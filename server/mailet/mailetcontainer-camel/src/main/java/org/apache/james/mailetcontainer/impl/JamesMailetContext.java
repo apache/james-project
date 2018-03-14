@@ -40,6 +40,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -232,7 +233,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
         try {
             if (!name.contains("@")) {
                 try {
-                    return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain()));
+                    return isLocalEmail(new MailAddress(name.toLowerCase(Locale.US), domains.getDefaultDomain().asString()));
                 } catch (DomainListException e) {
                     LOGGER.error("Unable to access DomainList", e);
                     return false;
@@ -249,7 +250,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     @Override
     public boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
-            if (!isLocalServer(mailAddress.getDomain().toLowerCase(Locale.US))) {
+            if (!isLocalServer(Domain.of(mailAddress.getDomain()))) {
                 return false;
             }
             try {
@@ -308,9 +309,9 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
-    public boolean isLocalServer(String name) {
+    public boolean isLocalServer(Domain domain) {
         try {
-            return domains.containsDomain(name);
+            return domains.containsDomain(domain);
         } catch (DomainListException e) {
             LOGGER.error("Unable to retrieve domains", e);
             return false;
@@ -455,14 +456,14 @@ public class JamesMailetContext implements MailetContext, Configurable {
             // list of supported domains that isn't localhost. If that
             // doesn't work, use the hostname, even if it is localhost.
             if (postMasterAddress.indexOf('@') < 0) {
-                String domainName = null; // the domain to use
+                Domain domainName = null; // the domain to use
                 // loop through candidate domains until we find one or exhaust
                 // the
                 // list
-                for (String dom : domains.getDomains()) {
-                    String serverName = dom.toLowerCase(Locale.US);
-                    if (!("localhost".equals(serverName))) {
-                        domainName = serverName; // ok, not localhost, so
+                Domain localhost = Domain.of("localhost");
+                for (Domain dom : domains.getDomains()) {
+                    if (!(localhost.equals(dom))) {
+                        domainName = dom; // ok, not localhost, so
                         // use it
                     }
                 }
@@ -470,15 +471,15 @@ public class JamesMailetContext implements MailetContext, Configurable {
                 // if we found a suitable domain, use it. Otherwise fallback to
                 // the
                 // host name.
-                postMasterAddress = postMasterAddress + "@" + (domainName != null ? domainName : domains.getDefaultDomain());
+                postMasterAddress = postMasterAddress + "@" + (domainName != null ? domainName.name() : domains.getDefaultDomain());
             }
             try {
                 this.postmaster = new MailAddress(postMasterAddress);
-                if (!domains.containsDomain(postmaster.getDomain())) {
+                if (!domains.containsDomain(Domain.of(postmaster.getDomain()))) {
                     LOGGER.warn("The specified postmaster address ( {} ) is not a local " +
-                            "address.  This is not necessarily a problem, but it does mean that emails addressed to " +
-                            "the postmaster will be routed to another server.  For some configurations this may " +
-                            "cause problems.", postmaster);
+                        "address.  This is not necessarily a problem, but it does mean that emails addressed to " +
+                        "the postmaster will be routed to another server.  For some configurations this may " +
+                        "cause problems.", postmaster);
                 }
             } catch (AddressException e) {
                 throw new ConfigurationException("Postmaster address " + postMasterAddress + "is invalid", e);

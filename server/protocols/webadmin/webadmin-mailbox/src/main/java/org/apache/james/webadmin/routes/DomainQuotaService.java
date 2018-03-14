@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
@@ -40,31 +41,31 @@ public class DomainQuotaService {
         this.maxQuotaManager = maxQuotaManager;
     }
 
-    public Optional<QuotaCount> getMaxCountQuota(String domain) {
+    public Optional<QuotaCount> getMaxCountQuota(Domain domain) {
         return maxQuotaManager.getDomainMaxMessage(domain);
     }
 
-    public void setMaxCountQuota(String domain, QuotaCount quotaCount) throws MailboxException {
+    public void setMaxCountQuota(Domain domain, QuotaCount quotaCount) throws MailboxException {
         maxQuotaManager.setDomainMaxMessage(domain, quotaCount);
     }
 
-    public void remoteMaxQuotaCount(String domain) throws MailboxException {
+    public void remoteMaxQuotaCount(Domain domain) throws MailboxException {
         maxQuotaManager.removeDomainMaxMessage(domain);
     }
 
-    public Optional<QuotaSize> getMaxSizeQuota(String domain) {
+    public Optional<QuotaSize> getMaxSizeQuota(Domain domain) {
         return maxQuotaManager.getDomainMaxStorage(domain);
     }
 
-    public void setMaxSizeQuota(String domain, QuotaSize quotaSize) throws MailboxException {
+    public void setMaxSizeQuota(Domain domain, QuotaSize quotaSize) throws MailboxException {
         maxQuotaManager.setDomainMaxStorage(domain, quotaSize);
     }
 
-    public void remoteMaxQuotaSize(String domain) throws MailboxException {
+    public void remoteMaxQuotaSize(Domain domain) throws MailboxException {
         maxQuotaManager.removeDomainMaxStorage(domain);
     }
 
-    public QuotaDTO getQuota(String domain) {
+    public QuotaDTO getQuota(Domain domain) {
         return QuotaDTO
             .builder()
             .count(maxQuotaManager.getDomainMaxMessage(domain))
@@ -72,7 +73,7 @@ public class DomainQuotaService {
             .build();
     }
 
-    public void defineQuota(String domain, QuotaDTO quota) {
+    public void defineQuota(Domain domain, QuotaDTO quota) {
         quota.getCount()
             .ifPresent(Throwing.consumer(count -> maxQuotaManager.setDomainMaxMessage(domain, count)));
         quota.getSize()

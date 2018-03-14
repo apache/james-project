@@ -23,6 +23,7 @@ package org.apache.james.rrt.lib;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Domain;
 import org.junit.Test;
 
 public class MappingImplTest {
@@ -70,12 +71,12 @@ public class MappingImplTest {
     
     @Test
     public void appendDomainShouldWorkOnValidDomain() {
-        assertThat(MappingImpl.address("abc").appendDomain("domain")).isEqualTo(MappingImpl.address("abc@domain"));
+        assertThat(MappingImpl.address("abc").appendDomain(Domain.of("domain"))).isEqualTo(MappingImpl.address("abc@domain"));
     }
     
     @Test
     public void appendDomainShouldWorkWhenMappingAlreadyContainsDomains() {
-        assertThat(MappingImpl.address("abc@d").appendDomain("domain")).isEqualTo(MappingImpl.address("abc@d@domain"));
+        assertThat(MappingImpl.address("abc@d").appendDomain(Domain.of("domain"))).isEqualTo(MappingImpl.address("abc@d@domain"));
     }
     
     @Test(expected = NullPointerException.class)
@@ -83,11 +84,6 @@ public class MappingImplTest {
         MappingImpl.address("abc@d").appendDomain(null);
     }
     
-    @Test
-    public void appendDomainShouldWorkWhenEmptyDomain() {
-        assertThat(MappingImpl.address("abc").appendDomain("")).isEqualTo(MappingImpl.address("abc@"));
-    }
-
     @Test
     public void getTypeShouldReturnAddressWhenNoPrefix() {
         assertThat(MappingImpl.address("abc").getType()).isEqualTo(Mapping.Type.Address);
@@ -110,12 +106,12 @@ public class MappingImplTest {
 
     @Test
     public void getTypeShouldReturnDomainWhenDomainPrefix() {
-        assertThat(MappingImpl.domain("abc").getType()).isEqualTo(Mapping.Type.Domain);
+        assertThat(MappingImpl.domain(Domain.of("abc")).getType()).isEqualTo(Mapping.Type.Domain);
     }
     
     @Test(expected = IllegalStateException.class)
     public void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
-        MappingImpl.domain("toto").getErrorMessage();
+        MappingImpl.domain(Domain.of("toto")).getErrorMessage();
     }
     
     @Test
@@ -151,6 +147,6 @@ public class MappingImplTest {
 
     @Test
     public void getAddressShouldThrowForDomain() {
-        assertThatThrownBy(() -> MappingImpl.domain("value").getAddress()).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> MappingImpl.domain(Domain.of("value")).getAddress()).isInstanceOf(IllegalStateException.class);
     }
 }

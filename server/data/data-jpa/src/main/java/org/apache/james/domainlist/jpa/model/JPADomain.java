@@ -25,6 +25,8 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import org.apache.james.core.Domain;
+
 /**
  * Domain class for the James Domain to be used for JPA persistence.
  */
@@ -60,8 +62,8 @@ public class JPADomain {
      * @param name
      *            the name of the Domain
      */
-    public JPADomain(String name) {
-        this.name = name;
+    public JPADomain(Domain name) {
+        this.name = name.asString();
     }
 
 }

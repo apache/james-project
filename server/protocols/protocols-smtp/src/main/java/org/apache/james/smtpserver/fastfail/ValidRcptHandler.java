@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -111,7 +112,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
                     LOGGER.debug("Unknown user {} check if it's an alias", username);
 
                     try {
-                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), Domain.of(recipient.getDomain()));
 
                         if (targetString != null && !targetString.isEmpty()) {
                             return true;
@@ -136,7 +137,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     @Override
     protected boolean isLocalDomain(SMTPSession session, String domain) {
         try {
-            return domains.containsDomain(domain);
+            return domains.containsDomain(Domain.of(domain));
         } catch (DomainListException e) {
             LOGGER.error("Unable to get domains", e);
             return false;

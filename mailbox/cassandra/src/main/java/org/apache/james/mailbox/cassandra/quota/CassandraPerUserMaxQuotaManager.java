@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -64,32 +65,32 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDomainMaxMessage(String domain, QuotaCount count) {
+    public void setDomainMaxMessage(Domain domain, QuotaCount count) {
         perDomainQuota.setMaxMessage(domain, count);
     }
 
     @Override
-    public void setDomainMaxStorage(String domain, QuotaSize size) {
+    public void setDomainMaxStorage(Domain domain, QuotaSize size) {
         perDomainQuota.setMaxStorage(domain, size);
     }
 
     @Override
-    public void removeDomainMaxMessage(String domain) {
+    public void removeDomainMaxMessage(Domain domain) {
         perDomainQuota.removeMaxMessage(domain);
     }
 
     @Override
-    public void removeDomainMaxStorage(String domain) {
+    public void removeDomainMaxStorage(Domain domain) {
         perDomainQuota.removeMaxStorage(domain);
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
         return perDomainQuota.getMaxMessage(domain);
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
         return perDomainQuota.getMaxStorage(domain);
     }
 
@@ -163,7 +164,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
-        Function<String, Optional<QuotaCount>> domainQuotaSupplier = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
+        Function<Domain, Optional<QuotaCount>> domainQuotaSupplier = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxMessage(quotaRoot)),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
@@ -174,7 +175,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     @Override
     public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
-        Function<String, Optional<QuotaSize>> domainQuotaSupplier = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
+        Function<Domain, Optional<QuotaSize>> domainQuotaSupplier = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxStorage(quotaRoot)),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),

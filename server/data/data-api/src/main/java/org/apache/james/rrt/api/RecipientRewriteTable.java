@@ -20,12 +20,28 @@ package org.apache.james.rrt.api;
 
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.Mappings;
 
 /**
  * Interface which should be implemented of classes which map recipients.
  */
 public interface RecipientRewriteTable {
+
+    interface Domains {
+        Domain WILDCARD = new Domain(RecipientRewriteTable.WILDCARD) {
+
+            @Override
+            public String name() {
+                throw new IllegalStateException();
+            }
+
+            @Override
+            public String toString() {
+                return "Domain : * (Wildcard)";
+            }
+        };
+    }
 
     /**
      * The prefix which is used for error mappings
@@ -58,7 +74,7 @@ public interface RecipientRewriteTable {
      *             get thrown if an error mapping was found
      * @throws RecipientRewriteTableException
      */
-    Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException;
+    Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
      * Add regex mapping
@@ -71,7 +87,7 @@ public interface RecipientRewriteTable {
      *            the regex.
      * @throws RecipientRewriteTableException
      */
-    void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException;
+    void addRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException;
 
     /**
      * Remove regex mapping
@@ -84,7 +100,7 @@ public interface RecipientRewriteTable {
      *            the regex.
      * @throws RecipientRewriteTableException
      */
-    void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException;
+    void removeRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException;
 
     /***
      * Add address mapping
@@ -96,7 +112,7 @@ public interface RecipientRewriteTable {
      * @param address
      * @throws RecipientRewriteTableException
      */
-    void addAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException;
+    void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException;
 
     /**
      * Remove address mapping
@@ -108,7 +124,7 @@ public interface RecipientRewriteTable {
      * @param address
      * @throws RecipientRewriteTableException
      */
-    void removeAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException;
+    void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException;
 
     /**
      * Add error mapping
@@ -121,7 +137,7 @@ public interface RecipientRewriteTable {
      *            the regex.
      * @throws RecipientRewriteTableException
      */
-    void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException;
+    void addErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException;
 
     /**
      * Remove error mapping
@@ -133,7 +149,7 @@ public interface RecipientRewriteTable {
      * @param error
      * @throws RecipientRewriteTableException
      */
-    void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException;
+    void removeErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException;
 
     /**
      * Return the explicit mapping stored for the given user and domain. Return
@@ -146,7 +162,7 @@ public interface RecipientRewriteTable {
      * @return the collection which holds the mappings.
      * @throws RecipientRewriteTableException
      */
-    Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException;
+    Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException;
 
     /**
      * Add mapping
@@ -159,7 +175,7 @@ public interface RecipientRewriteTable {
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    void addMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException;
 
     /**
      * Remove mapping
@@ -172,7 +188,7 @@ public interface RecipientRewriteTable {
      *            the mapping
      * @throws RecipientRewriteTableException
      */
-    void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException;
+    void removeMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException;
 
     /**
      * Return a Map which holds all mappings. The key is the user@domain and the
@@ -192,7 +208,7 @@ public interface RecipientRewriteTable {
      *            the realDomain
      * @throws RecipientRewriteTableException
      */
-    void addAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException;
+    void addAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException;
 
     /**
      * Remove aliasDomain mapping
@@ -203,7 +219,7 @@ public interface RecipientRewriteTable {
      *            the realDomain
      * @throws RecipientRewriteTableException
      */
-    void removeAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException;
+    void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException;
 
     class ErrorMappingException extends Exception {
 

@@ -32,6 +32,7 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -48,8 +49,8 @@ public class SenderHostIsLocalTest {
     @BeforeEach
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
-        when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);
-        when(mailContext.isLocalServer(JAMES2_APACHE_ORG)).thenReturn(false);
+        when(mailContext.isLocalServer(Domain.of(JAMES_APACHE_ORG))).thenReturn(true);
+        when(mailContext.isLocalServer(Domain.of(JAMES2_APACHE_ORG))).thenReturn(false);
         
         matcher = new SenderHostIsLocal();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()

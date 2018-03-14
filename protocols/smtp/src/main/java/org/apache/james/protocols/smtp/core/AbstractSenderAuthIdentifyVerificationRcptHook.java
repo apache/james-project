@@ -20,6 +20,7 @@ package org.apache.james.protocols.smtp.core;
 
 import java.util.Locale;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.smtp.SMTPRetCode;
@@ -60,8 +61,8 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             // Its important to ignore case here to fix JAMES-837. This is save todo because if the handler is called
             // the user was already authenticated
             if ((senderAddress == null)
-                    || (!authUser.equalsIgnoreCase(username))
-                    || (!isLocalDomain(senderAddress.getDomain()))) {
+                || (!authUser.equalsIgnoreCase(username))
+                || (!isLocalDomain(Domain.of(senderAddress.getDomain())))) {
                 return INVALID_AUTH;
             }
         }
@@ -75,7 +76,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
      * @param domain
      * @return isLocal
      */
-    protected abstract boolean isLocalDomain(String domain);
+    protected abstract boolean isLocalDomain(Domain domain);
     
     /**
      * Return true if virtualHosting should get used. If so the full email address will get used to 

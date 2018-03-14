@@ -24,6 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.apache.james.core.Domain;
+
 @Entity(name = "MaxDomainMessageCount")
 @Table(name = "JAMES_MAX_DOMAIN_MESSAGE_COUNT")
 public class MaxDomainMessageCount {
@@ -34,8 +36,8 @@ public class MaxDomainMessageCount {
     @Column(name = "VALUE", nullable = true)
     private Long value;
 
-    public MaxDomainMessageCount(String domain, Long value) {
-        this.domain = domain;
+    public MaxDomainMessageCount(Domain domain, Long value) {
+        this.domain = domain.asString();
         this.value = value;
     }
 

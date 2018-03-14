@@ -22,6 +22,7 @@ package org.apache.james.rrt.lib;
 
 import java.io.Serializable;
 
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 
 import com.google.common.base.Objects;
@@ -50,8 +51,8 @@ public class MappingImpl implements Mapping, Serializable {
         return new MappingImpl(RecipientRewriteTable.ERROR_PREFIX, mapping);
     }
 
-    public static MappingImpl domain(String mapping) {
-        return new MappingImpl(RecipientRewriteTable.ALIASDOMAIN_PREFIX, mapping);
+    public static MappingImpl domain(Domain mapping) {
+        return new MappingImpl(RecipientRewriteTable.ALIASDOMAIN_PREFIX, mapping.asString());
     }
     
     private final String mapping;
@@ -72,9 +73,9 @@ public class MappingImpl implements Mapping, Serializable {
     }
     
     @Override
-    public Mapping appendDomain(String domain) {
+    public Mapping appendDomain(Domain domain) {
         Preconditions.checkNotNull(domain);
-        return new MappingImpl("", mapping + "@" + domain);
+        return new MappingImpl("", mapping + "@" + domain.asString());
     }
     
     @Override

@@ -25,12 +25,14 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -72,28 +74,28 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void addDomain(String domain) throws Exception {
-        domainList.addDomain(domain);
+        domainList.addDomain(Domain.of(domain));
     }
 
 
     @Override
     public boolean containsDomain(String domain) throws Exception {
-        return domainList.containsDomain(domain);
+        return domainList.containsDomain(Domain.of(domain));
     }
 
     @Override
     public String getDefaultDomain() throws Exception {
-        return domainList.getDefaultDomain();
+        return domainList.getDefaultDomain().name();
     }
 
     @Override
     public void removeDomain(String domain) throws Exception {
-        domainList.removeDomain(domain);
+        domainList.removeDomain(Domain.of(domain));
     }
 
     @Override
     public List<String> listDomains() throws Exception {
-        return domainList.getDomains();
+        return domainList.getDomains().stream().map(Domain::name).collect(Guavate.toImmutableList());
     }
 
     @Override
@@ -108,27 +110,27 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
-        recipientRewriteTable.addAddressMapping(user, domain, toAddress);
+        recipientRewriteTable.addAddressMapping(user, Domain.of(domain), toAddress);
     }
 
     @Override
     public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
-        recipientRewriteTable.removeAddressMapping(user, domain, fromAddress);
+        recipientRewriteTable.removeAddressMapping(user, Domain.of(domain), fromAddress);
     }
 
     @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.addRegexMapping(user, domain, regex);
+        recipientRewriteTable.addRegexMapping(user, Domain.of(domain), regex);
     }
 
 
     @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.removeRegexMapping(user, domain, regex);
+        recipientRewriteTable.removeRegexMapping(user, Domain.of(domain), regex);
     }
 
     @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
-        recipientRewriteTable.addAliasDomainMapping(aliasDomain, deliveryDomain);
+        recipientRewriteTable.addAliasDomainMapping(Domain.of(aliasDomain), Domain.of(deliveryDomain));
     }
 }

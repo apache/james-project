@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -56,7 +57,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
         if (mappings == null) {
             return null;
         } else {
@@ -65,11 +66,11 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException {
         if (mappings == null) {
             return null;
         } else {
-            String maps = mappings.get(user + "@" + domain);
+            String maps = mappings.get(user + "@" + domain.asString());
             if (maps != null) {
                 return MappingsImpl.fromRawString(maps);
             } else {
@@ -92,12 +93,12 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 }

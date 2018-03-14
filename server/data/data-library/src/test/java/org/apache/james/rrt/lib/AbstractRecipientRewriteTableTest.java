@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
@@ -63,7 +64,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
                 for (String aMap : map.asStrings()) {
                     try {
-                        removeMapping(args[0], args[1], aMap);
+                        removeMapping(args[0], Domain.of(args[1]), aMap);
                     } catch (IllegalArgumentException e) {
                         e.printStackTrace();
                     }
@@ -78,7 +79,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void testStoreAndGetMappings() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "*";
-        String domain = "test";
+        Domain domain = Domain.of("test");
         String regex = "prefix_.*:admin@test";
         addMapping(user, domain, regex, REGEX_TYPE);
         assertThat(virtualUserTable.getMappings("prefix_abc", domain)).isNotEmpty();
@@ -87,7 +88,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void testStoreAndRetrieveRegexMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         // String regex = "(.*):{$1}@localhost";
         // String regex2 = "(.+):{$1}@test";
         String regex = "(.*)@localhost";
@@ -118,7 +119,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void testStoreAndRetrieveAddressMapping() throws ErrorMappingException, RecipientRewriteTableException {
 
         String user = "test";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         String address = "test@localhost2";
         String address2 = "test@james";
 
@@ -141,7 +142,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void testStoreAndRetrieveErrorMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         String error = "bounce!";
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
@@ -164,7 +165,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void testStoreAndRetrieveWildCardAddressMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
         String user2 = "test2";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         String address = "test@localhost2";
         String address2 = "test@james";
 
@@ -188,18 +189,18 @@ public abstract class AbstractRecipientRewriteTableTest {
         String user1 = "user1";
         String user2 = "user2";
         String user3 = "user3";
-        String domain1 = "domain1";
-        String domain2 = "domain2";
-        String domain3 = "domain3";
+        Domain domain1 = Domain.of("domain1");
+        Domain domain2 = Domain.of("domain2");
+        Domain domain3 = Domain.of("domain3");
 
         virtualUserTable.setRecursiveMapping(true);
 
             assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
 
-            addMapping(user1, domain1, user2 + "@" + domain2, ADDRESS_TYPE);
-            addMapping(user2, domain2, user3 + "@" + domain3, ADDRESS_TYPE);
-            assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(MappingImpl.address(user3 + "@" + domain3));
-            addMapping(user3, domain3, user1 + "@" + domain1, ADDRESS_TYPE);
+            addMapping(user1, domain1, user2 + "@" + domain2.asString(), ADDRESS_TYPE);
+            addMapping(user2, domain2, user3 + "@" + domain3.asString(), ADDRESS_TYPE);
+            assertThat(virtualUserTable.getMappings(user1, domain1)).containsOnly(MappingImpl.address(user3 + "@" + domain3.asString()));
+            addMapping(user3, domain3, user1 + "@" + domain1.asString(), ADDRESS_TYPE);
             
             assertThatThrownBy(() ->
                 virtualUserTable.getMappings(user1, domain1))
@@ -208,14 +209,14 @@ public abstract class AbstractRecipientRewriteTableTest {
 
             // disable recursive mapping
             virtualUserTable.setRecursiveMapping(false);
-            assertThat(virtualUserTable.getMappings(user1, domain1)).describedAs("Not recursive mapped").containsExactly(MappingImpl.address(user2 + "@" + domain2));
+            assertThat(virtualUserTable.getMappings(user1, domain1)).describedAs("Not recursive mapped").containsExactly(MappingImpl.address(user2 + "@" + domain2.asString()));
     }
 
     @Test
     public void testAliasDomainMapping() throws ErrorMappingException, RecipientRewriteTableException {
 
         String domain = "realdomain";
-        String aliasDomain = "aliasdomain";
+        Domain aliasDomain = Domain.of("aliasdomain");
         String user = "user";
         String user2 = "user2";
 
@@ -241,7 +242,8 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void sortMappingsShouldReturnSameStringWhenSingleDomainAlias() {
         String singleDomainAlias = RecipientRewriteTable.ALIASDOMAIN_PREFIX + "first";
-        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.fromRawString(singleDomainAlias))).containsExactly(MappingImpl.domain("first"));
+        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.fromRawString(singleDomainAlias)))
+            .containsExactly(MappingImpl.domain(Domain.of("first")));
     }
      
     @Test
@@ -271,7 +273,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
         String user = "test";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         String address = "test@localhost2";
 
         expectedException.expect(RecipientRewriteTableException.class);
@@ -283,7 +285,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() throws Exception {
         String user = "test";
-        String domain = "localhost";
+        Domain domain = Domain.of("localhost");
         String address = "test@localhost2";
 
         addMapping(user, domain, address, ADDRESS_TYPE);
@@ -294,13 +296,13 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
-    protected abstract void addMapping(String user, String domain, String mapping, int type) throws
+    protected abstract void addMapping(String user, Domain domain, String mapping, int type) throws
             RecipientRewriteTableException;
 
-    protected abstract void removeMapping(String user, String domain, String mapping, int type) throws
+    protected abstract void removeMapping(String user, Domain domain, String mapping, int type) throws
             RecipientRewriteTableException;
 
-    private void removeMapping(String user, String domain, String rawMapping) throws RecipientRewriteTableException {
+    private void removeMapping(String user, Domain domain, String rawMapping) throws RecipientRewriteTableException {
         if (rawMapping.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
             removeMapping(user, domain, rawMapping.substring(RecipientRewriteTable.ERROR_PREFIX.length()), ERROR_TYPE);
         } else if (rawMapping.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {

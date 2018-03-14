@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -46,7 +47,7 @@ import org.junit.Test;
 
 public class ValidRcptHandlerTest {
 
-    private static final String VALID_DOMAIN = "localhost";
+    private static final Domain VALID_DOMAIN = Domain.of("localhost");
     private static final String VALID_USER = "postmaster";
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
@@ -115,8 +116,8 @@ public class ValidRcptHandlerTest {
     private RecipientRewriteTable setUpRecipientRewriteTable(DomainList domainList) throws RecipientRewriteTableException {
         MemoryRecipientRewriteTable memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(domainList);
-        memoryRecipientRewriteTable.addAddressMapping(USER1, "localhost", "address");
-        memoryRecipientRewriteTable.addErrorMapping(USER2, "localhost", "554 BOUNCE");
+        memoryRecipientRewriteTable.addAddressMapping(USER1, Domain.of("localhost"), "address");
+        memoryRecipientRewriteTable.addErrorMapping(USER2, Domain.of("localhost"), "554 BOUNCE");
         return memoryRecipientRewriteTable;
     }
 

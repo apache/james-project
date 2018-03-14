@@ -24,6 +24,7 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import java.util.Collection;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
@@ -70,14 +71,13 @@ public class DomainQuotaRoutesNoVirtualHostingTest {
     @Before
     public void setUp() throws Exception {
         InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService());
-        domainList.setAutoDetect(false);
-        domainList.setAutoDetectIP(false);
-        domainList.addDomain(FOUND_COM);
+        MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
+        memoryDomainList.setAutoDetect(false);
+        memoryDomainList.addDomain(Domain.of(FOUND_COM));
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(domainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
+        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
             domainQuotaRoutes);

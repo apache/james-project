@@ -16,45 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.domainlist.jpa;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
+package org.apache.james.domainlist.api;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.apache.james.core.Domain;
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Test the JPA implementation of the DomainList.
- */
-public class JPADomainListTest extends AbstractDomainListTest {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+public class DomainTest {
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    @Test
+    public void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(Domain.class).verify();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        DomainList domainList = createDomainList();
-        for (Domain domain: domainList.getDomains()) {
-            domainList.removeDomain(domain);
-        }
+    @Test
+    public void shouldBeCaseInsensitive() {
+        assertThat(Domain.of("Domain")).isEqualTo(Domain.of("domain"));
     }
 
-    @Override
-    protected DomainList createDomainList() throws Exception {
-        JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
-            JPA_TEST_CLUSTER.getEntityManagerFactory());
-        jpaDomainList.setAutoDetect(false);
-        jpaDomainList.setAutoDetectIP(false);
-        
-        return jpaDomainList;
+    @Test
+    public void shouldThrowWhenDomainContainAtSymbol() {
+        assertThatThrownBy(() -> Domain.of("Dom@in")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldThrowWhenDomainIsEmpty() {
+        assertThatThrownBy(() -> Domain.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void shouldThrowOnNullArgument() {
+        assertThatThrownBy(() -> Domain.of(null)).isInstanceOf(NullPointerException.class);
     }
 
 }

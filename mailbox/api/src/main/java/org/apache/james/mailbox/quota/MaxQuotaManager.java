@@ -22,6 +22,7 @@ package org.apache.james.mailbox.quota;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -122,15 +123,15 @@ public interface MaxQuotaManager {
 
     Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot);
 
-    Optional<QuotaCount> getDomainMaxMessage(String domain);
+    Optional<QuotaCount> getDomainMaxMessage(Domain domain);
 
-    void setDomainMaxMessage(String domain, QuotaCount count) throws MailboxException;
+    void setDomainMaxMessage(Domain domain, QuotaCount count) throws MailboxException;
 
-    void removeDomainMaxMessage(String domain) throws MailboxException;
+    void removeDomainMaxMessage(Domain domain) throws MailboxException;
 
-    void setDomainMaxStorage(String domain, QuotaSize size) throws MailboxException;
+    void setDomainMaxStorage(Domain domain, QuotaSize size) throws MailboxException;
 
-    Optional<QuotaSize> getDomainMaxStorage(String domain);
+    Optional<QuotaSize> getDomainMaxStorage(Domain domain);
 
-    void removeDomainMaxStorage(String domain) throws MailboxException;
+    void removeDomainMaxStorage(Domain domain) throws MailboxException;
 }

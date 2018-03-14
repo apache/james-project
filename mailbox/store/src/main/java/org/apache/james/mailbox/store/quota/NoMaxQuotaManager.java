@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.quota;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -59,22 +60,22 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDomainMaxMessage(String domain, QuotaCount count) throws MailboxException {
+    public void setDomainMaxMessage(Domain domain, QuotaCount count) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void setDomainMaxStorage(String domain, QuotaSize size) throws MailboxException {
+    public void setDomainMaxStorage(Domain domain, QuotaSize size) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void removeDomainMaxMessage(String domain) throws MailboxException {
+    public void removeDomainMaxMessage(Domain domain) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void removeDomainMaxStorage(String domain) throws MailboxException {
+    public void removeDomainMaxStorage(Domain domain) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
@@ -119,12 +120,12 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
         return Optional.empty();
     }
 

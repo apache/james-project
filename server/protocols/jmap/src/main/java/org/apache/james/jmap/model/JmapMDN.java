@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.mailbox.MailboxSession;
@@ -150,7 +151,7 @@ public class JmapMDN {
             .setTo(getSenderAddress(originalMessage))
             .setFrom(user.asString())
             .setSubject(subject)
-            .setMessageId(MimeUtil.createUniqueMessageId(user.getDomainPart().orElse(null)))
+            .setMessageId(MimeUtil.createUniqueMessageId(user.getDomainPart().map(Domain::name).orElse(null)))
             .build();
     }
 

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -30,6 +31,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.webadmin.Constants;
@@ -42,8 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -146,14 +146,15 @@ public class DomainsRoutes implements Routes {
     })
     public void defineGetDomains() {
         service.get(DOMAINS,
-            (request, response) -> domainList.getDomains(),
+            (request, response) ->
+                domainList.getDomains().stream().map(Domain::name).collect(Collectors.toList()),
             jsonTransformer);
     }
 
     private String removeDomain(Request request, Response response) {
         try {
-            String domain = request.params(DOMAIN_NAME);
-            removeDomain(domain);
+            Domain domain = checkValidDomain(request);
+            domainList.removeDomain(domain);
         } catch (DomainListException e) {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }
@@ -161,22 +162,17 @@ public class DomainsRoutes implements Routes {
         return Constants.EMPTY_BODY;
     }
 
-    private void removeDomain(String domain) throws DomainListException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(domain));
-        domainList.removeDomain(domain);
-    }
-
     private String addDomain(Request request, Response response) {
-        String domainName = request.params(DOMAIN_NAME);
+        Domain domain = checkValidDomain(request);
         try {
-            addDomain(domainName);
+            addDomain(domain);
             response.status(204);
         } catch (DomainListException e) {
-            LOGGER.info("{} already exists", domainName);
+            LOGGER.info("{} already exists", domain);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NO_CONTENT_204)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message(domainName + " already exists")
+                .message(domain.name() + " already exists")
                 .cause(e)
                 .haltError();
         } catch (IllegalArgumentException e) {
@@ -184,31 +180,43 @@ public class DomainsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation " + domainName)
+                .message("Invalid request for domain creation " + domain.name())
                 .cause(e)
                 .haltError();
         }
         return Constants.EMPTY_BODY;
     }
 
-    private void addDomain(String domain) throws DomainListException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(domain));
-        Preconditions.checkArgument(!domain.contains("@"));
-        Preconditions.checkArgument(domain.length() < MAXIMUM_DOMAIN_SIZE);
+    private Domain checkValidDomain(Request request) {
+        String domainName = request.params(DOMAIN_NAME);
+        try {
+            return Domain.of(domainName);
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid request for domain creation " + domainName)
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private void addDomain(Domain domain) throws DomainListException {
+        Preconditions.checkArgument(domain.name().length() < MAXIMUM_DOMAIN_SIZE);
         domainList.addDomain(domain);
     }
 
-    private String exists(Request request, Response response) throws DomainListException {
-        String domainName = request.params(DOMAIN_NAME);
-        if (!domainList.containsDomain(domainName)) {
+    private Response exists(Request request, Response response) throws DomainListException {
+        Domain domain = checkValidDomain(request);
+        if (!domainList.containsDomain(domain)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("The domain list does not contain: " + domainName)
+                .message("The domain list does not contain: " + domain.name())
                 .haltError();
         } else {
             response.status(HttpStatus.NO_CONTENT_204);
+            return response;
         }
-        return Constants.EMPTY_BODY;
     }
 }

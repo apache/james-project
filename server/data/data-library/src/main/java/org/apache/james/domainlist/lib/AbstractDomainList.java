@@ -23,11 +23,11 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -35,6 +35,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -61,7 +62,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     private final EnvDetector envDetector;
     private boolean autoDetect = true;
     private boolean autoDetectIP = true;
-    private String defaultDomain;
+    private Domain defaultDomain;
 
     public AbstractDomainList(DNSService dns, EnvDetector envDetector) {
         this.dns = dns;
@@ -84,26 +85,23 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     protected void addConfiguredDomains(HierarchicalConfiguration config) {
-        String[] configuredDomainNames = config.getStringArray(CONFIGURE_DOMAIN_NAMES);
-        try {
-            if (configuredDomainNames != null) {
-                for (String domain : Arrays.asList(configuredDomainNames)) {
+        Arrays.stream(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
+            .map(Domain::of)
+            .forEach(
+                Throwing.consumer((Domain domain) -> {
                     if (!containsDomainInternal(domain)) {
-                        addDomain(domain.toLowerCase(Locale.US));
+                        addDomain(domain);
                     }
-                }
-            }
-        } catch (DomainListException e) {
-            throw Throwables.propagate(e);
-        }
+                }).sneakyThrow());
     }
+
 
     private void addEnvDomain() {
         String envDomain = envDetector.getEnv(ENV_DOMAIN);
         if (!Strings.isNullOrEmpty(envDomain)) {
             try {
                 LOGGER.info("Adding environment defined domain {}", envDomain);
-                addDomain(envDomain);
+                addDomain(Domain.of(envDomain));
             } catch (DomainListException e) {
                 throw Throwables.propagate(e);
             }
@@ -112,11 +110,11 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
         try {
-            setDefaultDomain(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST));
+            setDefaultDomain(Domain.of(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST)));
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
-                setDefaultDomain(hostName);
+                setDefaultDomain(Domain.of(hostName));
             }
         } catch (UnknownHostException e) {
             LOGGER.warn("Unable to retrieve hostname.", e);
@@ -129,7 +127,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         return LOCALHOST.equals(defaultDomain);
     }
 
-    private void setDefaultDomain(String defaultDomain) throws DomainListException {
+    private void setDefaultDomain(Domain defaultDomain) throws DomainListException {
         if (defaultDomain != null && !containsDomain(defaultDomain)) {
             addDomain(defaultDomain);
         }
@@ -137,7 +135,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     @Override
-    public String getDefaultDomain() throws DomainListException {
+    public Domain getDefaultDomain() throws DomainListException {
         if (defaultDomain != null) {
             return defaultDomain;
         } else {
@@ -146,25 +144,25 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     @Override
-    public boolean containsDomain(String domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) throws DomainListException {
         boolean internalAnswer = containsDomainInternal(domain);
         return internalAnswer || getDomains().contains(domain);
     }
 
     @Override
-    public ImmutableList<String> getDomains() throws DomainListException {
-        List<String> domains = getDomainListInternal();
-        ImmutableList<String> detectedDomains = detectDomains();
+    public ImmutableList<Domain> getDomains() throws DomainListException {
+        List<Domain> domains = getDomainListInternal();
+        ImmutableList<Domain> detectedDomains = detectDomains();
         // Guava does not support concatenating ImmutableLists at this time:
         // https://stackoverflow.com/questions/37919648/concatenating-immutablelists
         // A work-around is to use Iterables.concat() until something like
         // https://github.com/google/guava/issues/1029 is implemented.
-        Iterable<String> domainsWithoutIp = Iterables.concat(domains, detectedDomains);
-        ImmutableList<String> detectedIps = detectIps(domainsWithoutIp);
-        ImmutableList<String> allDomains = ImmutableList.copyOf(Iterables.concat(domainsWithoutIp, detectedIps));
+        Iterable<Domain> domainsWithoutIp = Iterables.concat(domains, detectedDomains);
+        ImmutableList<Domain> detectedIps = detectIps(domainsWithoutIp);
+        ImmutableList<Domain> allDomains = ImmutableList.copyOf(Iterables.concat(domainsWithoutIp, detectedIps));
 
         if (LOGGER.isDebugEnabled()) {
-            for (String domain : allDomains) {
+            for (Domain domain : allDomains) {
                 LOGGER.debug("Handling mail for: " + domain);
             }
         }
@@ -172,7 +170,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         return allDomains;
     }
 
-    private ImmutableList<String> detectIps(Iterable<String> domains) {
+    private ImmutableList<Domain> detectIps(Iterable<Domain> domains) {
         if (autoDetectIP) {
             return getDomainsIpStream(domains, dns, LOGGER)
                 .collect(Guavate.toImmutableList());
@@ -180,7 +178,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         return ImmutableList.of();
     }
 
-    private ImmutableList<String> detectDomains() {
+    private ImmutableList<Domain> detectDomains() {
         if (autoDetect) {
             String hostName;
             try {
@@ -191,7 +189,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
             LOGGER.info("Local host is: {}", hostName);
             if (hostName != null && !hostName.equals("localhost")) {
-                return ImmutableList.of(hostName.toLowerCase(Locale.US));
+                return ImmutableList.of(Domain.of(hostName));
             }
         }
         return ImmutableList.of();
@@ -204,16 +202,17 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      *            Iterable of domains
      * @return Stream of ipaddress for domains
      */
-    private static Stream<String> getDomainsIpStream(Iterable<String> domains, DNSService dns, Logger log) {
+    private static Stream<Domain> getDomainsIpStream(Iterable<Domain> domains, DNSService dns, Logger log) {
         return Guavate.stream(domains)
             .flatMap(domain -> getDomainIpStream(domain, dns, log))
             .distinct();
     }
 
-    private static Stream<String> getDomainIpStream(String domain, DNSService dns, Logger log) {
+    private static Stream<Domain> getDomainIpStream(Domain domain, DNSService dns, Logger log) {
         try {
-            return dns.getAllByName(domain).stream()
+            return dns.getAllByName(domain.name()).stream()
                 .map(InetAddress::getHostAddress)
+                .map(Domain::of)
                 .distinct();
         } catch (UnknownHostException e) {
             log.error("Cannot get IP address(es) for {}", domain);
@@ -259,8 +258,8 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
      * 
      * @return List
      */
-    protected abstract List<String> getDomainListInternal() throws DomainListException;
+    protected abstract List<Domain> getDomainListInternal() throws DomainListException;
 
-    protected abstract boolean containsDomainInternal(String domain) throws DomainListException;
+    protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
 
 }

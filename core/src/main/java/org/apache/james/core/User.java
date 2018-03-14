@@ -60,39 +60,27 @@ public class User {
     }
 
     private final String localPart;
-    private final Optional<String> domainPart;
+    private final Optional<Domain> domainPart;
 
     private User(String localPart, Optional<String> domainPart) {
         Preconditions.checkNotNull(localPart);
         Preconditions.checkArgument(!localPart.isEmpty(), "username should not be empty");
         Preconditions.checkArgument(!localPart.contains("@"), "username can not contain domain delimiter");
 
-        Preconditions.checkArgument(!isEmptyString(domainPart), "domain part can not be empty");
-        Preconditions.checkArgument(!containsDomainDelimiter(domainPart), "domain can not contain domain delimiter");
-
         this.localPart = localPart;
-        this.domainPart = domainPart;
-    }
-
-    private Boolean containsDomainDelimiter(Optional<String> domainPart) {
-        return domainPart.map(s -> s.contains("@")).orElse(false);
-    }
-
-    private Boolean isEmptyString(Optional<String> domainPart) {
-        return domainPart.map(String::isEmpty)
-            .orElse(false);
+        this.domainPart = domainPart.map(Domain::of);
     }
 
     public String getLocalPart() {
         return localPart;
     }
 
-    public Optional<String> getDomainPart() {
+    public Optional<Domain> getDomainPart() {
         return domainPart;
     }
 
     public String asString() {
-        return domainPart.map(domain -> localPart + "@" + domain)
+        return domainPart.map(domain -> localPart + "@" + domain.asString())
             .orElse(localPart);
     }
 

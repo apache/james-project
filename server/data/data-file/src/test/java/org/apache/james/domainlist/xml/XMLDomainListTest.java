@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
 import org.apache.james.domainlist.api.DomainListException;
@@ -39,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 
 public class XMLDomainListTest {
 
-    public static final String DEFAULT_DOMAIN = "default.domain";
+    public static final Domain DEFAULT_DOMAIN = Domain.of("default.domain");
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -52,7 +53,7 @@ public class XMLDomainListTest {
         for (String name : names) {
             configuration.addProperty("domainnames.domainname", name);
         }
-        configuration.addProperty("defaultDomain", DEFAULT_DOMAIN);
+        configuration.addProperty("defaultDomain", DEFAULT_DOMAIN.asString());
         return configuration;
     }
 
@@ -130,7 +131,7 @@ public class XMLDomainListTest {
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("hostname"));
         testee.configure(setUpConfiguration(true, false, domains));
 
-        testee.addDomain("newDomain");
+        testee.addDomain(Domain.of("newDomain"));
     }
 
     @Test
@@ -143,7 +144,7 @@ public class XMLDomainListTest {
         XMLDomainList testee = new XMLDomainList(setUpDNSServer("localhost"));
         testee.configure(setUpConfiguration(true, false, domains));
 
-        testee.removeDomain("newDomain");
+        testee.removeDomain(Domain.of("newDomain"));
     }
 
     @Test

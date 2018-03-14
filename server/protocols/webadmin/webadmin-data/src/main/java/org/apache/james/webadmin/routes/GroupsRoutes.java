@@ -38,6 +38,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -61,7 +62,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -154,19 +154,20 @@ public class GroupsRoutes implements Routes {
     })
     public HaltException addToGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException, UsersRepositoryException, DomainListException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        ensureRegisteredDomain(groupAddress.getDomain());
+        Domain domain = Domain.of(groupAddress.getDomain());
+        ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.addAddressMapping(groupAddress.getLocalPart(), groupAddress.getDomain(), userAddress.asString());
+        recipientRewriteTable.addAddressMapping(groupAddress.getLocalPart(), domain, userAddress.asString());
         return halt(HttpStatus.CREATED_201);
     }
 
-    private void ensureRegisteredDomain(String domain) throws DomainListException {
+    private void ensureRegisteredDomain(Domain domain) throws DomainListException {
         if (!domainList.containsDomain(domain)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.FORBIDDEN_403)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Server doesn't own the domain: " + domain)
+                .message("Server doesn't own the domain: " + domain.name())
                 .haltError();
         }
     }
@@ -199,7 +200,10 @@ public class GroupsRoutes implements Routes {
     public HaltException removeFromGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.removeAddressMapping(groupAddress.getLocalPart(), groupAddress.getDomain(), userAddress.asString());
+        recipientRewriteTable.removeAddressMapping(
+            groupAddress.getLocalPart(),
+            Domain.of(groupAddress.getDomain()),
+            userAddress.asString());
         return halt(HttpStatus.OK_200);
     }
 
@@ -218,7 +222,7 @@ public class GroupsRoutes implements Routes {
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), groupAddress.getDomain());
+        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), Domain.of(groupAddress.getDomain()));
 
         ensureNonEmptyMappings(mappings);
 

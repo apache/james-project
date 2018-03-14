@@ -30,6 +30,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.quota.QuotaCount;
@@ -123,7 +124,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             QuotaDTO quotaDTO = parseQuotaDTO(request);
             domainQuotaService.defineQuota(domain, quotaDTO);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -144,7 +145,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             return domainQuotaService.getQuota(domain);
         }, jsonTransformer);
     }
@@ -160,7 +161,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             domainQuotaService.remoteMaxQuotaSize(domain);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -183,7 +184,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
             domainQuotaService.setMaxSizeQuota(domain, quotaSize);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -203,7 +204,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             Optional<QuotaSize> maxSizeQuota = domainQuotaService.getMaxSizeQuota(domain);
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
@@ -224,7 +225,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             domainQuotaService.remoteMaxQuotaCount(domain);
             response.status(HttpStatus.NO_CONTENT_204);
             return response;
@@ -247,7 +248,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             QuotaCount quotaCount = Quotas.quotaCount(request.body());
             domainQuotaService.setMaxCountQuota(domain, quotaCount);
             response.status(HttpStatus.NO_CONTENT_204);
@@ -266,7 +267,7 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
-            String domain = checkDomainExist(request);
+            Domain domain = checkDomainExist(request);
             Optional<QuotaCount> maxCountQuota = domainQuotaService.getMaxCountQuota(domain);
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
@@ -276,7 +277,7 @@ public class DomainQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private String checkDomainExist(Request request) {
+    private Domain checkDomainExist(Request request) {
         if (!isVirtualHostingSupported()) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.METHOD_NOT_ALLOWED_405)
@@ -284,8 +285,8 @@ public class DomainQuotaRoutes implements Routes {
                 .message("Domain Quota configuration not supported when virtual hosting is desactivated. Please use global quota configuration instead")
                 .haltError();
         }
-        String domain = request.params(DOMAIN);
         try {
+            Domain domain = Domain.of(request.params(DOMAIN));
             if (!domainList.containsDomain(domain)) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
@@ -293,14 +294,21 @@ public class DomainQuotaRoutes implements Routes {
                     .message("Domain not found")
                     .haltError();
             }
+            return domain;
         } catch (DomainListException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.NOT_FOUND)
                 .cause(e)
                 .haltError();
+        } catch (IllegalArgumentException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid domain")
+                .cause(e)
+                .haltError();
         }
-        return domain;
     }
 
     private QuotaDTO parseQuotaDTO(Request request) {

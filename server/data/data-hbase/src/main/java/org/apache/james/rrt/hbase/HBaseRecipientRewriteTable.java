@@ -33,6 +33,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -55,9 +56,9 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private static final String ROW_SEPARATOR = "@";
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
-        String fixedDomain = getFixedDomain(domain);
+        Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
@@ -68,7 +69,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws
+    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws
             RecipientRewriteTableException {
         HTableInterface table = null;
         Mappings list = MappingsImpl.empty();
@@ -90,7 +91,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
-    private Mappings feedUserDomainMappingsList(HTableInterface table, String user, String domain, Mappings list) throws
+    private Mappings feedUserDomainMappingsList(HTableInterface table, String user, Domain domain, Mappings list) throws
             IOException {
         Get get = new Get(Bytes.toBytes(getRowKey(user, domain)));
         Result result = table.get(get);
@@ -153,7 +154,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
         HTableInterface table = null;
         String mappings = null;
         try {
@@ -163,7 +164,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 mappings = getMapping(table, WILDCARD, domain);
             }
             if (mappings == null) {
-                mappings = getMapping(table, user, WILDCARD);
+                mappings = getMapping(table, user, Domains.WILDCARD);
             }
         } catch (IOException e) {
             log.error("Error while mapping address in HBase", e);
@@ -180,7 +181,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return mappings;
     }
 
-    private String getMapping(HTableInterface table, String user, String domain) throws IOException {
+    private String getMapping(HTableInterface table, String user, Domain domain) throws IOException {
         Get get = new Get(Bytes.toBytes(getRowKey(user, domain)));
         Result result = table.get(get);
         List<KeyValue> keyValues = result.getColumn(HRecipientRewriteTable.COLUMN_FAMILY_NAME,
@@ -192,10 +193,10 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws
+    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws
             RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
-        String fixedDomain = getFixedDomain(domain);
+        Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
@@ -215,7 +216,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param mapping the mapping
      * @throws RecipientRewriteTableException
      */
-    private void doUpdateMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doUpdateMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         doAddMapping(user, domain, mapping);
     }
 
@@ -227,7 +228,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param mapping the mapping
      * @throws RecipientRewriteTableException
      */
-    private void doRemoveMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doRemoveMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getRecipientRewriteTable();
@@ -256,7 +257,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param mapping the mapping
      * @throws RecipientRewriteTableException
      */
-    private void doAddMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doAddMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getRecipientRewriteTable();
@@ -286,7 +287,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param domain
      * @return the key
      */
-    private String getRowKey(String user, String domain) {
-        return user + ROW_SEPARATOR + domain;
+    private String getRowKey(String user, Domain domain) {
+        return user + ROW_SEPARATOR + domain.asString();
     }
 }

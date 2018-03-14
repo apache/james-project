@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.bayesian.JDBCBayesianAnalyzer;
@@ -294,7 +295,7 @@ public class BayesianAnalysis extends GenericMailet {
 
             if (ignoreLocalSender) {
                 // ignore the message if the sender is local
-                if (mail.getSender() != null && getMailetContext().isLocalServer(mail.getSender().getDomain())) {
+                if (mail.getSender() != null && getMailetContext().isLocalServer(Domain.of(mail.getSender().getDomain()))) {
                     return;
                 }
             }

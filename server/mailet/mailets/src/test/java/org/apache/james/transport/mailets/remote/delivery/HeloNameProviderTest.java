@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.transport.mailets.remote.delivery.HeloNameProvider;
@@ -54,7 +55,7 @@ public class HeloNameProviderTest {
 
     @Test
     public void getHeloNameShouldReturnDomainListDefaultDomainOnNullHeloName() throws DomainListException {
-        when(domainList.getDefaultDomain()).thenReturn(DOMAIN);
+        when(domainList.getDefaultDomain()).thenReturn(Domain.of(DOMAIN));
         HeloNameProvider heloNameProvider = new HeloNameProvider(null, domainList);
 
         assertThat(heloNameProvider.getHeloName()).isEqualTo(DOMAIN);

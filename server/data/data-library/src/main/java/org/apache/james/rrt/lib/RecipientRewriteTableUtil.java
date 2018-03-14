@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 
@@ -135,7 +136,7 @@ public class RecipientRewriteTableUtil {
 
     /**
      * Returns the real recipient given a virtual username and domain.
-     * 
+     *
      * @param user
      *            the virtual user
      * @param domain
@@ -143,12 +144,12 @@ public class RecipientRewriteTableUtil {
      * @return the real recipient address, or <code>null</code> if no mapping
      *         exists
      */
-    public static String getTargetString(String user, String domain, Map<String, String> mappings) {
+    public static String getTargetString(String user, Domain domain, Map<String, String> mappings) {
         StringBuffer buf;
         String target;
 
         // Look for exact (user@domain) match
-        buf = new StringBuffer().append(user).append("@").append(domain);
+        buf = new StringBuffer().append(user).append("@").append(domain.asString());
         target = mappings.get(buf.toString());
         if (target != null) {
             return target;
@@ -162,7 +163,7 @@ public class RecipientRewriteTableUtil {
         }
 
         // Look for *@domain match
-        buf = new StringBuffer().append("*@").append(domain);
+        buf = new StringBuffer().append("*@").append(domain.asString());
         target = mappings.get(buf.toString());
         if (target != null) {
             return target;

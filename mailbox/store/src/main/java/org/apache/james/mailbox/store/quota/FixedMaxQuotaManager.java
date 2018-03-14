@@ -3,6 +3,7 @@ package org.apache.james.mailbox.store.quota;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedOperationException;
 import org.apache.james.mailbox.model.Quota;
@@ -44,12 +45,12 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDomainMaxMessage(String domain, QuotaCount count) throws MailboxException {
+    public void setDomainMaxMessage(Domain domain, QuotaCount count) throws MailboxException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void setDomainMaxStorage(String domain, QuotaSize size) throws UnsupportedOperationException {
+    public void setDomainMaxStorage(Domain domain, QuotaSize size) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 
@@ -98,12 +99,12 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(String domain) {
+    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(String domain) {
+    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
         return Optional.empty();
     }
 
@@ -112,12 +113,12 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void removeDomainMaxMessage(String domain) throws UnsupportedOperationException {
+    public void removeDomainMaxMessage(Domain domain) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void removeDomainMaxStorage(String domain) throws UnsupportedOperationException {
+    public void removeDomainMaxStorage(Domain domain) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 

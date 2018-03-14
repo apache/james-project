@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -40,10 +41,10 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     private static class InMemoryMappingEntry {
         private final String user;
-        private final String domain;
+        private final Domain domain;
         private final Mapping mapping;
 
-        public InMemoryMappingEntry(String user, String domain, Mapping mapping) {
+        public InMemoryMappingEntry(String user, Domain domain, Mapping mapping) {
             this.user = user;
             this.domain = domain;
             this.mapping = mapping;
@@ -53,7 +54,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
             return user;
         }
 
-        public String getDomain() {
+        public Domain getDomain() {
             return domain;
         }
 
@@ -62,7 +63,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
 
         public String asKey() {
-            return getUser() + "@" + getDomain();
+            return getUser() + "@" + getDomain().asString();
         }
 
         @Override
@@ -91,27 +92,26 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         mappingEntries.add(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         mappingEntries.remove(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException {
         return retrieveMappings(user, domain)
             .orElse(null);
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
         Mappings mappings = retrieveMappings(user, domain)
             .orElse(retrieveMappings(WILDCARD, domain)
-                .orElse(retrieveMappings(user, WILDCARD)
-                    .orElse(MappingsImpl.empty())));
+                .orElse(MappingsImpl.empty()));
 
         return !mappings.isEmpty() ? mappings.serialize() : null;
     }
@@ -136,7 +136,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
             });
     }
 
-    private Optional<Mappings> retrieveMappings(final String user, final String domain) {
+    private Optional<Mappings> retrieveMappings(final String user, final Domain domain) {
         Stream<Mapping> userEntries = mappingEntries.stream()
             .filter(mappingEntry -> user.equals(mappingEntry.getUser()) && domain.equals(mappingEntry.getDomain()))
             .map(InMemoryMappingEntry::getMapping);

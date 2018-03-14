@@ -24,12 +24,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Locale;
 import java.util.Scanner;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -127,7 +127,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             LOGGER.error("Sender is null");
             return;
         }
-        if (!getMailetContext().isLocalServer(mail.getSender().getDomain().toLowerCase(Locale.US))) {
+        if (!getMailetContext().isLocalServer(Domain.of(mail.getSender().getDomain()))) {
             LOGGER.error("Sender not local");
             return;
         }

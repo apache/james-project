@@ -35,6 +35,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -184,9 +185,9 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
-        String fixedDomain = getFixedDomain(domain);
+        Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
@@ -196,7 +197,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         try {
@@ -206,7 +207,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             ResultSet mappingRS = null;
             try {
                 mappingStmt.setString(1, user);
-                mappingStmt.setString(2, domain);
+                mappingStmt.setString(2, domain.asString());
                 mappingRS = mappingStmt.executeQuery();
                 if (mappingRS.next()) {
                     return mappingRS.getString(1);
@@ -226,7 +227,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         try {
@@ -235,7 +236,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             ResultSet mappingRS = null;
             try {
                 mappingStmt.setString(1, user);
-                mappingStmt.setString(2, domain);
+                mappingStmt.setString(2, domain.asString());
                 mappingRS = mappingStmt.executeQuery();
                 if (mappingRS.next()) {
                     return MappingsImpl.fromRawString(mappingRS.getString(1));
@@ -266,9 +267,9 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 mappingRS = mappingStmt.executeQuery();
                 while (mappingRS.next()) {
                     String user = mappingRS.getString(1);
-                    String domain = mappingRS.getString(2);
+                    Domain domain = Domain.of(mappingRS.getString(2));
                     String map = mappingRS.getString(3);
-                    mapping.put(user + "@" + domain, MappingsImpl.fromRawString(map));
+                    mapping.put(user + "@" + domain.asString(), MappingsImpl.fromRawString(map));
                 }
                 if (mapping.size() > 0) {
                     return mapping;
@@ -288,9 +289,9 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
-        String fixedDomain = getFixedDomain(domain);
+        Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
@@ -312,7 +313,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @return true if update was successfully
      * @throws RecipientRewriteTableException
      */
-    private void doUpdateMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doUpdateMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
 
@@ -324,7 +325,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             try {
                 mappingStmt.setString(1, mapping);
                 mappingStmt.setString(2, user);
-                mappingStmt.setString(3, domain);
+                mappingStmt.setString(3, domain.asString());
 
                 if (mappingStmt.executeUpdate() < 1) {
                     throw new RecipientRewriteTableException("Mapping not found");
@@ -354,7 +355,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @return true if succesfully
      * @throws RecipientRewriteTableException
      */
-    private void doRemoveMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doRemoveMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
 
@@ -365,7 +366,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             ResultSet mappingRS = null;
             try {
                 mappingStmt.setString(1, user);
-                mappingStmt.setString(2, domain);
+                mappingStmt.setString(2, domain.asString());
                 mappingStmt.setString(3, mapping);
                 if (mappingStmt.executeUpdate() < 1) {
                     throw new RecipientRewriteTableException("Mapping not found");
@@ -394,7 +395,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @return true if successfully
      * @throws RecipientRewriteTableException
      */
-    private void doAddMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    private void doAddMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
 
@@ -405,7 +406,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             ResultSet mappingRS = null;
             try {
                 mappingStmt.setString(1, user);
-                mappingStmt.setString(2, domain);
+                mappingStmt.setString(2, domain.asString());
                 mappingStmt.setString(3, mapping);
 
                 if (mappingStmt.executeUpdate() < 1) {

@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -72,7 +73,7 @@ public class UserQuotaRoutesTest {
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
         memoryDomainList.setAutoDetect(false);
-        memoryDomainList.addDomain(PERDU_COM);
+        memoryDomainList.addDomain(Domain.of(PERDU_COM));
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(memoryDomainList);
         usersRepository.addUser(BOB.asString(), PASSWORD);
@@ -395,8 +396,8 @@ public class UserQuotaRoutesTest {
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(22));
-        maxQuotaManager.setDomainMaxStorage(PERDU_COM, QuotaSize.size(34));
-        maxQuotaManager.setDomainMaxMessage(PERDU_COM, QuotaCount.count(23));
+        maxQuotaManager.setDomainMaxStorage(Domain.of(PERDU_COM), QuotaSize.size(34));
+        maxQuotaManager.setDomainMaxMessage(Domain.of(PERDU_COM), QuotaCount.count(23));
         maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
@@ -424,7 +425,7 @@ public class UserQuotaRoutesTest {
     public void getQuotaShouldReturnOnlySpecifiedValues() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(18));
-        maxQuotaManager.setDomainMaxMessage(PERDU_COM, QuotaCount.count(52));
+        maxQuotaManager.setDomainMaxMessage(Domain.of(PERDU_COM), QuotaCount.count(52));
 
         JsonPath jsonPath =
             given()

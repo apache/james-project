@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.net.UnknownHostException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -35,12 +36,12 @@ public abstract class AbstractDomainListTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainListTest.class);
 
-    private static final String DOMAIN_1 = "domain1.tld";
-    private static final String DOMAIN_2 = "domain2.tld";
-    private static final String DOMAIN_3 = "domain3.tld";
-    private static final String DOMAIN_4 = "domain4.tld";
-    private static final String DOMAIN_5 = "domain5.tld";
-    private static final String DOMAIN_UPPER_5 = "Domain5.tld";
+    private static final Domain DOMAIN_1 = Domain.of("domain1.tld");
+    private static final Domain DOMAIN_2 = Domain.of("domain2.tld");
+    private static final Domain DOMAIN_3 = Domain.of("domain3.tld");
+    private static final Domain DOMAIN_4 = Domain.of("domain4.tld");
+    private static final Domain DOMAIN_5 = Domain.of("domain5.tld");
+    private static final Domain DOMAIN_UPPER_5 = Domain.of("Domain5.tld");
 
     private DomainList domainList;
 

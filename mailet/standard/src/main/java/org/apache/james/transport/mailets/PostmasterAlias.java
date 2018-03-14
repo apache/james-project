@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -66,7 +67,7 @@ public class PostmasterAlias extends GenericMailet {
 
     private boolean isPostmasterAlias(MailAddress addr) {
         return addr.getLocalPart().equalsIgnoreCase("postmaster")
-            && getMailetContext().isLocalServer(addr.getDomain())
+            && getMailetContext().isLocalServer(Domain.of(addr.getDomain()))
             && !getMailetContext().isLocalEmail(addr);
     }
 

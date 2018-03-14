@@ -19,6 +19,7 @@
 package org.apache.james.rrt.hbase;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -57,7 +58,7 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void addMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
+    protected void addMapping(String user, Domain domain, String mapping, int type) throws RecipientRewriteTableException {
         switch (type) {
         case ERROR_TYPE:
             virtualUserTable.addErrorMapping(user, domain, mapping);
@@ -69,7 +70,7 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
             virtualUserTable.addAddressMapping(user, domain, mapping);
             break;
         case ALIASDOMAIN_TYPE:
-            virtualUserTable.addAliasDomainMapping(domain, mapping);
+            virtualUserTable.addAliasDomainMapping(domain, Domain.of(mapping));
             break;
         default:
             throw new RuntimeException("Invalid mapping type: " + type);
@@ -77,7 +78,7 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void removeMapping(String user, String domain, String mapping, int type) throws RecipientRewriteTableException {
+    protected void removeMapping(String user, Domain domain, String mapping, int type) throws RecipientRewriteTableException {
         switch (type) {
         case ERROR_TYPE:
             virtualUserTable.removeErrorMapping(user, domain, mapping);
@@ -89,7 +90,7 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
             virtualUserTable.removeAddressMapping(user, domain, mapping);
             break;
         case ALIASDOMAIN_TYPE:
-            virtualUserTable.removeAliasDomainMapping(domain, mapping);
+            virtualUserTable.removeAliasDomainMapping(domain, Domain.of(mapping));
             break;
         default:
             throw new RuntimeException("Invalid mapping type: " + type);

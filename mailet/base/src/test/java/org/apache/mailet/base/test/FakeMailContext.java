@@ -34,6 +34,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.LookupException;
@@ -415,8 +416,8 @@ public class FakeMailContext implements MailetContext {
     }
 
     @Override
-    public boolean isLocalServer(String serverName) {
-        return serverName.equals("localhost");  // trivial implementation
+    public boolean isLocalServer(Domain domain) {
+        return domain.equals(Domain.of("localhost"));
     }
 
     /**

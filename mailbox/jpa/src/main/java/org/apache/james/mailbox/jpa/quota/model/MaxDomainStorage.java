@@ -24,6 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.apache.james.core.Domain;
+
 @Entity(name = "MaxDomainStorage")
 @Table(name = "JAMES_MAX_DOMAIN_STORAGE")
 public class MaxDomainStorage {
@@ -35,8 +37,8 @@ public class MaxDomainStorage {
     @Column(name = "VALUE", nullable = true)
     private Long value;
 
-    public MaxDomainStorage(String domain, Long value) {
-        this.domain = domain;
+    public MaxDomainStorage(Domain domain, Long value) {
+        this.domain = domain.asString();
         this.value = value;
     }
 

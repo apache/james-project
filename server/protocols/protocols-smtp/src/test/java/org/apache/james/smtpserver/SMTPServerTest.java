@@ -43,6 +43,7 @@ import org.apache.commons.net.ProtocolCommandEvent;
 import org.apache.commons.net.ProtocolCommandListener;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -233,7 +234,7 @@ public class SMTPServerTest {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
         MemoryDomainList domainList = new MemoryDomainList(mock(DNSService.class));
-        domainList.addDomain("localhost");
+        domainList.addDomain(Domain.of("localhost"));
         chain.put("domainlist", DomainList.class, domainList);
         
     }

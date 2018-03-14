@@ -36,6 +36,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
@@ -93,33 +94,33 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         executor.executeVoid(insertStatement.bind()
             .setString(USER, getFixedUser(user))
-            .setString(DOMAIN, getFixedDomain(domain))
+            .setString(DOMAIN, getFixedDomain(domain).asString())
             .setString(MAPPING, mapping.asString()))
             .join();
     }
 
     @Override
-    protected void removeMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
+    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         executor.executeVoid(deleteStatement.bind()
                 .setString(USER, getFixedUser(user))
-                .setString(DOMAIN, getFixedDomain(domain))
+                .setString(DOMAIN, getFixedDomain(domain).asString())
                 .setString(MAPPING, mapping.asString()))
             .join();
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException {
         return retrieveMappings(user, domain)
             .orElse(null);
     }
 
-    private Optional<Mappings> retrieveMappings(String user, String domain) {
+    private Optional<Mappings> retrieveMappings(String user, Domain domain) {
         List<String> mappings = executor.execute(retrieveMappingStatement.bind()
             .setString(USER, getFixedUser(user))
-            .setString(DOMAIN, getFixedDomain(domain)))
+            .setString(DOMAIN, getFixedDomain(domain).asString()))
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(row -> row.getString(MAPPING))
                 .collect(Guavate.toImmutableList()))
@@ -132,7 +133,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         Map<String, Mappings> map = executor.execute(retrieveAllMappingsStatement.bind())
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> new UserMapping(row.getString(USER), row.getString(DOMAIN), row.getString(MAPPING)))
+                .map(row -> new UserMapping(row.getString(USER), Domain.of(row.getString(DOMAIN)), row.getString(MAPPING)))
                 .collect(Guavate.toImmutableMap(
                     UserMapping::asKey,
                     UserMapping::toMapping,
@@ -144,10 +145,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     private static class UserMapping {
 
         private final String user;
-        private final String domain;
+        private final Domain domain;
         private final String mapping;
 
-        public UserMapping(String user, String domain, String mapping) {
+        public UserMapping(String user, Domain domain, String mapping) {
             this.user = user;
             this.domain = domain;
             this.mapping = mapping;
@@ -157,7 +158,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             return user;
         }
 
-        public String getDomain() {
+        public Domain getDomain() {
             return domain;
         }
 
@@ -175,11 +176,10 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
+    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
         Mappings mappings = retrieveMappings(user, domain)
             .orElseGet(() -> retrieveMappings(WILDCARD, domain)
-                .orElseGet(() -> retrieveMappings(user, WILDCARD)
-                    .orElseGet(() -> MappingsImpl.empty())));
+                .orElseGet(MappingsImpl::empty));
 
         return !mappings.isEmpty() ? mappings.serialize() : null;
     }

@@ -26,6 +26,7 @@ import java.util.Map;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.mailet.Experimental;
@@ -103,7 +104,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
         for (MailAddress source : recipients) {
             String user = source.getLocalPart().toLowerCase(Locale.US);
-            String domain = source.getDomain().toLowerCase(Locale.US);
+            Domain domain = Domain.of(source.getDomain());
 
             String targetString = RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
 

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mappings;
@@ -118,7 +119,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getMappings(String username, String domain) throws ErrorMappingException, RecipientRewriteTableException {
+    public Mappings getMappings(String username, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
         Builder mappingsBuilder = MappingsImpl.builder();
         try {
             User user = getUserByName(username);
@@ -129,7 +130,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                 if (enableAliases && jUser.getAliasing()) {
                     String alias = jUser.getAlias();
                     if (alias != null) {
-                        mappingsBuilder.add(alias + "@" + domain);
+                        mappingsBuilder.add(alias + "@" + domain.asString());
                     }
                 }
 
@@ -179,13 +180,13 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                     String user = users.next();
                     int index = user.indexOf("@");
                     String username;
-                    String domain;
+                    Domain domain;
                     if (index != -1) {
                         username = user.substring(0, index);
-                        domain = user.substring(index + 1, user.length());
+                        domain = Domain.of(user.substring(index + 1, user.length()));
                     } else {
                         username = user;
-                        domain = "localhost";
+                        domain = Domain.of("localhost");
                     }
                     try {
                         mappings.put(user, getMappings(username, domain));
@@ -202,65 +203,65 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException {
         return MappingsImpl.empty();
     }
 
     @Override
-    public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
+    public void addRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 
     @Override
-    public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
-        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
-
-    }
-
-    @Override
-    public void addAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+    public void removeRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+    public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
+    public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
+    public void addErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    public void removeErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+    public void addMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
+    public void removeMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
+    public void addAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+
+    }
+
+    @Override
+    public void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }

@@ -21,7 +21,6 @@ package org.apache.james.domainlist.hbase;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
@@ -33,6 +32,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.hbase.def.HDomainList;
@@ -57,11 +57,11 @@ public class HBaseDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected boolean containsDomainInternal(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Get get = new Get(Bytes.toBytes(domain.toLowerCase(Locale.US)));
+            Get get = new Get(Bytes.toBytes(domain.asString()));
             Result result = table.get(get);
             if (!result.isEmpty()) {
                 return true;
@@ -82,15 +82,14 @@ public class HBaseDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
-        String lowerCasedDomain = domain.toLowerCase(Locale.US);
-        if (containsDomain(lowerCasedDomain)) {
-            throw new DomainListException(lowerCasedDomain + " already exists.");
+    public void addDomain(Domain domain) throws DomainListException {
+        if (containsDomain(domain)) {
+            throw new DomainListException(domain + " already exists.");
         }
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Put put = new Put(Bytes.toBytes(lowerCasedDomain));
+            Put put = new Put(Bytes.toBytes(domain.asString()));
             put.add(HDomainList.COLUMN_FAMILY_NAME, HDomainList.COLUMN.DOMAIN, null);
             table.put(put);
             table.flushCommits();
@@ -109,11 +108,11 @@ public class HBaseDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         HTableInterface table = null;
         try {
             table = TablePool.getInstance().getDomainlistTable();
-            Delete delete = new Delete(Bytes.toBytes(domain.toLowerCase(Locale.US)));
+            Delete delete = new Delete(Bytes.toBytes(domain.asString()));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {
@@ -131,8 +130,8 @@ public class HBaseDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected List<String> getDomainListInternal() throws DomainListException {
-        List<String> list = new ArrayList<>();
+    protected List<Domain> getDomainListInternal() throws DomainListException {
+        List<Domain> list = new ArrayList<>();
         HTableInterface table = null;
         ResultScanner resultScanner = null;
         try {
@@ -143,7 +142,7 @@ public class HBaseDomainList extends AbstractDomainList {
             resultScanner = table.getScanner(scan);
             Result result;
             while ((result = resultScanner.next()) != null) {
-                list.add(Bytes.toString(result.getRow()));
+                list.add(Domain.of(Bytes.toString(result.getRow())));
             }
         } catch (IOException e) {
             log.error("Error while counting domains from HBase", e);

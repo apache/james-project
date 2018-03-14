@@ -34,6 +34,7 @@ import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -50,7 +51,6 @@ import org.junit.runner.RunWith;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
-
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
@@ -260,13 +260,13 @@ public class DomainsRoutesTest {
     public class ExceptionHandling {
 
         private DomainList domainList;
-        private String domain;
+        private Domain domain;
 
         @Before
         public void setUp() throws Exception {
             domainList = mock(DomainList.class);
             createServer(domainList);
-            domain = "domain";
+            domain = Domain.of("domain");
         }
 
         @Test

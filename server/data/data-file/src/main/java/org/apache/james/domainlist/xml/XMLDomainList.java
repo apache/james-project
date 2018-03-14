@@ -21,13 +21,13 @@ package org.apache.james.domainlist.xml;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
@@ -39,7 +39,7 @@ import org.apache.james.lifecycle.api.Configurable;
 @Singleton
 public class XMLDomainList extends AbstractDomainList implements Configurable {
 
-    private final List<String> domainNames = new ArrayList<>();
+    private final List<Domain> domainNames = new ArrayList<>();
     private boolean isConfigured = false;
 
     @Inject
@@ -54,17 +54,17 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    protected List<String> getDomainListInternal() {
+    protected List<Domain> getDomainListInternal() {
         return new ArrayList<>(domainNames);
     }
 
     @Override
-    protected boolean containsDomainInternal(String domains) throws DomainListException {
-        return domainNames.contains(domains.toLowerCase(Locale.US));
+    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+        return domainNames.contains(domain);
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
+    public void addDomain(Domain domain) throws DomainListException {
         if (isConfigured) {
             throw new DomainListException("Read-Only DomainList implementation");
         }
@@ -72,7 +72,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         if (isConfigured) {
             throw new DomainListException("Read-Only DomainList implementation");
         }

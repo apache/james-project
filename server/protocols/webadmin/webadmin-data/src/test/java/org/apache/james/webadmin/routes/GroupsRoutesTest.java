@@ -26,6 +26,7 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.mock;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -57,21 +59,20 @@ import org.mockito.Mockito;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.filter.log.LogDetail;
 import com.jayway.restassured.http.ContentType;
-
 import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
 @RunWith(HierarchicalContextRunner.class)
 public class GroupsRoutesTest {
 
-    private static final String DOMAIN = "b.com";
-    private static final String GROUP1 = "group1" + "@" + DOMAIN;
-    private static final String GROUP2 = "group2" + "@" + DOMAIN;
-    private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN;
-    private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN;
-    private static final String USER_A = "a" + "@" + DOMAIN;
-    private static final String USER_B = "b" + "@" + DOMAIN;
-    private static final String USER_WITH_SLASH = "user/@" + DOMAIN;
-    private static final String USER_WITH_ENCODED_SLASH = "user%2F@" + DOMAIN;
+    private static final Domain DOMAIN = Domain.of("b.com");
+    private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
+    private static final String GROUP2 = "group2" + "@" + DOMAIN.name();
+    private static final String GROUP_WITH_SLASH = "group10/10" + "@" + DOMAIN.name();
+    private static final String GROUP_WITH_ENCODED_SLASH = "group10%2F10" + "@" + DOMAIN.name();
+    private static final String USER_A = "a" + "@" + DOMAIN.name();
+    private static final String USER_B = "b" + "@" + DOMAIN.name();
+    private static final String USER_WITH_SLASH = "user/@" + DOMAIN.name();
+    private static final String USER_WITH_ENCODED_SLASH = "user%2F@" + DOMAIN.name();
 
     private WebAdminServer webAdminServer;
 
@@ -372,7 +373,7 @@ public class GroupsRoutesTest {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping("error", DOMAIN, "disabled");
             memoryRecipientRewriteTable.addRegexMapping("regex", DOMAIN, ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping("alias", DOMAIN);
+            memoryRecipientRewriteTable.addAliasDomainMapping(Domain.of("alias"), DOMAIN);
 
         }
 
@@ -387,7 +388,7 @@ public class GroupsRoutesTest {
             memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
             UsersRepository userRepository = mock(UsersRepository.class);
             DomainList domainList = mock(DomainList.class);
-            Mockito.when(domainList.containsDomain(anyString())).thenReturn(true);
+            Mockito.when(domainList.containsDomain(any())).thenReturn(true);
             createServer(new GroupsRoutes(memoryRecipientRewriteTable, userRepository, domainList, new JsonTransformer()));
         }
 
@@ -526,7 +527,7 @@ public class GroupsRoutesTest {
         public void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
+                .addAddressMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -539,7 +540,7 @@ public class GroupsRoutesTest {
         public void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
+                .addAddressMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -552,7 +553,7 @@ public class GroupsRoutesTest {
         public void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), anyString(), anyString());
+                .addAddressMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -604,7 +605,7 @@ public class GroupsRoutesTest {
         public void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
+                .removeAddressMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -617,7 +618,7 @@ public class GroupsRoutesTest {
         public void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
+                .removeAddressMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -630,7 +631,7 @@ public class GroupsRoutesTest {
         public void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), anyString(), anyString());
+                .removeAddressMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -643,7 +644,7 @@ public class GroupsRoutesTest {
         public void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
+                .getMappings(anyString(), any());
 
             when()
                 .get(GROUP1)
@@ -656,7 +657,7 @@ public class GroupsRoutesTest {
         public void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
+                .getMappings(anyString(), any());
 
             when()
                 .get(GROUP1)
@@ -669,7 +670,7 @@ public class GroupsRoutesTest {
         public void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), anyString());
+                .getMappings(anyString(), any());
 
             when()
                 .get(GROUP1)

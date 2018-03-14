@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
@@ -57,8 +58,8 @@ import de.bechte.junit.runners.context.HierarchicalContextRunner;
 @RunWith(HierarchicalContextRunner.class)
 public class UsersRoutesTest {
 
-    public static final String DOMAIN = "domain";
-    public static final String USERNAME = "username@" + DOMAIN;
+    public static final Domain DOMAIN = Domain.of("domain");
+    public static final String USERNAME = "username@" + DOMAIN.name();
     private WebAdminServer webAdminServer;
 
     private void createServer(UsersRepository usersRepository) throws Exception {

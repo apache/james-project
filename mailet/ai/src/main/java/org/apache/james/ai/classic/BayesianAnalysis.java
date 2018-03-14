@@ -32,6 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -343,7 +344,7 @@ public class BayesianAnalysis extends GenericMailet {
     }
 
     private boolean isSenderLocal(Mail mail) {
-        return mail.getSender() != null && getMailetContext().isLocalServer(mail.getSender().getDomain());
+        return mail.getSender() != null && getMailetContext().isLocalServer(Domain.of(mail.getSender().getDomain()));
     }
 
     void loadData(Connection conn) throws java.sql.SQLException {

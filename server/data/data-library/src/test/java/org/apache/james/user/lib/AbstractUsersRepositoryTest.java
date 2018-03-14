@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -36,7 +37,7 @@ import org.junit.Test;
 
 public abstract class AbstractUsersRepositoryTest {
 
-    private static final String DOMAIN = "domain"; 
+    private static final Domain DOMAIN = Domain.of("domain");
 
     protected AbstractUsersRepository usersRepository; 
 
@@ -70,7 +71,7 @@ public abstract class AbstractUsersRepositoryTest {
     
     private String login(String login) throws UsersRepositoryException {
         if (usersRepository.supportVirtualHosting()) {
-            return login + '@' + DOMAIN;
+            return login + '@' + DOMAIN.name();
         } else {
             return login;
         }

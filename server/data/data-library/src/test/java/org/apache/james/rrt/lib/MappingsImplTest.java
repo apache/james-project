@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.junit.Test;
 
 
@@ -111,7 +112,7 @@ public class MappingsImplTest {
     @Test
     public void fromRawStringShouldNotUseColonDelimiterWhenValueStartsWithDomain() {
         MappingsImpl actual = MappingsImpl.fromRawString("domain:test");
-        assertThat(actual).containsExactly(MappingImpl.domain("test"));
+        assertThat(actual).containsExactly(MappingImpl.domain(Domain.of("test")));
     }
     
 
@@ -160,11 +161,11 @@ public class MappingsImplTest {
     @Test
     public void selectShouldReturnMatchingElementsInOrderWhenMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .add(MappingImpl.regex("tata"))
-                .build();
+            .add(MappingImpl.regex("toto"))
+            .add(MappingImpl.address("toto"))
+            .add(MappingImpl.domain(Domain.of("domain")))
+            .add(MappingImpl.regex("tata"))
+            .build();
         MappingsImpl expected = MappingsImpl.builder()
                 .add(MappingImpl.regex("toto"))
                 .add(MappingImpl.regex("tata"))
@@ -192,15 +193,15 @@ public class MappingsImplTest {
     @Test
     public void excludeShouldReturnNonMatchingElementsInOrderWhenNonMatchingMapping() {
         MappingsImpl mappings = MappingsImpl.builder()
-                .add(MappingImpl.regex("toto"))
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .add(MappingImpl.regex("tata"))
-                .build();
+            .add(MappingImpl.regex("toto"))
+            .add(MappingImpl.address("toto"))
+            .add(MappingImpl.domain(Domain.of("domain")))
+            .add(MappingImpl.regex("tata"))
+            .build();
         MappingsImpl expected = MappingsImpl.builder()
-                .add(MappingImpl.address("toto")) 
-                .add(MappingImpl.domain("domain"))
-                .build();
+            .add(MappingImpl.address("toto"))
+            .add(MappingImpl.domain(Domain.of("domain")))
+            .build();
         assertThat(mappings.exclude(Mapping.Type.Regex)).isEqualTo(expected);
     }
     

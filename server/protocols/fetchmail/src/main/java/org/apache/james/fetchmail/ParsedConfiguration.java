@@ -28,6 +28,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -780,7 +781,7 @@ class ParsedConfiguration {
      */
     protected void validateDefaultDomainName(String defaultDomainName) throws ConfigurationException {
         try {
-            if (!getDomainList().containsDomain(defaultDomainName)) {
+            if (!getDomainList().containsDomain(Domain.of(defaultDomainName))) {
                 throw new ConfigurationException("Default domain name is not a local server: " + defaultDomainName);
             }
         } catch (DomainListException e) {

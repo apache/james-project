@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
@@ -51,7 +52,7 @@ public class DomainQuotaRoutesTest {
 
     private static final String QUOTA_DOMAINS = "/quota/domains";
     private static final String PERDU_COM = "perdu.com";
-    private static final String TROUVÉ_COM = "trouvé.com";
+    private static final Domain TROUVÉ_COM = Domain.of("trouvé.com");
     private static final String COUNT = "count";
     private static final String SIZE = "size";
     private WebAdminServer webAdminServer;
@@ -60,14 +61,14 @@ public class DomainQuotaRoutesTest {
     @Before
     public void setUp() throws Exception {
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService());
-        domainList.setAutoDetect(false);
-        domainList.setAutoDetectIP(false);
-        domainList.addDomain(TROUVÉ_COM);
+        MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
+        memoryDomainList.setAutoDetect(false);
+        memoryDomainList.setAutoDetectIP(false);
+        memoryDomainList.addDomain(TROUVÉ_COM);
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
-        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(domainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
+        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
             domainQuotaRoutes);
@@ -95,7 +96,7 @@ public class DomainQuotaRoutesTest {
     @Test
     public void getCountShouldReturnNoContentByDefault() {
         given()
-            .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -107,7 +108,7 @@ public class DomainQuotaRoutesTest {
 
         Long actual =
             given()
-                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -131,7 +132,7 @@ public class DomainQuotaRoutesTest {
     public void putCountShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -152,7 +153,7 @@ public class DomainQuotaRoutesTest {
         given()
             .body("-1")
         .when()
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -163,7 +164,7 @@ public class DomainQuotaRoutesTest {
     public void putCountShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -182,7 +183,7 @@ public class DomainQuotaRoutesTest {
     public void putCountShouldAcceptValidValue() {
         given()
             .body("42")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -202,7 +203,7 @@ public class DomainQuotaRoutesTest {
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(42));
 
         given()
-            .delete(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + COUNT)
+            .delete(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -220,7 +221,7 @@ public class DomainQuotaRoutesTest {
     @Test
     public void getSizeShouldReturnNoContentByDefault() {
         when()
-            .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -233,7 +234,7 @@ public class DomainQuotaRoutesTest {
 
         long quota =
             given()
-                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -247,7 +248,7 @@ public class DomainQuotaRoutesTest {
     public void putSizeShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -278,7 +279,7 @@ public class DomainQuotaRoutesTest {
         given()
             .body("-1")
         .when()
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -289,7 +290,7 @@ public class DomainQuotaRoutesTest {
     public void putSizeShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -309,7 +310,7 @@ public class DomainQuotaRoutesTest {
         given()
             .body("42")
         .when()
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -329,7 +330,7 @@ public class DomainQuotaRoutesTest {
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
 
         given()
-            .delete(QUOTA_DOMAINS + "/" + TROUVÉ_COM + "/" + SIZE)
+            .delete(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -348,7 +349,7 @@ public class DomainQuotaRoutesTest {
     public void getQuotaShouldReturnBothEmptyWhenDefaultValues() {
         JsonPath jsonPath =
             given()
-                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM)
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -366,7 +367,7 @@ public class DomainQuotaRoutesTest {
 
         JsonPath jsonPath =
             given()
-                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM)
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -385,7 +386,7 @@ public class DomainQuotaRoutesTest {
 
         JsonPath jsonPath =
             given()
-                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM)
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -408,7 +409,7 @@ public class DomainQuotaRoutesTest {
     public void putQuotaShouldUpdateBothQuota() {
         given()
             .body("{\"count\":52,\"size\":42}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -420,7 +421,7 @@ public class DomainQuotaRoutesTest {
     public void putQuotaShouldBeAbleToRemoveBothQuota() {
         given()
             .body("{\"count\":null,\"count\":null}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM)
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 

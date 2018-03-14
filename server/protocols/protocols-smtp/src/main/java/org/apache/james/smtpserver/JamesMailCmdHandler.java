@@ -42,7 +42,7 @@ public class JamesMailCmdHandler extends MailCmdHandler {
     @Override
     public String getDefaultDomain() {
         try {
-            return domainList.getDefaultDomain();
+            return domainList.getDefaultDomain().name();
         } catch (DomainListException e) {
             return super.getDefaultDomain();
         }

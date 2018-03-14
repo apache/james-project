@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -73,7 +74,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
             if (i == -1) {
                 throw new UsersRepositoryException("Given Username needs to contain a @domainpart");
             } else {
-                String domain = username.substring(i + 1);
+                Domain domain = Domain.of(username.substring(i + 1));
                 try {
                     if (!domainList.containsDomain(domain)) {
                         throw new UsersRepositoryException("Domain does not exist in DomainList");

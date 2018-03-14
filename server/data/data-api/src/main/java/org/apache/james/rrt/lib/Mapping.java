@@ -20,6 +20,7 @@
 
 package org.apache.james.rrt.lib;
 
+import org.apache.james.core.Domain;
 
 public interface Mapping {
 
@@ -33,7 +34,7 @@ public interface Mapping {
 
     boolean hasDomain();
 
-    Mapping appendDomain(String domain);
+    Mapping appendDomain(Domain domain);
 
     String getErrorMessage();
 

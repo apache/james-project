@@ -16,45 +16,55 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.domainlist.jpa;
 
-import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.core.Domain;
-import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.jpa.model.JPADomain;
-import org.apache.james.domainlist.lib.AbstractDomainListTest;
-import org.junit.After;
-import org.junit.Before;
+package org.apache.james.core;
 
-/**
- * Test the JPA implementation of the DomainList.
- */
-public class JPADomainListTest extends AbstractDomainListTest {
+import java.util.Locale;
+import java.util.Objects;
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
+import com.google.common.base.Preconditions;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
+public class Domain {
+
+    public static Domain of(String domain) {
+        Preconditions.checkNotNull(domain);
+        Preconditions.checkArgument(!domain.isEmpty() && !domain.contains("@"));
+        return new Domain(domain);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        DomainList domainList = createDomainList();
-        for (Domain domain: domainList.getDomains()) {
-            domainList.removeDomain(domain);
+    private final String domainName;
+    private final String normalizedDomainName;
+
+    protected Domain(String domainName) {
+        this.domainName = domainName;
+        this.normalizedDomainName = domainName.toLowerCase(Locale.US);
+    }
+
+    public String name() {
+        return domainName;
+    }
+
+    public String asString() {
+        return normalizedDomainName;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Domain) {
+            Domain domain = (Domain) o;
+            return Objects.equals(normalizedDomainName, domain.normalizedDomainName);
         }
+        return false;
     }
 
     @Override
-    protected DomainList createDomainList() throws Exception {
-        JPADomainList jpaDomainList = new JPADomainList(getDNSServer("localhost"),
-            JPA_TEST_CLUSTER.getEntityManagerFactory());
-        jpaDomainList.setAutoDetect(false);
-        jpaDomainList.setAutoDetectIP(false);
-        
-        return jpaDomainList;
+    public final int hashCode() {
+        return Objects.hash(normalizedDomainName);
+    }
+
+    @Override
+    public String toString() {
+        return "Domain : " + domainName;
     }
 
 }

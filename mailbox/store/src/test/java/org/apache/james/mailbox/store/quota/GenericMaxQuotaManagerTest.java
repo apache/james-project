@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.core.Domain;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -33,7 +34,7 @@ import org.junit.Test;
 
 public abstract class GenericMaxQuotaManagerTest {
 
-    public static final String DOMAIN = "domain";
+    public static final Domain DOMAIN = Domain.of("domain");
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa@domain", Optional.of(DOMAIN));
     private MaxQuotaManager maxQuotaManager;
 

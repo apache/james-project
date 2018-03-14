@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
@@ -52,9 +53,9 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.collect.ImmutableList;
 
 public class JamesMailetContextTest {
-    public static final String DOMAIN_COM = "domain.com";
+    public static final Domain DOMAIN_COM = Domain.of("domain.com");
     public static final String USERNAME = "user";
-    public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM;
+    public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM.name();
     public static final String PASSWORD = "password";
     public static final DNSService DNS_SERVICE = null;
 
@@ -117,7 +118,7 @@ public class JamesMailetContextTest {
     public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         when(configuration.getString(eq("defaultDomain"), any(String.class)))
-            .thenReturn(DOMAIN_COM);
+            .thenReturn(DOMAIN_COM.name());
 
         domainList.configure(configuration);
         usersRepository.addUser(USERMAIL, PASSWORD);

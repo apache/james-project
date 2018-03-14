@@ -28,8 +28,10 @@ import static org.mockito.Mockito.when;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.junit.Before;
@@ -52,7 +54,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
     private static class MyDomainList extends AbstractDomainList {
 
-        private List<String> domains;
+        private List<Domain> domains;
 
         public MyDomainList(DNSService dns, EnvDetector envDetector) {
             super(dns, envDetector);
@@ -60,22 +62,22 @@ public class AbstractDomainListPrivateMethodsTest {
         }
 
         @Override
-        protected boolean containsDomainInternal(String domain) throws DomainListException {
+        protected boolean containsDomainInternal(Domain domain) throws DomainListException {
             return domains.contains(domain);
         }
 
         @Override
-        public void addDomain(String domain) throws DomainListException {
+        public void addDomain(Domain domain) throws DomainListException {
             domains.add(domain);
         }
 
         @Override
-        public void removeDomain(String domain) throws DomainListException {
+        public void removeDomain(Domain domain) throws DomainListException {
             domains.remove(domain);
         }
 
         @Override
-        protected List<String> getDomainListInternal() throws DomainListException {
+        protected List<Domain> getDomainListInternal() throws DomainListException {
             return domains;
         }
     }
@@ -110,7 +112,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
             .thenReturn(AbstractDomainList.LOCALHOST);
 
-        String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
+        Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(configuration);
 
         assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
@@ -122,7 +124,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
             .thenReturn(AbstractDomainList.LOCALHOST);
 
-        String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
+        Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(configuration);
         domainList.configureDefaultDomain(configuration);
 
@@ -138,7 +140,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
         domainList.configureDefaultDomain(configuration);
 
-        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
+        assertThat(domainList.getDomainListInternal()).contains(Domain.of(expectedDefaultDomain));
     }
 
     @Test
@@ -148,10 +150,10 @@ public class AbstractDomainListPrivateMethodsTest {
         when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
             .thenReturn(expectedDefaultDomain);
 
-        domainList.addDomain(expectedDefaultDomain);
+        domainList.addDomain(Domain.of(expectedDefaultDomain));
         domainList.configureDefaultDomain(configuration);
 
-        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
+        assertThat(domainList.getDomainListInternal()).contains(Domain.of(expectedDefaultDomain));
     }
 
     @Test
@@ -188,7 +190,7 @@ public class AbstractDomainListPrivateMethodsTest {
         String detected = "detected.tld";
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
-        assertThat(domainList.getDomains()).containsOnly(detected);
+        assertThat(domainList.getDomains()).containsOnly(Domain.of(detected));
     }
 
     @Test
@@ -206,7 +208,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
         when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress));
 
-        assertThat(domainList.getDomains()).containsOnly(detected, detectedIp);
+        assertThat(domainList.getDomains()).containsOnly(Domain.of(detected), Domain.of(detectedIp));
     }
 
     @Test
@@ -228,9 +230,11 @@ public class AbstractDomainListPrivateMethodsTest {
         when(detectedAddress2.getHostAddress()).thenReturn(detectedIp2);
         when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress1));
         when(dnsService.getAllByName(added)).thenReturn(ImmutableList.of(detectedAddress2));
-        domainList.addDomain(added);
+        domainList.addDomain(Domain.of(added));
 
-        assertThat(domainList.getDomains()).containsOnly(detected, detectedIp1, added, detectedIp2);
+        assertThat(domainList.getDomains())
+            .extracting(Domain::name)
+            .containsOnly(detected, detectedIp1, added, detectedIp2);
     }
 
     @Test
@@ -239,7 +243,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        String domain = "added.tld";
+        Domain domain = Domain.of("added.tld");
         domainList.addDomain(domain);
         domainList.configure(configuration);
 
@@ -255,7 +259,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
         when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress));
 
-        assertThat(domainList.containsDomain(detectedIp)).isTrue();
+        assertThat(domainList.containsDomain(Domain.of(detectedIp))).isTrue();
     }
 
     @Test
@@ -264,7 +268,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        String domain = "added.tld";
+        Domain domain = Domain.of("added.tld");
         domainList.addDomain(domain);
         domainList.configure(configuration);
 
@@ -277,7 +281,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        String domain = "added.tld";
+        Domain domain = Domain.of("added.tld");
         domainList.configure(configuration);
 
         assertThat(domainList.containsDomain(domain)).isFalse();
@@ -290,7 +294,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
         domainList.configure(configuration);
-        domainList.containsDomain("added.tld");
+        domainList.containsDomain(Domain.of("added.tld"));
 
         verifyZeroInteractions(dnsService);
     }
@@ -306,7 +310,7 @@ public class AbstractDomainListPrivateMethodsTest {
         String detected = "detected.tld";
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
-        assertThat(domainList.containsDomain(detected)).isTrue();
+        assertThat(domainList.containsDomain(Domain.of(detected))).isTrue();
     }
 
     @Test
@@ -319,7 +323,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
         domainList.configure(configuration);
 
-        assertThat(domainList.containsDomain(envDomain)).isTrue();
+        assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }
 
     @Test
@@ -333,7 +337,7 @@ public class AbstractDomainListPrivateMethodsTest {
         domainList.configure(configuration);
 
         assertThat(domainList.getDomains())
-            .containsOnlyElementsOf(Arrays.asList(configuredDomain));
+            .containsOnlyElementsOf(Arrays.stream(configuredDomain).map(Domain::of).collect(Collectors.toList()));
     }
 
 }

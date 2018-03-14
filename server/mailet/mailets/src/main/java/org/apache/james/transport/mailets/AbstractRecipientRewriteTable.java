@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.ParseException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -126,7 +127,8 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
                         }
 
                         try {
-                            MailAddress target = (targetAddress.indexOf('@') < 0) ? new MailAddress(targetAddress, domainList.getDefaultDomain()) : new MailAddress(targetAddress);
+                            MailAddress target = (targetAddress.indexOf('@') < 0) ?
+                                new MailAddress(targetAddress, domainList.getDefaultDomain().asString()) : new MailAddress(targetAddress);
 
                             // Mark this source address as an address to remove
                             // from the recipient list
@@ -134,7 +136,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
 
                             // We need to separate local and remote
                             // recipients. This is explained below.
-                            if (getMailetContext().isLocalServer(target.getDomain())) {
+                            if (getMailetContext().isLocalServer(Domain.of(target.getDomain()))) {
                                 recipientsToAddLocal.add(target);
                             } else {
                                 recipientsToAddForward.add(target);

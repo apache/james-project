@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -73,7 +74,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     }
 
     @Override
-    protected boolean isLocalDomain(String domain) {
+    protected boolean isLocalDomain(Domain domain) {
         try {
             return domains.containsDomain(domain);
         } catch (DomainListException e) {

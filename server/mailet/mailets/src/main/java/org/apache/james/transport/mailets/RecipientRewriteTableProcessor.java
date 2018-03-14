@@ -29,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -117,7 +118,7 @@ public class RecipientRewriteTableProcessor {
 
     private RrtExecutionResult getRrtExecutionResult(Mail mail, MailAddress recipient) {
         try {
-            Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), Domain.of(recipient.getDomain()));
 
             if (mappings != null) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
@@ -154,7 +155,7 @@ public class RecipientRewriteTableProcessor {
 
     private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
         return mailAddresses.stream()
-            .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
+            .filter(mailAddress -> mailetContext.isLocalServer(Domain.of(mailAddress.getDomain())))
             .collect(Guavate.toImmutableList());
     }
 
@@ -172,7 +173,7 @@ public class RecipientRewriteTableProcessor {
             .collect(Guavate.toImmutableList());
         
         if (!addressWithoutDomains.isEmpty()) {
-            final String defaultDomain = getDefaultDomain(domainList);
+            final Domain defaultDomain = getDefaultDomain(domainList);
 
             return addressWithoutDomains.stream()
                 .map(address -> address.appendDomain(defaultDomain))
@@ -183,7 +184,7 @@ public class RecipientRewriteTableProcessor {
 
     private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) throws MessagingException {
         ImmutableList<MailAddress> remoteAddress = mailAddresses.stream()
-            .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
+            .filter(mailAddress -> !mailetContext.isLocalServer(Domain.of(mailAddress.getDomain())))
             .collect(Guavate.toImmutableList());
 
         if (!remoteAddress.isEmpty()) {
@@ -196,7 +197,7 @@ public class RecipientRewriteTableProcessor {
         }
     }
 
-    private String getDefaultDomain(DomainList domainList) throws MessagingException {
+    private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
         try {
             return domainList.getDefaultDomain();
         } catch (DomainListException e) {

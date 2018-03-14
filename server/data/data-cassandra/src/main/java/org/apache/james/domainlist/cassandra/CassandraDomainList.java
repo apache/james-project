@@ -28,12 +28,12 @@ import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable
 import static org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable.TABLE_NAME;
 
 import java.util.List;
-import java.util.Locale;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
@@ -92,36 +92,36 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected List<String> getDomainListInternal() throws DomainListException {
+    protected List<Domain> getDomainListInternal() throws DomainListException {
         return executor.execute(readAllStatement.bind())
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> row.getString(DOMAIN))
+                .map(row -> Domain.of(row.getString(DOMAIN)))
                 .collect(Guavate.toImmutableList()))
             .join();
     }
 
     @Override
-    protected boolean containsDomainInternal(String domain) throws DomainListException {
+    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
         return executor.executeSingleRow(readStatement.bind()
-                .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+                .setString(DOMAIN, domain.asString()))
             .join()
             .isPresent();
     }
 
     @Override
-    public void addDomain(String domain) throws DomainListException {
+    public void addDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(insertStatement.bind()
-            .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+            .setString(DOMAIN, domain.asString()))
             .join();
         if (!executed) {
-            throw new DomainListException(domain.toLowerCase(Locale.US) + " already exists.");
+            throw new DomainListException(domain.name() + " already exists.");
         }
     }
 
     @Override
-    public void removeDomain(String domain) throws DomainListException {
+    public void removeDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
-            .setString(DOMAIN, domain.toLowerCase(Locale.US)))
+            .setString(DOMAIN, domain.asString()))
             .join();
         if (!executed) {
             throw new DomainListException(domain + " was not found");

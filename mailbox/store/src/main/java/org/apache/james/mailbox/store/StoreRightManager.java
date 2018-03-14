@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
@@ -207,8 +208,8 @@ public class StoreRightManager implements RightManager {
 
     @VisibleForTesting
     boolean areDomainsDifferent(String user, String otherUser) {
-        Optional<String> domain = User.fromUsername(user).getDomainPart();
-        Optional<String> otherDomain = User.fromUsername(otherUser).getDomainPart();
+        Optional<Domain> domain = User.fromUsername(user).getDomainPart();
+        Optional<Domain> otherDomain = User.fromUsername(otherUser).getDomainPart();
         return !domain.equals(otherDomain);
     }
 
