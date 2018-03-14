@@ -53,7 +53,8 @@ import com.jayway.restassured.specification.RequestSpecification;
 
 public class IsOverQuotaMatcherTest {
 
-    private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
+    private static final String OTHER_DOMAIN = "other.com";
+    private static final String FROM = "fromuser@" + OTHER_DOMAIN;
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     private static final String BOUNCE_SENDER = "bounce.sender@" + DEFAULT_DOMAIN;
 
@@ -97,6 +98,7 @@ public class IsOverQuotaMatcherTest {
 
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addDomain(OTHER_DOMAIN);
         dataProbe.addUser(FROM, PASSWORD);
         dataProbe.addUser(RECIPIENT, PASSWORD);
         dataProbe.addUser(BOUNCE_SENDER, PASSWORD);
@@ -112,6 +114,25 @@ public class IsOverQuotaMatcherTest {
         webAdminApi.given()
             .body(SMALL_SIZE.asLong())
             .put("/quota/users/" + RECIPIENT + "/size");
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        String bounceMessage = messageReader.readFirstMessage();
+        assertThat(bounceMessage).contains(OVER_QUOTA_MESSAGE);
+    }
+
+    @Test
+    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainSizeQuota() throws Exception {
+        webAdminApi.given()
+            .body(SMALL_SIZE.asLong())
+            .put("/quota/domains/" + DEFAULT_DOMAIN + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -147,6 +168,25 @@ public class IsOverQuotaMatcherTest {
         webAdminApi.given()
             .body(SMALL_COUNT.asLong())
             .put("/quota/users/" + RECIPIENT + "/count");
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        String bounceMessage = messageReader.readFirstMessage();
+        assertThat(bounceMessage).contains(OVER_QUOTA_MESSAGE);
+    }
+
+    @Test
+    public void aBounceMessageShouldBeSentToTheSenderWhenRecipientAsReachedHisDomainCountQuota() throws Exception {
+        webAdminApi.given()
+            .body(SMALL_COUNT.asLong())
+            .put("/quota/domains/" + DEFAULT_DOMAIN + "/count");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
