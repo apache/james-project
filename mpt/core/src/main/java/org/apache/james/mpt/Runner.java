@@ -86,6 +86,7 @@ public class Runner {
 
             public ProtocolSession session;
 
+            @Override
             public void doContinue() {
                 if (session != null) {
                     session.doContinue();

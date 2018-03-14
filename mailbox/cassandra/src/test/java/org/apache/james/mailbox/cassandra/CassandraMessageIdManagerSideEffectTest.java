@@ -49,6 +49,7 @@ public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdMa
 
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         CassandraModuleComposite modules = new CassandraModuleComposite(

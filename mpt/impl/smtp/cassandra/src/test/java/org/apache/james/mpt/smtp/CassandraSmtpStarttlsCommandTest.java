@@ -33,6 +33,7 @@ public class CassandraSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     
     private SmtpHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(

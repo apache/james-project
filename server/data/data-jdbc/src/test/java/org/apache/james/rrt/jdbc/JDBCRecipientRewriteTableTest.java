@@ -33,11 +33,13 @@ import org.junit.Before;
  */
 public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

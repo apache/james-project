@@ -58,9 +58,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         this.domainList = domainList;
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Configurable#configure(HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         setRecursiveMapping(config.getBoolean("recursiveMapping", true));
         try {
@@ -100,10 +98,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         this.mappingLimit = mappingLimit;
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#getMappings(String,
-     *      String)
-     */
+    @Override
     public Mappings getMappings(String user, String domain) throws ErrorMappingException, RecipientRewriteTableException {
         return getMappings(user, domain, mappingLimit);
     }
@@ -185,10 +180,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         return null;
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#addRegexMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
         try {
             Pattern.compile(regex);
@@ -202,19 +194,13 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#removeRegexMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
         LOGGER.info("Remove regex mapping => {} for user: {} domain: {}", regex, user, domain);
         removeMappingInternal(user, domain, MappingImpl.regex(regex));
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#addAddressMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void addAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
         if (address.indexOf('@') < 0) {
             try {
@@ -234,10 +220,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#removeAddressMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
         if (address.indexOf('@') < 0) {
             try {
@@ -250,10 +233,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         removeMappingInternal(user, domain, MappingImpl.address(address));
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#addErrorMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
         checkMapping(user, domain, MappingImpl.error(error));
         LOGGER.info("Add error mapping => {} for user: {} domain: {}", error, user, domain);
@@ -261,19 +241,13 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#removeErrorMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
         LOGGER.info("Remove error mapping => {} for user: {} domain: {}", error, user, domain);
         removeMappingInternal(user, domain, MappingImpl.error(error));
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#addMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
 
         String map = mapping.toLowerCase(Locale.US);
@@ -293,10 +267,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#removeMapping(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
 
         String map = mapping.toLowerCase(Locale.US);
@@ -316,9 +287,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#getAllMappings()
-     */
+    @Override
     public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
         int count = 0;
         Map<String, Mappings> mappings = getAllMappingsInternal();
@@ -330,27 +299,18 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         return mappings;
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#getUserDomainMappings(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         return getUserDomainMappingsInternal(user, domain);
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#addAliasDomainMapping(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     public void addAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Add domain mapping: {} => {}", aliasDomain, realDomain);
         addMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTable#removeAliasDomainMapping(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     public void removeAliasDomainMapping(String aliasDomain, String realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Remove domain mapping: {} => {}", aliasDomain, realDomain);
         removeMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));

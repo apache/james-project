@@ -37,10 +37,12 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         subscriptionsByUser = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
     }
 
+    @Override
     public synchronized void delete(Subscription subscription) {
         subscriptionsByUser.remove(subscription.getUser(), subscription);
     }
 
+    @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) {
         final List<Subscription> subscriptions = ImmutableList.copyOf(subscriptionsByUser.get(user));
         if (subscriptions != null) {
@@ -52,6 +54,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         return null;
     }
 
+    @Override
     public List<Subscription> findSubscriptionsForUser(String user) {
         final List<Subscription> subcriptions = subscriptionsByUser.get(user);
         if (subcriptions == null) {
@@ -60,6 +63,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         return ImmutableList.copyOf(subcriptions);
     }
 
+    @Override
     public synchronized void save(Subscription subscription) {
         subscriptionsByUser.put(subscription.getUser(), subscription);
     }
@@ -68,6 +72,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
         subscriptionsByUser.clear();
     }
 
+    @Override
     public void endRequest() {
         // nothing to do
     }

@@ -36,10 +36,7 @@ public class HostIs extends GenericRecipientMatcher {
 
     private Collection<String> hosts;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() {
         StringTokenizer st = new StringTokenizer(getCondition(), ", ", false);
         hosts = new Vector<>();
@@ -48,10 +45,7 @@ public class HostIs extends GenericRecipientMatcher {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericRecipientMatcher#matchRecipient(org.apache.mailet.MailAddress)
-     */
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         return hosts.contains(recipient.getDomain().toLowerCase(Locale.US));
     }

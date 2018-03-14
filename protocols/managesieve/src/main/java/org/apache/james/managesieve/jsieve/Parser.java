@@ -56,10 +56,12 @@ public class Parser implements SieveParser {
         sieveFactory = manager.build();
     }
 
+    @Override
     public List<String> getExtensions() {
         return sieveFactory.getExtensions();
     }
 
+    @Override
     public List<String> parse(String content) throws SyntaxException {
         try {
             sieveFactory.parse(new ByteArrayInputStream(content.getBytes()));

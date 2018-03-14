@@ -29,6 +29,7 @@ public class TestScriptedUserAdder extends TestCase {
     
     private DiscardProtocol.Record record;
     
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         protocol = new DiscardProtocol();
@@ -36,6 +37,7 @@ public class TestScriptedUserAdder extends TestCase {
         record = protocol.recordNext();
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         protocol.stop();

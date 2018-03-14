@@ -75,12 +75,14 @@ public class ReIndexerImpl implements ReIndexer {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
+    @Override
     public void reIndex(MailboxPath path) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
         reIndex(path, mailboxSession);
     }
 
 
+    @Override
     public void reIndex() throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing");
         LOGGER.info("Starting a full reindex");

@@ -29,6 +29,7 @@ import com.github.steveash.guavate.Guavate;
 
 public class DiscardAction extends FileIntoAction implements MailAction {
 
+    @Override
     public void execute(Action action, Mail mail, final ActionContext context)
             throws MessagingException {
         if (action instanceof ActionDiscard) {

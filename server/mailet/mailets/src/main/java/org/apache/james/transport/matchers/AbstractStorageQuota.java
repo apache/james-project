@@ -94,6 +94,7 @@ public abstract class AbstractStorageQuota extends AbstractQuotaMatcher {
      * @param recipient
      *            the recipient to check
      */
+    @Override
     protected boolean isRecipientChecked(MailAddress recipient) throws MessagingException {
         MailetContext mailetContext = getMailetContext();
         return super.isRecipientChecked(recipient) && (mailetContext.isLocalEmail(recipient));

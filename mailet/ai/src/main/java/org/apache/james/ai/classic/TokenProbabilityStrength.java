@@ -48,6 +48,7 @@ class TokenProbabilityStrength implements Comparable<TokenProbabilityStrength> {
      * 
      * @return The result of the comparison (before, equal, after).
      */
+    @Override
     public final int compareTo(TokenProbabilityStrength anotherTokenProbabilityStrength) {
         int result = (int) ((anotherTokenProbabilityStrength.strength - strength) * 1000000);
         if (result == 0) {

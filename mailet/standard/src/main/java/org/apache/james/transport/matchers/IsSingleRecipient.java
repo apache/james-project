@@ -33,6 +33,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class IsSingleRecipient extends GenericMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         if (mail.getRecipients().size() == 1) {
             return mail.getRecipients();

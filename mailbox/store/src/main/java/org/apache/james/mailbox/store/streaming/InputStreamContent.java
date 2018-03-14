@@ -43,9 +43,7 @@ public final class InputStreamContent implements Content {
         this.type = type;
     }
     
-    /**
-     * @see org.apache.james.mailbox.model.Content#size()
-     */
+    @Override
     public long size() {
         switch (type) {
         case Full:
@@ -56,9 +54,7 @@ public final class InputStreamContent implements Content {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.InputStreamContent#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         // wrap the streams in a BoundedInputStream to make sure it really match with the stored size.
         switch (type) {

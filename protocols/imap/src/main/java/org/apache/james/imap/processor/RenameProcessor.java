@@ -50,14 +50,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
         super(RenameRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor
-     * #doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(RenameRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         PathConverter pathConverter = PathConverter.forSession(session);
         MailboxPath existingPath = pathConverter.buildFullPath(request.getExistingName());

@@ -61,11 +61,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
         registerMBeans();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener
-     * #afterMailet(org.apache.mailet.Mailet, java.lang.String, java.lang.String, long, java.lang.Exception)
-     */
+    @Override
     public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
         MailetManagement mgmt = mailetMap.get(m);
         if (mgmt != null) {
@@ -73,12 +69,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener
-     * #afterMatcher(org.apache.mailet.Matcher, java.lang.String, java.util.Collection,
-     * java.util.Collection, long, java.lang.Exception)
-     */
+    @Override
     public void afterMatcher(Matcher m, String mailName, Collection<MailAddress> rcpts, Collection<MailAddress> matches, long processTime, Exception e) {
         MatcherManagement mgmt = matcherMap.get(m);
 
@@ -162,9 +153,7 @@ public class JMXStateMailetProcessorListener implements MailetProcessorListener,
 
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         unregisterMBeans();
         mailetMap.clear();

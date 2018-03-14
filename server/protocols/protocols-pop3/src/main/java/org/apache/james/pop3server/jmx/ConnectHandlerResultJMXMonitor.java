@@ -24,10 +24,7 @@ import org.apache.james.protocols.pop3.POP3Session;
 
 public class ConnectHandlerResultJMXMonitor extends AbstractConnectHandlerResultJMXMonitor<POP3Response, POP3Session> {
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.AbstractConnectHandlerResultJMXMonitor
-     * #getDefaultJMXName()
-     */
+    @Override
     protected String getDefaultJMXName() {
         return "pop3server";
     }

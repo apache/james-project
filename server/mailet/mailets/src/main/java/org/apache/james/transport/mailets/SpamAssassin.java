@@ -79,9 +79,7 @@ public class SpamAssassin extends GenericMailet {
         this.usersRepository = usersRepository;
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#init()
-     */
+    @Override
     public void init() throws MessagingException {
         spamdHost = Optional.ofNullable(getInitParameter(SPAMD_HOST))
             .filter(s -> !Strings.isNullOrEmpty(s))
@@ -91,9 +89,7 @@ public class SpamAssassin extends GenericMailet {
         Port.assertValid(spamdPort);
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#service(Mail)
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
@@ -114,9 +110,7 @@ public class SpamAssassin extends GenericMailet {
         }
     }
 
-    /**
-     * @see org.apache.mailet.base.GenericMailet#getMailetInfo()
-     */
+    @Override
     public String getMailetInfo() {
         return "Checks message against SpamAssassin";
     }

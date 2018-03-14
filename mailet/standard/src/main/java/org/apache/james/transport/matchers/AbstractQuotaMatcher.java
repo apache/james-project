@@ -54,6 +54,7 @@ public abstract class AbstractQuotaMatcher extends GenericMatcher {
      *
      * @throws MessagingException if either <CODE>isSenderChecked</CODE> or isRecipientChecked throw an exception
      */    
+    @Override
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> matching = null;
         if (isSenderChecked(mail.getSender())) {

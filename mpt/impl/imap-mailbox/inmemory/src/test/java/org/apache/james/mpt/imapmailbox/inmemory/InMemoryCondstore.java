@@ -29,6 +29,7 @@ public class InMemoryCondstore extends Condstore {
 
     private JamesImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();

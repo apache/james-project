@@ -36,6 +36,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class SenderIsNull extends GenericMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         if (mail.getSender() == null) {
             return mail.getRecipients();

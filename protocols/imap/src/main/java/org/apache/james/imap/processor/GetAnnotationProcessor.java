@@ -62,12 +62,14 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         super(GetAnnotationRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
     }
 
+    @Override
     protected void doProcess(GetAnnotationRequest message, ImapSession session, String tag, ImapCommand command,
-            Responder responder) {
+                             Responder responder) {
         try {
             proceed(message, session, tag, command, responder);
         } catch (MailboxNotFoundException e) {

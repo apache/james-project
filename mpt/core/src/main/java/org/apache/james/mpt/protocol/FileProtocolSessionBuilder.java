@@ -53,6 +53,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
      *            The name of the protocol session file.
      * @return The ProtocolSession
      */
+    @Override
     public ProtocolSession buildProtocolSession(String fileName) throws Exception {
         ProtocolSession session = new ProtocolSession();
         addTestFile(fileName, session);

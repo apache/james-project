@@ -38,6 +38,7 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
 
         QuotaResponse quotaResponse = (QuotaResponse) acceptableMessage;
@@ -75,13 +76,7 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         composer.message(quota.getLimit().asLong());
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.james.imap.encode.base.AbstractChainedImapEncoder#isAcceptable
-     * (org.apache.james.imap.api.ImapMessage)
-     */
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return message instanceof QuotaResponse;
     }

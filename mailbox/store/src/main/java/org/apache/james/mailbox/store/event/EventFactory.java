@@ -56,14 +56,17 @@ public class EventFactory {
             this.availableMessages = ImmutableMap.copyOf(availableMessages);
         }
 
+        @Override
         public List<MessageUid> getUids() {
             return ImmutableList.copyOf(added.keySet());
         }
 
+        @Override
         public MessageMetaData getMetaData(MessageUid uid) {
             return added.get(uid);
         }
 
+        @Override
         public Mailbox getMailbox() {
             return mailbox;
         }
@@ -83,14 +86,17 @@ public class EventFactory {
             this.mailbox = mailbox;
         }
 
+        @Override
         public List<MessageUid> getUids() {
             return ImmutableList.copyOf(uids.keySet());
         }
 
+        @Override
         public MessageMetaData getMetaData(MessageUid uid) {
             return uids.get(uid);
         }
 
+        @Override
         public Mailbox getMailbox() {
             return mailbox;
         }
@@ -110,14 +116,17 @@ public class EventFactory {
             this.mailbox = mailbox;
         }
 
+        @Override
         public List<MessageUid> getUids() {
             return uids;
         }
 
+        @Override
         public List<UpdatedFlags> getUpdatedFlags() {
             return uFlags;
         }
 
+        @Override
         public Mailbox getMailbox() {
             return mailbox;
         }
@@ -133,6 +142,7 @@ public class EventFactory {
         }
 
 
+        @Override
         public Mailbox getMailbox() {
             return mailbox;
         }
@@ -149,6 +159,7 @@ public class EventFactory {
         }
 
 
+        @Override
         public Mailbox getMailbox() {
             return mailbox;
         }
@@ -166,6 +177,7 @@ public class EventFactory {
             this.newMailbox = newMailbox;
         }
 
+        @Override
         public MailboxPath getNewPath() {
             return newPath;
         }

@@ -43,14 +43,17 @@ public class MockMailboxSession implements MailboxSession {
     public MockMailboxSession(String username, long sessionId) {
         this.user = new User() {
 
+            @Override
             public String getUserName() {
                 return username;
             }
 
+            @Override
             public String getPassword() {
                 return null;
             }
 
+            @Override
             public List<Locale> getLocalePreferences() {
                 return new ArrayList<>();
             }
@@ -68,42 +71,52 @@ public class MockMailboxSession implements MailboxSession {
         type = SessionType.User;
     }
 
+    @Override
     public void close() {
         this.open = false;
     }
 
+    @Override
     public Map<Object, Object> getAttributes() {
         return attrs;
     }
 
+    @Override
     public String getOtherUsersSpace() {
         return null;
     }
 
+    @Override
     public String getPersonalSpace() {
         return "";
     }
 
+    @Override
     public long getSessionId() {
         return sessionId;
     }
 
+    @Override
     public Collection<String> getSharedSpaces() {
         return new ArrayList<>();
     }
 
+    @Override
     public User getUser() {
         return user;
     }
 
+    @Override
     public boolean isOpen() {
         return open;
     }
 
+    @Override
     public char getPathDelimiter() {
         return '.';
     }
 
+    @Override
     public SessionType getType() {
         return type;
     }

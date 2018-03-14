@@ -32,6 +32,7 @@ public class JmxSieveProbe implements SieveProbe, JmxProbe {
     
     private SieveRepositoryManagementMBean sieveRepositoryManagement;
     
+    @Override
     public JmxSieveProbe connect(JmxConnection jmxc) throws IOException {
         try {
             sieveRepositoryManagement = jmxc.retrieveBean(SieveRepositoryManagementMBean.class, SIEVEMANAGER_OBJECT_NAME);

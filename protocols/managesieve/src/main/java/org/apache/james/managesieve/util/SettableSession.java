@@ -35,38 +35,47 @@ public class SettableSession implements Session {
         this.sslEnabled = false;
     }
 
+    @Override
     public String getUser() {
         return user;
     }
 
+    @Override
     public boolean isAuthenticated() {
         return state == State.AUTHENTICATED;
     }
 
+    @Override
     public void setUser(String user) {
         this.user = user;
     }
 
+    @Override
     public State getState() {
         return state;
     }
 
+    @Override
     public void setState(State state) {
         this.state = state;
     }
 
+    @Override
     public Authenticate.SupportedMechanism getChoosedAuthenticationMechanism() {
         return choosedAuthenticationMechanism;
     }
 
+    @Override
     public void setChoosedAuthenticationMechanism(Authenticate.SupportedMechanism choosedAuthenticationMechanism) {
         this.choosedAuthenticationMechanism = choosedAuthenticationMechanism;
     }
 
+    @Override
     public void setSslEnabled(boolean sslEnabled) {
         this.sslEnabled = sslEnabled;
     }
 
+    @Override
     public boolean isSslEnabled() {
         return sslEnabled;
     }

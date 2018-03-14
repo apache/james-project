@@ -50,6 +50,7 @@ public class MockMailbox extends ImapMailbox {
         this(identifier, new Message[0]);
     }
 
+    @Override
     public InputStream getMessageBody(long uid) throws IOException {
         Message m = messages.get(uid);
         if (m == null) {
@@ -58,6 +59,7 @@ public class MockMailbox extends ImapMailbox {
         return new ByteArrayInputStream(m.body.getBytes("US-ASCII"));
     }
 
+    @Override
     public InputStream getMessageHeaders(long uid) throws IOException {
         Message m = messages.get(uid);
         if (m == null) {
@@ -66,6 +68,7 @@ public class MockMailbox extends ImapMailbox {
         return new ByteArrayInputStream((m.headers + "\r\n").getBytes("US-ASCII"));
     }
 
+    @Override
     public InputStream getMessage(long uid) throws IOException {
         InputStream body = getMessageBody(uid);
         InputStream headers = getMessageHeaders(uid);
@@ -75,6 +78,7 @@ public class MockMailbox extends ImapMailbox {
         return new SequenceInputStream(headers, body);
     }
 
+    @Override
     public List<MessageMetaData> getMessages() throws IOException {
         return messages.values()
             .stream()
@@ -82,16 +86,19 @@ public class MockMailbox extends ImapMailbox {
             .collect(Guavate.toImmutableList());
     }
 
+    @Override
     public void remove(long... uids) throws IOException {
         for (long uid: uids) {
             messages.remove(uid);
         }
     }
 
+    @Override
     public String getIdentifier() throws IOException {
         return identifier;
     }
 
+    @Override
     public void close() throws IOException {
         // nothing
     }

@@ -87,16 +87,12 @@ public class MessageResultImpl implements MessageResult {
         return message.getInternalDate();
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult#getFlags()
-     */
+    @Override
     public Flags getFlags() {
         return message.createFlags();
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult#getSize()
-     */
+    @Override
     public long getSize() {
         return message.getFullContentOctets();
     }
@@ -123,9 +119,7 @@ public class MessageResultImpl implements MessageResult {
         return false;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult#getFullContent()
-     */
+    @Override
     public final Content getFullContent() throws IOException {
         if (fullContent == null) {
             fullContent = new InputStreamContent(message, Type.Full);
@@ -133,9 +127,7 @@ public class MessageResultImpl implements MessageResult {
         return fullContent;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult#getBody()
-     */
+    @Override
     public final Content getBody() throws IOException {
         if (bodyContent == null) {
             bodyContent = new InputStreamContent(message, Type.Body);
@@ -155,10 +147,7 @@ public class MessageResultImpl implements MessageResult {
         return "MessageResultImpl ( " + "uid = " + getUid() + TAB + "flags = " + getFlags() + TAB + "size = " + getSize() + TAB + "internalDate = " + getInternalDate() + ")";
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.model.MessageResult#getBody(org.apache.james.mailbox.model.MessageResult.MimePath)
-     */
+    @Override
     public Content getBody(MimePath path) throws MailboxException {
         final Content result;
         final PartContent partContent = getPartContent(path);
@@ -170,10 +159,7 @@ public class MessageResultImpl implements MessageResult {
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.model.MessageResult#getMimeBody(org.apache.james.mailbox.model.MessageResult.MimePath)
-     */
+    @Override
     public Content getMimeBody(MimePath path) throws MailboxException {
         final Content result;
         final PartContent partContent = getPartContent(path);
@@ -185,10 +171,7 @@ public class MessageResultImpl implements MessageResult {
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.model.MessageResult#getFullContent(org.apache.james.mailbox.model.MessageResult.MimePath)
-     */
+    @Override
     public Content getFullContent(MimePath path) throws MailboxException {
         final Content result;
         final PartContent partContent = getPartContent(path);
@@ -200,10 +183,7 @@ public class MessageResultImpl implements MessageResult {
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.model.MessageResult#iterateHeaders(org.apache.james.mailbox.model.MessageResult.MimePath)
-     */
+    @Override
     public Iterator<Header> iterateHeaders(MimePath path) throws MailboxException {
         final Iterator<Header> result;
         final PartContent partContent = getPartContent(path);
@@ -215,10 +195,7 @@ public class MessageResultImpl implements MessageResult {
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailbox.model.MessageResult#iterateMimeHeaders(org.apache.james.mailbox.model.MessageResult.MimePath)
-     */
+    @Override
     public Iterator<Header> iterateMimeHeaders(MimePath path) throws MailboxException {
         final Iterator<Header> result;
         final PartContent partContent = getPartContent(path);
@@ -323,9 +300,7 @@ public class MessageResultImpl implements MessageResult {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult#getMimeDescriptor()
-     */
+    @Override
     public MimeDescriptor getMimeDescriptor() throws MailboxException {
         
         // check if we need to create the MimeDescriptor which is done in a lazy fashion because
@@ -344,9 +319,7 @@ public class MessageResultImpl implements MessageResult {
         return mimeDescriptor;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageMetaData#getModSeq()
-     */
+    @Override
     public long getModSeq() {
         return message.getModSeq();
     }

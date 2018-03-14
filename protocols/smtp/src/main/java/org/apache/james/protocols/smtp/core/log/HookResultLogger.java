@@ -47,6 +47,7 @@ public class HookResultLogger implements HookResultHook {
 
     }
 
+    @Override
     public HookResult onHookResult(SMTPSession session, HookResult hResult, long executionTime, Hook hook) {
         boolean match = false;
         boolean info = false;

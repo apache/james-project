@@ -45,6 +45,7 @@ public class StoreQuotaManager implements QuotaManager {
         this.maxQuotaManager = maxQuotaManager;
     }
 
+    @Override
     public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
         return Quota.<QuotaCount>builder()
             .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
@@ -54,6 +55,7 @@ public class StoreQuotaManager implements QuotaManager {
     }
 
 
+    @Override
     public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
         return Quota.<QuotaSize>builder()
             .used(currentQuotaManager.getCurrentStorage(quotaRoot))

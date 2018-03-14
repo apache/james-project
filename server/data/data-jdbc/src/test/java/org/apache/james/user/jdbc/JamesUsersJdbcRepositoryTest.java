@@ -38,11 +38,13 @@ import org.junit.Before;
  */
 public class JamesUsersJdbcRepositoryTest extends AbstractUsersJdbcRepositoryTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

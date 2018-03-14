@@ -86,8 +86,7 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
         .forEachOrdered(commands::add);
     }
 
-    /**
-     */
+    @Override
     public List<String> getHandlers() {
         return commands;
     }

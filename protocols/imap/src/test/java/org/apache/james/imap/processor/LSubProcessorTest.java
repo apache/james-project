@@ -71,6 +71,7 @@ public class LSubProcessorTest {
         /**
          * @see MailboxSession.User#getLocalePreferences()
          */
+        @Override
         public List<Locale> getLocalePreferences() {
             return new ArrayList<>();
         }
@@ -78,6 +79,7 @@ public class LSubProcessorTest {
         /**
          * @see MailboxSession.User#getPassword()
          */
+        @Override
         public String getPassword() {
             return "test";
         }
@@ -85,6 +87,7 @@ public class LSubProcessorTest {
         /**
          * @see MailboxSession.User#getUserName()
          */
+        @Override
         public String getUserName() {
             return "test";
         }

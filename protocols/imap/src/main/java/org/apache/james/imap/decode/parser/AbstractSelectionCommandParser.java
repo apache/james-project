@@ -43,6 +43,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
 
 
     
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         boolean condstore = false;
@@ -80,6 +81,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
                 request.consumeWord(new CharacterValidator() {
                     int pos = 0;
 
+                    @Override
                     public boolean isValid(char chr) {
                         if (pos >= QRESYNC.length) {
                             return false;

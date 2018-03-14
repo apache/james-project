@@ -47,6 +47,7 @@ public class CassandraAnnotationMapperTest extends AnnotationMapperTest {
     
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         CassandraModuleComposite modules = new CassandraModuleComposite(

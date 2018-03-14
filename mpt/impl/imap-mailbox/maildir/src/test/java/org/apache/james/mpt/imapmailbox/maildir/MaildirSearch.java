@@ -29,6 +29,7 @@ public class MaildirSearch extends Search {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new MaildirHostSystem();

@@ -72,11 +72,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
         return order;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.jcr.IsPersistent#getNode()
-     */
+    @Override
     public Node getNode() {
         return node;
     }
@@ -86,6 +82,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
      * 
      * @see org.apache.james.mailbox.store.mail.model.Property#getLocalName()
      */
+    @Override
     public String getLocalName() {
         if (isPersistent()) {
             try {
@@ -98,11 +95,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
         return localName;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.Property#getNamespace()
-     */
+    @Override
     public String getNamespace() {
         if (isPersistent()) {
             try {
@@ -115,11 +108,7 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
         return namespace;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.Property#getValue()
-     */
+    @Override
     public String getValue() {
         if (isPersistent()) {
             try {
@@ -132,20 +121,12 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
         return value;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.jcr.IsPersistent#isPersistent()
-     */
+    @Override
     public boolean isPersistent() {
         return node != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.jcr.IsPersistent#merge(javax.jcr.Node)
-     */
+    @Override
     public void merge(Node node) throws RepositoryException {
         node.setProperty(NAMESPACE_PROPERTY, getNamespace());
         node.setProperty(ORDER_PROPERTY, getOrder());

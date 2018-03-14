@@ -43,12 +43,7 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
     private final Map<String, LineHandlerStats> lStats = new HashMap<>();
     private String jmxName;
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ProtocolHandlerResultHandler
-     * #onResponse(org.apache.james.protocols.api.ProtocolSession, longlong,
-     * org.apache.james.protocols.api.handler.ProtocolHandler)
-     */
+    @Override
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
         if (handler instanceof LineHandler) {
             lStats.get(handler.getClass().getName()).increment(response);
@@ -56,20 +51,14 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
         return response;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> marker = new ArrayList<>();
         marker.add(LineHandler.class);
         return marker;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings("unlikely-arg-type")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
 

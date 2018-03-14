@@ -57,11 +57,6 @@ public class ChunkInputStream extends InputStream {
         this(conf, Bytes.toBytes(tableName), Bytes.toBytes(cf), key);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.io.InputStream#read()
-     */
     @Override
     public int read() throws IOException {
         if (chunk == null || pos + 1 == chunk.length) {
@@ -105,9 +100,6 @@ public class ChunkInputStream extends InputStream {
         }
     }
 
-    /**
-     * Not supported
-     */
     @Override
     public boolean markSupported() {
         return false;

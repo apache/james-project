@@ -35,6 +35,7 @@ public class CassandraAuthenticateTest extends AuthenticateTest {
     
     private ManageSieveHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new CassandraModule(cassandraServer.getIp(), cassandraServer.getBindingPort()));
@@ -48,6 +49,7 @@ public class CassandraAuthenticateTest extends AuthenticateTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

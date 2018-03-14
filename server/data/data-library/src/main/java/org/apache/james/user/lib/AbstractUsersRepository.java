@@ -41,10 +41,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     private boolean virtualHosting;
     private Optional<String> administratorId;
 
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
 
         virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
@@ -93,10 +90,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#addUser(java.lang.String,
-     * java.lang.String)
-     */
+    @Override
     public void addUser(String username, String password) throws UsersRepositoryException {
 
         if (!contains(username)) {
@@ -108,9 +102,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#supportVirtualHosting()
-     */
+    @Override
     public boolean supportVirtualHosting() {
         return virtualHosting;
     }

@@ -46,6 +46,7 @@ public class DefaultJamesResourceLoader extends DefaultResourceLoader implements
      * 
      * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
      */
+    @Override
     public Resource getResource(String fileURL) {
         Resource r;
         if (fileURL.startsWith(FileSystem.CLASSPATH_PROTOCOL)) {
@@ -70,18 +71,22 @@ public class DefaultJamesResourceLoader extends DefaultResourceLoader implements
         return r;
     }
 
+    @Override
     public String getAbsoluteDirectory() {
         return jamesDirectoriesProvider.getAbsoluteDirectory();
     }
 
+    @Override
     public String getConfDirectory() {
         return jamesDirectoriesProvider.getConfDirectory();
     }
 
+    @Override
     public String getVarDirectory() {
         return jamesDirectoriesProvider.getVarDirectory();
     }
 
+    @Override
     public String getRootDirectory() {
         return jamesDirectoriesProvider.getRootDirectory();
     }

@@ -265,5 +265,6 @@ public interface MessageResult extends Comparable<MessageResult>, MessageMetaDat
         int[] getPositions();
     }
 
+    @Override
     MessageId getMessageId();
 }

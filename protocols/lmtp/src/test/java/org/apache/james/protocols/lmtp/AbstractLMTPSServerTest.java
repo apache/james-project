@@ -78,6 +78,7 @@ public abstract class AbstractLMTPSServerTest extends AbstractLMTPServerTest {
             return sendCommand("LHLO", hostname);
         }
 
+        @Override
         public int[] getReplies() throws IOException {
             int[] codes = new int[replies.size()];
             for (int i = 0; i < codes.length; i++) {

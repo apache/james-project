@@ -126,22 +126,27 @@ public class DNSRBLHandlerTest {
                 return remoteIp;
             }
 
+            @Override
             public Map<String,Object> getState() {
                 return sessionState;
             }
 
+            @Override
             public boolean isRelayingAllowed() {
                 return relaying;
             }
 
+            @Override
             public boolean isAuthSupported() {
                 return false;
             }
 
+            @Override
             public int getRcptCount() {
                 return 0;
             }
             
+            @Override
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     if (value == null) {
@@ -158,6 +163,7 @@ public class DNSRBLHandlerTest {
                 }
             }
 
+            @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {
                     return connectionState.get(key);

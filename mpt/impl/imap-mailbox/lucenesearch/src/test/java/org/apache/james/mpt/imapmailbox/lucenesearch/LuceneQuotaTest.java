@@ -29,6 +29,7 @@ public class LuceneQuotaTest extends QuotaTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();
@@ -41,6 +42,7 @@ public class LuceneQuotaTest extends QuotaTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

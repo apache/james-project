@@ -72,9 +72,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook#isLocalDomain(java.lang.String)
-     */
+    @Override
     protected boolean isLocalDomain(String domain) {
         try {
             return domains.containsDomain(domain);
@@ -83,9 +81,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook#useVirtualHosting()
-     */
+    @Override
     protected boolean useVirtualHosting() {
         try {
             return users.supportVirtualHosting();

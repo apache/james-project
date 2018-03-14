@@ -51,10 +51,12 @@ public class HasMimeType extends GenericMatcher {
 
     private Set<String> acceptedContentTypes;
 
+    @Override
     public void init() throws javax.mail.MessagingException {
         acceptedContentTypes = ImmutableSet.copyOf(Splitter.on(",").trimResults().split(getCondition()));
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws javax.mail.MessagingException {
         Optional<String> mimeTypes = getMimeTypeFromMessage(mail.getMessage());
 

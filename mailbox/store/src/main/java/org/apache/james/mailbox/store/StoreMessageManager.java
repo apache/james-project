@@ -260,6 +260,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * 
      * @return true
      */
+    @Override
     public boolean isModSeqPermanent(MailboxSession session) {
         return true;
     }
@@ -453,11 +454,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return new SimpleMailboxMessage(messageIdFactory.generate(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
     }
 
-    /**
-     * This mailbox is writable
-     *
-     * @throws MailboxException
-     */
+    @Override
     public boolean isWriteable(MailboxSession session) throws MailboxException {
         return storeRightManager.isReadWrite(session, mailbox, getSharedPermanentFlags(session));
     }
@@ -550,11 +547,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.MessageManager#setFlags(javax.mail.Flags,
-     *      boolean, boolean, org.apache.james.mailbox.model.MessageRange,
-     *      org.apache.james.mailbox.MailboxSession)
-     */
+    @Override
     public Map<MessageUid, Flags> setFlags(final Flags flags, final FlagsUpdateMode flagsUpdateMode, final MessageRange set, MailboxSession mailboxSession) throws MailboxException {
 
         if (!isWriteable(mailboxSession)) {
@@ -636,18 +629,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.MessageManager#getMessageCount(org.apache.james.mailbox.MailboxSession)
-     */
+    @Override
     public long getMessageCount(MailboxSession mailboxSession) throws MailboxException {
         return mapperFactory.getMessageMapper(mailboxSession).countMessagesInMailbox(getMailboxEntity());
     }
 
-    /**
-     * @see org.apache.james.mailbox.MessageManager#getMessages(org.apache.james.mailbox.model.MessageRange,
-     *      org.apache.james.mailbox.model.MessageResult.FetchGroup,
-     *      org.apache.james.mailbox.MailboxSession)
-     */
+    @Override
     public MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
         return new StoreMessageResultIterator(messageMapper, mailbox, set, batchSizes, fetchGroup);

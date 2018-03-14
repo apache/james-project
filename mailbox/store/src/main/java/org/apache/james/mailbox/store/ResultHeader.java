@@ -43,23 +43,17 @@ public final class ResultHeader implements MessageResult.Header {
         size = name.length() + value.length() + 2;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult.Header#getName()
-     */
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.MessageResult.Header#getValue()
-     */
+    @Override
     public String getValue() {
         return value;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.Content#size()
-     */
+    @Override
     public long size() {
         return size;
     }
@@ -68,9 +62,7 @@ public final class ResultHeader implements MessageResult.Header {
         return "[HEADER " + name + ": " + value + "]";
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.InputStreamContent#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         return new ByteArrayInputStream((name + ": " + value).getBytes(US_ASCII));
     }

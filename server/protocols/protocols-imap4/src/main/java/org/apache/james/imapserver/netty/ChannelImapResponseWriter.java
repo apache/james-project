@@ -54,18 +54,14 @@ public class ChannelImapResponseWriter implements ImapResponseWriter {
         this.zeroCopy = zeroCopy;
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapResponseWriter#write(byte[])
-     */
+    @Override
     public void write(byte[] buffer) throws IOException {
         if (channel.isConnected()) {
             channel.write(ChannelBuffers.wrappedBuffer(buffer));
         }
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapResponseWriter#write(org.apache.james.imap.message.response.Literal)
-     */
+    @Override
     public void write(Literal literal) throws IOException {
         if (channel.isConnected()) {
             InputStream in = literal.getInputStream();

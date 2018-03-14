@@ -52,6 +52,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
      * @throws DecodingException
      *             If the end-of-stream is reached.
      */
+    @Override
     public char nextChar() throws DecodingException {
         if (!nextSeen) {
             int next = -1;
@@ -71,9 +72,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
         return nextChar;
     }
 
-    /**
-     * @see ImapRequestLineReader#read(int, boolean)
-     */
+    @Override
     public InputStream read(int size, boolean extraCRLF) throws DecodingException {
 
         // Unset the next char.
@@ -91,6 +90,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
      * Sends a server command continuation request '+' back to the client,
      * requesting more data to be sent.
      */
+    @Override
     protected void commandContinuationRequest() throws DecodingException {
         try {
             output.write('+');

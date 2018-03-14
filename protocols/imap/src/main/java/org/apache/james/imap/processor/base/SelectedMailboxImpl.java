@@ -119,6 +119,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         return uidMsnConverter.getLastUid();
     }
 
+    @Override
     public synchronized void deselect() {
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
@@ -225,6 +226,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     
     
+    @Override
     public synchronized void resetExpungedUids() {
         expungedUids.clear();
     }
@@ -256,6 +258,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
      * @return true if new messages have been added, false otherwise
      */
 
+    @Override
     public final synchronized boolean isSizeChanged() {
         return sizeChanged;
     }
@@ -267,6 +270,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
      *         otherwise
      */
 
+    @Override
     public final synchronized boolean isDeletedByOtherSession() {
         return isDeletedByOtherSession;
     }
@@ -292,21 +296,25 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         
     }
 
+    @Override
     public synchronized Flags getApplicableFlags() {
         return new Flags(applicableFlags);
     }
 
     
+    @Override
     public synchronized boolean hasNewApplicableFlags() {
         return applicableFlagsChanged;
     }
 
     
+    @Override
     public synchronized void resetNewApplicableFlags() {
         applicableFlagsChanged = false;
     }
 
     
+    @Override
     public synchronized void event(Event event) {
 
         if (event instanceof MailboxEvent) {
@@ -414,6 +422,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     
+    @Override
     public synchronized long existsCount() {
         return uidMsnConverter.getNumMessage();
     }

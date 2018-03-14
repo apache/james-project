@@ -49,6 +49,7 @@ public class JamesDataCmdHandler extends DataCmdHandler {
      * @param session  SMTP session object
      * @param argument the argument passed in with the command by the SMTP client
      */
+    @Override
     protected SMTPResponse doDATA(SMTPSession session, String argument) {
         try {
             MimeMessageInputStreamSource mmiss = new MimeMessageInputStreamSource(MailImpl.getId());

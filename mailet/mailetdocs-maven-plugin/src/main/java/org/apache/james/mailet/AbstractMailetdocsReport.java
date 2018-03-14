@@ -69,11 +69,13 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
             this.type = typeMatcher;
         }
 
+        @Override
         public boolean evaluate(Object subject) {
             return ((MailetMatcherDescriptor) subject).getType() == type;
         }
     }
 
+    @Override
     protected void executeReport(Locale locale) throws MavenReportException {
         
         getLog().info("Executing Mailets/Matchers Report");
@@ -234,26 +236,32 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
         getSink().section1_();
     }
 
+    @Override
     protected MavenProject getProject() {
         return project;
     }
 
+    @Override
     protected String getOutputDirectory() {
         return outputDirectory;
     }
 
+    @Override
     protected Renderer getSiteRenderer() {
         return siteRenderer;
     }
 
+    @Override
     public String getDescription(Locale arg0) {
         return "Documentation about bundled mailets";
     }
 
+    @Override
     public String getName(Locale arg0) {
         return "Mailet Reference";
     }
 
+    @Override
     public String getOutputName() {
         return "mailet-report";
     }

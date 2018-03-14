@@ -86,10 +86,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#bind()
-     */
+    @Override
     public synchronized void bind() throws Exception {
         if (started) {
             throw new IllegalStateException("Server running already");
@@ -130,10 +127,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#unbind()
-     */
+    @Override
     public synchronized void unbind() {
         if (started == false) {
             return;
@@ -147,10 +141,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         started = false;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getListenAddresses()
-     */
+    @Override
     public synchronized List<InetSocketAddress> getListenAddresses() {
         ImmutableList.Builder<InetSocketAddress> builder = ImmutableList.builder();
         for (Channel channel : ImmutableList.copyOf(channels.iterator())) {
@@ -194,19 +185,13 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getBacklog()
-     */
+    @Override
     public int getBacklog() {
         return backlog;
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#getTimeout()
-     */
+    @Override
     public int getTimeout() {
         return timeout;
     }
@@ -231,10 +216,7 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.ProtocolServer#isBound()
-     */
+    @Override
     public boolean isBound() {
         return started;
     }

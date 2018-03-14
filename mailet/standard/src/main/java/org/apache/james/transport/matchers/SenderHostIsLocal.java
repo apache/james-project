@@ -38,6 +38,7 @@ import org.apache.mailet.base.GenericMatcher;
  * <br>
  */
 public class SenderHostIsLocal extends GenericMatcher {
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         if (mail.getSender() != null && isLocalServer(mail)) {
             return mail.getRecipients();

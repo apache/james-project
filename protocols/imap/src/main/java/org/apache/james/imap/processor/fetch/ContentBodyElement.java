@@ -40,17 +40,12 @@ class ContentBodyElement implements BodyElement {
         this.content = content;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.BodyElement#getName()
-     */
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @throws MailboxException 
-     * @see org.apache.james.imap.message.response.FetchResponse.BodyElement#size()
-     */
+    @Override
     public long size() throws IOException {
         try {
             return content.size();
@@ -60,9 +55,7 @@ class ContentBodyElement implements BodyElement {
     }
 
 
-    /**
-     * @see org.apache.james.imap.message.response.Literal#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         return content.getInputStream();
     }

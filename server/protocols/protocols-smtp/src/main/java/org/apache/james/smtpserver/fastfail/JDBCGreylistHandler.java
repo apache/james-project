@@ -169,10 +169,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         return wNetworks;
     }
     
-    /**
-     * @see org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler#getGreyListData(java.lang.String,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Iterator<String> getGreyListData(String ipAddress, String sender, String recip) throws SQLException {
         Collection<String> data = new ArrayList<>(2);
         PreparedStatement mappingStmt = null;
@@ -200,10 +197,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         return data.iterator();
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler#insertTriplet(java.lang.String,
-     *      java.lang.String, java.lang.String, int, long)
-     */
+    @Override
     protected void insertTriplet(String ipAddress, String sender, String recip, int count, long createTime) throws SQLException {
         Connection conn = datasource.getConnection();
 
@@ -224,10 +218,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler#updateTriplet(java.lang.String,
-     *      java.lang.String, java.lang.String, int, long)
-     */
+    @Override
     protected void updateTriplet(String ipAddress, String sender, String recip, int count, long time) throws SQLException {
         Connection conn = datasource.getConnection();
         PreparedStatement mappingStmt = null;
@@ -246,9 +237,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler#cleanupAutoWhiteListGreyList(long)
-     */
+    @Override
     protected void cleanupAutoWhiteListGreyList(long time) throws SQLException {
         PreparedStatement mappingStmt = null;
         Connection conn = datasource.getConnection();
@@ -265,9 +254,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler#cleanupGreyList(long)
-     */
+    @Override
     protected void cleanupGreyList(long time) throws SQLException {
         Connection conn = datasource.getConnection();
 
@@ -366,8 +353,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         }
     }
 
-    /**
-     */
+    @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if ((wNetworks == null) || (!wNetworks.matchInetNetwork(session.getRemoteAddress().getAddress().getHostAddress()))) {
             return super.doRcpt(session, sender, rcpt);

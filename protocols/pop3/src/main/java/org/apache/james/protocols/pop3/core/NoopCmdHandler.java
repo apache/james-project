@@ -52,6 +52,7 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
      * Handler method called upon receipt of a NOOP command. Like all good
      * NOOPs, does nothing much.
      */
+    @Override
     public Response onCommand(POP3Session session, Request request) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             return POP3Response.OK;
@@ -60,9 +61,7 @@ public class NoopCmdHandler implements CommandHandler<POP3Session> {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

@@ -39,9 +39,7 @@ public class MimeMessageBlobMessageSource extends MimeMessageSource implements A
         this.sourceId = message.getJMSMessageID();
     }
 
-    /**
-     * @see org.apache.james.server.core.MimeMessageSource#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         try {
             return message.getInputStream();
@@ -50,9 +48,7 @@ public class MimeMessageBlobMessageSource extends MimeMessageSource implements A
         }
     }
 
-    /**
-     * @see org.apache.james.server.core.MimeMessageSource#getSourceId()
-     */
+    @Override
     public String getSourceId() {
         return sourceId;
     }

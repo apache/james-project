@@ -30,18 +30,22 @@ import org.apache.mailet.base.GenericMatcher;
 
 public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {
 
+    @Override
     protected String getHasMailAttribute() {
         return "test@james.apache.org";
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new SMTPAuthUserIs();
     }
 
+    @Override
     protected String getMatcherName() {
         return "SMTPAuthUserIs";
     }
     
+    @Override
     protected void init() {
         super.init();
         setMailAttributeName(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
@@ -50,6 +54,7 @@ public class SMTPAuthUserIsTest extends AbstractHasMailAttributeTest {
     
     
     // test if the mail attribute was not matched
+    @Override
     public void testAttributeIsNotMatched() throws MessagingException {
         setupAll();
         setMailAttributeValue("notmatched@james.apache.org");

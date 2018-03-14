@@ -60,6 +60,7 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
      * Handler method called upon receipt of a RETR command. This command
      * retrieves a particular mail message from the mailbox.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         POP3Response response = null;
@@ -106,9 +107,7 @@ public class RetrCmdHandler implements CommandHandler<POP3Session> {
         return response;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

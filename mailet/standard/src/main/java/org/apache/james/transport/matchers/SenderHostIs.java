@@ -52,6 +52,7 @@ public class SenderHostIs extends GenericMatcher {
 
     private Collection<String> senderHosts;
     
+    @Override
     public void init()  {
         String condition = getCondition();
         Preconditions.checkNotNull(condition, "'condition' should not be null");
@@ -74,6 +75,7 @@ public class SenderHostIs extends GenericMatcher {
      *
      * @param mail the mail being processed
      */
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         try {
             if (mail.getSender() != null && senderHosts.contains(mail.getSender().getDomain().toLowerCase(Locale.US))) {

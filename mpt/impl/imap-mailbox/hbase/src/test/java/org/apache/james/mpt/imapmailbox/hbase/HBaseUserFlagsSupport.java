@@ -31,6 +31,7 @@ public class HBaseUserFlagsSupport extends UserFlagsSupport {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = HBaseHostSystem.build();

@@ -47,6 +47,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
      * @throws DecodingException
      *             If the end-of-stream is reached.
      */
+    @Override
     public char nextChar() throws DecodingException {
         
         if (!nextSeen) {
@@ -79,6 +80,7 @@ public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLi
      * @throws DecodingException
      *             If a char can't be read into each array element.
      */
+    @Override
     public InputStream read(int size, boolean extraCRLF) throws DecodingException {
 
         // Unset the next char.

@@ -83,6 +83,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @throws Exception upon failure
      * @throws NullPointerException when script has not been set
      */
+    @Override
     public void addUser(String user, String password) throws Exception {
         final StringReader reader = new StringReader(script);
         addUser(user, password, reader);

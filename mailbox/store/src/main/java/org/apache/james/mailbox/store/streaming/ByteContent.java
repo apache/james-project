@@ -39,9 +39,7 @@ public final class ByteContent implements Content {
         size = contents.length;
     }
 
-    /**
-     * @see org.apache.james.mailbox.model.Content#size()
-     */
+    @Override
     public long size() {
         return size;
     }

@@ -240,26 +240,32 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             return mailboxId;
         }
 
+        @Override
         public Flags getFlags() {
             return flags;
         }
 
+        @Override
         public Content getFullContent() throws MailboxException {
             throw exception;
         }
 
+        @Override
         public Date getInternalDate() {
             return internalDate;
         }
 
+        @Override
         public Content getBody() throws MailboxException {
             throw exception;
         }
 
+        @Override
         public long getSize() {
             return size;
         }
 
+        @Override
         public MessageUid getUid() {
             return uid;
         }
@@ -269,6 +275,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             return messageId;
         }
         
+        @Override
         public int compareTo(MessageResult that) {
             return uid.compareTo(that.getUid());
         }
@@ -291,30 +298,37 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             return false;
         }
 
+        @Override
         public Content getFullContent(MimePath path) throws MailboxException {
             throw exception;
         }
 
+        @Override
         public Iterator<Header> iterateHeaders(MimePath path) throws MailboxException {
             throw exception;
         }
 
+        @Override
         public Iterator<Header> iterateMimeHeaders(MimePath path) throws MailboxException {
             throw exception;
         }
 
+        @Override
         public Content getBody(MimePath path) throws MailboxException {
             throw exception;
         }
 
+        @Override
         public Content getMimeBody(MimePath path) throws MailboxException {
             throw exception;
         }
 
+        @Override
         public MimeDescriptor getMimeDescriptor() throws MailboxException {
             throw exception;
         }
 
+        @Override
         public long getModSeq() {
             return modSeq;
         }

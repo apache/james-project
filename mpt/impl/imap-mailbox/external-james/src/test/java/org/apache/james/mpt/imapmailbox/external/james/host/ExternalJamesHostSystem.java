@@ -64,10 +64,12 @@ public class ExternalJamesHostSystem extends ExternalHostSystem {
         return super.addUser(user, password);
     }
     
+    @Override
     public void beforeTest() throws Exception {
 
     }
 
+    @Override
     public void afterTest() throws Exception {
 
     }

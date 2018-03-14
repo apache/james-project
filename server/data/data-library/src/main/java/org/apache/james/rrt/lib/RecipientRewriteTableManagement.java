@@ -46,11 +46,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         this.rrt = rrt;
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#addRegexMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
         try {
             rrt.addRegexMapping(user, domain, regex);
@@ -59,11 +55,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#removeRegexMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
         try {
             rrt.removeRegexMapping(user, domain, regex);
@@ -72,11 +64,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#addAddressMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void addAddressMapping(String user, String domain, String address) throws Exception {
         try {
             rrt.addAddressMapping(user, domain, address);
@@ -85,11 +73,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#removeAddressMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeAddressMapping(String user, String domain, String address) throws Exception {
         try {
             rrt.removeAddressMapping(user, domain, address);
@@ -98,11 +82,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#addErrorMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void addErrorMapping(String user, String domain, String error) throws Exception {
         try {
             rrt.addErrorMapping(user, domain, error);
@@ -111,11 +91,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#removeErrorMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeErrorMapping(String user, String domain, String error) throws Exception {
         try {
             rrt.removeErrorMapping(user, domain, error);
@@ -124,6 +100,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
+    @Override
     public void addDomainMapping(String domain, String targetDomain) throws Exception {
         try {
             rrt.addAliasDomainMapping(domain, targetDomain);
@@ -132,6 +109,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
+    @Override
     public void removeDomainMapping(String domain, String targetDomain) throws Exception {
         try {
             rrt.removeAliasDomainMapping(domain, targetDomain);
@@ -140,10 +118,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see org.apache.james.rrt.api.RecipientRewriteTableManagementMBean
-     * #getUserDomainMappings(java.lang.String, java.lang.String)
-     */
+    @Override
     public Mappings getUserDomainMappings(String user, String domain) throws Exception {
         try {
             return rrt.getUserDomainMappings(user, domain);
@@ -152,11 +127,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean
-     * #addMapping(java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void addMapping(String user, String domain, String mapping) throws Exception {
         try {
             rrt.addMapping(user, domain, mapping);
@@ -165,11 +136,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#removeMapping
-     * (java.lang.String, java.lang.String, java.lang.String)
-     */
+    @Override
     public void removeMapping(String user, String domain, String mapping) throws Exception {
         try {
             rrt.removeMapping(user, domain, mapping);
@@ -178,10 +145,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.rrt.api.RecipientRewriteTableManagementMBean#getAllMappings()
-     */
+    @Override
     public Map<String, Mappings> getAllMappings() throws Exception {
         try {
             return ImmutableMap.copyOf(rrt.getAllMappings());

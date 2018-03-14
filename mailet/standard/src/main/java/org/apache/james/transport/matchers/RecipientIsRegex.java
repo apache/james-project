@@ -48,6 +48,7 @@ import com.google.common.base.Strings;
 public class RecipientIsRegex extends GenericRecipientMatcher {
     Pattern pattern   = null;
 
+    @Override
     public void init() throws javax.mail.MessagingException {
         String patternString = getCondition();
         if (Strings.isNullOrEmpty(patternString)) {
@@ -62,6 +63,7 @@ public class RecipientIsRegex extends GenericRecipientMatcher {
         }
     }
 
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         String myRecipient = recipient.toString();
         return pattern.matcher(myRecipient).matches();

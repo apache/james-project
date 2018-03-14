@@ -46,6 +46,7 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
 
     }
 
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         if (mail instanceof MailImpl) {
 

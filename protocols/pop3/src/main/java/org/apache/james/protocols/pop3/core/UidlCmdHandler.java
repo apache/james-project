@@ -58,6 +58,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
      * Handler method called upon receipt of a UIDL command. Returns a listing
      * of message ids to the client.
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Response onCommand(POP3Session session, Request request) {
         POP3Response response = null;
@@ -116,9 +117,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         return response;
     }
 
-    /**
-     * @see org.apache.james.pop3server.core.CapaCapability#getImplementedCapabilities(org.apache.james.pop3server.POP3Session)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<String> getImplementedCapabilities(POP3Session session) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
@@ -128,9 +127,7 @@ public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

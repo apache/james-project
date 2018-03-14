@@ -74,6 +74,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest {
         return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider());
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

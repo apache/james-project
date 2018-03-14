@@ -81,9 +81,7 @@ public class SMTPResponse extends AbstractResponse {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.Response#getLines()
-     */
+    @Override
     public List<CharSequence> getLines() {
         List<CharSequence> responseList = new ArrayList<>();
 

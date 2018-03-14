@@ -57,6 +57,7 @@ public class SenderIsRegex extends GenericMatcher {
 
     private Pattern pattern;
 
+    @Override
     public void init() throws MessagingException {
         String patternString = getCondition();
         if (Strings.isNullOrEmpty(patternString)) {
@@ -71,6 +72,7 @@ public class SenderIsRegex extends GenericMatcher {
         }
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         MailAddress mailAddress = mail.getSender();
         if (mailAddress == null) {

@@ -43,6 +43,7 @@ public class TestRunScripts extends TestCase {
     
     MailProtocolTestTask subject;
     
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         fakeServer = new DiscardProtocol();
@@ -59,6 +60,7 @@ public class TestRunScripts extends TestCase {
         subject.setProject(new Project());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         fakeServer.stop();
@@ -66,6 +68,7 @@ public class TestRunScripts extends TestCase {
 
     public void testIgnoreUnsupportedResource() throws Exception {
         final Resource unsupportedResource = new StringResource() {
+            @Override
             public InputStream getInputStream() {
                 throw new UnsupportedOperationException();
             }

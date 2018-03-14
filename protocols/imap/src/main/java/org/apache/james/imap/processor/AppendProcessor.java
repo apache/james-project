@@ -62,13 +62,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         super(AppendRequest.class, next, mailboxManager, statusResponseFactory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor#doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(AppendRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final String mailboxName = request.getMailboxName();
         final InputStream messageIn = request.getMessage();

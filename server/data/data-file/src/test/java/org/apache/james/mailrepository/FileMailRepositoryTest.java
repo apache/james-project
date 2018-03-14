@@ -66,6 +66,7 @@ public class FileMailRepositoryTest {
     @DisplayName("Default configuration")
     public class DefaultFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
+        @Override
         protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
             configuration.addProperty("[@FIFO]", "false");
             configuration.addProperty("[@CACHEKEYS]", "true");
@@ -77,6 +78,7 @@ public class FileMailRepositoryTest {
     @DisplayName("No cache configuration")
     public class NoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
+        @Override
         protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
             configuration.addProperty("[@FIFO]", "false");
             configuration.addProperty("[@CACHEKEYS]", "false");
@@ -88,6 +90,7 @@ public class FileMailRepositoryTest {
     @DisplayName("Fifo configuration")
     public class FifoFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
+        @Override
         protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
             configuration.addProperty("[@FIFO]", "true");
             configuration.addProperty("[@CACHEKEYS]", "true");
@@ -99,6 +102,7 @@ public class FileMailRepositoryTest {
     @DisplayName("Fifo no cache configuration")
     public class FifoNoCacheFileMailRepositoryTest extends GenericFileMailRepositoryTest {
 
+        @Override
         protected DefaultConfigurationBuilder withConfigurationOptions(DefaultConfigurationBuilder configuration) {
             configuration.addProperty("[@FIFO]", "true");
             configuration.addProperty("[@CACHEKEYS]", "false");

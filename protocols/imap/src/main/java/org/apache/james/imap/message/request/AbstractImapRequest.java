@@ -40,6 +40,7 @@ public abstract class AbstractImapRequest implements ImapRequest {
      * 
      * @see org.apache.james.imap.api.message.request.ImapRequest#getCommand()
      */
+    @Override
     public final ImapCommand getCommand() {
         return command;
     }
@@ -49,6 +50,7 @@ public abstract class AbstractImapRequest implements ImapRequest {
      * 
      * @see org.apache.james.imap.api.message.request.ImapRequest#getTag()
      */
+    @Override
     public final String getTag() {
         return tag;
     }

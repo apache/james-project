@@ -29,6 +29,7 @@ public class LuceneMailboxAnnotation extends MailboxAnnotation {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();

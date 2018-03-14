@@ -141,6 +141,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         this.dataSource = dataSource;
     }
 
+    @Override
     protected void doConfigure(HierarchicalConfiguration conf) throws ConfigurationException {
 
         String destination = conf.getString("[@destinationURL]", null);
@@ -194,10 +195,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         doAddMapping(fixedUser, fixedDomain, mapping.asString());
     }
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddressInternal(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
@@ -227,11 +225,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddress(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
@@ -259,10 +253,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#getAllMappingsInternal()
-     */
+    @Override
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;

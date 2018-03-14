@@ -94,16 +94,12 @@ public class JPAUser implements User {
         this.password = hashPassword(userName, password, alg);
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#getUserName()
-     */
+    @Override
     public String getUserName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#setPassword(java.lang.String)
-     */
+    @Override
     public boolean setPassword(String newPass) {
         final boolean result;
         if (newPass == null) {
@@ -115,9 +111,7 @@ public class JPAUser implements User {
         return result;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.User#verifyPassword(java.lang.String)
-     */
+    @Override
     public boolean verifyPassword(String pass) {
         final boolean result;
         if (pass == null) {

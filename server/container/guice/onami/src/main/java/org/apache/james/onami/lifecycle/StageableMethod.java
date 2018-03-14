@@ -46,9 +46,6 @@ final class StageableMethod extends AbstractBasicStageable<Object> {
         this.stageMethod = stageMethod;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public final void stage(StageHandler stageHandler) {
         try {

@@ -84,6 +84,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
         this.mailboxIdFactory = mailboxIdFactory;
     }
 
+    @Override
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMailboxesCreationProcessor");
 

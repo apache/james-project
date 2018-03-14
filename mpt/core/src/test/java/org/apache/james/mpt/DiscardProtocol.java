@@ -134,6 +134,7 @@ public class DiscardProtocol {
     }
     
     private final class SocketMonitor implements Runnable {
+        @Override
         public void run() {
             try {
                 long lastConnection = System.currentTimeMillis();
@@ -209,6 +210,7 @@ public class DiscardProtocol {
             this.socketChannel = socketChannel;
         }
 
+        @Override
         public void run() {
             try {
                 if (socketChannel == null) {
@@ -269,6 +271,7 @@ public class DiscardProtocol {
         /**
          * Blocks until connection is complete (closed)
          */
+        @Override
         public synchronized String complete() throws Exception {
             if (aborted) {
                 throw new Exception("Aborted");

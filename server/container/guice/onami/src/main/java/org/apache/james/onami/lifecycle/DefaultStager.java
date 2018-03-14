@@ -71,9 +71,6 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
         stageables = localStageables;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void register(Stageable stageable) {
         synchronized (stageables) {
@@ -81,35 +78,23 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public <T extends ExecutorService> T register(T executorService) {
         register(new ExecutorServiceStageable(executorService));
         return executorService;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public <T extends Closeable> T register(T closeable) {
         register(new CloseableStageable(closeable));
         return closeable;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void stage() {
         stage(null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void stage(StageHandler stageHandler) {
         if (stageHandler == null) {
@@ -128,9 +113,6 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Class<A> getStage() {
         return stage;

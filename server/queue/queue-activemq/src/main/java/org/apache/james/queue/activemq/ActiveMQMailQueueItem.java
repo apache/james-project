@@ -48,9 +48,7 @@ public class ActiveMQMailQueueItem extends JMSMailQueueItem implements ActiveMQS
         this.message = message;
     }
 
-    /**
-     * @see org.apache.james.queue.jms.JMSMailQueueItem#done(boolean)
-     */
+    @Override
     public void done(boolean success) throws MailQueueException {
         super.done(success);
         if (success) {

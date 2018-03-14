@@ -29,6 +29,7 @@ public class JpaSelectedInbox extends SelectedInbox {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();

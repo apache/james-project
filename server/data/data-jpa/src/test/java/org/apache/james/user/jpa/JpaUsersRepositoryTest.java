@@ -36,6 +36,7 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

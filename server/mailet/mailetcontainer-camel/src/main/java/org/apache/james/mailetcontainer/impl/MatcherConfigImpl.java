@@ -42,6 +42,7 @@ public class MatcherConfigImpl implements MatcherConfig {
      * 
      * @return a String containing the value of the initialization parameter
      */
+    @Override
     public String getCondition() {
         return condition;
     }
@@ -61,6 +62,7 @@ public class MatcherConfigImpl implements MatcherConfig {
      * 
      * @return the name of the matcher instance
      */
+    @Override
     public String getMatcherName() {
         return name;
     }
@@ -82,6 +84,7 @@ public class MatcherConfigImpl implements MatcherConfig {
      * @return a MailetContext object, used by the matcher to interact with its
      *         mailet container
      */
+    @Override
     public MailetContext getMailetContext() {
         return context;
     }

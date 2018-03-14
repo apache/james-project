@@ -54,6 +54,7 @@ public class ClientProviderImpl implements ClientProvider {
     }
 
 
+    @Override
     public Client get() {
         TransportClient transportClient = TransportClient.builder().build();
         ConsumerChainer<Host> consumer = Throwing.consumer(host -> transportClient

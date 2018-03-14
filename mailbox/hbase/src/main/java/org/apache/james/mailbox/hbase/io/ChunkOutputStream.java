@@ -62,11 +62,6 @@ public class ChunkOutputStream extends OutputStream {
         this.chunk = new byte[chunkSize];
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.io.OutputStream#write(int)
-     */
     @Override
     public void write(int b) throws IOException {
         if (chunk.length - 1 == pos) {

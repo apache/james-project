@@ -80,6 +80,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
         this.userAdder = userAdder;
     }
     
+    @Override
     public boolean addUser(String user, String password) throws Exception {
         if (userAdder == null) {
             monitor.note("Please ensure user '" + user + "' with password '" + password + "' exists.");
@@ -90,6 +91,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
         return true;
     }
 
+    @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
         throw new NotImplementedException();
     }
@@ -100,9 +102,11 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     public void afterTests() throws Exception {
     }
 
+    @Override
     public void beforeTest() throws Exception {
     }
     
+    @Override
     public void afterTest() throws Exception {
     }
 

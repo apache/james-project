@@ -74,11 +74,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddressInternal(java.lang.String,
-     *      java.lang.String)
-     */
+    @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         String mapping = getMapping(user, domain, "selectExactMappings");
         if (mapping != null) {
@@ -110,10 +106,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddress(java.lang.String, java.lang.String)
-     */
+    @Override
     protected Mappings getUserDomainMappingsInternal(String user, String domain) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
@@ -138,10 +131,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @throws RecipientRewriteTableException
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#getAllMappingsInternal()
-     */
+    @Override
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();

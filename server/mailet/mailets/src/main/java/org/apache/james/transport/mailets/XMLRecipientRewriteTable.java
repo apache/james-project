@@ -81,9 +81,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
      */
     private Map<String, String> mappings = new HashMap<>();
 
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
         String mapping = getInitParameter("mapping");
 
@@ -99,6 +97,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param recipientsMap
      *            the mapping of virtual to real recipients
      */
+    @Override
     protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
@@ -114,6 +113,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
+    @Override
     public String getMailetInfo() {
         return "XML Virtual User Table mailet";
     }

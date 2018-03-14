@@ -54,6 +54,7 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
         this.partContentDescriptors = partContentDescriptors;
     }
 
+    @Override
     public int content() {
         return content;
     }
@@ -66,12 +67,7 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
         return "Fetch " + content;
     }
 
-    /**
-     * Gets content descriptors for the parts to be fetched.
-     * 
-     * @return <code>Set</code> of {@link org.apache.james.mailbox.MessageResult.FetchGroup.PartContentDescriptor},
-     *         possibly null
-     */
+    @Override
     public Set<PartContentDescriptor> getPartContentDescriptors() {
         return partContentDescriptors;
     }

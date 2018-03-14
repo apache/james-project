@@ -29,9 +29,7 @@ import org.apache.mailet.Mail;
  */
 public class DisposeProcessor implements Processor {
 
-    /**
-     * @see org.apache.camel.Processor#process(org.apache.camel.Exchange)
-     */
+    @Override
     public void process(Exchange arg0) throws Exception {
         Mail mail = arg0.getIn().getBody(Mail.class);
         LifecycleUtil.dispose(mail.getMessage());

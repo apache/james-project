@@ -24,6 +24,7 @@ import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 
 public class InMemoryPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
+    @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
         return new InMemoryPerUserMaxQuotaManager();
     }

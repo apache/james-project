@@ -51,6 +51,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
             this.password = password;
         }
         
+        @Override
         public void prepare(HostSystem system) throws Exception {
             try {
                 system.addUser(user, password);
@@ -151,6 +152,7 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
 
             public ProtocolSession session;
 
+            @Override
             public void doContinue() {
                 if (session != null) {
                     session.doContinue();

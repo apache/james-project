@@ -44,16 +44,19 @@ public final class SystemLoggingMonitor implements Monitor {
         this.verbose = verbose;
     }
 
+    @Override
     public void note(String message) {
         System.out.println(message);
     }
 
+    @Override
     public void debug(char character) {
         if (verbose) {
             System.out.print(character);
         }
     }
 
+    @Override
     public void debug(String message) {
         if (verbose) {
             System.out.println(message);

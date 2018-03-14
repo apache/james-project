@@ -34,10 +34,12 @@ public class ExistsResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return message instanceof ExistsResponse;
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final ExistsResponse existsResponse = (ExistsResponse) acceptableMessage;
         final long numberOfMessages = existsResponse.getNumberOfMessages();

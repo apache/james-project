@@ -114,6 +114,7 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
         }
     }
 
+    @Override
     public void receiveSerializedEvent(byte[] serializedEvent) {
         try {
             MailboxEvent event = eventSerializer.deSerializeEvent(serializedEvent);

@@ -58,18 +58,12 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
      */
     private String algo;
 
-    /**
-     * @see org.apache.james.user.lib.AbstractUsersRepository#doConfigure(HierarchicalConfiguration)
-     */
     @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
         algo = config.getString("algorithm", "MD5");
         super.doConfigure(config);
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#getUserByName(String)
-     */
     @Override
     public User getUserByName(String name) throws UsersRepositoryException {
         KeyValue keyValue = getKeyValue(name);
@@ -80,9 +74,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         return user;
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#updateUser(User)
-     */
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
         if (user == null) {
@@ -98,9 +89,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         putUser((DefaultUser) user, false);
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#removeUser(String)
-     */
     @Override
     public void removeUser(String name) throws UsersRepositoryException {
         HTableInterface table = null;
@@ -123,18 +111,12 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#contains(String)
-     */
     @Override
     public boolean contains(String name) throws UsersRepositoryException {
         KeyValue keyValue = getKeyValue(name.toLowerCase(Locale.US));
         return (keyValue != null);
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#test(String, String)
-     */
     @Override
     public boolean test(String name, String password) throws UsersRepositoryException {
         KeyValue keyValue = getKeyValue(name);
@@ -146,9 +128,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         return false;
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#countUsers()
-     */
     @Override
     public int countUsers() throws UsersRepositoryException {
         HTableInterface table = null;
@@ -181,9 +160,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         }
     }
 
-    /**
-     * @see org.apache.james.user.api.UsersRepository#list()
-     */
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
         List<String> list = new ArrayList<>();
@@ -217,9 +193,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         return list.iterator();
     }
 
-    /**
-     * @see org.apache.james.user.lib.AbstractUsersRepository#doAddUser(String, String)
-     */
     @Override
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, algo);

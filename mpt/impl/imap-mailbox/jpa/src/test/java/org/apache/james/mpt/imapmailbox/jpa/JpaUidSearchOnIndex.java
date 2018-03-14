@@ -29,6 +29,7 @@ public class JpaUidSearchOnIndex extends UidSearchOnIndex {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();

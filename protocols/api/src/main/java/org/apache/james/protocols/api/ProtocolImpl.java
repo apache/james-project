@@ -34,26 +34,17 @@ public abstract class ProtocolImpl implements Protocol {
         this.config = config;
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Protocol#getProtocolChain()
-     */
+    @Override
     public ProtocolHandlerChain getProtocolChain() {
         return chain;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Protocol#newSession(org.apache.james.protocols.api.ProtocolTransport)
-     */
+    @Override
     public ProtocolSession newSession(ProtocolTransport transport) {
         return new ProtocolSessionImpl(transport, config);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Protocol#getConfiguration()
-     */
+    @Override
     public ProtocolConfiguration getConfiguration() {
         return config;
     }

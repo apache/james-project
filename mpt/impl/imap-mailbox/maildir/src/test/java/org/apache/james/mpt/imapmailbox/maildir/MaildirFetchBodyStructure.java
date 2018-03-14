@@ -29,6 +29,7 @@ public class MaildirFetchBodyStructure extends FetchBodyStructure {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new MaildirHostSystem();

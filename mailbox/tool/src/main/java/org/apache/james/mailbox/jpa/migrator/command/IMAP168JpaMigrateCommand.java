@@ -47,9 +47,7 @@ import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
  */
 public class IMAP168JpaMigrateCommand implements JpaMigrateCommand {
 
-    /**
-     * @see org.apache.james.mailbox.jpa.migrator.command#migrate(javax.persistence.EntityManager)
-     */
+    @Override
     public void migrate(EntityManager em) throws JpaMigrateException {
 
         JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOX ADD COLUMN NAMESPACE VARCHAR(255)");

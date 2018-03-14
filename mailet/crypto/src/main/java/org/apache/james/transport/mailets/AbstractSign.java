@@ -426,9 +426,7 @@ public abstract class AbstractSign extends GenericMailet {
     /* ****************** End of setters and getters ********************** */
     /* ******************************************************************** */    
     
-    /**
-     * Mailet initialization routine.
-     */
+    @Override
     public void init() throws MessagingException {
         
         // check that all init parameters have been declared in allowedInitParameters
@@ -467,6 +465,7 @@ public abstract class AbstractSign extends GenericMailet {
      * @param mail the mail to sign
      * @throws MessagingException if a problem arises signing the mail
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         
         try {

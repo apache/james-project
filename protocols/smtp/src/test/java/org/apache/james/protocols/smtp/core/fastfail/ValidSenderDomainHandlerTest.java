@@ -62,6 +62,7 @@ public class ValidSenderDomainHandlerTest {
         return new BaseFakeSMTPSession() {
             HashMap<String,Object> map = new HashMap<>();
 
+            @Override
             public Map<String,Object> getState() {
 
                 map.put(SMTPSession.SENDER, sender);
@@ -69,10 +70,12 @@ public class ValidSenderDomainHandlerTest {
                 return map;
             }
 
+            @Override
             public boolean isRelayingAllowed() {
                 return false;
             }
 
+            @Override
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();
@@ -90,6 +93,7 @@ public class ValidSenderDomainHandlerTest {
              * (non-Javadoc)
              * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
              */
+            @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {
                     throw new UnsupportedOperationException();

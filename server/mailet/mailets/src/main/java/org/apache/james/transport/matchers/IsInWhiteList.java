@@ -71,17 +71,12 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
         selectByPK = sqlQueries.getSqlString("selectByPK", true);
     }
 
-    /**
-     * @see org.apache.james.transport.matchers.AbstractSQLWhitelistMatcher#getSQLSectionName()
-     */
+    @Override
     protected String getSQLSectionName() {
         return "WhiteList";
     }
 
-    /**
-     * @see org.apache.james.transport.matchers.AbstractSQLWhitelistMatcher
-     * #matchedWhitelist(org.apache.mailet.MailAddress, org.apache.mailet.Mail)
-     */
+    @Override
     protected boolean matchedWhitelist(MailAddress recipientMailAddress, Mail mail) throws MessagingException {
         MailAddress senderMailAddress = mail.getSender();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
@@ -178,18 +173,12 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
         return false;
     }
 
-    /**
-     * @see org.apache.james.transport.matchers.AbstractSQLWhitelistMatcher
-     * #getTableCreateQueryName()
-     */
+    @Override
     protected String getTableCreateQueryName() {
         return "createWhiteListTable";
     }
 
-    /**
-     * @see
-     * org.apache.james.transport.matchers.AbstractSQLWhitelistMatcher#getTableName()
-     */
+    @Override
     protected String getTableName() {
         return "whiteListTableName";
     }

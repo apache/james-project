@@ -1247,9 +1247,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     
 
-    /**
-     * @see org.apache.james.mailbox.store.search.ListeningMessageSearchIndex#add(org.apache.james.mailbox.MailboxSession, org.apache.james.mailbox.store.mail.model.Mailbox, MailboxMessage)
-     */
     @Override
     public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws MailboxException {
         Document doc = createMessageDocument(session, membership);
@@ -1263,9 +1260,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         }
     }
 
-    /**
-     * @see ListeningMessageSearchIndex#update
-     */
     @Override
     public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
         for (UpdatedFlags updatedFlags : updatedFlagsList) {

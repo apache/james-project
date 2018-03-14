@@ -76,8 +76,6 @@ public class DoublingRetrySchedule implements RetrySchedule {
         this.multiplier = Math.max(1, multiplier);
     }
 
-    /**
-     */
     @Override
     public long getInterval(int index) {
         if (startInterval > 0) {
@@ -90,9 +88,6 @@ public class DoublingRetrySchedule implements RetrySchedule {
         return multiplier * Math.min((long) (startInterval * Math.pow(2, index)), maxInterval);
     }    
 
-    /**
-     * @see java.lang.Object#toString()
-     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

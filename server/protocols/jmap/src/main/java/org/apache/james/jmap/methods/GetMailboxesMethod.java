@@ -77,6 +77,7 @@ public class GetMailboxesMethod implements Method {
         return GetMailboxesRequest.class;
     }
 
+    @Override
     public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;

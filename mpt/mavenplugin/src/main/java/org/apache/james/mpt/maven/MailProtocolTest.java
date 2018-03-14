@@ -162,29 +162,20 @@ public class MailProtocolTest implements Monitor {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#debug(char)
-     */
+    @Override
     public void debug(char character) {
         //getLog().debug("'" + character + "'");
         // do nothing by default
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#debug(java.lang.String)
-     */
+    @Override
     public void debug(String message) {
         //getLog().debug(message);
         // do nothing by default
 
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mpt.Monitor#note(java.lang.String)
-     */
+    @Override
     public void note(String message) {
         //getLog().debug(message);
         System.out.println(message);

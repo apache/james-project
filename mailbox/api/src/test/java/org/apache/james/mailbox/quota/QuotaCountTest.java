@@ -24,10 +24,12 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QuotaCountTest implements QuotaValueTest<QuotaCount> {
 
+    @Override
     public QuotaCount instance(long value) {
         return QuotaCount.count(value);
     }
 
+    @Override
     public QuotaCount unlimited() {
         return QuotaCount.unlimited();
     }

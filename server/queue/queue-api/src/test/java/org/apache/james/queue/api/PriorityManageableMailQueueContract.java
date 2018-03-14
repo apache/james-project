@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 
 public interface PriorityManageableMailQueueContract extends ManageableMailQueueContract, PriorityMailQueueContract {
 
+    @Override
     ManageableMailQueue getManageableMailQueue();
 
     @Test

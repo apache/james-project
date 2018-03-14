@@ -29,6 +29,7 @@ public class MaildirQuotaTest extends QuotaTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new MaildirHostSystem();
@@ -40,6 +41,7 @@ public class MaildirQuotaTest extends QuotaTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

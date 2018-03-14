@@ -68,13 +68,12 @@ public class Sign extends AbstractSign {
      *
      * @return a string describing this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "Signature Mailet";
     }
     
-    /**
-     *
-     */
+    @Override
     protected  String[] getAllowedInitParameters() {
         return new String[]{
             "keyHolderClass",
@@ -114,6 +113,7 @@ public class Sign extends AbstractSign {
      *     "[signerName]" <[signerAddress]>
      * </code></pre>
      */
+    @Override
     public String getExplanationText() {
         String explanationText = super.getExplanationText();
         if (explanationText == null) {
@@ -135,6 +135,7 @@ public class Sign extends AbstractSign {
     /**
      * If the <CODE>&lt;postmasterSigns&gt;</CODE> init parameter is missing sets it to <I>true</I>.
      */
+    @Override
     protected void initPostmasterSigns() {
         setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? true : Boolean.valueOf(getInitParameter("postmasterSigns")));
     }
@@ -142,6 +143,7 @@ public class Sign extends AbstractSign {
     /**
      * If the <CODE>&lt;rebuildFrom&gt;</CODE> init parameter is missing sets it to <I>true</I>.
      */
+    @Override
     protected void initRebuildFrom() throws MessagingException {
         setRebuildFrom((getInitParameter("rebuildFrom") == null) ? true : Boolean.valueOf(getInitParameter("rebuildFrom")));
         if (isDebug()) {
@@ -161,6 +163,7 @@ public class Sign extends AbstractSign {
      * A text file with the massaged contents of {@link #getExplanationText}
      * is attached to the original message.
      */    
+    @Override
     protected MimeBodyPart getWrapperBodyPart(Mail mail) throws MessagingException, IOException {
         
         String explanationText = getExplanationText();

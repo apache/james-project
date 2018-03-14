@@ -46,9 +46,8 @@ public class StoreProcessor extends ProcessorAbstract {
      * Method process connects to a Folder in a Message Store, creates a
      * <code>FolderProcessor</code> and runs it to process the messages in the
      * Folder.
-     * 
-     * @see org.apache.james.fetchmail.ProcessorAbstract#process()
      */
+    @Override
     public void process() throws MessagingException {
         Store store = null;
         Folder folder;

@@ -41,10 +41,7 @@ public class JCRRepositoryAuthenticator implements Authenticator {
         this.repository = repository;
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.Authenticator#isAuthentic(java.lang.String, java.lang.CharSequence)
-     */
+    @Override
     public boolean isAuthentic(String userid, CharSequence passwd) {
         Repository repos = repository.getRepository();
         try {

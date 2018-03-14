@@ -42,6 +42,7 @@ public interface SMTPSession extends ProtocolSession {
      *
      * @return the configuration
      */
+    @Override
     SMTPConfiguration getConfiguration();
     
     

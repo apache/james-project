@@ -120,6 +120,7 @@ public class JPAProperty implements Property {
      * 
      * @return not null
      */
+    @Override
     public String getLocalName() {
         return localName;
     }
@@ -129,6 +130,7 @@ public class JPAProperty implements Property {
      * 
      * @return not null
      */
+    @Override
     public String getNamespace() {
         return namespace;
     }
@@ -138,6 +140,7 @@ public class JPAProperty implements Property {
      * 
      * @return not null
      */
+    @Override
     public String getValue() {
         return value;
     }

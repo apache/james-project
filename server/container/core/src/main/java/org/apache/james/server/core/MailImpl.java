@@ -564,6 +564,7 @@ public class MailImpl implements Disposable, Mail {
         this.sender = sender;
     }
 
+    @Override
     public void setState(String state) {
         this.state = state;
     }
@@ -576,6 +577,7 @@ public class MailImpl implements Disposable, Mail {
         this.remoteAddr = remoteAddr;
     }
 
+    @Override
     public void setLastUpdated(Date lastUpdated) {
         // Make a defensive copy to ensure that the date
         // doesn't get changed external to the class

@@ -154,6 +154,7 @@ public class BayesianAnalysis extends GenericMailet {
      * 
      * @return a string describing this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "BayesianAnalysis Mailet";
     }
@@ -225,6 +226,7 @@ public class BayesianAnalysis extends GenericMailet {
      * @throws MessagingException
      *             if a problem arises
      */
+    @Override
     public void init() throws MessagingException {
         String repositoryPath = getInitParameter("repositoryPath");
 
@@ -284,6 +286,7 @@ public class BayesianAnalysis extends GenericMailet {
      * @throws MessagingException
      *             if a problem arises
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
 
         try {
@@ -417,6 +420,7 @@ public class BayesianAnalysis extends GenericMailet {
         /**
          * Thread entry point.
          */
+        @Override
         public void run() {
             LOGGER.info("CorpusLoader thread started: will wake up every " + CORPUS_RELOAD_INTERVAL + " ms");
 

@@ -54,19 +54,23 @@ public class MailboxMessageResultUtilsTest {
             value = "Value";
         }
 
+        @Override
         public long size() {
             return 0;
         }
 
+        @Override
         public String getName() {
             return name;
         }
 
+        @Override
         public String getValue() {
             return value;
         }
 
         
+        @Override
         public InputStream getInputStream() throws IOException {
             return null;
         }

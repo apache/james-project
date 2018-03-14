@@ -103,14 +103,17 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         setMailetContext(aMailetContext);
     }
 
+    @Override
     public DateTime getScriptActivationDate() {
         return scriptActivationDate;
     }
 
+    @Override
     public DateTime getScriptInterpretationDate() {
         return scriptInterpretationDate;
     }
 
+    @Override
     public MailAddress getRecipient() {
         return recipient;
     }
@@ -124,6 +127,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         return getMail().getMessage();
     }
 
+    @Override
     public List<Action> getActions() {
         List<Action> actions = null;
         if (null == (actions = getActionsBasic())) {
@@ -141,10 +145,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         return fieldActions;
     }
 
+    @Override
     public void addAction(Action action) {
         getActions().add(action);
     }
 
+    @Override
     public void executeActions() throws SieveException {
         final List<Action> actions = getActions();
         for (final Action action: actions) {
@@ -168,9 +174,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         setActions(computeActions());
     }
 
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getHeader(String)
-     */
+    @Override
     public List<String> getHeader(String name) throws SieveMailException {
         try {
             String[] headers = getMessage().getHeader(name);
@@ -180,9 +184,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
     
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getHeaderNames()
-     */
+    @Override
     public List<String> getHeaderNames() throws SieveMailException {
         Set<String> headerNames = new HashSet<>();
         try {
@@ -196,16 +198,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
     
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getMatchingHeader(String)
-     */
+    @Override
     public List<String> getMatchingHeader(String name) throws SieveMailException {
         return MailUtils.getMatchingHeader(this, name);
     }
     
-    /**
-     * @see org.apache.jsieve.mail.MailAdapter#getSize()
-     */
+    @Override
     public int getSize() throws SieveMailException {
         try {
             return (int) getMail().getMessageSize();
@@ -230,6 +228,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         return envelopes;
     }
     
+    @Override
     public List<String> getEnvelope(String name) throws SieveMailException {
         List<String> values = new ArrayList<>(1);
         String value = getEnvelopes().get(name);
@@ -239,16 +238,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         return values;
     }
     
-    /**
-     * @see org.apache.jsieve.mail.optional.EnvelopeAccessors#getEnvelopeNames()
-     */
+    @Override
     public List<String> getEnvelopeNames() throws SieveMailException {
         return new ArrayList<>(getEnvelopes().keySet());
     }
     
-    /**
-     * @see org.apache.jsieve.mail.optional.EnvelopeAccessors#getMatchingEnvelope(String)
-     */
+    @Override
     public List<String> getMatchingEnvelope(String name) throws SieveMailException {
         final List<String> matchedEnvelopeValues = new ArrayList<>(32);
         for (String envelopeName: getEnvelopeNames()) {
@@ -336,6 +331,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
                 + " Message ID: " + (null == messageID ? "null" : messageID);
     }
     
+    @Override
     public String getContentType() throws SieveMailException {
         try {
             return getMessage().getContentType();
@@ -344,6 +340,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
     
+    @Override
     public Address[] parseAddresses(String arg) throws SieveMailException, InternetAddressException {
         try {
             List<String> headerValues = getHeader(arg);
@@ -368,18 +365,22 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
 
+    @Override
     public String getServerInfo() {
         return getMailetContext().getServerInfo();
     }
 
+    @Override
     public void post(String uri, Mail mail) throws MessagingException {
         poster.post(uri, mail);
     }
     
+    @Override
     public void post(MailAddress sender, Collection<MailAddress> recipients, MimeMessage mail) throws MessagingException {
         getMailetContext().sendMail(sender, recipients, mail);
     }
 
+    @Override
     public boolean isInBodyText(List<String> phrasesCaseInsensitive) throws SieveMailException {
         try {
             return MessageMatcher.builder()
@@ -393,6 +394,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
 
+    @Override
     public boolean isInBodyRaw(List<String> phrasesCaseInsensitive) throws SieveMailException {
         try {
             return MessageMatcher.builder()
@@ -406,6 +408,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
 
+    @Override
     public boolean isInBodyContent(List<String> contentTypes, List<String> phrasesCaseInsensitive) throws SieveMailException {
         try {
             return MessageMatcher.builder()
@@ -419,5 +422,6 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         }
     }
 
+    @Override
     public void setContext(SieveContext context) {}
 }

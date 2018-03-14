@@ -44,10 +44,7 @@ public class OutputStreamImapResponseWriter implements ImapResponseWriter {
 
 
 
-    /**
-     * @see
-     * org.apache.james.imap.encode.ImapResponseWriter#write(org.apache.james.imap.message.response.Literal)
-     */
+    @Override
     public void write(Literal literal) throws IOException {
         InputStream in = null;
         try {
@@ -65,9 +62,7 @@ public class OutputStreamImapResponseWriter implements ImapResponseWriter {
 
     }
 
-    /**
-     * @see org.apache.james.imap.encode.ImapResponseWriter#write(byte[])
-     */
+    @Override
     public void write(byte[] buffer) throws IOException {
         output.write(buffer);
     }

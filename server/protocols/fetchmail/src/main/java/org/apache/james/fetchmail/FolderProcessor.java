@@ -64,9 +64,8 @@ public class FolderProcessor extends ProcessorAbstract {
      * Method process opens a Folder, fetches the Envelopes for all of its
      * Messages, creates a <code>MessageProcessor</code> and runs it to process
      * each message.
-     * 
-     * @see org.apache.james.fetchmail.ProcessorAbstract#process()
      */
+    @Override
     public void process() throws MessagingException {
         int messagesProcessed = 0;
         int messageCount = 0;

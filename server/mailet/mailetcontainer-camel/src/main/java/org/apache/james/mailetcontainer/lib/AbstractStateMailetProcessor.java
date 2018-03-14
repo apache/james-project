@@ -93,10 +93,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     }
 
 
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         this.state = config.getString("[@state]", null);
         if (state == null) {
@@ -395,10 +392,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
          */
         private static final String TERMINATING_MAILET_NAME = "Terminating%Mailet%Name";
 
-        /**
-         * @see
-         * org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
-         */
+        @Override
         public void service(Mail mail) {
             if (!(Mail.ERROR.equals(mail.getState()))) {
                 // Don't complain if we fall off the end of the

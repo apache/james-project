@@ -44,12 +44,7 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
         this.factory = factory;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.base.AbstractChainedProcessor#doProcess(org.apache.james.imap.api.ImapMessage,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected void doProcess(CompressRequest request, Responder responder, ImapSession session) {
         if (session.isCompressionSupported()) {
             Object obj = session.getAttribute(COMPRESSED);
@@ -71,10 +66,7 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
         }
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-     * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public List<String> getImplementedCapabilities(ImapSession session) {
         if (session.isCompressionSupported()) {

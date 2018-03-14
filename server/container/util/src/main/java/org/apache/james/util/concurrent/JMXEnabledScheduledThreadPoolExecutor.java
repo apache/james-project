@@ -56,12 +56,14 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
         registerMBean();
     }
 
+    @Override
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
         inProgress.add(r);
         startTime.set(System.currentTimeMillis());
     }
 
+    @Override
     protected void afterExecute(Runnable r, Throwable t) {
         long time = System.currentTimeMillis() - startTime.get();
         synchronized (this) {
@@ -117,44 +119,32 @@ public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolEx
         return super.shutdownNow();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getTotalTasks()
-     */
+    @Override
     public synchronized int getTotalTasks() {
         return totalTasks;
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getAverageTaskTime()
-     */
+    @Override
     public synchronized double getAverageTaskTime() {
         return (totalTasks == 0) ? 0 : totalTime / totalTasks;
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getActiveThreads()
-     */
+    @Override
     public int getActiveThreads() {
         return getPoolSize();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getActiveTasks()
-     */
+    @Override
     public int getActiveTasks() {
         return getActiveCount();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getQueuedTasks()
-     */
+    @Override
     public int getQueuedTasks() {
         return getQueue().size();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getMaximalThreads()
-     */
+    @Override
     public int getMaximalThreads() {
         return getMaximumPoolSize();
     }

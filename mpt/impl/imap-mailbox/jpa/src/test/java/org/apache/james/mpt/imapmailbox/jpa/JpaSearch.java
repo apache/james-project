@@ -29,6 +29,7 @@ public class JpaSearch extends Search {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();

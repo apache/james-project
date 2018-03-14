@@ -70,9 +70,6 @@ public class HBaseUsersRepositoryTest extends AbstractUsersRepositoryTest {
         }
     }
 
-    /**
-     * @see org.apache.james.user.lib.AbstractUsersRepositoryTest#getUsersRepository()
-     */
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         HBaseUsersRepository userRepository = new HBaseUsersRepository();

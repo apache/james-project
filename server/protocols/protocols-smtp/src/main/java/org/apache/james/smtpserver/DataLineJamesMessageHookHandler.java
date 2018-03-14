@@ -80,6 +80,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
 
     }
 
+    @Override
     public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {
 
         byte[] line = new byte[lineByteBuffer.remaining()];

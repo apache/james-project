@@ -112,9 +112,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
 
     }
 
-    /**
-     * @see org.apache.james.pop3server.core.CapaCapability#getImplementedCapabilities(org.apache.james.pop3server.POP3Session)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public Set<String> getImplementedCapabilities(POP3Session session) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
@@ -124,9 +122,6 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
     @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;

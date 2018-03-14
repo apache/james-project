@@ -70,9 +70,7 @@ public class FromRepository extends GenericMailet {
         this.mailStore = mailStore;
     }
 
-    /**
-     * Initialize the mailet, loading configuration information.
-     */
+    @Override
     public void init() throws MessagingException {
         repositoryPath = getInitParameter("repositoryPath");
         processor = (getInitParameter("processor") == null) ? Mail.DEFAULT : getInitParameter("processor");
@@ -97,6 +95,7 @@ public class FromRepository extends GenericMailet {
      *            triggering e-mail (eventually parameterize via the trigger
      *            message)
      */
+    @Override
     public void service(Mail trigger) throws MessagingException {
         trigger.setState(Mail.GHOST);
         Collection<String> processed = new ArrayList<>();
@@ -128,11 +127,7 @@ public class FromRepository extends GenericMailet {
         }
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "FromRepository Mailet";
     }

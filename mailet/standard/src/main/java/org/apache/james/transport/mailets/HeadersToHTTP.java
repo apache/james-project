@@ -68,9 +68,7 @@ public class HeadersToHTTP extends GenericMailet {
     private String parameterValue = null;
     private boolean passThrough = true;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
 
         passThrough = (getInitParameter("passThrough", "true").compareToIgnoreCase("true") == 0);
@@ -109,6 +107,7 @@ public class HeadersToHTTP extends GenericMailet {
      *            the mail being processed
      * 
      */
+    @Override
     public void service(Mail mail) {
         try {
             LOGGER.debug("{} HeadersToHTTP: Starting", mail.getName());
@@ -187,11 +186,7 @@ public class HeadersToHTTP extends GenericMailet {
         return pairs;
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "HTTP POST serialised message";
     }

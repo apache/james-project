@@ -31,6 +31,7 @@ public class FileAuthenticateTest extends AuthenticateTest {
 
     private ManageSieveHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new FileModule());
@@ -44,6 +45,7 @@ public class FileAuthenticateTest extends AuthenticateTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

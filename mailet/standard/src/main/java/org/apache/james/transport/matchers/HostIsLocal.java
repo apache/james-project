@@ -30,10 +30,7 @@ import org.apache.mailet.base.GenericRecipientMatcher;
  */
 public class HostIsLocal extends GenericRecipientMatcher {
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericRecipientMatcher#matchRecipient(org.apache.mailet.MailAddress)
-     */
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         return getMailetContext().isLocalServer(recipient.getDomain());
     }

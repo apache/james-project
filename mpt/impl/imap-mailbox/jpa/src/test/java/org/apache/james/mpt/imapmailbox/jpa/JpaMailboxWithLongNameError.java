@@ -31,6 +31,7 @@ public class JpaMailboxWithLongNameError extends MailboxWithLongNameError {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();

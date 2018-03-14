@@ -161,6 +161,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart);
     }
 
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         /*
       The repository configuration
@@ -381,10 +382,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
                 ins.seek(messageStart - 1);
             }
             MessageAction op = new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return true;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     if (key.equals(generateKeyValue(bodyText))) {
                         LOGGER.debug("{} Located message. Returning MIME message", this.getClass().getName());
@@ -432,10 +435,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             }
             this.mList = new Hashtable<>((int) initialCapacity);
             this.parseMboxFile(ins, new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return false;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     String key = generateKeyValue(bodyText);
                     mList.put(key, messageStart);
@@ -461,9 +466,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#store(Mail)
-     */
+    @Override
     public void store(Mail mc) {
         LOGGER.debug("Will store message to file {}", mboxFile);
 
@@ -499,9 +502,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#list()
-     */
+    @Override
     public Iterator<String> list() {
         ArrayList<String> keys = loadKeysAsArray();
 
@@ -524,9 +525,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         return new ArrayList<>(mList.keySet());
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#retrieve(String)
-     */
+    @Override
     public Mail retrieve(String key) {
 
         loadKeys();
@@ -544,9 +543,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         return res;
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Mail)
-     */
+    @Override
     public void remove(Mail mail) {
         ArrayList<Mail> remArray = new ArrayList<>();
         remArray.add(mail);
@@ -597,9 +594,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Collection)
-     */
+    @Override
     public void remove(final Collection<Mail> mails) {
         LOGGER.debug("Removing entry for key {}", mails);
         // The plan is as follows:
@@ -610,10 +605,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             RandomAccessFile ins = new RandomAccessFile(mboxFile, "r"); // The source
             final RandomAccessFile outputFile = new RandomAccessFile(mboxFile + WORKEXT, "rw"); // The destination
             parseMboxFile(ins, new MessageAction() {
+                @Override
                 public boolean isComplete() {
                     return false;
                 }
 
+                @Override
                 public MimeMessage messageAction(String messageSeparator, String bodyText, long messageStart) {
                     // Write out the messages as we go, until we reach the key
                     // we want
@@ -671,9 +668,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(String)
-     */
+    @Override
     public void remove(String key) {
         loadKeys();
         try {
@@ -689,16 +684,12 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         unlockMBox();
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#lock(String)
-     */
+    @Override
     public boolean lock(String key) {
         return false;
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#unlock(String)
-     */
+    @Override
     public boolean unlock(String key) {
         return false;
     }

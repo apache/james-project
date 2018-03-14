@@ -41,9 +41,7 @@ public class NumberedRepositoryFileFilter implements FilenameFilter {
         prefix = ".Repository";
     }
 
-    /**
-     * @see java.io.FilenameFilter#accept(File, String)
-     */
+    @Override
     public boolean accept(File file, String name) {
         // System.out.println("check: " + name);
         // System.out.println("post: " + postfix);

@@ -181,6 +181,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         }
     }
 
+    @Override
     @VisibleForTesting
     public String getHelp() throws MessagingException {
         if (null == help) {

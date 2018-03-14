@@ -80,10 +80,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return new MailboxPath(getNamespace(), getUser(), getName());
     }
    
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
-     */
+    @Override
     public String getName() {
         if (isPersistent()) {
             try {
@@ -95,10 +92,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return name;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUidValidity()
-     */
+    @Override
     public long getUidValidity() {
         if (isPersistent()) {
             try {
@@ -110,11 +104,8 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return uidValidity;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setName(java.lang.String)
-     */
-    public void setName(String name) {  
+    @Override
+    public void setName(String name) {
         if (isPersistent()) {
             try {
                 node.setProperty(NAME_PROPERTY, name);
@@ -130,26 +121,17 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#getNode()
-     */
+    @Override
     public Node getNode() {
         return node;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#isPersistent()
-     */
+    @Override
     public boolean isPersistent() {
         return node != null;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.jcr.Persistent#merge(javax.jcr.Node)
-     */
+    @Override
     public void  merge(Node node) throws RepositoryException {
         node.setProperty(NAME_PROPERTY, getName());
         node.setProperty(UIDVALIDITY_PROPERTY, getUidValidity());
@@ -222,6 +204,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         
     }
 
+    @Override
     public String getNamespace() {
         if (isPersistent()) {
             try {
@@ -233,10 +216,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return namespace;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUser()
-     */
+    @Override
     public String getUser() {
         if (isPersistent()) {
             try {
@@ -253,10 +233,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return user;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setNamespace(java.lang.String)
-     */
+    @Override
     public void setNamespace(String namespace) {
         if (isPersistent()) {
             try {
@@ -270,10 +247,7 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setUser(java.lang.String)
-     */
+    @Override
     public void setUser(String user) {
         if (isPersistent()) {
             try {
@@ -311,18 +285,12 @@ public class JCRMailbox implements Mailbox, JCRImapConstants, Persistent {
         return highestKnownModSeq;
     }
     
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getACL()
-     */
     @Override
     public MailboxACL getACL() {
         // TODO ACL support
         return MailboxACL.OWNER_FULL_ACL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setACL(org.apache.james.mailbox.MailboxACL)
-     */
     @Override
     public void setACL(MailboxACL acl) {
         // TODO ACL support

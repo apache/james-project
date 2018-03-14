@@ -36,14 +36,17 @@ public class MaxRcptHandlerTest {
         return new BaseFakeSMTPSession() {
             HashMap<String,Object> state = new HashMap<>();
 
+            @Override
             public Map<String,Object> getState() {
                 return state;
             }
 
+            @Override
             public boolean isRelayingAllowed() {
                 return false;
             }
 
+            @Override
             public int getRcptCount() {
                 return rcptCount;
             }

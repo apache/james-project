@@ -32,9 +32,7 @@ import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
  */
 public class IMAP176JpaMigrateCommand implements JpaMigrateCommand {
 
-    /**
-     * @see org.apache.james.mailbox.jpa.migrator.command#migrate(javax.persistence.EntityManager)
-     */
+    @Override
     public void migrate(EntityManager em) throws JpaMigrateException {
         JpaMigrateQuery.executeUpdate(em, "UPDATE MAILBOX SET NAMESPACE = '#private'");
     }

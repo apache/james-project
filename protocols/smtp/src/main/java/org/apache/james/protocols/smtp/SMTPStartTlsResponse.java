@@ -48,14 +48,17 @@ public class SMTPStartTlsResponse extends SMTPResponse implements StartTlsRespon
         // We need to override this and return a StartTlsResponse. See ROTOCOLS-89
         return new StartTlsResponse() {
             
+            @Override
             public boolean isEndSession() {
                 return SMTPStartTlsResponse.this.isEndSession();
             }
             
+            @Override
             public String getRetCode() {
                 return SMTPStartTlsResponse.this.getRetCode();
             }
             
+            @Override
             public List<CharSequence> getLines() {
                 return SMTPStartTlsResponse.this.getLines();
             }

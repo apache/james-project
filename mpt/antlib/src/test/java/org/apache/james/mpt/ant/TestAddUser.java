@@ -33,6 +33,7 @@ public class TestAddUser extends TestCase {
     
     MailProtocolTestTask subject;
     
+    @Override
     protected void setUp() throws Exception {
         super.setUp();
         fakeServer = new DiscardProtocol();
@@ -46,6 +47,7 @@ public class TestAddUser extends TestCase {
         subject.setProject(new Project());
     }
 
+    @Override
     protected void tearDown() throws Exception {
         super.tearDown();
         fakeServer.stop();

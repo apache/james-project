@@ -972,6 +972,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return options;
     }
     
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;

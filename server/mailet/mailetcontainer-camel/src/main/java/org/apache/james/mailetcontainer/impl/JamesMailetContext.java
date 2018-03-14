@@ -136,8 +136,6 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * is different than a mail-client's reply, which would use the Reply-To or
      * From header. This will send the bounce with the server's postmaster as
      * the sender.
-     *
-     * @see org.apache.mailet.MailetContext#bounce(Mail, String)
      */
     @Override
     public void bounce(Mail mail, String message) throws MessagingException {
@@ -170,8 +168,6 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * multipart (mixed)/ contentPartRoot (body) = mpContent (alternative)/ part
      * (body) = message part (body) = original
      * </p>
-     *
-     * @see org.apache.mailet.MailetContext#bounce(Mail, String, MailAddress)
      */
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
@@ -392,6 +388,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
         sendMail(sender, recipients, message);
     }
 
+    @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) throws MessagingException {
         sendMail(sender, recipients, message, Mail.DEFAULT);
     }
@@ -420,6 +417,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
         rootMailQueue.enQueue(mail, delay, unit);
     }
 
+    @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage message, String state) throws MessagingException {
         MailImpl mail = new MailImpl(MailImpl.getId(), sender, recipients, message);
         try {

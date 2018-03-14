@@ -32,6 +32,7 @@ public class ImapResponseMessageProcessor extends AbstractChainedProcessor<ImapR
         super(ImapResponseMessage.class, next);
     }
 
+    @Override
     protected void doProcess(ImapResponseMessage acceptableMessage, Responder responder, ImapSession session) {
         responder.respond(acceptableMessage);
     }

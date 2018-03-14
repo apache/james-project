@@ -50,13 +50,12 @@ public class VrfyCmdHandler implements CommandHandler<SMTPSession> {
      * not implemented.
      *
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         return NOT_SUPPORTED;
     }
     
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

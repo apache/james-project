@@ -56,6 +56,7 @@ public class DNSServiceModule extends AbstractModule {
             this.dnsService = dnsService;
         }
 
+        @Override
         public void initModule() {
             try {
                 dnsService.configure(configurationProvider.getConfiguration("dnsservice"));

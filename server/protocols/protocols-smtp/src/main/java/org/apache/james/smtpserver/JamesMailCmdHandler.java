@@ -39,9 +39,7 @@ public class JamesMailCmdHandler extends MailCmdHandler {
         this.domainList = domainList;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.MailCmdHandler#getDefaultDomain()
-     */
+    @Override
     public String getDefaultDomain() {
         try {
             return domainList.getDefaultDomain();

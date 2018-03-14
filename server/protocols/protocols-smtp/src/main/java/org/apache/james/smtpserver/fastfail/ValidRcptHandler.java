@@ -133,12 +133,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.smtp.core.fastfail.AbstractValidRcptHandler
-     * #isLocalDomain(org.apache.james.protocols.smtp.SMTPSession,
-     * java.lang.String)
-     */
+    @Override
     protected boolean isLocalDomain(SMTPSession session, String domain) {
         try {
             return domains.containsDomain(domain);

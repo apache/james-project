@@ -64,9 +64,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
         this.configurationMappings = configurationMappings;
     }
 
-    /**
-     * @see ConfigurationProvider#registerConfiguration(String, HierarchicalConfiguration)
-     */
+    @Override
     public void registerConfiguration(String beanName, HierarchicalConfiguration conf) {
         configurations.put(beanName, conf);
     }
@@ -77,6 +75,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
      * 
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
+    @Override
     public void afterPropertiesSet() throws Exception {
         if (configurationMappings != null) {
             for (String key : configurationMappings.keySet()) {
@@ -86,9 +85,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
         }
     }
 
-    /**
-     * @see ConfigurationProvider#getConfiguration(java.lang.String)
-     */
+    @Override
     public HierarchicalConfiguration getConfiguration(String name) throws ConfigurationException {
 
         HierarchicalConfiguration conf = configurations.get(name);
@@ -134,10 +131,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
 
     }
 
-    /**
-     * @see
-     * org.springframework.context.ResourceLoaderAware#setResourceLoader(org.springframework.core.io.ResourceLoader)
-     */
+    @Override
     public void setResourceLoader(ResourceLoader loader) {
         this.loader = loader;
     }

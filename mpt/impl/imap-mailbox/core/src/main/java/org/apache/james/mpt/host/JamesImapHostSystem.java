@@ -86,6 +86,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         return true;
     }
 
+    @Override
     public Session newSession(Continuation continuation)
             throws Exception {
         return new Session(continuation);
@@ -93,6 +94,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
 
     protected abstract MailboxManager getMailboxManager();
     
+    @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
@@ -102,6 +104,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         mailboxManager.endProcessingRequest(mailboxSession);
     }
 
+    @Override
     public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
@@ -134,6 +137,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             session = new FakeImapSession();
         }
 
+        @Override
         public String readLine() throws Exception {
             if (!isReadLast) {
                 handler.handleRequest(in, out, session);
@@ -142,19 +146,23 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             return out.nextLine();
         }
 
+        @Override
         public void start() throws Exception {
             // Welcome message handled in the server
             out.write("* OK IMAP4rev1 Server ready\r\n");
         }
 
+        @Override
         public void restart() throws Exception {
             session = new FakeImapSession();
         }
 
+        @Override
         public void stop() throws Exception {
             session.deselect();
         }
 
+        @Override
         public void writeLine(String line) throws Exception {
             isReadLast = false;
             in.nextLine(line);

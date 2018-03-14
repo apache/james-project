@@ -52,10 +52,7 @@ public class MimeBodyElement implements BodyElement {
         
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.message.response.FetchResponse.BodyElement#getName()
-     */
+    @Override
     public String getName() {
         return name;
     }
@@ -75,18 +72,13 @@ public class MimeBodyElement implements BodyElement {
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.message.response.FetchResponse.BodyElement#size()
-     */
+    @Override
     public long size() {
         return size;
     }
 
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.BodyElement#getInputStream()
-     */
+    @Override
     public InputStream getInputStream() throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 

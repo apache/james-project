@@ -53,6 +53,7 @@ public class SenderIs extends GenericMatcher {
         return senders;
     }
 
+    @Override
     public void init() throws javax.mail.MessagingException {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("SenderIs should have at least one address as parameter");
@@ -63,6 +64,7 @@ public class SenderIs extends GenericMatcher {
         }
     }
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         if (senders.contains(mail.getSender())) {
             return mail.getRecipients();

@@ -35,6 +35,7 @@ public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest {
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

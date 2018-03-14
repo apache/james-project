@@ -249,6 +249,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
         
     }
     
+    @Override
     protected SMTPClient createClient() {
         return new LMTPClientImpl();
     }
@@ -285,6 +286,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
             return sendCommand("LHLO", hostname);
         }
 
+        @Override
         public int[] getReplies() throws IOException {
             int[] codes = new int[replies.size()];
             for (int i = 0; i < codes.length; i++) {
@@ -320,6 +322,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
          * (non-Javadoc)
          * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
          */
+        @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (result == null) {
                 result = hook.onMessage(session, envelope);
@@ -346,6 +349,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
          * (non-Javadoc)
          * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
          */
+        @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (RCPT1.equals(recipient.toString())) {
                 return new HookResult(HookReturnCode.DENY);

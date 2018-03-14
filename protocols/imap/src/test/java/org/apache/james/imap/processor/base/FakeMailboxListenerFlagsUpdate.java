@@ -39,9 +39,7 @@ public class FakeMailboxListenerFlagsUpdate extends FlagsUpdated {
         this.flags = flags;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxListener.FlagsUpdated#getUpdatedFlags()
-     */
+    @Override
     public List<UpdatedFlags> getUpdatedFlags() {
         return flags;
     }

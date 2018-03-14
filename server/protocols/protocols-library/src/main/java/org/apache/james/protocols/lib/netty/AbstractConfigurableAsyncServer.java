@@ -153,11 +153,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return  "org.apache.james:type=server,name=" + jmxName;
     }
     
-    /**
-     * @see
-     * org.apache.james.lifecycle.api.Configurable
-     * #configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public final void configure(HierarchicalConfiguration config) throws ConfigurationException {
 
         enabled = config.getBoolean("[@enabled]", true);
@@ -360,6 +356,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @return enabled
      */
+    @Override
     public boolean isEnabled() {
         return enabled;
     }
@@ -425,6 +422,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
      * 
      * @return the socket type ('plain' or 'secure')
      */
+    @Override
     public String getSocketType() {
         if (encryption != null && !encryption.isStartTLS()) {
             return "secure";
@@ -432,17 +430,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return "plain";
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getStartTLSSupported()
-     */
+    @Override
     public boolean getStartTLSSupported() {
         return encryption != null && encryption.isStartTLS();
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.lib.jmx.ServerMBean#getMaximumConcurrentConnections()
-     */
+    @Override
     public int getMaximumConcurrentConnections() {
         return connectionLimit;
     }
@@ -473,16 +466,12 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return enabledCipherSuites;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#isStarted()
-     */
+    @Override
     public boolean isStarted() {
         return isBound();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#start()
-     */
+    @Override
     public boolean start() {
         try {
             bind();
@@ -493,24 +482,18 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#stop()
-     */
+    @Override
     public boolean stop() {
         unbind();
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getHandledConnections()
-     */
+    @Override
     public long getHandledConnections() {
         return countHandler.getConnectionsTillStartup();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getCurrentConnections()
-     */
+    @Override
     public int getCurrentConnections() {
         return countHandler.getCurrentConnectionCount();
     }
@@ -519,9 +502,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         return countHandler;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.ServerMBean#getBoundAddresses()
-     */
+    @Override
     public String[] getBoundAddresses() {
 
         List<InetSocketAddress> addresses = getListenAddresses();

@@ -32,6 +32,7 @@ public class JPADomainListTest extends AbstractDomainListTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPADomain.class);
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

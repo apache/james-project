@@ -92,9 +92,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
         return true;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
+    @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (check(session,rcpt)) {
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
@@ -104,9 +102,7 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.HeloHook#doHelo(org.apache.james.protocols.smtp.SMTPSession, java.lang.String)
-     */
+    @Override
     public HookResult doHelo(SMTPSession session, String helo) {
         checkEhloHelo(session, helo);
         return HookResult.declined();

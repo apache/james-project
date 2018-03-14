@@ -176,10 +176,12 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         return new CassandraSubscriptionMapper(session, cassandraUtils);
     }
 
+    @Override
     public ModSeqProvider getModSeqProvider() {
         return modSeqProvider;
     }
 
+    @Override
     public UidProvider getUidProvider() {
         return uidProvider;
     }

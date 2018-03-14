@@ -38,6 +38,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         ESearchResponse response = (ESearchResponse) acceptableMessage;
         String tag = response.getTag();
@@ -82,10 +83,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         composer.end();
     }
 
-    /**
-     * @see org.apache.james.imap.encode.base.AbstractChainedImapEncoder#isAcceptable
-     * (org.apache.james.imap.api.ImapMessage)
-     */
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return (message instanceof ESearchResponse);
     }

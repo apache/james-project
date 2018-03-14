@@ -39,16 +39,12 @@ public class POP3SessionImpl extends ProtocolSessionImpl implements POP3Session 
         super(transport, configData);
     }
 
-    /**
-     * @see org.apache.james.pop3server.POP3Session#getHandlerState()
-     */
+    @Override
     public int getHandlerState() {
         return handlerState;
     }
 
-    /**
-     * @see org.apache.james.pop3server.POP3Session#setHandlerState(int)
-     */
+    @Override
     public void setHandlerState(int handlerState) {
         this.handlerState = handlerState;
     }
@@ -60,17 +56,12 @@ public class POP3SessionImpl extends ProtocolSessionImpl implements POP3Session 
         setHandlerState(AUTHENTICATION_READY);
     }
 
-    /**
-     * @see org.apache.james.pop3server.POP3Session#getUserMailbox()
-     */
+    @Override
     public Mailbox getUserMailbox() {
         return mailbox;
     }
 
-    /**
-     * @see
-     * org.apache.james.pop3server.POP3Session#setUserMailbox(Mailbox)
-     */
+    @Override
     public void setUserMailbox(Mailbox mailbox) {
         this.mailbox = mailbox;
     }

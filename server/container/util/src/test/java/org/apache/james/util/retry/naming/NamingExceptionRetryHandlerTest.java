@@ -52,22 +52,16 @@ public class NamingExceptionRetryHandlerTest {
 
     private class TestRetryingProxy implements ExceptionRetryingProxy {
 
-    /**
-     */
     @Override
     public Context getDelegate() {
         return null;
     }
 
-    /**
-     */
     @Override
     public Context newDelegate() throws NamingException {
         return null;
     }
 
-    /**
-     */
     @Override
     public void resetDelegate() throws NamingException {
     }
@@ -75,8 +69,6 @@ public class NamingExceptionRetryHandlerTest {
 
     private class TestRetrySchedule implements RetrySchedule {
 
-    /**
-     */
     @Override
     public long getInterval(int index) {
         return index;

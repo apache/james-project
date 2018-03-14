@@ -41,9 +41,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
 
     private ByteArrayOutputStream outputStream;
 
-    /**
-     * @see org.apache.james.protocols.smtp.MailEnvelope#getSize()
-     */
+    @Override
     public long getSize() {
         if (outputStream == null) {
             return -1;
@@ -51,16 +49,12 @@ public class MailEnvelopeImpl implements MailEnvelope {
         return outputStream.size();
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.MailEnvelope#getRecipients()
-     */
+    @Override
     public List<MailAddress> getRecipients() {
         return recipients;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.MailEnvelope#getSender()
-     */
+    @Override
     public MailAddress getSender() {
         return sender;
     }
@@ -83,9 +77,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
         this.sender = sender;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.MailEnvelope#getMessageOutputStream()
-     */
+    @Override
     public OutputStream getMessageOutputStream() {
         if (outputStream == null) {
             // use 100kb as default which should be enough for most emails
@@ -94,9 +86,7 @@ public class MailEnvelopeImpl implements MailEnvelope {
         return outputStream;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.MailEnvelope#getMessageInputStream()
-     */
+    @Override
     public InputStream getMessageInputStream() {
         return new ByteArrayInputStream(outputStream.toByteArray());
     }

@@ -40,6 +40,7 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessageBody(long uid) throws IOException;
 
+    @Override
     public InputStream getMessageBody(String uid) throws NumberFormatException, IOException {
         return this.getMessageBody(Long.parseLong(uid));
     }
@@ -54,6 +55,7 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessageHeaders(long uid) throws IOException;
 
+    @Override
     public InputStream getMessageHeaders(String uid) throws NumberFormatException, IOException {
         return this.getMessageHeaders(Long.parseLong(uid));
     }
@@ -69,6 +71,7 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract InputStream getMessage(long uid) throws IOException;
 
+    @Override
     public InputStream getMessage(String uid) throws NumberFormatException, IOException {
         return this.getMessage(Long.parseLong(uid));
     }
@@ -80,6 +83,7 @@ public abstract class ImapMailbox implements Mailbox {
      */
     public abstract void remove(long... uids) throws IOException;
 
+    @Override
     public void remove(String... uids) throws NumberFormatException, IOException {
         long[] imapUids = Arrays.stream(uids)
             .mapToLong(Long::parseLong)

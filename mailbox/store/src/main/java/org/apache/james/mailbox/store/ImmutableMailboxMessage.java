@@ -155,30 +155,37 @@ public class ImmutableMailboxMessage implements MailboxMessage {
             .build();
     }
 
+    @Override
     public MessageId getMessageId() {
         return messageId;
     }
 
+    @Override
     public Date getInternalDate() {
         return internalDate;
     }
 
+    @Override
     public InputStream getBodyContent() {
         return bodyContent;
     }
 
+    @Override
     public String getMediaType() {
         return mediaType;
     }
 
+    @Override
     public String getSubType() {
         return subType;
     }
 
+    @Override
     public long getBodyOctets() {
         return bodyOctets;
     }
 
+    @Override
     public long getFullContentOctets() {
         return fullContentOctets;
     }
@@ -188,58 +195,72 @@ public class ImmutableMailboxMessage implements MailboxMessage {
         return headerOctets;
     }
 
+    @Override
     public Long getTextualLineCount() {
         return textualLineCount;
     }
 
+    @Override
     public InputStream getHeaderContent() {
         return headerContent;
     }
 
+    @Override
     public InputStream getFullContent() {
         return fullContent;
     }
 
+    @Override
     public List<Property> getProperties() {
         return properties;
     }
 
+    @Override
     public List<MessageAttachment> getAttachments() {
         return attachments;
     }
 
+    @Override
     public MailboxId getMailboxId() {
         return mailboxId;
     }
 
+    @Override
     public MessageUid getUid() {
         return uid;
     }
 
+    @Override
     public long getModSeq() {
         return modSeq;
     }
 
+    @Override
     public boolean isAnswered() {
         return answered;
     }
 
+    @Override
     public boolean isDeleted() {
         return deleted;
     }
 
+    @Override
     public boolean isDraft() {
         return draft;
     }
 
+    @Override
     public boolean isFlagged() {
         return flagged;
     }
 
+    @Override
     public boolean isRecent() {
         return recent;
     }
 
+    @Override
     public boolean isSeen() {
         return seen;
     }

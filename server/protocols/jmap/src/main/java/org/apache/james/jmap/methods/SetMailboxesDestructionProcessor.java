@@ -78,6 +78,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
         this.mailboxFactory = mailboxFactory;
     }
 
+    @Override
     public SetMailboxesResponse process(SetMailboxesRequest request, MailboxSession mailboxSession) {
         TimeMetric timeMetric = metricFactory.timer(JMAP_PREFIX + "SetMailboxesDestructionProcessor");
         ImmutableMap<MailboxId, Mailbox> idToMailbox = mapDestroyRequests(request, mailboxSession);

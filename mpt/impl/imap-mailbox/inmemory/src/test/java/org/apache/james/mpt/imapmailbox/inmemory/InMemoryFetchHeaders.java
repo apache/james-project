@@ -29,6 +29,7 @@ public class InMemoryFetchHeaders extends FetchHeaders {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();

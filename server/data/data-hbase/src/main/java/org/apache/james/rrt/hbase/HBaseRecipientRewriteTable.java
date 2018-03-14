@@ -54,9 +54,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private static final Logger log = LoggerFactory.getLogger(HBaseRecipientRewriteTable.class.getName());
     private static final String ROW_SEPARATOR = "@";
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#addMappingInternal(String, String, String)
-     */
     @Override
     protected void addMappingInternal(String user, String domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
@@ -70,9 +67,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#getUserDomainMappingsInternal(String, String)
-     */
     @Override
     protected Mappings getUserDomainMappingsInternal(String user, String domain) throws
             RecipientRewriteTableException {
@@ -109,9 +103,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return list;
     }
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#getAllMappingsInternal()
-     */
     @Override
     protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
         HTableInterface table = null;
@@ -161,9 +152,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return map;
     }
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#mapAddressInternal(String, String)
-     */
     @Override
     protected String mapAddressInternal(String user, String domain) throws RecipientRewriteTableException {
         HTableInterface table = null;
@@ -203,9 +191,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         return null;
     }
 
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTable#removeMappingInternal(String, String, String)
-     */
     @Override
     protected void removeMappingInternal(String user, String domain, Mapping mapping) throws
             RecipientRewriteTableException {

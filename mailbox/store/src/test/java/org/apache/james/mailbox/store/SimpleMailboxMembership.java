@@ -91,38 +91,47 @@ public class SimpleMailboxMembership implements MailboxMessage {
             .build();
     }
 
+    @Override
     public Date getInternalDate() {
         return internalDate;
     }
 
+    @Override
     public TestId getMailboxId() {
         return mailboxId;
     }
     
+    @Override
     public MessageUid getUid() {
         return uid;
     }
 
+    @Override
     public boolean isAnswered() {
         return answered;
     }
 
+    @Override
     public boolean isDeleted() {
         return deleted;
     }
 
+    @Override
     public boolean isDraft() {
         return draft;
     }
 
+    @Override
     public boolean isFlagged() {
         return flagged;
     }
 
+    @Override
     public boolean isRecent() {
         return recent;
     }
 
+    @Override
     public boolean isSeen() {
         return seen;
     }
@@ -136,6 +145,7 @@ public class SimpleMailboxMembership implements MailboxMessage {
         return size - body.length;
     }
 
+    @Override
     public void setFlags(Flags flags) {
         answered = flags.contains(Flags.Flag.ANSWERED);
         deleted = flags.contains(Flags.Flag.DELETED);
@@ -145,6 +155,7 @@ public class SimpleMailboxMembership implements MailboxMessage {
         seen = flags.contains(Flags.Flag.SEEN);
     }
 
+    @Override
     public Flags createFlags() {
         final Flags flags = new Flags();
 
@@ -214,10 +225,12 @@ public class SimpleMailboxMembership implements MailboxMessage {
     private long modSeq;
     
 
+    @Override
     public InputStream getBodyContent() throws IOException {
         return new ByteArrayInputStream(body);
     }
 
+    @Override
     public InputStream getHeaderContent() throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final Writer writer = new OutputStreamWriter(baos, "us-ascii");
@@ -236,18 +249,22 @@ public class SimpleMailboxMembership implements MailboxMessage {
 
     }
 
+    @Override
     public long getBodyOctets() {
         return body.length;
     }
 
+    @Override
     public String getSubType() {
         return subType;
     }
 
+    @Override
     public String getMediaType() {
         return mediaType;
     }
 
+    @Override
     public List<Property> getProperties() {
         if (properties != null) {
             return ImmutableList.<Property>copyOf(properties);
@@ -256,22 +273,27 @@ public class SimpleMailboxMembership implements MailboxMessage {
         }
     }
 
+    @Override
     public Long getTextualLineCount() {
         return textualLineCount;
     }
 
+    @Override
     public long getFullContentOctets() {
         return size;
     }
 
+    @Override
     public int compareTo(MailboxMessage other) {
         return getUid().compareTo(other.getUid());
     }
 
+    @Override
     public long getModSeq() {
         return modSeq;
     }
 
+    @Override
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
     }

@@ -35,6 +35,7 @@ public class UnknownCmdHandler extends UnknownCommandHandler<POP3Session> {
      * Handler method called upon receipt of an unrecognized command. Returns an
      * error response and logs the command.
      */
+    @Override
     public Response onCommand(POP3Session session, Request request) {
         return POP3Response.ERR;
     }

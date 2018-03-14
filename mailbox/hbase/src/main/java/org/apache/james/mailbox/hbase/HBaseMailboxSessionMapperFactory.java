@@ -160,18 +160,12 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
         return conf;
     }
 
-    /**
-     * Returns the ModSeqProvider used.
-     * @return The used modSeqProvider
-     */
+    @Override
     public ModSeqProvider getModSeqProvider() {
         return modSeqProvider;
     }
 
-    /**
-     * Returns the UidProvider that generates UID's for mailboxes.
-     * @return The provider that generates UID's for mailboxes
-     */
+    @Override
     public UidProvider getUidProvider() {
         return uidProvider;
     }

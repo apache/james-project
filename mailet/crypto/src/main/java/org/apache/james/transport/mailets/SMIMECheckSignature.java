@@ -116,6 +116,7 @@ public class SMIMECheckSignature extends GenericMailet {
 
     }
 
+    @Override
     public void init() throws MessagingException {
         MailetConfig config = getMailetConfig();
 
@@ -152,6 +153,7 @@ public class SMIMECheckSignature extends GenericMailet {
 
     }
 
+    @Override
     public void service(Mail mail) throws MessagingException {
         // I extract the MimeMessage from the mail object and I check if the
         // mime type of the mail is one of the mime types that can contain a

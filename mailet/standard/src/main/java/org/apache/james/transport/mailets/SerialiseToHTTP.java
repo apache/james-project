@@ -69,9 +69,7 @@ public class SerialiseToHTTP extends GenericMailet {
     private String messageKeyName = "message";
     private boolean passThrough = true;
 
-    /**
-     * Initialize the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
 
         passThrough = (getInitParameter("passThrough", "true").compareToIgnoreCase("true") == 0);
@@ -118,6 +116,7 @@ public class SerialiseToHTTP extends GenericMailet {
      *            the mail being processed
      *
      */
+    @Override
     public void service(Mail mail) {
         try {
             MimeMessage message = mail.getMessage();
@@ -202,11 +201,7 @@ public class SerialiseToHTTP extends GenericMailet {
         return data;
     }
 
-    /**
-     * Return a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "HTTP POST serialised message";
     }

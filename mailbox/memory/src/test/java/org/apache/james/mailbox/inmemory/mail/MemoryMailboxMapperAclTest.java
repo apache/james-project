@@ -25,6 +25,7 @@ import org.junit.Before;
 
 public class MemoryMailboxMapperAclTest extends MailboxMapperACLTest {
     
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

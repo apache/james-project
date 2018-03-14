@@ -93,6 +93,7 @@ public class NESSpamCheck extends GenericRegexMatcher {
     {"X-pmrqc", ".*"},
     {"Host-From:envonly", ".*"}};
 
+    @Override
     public void init() throws MessagingException {
         //No condition passed... just compile a bunch of regular expressions
         try {

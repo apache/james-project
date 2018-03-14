@@ -48,6 +48,7 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     private MailboxManagerManagementMBean mailboxManagerManagement;
     private ReIndexerManagementMBean reIndexerManagement;
 
+    @Override
     public JmxMailboxProbe connect(JmxConnection jmxc) throws IOException {
         try {
             mailboxCopierManagement = jmxc.retrieveBean(MailboxCopierManagementMBean.class, MAILBOXCOPIER_OBJECT_NAME);

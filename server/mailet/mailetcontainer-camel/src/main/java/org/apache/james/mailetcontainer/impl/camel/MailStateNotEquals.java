@@ -33,9 +33,7 @@ public class MailStateNotEquals implements Predicate {
         this.state = state;
     }
 
-    /**
-     * @see org.apache.camel.Predicate#matches(org.apache.camel.Exchange)
-     */
+    @Override
     public boolean matches(Exchange ex) {
         Mail m = ex.getIn().getBody(Mail.class);
         return !state.equals(m.getState());

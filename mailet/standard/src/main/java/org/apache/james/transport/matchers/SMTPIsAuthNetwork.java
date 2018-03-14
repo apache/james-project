@@ -44,6 +44,7 @@ public class SMTPIsAuthNetwork extends GenericMatcher {
      */
     public static final String SMTP_AUTH_NETWORK_NAME = "org.apache.james.SMTPIsAuthNetwork";
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         String relayingAllowed = (String) mail
                 .getAttribute(SMTP_AUTH_NETWORK_NAME);

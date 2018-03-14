@@ -33,6 +33,7 @@ public class JPAMailboxManagerTest extends MailboxManagerTest {
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -46,6 +47,7 @@ public class JPAMailboxManagerTest extends MailboxManagerTest {
         return openJPAMailboxManager.get();
     }
 
+    @Override
     @After
     public void tearDown() throws MailboxException {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);

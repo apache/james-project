@@ -28,9 +28,6 @@ import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
  */
 public class HBaseNonTransactionalMapper extends NonTransactionalMapper {
 
-    /**
-     * End request
-     */
     @Override
     public void endRequest() {
         //TODO: maybe do some thing more wise here?

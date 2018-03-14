@@ -34,6 +34,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(ExecutorExtension.class)
 public interface DelayedManageableMailQueueContract extends DelayedMailQueueContract, ManageableMailQueueContract {
 
+    @Override
     ManageableMailQueue getManageableMailQueue();
 
     @Test

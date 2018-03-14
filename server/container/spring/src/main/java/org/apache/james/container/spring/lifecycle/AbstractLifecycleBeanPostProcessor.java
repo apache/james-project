@@ -43,10 +43,7 @@ public abstract class AbstractLifecycleBeanPostProcessor<T> implements BeanPostP
         this.factory = (ConfigurableListableBeanFactory) factory;
     }
 
-    /**
-     * @see org.springframework.beans.factory.config.BeanPostProcessor
-     * #postProcessBeforeInitialization(java.lang.Object, java.lang.String)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public final Object postProcessBeforeInitialization(Object bean, String name) throws BeansException {
         try {
@@ -65,10 +62,7 @@ public abstract class AbstractLifecycleBeanPostProcessor<T> implements BeanPostP
         return bean;
     }
 
-    /**
-     * @see org.springframework.beans.factory.config.BeanPostProcessor
-     * #postProcessAfterInitialization(java.lang.Object, java.lang.String)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public final Object postProcessAfterInitialization(Object bean, String name) throws BeansException {
         try {
@@ -125,9 +119,7 @@ public abstract class AbstractLifecycleBeanPostProcessor<T> implements BeanPostP
         this.order = order;
     }
 
-    /**
-     * @see org.springframework.core.Ordered#getOrder()
-     */
+    @Override
     public int getOrder() {
         return order;
     }

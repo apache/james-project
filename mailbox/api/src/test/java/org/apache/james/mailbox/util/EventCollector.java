@@ -53,6 +53,7 @@ public class EventCollector implements MailboxListener {
         return events;
     }
 
+    @Override
     public void event(Event event) {
         events.add(event);
     }

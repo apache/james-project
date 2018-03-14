@@ -29,6 +29,7 @@ public class LuceneListing extends Listing {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();

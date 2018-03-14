@@ -30,30 +30,22 @@ public abstract class LMTPConfiguration extends ProtocolConfigurationImpl implem
 
 
     
-    /**
-     * Return <code>false</code>
-     */
+    @Override
     public boolean isRelayingAllowed(String remoteIP) {
         return false;
     }
 
-    /**
-     * Return <code>false</code>
-     */
+    @Override
     public boolean isAuthRequired(String remoteIP) {
         return false;
     }
 
-    /**
-     * Return <code>false</code>
-     */
+    @Override
     public boolean useHeloEhloEnforcement() {
         return false;
     }
 
-    /**
-     * Return <code>false</code>
-     */
+    @Override
     public boolean useAddressBracketsEnforcement() {
         return false;
     }

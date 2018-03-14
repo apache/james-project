@@ -118,44 +118,32 @@ public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemor
         return super.shutdownNow();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getTotalTasks()
-     */
+    @Override
     public synchronized int getTotalTasks() {
         return totalTasks;
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getAverageTaskTime()
-     */
+    @Override
     public synchronized double getAverageTaskTime() {
         return (totalTasks == 0) ? 0 : totalTime / totalTasks;
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getActiveThreads()
-     */
+    @Override
     public int getActiveThreads() {
         return getPoolSize();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getActiveTasks()
-     */
+    @Override
     public int getActiveTasks() {
         return getActiveCount();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getQueuedTasks()
-     */
+    @Override
     public int getQueuedTasks() {
         return getQueue().size();
     }
 
-    /**
-     * @see org.apache.james.util.concurrent.JMXEnabledThreadPoolExecutorMBean#getMaximalThreads()
-     */
+    @Override
     public int getMaximalThreads() {
         return getMaximumPoolSize();
     }

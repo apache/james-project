@@ -32,9 +32,7 @@ import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
  */
 public class IMAP172JpaMigrateCommand implements JpaMigrateCommand {
 
-    /**
-     * @see org.apache.james.mailbox.jpa.migrator.command#migrate(javax.persistence.EntityManager)
-     */
+    @Override
     public void migrate(EntityManager em) throws JpaMigrateException {
         JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOX DROP COLUMN MESSAGECOUNT");
         JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOX DROP COLUMN SIZE");

@@ -37,6 +37,7 @@ public class JCRMailboxManagerTest extends MailboxManagerTest {
 
     private Optional<RepositoryImpl> repository = Optional.empty();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -55,6 +56,7 @@ public class JCRMailboxManagerTest extends MailboxManagerTest {
         return JCRMailboxManagerProvider.provideMailboxManager(user, pass, workspace, repository.get());
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

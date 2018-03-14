@@ -52,13 +52,12 @@ public class NoopCmdHandler implements CommandHandler<SMTPSession> {
      * Just sends back an OK and logs the command.
      *
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         return NOOP;
     }
     
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

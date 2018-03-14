@@ -109,10 +109,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
 
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor#
-     * getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }

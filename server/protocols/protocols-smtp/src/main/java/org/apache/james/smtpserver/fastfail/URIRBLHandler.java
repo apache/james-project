@@ -105,10 +105,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
         this.getDetail = getDetail;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.JamesMessageHook#onMessage(org.apache.james.protocols.smtp.SMTPSession,
-     *      org.apache.mailet.Mail)
-     */
+    @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {
         if (check(session, mail)) {
             String uRblServer = (String) session.getAttachment(URBLSERVER, State.Transaction);

@@ -399,6 +399,7 @@ public class StoreMailboxManager implements MailboxManager {
     /**
      * Close the {@link MailboxSession} if not null
      */
+    @Override
     public void logout(MailboxSession session, boolean force) throws MailboxException {
         if (session != null) {
             session.close();

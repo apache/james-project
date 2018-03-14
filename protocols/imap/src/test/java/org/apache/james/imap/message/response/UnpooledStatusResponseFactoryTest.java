@@ -26,6 +26,7 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 public class UnpooledStatusResponseFactoryTest extends
         AbstractTestForStatusResponseFactory {
 
+    @Override
     protected StatusResponseFactory createInstance() {
         return new UnpooledStatusResponseFactory();
     }

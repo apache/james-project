@@ -38,6 +38,7 @@ public class JCRMailboxManagerStressTest extends MailboxManagerStressTest {
 
     private Optional<RepositoryImpl> repository = Optional.empty();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

@@ -31,6 +31,7 @@ public class HBaseQuotaTest extends QuotaTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = HBaseHostSystem.build();
@@ -43,6 +44,7 @@ public class HBaseQuotaTest extends QuotaTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

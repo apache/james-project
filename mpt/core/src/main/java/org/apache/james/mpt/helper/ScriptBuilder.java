@@ -1485,6 +1485,7 @@ public class ScriptBuilder {
             this.delegate = delegate;
         }
 
+        @Override
         public int read() throws IOException {
             final int result;
             final int next = delegate.read();

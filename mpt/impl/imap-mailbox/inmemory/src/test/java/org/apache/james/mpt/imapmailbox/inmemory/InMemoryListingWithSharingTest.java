@@ -29,6 +29,7 @@ public class InMemoryListingWithSharingTest extends ListingWithSharingTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new InMemoryHostSystem();

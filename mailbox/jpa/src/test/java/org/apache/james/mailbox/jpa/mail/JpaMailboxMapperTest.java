@@ -30,6 +30,7 @@ public class JpaMailboxMapperTest extends MailboxMapperTest {
 
     public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

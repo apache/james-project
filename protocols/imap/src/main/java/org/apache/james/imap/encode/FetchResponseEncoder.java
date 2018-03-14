@@ -61,10 +61,12 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
         this.neverAddBodyStructureExtensions = neverAddBodyStructureExtensions;
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return (message instanceof FetchResponse);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         if (acceptableMessage instanceof FetchResponse) {
             final FetchResponse fetchResponse = (FetchResponse) acceptableMessage;

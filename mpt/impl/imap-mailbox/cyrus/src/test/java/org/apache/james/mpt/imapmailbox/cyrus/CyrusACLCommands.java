@@ -33,6 +33,7 @@ public class CyrusACLCommands extends ACLCommands {
     private ImapHostSystem system;
     private GrantRightsOnHost grantRightsOnHost;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new CyrusMailboxTestModule());

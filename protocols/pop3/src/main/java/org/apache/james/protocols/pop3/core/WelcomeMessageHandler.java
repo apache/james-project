@@ -39,10 +39,7 @@ public class WelcomeMessageHandler implements ConnectHandler<POP3Session> {
 
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ConnectHandler
-     * #onConnect(org.apache.james.pop3server.POP3Session)
-     */
+    @Override
     public Response onConnect(POP3Session session) {
         StringBuilder responseBuffer = new StringBuilder();
         

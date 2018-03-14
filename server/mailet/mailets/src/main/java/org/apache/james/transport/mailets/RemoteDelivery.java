@@ -154,6 +154,7 @@ public class RemoteDelivery extends GenericMailet {
         this.startThreads = startThreads;
     }
 
+    @Override
     public void init() throws MessagingException {
         configuration = new RemoteDeliveryConfiguration(getMailetConfig(), domainList);
         queue = queueFactory.createQueue(configuration.getOutGoingQueueName());

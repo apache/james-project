@@ -34,12 +34,14 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
     
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
     
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

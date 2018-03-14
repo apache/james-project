@@ -398,6 +398,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
         } 
     }
 
+    @Override
     public void note(String message) {
         if (quiet) {
             log(message, Project.MSG_DEBUG);
@@ -406,10 +407,12 @@ public class MailProtocolTestTask extends Task implements Monitor {
         }
     }
 
+    @Override
     public void debug(char character) {
         log("'" + character + "'", Project.MSG_DEBUG);
     }
 
+    @Override
     public void debug(String message) {
         log(message, Project.MSG_DEBUG);
     }

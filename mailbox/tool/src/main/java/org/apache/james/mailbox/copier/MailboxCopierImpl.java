@@ -61,9 +61,7 @@ public class MailboxCopierImpl implements MailboxCopier {
         
     };
 
-    /**
-     * @see org.apache.james.mailbox.copier.MailboxCopier#copyMailboxes(org.apache.james.mailbox.MailboxManager, org.apache.james.mailbox.MailboxManager)
-     */
+    @Override
     public void copyMailboxes(MailboxManager srcMailboxManager, MailboxManager dstMailboxManager) throws MailboxException, IOException {
         
         Calendar start = Calendar.getInstance();

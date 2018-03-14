@@ -54,10 +54,6 @@ public class HBaseSubscriptionMapper extends HBaseNonTransactionalMapper impleme
         this.conf = conf;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
-     */
     @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
         HTable subscriptions = null;
@@ -88,10 +84,6 @@ public class HBaseSubscriptionMapper extends HBaseNonTransactionalMapper impleme
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#save(Subscription)
-     */
     @Override
     public void save(Subscription subscription) throws SubscriptionException {
         //TODO: maybe switch to checkAndPut
@@ -113,10 +105,6 @@ public class HBaseSubscriptionMapper extends HBaseNonTransactionalMapper impleme
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser(java.lang.String)
-     */
     @Override
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
         HTable subscriptions = null;
@@ -146,10 +134,6 @@ public class HBaseSubscriptionMapper extends HBaseNonTransactionalMapper impleme
         }
     }
 
-    /**
-     * @throws SubscriptionException 
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#delete(Subscription)
-     */
     @Override
     public void delete(Subscription subscription) throws SubscriptionException {
         //TODO: maybe switch to checkAndDelete

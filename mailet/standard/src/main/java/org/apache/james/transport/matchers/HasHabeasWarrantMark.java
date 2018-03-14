@@ -87,6 +87,7 @@ public class HasHabeasWarrantMark extends GenericMatcher {
         { "X-Habeas-SWE-9", "mark in spam to <http://www.habeas.com/report/>." }, 
     };
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
@@ -125,6 +126,7 @@ public class HasHabeasWarrantMark extends GenericMatcher {
      * @return a String containing matcher information
      */
 
+    @Override
     public String getMatcherInfo() {
         return "Habeas Warrant Mark Matcher (see http://www.habeas.com for details).";
     }

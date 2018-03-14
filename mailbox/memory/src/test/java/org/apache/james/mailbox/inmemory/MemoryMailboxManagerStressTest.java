@@ -26,6 +26,7 @@ import org.junit.Before;
 
 public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest {
     
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

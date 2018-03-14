@@ -28,12 +28,14 @@ public interface IMAPSession extends ProtocolSession {
     /**
      * Pop the last command handler 
      */
+    @Override
     void popLineHandler();
     
     /**
      * Return the size of the pushed {@link LineHandler}
      * @return size of the pushed line handler
      */
+    @Override
     int getPushedLineHandlerCount();
 
     /**

@@ -59,14 +59,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         super(ListRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.processor.AbstractMailboxProcessor
-     * #doProcess(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final String baseReferenceName = request.getBaseReferenceName();
         final String mailboxPatternString = request.getMailboxPattern();
@@ -130,18 +123,22 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 results = new ArrayList<>(1);
                 results.add(new MailboxMetaData() {
 
+                    @Override
                     public Children inferiors() {
                         return Children.CHILDREN_ALLOWED_BUT_UNKNOWN;
                     }
 
+                    @Override
                     public Selectability getSelectability() {
                         return Selectability.NOSELECT;
                     }
                     
+                    @Override
                     public char getHierarchyDelimiter() {
                         return mailboxSession.getPathDelimiter();
                     }
 
+                    @Override
                     public MailboxPath getPath() {
                         return rootPath;
                     }
@@ -225,6 +222,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         return result;
     }
 
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return ListRequest.class.equals(message.getClass());
     }

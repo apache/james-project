@@ -69,9 +69,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         this.session = session;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
     public void delete(Mailbox mailbox) throws MailboxException {
         
@@ -109,9 +106,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         }
     }
    
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.mailbox.model.MailboxPath)
-     */
     @Override
     public Mailbox findMailboxByPath(MailboxPath mailboxPath)
             throws MailboxException, MailboxNotFoundException {      
@@ -125,9 +119,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         return getCachedMailbox(mailboxId);
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.mailbox.model.MailboxPath)
-     */
     @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
             throws MailboxException {
@@ -151,9 +142,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         return mailboxList;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.mailbox.store.mail.model.Mailbox, char)
-     */
     @Override
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
         String searchString = mailbox.getName() + MaildirStore.maildirDelimiter + MaildirStore.WILDCARD;
@@ -162,9 +150,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         return (mailboxes.size() > 0);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox)
-     */
     @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
@@ -249,9 +234,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         return mailbox.getMailboxId();
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
-     */
     @Override
     public List<Mailbox> list() throws MailboxException {
         
@@ -273,9 +255,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#endRequest()
-     */
     @Override
     public void endRequest() {
         mailboxCache.clear();

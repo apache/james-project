@@ -41,10 +41,7 @@ public class SizeGreaterThan extends GenericMatcher {
 
     int cutoff = 0;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() throws MessagingException {
         String amount = getCondition();
         
@@ -71,10 +68,7 @@ public class SizeGreaterThan extends GenericMatcher {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#match(org.apache.mailet.Mail)
-     */
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (mail.getMessageSize() > cutoff) {
             return mail.getRecipients();

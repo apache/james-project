@@ -28,6 +28,7 @@ import org.junit.Before;
 
 public class MemoryAttachmentMapperTest extends AttachmentMapperTest {
     
+    @Override
     @Before
     public void setUp() throws MailboxException {
         super.setUp();

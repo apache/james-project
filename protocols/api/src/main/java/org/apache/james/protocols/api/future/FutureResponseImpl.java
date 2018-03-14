@@ -61,6 +61,7 @@ public class FutureResponseImpl implements FutureResponse {
         }
     }
 
+    @Override
     public synchronized void addListener(ResponseListener listener) {
         if (isReady()) {
             listener.onResponse(this);
@@ -72,10 +73,7 @@ public class FutureResponseImpl implements FutureResponse {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.FutureResponse#removeListener(org.apache.james.protocols.api.FutureResponse.ResponseListener)
-     */
+    @Override
     public synchronized void removeListener(ResponseListener listener) {
         if (!isReady()) {
             if (listeners != null) {
@@ -84,38 +82,26 @@ public class FutureResponseImpl implements FutureResponse {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.FutureResponse#isReady()
-     */
+    @Override
     public synchronized boolean isReady() {
         return response != null;
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Response#getLines()
-     */
+    @Override
     public List<CharSequence> getLines() {
         checkReady();
         return response.getLines();
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Response#getRetCode()
-     */
+    @Override
     public String getRetCode() {
         checkReady();
         return response.getRetCode();
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.Response#isEndSession()
-     */
+    @Override
     public boolean isEndSession() {
         checkReady();
         return response.isEndSession();

@@ -66,9 +66,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      */
     private HierarchicalConfiguration configuration;
 
-    /**
-     * @see org.apache.james.lifecycle.api.Configurable#configure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         this.configuration = configuration;
     }
@@ -153,6 +151,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      * @throws MailRepositoryStoreException if any error occurs while parsing the Configuration or
      *                                      retrieving the MailRepository
      */
+    @Override
     @SuppressWarnings("deprecation")
     public synchronized MailRepository select(String destination) throws MailRepositoryStoreException {
         int idx = destination.indexOf(':');
@@ -206,9 +205,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepositoryStore#getUrls()
-     */
+    @Override
     public synchronized List<String> getUrls() {
         return new ArrayList<>(repositories.keySet());
     }

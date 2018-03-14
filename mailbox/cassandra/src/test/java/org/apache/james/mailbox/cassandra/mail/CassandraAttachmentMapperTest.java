@@ -50,6 +50,7 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
     
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws MailboxException {
         CassandraModuleComposite modules = new CassandraModuleComposite(

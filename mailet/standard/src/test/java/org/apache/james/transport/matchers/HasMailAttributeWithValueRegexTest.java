@@ -42,15 +42,18 @@ public class HasMailAttributeWithValueRegexTest extends
         this.regex = regex;
     }
 
+    @Override
     protected String getHasMailAttribute() {
         return MAIL_ATTRIBUTE_NAME + ", " + regex;
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttributeWithValueRegex();
     }
 
     // test if the mail attribute was matched
+    @Override
     public void testAttributeIsMatched() throws MessagingException {
         init();
         setRegex(".*");
@@ -102,6 +105,7 @@ public class HasMailAttributeWithValueRegexTest extends
         }
     }
 
+    @Override
     protected String getMatcherName() {
         return "HasMailAttributeWithValueRegex";
     }

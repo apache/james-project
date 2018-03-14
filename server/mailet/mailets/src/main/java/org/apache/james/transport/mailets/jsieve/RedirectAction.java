@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class RedirectAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedirectAction.class.getName());
 
+    @Override
     public void execute(Action action, Mail mail, ActionContext context)
             throws MessagingException {
         if (action instanceof ActionRedirect) {

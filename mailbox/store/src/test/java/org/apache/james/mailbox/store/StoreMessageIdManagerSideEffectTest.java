@@ -37,6 +37,7 @@ import org.junit.Before;
 
 public class StoreMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

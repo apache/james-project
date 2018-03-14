@@ -62,13 +62,12 @@ public class SMIMESign extends Sign {
      *
      * @return a string describing this mailet
      */
+    @Override
     public String getMailetInfo() {
         return "SMIME Signature Mailet";
     }
     
-    /**
-     *
-     */
+    @Override
     protected  String[] getAllowedInitParameters() {
         return new String[]{
             "debug",
@@ -107,6 +106,7 @@ public class SMIMESign extends Sign {
      *     "[signerName]" <[signerAddress]>
      * </code></pre>
      */
+    @Override
     public String getExplanationText() {
         String explanationText = super.getExplanationText();
         if (explanationText == null) {
@@ -129,6 +129,7 @@ public class SMIMESign extends Sign {
      * Initializer for property keyHolderClass.
      * Hardcodes it to {@link org.apache.james.transport.SMIMEKeyHolder}.
      */
+    @Override
     protected void initKeyHolderClass() throws MessagingException {
         String keyHolderClassName = "org.apache.james.transport.SMIMEKeyHolder";
         try {
@@ -144,6 +145,7 @@ public class SMIMESign extends Sign {
     /**
      * If the <CODE>&lt;postmasterSigns&gt;</CODE> init parameter is missing sets it to <I>true</I>.
      */
+    @Override
     protected void initPostmasterSigns() {
         setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? true : Boolean.valueOf(getInitParameter("postmasterSigns")));
     }
@@ -151,6 +153,7 @@ public class SMIMESign extends Sign {
     /**
      * If the <CODE>&lt;rebuildFrom&gt;</CODE> init parameter is missing sets it to <I>true</I>.
      */
+    @Override
     protected void initRebuildFrom() throws MessagingException {
         setRebuildFrom((getInitParameter("rebuildFrom") == null) ? true : Boolean.valueOf(getInitParameter("rebuildFrom")));
         if (isDebug()) {
@@ -170,6 +173,7 @@ public class SMIMESign extends Sign {
      * A text file with the massaged contents of {@link #getExplanationText}
      * is attached to the original message.
      */    
+    @Override
     protected MimeBodyPart getWrapperBodyPart(Mail mail) throws MessagingException, IOException {
         
         String explanationText = getExplanationText();

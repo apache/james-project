@@ -33,9 +33,7 @@ import org.apache.james.protocols.smtp.hook.MailHook;
 public abstract class ValidSenderDomainHandler implements MailHook { 
 
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailHook#doMail(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress)
-     */
+    @Override
     public HookResult doMail(SMTPSession session, MailAddress sender) {
         if (sender != null  && !hasMXRecord(session,sender.getDomain())) {
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_SYNTAX_SENDER) + " sender " + sender + " contains a domain with no valid MX records");

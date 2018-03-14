@@ -45,9 +45,7 @@ public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcpt
 
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook#isLocalDomain(java.lang.String)
-     */
+    @Override
     protected boolean isLocalDomain(String domain) {
         try {
             return domains.containsDomain(domain);

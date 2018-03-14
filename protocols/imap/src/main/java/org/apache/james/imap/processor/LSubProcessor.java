@@ -52,13 +52,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         super(LsubRequest.class, next, mailboxManager, subscriptionManager, factory, metricFactory);
     }
 
-    /**
-     * @see org.apache.james.imap.processor.AbstractSubscriptionProcessor
-     * #doProcessRequest(org.apache.james.imap.api.message.request.ImapRequest,
-     * org.apache.james.imap.api.process.ImapSession, java.lang.String,
-     * org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.api.process.ImapProcessor.Responder)
-     */
+    @Override
     protected void doProcessRequest(LsubRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         String referenceName = request.getBaseReferenceName();
         String mailboxPattern = request.getMailboxPattern();

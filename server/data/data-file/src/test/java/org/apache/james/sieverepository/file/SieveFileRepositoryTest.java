@@ -21,17 +21,21 @@ public class SieveFileRepositoryTest extends AbstractSieveRepositoryTest {
 
     private FileSystem fileSystem;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         this.fileSystem = new FileSystem() {
+            @Override
             public File getBasedir() throws FileNotFoundException {
                 return new File(System.getProperty("java.io.tmpdir"));
             }
             
+            @Override
             public InputStream getResource(String url) throws IOException {
                 return new FileInputStream(getFile(url));
             }
             
+            @Override
             public File getFile(String fileURL) throws FileNotFoundException {
                 return new File(getBasedir(), fileURL.substring(FileSystem.FILE_PROTOCOL.length()));
             }

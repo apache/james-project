@@ -31,18 +31,12 @@ public class AuthenticateResponseEncoder  extends AbstractChainedImapEncoder {
         super(next);
     }
 
-    /**
-     * @see org.apache.james.imap.encode.base.AbstractChainedImapEncoder
-     * #isAcceptable(org.apache.james.imap.api.ImapMessage)
-     */
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return message instanceof AuthenticateResponse;
     }
 
-    /**
-     * @see org.apache.james.imap.encode.base.AbstractChainedImapEncoder
-     * #doEncode(org.apache.james.imap.api.ImapMessage, org.apache.james.imap.encode.ImapResponseComposer, org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         composer.continuationResponse("");
     }

@@ -43,12 +43,14 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
     private final DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         defaultConfiguration.setDelimiterParsingDisabled(true);
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

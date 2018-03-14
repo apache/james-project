@@ -65,9 +65,7 @@ public class UnknownCmdHandler extends AbstractHookableCmdHandler<UnknownHook> {
 
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

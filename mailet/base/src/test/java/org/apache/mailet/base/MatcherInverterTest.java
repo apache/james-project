@@ -39,6 +39,7 @@ public class MatcherInverterTest {
     public void testAllMatch() throws MessagingException {
         MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
 
+            @Override
             public Collection<MailAddress> match(Mail mail) throws MessagingException {
                 return null;
             }
@@ -57,6 +58,7 @@ public class MatcherInverterTest {
 
         MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
 
+            @Override
             public Collection<MailAddress> match(Mail mail) throws MessagingException {
                 return mail.getRecipients();
             }
@@ -75,6 +77,7 @@ public class MatcherInverterTest {
 
         MatcherInverter inverter = new MatcherInverter(new GenericMatcher() {
 
+            @Override
             public Collection<MailAddress> match(Mail mail) throws MessagingException {
                 return Arrays.asList(address1);
             }

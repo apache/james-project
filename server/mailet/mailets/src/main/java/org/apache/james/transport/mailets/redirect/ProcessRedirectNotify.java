@@ -141,6 +141,7 @@ public class ProcessRedirectNotify {
             super(originalMessage);
         }
 
+        @Override
         protected void updateHeaders() throws MessagingException {
             if (getMessageID() == null) {
                 super.updateHeaders();

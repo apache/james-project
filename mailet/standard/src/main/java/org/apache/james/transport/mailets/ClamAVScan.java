@@ -243,11 +243,7 @@ public class ClamAVScan extends GenericMailet {
      */
     private int nextAddressIndex;
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "Antivirus Check using ClamAV (CLAMD)";
     }
@@ -554,9 +550,7 @@ public class ClamAVScan extends GenericMailet {
         }
     }
 
-    /**
-     * Mailet initialization routine.
-     */
+    @Override
     public void init() throws MessagingException {
 
         // check that all init parameters have been declared in allowedInitParameters
@@ -591,6 +585,7 @@ public class ClamAVScan extends GenericMailet {
      * @param mail the mail to scan
      * @throws MessagingException if a problem arises
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
 
         // if already checked no action

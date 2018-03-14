@@ -36,6 +36,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class SubjectStartsWith extends GenericMatcher {
 
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         MimeMessage mm = mail.getMessage();
         String subject = mm.getSubject();

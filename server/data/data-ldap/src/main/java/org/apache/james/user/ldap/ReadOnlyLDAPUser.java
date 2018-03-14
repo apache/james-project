@@ -107,6 +107,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * 
      * @return The user's identifier or name.
      */
+    @Override
     public String getUserName() {
         return userName;
     }
@@ -119,6 +120,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * 
      * @return <code>False</code>
      */
+    @Override
     public boolean setPassword(String newPass) {
         return false;
     }
@@ -134,6 +136,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      *         to the LDAP host using the user's id and the supplied password,
      *         and <code>False</code> otherwise.
      */
+    @Override
     public boolean verifyPassword(String password) {
         boolean result = false;
         LdapContext ldapContext = null;

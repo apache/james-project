@@ -164,8 +164,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
      * Overrides default javamail behaviour by not altering the Message-ID by
      * default, see <a href="https://issues.apache.org/jira/browse/JAMES-875">JAMES-875</a> and
      * <a href="https://issues.apache.org/jira/browse/JAMES-1010">JAMES-1010</a>
-     *
-     * @see javax.mail.internet.MimeMessage#updateMessageID()
      */
     @Override
     protected void updateMessageID() throws MessagingException {
@@ -542,8 +540,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     /**
      * The message is changed when working with headers and when altering the
      * content. Every method that alter the content will fallback to this one.
-     * 
-     * @see javax.mail.Part#setDataHandler(javax.activation.DataHandler)
      */
     @Override
     public synchronized void setDataHandler(DataHandler arg0) throws MessagingException {
@@ -563,9 +559,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         }
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#parse(java.io.InputStream)
-     */
     @Override
     protected synchronized void parse(InputStream is) throws MessagingException {
         // the super implementation calls
@@ -577,8 +570,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
     /**
      * If we already parsed the headers then we simply return the updated ones.
      * Otherwise we parse
-     * 
-     * @see javax.mail.internet.MimeMessage#createInternetHeaders(java.io.InputStream)
      */
     @Override
     protected synchronized InternetHeaders createInternetHeaders(InputStream is) throws MessagingException {
@@ -620,9 +611,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         }
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#getContentStream()
-     */
     @Override
     protected InputStream getContentStream() throws MessagingException {
         if (!messageParsed) {
@@ -631,9 +619,6 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
         return super.getContentStream();
     }
 
-    /**
-     * @see javax.mail.internet.MimeMessage#getRawInputStream()
-     */
     @Override
     public synchronized InputStream getRawInputStream() throws MessagingException {
         if (!messageParsed && !isModified() && source != null) {

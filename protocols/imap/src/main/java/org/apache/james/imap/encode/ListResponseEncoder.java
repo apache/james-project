@@ -36,11 +36,13 @@ public class ListResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final AbstractListingResponse response = (AbstractListingResponse) acceptableMessage;
         ListingEncodingUtils.encodeListingResponse(ImapConstants.LIST_RESPONSE_NAME, composer, response);
     }
 
+    @Override
     protected boolean isAcceptable(ImapMessage message) {
         return (message instanceof ListResponse);
     }

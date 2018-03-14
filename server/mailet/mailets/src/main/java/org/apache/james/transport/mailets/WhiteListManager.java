@@ -179,9 +179,7 @@ public class WhiteListManager extends GenericMailet {
         return this.sqlParameters;
     }
 
-    /**
-     * Initializes the mailet.
-     */
+    @Override
     public void init() throws MessagingException {
         automaticInsert = Boolean.valueOf(getInitParameter("automaticInsert"));
         LOGGER.debug("automaticInsert: {}", automaticInsert);
@@ -241,9 +239,7 @@ public class WhiteListManager extends GenericMailet {
         deleteByPK = sqlQueries.getSqlString("deleteByPK", true);
     }
 
-    /**
-     * Services the mailet.
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
 
         // check if it's a local sender
@@ -285,11 +281,7 @@ public class WhiteListManager extends GenericMailet {
 
     }
 
-    /**
-     * Returns a string describing this mailet.
-     * 
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "White List Manager mailet";
     }

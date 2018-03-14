@@ -35,10 +35,7 @@ public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLine
 
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.decode.ImapRequestLineReader#commandContinuationRequest()
-     */
+    @Override
     protected void commandContinuationRequest() throws DecodingException {
         // only write the request out if this is not a retry to process the
         // request..

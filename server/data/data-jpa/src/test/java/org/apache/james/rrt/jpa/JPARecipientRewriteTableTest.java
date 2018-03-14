@@ -34,11 +34,13 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();

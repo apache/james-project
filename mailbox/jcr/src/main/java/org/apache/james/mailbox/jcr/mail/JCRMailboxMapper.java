@@ -63,13 +63,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         super(repos, session, scaling);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.MailboxMapper#delete(org.apache.james
-     * .imap.store.mail.model.Mailbox)
-     */
+    @Override
     public void delete(Mailbox mailbox) throws MailboxException {
         try {
             Node node = getSession().getNodeByIdentifier(((JCRMailbox) mailbox).getMailboxId().serialize());
@@ -83,10 +77,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxByPath(org.apache.james.imap.api.MailboxPath)
-     */
+    @Override
     public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException, MailboxNotFoundException {
         try {
             String name = Text.escapeIllegalXpathSearchChars(path.getName());
@@ -126,10 +117,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
     }
 
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#findMailboxWithPathLike(org.apache.james.imap.api.MailboxPath)
-     */
+    @Override
     public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
         List<Mailbox> mailboxList = new ArrayList<>();
         try {
@@ -156,13 +144,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         return mailboxList;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.MailboxMapper#save(org.apache.james.
-     * imap.store.mail.model.Mailbox)
-     */
+    @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
         
         try {
@@ -202,12 +184,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#hasChildren(org.apache.james.
-     * imap.store.mail.model.Mailbox)
-     */
+    @Override
     public boolean hasChildren(Mailbox mailbox, char delimiter)
             throws MailboxException, MailboxNotFoundException {
         try {
@@ -233,10 +210,7 @@ public class JCRMailboxMapper extends AbstractJCRScalingMapper implements Mailbo
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.MailboxMapper#list()
-     */
+    @Override
     public List<Mailbox> list() throws MailboxException {
         try {
             List<Mailbox> mList = new ArrayList<>();

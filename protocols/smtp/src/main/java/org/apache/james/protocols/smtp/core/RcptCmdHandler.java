@@ -84,6 +84,7 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
      * @param parameters
      *            parameters passed in with the command by the SMTP client
      */
+    @Override
     @SuppressWarnings("unchecked")
     protected Response doCoreCmd(SMTPSession session, String command,
             String parameters) {
@@ -112,8 +113,9 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
      * @param argument
      *            the argument passed in with the command by the SMTP client
      */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String argument) {
+                                      String argument) {
         String recipient = null;
         if ((argument != null) && (argument.indexOf(":") > 0)) {
             int colonIndex = argument.indexOf(":");
@@ -215,25 +217,19 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
         return sb.toString();
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getHookInterface()
-     */
+    @Override
     protected Class<RcptHook> getHookInterface() {
         return RcptHook.class;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(RcptHook rawHook, SMTPSession session,
-            String parameters) {
+                                  String parameters) {
         return rawHook.doRcpt(session,
                 (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction),
                 (MailAddress) session.getAttachment(CURRENT_RECIPIENT, State.Transaction));

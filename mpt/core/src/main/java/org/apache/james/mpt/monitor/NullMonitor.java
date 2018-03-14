@@ -26,12 +26,15 @@ import org.apache.james.mpt.api.Monitor;
  */
 public class NullMonitor implements Monitor {
 
+    @Override
     public void note(String message) {
     }
 
+    @Override
     public void debug(char character) {
     }
 
+    @Override
     public void debug(String messsage) {
     }
 }

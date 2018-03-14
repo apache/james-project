@@ -83,6 +83,7 @@ public class UsersRepositoryAliasingForwarding extends GenericMailet {
         processor.processMail(mail);
     }
 
+    @Override
     public String getMailetInfo() {
         return "Local User Aliasing and Forwarding Mailet";
     }

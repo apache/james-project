@@ -38,6 +38,7 @@ public class DefaultImapDecoderFactory implements ImapDecoderFactory {
         return new DefaultImapDecoder(unpooledStatusResponseFactory, imapCommands);
     }
 
+    @Override
     public ImapDecoder buildImapDecoder() {
         return createDecoder();
     }

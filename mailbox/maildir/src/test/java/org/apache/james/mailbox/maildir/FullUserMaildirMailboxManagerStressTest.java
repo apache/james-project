@@ -31,6 +31,7 @@ public class FullUserMaildirMailboxManagerStressTest extends MailboxManagerStres
     @Rule
     public TemporaryFolder tmpFolder = new TemporaryFolder();
     
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

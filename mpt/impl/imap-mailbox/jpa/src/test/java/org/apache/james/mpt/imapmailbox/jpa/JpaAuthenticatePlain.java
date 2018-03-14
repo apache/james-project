@@ -29,6 +29,7 @@ public class JpaAuthenticatePlain extends AuthenticatePlain {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();

@@ -397,6 +397,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
      * < 0 ==> a < b = 0 ==> a = b > 0 ==> a > b
      */
     private static class MXRecordComparator implements Comparator<MXRecord> {
+        @Override
         public int compare(MXRecord a, MXRecord b) {
             int pa = a.getPriority();
             int pb = b.getPriority();

@@ -25,6 +25,7 @@ import org.junit.Before;
 
 public class MemoryAnnotationMapperTest extends AnnotationMapperTest {
     
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

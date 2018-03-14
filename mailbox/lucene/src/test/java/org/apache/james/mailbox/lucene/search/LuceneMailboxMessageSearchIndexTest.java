@@ -644,6 +644,7 @@ public class LuceneMailboxMessageSearchIndexTest {
             this.id = TestId.of(id);
         }
 
+        @Override
         public void setMailboxId(MailboxId id) {
         }
 
@@ -652,35 +653,43 @@ public class LuceneMailboxMessageSearchIndexTest {
             return new MailboxPath(getNamespace(), getUser(), getName());
         }
 
+        @Override
         public TestId getMailboxId() {
             return id;
         }
 
+        @Override
         public String getNamespace() {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public void setNamespace(String namespace) {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public String getUser() {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public void setUser(String user) {
             throw new UnsupportedOperationException("Not supported");
         }
 
+        @Override
         public String getName() {
             return id.serialize();
         }
 
+        @Override
         public void setName(String name) {
             throw new UnsupportedOperationException("Not supported");
 
         }
 
+        @Override
         public long getUidValidity() {
             return 0;
         }

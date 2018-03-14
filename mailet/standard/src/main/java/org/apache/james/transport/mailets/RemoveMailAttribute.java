@@ -53,6 +53,7 @@ public class RemoveMailAttribute extends GenericMailet {
 
     private ImmutableList<String> attributesToRemove;
 
+    @Override
     public String getMailetInfo() {
         return "Remove Mail Attribute Mailet";
     }

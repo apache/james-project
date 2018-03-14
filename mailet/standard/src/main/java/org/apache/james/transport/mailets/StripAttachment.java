@@ -239,11 +239,6 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-    /**
-     * returns a String describing this mailet.
-     * 
-     * @return A desciption of this mailet
-     */
     @Override
     public String getMailetInfo() {
         return "StripAttachment";

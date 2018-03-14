@@ -44,6 +44,7 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
     private RecipientRewriteTableManagementMBean virtualUserTableProxy;
     private UsersRepositoryManagementMBean usersRepositoryProxy;
 
+    @Override
     public JmxDataProbe connect(JmxConnection jmxc) throws IOException {
         try {
             domainListProxy = jmxc.retrieveBean(DomainListManagementMBean.class, DOMAINLIST_OBJECT_NAME);

@@ -46,6 +46,7 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
         TablePool.getInstance(cluster.getConf());
     }
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
@@ -59,9 +60,6 @@ public class HBaseDomainListTest extends AbstractDomainListTest {
         }
     }
 
-    /**
-     * @see org.apache.james.domainlist.lib.AbstractDomainListTest#createDomainList()
-     */
     @Override
     protected DomainList createDomainList() throws Exception {
         HBaseDomainList domainList = new HBaseDomainList(getDNSServer("localhost"));

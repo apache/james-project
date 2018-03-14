@@ -32,9 +32,7 @@ import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
  */
 public class IMAP165JpaMigrateCommand implements JpaMigrateCommand {
 
-    /**
-     * @see org.apache.james.mailbox.jpa.migrator.command#migrate(javax.persistence.EntityManager)
-     */
+    @Override
     public void migrate(EntityManager em) throws JpaMigrateException {
         JpaMigrateQuery.executeUpdate(em, "CREATE INDEX I_MMBRSHP_SEEN ON MEMBERSHIP (SEEN)");
         JpaMigrateQuery.executeUpdate(em, "CREATE INDEX I_MMBRSHP_RECENT ON MEMBERSHIP (RECENT)");

@@ -47,6 +47,7 @@ public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws MailboxException {
         CassandraModuleComposite modules = new CassandraModuleComposite(

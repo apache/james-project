@@ -45,8 +45,6 @@ public abstract class LoggingRetryHandler extends NamingExceptionRetryHandler {
         super(exceptionClasses, proxy, schedule, maxRetries);
     }
 
-    /**
-     */
     @Override
     public void postFailure(NamingException ex, int retryCount) {
         super.postFailure(ex, retryCount);

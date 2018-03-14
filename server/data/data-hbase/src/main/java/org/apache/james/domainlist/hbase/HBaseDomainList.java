@@ -56,9 +56,6 @@ public class HBaseDomainList extends AbstractDomainList {
         super(dns);
     }
 
-    /**
-     * @see org.apache.james.domainlist.api.DomainList#containsDomain(String)
-     */
     @Override
     protected boolean containsDomainInternal(String domain) throws DomainListException {
         HTableInterface table = null;
@@ -84,9 +81,6 @@ public class HBaseDomainList extends AbstractDomainList {
         return false;
     }
 
-    /**
-     * @see org.apache.james.domainlist.api.DomainList#addDomain(String)
-     */
     @Override
     public void addDomain(String domain) throws DomainListException {
         String lowerCasedDomain = domain.toLowerCase(Locale.US);
@@ -136,9 +130,6 @@ public class HBaseDomainList extends AbstractDomainList {
         }
     }
 
-    /**
-     * @see org.apache.james.domainlist.lib.AbstractDomainList#getDomainListInternal()
-     */
     @Override
     protected List<String> getDomainListInternal() throws DomainListException {
         List<String> list = new ArrayList<>();

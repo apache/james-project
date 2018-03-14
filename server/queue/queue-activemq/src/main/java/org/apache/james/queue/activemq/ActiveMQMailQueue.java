@@ -109,10 +109,7 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
         this.useBlob = useBlob;
     }
 
-    /**
-     * @see
-     * org.apache.james.queue.jms.JMSMailQueue#populateMailMimeMessage(javax.jms.Message, org.apache.mailet.Mail)
-     */
+    @Override
     protected void populateMailMimeMessage(Message message, Mail mail) throws MessagingException, JMSException {
         if (message instanceof BlobMessage) {
             try {

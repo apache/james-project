@@ -87,6 +87,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
         bNetwork = new NetMatcher(networks, dnsServer);
     }
 
+    @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
 
         String domain = rcpt.getDomain();

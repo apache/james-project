@@ -46,10 +46,7 @@ public class CommandListservMatcher extends GenericRecipientMatcher {
 
     private MailAddress listservAddress;
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() throws MessagingException {
         listservAddress = new MailAddress(getCondition());
     }
@@ -60,6 +57,7 @@ public class CommandListservMatcher extends GenericRecipientMatcher {
      * @param recipient
      * @return true if matches, false otherwise
      */
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         if (recipient.getDomain().equals(listservAddress.getDomain())) {
             if (recipient.getLocalPart().startsWith(listservAddress.getLocalPart() + "-")) {

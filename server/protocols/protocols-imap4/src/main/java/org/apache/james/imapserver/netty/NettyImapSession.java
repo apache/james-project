@@ -62,49 +62,36 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return channel;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#logout()
-     */
+    @Override
     public void logout() {
         closeMailbox();
         state = ImapSessionState.LOGOUT;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#authenticated()
-     */
+    @Override
     public void authenticated() {
         this.state = ImapSessionState.AUTHENTICATED;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#deselect()
-     */
+    @Override
     public void deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
         closeMailbox();
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.api.process.ImapSession#selected(org.apache.james.imap.api.process.SelectedMailbox)
-     */
+    @Override
     public void selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
         closeMailbox();
         this.selectedMailbox = mailbox;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#getSelected()
-     */
+    @Override
     public SelectedMailbox getSelected() {
         return this.selectedMailbox;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#getState()
-     */
+    @Override
     public ImapSessionState getState() {
         return this.state;
     }
@@ -116,18 +103,12 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.api.process.ImapSession#getAttribute(java.lang.String)
-     */
+    @Override
     public Object getAttribute(String key) {
         return attributesByKey.get(key);
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.api.process.ImapSession#setAttribute(java.lang.String, java.lang.Object)
-     */
+    @Override
     public void setAttribute(String key, Object value) {
         if (value == null) {
             attributesByKey.remove(key);
@@ -136,9 +117,7 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         }
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#startTLS()
-     */
+    @Override
     public boolean startTLS() {
         if (!supportStartTLS()) {
             return false;
@@ -157,24 +136,17 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return true;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#supportStartTLS()
-     */
+    @Override
     public boolean supportStartTLS() {
         return sslContext != null;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.api.process.ImapSession#isCompressionSupported()
-     */
+    @Override
     public boolean isCompressionSupported() {
         return compress;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#startCompression()
-     */
+    @Override
     public boolean startCompression() {
         if (!isCompressionSupported()) {
             return false;
@@ -201,49 +173,36 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         return true;
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.api.process.ImapSession#pushLineHandler(org.apache.james.imap.api.process.ImapLineHandler)
-     */
+    @Override
     public void pushLineHandler(ImapLineHandler lineHandler) {
         channel.setReadable(false);
         channel.getPipeline().addBefore(REQUEST_DECODER, "lineHandler" + handlerCount++, new ImapLineHandlerAdapter(this, lineHandler));
         channel.setReadable(true);
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#popLineHandler()
-     */
+    @Override
     public void popLineHandler() {
         channel.setReadable(false);
         channel.getPipeline().remove("lineHandler" + --handlerCount);
         channel.setReadable(true);
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#isPlainAuthDisallowed()
-     */
+    @Override
     public boolean isPlainAuthDisallowed() {
         return plainAuthDisallowed;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#isTLSActive()
-     */
+    @Override
     public boolean isTLSActive() {
         return channel.getPipeline().get(SSL_HANDLER) != null;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#supportMultipleNamespaces()
-     */
+    @Override
     public boolean supportMultipleNamespaces() {
         return false;
     }
 
-    /**
-     * @see org.apache.james.imap.api.process.ImapSession#isCompressionActive()
-     */
+    @Override
     public boolean isCompressionActive() {
         return channel.getPipeline().get(ZLIB_DECODER) != null;
     }

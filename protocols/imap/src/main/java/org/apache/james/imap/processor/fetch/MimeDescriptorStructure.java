@@ -97,114 +97,82 @@ final class MimeDescriptorStructure implements FetchResponse.Structure {
         return results;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getDescription()
-     */
+    @Override
     public String getDescription() {
         return descriptor.getContentDescription();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getEncoding()
-     */
+    @Override
     public String getEncoding() {
         return descriptor.getTransferContentEncoding();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getId()
-     */
+    @Override
     public String getId() {
         return descriptor.getContentID();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getLines()
-     */
+    @Override
     public long getLines() {
         return descriptor.getLines();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getMediaType()
-     */
+    @Override
     public String getMediaType() {
         return descriptor.getMimeType();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getOctets()
-     */
+    @Override
     public long getOctets() {
         return descriptor.getBodyOctets();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getParameters()
-     */
+    @Override
     public List<String> getParameters() {
         return parameters;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getSubType()
-     */
+    @Override
     public String getSubType() {
         return descriptor.getMimeSubType();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#parts()
-     */
+    @Override
     public Iterator<Structure> parts() {
         return parts.iterator();
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getDisposition()
-     */
+    @Override
     public String getDisposition() {
         return disposition;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getLocation()
-     */
+    @Override
     public String getLocation() {
         return location;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getMD5()
-     */
+    @Override
     public String getMD5() {
         return md5;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getLanguages()
-     */
+    @Override
     public List<String> getLanguages() {
         return languages;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getBody()
-     */
+    @Override
     public Structure getBody() {
         return embeddedMessageStructure;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getDispositionParams()
-     */
+    @Override
     public Map<String, String> getDispositionParams() {
         return dispositionParams;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Structure#getEnvelope()
-     */
+    @Override
     public Envelope getEnvelope() {
         return envelope;
     }

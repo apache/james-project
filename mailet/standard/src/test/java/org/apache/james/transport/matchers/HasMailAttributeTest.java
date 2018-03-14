@@ -28,14 +28,17 @@ public class HasMailAttributeTest extends AbstractHasMailAttributeTest {
         super();
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttribute();
     }
 
+    @Override
     protected String getHasMailAttribute() {
         return MAIL_ATTRIBUTE_NAME;
     }
 
+    @Override
     protected String getMatcherName() {
         return "HasMailAttribute";
     }

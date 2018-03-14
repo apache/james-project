@@ -58,19 +58,23 @@ public class MailboxEventAnalyserTest {
             done = false;
         }
 
+        @Override
         public void remove() {
             throw new NotImplementedException("Not implemented");
         }
 
+        @Override
         public MessageResult next() {
             done = true;
             return messageResult;
         }
 
+        @Override
         public boolean hasNext() {
             return !done;
         }
 
+        @Override
         public MailboxException getException() {
             throw new NotImplementedException("Not implemented");
         }

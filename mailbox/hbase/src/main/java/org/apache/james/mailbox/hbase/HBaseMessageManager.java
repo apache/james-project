@@ -59,9 +59,6 @@ public class HBaseMessageManager extends StoreMessageManager {
 
     }
 
-    /**
-     * Support user flags
-     */
     @Override
     protected Flags getPermanentFlags(MailboxSession session) {
         Flags flags = super.getPermanentFlags(session);

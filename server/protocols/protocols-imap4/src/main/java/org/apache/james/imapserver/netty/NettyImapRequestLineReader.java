@@ -57,6 +57,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * wrapped {@link ChannelBuffer} contains not enough data to read the next
      * char
      */
+    @Override
     public char nextChar() throws DecodingException {
         if (!nextSeen) {
             int next;
@@ -78,6 +79,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * {@link ChannelBuffer} contains enough data. If not it will throw a
      * {@link NotEnoughDataException}
      */
+    @Override
     public InputStream read(int size, boolean extraCRLF) throws DecodingException {
         int crlf = 0;
         if (extraCRLF) {

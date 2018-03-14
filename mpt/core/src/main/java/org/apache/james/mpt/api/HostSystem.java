@@ -52,6 +52,7 @@ public interface HostSystem extends SessionFactory {
      * @return <code>Session</code>, not null
      * @throws Exception
      */
+    @Override
     Session newSession(Continuation continuation) throws Exception;
 
     void beforeTest() throws Exception;

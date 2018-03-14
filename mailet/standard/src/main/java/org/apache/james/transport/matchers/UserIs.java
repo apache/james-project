@@ -38,6 +38,7 @@ public class UserIs extends GenericRecipientMatcher {
 
     Set<String> users;
 
+    @Override
     public void init() throws MessagingException {
         if (Strings.isNullOrEmpty(getCondition())) {
             throw new MessagingException("UserIs should have a condition composed of a list of local parts of mail addresses");
@@ -48,6 +49,7 @@ public class UserIs extends GenericRecipientMatcher {
         }
     }
 
+    @Override
     public boolean matchRecipient(MailAddress recipient) {
         return users.contains(recipient.getLocalPart());
     }

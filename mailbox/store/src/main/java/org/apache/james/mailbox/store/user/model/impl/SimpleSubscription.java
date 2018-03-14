@@ -32,10 +32,12 @@ public class SimpleSubscription implements Subscription {
         this.mailbox = mailbox;
     }
 
+    @Override
     public String getMailbox() {
         return mailbox;
     }
 
+    @Override
     public String getUser() {
         return user;
     }

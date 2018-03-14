@@ -53,6 +53,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
         super.beforeTest();
     }
 
+    @Override
     protected SieveRepository createSieveRepository() throws Exception {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
@@ -60,6 +61,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
             new CassandraActiveScriptDAO(cassandra.getConf()));
     }
 
+    @Override
     protected UsersRepository createUsersRepository() {
         CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         cassandraUsersRepository.setEnableVirtualHosting(false);

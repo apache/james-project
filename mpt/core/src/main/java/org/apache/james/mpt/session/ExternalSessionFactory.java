@@ -52,6 +52,7 @@ public class ExternalSessionFactory implements SessionFactory {
         this.address = address;
     }
     
+    @Override
     public Session newSession(Continuation continuation) throws Exception {
         InetSocketAddress address = getAddress();
         monitor.note("Connecting to " + address.getHostName() + ":" + address.getPort());

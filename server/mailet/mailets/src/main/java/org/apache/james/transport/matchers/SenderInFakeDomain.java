@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class SenderInFakeDomain extends AbstractNetworkMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(SenderInFakeDomain.class);
 
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         if (mail.getSender() == null) {
             return null;

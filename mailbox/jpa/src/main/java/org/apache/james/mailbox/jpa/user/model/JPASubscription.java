@@ -85,16 +85,12 @@ public class JPASubscription implements Subscription {
         this.mailbox = mailbox;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.user.model.Subscription#getMailbox()
-     */
+    @Override
     public String getMailbox() {
         return mailbox;
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.user.model.Subscription#getUser()
-     */
+    @Override
     public String getUser() {
         return username;
     }

@@ -29,6 +29,7 @@ public class JpaQuotaTest extends QuotaTest {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();
@@ -41,6 +42,7 @@ public class JpaQuotaTest extends QuotaTest {
         return system;
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         system.afterTest();

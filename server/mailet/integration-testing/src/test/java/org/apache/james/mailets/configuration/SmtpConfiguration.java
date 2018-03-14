@@ -121,6 +121,7 @@ public class SmtpConfiguration implements SerializableAsXml {
         this.maxMessageSizeInKb = maxMessageSizeInKb;
     }
 
+    @Override
     public String serializeAsXml() throws IOException {
         HashMap<String, Object> scopes = new HashMap<>();
         scopes.put("hasAuthorizedAddresses", authorizedAddresses.isPresent());

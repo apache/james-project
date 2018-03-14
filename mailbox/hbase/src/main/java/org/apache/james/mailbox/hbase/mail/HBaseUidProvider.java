@@ -51,12 +51,6 @@ public class HBaseUidProvider implements UidProvider {
         this.conf = conf;
     }
 
-    /**
-     * Returns the last message uid used in a mailbox.
-     * @param session the session
-     * @param mailbox the mailbox for which to get the last uid
-     * @return the last uid used
-     */
     @Override
     public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         HTable mailboxes = null;
@@ -89,14 +83,6 @@ public class HBaseUidProvider implements UidProvider {
         }
     }
 
-    /**
-     * Returns the next uid. Implemented using HTable.incrementColumnValue(row, family, qualifier, amount).
-     * 
-     * @param session the mailbox session
-     * @param mailbox the mailbox for which we are getting the next uid.
-     * @return the next uid to be used.
-     * @throws MailboxException 
-     */
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         return nextUid(session, mailbox.getMailboxId());

@@ -25,6 +25,7 @@ import org.junit.Before;
 
 public class MemoryDomainListTest extends AbstractDomainListTest {
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

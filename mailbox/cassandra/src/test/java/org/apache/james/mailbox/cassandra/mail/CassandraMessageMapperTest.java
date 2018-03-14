@@ -57,6 +57,7 @@ public class CassandraMessageMapperTest extends MessageMapperTest {
 
     private CassandraCluster cassandra;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         CassandraModuleComposite modules = new CassandraModuleComposite(

@@ -64,12 +64,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         this.quotaRootResolver = quotaRootResolver;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor#
-     * getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }

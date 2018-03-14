@@ -249,46 +249,57 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         this.md5 = md5;
     }
 
+    @Override
     public Map<String, String> contentTypeParameters() {
         return contentTypeParameters;
     }
 
+    @Override
     public MimeDescriptor embeddedMessage() {
         return embeddedMessage;
     }
 
+    @Override
     public long getBodyOctets() {
         return bodyOctets;
     }
 
+    @Override
     public String getContentDescription() {
         return contentDescription;
     }
 
+    @Override
     public String getContentID() {
         return contentId;
     }
 
+    @Override
     public long getLines() {
         return lines;
     }
 
+    @Override
     public String getMimeSubType() {
         return subType;
     }
 
+    @Override
     public String getMimeType() {
         return type;
     }
 
+    @Override
     public String getTransferContentEncoding() {
         return transferEncoding;
     }
 
+    @Override
     public Iterator<MessageResult.Header> headers() {
         return headers.iterator();
     }
 
+    @Override
     public Iterator<MimeDescriptor> parts() {
         return parts.iterator();
     }
@@ -297,22 +308,27 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         parts.add(descriptor);
     }
 
+    @Override
     public List<String> getLanguages() {
         return languages;
     }
 
+    @Override
     public String getDisposition() {
         return disposition;
     }
 
+    @Override
     public Map<String,String> getDispositionParams() {
         return dispositionParams;
     }
 
+    @Override
     public String getContentLocation() {
         return location;
     }
 
+    @Override
     public String getContentMD5() {
         return md5;
     }

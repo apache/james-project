@@ -35,6 +35,7 @@ public class CyrusACLIntegration extends ACLIntegration {
     private GrantRightsOnHost grantRightsOnHost;
     private MailboxMessageAppender mailboxMessageAppender;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new CyrusMailboxTestModule());

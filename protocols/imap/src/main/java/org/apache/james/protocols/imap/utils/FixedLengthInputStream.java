@@ -40,6 +40,7 @@ public class FixedLengthInputStream extends FilterInputStream {
         this.length = length;
     }
 
+    @Override
     public int read() throws IOException {
         if (pos >= length) {
             return -1;
@@ -48,11 +49,13 @@ public class FixedLengthInputStream extends FilterInputStream {
         return super.read();
     }
 
+    @Override
     public int read(byte[] b) throws IOException {
 
         return read(b, 0, b.length);
     }
 
+    @Override
     public int read(byte[] b, int off, int len) throws IOException {
 
         if (pos >= length) {
@@ -72,27 +75,33 @@ public class FixedLengthInputStream extends FilterInputStream {
 
     }
 
+    @Override
     public long skip(long n) throws IOException {
         throw new IOException("Not implemented");
         // return super.skip( n );
     }
 
+    @Override
     public int available() throws IOException {
         return (int) (length - pos);
     }
 
+    @Override
     public void close() throws IOException {
         // Don't do anything to the underlying stream.
     }
 
+    @Override
     public void mark(int readlimit) {
         // Don't do anything.
     }
 
+    @Override
     public synchronized void reset() throws IOException {
         throw new IOException("mark not supported");
     }
 
+    @Override
     public boolean markSupported() {
         return false;
     }

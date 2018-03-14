@@ -51,6 +51,7 @@ import org.slf4j.LoggerFactory;
 public class RejectAction implements MailAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(RejectAction.class);
 
+    @Override
     public void execute(Action action, Mail mail, ActionContext context)
             throws MessagingException {
         if (action instanceof ActionReject) {

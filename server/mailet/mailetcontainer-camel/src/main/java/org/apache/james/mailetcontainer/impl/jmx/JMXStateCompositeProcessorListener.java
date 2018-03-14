@@ -110,12 +110,7 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
 
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor.CompositeProcessorListener
-     * #afterProcessor(org.apache.james.mailetcontainer.api.MailProcessor, java.lang.String,
-     * long, javax.mail.MessagingException)
-     */
+    @Override
     public void afterProcessor(MailProcessor processor, String mailName, long processTime, MessagingException e) {
         MailProcessorManagement m = mMap.get(processor);
         if (m != null) {
@@ -123,9 +118,7 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
         }
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         unregisterMBeans();
         mMap.clear();

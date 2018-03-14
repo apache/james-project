@@ -95,6 +95,7 @@ public class DecodingException extends IOException {
         return key;
     }
 
+    @Override
     public Throwable getCause() {
         return t;
     }

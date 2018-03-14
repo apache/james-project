@@ -41,6 +41,7 @@ public class ResponseEncoder implements Responder {
         this.session = session;
     }
 
+    @Override
     public void respond(ImapResponseMessage message) {
         try {
             encoder.encode(message, composer, session);

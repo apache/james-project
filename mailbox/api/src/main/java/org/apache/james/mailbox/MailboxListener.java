@@ -75,6 +75,7 @@ public interface MailboxListener {
          * 
          * @return session
          */
+        @Override
         public MailboxSession getSession() {
             return session;
         }
@@ -211,6 +212,7 @@ public interface MailboxListener {
          * 
          * @return flags
          */
+        @Override
         public abstract MessageMetaData getMetaData(MessageUid uid);
     }
 
@@ -250,6 +252,7 @@ public interface MailboxListener {
          * 
          * @return flags
          */
+        @Override
         public abstract MessageMetaData getMetaData(MessageUid uid);
         
     }

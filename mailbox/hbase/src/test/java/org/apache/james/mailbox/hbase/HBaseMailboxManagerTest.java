@@ -93,6 +93,7 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
         return manager;
     }
 
+    @Override
     @After
     public void tearDown() {
         CLUSTER.clearTable(MAILBOXES);

@@ -31,6 +31,7 @@ public class JamesDeploymentValidation extends DeploymentValidation {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(new ExternalJamesModule());

@@ -34,6 +34,7 @@ public class JpaMailboxManagerStressTest extends MailboxManagerStressTest {
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();

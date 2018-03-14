@@ -67,79 +67,53 @@ public final class MatcherManagement extends StandardMBean implements MatcherMan
 
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MatcherManagementMBean#getMatcherName()
-     */
+    @Override
     public String getMatcherName() {
         return matcherConfig.getMatcherName();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MatcherManagementMBean#getMatcherCondition()
-     */
+    @Override
     public String getMatcherCondition() {
         return matcherConfig.getCondition();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getErrorCount()
-     */
+    @Override
     public long getErrorCount() {
         return errorCount.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getFastestProcessing()
-     */
+    @Override
     public long getFastestProcessing() {
         return fastestProcessing.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getHandledMailCount()
-     */
+    @Override
     public long getHandledMailCount() {
         return getSuccessCount() + getErrorCount();
 
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSlowestProcessing()
-     */
+    @Override
     public long getSlowestProcessing() {
         return slowestProcessing.get();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getSuccessCount()
-     */
+    @Override
     public long getSuccessCount() {
         return successCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MatcherManagementMBean#getMatchedCount()
-     */
+    @Override
     public long getMatchedCount() {
         return matchedCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MatcherManagementMBean#getNotMatchedCount()
-     */
+    @Override
     public long getNotMatchedCount() {
         return notMatchedCount.get();
     }
 
-    /**
-     * @see org.apache.james.mailetcontainer.api.jmx.MailProcessorManagementMBean#getLastProcessing()
-     */
+    @Override
     public long getLastProcessing() {
         return lastProcessing.get();
     }

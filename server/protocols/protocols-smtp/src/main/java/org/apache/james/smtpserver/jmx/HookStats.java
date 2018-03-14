@@ -73,37 +73,27 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         all.incrementAndGet();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getOk()
-     */
+    @Override
     public long getOk() {
         return ok.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDeclined()
-     */
+    @Override
     public long getDeclined() {
         return declined.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDeny()
-     */
+    @Override
     public long getDeny() {
         return deny.get();
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getDenysoft()
-     */
+    @Override
     public long getDenysoft() {
         return denysoft.get();
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));
@@ -112,16 +102,12 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         }
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getName()
-     */
+    @Override
     public String getName() {
         return hookname;
     }
 
-    /**
-     * @see org.apache.james.smtpserver.jmx.HookStatsMBean#getAll()
-     */
+    @Override
     public long getAll() {
         return all.get();
     }

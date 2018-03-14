@@ -133,17 +133,12 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         }
     }
 
-    /**
-     * @see AbstractConfigurableAsyncServer#getDefaultPort()
-     */
     @Override
     public int getDefaultPort() {
         return 143;
     }
 
-    /**
-     * @see AbstractConfigurableAsyncServer#getServiceType()
-     */
+    @Override
     public String getServiceType() {
         return "IMAP Service";
     }
@@ -158,6 +153,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
             
             private final TimeUnit timeoutUnit = TimeUnit.SECONDS;
 
+            @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = pipeline();
                 pipeline.addLast(GROUP_HANDLER, groupHandler);

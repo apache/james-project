@@ -31,6 +31,7 @@ public class HBaseCondstore extends Condstore {
 
     private JamesImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = HBaseHostSystem.build();

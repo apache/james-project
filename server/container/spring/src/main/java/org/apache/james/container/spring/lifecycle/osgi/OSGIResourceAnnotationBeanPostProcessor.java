@@ -24,9 +24,7 @@ import org.springframework.osgi.service.exporter.OsgiServicePropertiesResolver;
 
 public class OSGIResourceAnnotationBeanPostProcessor extends AbstractOSGIAnnotationBeanPostProcessor<Resource> {
 
-    /**
-     * @see org.apache.james.container.spring.lifecycle.osgi.AbstractOSGIAnnotationBeanPostProcessor#getAnnotation()
-     */
+    @Override
     protected Class<Resource> getAnnotation() {
         return Resource.class;
     }

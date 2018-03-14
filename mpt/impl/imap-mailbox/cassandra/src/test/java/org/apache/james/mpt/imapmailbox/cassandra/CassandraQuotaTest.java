@@ -40,6 +40,7 @@ public class CassandraQuotaTest extends QuotaTest {
         return cassandraHostSystemRule.getImapHostSystem();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         cassandraHostSystemRule.clean();

@@ -50,9 +50,7 @@ public class SupressDuplicateRcptHandler implements RcptHook {
 
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         Collection<MailAddress> rcptList = (Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, State.Transaction);

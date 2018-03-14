@@ -98,11 +98,6 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         CndImporter.registerNodeTypes(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("org/apache/james/imap/jcr/james.cnd")), login());
     }
 
-    /**
-     * @see
-     * org.apache.james.mailrepository.lib.AbstractMailRepository
-     * #doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
     @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
         this.workspace = config.getString("workspace", null);
@@ -122,6 +117,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         return repository.login(creds, workspace);
     }
 
+    @Override
     public Iterator<String> list() throws MessagingException {
         try {
             Session session = login();
@@ -143,6 +139,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         }
     }
 
+    @Override
     public Mail retrieve(String key) throws MessagingException {
         try {
             Session session = login();

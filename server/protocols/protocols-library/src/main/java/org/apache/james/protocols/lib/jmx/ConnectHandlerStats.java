@@ -63,30 +63,22 @@ public class ConnectHandlerStats extends StandardMBean implements HandlerStatsMB
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.HandlerStatsMBean#getAll()
-     */
+    @Override
     public long getAll() {
         return all.get();
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.HandlerStatsMBean#getName()
-     */
+    @Override
     public String getName() {
         return handlerName;
     }
 
-    /**
-     * @see org.apache.james.protocols.lib.jmx.HandlerStatsMBean#getDisconnect()
-     */
+    @Override
     public long getDisconnect() {
         return disconnect.get();
     }
 
-    /**
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
-     */
+    @Override
     public void dispose() {
         try {
             mbeanserver.unregisterMBean(new ObjectName(name));

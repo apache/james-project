@@ -67,6 +67,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
         this.repository = repository;
     }
 
+    @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
         this.workspace = config.getString("workspace", null);
         String username = config.getString("username", null);
@@ -94,6 +95,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @return the user being retrieved, null if the user doesn't exist
      * 
      */
+    @Override
     public User getUserByName(String username) {
         User user;
         try {
@@ -142,6 +144,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @throws UsersRepositoryException
      *            If an error occurred
      */
+    @Override
     public void updateUser(User user) throws UsersRepositoryException {
         if (user != null && user instanceof JCRUser) {
             final JCRUser jcrUser = (JCRUser) user;
@@ -181,6 +184,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      *            the user to remove from the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public void removeUser(String username) throws UsersRepositoryException {
         try {
             final Session session = login();
@@ -212,6 +216,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @return whether the user is in the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public boolean contains(String name) throws UsersRepositoryException {
         try {
             final Session session = login();
@@ -247,6 +252,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * 
      * @since James 1.2.2
      */
+    @Override
     public boolean test(String username, String password) throws UsersRepositoryException {
         try {
             final Session session = login();
@@ -284,6 +290,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      * @return the number of users in the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public int countUsers() throws UsersRepositoryException {
         try {
             final Session session = login();
@@ -314,6 +321,7 @@ public class JCRUsersRepository extends AbstractUsersRepository {
      *         repository.
      * @throws UsersRepositoryException
      */
+    @Override
     public Iterator<String> list() throws UsersRepositoryException {
         final Collection<String> userNames = new ArrayList<>();
         try {

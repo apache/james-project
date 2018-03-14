@@ -35,9 +35,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class IsSMIMEEncrypted extends GenericMatcher {
 
-    /**
-     * @see org.apache.mailet.Matcher#match(org.apache.mailet.Mail)
-     */
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (mail == null) {
             return null;

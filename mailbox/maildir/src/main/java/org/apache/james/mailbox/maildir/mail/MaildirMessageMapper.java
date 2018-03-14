@@ -147,11 +147,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#updateFlags(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      javax.mail.Flags, boolean, boolean,
-     *      org.apache.james.mailbox.model.MessageRange)
-     */
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
@@ -247,12 +242,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         return uids;
     }
 
-    /**
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#move(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
@@ -268,10 +257,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         return save(mailbox, theCopy);
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.AbstractMessageMapper#save(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     protected MessageMetaData save(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -346,9 +331,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             .computeApplicableFlags();
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#endRequest()
-     */
     @Override
     public void endRequest() {
         // not used
@@ -435,25 +417,16 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
 
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#begin()
-     */
     @Override
     protected void begin() throws MailboxException {
         // nothing to do
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#commit()
-     */
     @Override
     protected void commit() throws MailboxException {
         // nothing to do
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.transaction.TransactionalMapper#rollback()
-     */
     @Override
     protected void rollback() throws MailboxException {
         // nothing to do

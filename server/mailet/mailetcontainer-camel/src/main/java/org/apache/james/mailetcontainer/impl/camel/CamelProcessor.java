@@ -64,6 +64,7 @@ public class CamelProcessor implements Processor {
     /**
      * Call the wrapped mailet for the exchange
      */
+    @Override
     public void process(Exchange exchange) throws Exception {
         Mail mail = exchange.getIn().getBody(Mail.class);
         long start = System.currentTimeMillis();

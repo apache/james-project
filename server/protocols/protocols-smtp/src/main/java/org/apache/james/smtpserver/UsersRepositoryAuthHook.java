@@ -59,10 +59,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
         this.users = users;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.AuthHook#doAuth(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     public HookResult doAuth(SMTPSession session, String username, String password) {
         try {
             if (users.test(username, password)) {

@@ -66,9 +66,6 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         super(MailboxManagerManagementMBean.class);
     }
 
-    /**
-     * @see org.apache.james.adapter.mailbox.MailboxManagerManagementMBean#deleteMailboxes(java.lang.String)
-     */
     @Override
     public boolean deleteMailboxes(String username) {
         checkString(username, "Username");
@@ -96,11 +93,6 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         return false;
     }
 
-    /**
-     * @see
-     * org.apache.james.adapter.mailbox.MailboxManagerManagementMBean#listMailboxes
-     * (java.lang.String)
-     */
     @Override
     public List<String> listMailboxes(String username) {
         checkString(username, "Username");

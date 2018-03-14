@@ -36,12 +36,7 @@ public class LogoutCommandParser extends AbstractImapCommandParser {
         super(ImapCommand.anyStateCommand(ImapConstants.LOGOUT_COMMAND_NAME));
     }
 
-    /**
-     * @see
-     * org.apache.james.imap.decode.base.AbstractImapCommandParser#decode(org.apache.james.imap.api.ImapCommand,
-     * org.apache.james.imap.decode.ImapRequestLineReader, java.lang.String,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
         request.eol();
         return new LogoutRequest(command, tag);

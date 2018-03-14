@@ -49,9 +49,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         this.mapperFactory = mapperFactory;
     }
 
-    /**
-     * @see org.apache.james.mailbox.SubscriptionManager#subscribe(org.apache.james.mailbox.MailboxSession, java.lang.String)
-     */
+    @Override
     public void subscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
@@ -80,9 +78,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         return new SimpleSubscription(session.getUser().getUserName(), mailbox);
     }
 
-    /**
-     * @see org.apache.james.mailbox.SubscriptionManager#subscriptions(org.apache.james.mailbox.MailboxSession)
-     */
+    @Override
     public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
         return mapperFactory.getSubscriptionMapper(session)
             .findSubscriptionsForUser(session.getUser().getUserName())
@@ -91,9 +87,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
             .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
     }
 
-    /**
-     * @see org.apache.james.mailbox.SubscriptionManager#unsubscribe(org.apache.james.mailbox.MailboxSession, java.lang.String)
-     */
+    @Override
     public void unsubscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
@@ -108,18 +102,14 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         }
     }
 
-    /**
-     * @see org.apache.james.mailbox.SubscriptionManager#endProcessingRequest(org.apache.james.mailbox.MailboxSession)
-     */
+    @Override
     public void endProcessingRequest(MailboxSession session) {
         if (mapperFactory instanceof RequestAware) {
             ((RequestAware)mapperFactory).endProcessingRequest(session);
         }
     }
 
-    /**
-     * Do nothing, Sub classes should override this if needed
-     */
+    @Override
     public void startProcessingRequest(MailboxSession session) {
         // Do nothing        
     }

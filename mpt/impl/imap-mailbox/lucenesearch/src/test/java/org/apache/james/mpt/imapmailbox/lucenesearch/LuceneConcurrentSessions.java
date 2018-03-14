@@ -29,6 +29,7 @@ public class LuceneConcurrentSessions extends ConcurrentSessions {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new LuceneSearchHostSystem();

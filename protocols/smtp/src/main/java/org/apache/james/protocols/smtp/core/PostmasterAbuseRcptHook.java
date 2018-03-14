@@ -33,9 +33,7 @@ import org.slf4j.LoggerFactory;
 public class PostmasterAbuseRcptHook implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(PostmasterAbuseRcptHook.class);
     
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
+    @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (rcpt.getLocalPart().equalsIgnoreCase("postmaster") || rcpt.getLocalPart().equalsIgnoreCase("abuse")) {
             LOGGER.debug("Sender allowed");

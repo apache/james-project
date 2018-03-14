@@ -330,34 +330,22 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
             .build();
     }
 
-    /**
-     * @see MailboxMessage#getModSeq()
-     */
+    @Override
     public long getModSeq() {
         return modSeq;
     }
 
-    /**
-     * @see MailboxMessage#setModSeq(long)
-     */
+    @Override
     public void setModSeq(long modSeq) {
         this.modSeq = modSeq;
     }
 
-    /**
-     * Gets the top level MIME content media type.
-     *
-     * @return top level MIME content media type, or null if default
-     */
+    @Override
     public String getMediaType() {
         return mediaType;
     }
 
-    /**
-     * Gets the MIME content subtype.
-     *
-     * @return the MIME content subtype, or null if default
-     */
+    @Override
     public String getSubType() {
         return subType;
     }
@@ -369,22 +357,17 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      *
      * @return unmodifiable list of meta-data, not null
      */
+    @Override
     public List<Property> getProperties() {
         return new ArrayList<>(properties);
     }
 
-    /**
-     * Gets the number of CRLF in a textual document.
-     *
-     * @return CRLF count when document is textual, null otherwise
-     */
+    @Override
     public Long getTextualLineCount() {
         return textualLineCount;
     }
 
-    /**
-     * @see MailboxMessage#getFullContentOctets()
-     */
+    @Override
     public long getFullContentOctets() {
         return contentOctets;
     }
@@ -393,9 +376,7 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         return bodyStartOctet;
     }
 
-    /**
-     * @see MailboxMessage#getInternalDate()
-     */
+    @Override
     public Date getInternalDate() {
         return internalDate;
     }

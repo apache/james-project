@@ -57,6 +57,7 @@ public class JCRUser implements User {
         this.hashedSaltedPassword = hashedSaltedPassword;
     }
 
+    @Override
     public String getUserName() {
         return userName;
     }
@@ -70,6 +71,7 @@ public class JCRUser implements User {
         return hashedSaltedPassword;
     }
 
+    @Override
     public boolean setPassword(String newPass) {
         final boolean result;
         if (newPass == null) {
@@ -81,6 +83,7 @@ public class JCRUser implements User {
         return result;
     }
 
+    @Override
     public boolean verifyPassword(String pass) {
         final boolean result;
         result = pass != null && hashedSaltedPassword.equals(hashPassword(userName, pass));

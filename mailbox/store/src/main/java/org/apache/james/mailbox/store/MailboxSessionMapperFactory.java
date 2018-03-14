@@ -47,9 +47,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     protected static final String ANNOTATIONMAPPER = "ANNOTATIONMAPPER";
     
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.MessageMapperFactory#getMessageMapper(MailboxSession)
-     */
+    @Override
     public MessageMapper getMessageMapper(MailboxSession session) throws MailboxException {
         MessageMapper mapper = (MessageMapper) session.getAttributes().get(MESSAGEMAPPER);
         if (mapper == null) {
@@ -91,9 +89,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
 
     public abstract MessageIdMapper createMessageIdMapper(MailboxSession session) throws MailboxException;
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.MailboxMapperFactory#getMailboxMapper(MailboxSession)
-     */
+    @Override
     public MailboxMapper getMailboxMapper(MailboxSession session) throws MailboxException {
         MailboxMapper mapper = (MailboxMapper) session.getAttributes().get(MAILBOXMAPPER);
         if (mapper == null) {
@@ -118,6 +114,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      * @param session
      * @return mapper
      */
+    @Override
     public SubscriptionMapper getSubscriptionMapper(MailboxSession session) throws SubscriptionException {
         SubscriptionMapper mapper = (SubscriptionMapper) session.getAttributes().get(SUBSCRIPTIONMAPPER);
         if (mapper == null) {
@@ -144,6 +141,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
      * 
      * @param session
      */
+    @Override
     public void endProcessingRequest(MailboxSession session) {
         if (session == null) {
             return;
@@ -162,10 +160,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
         }
     }
 
-    /**
-     * Do nothing
-     * 
-     */
+    @Override
     public void startProcessingRequest(MailboxSession session) {
         // Do nothing
         

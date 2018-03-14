@@ -62,6 +62,7 @@ public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManag
     @Rule
     public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
 
+    @Override
     @Before
     public void setUp() throws Exception {
         CassandraModuleComposite modules = new CassandraModuleComposite(

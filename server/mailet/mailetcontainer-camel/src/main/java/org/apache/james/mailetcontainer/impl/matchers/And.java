@@ -45,6 +45,7 @@ public class And extends GenericCompositeMatcher {
      * @return Collection of Recipient from the And composition results of the
      *         child Matchers.
      */
+    @Override
     public Collection<MailAddress> match(final Mail mail) throws MessagingException {
         ImmutableList<Set<MailAddress>> individualMatchedResults = performMatchOnMatchers(mail);
         return computeIntersection(individualMatchedResults);

@@ -31,6 +31,7 @@ public class HBaseSelect extends Select {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = HBaseHostSystem.build();

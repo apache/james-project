@@ -46,6 +46,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             "List-Id",
             "List-Archive" };
 
+    @Override
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
         return mail.getSender() == null ||
             isMailingList(mail) ||
@@ -53,6 +54,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             isMdnSentAutomatically(mail);
     }
 
+    @Override
     public boolean isMailingList(Mail mail) throws MessagingException {
         return senderIsMailingList(mail)
             || headerIsMailingList(mail);
@@ -78,6 +80,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             .hasMoreElements();
     }
 
+    @Override
     public boolean isAutoSubmitted(Mail mail) throws MessagingException {
         String[] headers = mail.getMessage().getHeader(AUTO_SUBMITTED_HEADER);
         if (headers != null) {
@@ -87,6 +90,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
         return false;
     }
 
+    @Override
     public boolean isMdnSentAutomatically(Mail mail) throws MessagingException {
         ResultCollector resultCollector = new ResultCollector(false);
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);

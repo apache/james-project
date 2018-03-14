@@ -186,6 +186,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
         return builder.build();
     }
 
+    @Override
     public Cluster get() {
         return cluster;
     }

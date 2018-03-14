@@ -55,6 +55,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      */
     private final Lock lock = new Lock();
 
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         doConfigure(configuration);
     }
@@ -71,6 +72,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      * 
      * @return true if successfully released the lock, false otherwise
      */
+    @Override
     public boolean unlock(String key) {
         return lock.unlock(key);
     }
@@ -83,13 +85,12 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      * 
      * @return true if successfully obtained the lock, false otherwise
      */
+    @Override
     public boolean lock(String key) {
         return lock.lock(key);
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#store(Mail)
-     */
+    @Override
     public void store(Mail mc) throws MessagingException {
         boolean wasLocked = true;
         String key = mc.getName();
@@ -124,25 +125,19 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      */
     protected abstract void internalStore(Mail mc) throws MessagingException, IOException;
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Mail)
-     */
+    @Override
     public void remove(Mail mail) throws MessagingException {
         remove(mail.getName());
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(Collection)
-     */
+    @Override
     public void remove(Collection<Mail> mails) throws MessagingException {
         for (Mail mail : mails) {
             remove(mail);
         }
     }
 
-    /**
-     * @see org.apache.james.mailrepository.api.MailRepository#remove(String)
-     */
+    @Override
     public void remove(String key) throws MessagingException {
         if (lock(key)) {
             try {

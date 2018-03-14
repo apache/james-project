@@ -84,18 +84,22 @@ public class FakeMailetConfig implements MailetConfig {
         this.properties = properties;
     }
 
+    @Override
     public String getInitParameter(String name) {
         return properties.getProperty(name);
     }
 
+    @Override
     public Iterator<String> getInitParameterNames() {
         return properties.stringPropertyNames().iterator();
     }
 
+    @Override
     public MailetContext getMailetContext() {
         return mailetContext;
     }
 
+    @Override
     public String getMailetName() {
         return mailetName;
     }

@@ -41,10 +41,7 @@ public abstract class UnknownCommandHandler<S extends ProtocolSession> implement
     
     private static final Collection<String> COMMANDS = ImmutableSet.of(COMMAND_IDENTIFIER);
   
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

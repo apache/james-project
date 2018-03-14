@@ -54,6 +54,7 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
      * Handler method called upon receipt of a USER command. Reads in the user
      * id.
      */
+    @Override
     public Response onCommand(POP3Session session, Request request) {
         String parameters = request.getArgument();
         if (session.getHandlerState() == POP3Session.AUTHENTICATION_READY && parameters != null) {
@@ -65,16 +66,12 @@ public class UserCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
         }
     }
 
-    /**
-     * @see org.apache.james.pop3server.core.CapaCapability#getImplementedCapabilities(org.apache.james.pop3server.POP3Session)
-     */
+    @Override
     public Set<String> getImplementedCapabilities(POP3Session session) {
         return CAPS;
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }

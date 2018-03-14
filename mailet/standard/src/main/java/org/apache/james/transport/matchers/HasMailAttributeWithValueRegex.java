@@ -52,15 +52,12 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher {
     private String attributeName;
     private Pattern pattern   = null;
 
-    /**
-     * Return a string describing this matcher.
-     *
-     * @return a string describing this matcher
-     */
+    @Override
     public String getMatcherInfo() {
         return "Has Mail Attribute Value Matcher";
     }
 
+    @Override
     public void init(MatcherConfig conf) throws MessagingException {
         String condition = conf.getCondition();
         int idx = condition.indexOf(',');
@@ -84,6 +81,7 @@ public class HasMailAttributeWithValueRegex extends GenericMatcher {
      * interpreted as a regular expression matches the toString value of the
      * corresponding attributes value.
      **/
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Serializable obj = mail.getAttribute(attributeName);
         //to be a little more generic the toString of the value is what is matched against

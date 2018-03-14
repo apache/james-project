@@ -133,9 +133,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         }
     }
 
-    /**
-     * @see org.springframework.beans.factory.BeanClassLoaderAware#setBeanClassLoader(java.lang.ClassLoader)
-     */
+    @Override
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.classLoader = classLoader;
     }
@@ -274,16 +272,12 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
         return setter != null ? AnnotationUtils.getAnnotation(setter, getAnnotation()) : null;
     }
 
-    /**
-     * @see org.springframework.osgi.context.BundleContextAware#setBundleContext(org.osgi.framework.BundleContext)
-     */
+    @Override
     public void setBundleContext(BundleContext context) {
         this.bundleContext = context;
     }
 
-    /**
-     * @see org.springframework.beans.factory.BeanFactoryAware#setBeanFactory(org.springframework.beans.factory.BeanFactory)
-     */
+    @Override
     public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
         this.beanFactory = beanFactory;
     }

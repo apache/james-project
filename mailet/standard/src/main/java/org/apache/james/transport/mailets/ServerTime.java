@@ -44,6 +44,7 @@ public class ServerTime extends GenericMailet {
      *
      * @throws javax.mail.MessagingException if an error is encountered while formulating the reply message
      */
+    @Override
     public void service(Mail mail) throws javax.mail.MessagingException {
         MimeMessage response = (MimeMessage)mail.getMessage().reply(false);
         response.setSubject("The time is now...");
@@ -67,11 +68,7 @@ public class ServerTime extends GenericMailet {
         getMailetContext().sendMail(response);
     }
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "ServerTime Mailet";
     }

@@ -97,6 +97,7 @@ public class ManageSieveServer extends AbstractConfigurableAsyncServer implement
 
             private final ChannelGroupHandler groupHandler = new ChannelGroupHandler(group);
 
+            @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline pipeline = pipeline();
                 Encryption secure = getEncryption();

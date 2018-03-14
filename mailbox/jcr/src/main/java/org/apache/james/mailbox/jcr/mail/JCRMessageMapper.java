@@ -165,6 +165,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * Begin is not supported by level 1 JCR implementations, however we refresh
      * the session
      */
+    @Override
     protected void begin() throws MailboxException {
         try {
             getSession().refresh(true);
@@ -178,6 +179,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * Just call save on the underlying JCR Session, because level 1 JCR
      * implementation does not offer Transactions
      */
+    @Override
     protected void commit() throws MailboxException {
         try {
             if (getSession().hasPendingChanges()) {
@@ -192,6 +194,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * Rollback is not supported by level 1 JCR implementations, so just do
      * nothing
      */
+    @Override
     protected void rollback() throws MailboxException {
         try {
             // just refresh session and discard all pending changes
@@ -204,17 +207,12 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
     /**
      * Logout from open JCR Session
      */
+    @Override
     public void endRequest() {
         repository.logout(mailboxSession);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.MessageMapper#countMessagesInMailbox
-     * ()
-     */
+    @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
         try {
             // we use order by because without it count will always be 0 in
@@ -245,6 +243,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * @see org.apache.james.mailbox.store.mail.MessageMapper#
      * countUnseenMessagesInMailbox ()
      */
+    @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
 
         try {
@@ -271,14 +270,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.MessageMapper#delete(org.apache.james
-     * .mailbox.store.mail.model.Mailbox,
-     * org.apache.james.mailbox.store.mail.model.MailboxMessage)
-     */
+    @Override
     public void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         JCRMailboxMessage membership = (JCRMailboxMessage) message;
         if (membership.isPersistent()) {
@@ -291,15 +283,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.mail.MessageMapper#findInMailbox(org.apache
-     * .james.mailbox.store.mail.model.Mailbox,
-     * org.apache.james.mailbox.MessageRange,
-     * org.apache.james.mailbox.store.mail.MessageMapper.FetchType, int)
-     */
+    @Override
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType fType, int max)
             throws MailboxException {
         try {
@@ -339,6 +323,7 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * @see org.apache.james.mailbox.store.mail.MessageMapper#
      * findRecentMessageUidsInMailbox ()
      */
+    @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {
 
         try {
@@ -420,12 +405,6 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
         }
     }
 
-    /**
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#move(org.apache.james.mailbox.store.mail.model.Mailbox,
-     *      MailboxMessage)
-     */
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");

@@ -37,9 +37,7 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
      */
     protected abstract List<ProtocolHandler> getHandlers();
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ProtocolHandlerChain#getHandlers(java.lang.Class)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public <T> LinkedList<T> getHandlers(Class<T> type) {
         List<ProtocolHandler> handlers = getHandlers();
@@ -70,10 +68,7 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
     }
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.handler.ProtocolHandlerChain#destroy()
-     */
+    @Override
     public void destroy() {
         List<ProtocolHandler> handlers = getHandlers(ProtocolHandler.class);
         for (ProtocolHandler handler: handlers) {

@@ -52,6 +52,7 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
     private InMemoryMailboxManager parseFailingMailboxManager;
 
 
+    @Override
     @Before
     public void setUp() throws Exception {
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();

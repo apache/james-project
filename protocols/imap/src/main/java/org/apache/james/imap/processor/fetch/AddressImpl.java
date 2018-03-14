@@ -41,30 +41,22 @@ final class AddressImpl implements FetchResponse.Envelope.Address {
         this.personalName = personalName;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope.Address#getAtDomainList()
-     */
+    @Override
     public String getAtDomainList() {
         return atDomainList;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope.Address#getHostName()
-     */
+    @Override
     public String getHostName() {
         return hostName;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope.Address#getMailboxName()
-     */
+    @Override
     public String getMailboxName() {
         return mailboxName;
     }
 
-    /**
-     * @see org.apache.james.imap.message.response.FetchResponse.Envelope.Address#getPersonalName()
-     */
+    @Override
     public String getPersonalName() {
         return personalName;
     }

@@ -66,6 +66,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
 
     private String destination;
 
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         destination = configuration.getString("[@destinationURL]");
     }

@@ -122,9 +122,7 @@ public class JPAMailbox implements Mailbox {
         this(mailbox.generateAssociatedPath(), mailbox.getUidValidity());
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
-     */
+    @Override
     public JPAId getMailboxId() {
         return JPAId.of(mailboxId);
     }
@@ -134,20 +132,17 @@ public class JPAMailbox implements Mailbox {
         this.mailboxId = ((JPAId)mailboxId).getRawId();
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUidValidity()
-     */
+    @Override
     public long getUidValidity() {
         return uidValidity;
     }
     
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setName(java.lang.String)
-     */
+    @Override
     public void setName(String name) {
         this.name = name;
     }
@@ -192,30 +187,22 @@ public class JPAMailbox implements Mailbox {
         return true;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getNamespace()
-     */
+    @Override
     public String getNamespace() {
         return namespace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUser()
-     */
+    @Override
     public String getUser() {
         return user;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setNamespace(java.lang.String)
-     */
+    @Override
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setUser(java.lang.String)
-     */
+    @Override
     public void setUser(String user) {
         this.user = user;
     }

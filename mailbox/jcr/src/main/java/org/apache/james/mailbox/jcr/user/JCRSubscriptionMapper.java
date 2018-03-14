@@ -55,13 +55,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
         super(repos,session, scaling);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.user.SubscriptionMapper#delete(org.apache
-     * .james.imap.store.user.model.Subscription)
-     */
+    @Override
     public void delete(Subscription subscription) throws SubscriptionException {
 
         JCRSubscription sub = (JCRSubscription) subscription;
@@ -92,12 +86,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
 
     }
 
-
-
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.user.SubscriptionMapper#findMailboxSubscriptionForUser(java.lang.String, java.lang.String)
-     */
+    @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
         try {
             String queryString = "/jcr:root/" + MAILBOXES_PATH + "//element(*,jamesMailbox:user)[@" + JCRSubscription.USERNAME_PROPERTY + "='" + user + "'] AND [@" + JCRSubscription.MAILBOXES_PROPERTY + "='" + mailbox + "']";
@@ -119,13 +108,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.user.SubscriptionMapper#findSubscriptionsForUser
-     * (java.lang.String)
-     */
+    @Override
     public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
         List<Subscription> subList = new ArrayList<>();
         try {
@@ -155,13 +138,7 @@ public class JCRSubscriptionMapper extends AbstractJCRScalingMapper implements S
 
 
     
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.mailbox.store.user.SubscriptionMapper#save(org.apache.james
-     * .imap.store.user.model.Subscription)
-     */
+    @Override
     public void save(Subscription subscription) throws SubscriptionException {
         String username = subscription.getUser();
         String mailbox = subscription.getMailbox();

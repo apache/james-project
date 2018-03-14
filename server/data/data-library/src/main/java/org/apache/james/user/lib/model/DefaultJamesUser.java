@@ -72,62 +72,46 @@ public class DefaultJamesUser extends DefaultUser implements JamesUser {
         alias = "";
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#setForwarding(boolean)
-     */
+    @Override
     public void setForwarding(boolean forward) {
         forwarding = forward;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#getForwarding()
-     */
+    @Override
     public boolean getForwarding() {
         return forwarding;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#setForwardingDestination(MailAddress)
-     */
+    @Override
     public boolean setForwardingDestination(MailAddress address) {
         /* TODO: Some verification would be good */
         forwardingDestination = address;
         return true;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#getForwardingDestination()
-     */
+    @Override
     public MailAddress getForwardingDestination() {
         return forwardingDestination;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#setAliasing(boolean)
-     */
+    @Override
     public void setAliasing(boolean alias) {
         aliasing = alias;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#getAliasing()
-     */
+    @Override
     public boolean getAliasing() {
         return aliasing;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#setAlias(java.lang.String)
-     */
+    @Override
     public boolean setAlias(String address) {
         /* TODO: Some verification would be good */
         alias = address;
         return true;
     }
 
-    /**
-     * @see org.apache.james.user.api.model.JamesUser#getAlias()
-     */
+    @Override
     public String getAlias() {
         return alias;
     }

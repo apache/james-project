@@ -82,6 +82,7 @@ public class AuthCmdHandler
     
     private abstract class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
+        @Override
         public Response onLine(SMTPSession session, ByteBuffer line) {
             String charset = session.getCharset().name();
             try {
@@ -149,6 +150,7 @@ public class AuthCmdHandler
      * handles AUTH command
      *
      */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         return doAUTH(session, request.getArgument());
     }
@@ -178,6 +180,7 @@ public class AuthCmdHandler
                 String userpass;
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
+                        @Override
                         protected Response onCommand(SMTPSession session, String l) {
                             return doPlainAuthPass(session, l);
                         }
@@ -201,6 +204,7 @@ public class AuthCmdHandler
                 
                 if (initialResponse == null) {
                     session.pushLineHandler(new AbstractSMTPLineHandler() {
+                        @Override
                         protected Response onCommand(SMTPSession session, String l) {
                             return doLoginAuthPass(session, l);
                         }
@@ -329,6 +333,7 @@ public class AuthCmdHandler
                 return this;
             }
 
+            @Override
             protected Response onCommand(SMTPSession session, String l) {
                 return doLoginAuthPassCheck(session, user, l);
             }
@@ -498,16 +503,12 @@ public class AuthCmdHandler
 
 
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.esmtp.EhloExtension#getImplementedEsmtpFeatures(org.apache.james.protocols.smtp.SMTPSession)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         if (session.isAuthSupported()) {
@@ -517,9 +518,7 @@ public class AuthCmdHandler
         }
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> classes = new ArrayList<>(1);
         classes.add(AuthHook.class);
@@ -527,9 +526,7 @@ public class AuthCmdHandler
     }
 
 
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings("unchecked")
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (AuthHook.class.equals(interfaceName)) {
@@ -553,18 +550,14 @@ public class AuthCmdHandler
         return hooks;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailParametersHook#doMailParameter(org.apache.james.protocols.smtp.SMTPSession, java.lang.String, java.lang.String)
-     */
+    @Override
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
         // Ignore the AUTH command.
         // TODO we should at least check for correct syntax and put the result in session
         return HookResult.declined();
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.hook.MailParametersHook#getMailParamNames()
-     */
+    @Override
     public String[] getMailParamNames() {
         return MAIL_PARAMS;
     }

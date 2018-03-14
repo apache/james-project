@@ -31,6 +31,7 @@ public class HBaseAuthenticatedState extends AuthenticatedState {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = HBaseHostSystem.build();

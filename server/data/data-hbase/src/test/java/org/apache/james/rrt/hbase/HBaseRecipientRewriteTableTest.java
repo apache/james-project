@@ -43,14 +43,12 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
         super.setUp();
     }
 
+    @Override
     @After
     public void tearDown() throws Exception {
         super.tearDown();
     }
     
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()
-     */
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         HBaseRecipientRewriteTable rrt = new HBaseRecipientRewriteTable();

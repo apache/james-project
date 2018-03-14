@@ -177,9 +177,7 @@ public class DNSRBLHandler implements RcptHook {
         }
     }
     
-    /**
-     * @see org.apache.james.protocols.smtp.hook.RcptHook#doRcpt(org.apache.james.protocols.smtp.SMTPSession, org.apache.mailet.MailAddress, org.apache.mailet.MailAddress)
-     */
+    @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         checkDNSRBL(session, session.getRemoteAddress().getAddress().getHostAddress());
     

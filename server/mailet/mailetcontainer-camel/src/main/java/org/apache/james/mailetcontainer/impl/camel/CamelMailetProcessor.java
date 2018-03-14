@@ -64,10 +64,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         this.metricFactory = metricFactory;
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.api.MailProcessor#service(org.apache.mailet.Mail)
-     */
+    @Override
     public void service(Mail mail) throws MessagingException {
         try {
             producerTemplate.sendBody(getEndpoint(), mail);
@@ -77,16 +74,12 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         }
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#getCamelContext()
-     */
+    @Override
     public CamelContext getCamelContext() {
         return context;
     }
 
-    /**
-     * @see org.apache.camel.CamelContextAware#setCamelContext(org.apache.camel.CamelContext)
-     */
+    @Override
     public void setCamelContext(CamelContext context) {
         this.context = context;
     }
@@ -106,6 +99,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         return "direct:processor." + getState();
     }
 
+    @Override
     @PostConstruct
     public void init() throws Exception {
         producerTemplate = context.createProducerTemplate();
@@ -116,11 +110,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         super.init();
     }
 
-    /**
-     * @see
-     * org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor#setupRouting
-     * (java.util.List)
-     */
+    @Override
     protected void setupRouting(List<MatcherMailetPair> pairs) throws MessagingException {
         try {
             this.pairs = pairs;
@@ -198,6 +188,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         private final class RemovePropertiesProcessor implements Processor {
 
+            @Override
             public void process(Exchange exchange) throws Exception {
                 exchange.removeProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY);
                 exchange.removeProperty(MatcherSplitter.MATCHER_PROPERTY);
@@ -206,6 +197,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         private final class CompleteProcessor implements Processor {
 
+            @Override
             public void process(Exchange ex) throws Exception {
                 LOGGER.debug("End of mailetprocessor for state {} reached", getState());
                 ex.setProperty(Exchange.ROUTE_STOP, true);
@@ -214,6 +206,7 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         private final class StateChangedProcessor implements Processor {
 
+            @Override
             public void process(Exchange arg0) throws Exception {
                 Mail mail = arg0.getIn().getBody(Mail.class);
                 toProcessor(mail);

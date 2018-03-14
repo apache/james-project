@@ -33,10 +33,12 @@ public class ExpungeResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
+    @Override
     public boolean isAcceptable(ImapMessage message) {
         return (message instanceof ExpungeResponse);
     }
 
+    @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final ExpungeResponse expungeResponse = (ExpungeResponse) acceptableMessage;
         final int messageSequenceNumber = expungeResponse.getMessageSequenceNumber();

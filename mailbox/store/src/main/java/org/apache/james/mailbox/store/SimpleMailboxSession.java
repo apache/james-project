@@ -82,23 +82,17 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     }
 
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#close()
-     */
+    @Override
     public void close() {
         open = false;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getSessionId()
-     */
+    @Override
     public long getSessionId() {
         return sessionId;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#isOpen()
-     */
+    @Override
     public boolean isOpen() {
         return open;
     }
@@ -119,6 +113,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
      * Gets the user executing this session.
      * @return not null
      */
+    @Override
     public User getUser() {
         return this;
     }
@@ -128,34 +123,27 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
      * 
      * @return not null
      */
+    @Override
     public String getUserName() {
         return userName;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getOtherUsersSpace()
-     */
+    @Override
     public String getOtherUsersSpace() {
         return otherUsersSpace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getPersonalSpace()
-     */
+    @Override
     public String getPersonalSpace() {
         return personalSpace;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getSharedSpaces()
-     */
+    @Override
     public Collection<String> getSharedSpaces() {
         return sharedSpaces;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession.User#getLocalePreferences()
-     */
+    @Override
     public List<Locale> getLocalePreferences() {
         return localePreferences;
     }
@@ -163,27 +151,22 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     /**
      * @see org.apache.james.mailbox.MailboxSession#getAttributes()
      */
+    @Override
     public Map<Object, Object> getAttributes() {
         return attributes;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession.User#getPassword()
-     */
+    @Override
     public String getPassword() {
         return password;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getPathDelimiter()
-     */
+    @Override
     public char getPathDelimiter() {
         return pathSeparator;
     }
 
-    /**
-     * @see org.apache.james.mailbox.MailboxSession#getType()
-     */
+    @Override
     public SessionType getType() {
         return type;
     }

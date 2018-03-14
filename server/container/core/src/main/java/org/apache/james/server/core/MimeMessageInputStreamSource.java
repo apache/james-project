@@ -117,6 +117,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      *
      * @return the unique identifier for this MimeMessageInputStreamSource
      */
+    @Override
     public String getSourceId() {
         return sourceId;
     }
@@ -126,6 +127,7 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
      *
      * @return a <code>BufferedInputStream</code> containing the data
      */
+    @Override
     public synchronized InputStream getInputStream() throws IOException {
         InputStream in;
         if (out.isInMemory()) {

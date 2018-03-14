@@ -79,6 +79,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * 
      * @since James 1.2.2
      */
+    @Override
     public User getUserByName(String name) throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -117,6 +118,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * 
      * @throws UsersRepositoryException
      */
+    @Override
     public void updateUser(User user) throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -148,6 +150,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      *            the user to remove from the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public void removeUser(String name) throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -179,6 +182,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * @return whether the user is in the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public boolean contains(String name) throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -207,6 +211,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * 
      * @since James 1.2.2
      */
+    @Override
     public boolean test(String name, String password) throws UsersRepositoryException {
         final User user = getUserByName(name);
         final boolean result;
@@ -220,6 +225,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * @return the number of users in the repository
      * @throws UsersRepositoryException
      */
+    @Override
     public int countUsers() throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
@@ -240,6 +246,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      *         repository.
      * @throws UsersRepositoryException
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Iterator<String> list() throws UsersRepositoryException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
@@ -255,10 +262,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         }
     }
 
-    /**
-     * @see
-     * org.apache.james.user.lib.AbstractUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
-     */
+    @Override
     public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
         algo = config.getString("algorithm", "MD5");
         super.doConfigure(config);
@@ -273,10 +277,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         return entityManagerFactory.createEntityManager();
     }
 
-    /**
-     * @see
-     * org.apache.james.user.lib.AbstractUsersRepository#doAddUser(java.lang.String, java.lang.String)
-     */
+    @Override
     protected void doAddUser(String username, String password) throws UsersRepositoryException {
         String lowerCasedUsername = username.toLowerCase(Locale.US);
         if (contains(lowerCasedUsername)) {

@@ -29,6 +29,7 @@ public class MaildirExpunge extends Expunge {
 
     private ImapHostSystem system;
 
+    @Override
     @Before
     public void setUp() throws Exception {
         system = new MaildirHostSystem();

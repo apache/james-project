@@ -63,9 +63,6 @@ public class HBaseMailbox implements Mailbox {
         return new MailboxPath(getNamespace(), getUser(), getName());
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getMailboxId()
-     */
     @Override
     public HBaseId getMailboxId() {
         return mailboxId;
@@ -85,52 +82,31 @@ public class HBaseMailbox implements Mailbox {
         return namespace;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setNamespace(java.lang.String)
-     */
     @Override
     public void setNamespace(String namespace) {
         this.namespace = namespace;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUser()
-     */
     @Override
     public String getUser() {
         return user;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setUser(java.lang.String)
-     */
     @Override
     public void setUser(String user) {
         this.user = user;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getName()
-     */
     @Override
     public String getName() {
         return name;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setName(java.lang.String)
-     */
     @Override
     public void setName(String name) {
         this.name = name;
     }
 
-    /**
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getUidValidity()
-     */
     @Override
     public long getUidValidity() {
         return uidValidity;
@@ -203,18 +179,12 @@ public class HBaseMailbox implements Mailbox {
         this.messageCount = messageCount;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#getACL()
-     */
     @Override
     public MailboxACL getACL() {
         // TODO ACL support
         return MailboxACL.OWNER_FULL_ACL;
     }
 
-    /* (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.model.Mailbox#setACL(org.apache.james.mailbox.MailboxACL)
-     */
     @Override
     public void setACL(MailboxACL acl) {
         // TODO ACL support

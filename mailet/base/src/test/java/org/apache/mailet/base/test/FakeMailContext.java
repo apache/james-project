@@ -366,10 +366,12 @@ public class FakeMailContext implements MailetContext {
         this.postmaster = postmaster;
     }
 
+    @Override
     public void bounce(Mail mail, String message) throws MessagingException {
         bouncedMails.add(new BouncedMail(fromMail(mail), message, Optional.empty()));
     }
 
+    @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
         bouncedMails.add(new BouncedMail(fromMail(mail), message, Optional.ofNullable(bouncer)));
     }
@@ -377,34 +379,42 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use the generic dnsLookup method
      */
+    @Override
     public Collection<String> getMailServers(String host) {
         return null;  // trivial implementation
     }
 
+    @Override
     public MailAddress getPostmaster() {
         return postmaster;
     }
 
+    @Override
     public Object getAttribute(String name) {
         return attributes.get(name);
     }
 
+    @Override
     public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
     }
 
+    @Override
     public int getMajorVersion() {
         return 0;  // trivial implementation
     }
 
+    @Override
     public int getMinorVersion() {
         return 0;  // trivial implementation
     }
 
+    @Override
     public String getServerInfo() {
         return "Mock Server";
     }
 
+    @Override
     public boolean isLocalServer(String serverName) {
         return serverName.equals("localhost");  // trivial implementation
     }
@@ -412,10 +422,12 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #isLocalEmail(MailAddress)} instead 
      */
+    @Override
     public boolean isLocalUser(String userAccount) {
         return false;  // trivial implementation
     }
 
+    @Override
     public boolean isLocalEmail(MailAddress mailAddress) {
         return false;  // trivial implementation
     }
@@ -423,6 +435,7 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #log(LogLevel level, String message)}
      */
+    @Override
     public void log(String message) {
         System.out.println(message);
     }
@@ -430,15 +443,18 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use {@link #log(LogLevel level, String message, Throwable t)}
      */
+    @Override
     public void log(String message, Throwable t) {
         System.out.println(message);
         t.printStackTrace(System.out);
     }
 
+    @Override
     public void removeAttribute(String name) {
         // trivial implementation
     }
 
+    @Override
     public void sendMail(MimeMessage mimemessage) throws MessagingException {
         sentMails.add(sentMailBuilder()
             .message(mimemessage)
@@ -446,6 +462,7 @@ public class FakeMailContext implements MailetContext {
             .build());
     }
 
+    @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg) throws MessagingException {
         sentMails.add(sentMailBuilder()
             .recipients(recipients)
@@ -455,6 +472,7 @@ public class FakeMailContext implements MailetContext {
             .build());
     }
 
+    @Override
     public void sendMail(MailAddress sender, Collection<MailAddress> recipients, MimeMessage msg, String state) throws MessagingException {
         sentMails.add(sentMailBuilder()
             .recipients(recipients)
@@ -501,14 +519,17 @@ public class FakeMailContext implements MailetContext {
     /**
      * @deprecated use the generic dnsLookup method
      */
+    @Override
     public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
         return null;  // trivial implementation
     }
 
+    @Override
     public void setAttribute(String name, Object value) {
         throw new UnsupportedOperationException("MOCKed method");
     }
 
+    @Override
     public void log(LogLevel level, String message) {
         if (logger.isPresent()) {
             switch (level) {
@@ -529,6 +550,7 @@ public class FakeMailContext implements MailetContext {
         }
     }
 
+    @Override
     public void log(LogLevel level, String message, Throwable t) {
         if (logger.isPresent()) {
             switch (level) {
@@ -550,6 +572,7 @@ public class FakeMailContext implements MailetContext {
         }
     }
 
+    @Override
     public List<String> dnsLookup(String name, RecordType type) throws LookupException {
         return null;   // trivial implementation
     }

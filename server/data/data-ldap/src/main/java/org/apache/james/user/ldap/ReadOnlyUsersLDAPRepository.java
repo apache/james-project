@@ -355,6 +355,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @param configuration
      *            An encapsulation of the James server configuration data.
      */
+    @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
         ldapHost = configuration.getString("[@ldapHost]", "");
         principal = configuration.getString("[@principal]", "");
@@ -628,9 +629,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
       return new ReadOnlyLDAPUser(userName.get().toString(), userDN, ldapContext);
     }
 
-    /**
-     * @see UsersRepository#contains(java.lang.String)
-     */
+    @Override
     public boolean contains(String name) throws UsersRepositoryException {
         return getUserByName(name) != null;
     }
@@ -645,9 +644,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return getUserByNameCaseInsensitive(name) != null;
     }
 
-    /**
-     * @see UsersRepository#countUsers()
-     */
+    @Override
     public int countUsers() throws UsersRepositoryException {
         try {
             return getValidUsers().size();
@@ -673,9 +670,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return null;
     }
 
-    /**
-     * @see UsersRepository#getUserByName(java.lang.String)
-     */
+    @Override
     public User getUserByName(String name) throws UsersRepositoryException {
         try {
           return searchAndBuildUser(name);
@@ -708,9 +703,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return null;
     }
 
-    /**
-     * @see UsersRepository#list()
-     */
+    @Override
     public Iterator<String> list() throws UsersRepositoryException {
         try {
             return buildUserCollection(getValidUsers())
@@ -748,9 +741,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return validUserDNs;
     }
 
-    /**
-     * @see UsersRepository#removeUser(java.lang.String)
-     */
+    @Override
     public void removeUser(String name) throws UsersRepositoryException {
         LOGGER.warn("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
@@ -758,25 +749,20 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
     }
 
-    /**
-     * @see UsersRepository#test(java.lang.String, java.lang.String)
-     */
+    @Override
     public boolean test(String name, String password) throws UsersRepositoryException {
         User u = getUserByName(name);
         return u != null && u.verifyPassword(password);
     }
 
-    /**
-     * @see UsersRepository#addUser(java.lang.String, java.lang.String)
-     */
+    @Override
     public void addUser(String username, String password) throws UsersRepositoryException {
         LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
     }
 
-    /**
-     */
+    @Override
     public void updateUser(User user) throws UsersRepositoryException {
         LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
@@ -786,6 +772,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     /**
      * VirtualHosting not supported
      */
+    @Override
     public boolean supportVirtualHosting() {
         return supportsVirtualHosting;
     }

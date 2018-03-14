@@ -80,6 +80,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         super(SearchRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     protected void doProcess(SearchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         final SearchOperation operation = request.getSearchOperation();
         final SearchKey searchKey = operation.getSearchKey();
@@ -493,10 +494,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
         return SearchQuery.and(criteria);
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-     * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPS;
     }

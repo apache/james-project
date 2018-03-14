@@ -91,11 +91,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
 
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler
-     * #onCommand(SMTPSession, Request)
-     */
+    @Override
     public Response onCommand(SMTPSession session, Request request) {
         Response response = super.onCommand(session, request);
         // Check if the response was not ok
@@ -130,28 +126,20 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         return new SMTPResponse(SMTPRetCode.MAIL_OK, responseBuffer);
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doCoreCmd(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
+                                 String parameters) {
         return doMAIL(session, parameters);
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doFilterChecks(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String parameters) {
+                                      String parameters) {
         return doMAILFilter(session, parameters);
     }
 
@@ -260,14 +248,13 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
         return null;
     }
     
+    @Override
     protected Class<MailHook> getHookInterface() {
         return MailHook.class;
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(MailHook rawHook, SMTPSession session, String parameters) {
         MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
         if (sender.isNullSender()) {
@@ -277,18 +264,14 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     }
 
     
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> l = super.getMarkerInterfaces();
         l.add(MailParametersHook.class);
         return l;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extension) {
         if (MailParametersHook.class.equals(interfaceName)) {

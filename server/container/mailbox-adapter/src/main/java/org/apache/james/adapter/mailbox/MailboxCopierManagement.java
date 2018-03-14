@@ -54,11 +54,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
         this.resolver = resolver;
     }
     
-    /**
-     * @see
-     * org.apache.james.container.spring.mailbox.MailboxCopierManagementMBean
-     * #getMailboxManagerBeans()
-     */
+    @Override
     public Map<String, String> getMailboxManagerBeans() {
         Map<String, String> bMap = new HashMap<>();
         Map<String, MailboxManager> beans = resolver.getMailboxManagerBeans();
@@ -71,11 +67,7 @@ public class MailboxCopierManagement implements MailboxCopierManagementMBean {
         return bMap;
     }
 
-    /**
-     * @see
-     * org.apache.james.container.spring.mailbox.MailboxCopierManagementMBean
-     * #copy(java.lang.String, java.lang.String)
-     */
+    @Override
     public void copy(String srcBean, String dstBean) throws Exception {
         if (srcBean.equals(dstBean)) {
             throw new IllegalArgumentException("srcBean and dstBean can not have the same name!");

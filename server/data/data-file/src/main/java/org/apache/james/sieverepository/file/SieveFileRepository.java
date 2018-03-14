@@ -207,6 +207,7 @@ public class SieveFileRepository implements SieveRepository {
         }
     }
 
+    @Override
     public List<ScriptSummary> listScripts(String user) throws StorageException {
         File[] files = getUserDirectory(user).listFiles();
         List<ScriptSummary> summaries = new ArrayList<>(files.length);
@@ -275,6 +276,7 @@ public class SieveFileRepository implements SieveRepository {
         return new DateTime(getActiveFile(user).lastModified());
     }
 
+    @Override
     public void setActive(String user, String name) throws ScriptNotFoundException, StorageException {
         synchronized (lock) {
             // Turn off currently active script, if any

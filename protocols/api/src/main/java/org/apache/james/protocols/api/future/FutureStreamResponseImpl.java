@@ -44,10 +44,7 @@ public class FutureStreamResponseImpl extends FutureResponseImpl implements Stre
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.StreamResponse#getStream()
-     */
+    @Override
     public InputStream getStream() {
         checkReady();
         return ((StreamResponse) response).getStream();

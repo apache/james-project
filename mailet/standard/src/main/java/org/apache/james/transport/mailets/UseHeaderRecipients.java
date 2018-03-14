@@ -83,6 +83,7 @@ public class UseHeaderRecipients extends GenericMailet {
      * <p/>
      * initializes the DEBUG flag
      */
+    @Override
     public void init() {
         isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
     }
@@ -94,6 +95,7 @@ public class UseHeaderRecipients extends GenericMailet {
      *
      * @param mail incoming email
      */
+    @Override
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
 
@@ -122,11 +124,7 @@ public class UseHeaderRecipients extends GenericMailet {
     }
 
 
-    /**
-     * Return a string describing this mailet.
-     *
-     * @return a string describing this mailet
-     */
+    @Override
     public String getMailetInfo() {
         return "UseHeaderRecipients Mailet";
     }

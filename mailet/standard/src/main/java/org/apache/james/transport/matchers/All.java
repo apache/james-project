@@ -31,10 +31,7 @@ import org.apache.mailet.base.GenericMatcher;
 public class All extends GenericMatcher {
     
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#match(org.apache.mailet.Mail)
-     */
+    @Override
     public Collection<MailAddress> match(Mail mail) {
         return mail.getRecipients();
     }

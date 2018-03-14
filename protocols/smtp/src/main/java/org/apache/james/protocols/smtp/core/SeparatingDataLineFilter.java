@@ -48,10 +48,7 @@ public abstract class SeparatingDataLineFilter implements DataLineFilter {
 
     private static final String HEADERS_COMPLETE = "HEADERS_COMPLETE";
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.smtp.core.DataLineFilter#onLine(org.apache.james.protocols.smtp.SMTPSession, java.nio.ByteBuffer, org.apache.james.protocols.api.handler.LineHandler)
-     */
+    @Override
     public final Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
         if (session.getAttachment(HEADERS_COMPLETE, State.Transaction) == null) {
             if (line.remaining() == 2) {

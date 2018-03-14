@@ -69,19 +69,14 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
 
     }
 
-    /**
-     * @see org.apache.james.protocols.api.handler.CommandHandler#getImplCommands()
-     */
+    @Override
     public Collection<String> getImplCommands() {
         return COMMANDS;
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doCoreCmd(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doCoreCmd(SMTPSession session, String command,
-            String parameters) {
+                                 String parameters) {
         session.setAttachment(SMTPSession.CURRENT_HELO_MODE, COMMAND_NAME, ProtocolSession.State.Connection);
         StringBuilder response = new StringBuilder();
         response.append(session.getConfiguration().getHelloName()).append(
@@ -90,12 +85,9 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
         return new SMTPResponse(SMTPRetCode.MAIL_OK, response);
     }
 
-    /**
-     * @see org.apache.james.protocols.smtp.core.AbstractHookableCmdHandler#doFilterChecks(org.apache.james.protocols.smtp.SMTPSession,
-     *      java.lang.String, java.lang.String)
-     */
+    @Override
     protected Response doFilterChecks(SMTPSession session, String command,
-            String parameters) {
+                                      String parameters) {
         session.resetState();
 
         if (parameters == null) {
@@ -107,17 +99,13 @@ public class HeloCmdHandler extends AbstractHookableCmdHandler<HeloHook> {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected Class<HeloHook> getHookInterface() {
         return HeloHook.class;
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
+    @Override
     protected HookResult callHook(HeloHook rawHook, SMTPSession session, String parameters) {
         return rawHook.doHelo(session, parameters);
     }

@@ -96,6 +96,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         folder.delete();
     }
 
+    @Override
     public InMemoryDNSService getInMemoryDnsService() {
         return inMemoryDNSService;
     }

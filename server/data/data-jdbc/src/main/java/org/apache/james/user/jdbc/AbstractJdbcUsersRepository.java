@@ -128,6 +128,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      *            the user to be removed
      * @throws UsersRepositoryException
      */
+    @Override
     public void removeUser(String userName) throws UsersRepositoryException {
         User user = getUserByName(userName);
         if (user != null) {
@@ -148,6 +149,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * 
      * @since James 1.2.2
      */
+    @Override
     public User getUserByName(String name) throws UsersRepositoryException {
         return getUserByName(name, ignoreCase);
     }
@@ -157,6 +159,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * 
      * @return true or false
      */
+    @Override
     public boolean contains(String name) throws UsersRepositoryException {
         User user = getUserByName(name, ignoreCase);
         return (user != null);
@@ -185,6 +188,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      *         incorrect or the user doesn't exist
      * @since James 1.2.2
      */
+    @Override
     public boolean test(String name, String password) throws UsersRepositoryException {
         User user = getUserByName(name, ignoreCase);
         return user != null && user.verifyPassword(password);
@@ -195,6 +199,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * 
      * @return the number of users in the repository
      */
+    @Override
     public int countUsers() throws UsersRepositoryException {
         List<String> usernames = listUserNames();
         return usernames.size();
@@ -206,6 +211,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * @return Iterator over a collection of Strings, each being one user in the
      *         repository.
      */
+    @Override
     public Iterator<String> list() throws UsersRepositoryException {
         return listUserNames().iterator();
     }
@@ -344,9 +350,8 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      *       &lt;sqlParameters table=&quot;JamesUsers&quot;/&gt;
      *   &lt;/repository&gt;
      * </pre>
-     * 
-     * @see org.apache.james.user.lib.AbstractJamesUsersRepository#doConfigure(org.apache.commons.configuration.HierarchicalConfiguration)
      */
+    @Override
     protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
         LOGGER.debug("{}.configure()", getClass().getName());
 
@@ -474,6 +479,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      *            the user to add
      * @throws UsersRepositoryException
      */
+    @Override
     protected void doAddUser(User user) throws UsersRepositoryException {
         Connection conn = null;
         PreparedStatement addUserStatement = null;
@@ -530,6 +536,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      *            the user to update
      * @throws UsersRepositoryException
      */
+    @Override
     protected void doUpdateUser(User user) throws UsersRepositoryException {
         Connection conn = null;
         PreparedStatement updateUserStatement = null;

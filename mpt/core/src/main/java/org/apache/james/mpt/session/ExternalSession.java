@@ -65,6 +65,7 @@ public final class ExternalSession implements Session {
         this.shabang = shabang;
     }
 
+    @Override
     public String readLine() throws Exception {
         StringBuffer buffer = new StringBuffer();
         readlineInto(buffer);
@@ -138,6 +139,7 @@ public final class ExternalSession implements Session {
         return true;
     }
 
+    @Override
     public void start() throws Exception {
         while (!socket.finishConnect()) {
             monitor.note("connecting...");
@@ -145,15 +147,18 @@ public final class ExternalSession implements Session {
         }
     }
 
+    @Override
     public void restart() throws Exception {
         throw new NotImplementedException("Restart is not implemented for ExternalSession");
     }
 
+    @Override
     public void stop() throws Exception {
         monitor.note("closing");
         socket.close();
     }
 
+    @Override
     public void writeLine(String line) throws Exception {
         monitor.note("-> " + line);
         monitor.debug("[Writing line]");

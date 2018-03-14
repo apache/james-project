@@ -516,10 +516,6 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#add(org.apache.james.mailbox.store.mail.model.Mailbox, org.apache.james.mailbox.store.mail.model.MailboxMessage)
-     */
     @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
@@ -533,10 +529,6 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         return data;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#updateFlags(org.apache.james.mailbox.store.mail.model.Mailbox, javax.mail.Flags, boolean, boolean, org.apache.james.mailbox.MessageRange)
-     */
     @Override
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
 

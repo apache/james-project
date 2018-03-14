@@ -42,13 +42,7 @@ public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, 
     private final Map<String, HookStats> hookStats = new HashMap<>();
     private String jmxPath;
 
-    /**
-     * @see
-     * org.apache.james.protocols.smtp.hook.HookResultHook
-     * #onHookResult(org.apache.james.protocols.smtp.SMTPSession,
-     * org.apache.james.protocols.smtp.hook.HookResult, long,
-     * org.apache.james.protocols.smtp.hook.Hook)
-     */
+    @Override
     public HookResult onHookResult(SMTPSession session, HookResult result, long executionTime, Hook hook) {
         String hookName = hook.getClass().getName();
         HookStats stats = hookStats.get(hookName);
@@ -58,20 +52,14 @@ public class HookResultJMXMonitor implements HookResultHook, ExtensibleHandler, 
         return result;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     public List<Class<?>> getMarkerInterfaces() {
         List<Class<?>> marker = new ArrayList<>();
         marker.add(Hook.class);
         return marker;
     }
 
-    /**
-     * @see
-     * org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     public void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException {
         if (interfaceName.equals(Hook.class)) {
 

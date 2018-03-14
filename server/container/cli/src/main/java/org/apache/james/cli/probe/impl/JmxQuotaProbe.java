@@ -36,6 +36,7 @@ public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
 
     private QuotaManagementMBean quotaManagement;
 
+    @Override
     public JmxQuotaProbe connect(JmxConnection jmxc) throws IOException {
         try {
             quotaManagement = jmxc.retrieveBean(QuotaManagementMBean.class, QUOTAMANAGER_OBJECT_NAME);

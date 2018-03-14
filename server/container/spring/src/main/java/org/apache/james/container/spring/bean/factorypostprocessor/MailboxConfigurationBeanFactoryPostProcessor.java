@@ -53,6 +53,7 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
             JCR_MAILBOXMANAGER, MAILDIR_MAILBOXMANAGER,
             HBASE_MAILBOXMANAGER, CASSANDRA_MAILBOXMANAGER);
 
+    @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         ConfigurationProvider confProvider = beanFactory.getBean(ConfigurationProvider.class);
         try {

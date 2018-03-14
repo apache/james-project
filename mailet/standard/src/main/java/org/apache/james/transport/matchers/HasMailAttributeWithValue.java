@@ -84,6 +84,7 @@ public class HasMailAttributeWithValue extends GenericMatcher {
      * 
      * @param mail
      */
+    @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Object attributeValue = mail.getAttribute(getAttributeName());
 
@@ -126,10 +127,7 @@ public class HasMailAttributeWithValue extends GenericMatcher {
         fieldAttributeValue = attributeValue;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see org.apache.mailet.base.GenericMatcher#init()
-     */
+    @Override
     public void init() throws MessagingException {
         String condition = getCondition().trim();
         int commaPosition = condition.indexOf(',');
@@ -146,11 +144,7 @@ public class HasMailAttributeWithValue extends GenericMatcher {
         setAttributeValue(condition.substring(commaPosition + 1).trim());
     }
     
-    /**
-     * Return a string describing this matcher.
-     *
-     * @return a string describing this matcher
-     */
+    @Override
     public String getMatcherInfo() {
         return "Has Mail Attribute With Value Matcher";
     }

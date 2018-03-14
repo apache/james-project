@@ -40,9 +40,7 @@ public class BodyOffsetInputStream extends InputStream {
         this.in = new PushbackInputStream(in, 3);
     }
 
-    /**
-     * @see InputStream#read()
-     */
+    @Override
     public int read() throws IOException {
         int i = in.read();
         if (i != -1) {
@@ -110,16 +108,12 @@ public class BodyOffsetInputStream extends InputStream {
         
     }
 
-    /**
-     * Mark is not supported by this implementation
-     */
+    @Override
     public boolean markSupported() {
         return false;
     }
 
-    /**
-     * Throws {@link IOException}
-     */
+    @Override
     public void reset() throws IOException {
         throw new IOException("Not supported");
     }

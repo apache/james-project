@@ -128,9 +128,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         this.datasource = datasource;
     }
 
-    /**
-     * Initialize the mailet
-     */
+    @Override
     public void init() throws MessagingException {
         if (getInitParameter("table") == null) {
             throw new MailetException("Table location not specified for JDBCRecipientRewriteTable");
@@ -175,6 +173,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @param recipientsMap
      *            the mapping of virtual to real recipients
      */
+    @Override
     protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
@@ -208,6 +207,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         }
     }
 
+    @Override
     public String getMailetInfo() {
         return "JDBC Virtual User Table mailet";
     }

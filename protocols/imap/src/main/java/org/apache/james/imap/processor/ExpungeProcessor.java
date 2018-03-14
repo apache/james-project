@@ -60,6 +60,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         super(ExpungeRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
+    @Override
     protected void doProcess(ExpungeRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
@@ -121,10 +122,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
         return expunged;
     }
 
-    /**
-     * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-     * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-     */
+    @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return UIDPLUS;
     }

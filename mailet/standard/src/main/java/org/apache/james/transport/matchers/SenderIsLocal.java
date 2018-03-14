@@ -31,6 +31,7 @@ import org.apache.mailet.base.GenericMatcher;
  */
 public class SenderIsLocal extends GenericMatcher {
 
+    @Override
     public final Collection<MailAddress> match(Mail mail) throws MessagingException {
         if (isLocal(mail.getSender())) {
             return mail.getRecipients();

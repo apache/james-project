@@ -110,10 +110,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
         return handlers;
     }
 
-    /**
-     * @throws WiringException 
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#wireExtensions(java.lang.Class, java.util.List)
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public void wireExtensions(Class interfaceName, List extensions) throws WiringException {
         if (interfaceName.equals(ProtocolHandlerResultHandler.class)) {
@@ -143,10 +140,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
 
     }
     
-    /*
-     * (non-Javadoc)
-     * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
-     */
+    @Override
     public Response onLine(SessionT session, ByteBuffer line) {
         
         try {
@@ -254,9 +248,7 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
 
     }
    
-    /**
-     * @see org.apache.james.protocols.api.handler.ExtensibleHandler#getMarkerInterfaces()
-     */
+    @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public List<Class<?>> getMarkerInterfaces() {
         List res = new LinkedList();

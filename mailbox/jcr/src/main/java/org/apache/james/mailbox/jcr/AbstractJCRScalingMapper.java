@@ -61,7 +61,8 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
     /**
      * Begin is not supported by level 1 JCR implementations, however we refresh the session
      */
-    protected void begin() throws MailboxException {  
+    @Override
+    protected void begin() throws MailboxException {
         try {
             getSession().refresh(true);
         } catch (RepositoryException e) {
@@ -73,6 +74,7 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
     /**
      * Just call save on the underlying JCR Session, because level 1 JCR implementation does not offer Transactions
      */
+    @Override
     protected void commit() throws MailboxException {
         try {
             if (getSession().hasPendingChanges()) {
@@ -86,6 +88,7 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
     /**
      * Rollback is not supported by level 1 JCR implementations, so just do nothing
      */
+    @Override
     protected void rollback() throws MailboxException {
         try {
             // just refresh session and discard all pending changes
@@ -98,6 +101,7 @@ public abstract class AbstractJCRScalingMapper extends TransactionalMapper imple
     /**
      * Logout from open JCR Session
      */
+    @Override
     public void endRequest() {
        repository.logout(mSession);
     }

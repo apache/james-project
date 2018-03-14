@@ -33,6 +33,7 @@ public class TestMessageHook implements MessageHook {
 
     private final CopyOnWriteArrayList<MailEnvelope> queued = new CopyOnWriteArrayList<>();
     
+    @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         queued.add(mail);
         return new HookResult(HookReturnCode.OK);

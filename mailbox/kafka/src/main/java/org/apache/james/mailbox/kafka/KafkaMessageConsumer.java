@@ -50,6 +50,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
             this.stream = stream;
         }
 
+        @Override
         public void run() {
             for (MessageAndMetadata<byte[], byte[]> message : stream) {
                 messageReceiver.receiveSerializedEvent(message.message());
@@ -86,6 +87,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
         }
     }
 
+    @Override
     @PreDestroy
     public void destroy() {
         if (consumer != null) {
@@ -97,6 +99,7 @@ public class KafkaMessageConsumer implements MessageConsumer {
         this.isInitialized = false;
     }
 
+    @Override
     @PostConstruct
     public void init(Topic topic) {
         if (!isInitialized) {

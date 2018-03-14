@@ -33,6 +33,7 @@ public class TestDiscardProtocol extends TestCase {
     private final class InputLater implements Runnable {
         private Exception e;
         
+        @Override
         public void run() {
             try  {
                 Thread.sleep(1000);

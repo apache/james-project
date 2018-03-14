@@ -33,10 +33,12 @@ public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest 
         super();
     }
 
+    @Override
     protected String getHasMailAttribute() {
         return MAIL_ATTRIBUTE_NAME + ", " + MAIL_ATTRIBUTE_VALUE;
     }
 
+    @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttributeWithValue();
     }
@@ -52,6 +54,7 @@ public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest 
         assertNull(matchedRecipients);
     }
 
+    @Override
     protected String getMatcherName() {
         return "HasMailAttributeWithValue";
     }

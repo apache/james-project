@@ -38,30 +38,36 @@ public class FakeImapSession implements ImapSession {
         this.attributesByKey = new ConcurrentHashMap<>();
     }
 
+    @Override
     public void logout() {
         closeMailbox();
         state = ImapSessionState.LOGOUT;
     }
 
+    @Override
     public void authenticated() {
         this.state = ImapSessionState.AUTHENTICATED;
     }
 
+    @Override
     public void deselect() {
         this.state = ImapSessionState.AUTHENTICATED;
         closeMailbox();
     }
 
+    @Override
     public void selected(SelectedMailbox mailbox) {
         this.state = ImapSessionState.SELECTED;
         closeMailbox();
         this.selectedMailbox = mailbox;
     }
 
+    @Override
     public SelectedMailbox getSelected() {
         return this.selectedMailbox;
     }
 
+    @Override
     public ImapSessionState getState() {
         return this.state;
     }
@@ -73,10 +79,12 @@ public class FakeImapSession implements ImapSession {
         }
     }
 
+    @Override
     public Object getAttribute(String key) {
         return attributesByKey.get(key);
     }
 
+    @Override
     public void setAttribute(String key, Object value) {
         if (value == null) {
             attributesByKey.remove(key);
@@ -85,41 +93,51 @@ public class FakeImapSession implements ImapSession {
         }
     }
     
+    @Override
     public boolean startTLS() {
         return false;
     }
 
+    @Override
     public boolean supportStartTLS() {
         return false;
     }
 
+    @Override
     public boolean isCompressionSupported() {
         return false;
     }
 
+    @Override
     public boolean startCompression() {
         return false;
     }
 
-    public void pushLineHandler(ImapLineHandler lineHandler) {        
+    @Override
+    public void pushLineHandler(ImapLineHandler lineHandler) {
     }
 
+    @Override
     public void popLineHandler() {
         
     }
 
+    @Override
     public boolean isPlainAuthDisallowed() {
         return false;
     }
 
+    @Override
     public boolean isTLSActive() {
         return false;
     }
 
+    @Override
     public boolean supportMultipleNamespaces() {
         return false;
     }
 
+    @Override
     public boolean isCompressionActive() {
         return false;
     }

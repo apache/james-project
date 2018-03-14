@@ -846,12 +846,14 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class NoopCharValidator implements CharacterValidator {
+        @Override
         public boolean isValid(char chr) {
             return true;
         }
     }
 
     public static class AtomCharValidator implements CharacterValidator {
+        @Override
         public boolean isValid(char chr) {
             return (isCHAR(chr) && !isAtomSpecial(chr) && !isListWildcard(chr) && !isQuotedSpecial(chr));
         }
@@ -862,6 +864,7 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class TagCharValidator extends AtomCharValidator {
+        @Override
         public boolean isValid(char chr) {
             if (chr == '+') {
                 return false;
@@ -871,6 +874,7 @@ public abstract class ImapRequestLineReader {
     }
 
     public static class MessageSetCharValidator implements CharacterValidator {
+        @Override
         public boolean isValid(char chr) {
             return (isDigit(chr) || chr == ':' || chr == '*' || chr == ',');
         }
