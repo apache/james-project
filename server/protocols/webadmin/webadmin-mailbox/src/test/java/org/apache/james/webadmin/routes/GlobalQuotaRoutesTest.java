@@ -80,7 +80,7 @@ public class GlobalQuotaRoutesTest {
     @Test
     public void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(value));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(value));
 
         Long actual =
             when()
@@ -147,7 +147,7 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).contains(QuotaCount.unlimited());
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.unlimited());
     }
 
 
@@ -160,19 +160,19 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).contains(QuotaCount.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
     }
 
     @Test
     public void deleteCountShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
 
         when()
             .delete("/quota/count")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).isEmpty();
     }
 
     @Test
@@ -186,7 +186,7 @@ public class GlobalQuotaRoutesTest {
     @Test
     public void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(value));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(value));
 
 
         long quota =
@@ -233,7 +233,7 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxStorage()).contains(QuotaSize.unlimited());
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.unlimited());
     }
 
     @Test
@@ -267,27 +267,27 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxStorage()).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(42));
     }
 
     @Test
     public void deleteSizeShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
 
         when()
             .delete("/quota/count")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).isEmpty();
     }
 
     @Test
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
         int maxStorage = 42;
         int maxMessage = 52;
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(maxStorage));
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(maxMessage));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(maxStorage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(maxMessage));
 
         JsonPath jsonPath =
             when()
@@ -323,7 +323,7 @@ public class GlobalQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnOnlySizeWhenNoCount() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
 
         JsonPath jsonPath =
             when()
@@ -343,7 +343,7 @@ public class GlobalQuotaRoutesTest {
     @Test
     public void getQuotaShouldReturnOnlyCountWhenNoSize() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(maxMessage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(maxMessage));
 
 
         JsonPath jsonPath =
@@ -371,8 +371,8 @@ public class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(maxQuotaManager.getDefaultMaxMessage()).contains(QuotaCount.count(52));
-        softly.assertThat(maxQuotaManager.getDefaultMaxStorage()).contains(QuotaSize.size(42));
+        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(52));
+        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(42));
     }
 
     @Test
@@ -385,13 +385,13 @@ public class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(maxQuotaManager.getDefaultMaxMessage()).contains(QuotaCount.unlimited());
-        softly.assertThat(maxQuotaManager.getDefaultMaxStorage()).contains(QuotaSize.unlimited());
+        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.unlimited());
+        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.unlimited());
     }
 
     @Test
     public void putQuotaShouldUnsetCountWhenNull() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
         given()
             .body("{\"count\":null,\"size\":43}")
         .when()
@@ -399,12 +399,12 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).isEmpty();
     }
 
     @Test
     public void putQuotaShouldUnsetSizeWhenNull() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(44));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(44));
         given()
             .body("{\"count\":45,\"size\":null}")
         .when()
@@ -412,12 +412,12 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxStorage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).isEmpty();
     }
 
     @Test
     public void putQuotaShouldUnsetCountWhenAbsent() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
         given()
             .body("{\"size\":43}")
         .when()
@@ -425,12 +425,12 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxMessage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).isEmpty();
     }
 
     @Test
     public void putQuotaShouldUnsetSizeWhenAbsent() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(44));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(44));
         given()
             .body("{\"count\":45}")
         .when()
@@ -438,7 +438,7 @@ public class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDefaultMaxStorage()).isEmpty();
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).isEmpty();
     }
 
 }

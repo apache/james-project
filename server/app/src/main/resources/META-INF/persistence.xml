@@ -35,8 +35,8 @@
         <class>org.apache.james.domainlist.jpa.model.JPADomain</class>
         <class>org.apache.james.user.jpa.model.JPAUser</class>
         <class>org.apache.james.rrt.jpa.model.JPARecipientRewrite</class>
-        <class>org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount</class>
-        <class>org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota</class>

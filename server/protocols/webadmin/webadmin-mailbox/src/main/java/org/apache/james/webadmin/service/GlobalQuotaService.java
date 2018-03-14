@@ -40,48 +40,48 @@ public class GlobalQuotaService {
     public void defineQuota(QuotaDTO quota) throws MailboxException {
         Optional<QuotaCount> count = quota.getCount();
         if (count.isPresent()) {
-            maxQuotaManager.setDefaultMaxMessage(count.get());
+            maxQuotaManager.setGlobalMaxMessage(count.get());
         } else {
-            maxQuotaManager.removeDefaultMaxMessage();
+            maxQuotaManager.removeGlobalMaxMessage();
         }
 
         Optional<QuotaSize> size = quota.getSize();
         if (size.isPresent()) {
-            maxQuotaManager.setDefaultMaxStorage(size.get());
+            maxQuotaManager.setGlobalMaxStorage(size.get());
         } else {
-            maxQuotaManager.removeDefaultMaxStorage();
+            maxQuotaManager.removeGlobalMaxStorage();
         }
     }
 
     public QuotaDTO getQuota() throws MailboxException {
         return QuotaDTO
             .builder()
-            .count(maxQuotaManager.getDefaultMaxMessage())
-            .size(maxQuotaManager.getDefaultMaxStorage())
+            .count(maxQuotaManager.getGlobalMaxMessage())
+            .size(maxQuotaManager.getGlobalMaxStorage())
             .build();
     }
 
     public Optional<QuotaSize> getMaxSizeQuota() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxStorage();
+        return maxQuotaManager.getGlobalMaxStorage();
     }
 
     public void defineMaxSizeQuota(QuotaSize quotaRequest) throws MailboxException {
-        maxQuotaManager.setDefaultMaxStorage(quotaRequest);
+        maxQuotaManager.setGlobalMaxStorage(quotaRequest);
     }
 
     public void deleteMaxSizeQuota() throws MailboxException {
-        maxQuotaManager.removeDefaultMaxStorage();
+        maxQuotaManager.removeGlobalMaxStorage();
     }
 
     public Optional<QuotaCount> getMaxCountQuota() throws MailboxException {
-        return maxQuotaManager.getDefaultMaxMessage();
+        return maxQuotaManager.getGlobalMaxMessage();
     }
 
     public void defineMaxCountQuota(QuotaCount value) throws MailboxException {
-        maxQuotaManager.setDefaultMaxMessage(value);
+        maxQuotaManager.setGlobalMaxMessage(value);
     }
 
     public void deleteMaxCountQuota() throws MailboxException {
-        maxQuotaManager.removeDefaultMaxMessage();
+        maxQuotaManager.removeGlobalMaxMessage();
     }
 }

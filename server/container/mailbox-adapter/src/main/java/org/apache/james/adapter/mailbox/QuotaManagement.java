@@ -91,26 +91,26 @@ public class QuotaManagement implements QuotaManagementMBean {
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getDefaultMaxMessageCount() throws MailboxException {
+    public SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getDefaultMaxMessageCount")
+                     .addContext(MDCBuilder.ACTION, "getGlobalMaxMessageCount")
                      .build()) {
-            return SerializableQuotaValue.valueOf(maxQuotaManager.getDefaultMaxMessage());
+            return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getDefaultMaxStorage() throws MailboxException {
+    public SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "getDefaultMaxStorage")
+                     .addContext(MDCBuilder.ACTION, "getGlobalMaxStorage")
                      .build()) {
-            return SerializableQuotaValue.valueOf(maxQuotaManager.getDefaultMaxStorage());
+            return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -151,30 +151,30 @@ public class QuotaManagement implements QuotaManagementMBean {
     }
 
     @Override
-    public void setDefaultMaxMessageCount(SerializableQuotaValue<QuotaCount> maxDefaultMessageCount) {
+    public void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setDefaultMaxMessageCount")
+                     .addContext(MDCBuilder.ACTION, "setGlobalMaxMessageCount")
                      .build()) {
-            maxDefaultMessageCount
+            maxGlobalMessageCount
                 .toValue(QuotaCount::count, QuotaCount.unlimited())
-                .ifPresent(Throwing.consumer(maxQuotaManager::setDefaultMaxMessage).sneakyThrow());
+                .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxMessage).sneakyThrow());
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
 
     @Override
-    public void setDefaultMaxStorage(SerializableQuotaValue<QuotaSize> maxDefaultSize) {
+    public void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
-                     .addContext(MDCBuilder.ACTION, "setDefaultMaxStorage")
+                     .addContext(MDCBuilder.ACTION, "setGlobalMaxStorage")
                      .build()) {
-            maxDefaultSize
+            maxGlobalSize
                 .toValue(QuotaSize::size, QuotaSize.unlimited())
-                .ifPresent(Throwing.consumer(maxQuotaManager::setDefaultMaxStorage).sneakyThrow());
+                .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxStorage).sneakyThrow());
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }

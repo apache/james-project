@@ -30,8 +30,8 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
-import org.apache.james.mailbox.cassandra.table.CassandraDefaultMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
+import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
@@ -74,11 +74,11 @@ public class CassandraQuotaModule implements CassandraModule {
                     .comment("Holds per domain limitations. Limitations can concern the number of messages in a quota-root or the total size of a quota-root.")
                     .caching(SchemaBuilder.KeyCaching.ALL,
                         SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))),
-            new CassandraTable(CassandraDefaultMaxQuota.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraDefaultMaxQuota.TABLE_NAME)
+            new CassandraTable(CassandraGlobalMaxQuota.TABLE_NAME,
+                SchemaBuilder.createTable(CassandraGlobalMaxQuota.TABLE_NAME)
                     .ifNotExists()
-                    .addPartitionKey(CassandraDefaultMaxQuota.TYPE, text())
-                    .addColumn(CassandraDefaultMaxQuota.VALUE, bigint())
+                    .addPartitionKey(CassandraGlobalMaxQuota.TYPE, text())
+                    .addColumn(CassandraGlobalMaxQuota.VALUE, bigint())
                     .withOptions()
                     .comment("Holds defaults limitations definition.")
                     .caching(SchemaBuilder.KeyCaching.ALL,

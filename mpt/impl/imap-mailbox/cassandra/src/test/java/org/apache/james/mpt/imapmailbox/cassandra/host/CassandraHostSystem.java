@@ -48,7 +48,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
-import org.apache.james.mailbox.cassandra.quota.CassandraDefaultMaxQuotaDao;
+import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
@@ -131,7 +131,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(session),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
-            new CassandraDefaultMaxQuotaDao(session));
+            new CassandraGlobalMaxQuotaDao(session));
 
         CassandraCurrentQuotaManager currentQuotaManager = new CassandraCurrentQuotaManager(session);
 
@@ -165,8 +165,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws MailboxException {
-        perUserMaxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
-        perUserMaxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+        perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
+        perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
 
     @Override

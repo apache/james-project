@@ -45,12 +45,12 @@ public class MaxQuotaConfigurationReader implements Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        Long defaultMaxMessage = config.configurationAt("maxQuotaManager").getLong("defaultMaxMessage", null);
-        Long defaultMaxStorage = config.configurationAt("maxQuotaManager").getLong("defaultMaxStorage", null);
+        Long globalMaxMessage = config.configurationAt("maxQuotaManager").getLong("globalMaxMessage", null);
+        Long globalMaxStorage = config.configurationAt("maxQuotaManager").getLong("globalMaxStorage", null);
         Map<String, Long> maxMessage = parseMaxMessageConfiguration(config, "maxMessage");
         Map<String, Long> maxStorage = parseMaxMessageConfiguration(config, "maxStorage");
         try {
-            configureDefaultValues(defaultMaxMessage, defaultMaxStorage);
+            configureGlobalValues(globalMaxMessage, globalMaxStorage);
             configureQuotaRootSpecificValues(maxMessage, maxStorage);
         } catch (MailboxException e) {
             throw new ConfigurationException("Exception caught while configuring max quota manager", e);
@@ -66,12 +66,12 @@ public class MaxQuotaConfigurationReader implements Configurable {
         return result;
     }
 
-    private void configureDefaultValues(Long defaultMaxMessage, Long defaultMaxStorage) throws MailboxException {
-        if (defaultMaxMessage != null) {
-            maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(defaultMaxMessage));
+    private void configureGlobalValues(Long globalMaxMessage, Long globalMaxStorage) throws MailboxException {
+        if (globalMaxMessage != null) {
+            maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(globalMaxMessage));
         }
-        if (defaultMaxStorage != null) {
-            maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(defaultMaxStorage));
+        if (globalMaxStorage != null) {
+            maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(globalMaxStorage));
         }
     }
 

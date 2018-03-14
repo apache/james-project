@@ -63,42 +63,42 @@ public interface MaxQuotaManager {
     void removeMaxStorage(QuotaRoot quotaRoot) throws MailboxException;
 
     /**
-     * Method allowing you to set the default maximum storage in bytes.
+     * Method allowing you to set the global maximum storage in bytes.
      *
-     * @param defaultMaxStorage new default maximum storage
+     * @param globalMaxStorage new global maximum storage
      */
-    void setDefaultMaxStorage(QuotaSize defaultMaxStorage) throws MailboxException;
+    void setGlobalMaxStorage(QuotaSize globalMaxStorage) throws MailboxException;
 
     /**
-     * Method allowing you to remove the default maximum messages size in bytes.
+     * Method allowing you to remove the global maximum messages size in bytes.
      */
-    void removeDefaultMaxStorage() throws MailboxException;
+    void removeGlobalMaxStorage() throws MailboxException;
 
     /**
-     * Method allowing you to set the default maximum message count allowed
+     * Method allowing you to set the global maximum message count allowed
      *
-     * @param defaultMaxMessageCount new default message count
+     * @param globalMaxMessageCount new global message count
      */
-    void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) throws MailboxException;
+    void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) throws MailboxException;
 
     /**
-     * Method allowing you to remove the default maximum messages count.
+     * Method allowing you to remove the global maximum messages count.
      */
-    void removeDefaultMaxMessage() throws MailboxException;
+    void removeGlobalMaxMessage() throws MailboxException;
 
     /**
-     * Method allowing you to get the default maximum storage in bytes.
+     * Method allowing you to get the global maximum storage in bytes.
      *
-     * @return default maximum storage, if defined
+     * @return global maximum storage, if defined
      */
-    Optional<QuotaSize> getDefaultMaxStorage() throws MailboxException;
+    Optional<QuotaSize> getGlobalMaxStorage() throws MailboxException;
 
     /**
-     * Method allowing you to get the default maximum message count allowed
+     * Method allowing you to get the global maximum message count allowed
      *
-     * @return default maximum message count, if defined
+     * @return global maximum message count, if defined
      */
-    Optional<QuotaCount> getDefaultMaxMessage() throws MailboxException;
+    Optional<QuotaCount> getGlobalMaxMessage() throws MailboxException;
 
     /**
      * Return the maximum storage which is allowed for the given {@link QuotaRoot} (in fact the user which the session is bound to)

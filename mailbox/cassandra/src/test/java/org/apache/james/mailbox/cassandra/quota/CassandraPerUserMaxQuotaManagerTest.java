@@ -39,7 +39,7 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
         return new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(cassandra.getConf()),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
-            new CassandraDefaultMaxQuotaDao(cassandra.getConf()));
+            new CassandraGlobalMaxQuotaDao(cassandra.getConf()));
     }
 
     @After

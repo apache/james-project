@@ -393,8 +393,8 @@ public class UserQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(22));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(22));
         maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
@@ -418,7 +418,7 @@ public class UserQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnOnlySpecifiedValues() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
         maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
         JsonPath jsonPath =
@@ -441,8 +441,8 @@ public class UserQuotaRoutesTest {
 
     @Test
     public void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1111));
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(12));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(12));
 
         JsonPath jsonPath =
             given()

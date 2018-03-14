@@ -42,15 +42,15 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
 
     private final CassandraPerUserMaxQuotaDao perUserQuota;
     private final CassandraPerDomainMaxQuotaDao perDomainQuota;
-    private final CassandraDefaultMaxQuotaDao defaultQuota;
+    private final CassandraGlobalMaxQuotaDao globalQuota;
 
     @Inject
     public CassandraPerUserMaxQuotaManager(CassandraPerUserMaxQuotaDao perUserQuota,
                                            CassandraPerDomainMaxQuotaDao domainQuota,
-                                           CassandraDefaultMaxQuotaDao defaultQuota) {
+                                           CassandraGlobalMaxQuotaDao globalQuota) {
         this.perUserQuota = perUserQuota;
         this.perDomainQuota = domainQuota;
-        this.defaultQuota = defaultQuota;
+        this.globalQuota = globalQuota;
     }
 
     @Override
@@ -104,45 +104,45 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
-        defaultQuota.setDefaultMaxStorage(defaultMaxStorage);
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+        globalQuota.setGlobalMaxStorage(globalMaxStorage);
     }
 
     @Override
-    public void removeDefaultMaxStorage() {
-        defaultQuota.removeDefaultMaxStorage();
+    public void removeGlobalMaxStorage() {
+        globalQuota.removeGlobaltMaxStorage();
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
-        defaultQuota.setDefaultMaxMessage(defaultMaxMessageCount);
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+        globalQuota.setGlobalMaxMessage(globalMaxMessageCount);
     }
 
     @Override
-    public void removeDefaultMaxMessage() {
-        defaultQuota.removeDefaultMaxMessage();
+    public void removeGlobalMaxMessage() {
+        globalQuota.removeGlobalMaxMessage();
     }
 
     @Override
-    public Optional<QuotaSize> getDefaultMaxStorage() {
-        return defaultQuota.getDefaultMaxStorage();
+    public Optional<QuotaSize> getGlobalMaxStorage() {
+        return globalQuota.getGlobalMaxStorage();
     }
 
     @Override
-    public Optional<QuotaCount> getDefaultMaxMessage() {
-        return defaultQuota.getDefaultMaxMessage();
+    public Optional<QuotaCount> getGlobalMaxMessage() {
+        return globalQuota.getGlobalMaxMessage();
     }
 
     @Override
     public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
         Supplier<Optional<QuotaSize>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
             .flatMap(this::getDomainMaxStorage)).sneakyThrow();
-        Supplier<Optional<QuotaSize>> defaultDomainSupplier = Throwing.supplier(this::getDefaultMaxStorage).sneakyThrow();
+        Supplier<Optional<QuotaSize>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow();
 
         return Stream
             .of(() -> perUserQuota.getMaxStorage(quotaRoot),
                 domainQuotaSupplier,
-                defaultDomainSupplier)
+                globalDomainSupplier)
             .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
             .findFirst();
     }
@@ -151,12 +151,12 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
         Supplier<Optional<QuotaCount>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
             .flatMap(this::getDomainMaxMessage)).sneakyThrow();
-        Supplier<Optional<QuotaCount>> defaultDomainSupplier = Throwing.supplier(this::getDefaultMaxMessage).sneakyThrow();
+        Supplier<Optional<QuotaCount>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow();
 
         return Stream
             .of(() -> perUserQuota.getMaxMessage(quotaRoot),
                 domainQuotaSupplier,
-                defaultDomainSupplier)
+                globalDomainSupplier)
             .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
             .findFirst();
     }
@@ -167,7 +167,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxMessage(quotaRoot)),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
-                Pair.of(Quota.Scope.Global, defaultQuota.getDefaultMaxMessage()))
+                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxMessage()))
             .filter(pair -> pair.getValue().isPresent())
             .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
@@ -178,7 +178,7 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream.of(
                 Pair.of(Quota.Scope.User, perUserQuota.getMaxStorage(quotaRoot)),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaSupplier)),
-                Pair.of(Quota.Scope.Global, defaultQuota.getDefaultMaxStorage()))
+                Pair.of(Quota.Scope.Global, globalQuota.getGlobalMaxStorage()))
             .filter(pair -> pair.getValue().isPresent())
             .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }

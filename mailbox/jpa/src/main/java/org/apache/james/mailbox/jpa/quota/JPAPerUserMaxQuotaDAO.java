@@ -26,10 +26,10 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -117,50 +117,50 @@ public class JPAPerUserMaxQuotaDAO {
     }
 
 
-    public void setDefaultMaxStorage(Optional<QuotaSize> defaultMaxStorage) {
+    public void setGlobalMaxStorage(Optional<QuotaSize> globalMaxStorage) {
         entityManager.getTransaction().begin();
-        MaxDefaultStorage defaultMaxStorageEntity = getDefaultMaxStorageEntity(defaultMaxStorage);
-        entityManager.persist(defaultMaxStorageEntity);
+        MaxGlobalStorage globalMaxStorageEntity = getGlobalMaxStorageEntity(globalMaxStorage);
+        entityManager.persist(globalMaxStorageEntity);
         entityManager.getTransaction().commit();
     }
 
-    private MaxDefaultStorage getDefaultMaxStorageEntity(Optional<QuotaSize> maxSizeQuota) {
-        MaxDefaultStorage storedValue = entityManager.find(MaxDefaultStorage.class, MaxDefaultStorage.DEFAULT_KEY);
+    private MaxGlobalStorage getGlobalMaxStorageEntity(Optional<QuotaSize> maxSizeQuota) {
+        MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
         Long value = quotaValueToLong(maxSizeQuota);
         if (storedValue == null) {
-            return new MaxDefaultStorage(value);
+            return new MaxGlobalStorage(value);
         }
         storedValue.setValue(value);
         return storedValue;
     }
 
-    public void setDefaultMaxMessage(Optional<QuotaCount> defaultMaxMessageCount) {
+    public void setGlobalMaxMessage(Optional<QuotaCount> globalMaxMessageCount) {
         entityManager.getTransaction().begin();
-        MaxDefaultMessageCount defaultMaxMessageEntity = getDefaultMaxMessageEntity(defaultMaxMessageCount);
-        entityManager.persist(defaultMaxMessageEntity);
+        MaxGlobalMessageCount globalMaxMessageEntity = getGlobalMaxMessageEntity(globalMaxMessageCount);
+        entityManager.persist(globalMaxMessageEntity);
         entityManager.getTransaction().commit();
     }
 
-    private MaxDefaultMessageCount getDefaultMaxMessageEntity(Optional<QuotaCount> maxMessageQuota) {
-        MaxDefaultMessageCount storedValue = entityManager.find(MaxDefaultMessageCount.class, MaxDefaultMessageCount.DEFAULT_KEY);
+    private MaxGlobalMessageCount getGlobalMaxMessageEntity(Optional<QuotaCount> maxMessageQuota) {
+        MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
         Long value = quotaValueToLong(maxMessageQuota);
         if (storedValue == null) {
-            return new MaxDefaultMessageCount(value);
+            return new MaxGlobalMessageCount(value);
         }
         storedValue.setValue(value);
         return storedValue;
     }
 
-    public Optional<QuotaSize> getDefaultMaxStorage() {
-        MaxDefaultStorage storedValue = entityManager.find(MaxDefaultStorage.class, MaxDefaultStorage.DEFAULT_KEY);
+    public Optional<QuotaSize> getGlobalMaxStorage() {
+        MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
         if (storedValue == null) {
             return Optional.empty();
         }
         return longToQuotaSize(storedValue.getValue());
     }
 
-    public Optional<QuotaCount> getDefaultMaxMessage() {
-        MaxDefaultMessageCount storedValue = entityManager.find(MaxDefaultMessageCount.class, MaxDefaultMessageCount.DEFAULT_KEY);
+    public Optional<QuotaCount> getGlobalMaxMessage() {
+        MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
         if (storedValue == null) {
             return Optional.empty();
         }

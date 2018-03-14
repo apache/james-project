@@ -28,10 +28,10 @@ import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.AbstractJPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount;
-import org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount;
+import org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.jpa.user.model.JPASubscription;
@@ -51,8 +51,8 @@ public interface JPAMailboxFixture {
     );
 
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.<Class<?>>of(
-        MaxDefaultMessageCount.class,
-        MaxDefaultStorage.class,
+        MaxGlobalMessageCount.class,
+        MaxGlobalStorage.class,
         MaxDomainStorage.class,
         MaxDomainMessageCount.class,
         MaxUserMessageCount.class,
@@ -69,8 +69,8 @@ public interface JPAMailboxFixture {
         "JAMES_SUBSCRIPTION");
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.<String>of(
-        "JAMES_MAX_DEFAULT_MESSAGE_COUNT",
-        "JAMES_MAX_DEFAULT_STORAGE",
+        "JAMES_MAX_GLOBAL_MESSAGE_COUNT",
+        "JAMES_MAX_GLOBAL_STORAGE",
         "JAMES_MAX_USER_MESSAGE_COUNT",
         "JAMES_MAX_USER_STORAGE",
         "JAMES_MAX_DOMAIN_MESSAGE_COUNT",

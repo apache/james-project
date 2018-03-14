@@ -164,8 +164,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
-        maxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+        maxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
+        maxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
 
 }

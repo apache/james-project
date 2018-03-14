@@ -86,7 +86,7 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldKeepAddressesWithTooBigSize() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(100));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
@@ -99,7 +99,7 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldReturnEmptyAtSizeQuotaLimit() throws Exception {
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1000));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000));
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
@@ -112,7 +112,7 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldKeepAddressesWithTooMuchMessages() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(0));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(0));
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)
@@ -124,7 +124,7 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldReturnEmptyOnMessageLimit() throws Exception {
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1));
 
         FakeMail fakeMail = FakeMail.builder()
             .recipient(MailAddressFixture.ANY_AT_JAMES)

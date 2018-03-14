@@ -24,11 +24,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-@Entity(name = "MaxDefaultMessageCount")
-@Table(name = "JAMES_MAX_DEFAULT_MESSAGE_COUNT")
-public class MaxDefaultMessageCount {
+@Entity(name = "MaxGlobalStorage")
+@Table(name = "JAMES_MAX_Global_STORAGE")
+public class MaxGlobalStorage {
     public static final String DEFAULT_KEY = "default_key";
-    
+   
     @Id
     @Column(name = "QUOTAROOT_ID")
     private String quotaRoot = DEFAULT_KEY;
@@ -36,12 +36,12 @@ public class MaxDefaultMessageCount {
     @Column(name = "VALUE", nullable = true)
     private Long value;
 
-    public MaxDefaultMessageCount(Long value) {
+    public MaxGlobalStorage(Long value) {
         this.quotaRoot = DEFAULT_KEY;
         this.value = value;
     }
 
-    public MaxDefaultMessageCount() {
+    public MaxGlobalStorage() {
     }
 
     public Long getValue() {

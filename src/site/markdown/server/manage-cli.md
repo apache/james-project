@@ -249,13 +249,13 @@ With value being an integer. Please note the use of units for storage (K, M, G).
 {cli} SetMaxStorageQuota someone@apache.org 4G
 ```
 
-Moreover, James allows to specify defaults maximum values, at the server level. Note: syntax is similar to what was exposed previously.
+Moreover, James allows to specify global maximum values, at the server level. Note: syntax is similar to what was exposed previously.
 
 ```
-{cli} SetDefaultMaxMessageCountQuota value
-{cli} GetDefaultMaxMessageCountQuota
-{cli} SetDefaultMaxStorageQuota value
-{cli} GetDefaultMaxStorageQuota
+{cli} SetGlobalMaxMessageCountQuota value
+{cli} GetGlobalMaxMessageCountQuota
+{cli} SetGlobalMaxStorageQuota value
+{cli} GetGlobalMaxStorageQuota
 ```
 
 ## Re-indexing

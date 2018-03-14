@@ -93,28 +93,28 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
-        dao.setDefaultMaxStorage(Optional.of(defaultMaxStorage));
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+        dao.setGlobalMaxStorage(Optional.of(globalMaxStorage));
     }
 
     @Override
-    public void removeDefaultMaxMessage() {
-        dao.setDefaultMaxMessage(Optional.empty());
+    public void removeGlobalMaxMessage() {
+        dao.setGlobalMaxMessage(Optional.empty());
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
-        dao.setDefaultMaxMessage(Optional.of(defaultMaxMessageCount));
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+        dao.setGlobalMaxMessage(Optional.of(globalMaxMessageCount));
     }
 
     @Override
-    public Optional<QuotaSize> getDefaultMaxStorage() {
-        return dao.getDefaultMaxStorage();
+    public Optional<QuotaSize> getGlobalMaxStorage() {
+        return dao.getGlobalMaxStorage();
     }
 
     @Override
-    public Optional<QuotaCount> getDefaultMaxMessage() {
-        return dao.getDefaultMaxMessage();
+    public Optional<QuotaCount> getGlobalMaxMessage() {
+        return dao.getGlobalMaxMessage();
     }
 
     @Override
@@ -122,7 +122,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream
             .of((Supplier<Optional<QuotaSize>>) () -> dao.getMaxStorage(quotaRoot),
                 () -> quotaRoot.getDomain().flatMap(this::getDomainMaxStorage),
-                this::getDefaultMaxStorage)
+                this::getGlobalMaxStorage)
             .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
             .findFirst();
     }
@@ -132,7 +132,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream
             .of((Supplier<Optional<QuotaCount>>) () -> dao.getMaxMessage(quotaRoot),
                 () -> quotaRoot.getDomain().flatMap(this::getDomainMaxMessage),
-                this::getDefaultMaxMessage)
+                this::getGlobalMaxMessage)
             .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
             .findFirst();
     }
@@ -143,7 +143,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxMessage(quotaRoot)),
             Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
-            Pair.of(Quota.Scope.Global, dao.getDefaultMaxMessage()))
+            Pair.of(Quota.Scope.Global, dao.getGlobalMaxMessage()))
         .filter(pair -> pair.getValue().isPresent())
         .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
@@ -154,7 +154,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxStorage(quotaRoot)),
             Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
-            Pair.of(Quota.Scope.Global, dao.getDefaultMaxStorage()))
+            Pair.of(Quota.Scope.Global, dao.getGlobalMaxStorage()))
         .filter(pair -> pair.getValue().isPresent())
         .collect(Guavate.toImmutableMap(Pair::getKey, value -> value.getValue().get()));
     }
@@ -165,8 +165,8 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void removeDefaultMaxStorage() {
-        dao.setDefaultMaxStorage(Optional.empty());
+    public void removeGlobalMaxStorage() {
+        dao.setGlobalMaxStorage(Optional.empty());
     }
 
 }

@@ -17,38 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.jpa.quota.model;
+package org.apache.james.mailbox.cassandra.table;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+public interface CassandraGlobalMaxQuota {
+    String TABLE_NAME = "defaultMaxQuota";
 
-@Entity(name = "MaxDefaultStorage")
-@Table(name = "JAMES_MAX_DEFAULT_STORAGE")
-public class MaxDefaultStorage {
-    public static final String DEFAULT_KEY = "default_key";
-   
-    @Id
-    @Column(name = "QUOTAROOT_ID")
-    private String quotaRoot = DEFAULT_KEY;
+    String TYPE = "type";
+    String VALUE = "value";
 
-    @Column(name = "VALUE", nullable = true)
-    private Long value;
-
-    public MaxDefaultStorage(Long value) {
-        this.quotaRoot = DEFAULT_KEY;
-        this.value = value;
-    }
-
-    public MaxDefaultStorage() {
-    }
-
-    public Long getValue() {
-        return value;
-    }
-
-    public void setValue(Long value) {
-        this.value = value;
-    }
+    String MESSAGE = "message";
+    String STORAGE = "storage";
 }

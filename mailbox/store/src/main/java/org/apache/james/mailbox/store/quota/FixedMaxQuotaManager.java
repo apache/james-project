@@ -54,22 +54,22 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) {
-        maxStorage = Optional.of(defaultMaxStorage);
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+        maxStorage = Optional.of(globalMaxStorage);
     }
 
     @Override
-    public void removeDefaultMaxStorage() throws MailboxException {
+    public void removeGlobalMaxStorage() throws MailboxException {
         throw new UnsupportedOperationException("Can not modify QuotaRoot specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void removeDefaultMaxMessage() {
+    public void removeGlobalMaxMessage() {
         maxMessage = Optional.empty();
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) {
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
         maxMessage = Optional.empty();
     }
 
@@ -122,12 +122,12 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaSize> getDefaultMaxStorage() {
+    public Optional<QuotaSize> getGlobalMaxStorage() {
         return maxStorage;
     }
 
     @Override
-    public Optional<QuotaCount> getDefaultMaxMessage() {
+    public Optional<QuotaCount> getGlobalMaxMessage() {
         return maxMessage;
     }
 }

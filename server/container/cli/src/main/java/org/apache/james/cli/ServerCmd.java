@@ -293,17 +293,17 @@ public class ServerCmd {
         case SETMAXMESSAGECOUNTQUOTA:
             quotaProbe.setMaxMessageCount(arguments[1], parseQuotaCount(arguments[2]));
             break;
-        case SETDEFAULTMAXSTORAGEQUOTA:
-            quotaProbe.setDefaultMaxStorage(parseQuotaSize(arguments[1]));
+        case SETGLOBALMAXSTORAGEQUOTA:
+            quotaProbe.setGlobalMaxStorage(parseQuotaSize(arguments[1]));
             break;
-        case SETDEFAULTMAXMESSAGECOUNTQUOTA:
-            quotaProbe.setDefaultMaxMessageCount(parseQuotaCount(arguments[1]));
+        case SETGLOBALMAXMESSAGECOUNTQUOTA:
+            quotaProbe.setGlobalMaxMessageCount(parseQuotaCount(arguments[1]));
             break;
-        case GETDEFAULTMAXSTORAGEQUOTA:
-            printStream.println("Default Maximum Storage Quota: " + formatStorageValue(quotaProbe.getDefaultMaxStorage()));
+        case GETGLOBALMAXSTORAGEQUOTA:
+            printStream.println("Global Maximum Storage Quota: " + formatStorageValue(quotaProbe.getGlobalMaxStorage()));
             break;
-        case GETDEFAULTMAXMESSAGECOUNTQUOTA:
-            printStream.println("Default Maximum message count Quota: " + formatMessageValue(quotaProbe.getDefaultMaxMessageCount()));
+        case GETGLOBALMAXMESSAGECOUNTQUOTA:
+            printStream.println("Global Maximum message count Quota: " + formatMessageValue(quotaProbe.getGlobalMaxMessageCount()));
             break;
         case REINDEXMAILBOX:
             mailboxProbe.reIndexMailbox(arguments[1], arguments[2], arguments[3]);

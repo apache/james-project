@@ -30,8 +30,8 @@
         <class>org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage</class>
         <class>org.apache.james.mailbox.jpa.mail.model.JPAProperty</class>
         <class>org.apache.james.mailbox.jpa.user.model.JPASubscription</class>
-        <class>org.apache.james.mailbox.jpa.quota.model.MaxDefaultMessageCount</class>
-        <class>org.apache.james.mailbox.jpa.quota.model.MaxDefaultStorage</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota</class>

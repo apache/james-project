@@ -74,13 +74,13 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getDefaultMaxMessageCount() throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getDefaultMaxMessage());
+    public SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException {
+        return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getDefaultMaxStorage() throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getDefaultMaxStorage());
+    public SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException {
+        return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
     }
 
     @Override
@@ -102,14 +102,14 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public void setDefaultMaxMessageCount(SerializableQuotaValue<QuotaCount> maxDefaultMessageCount) throws MailboxException {
-        maxDefaultMessageCount.toValue(QuotaCount::count, QuotaCount.unlimited())
-            .ifPresent(Throwing.consumer(maxQuotaManager::setDefaultMaxMessage).sneakyThrow());
+    public void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) throws MailboxException {
+        maxGlobalMessageCount.toValue(QuotaCount::count, QuotaCount.unlimited())
+            .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxMessage).sneakyThrow());
     }
 
     @Override
-    public void setDefaultMaxStorage(SerializableQuotaValue<QuotaSize> maxDefaultSize) throws MailboxException {
-        maxDefaultSize.toValue(QuotaSize::size, QuotaSize.unlimited())
-            .ifPresent(Throwing.consumer(maxQuotaManager::setDefaultMaxStorage).sneakyThrow());
+    public void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) throws MailboxException {
+        maxGlobalSize.toValue(QuotaSize::size, QuotaSize.unlimited())
+            .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxStorage).sneakyThrow());
     }
 }

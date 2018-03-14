@@ -99,7 +99,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws MailboxException {
-        perUserMaxQuotaManager.setDefaultMaxMessage(maxMessageQuota);
-        perUserMaxQuotaManager.setDefaultMaxStorage(maxStorageQuota);
+        perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
+        perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
 }

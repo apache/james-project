@@ -71,13 +71,13 @@ public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getDefaultMaxMessageCount() throws MailboxException {
-        return quotaManagement.getDefaultMaxMessageCount();
+    public SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException {
+        return quotaManagement.getGlobalMaxMessageCount();
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getDefaultMaxStorage() throws MailboxException {
-        return quotaManagement.getDefaultMaxStorage();
+    public SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException {
+        return quotaManagement.getGlobalMaxStorage();
     }
 
     @Override
@@ -91,13 +91,13 @@ public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
     }
 
     @Override
-    public void setDefaultMaxMessageCount(SerializableQuotaValue<QuotaCount> maxDefaultMessageCount) throws MailboxException {
-        quotaManagement.setDefaultMaxMessageCount(maxDefaultMessageCount);
+    public void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) throws MailboxException {
+        quotaManagement.setGlobalMaxMessageCount(maxGlobalMessageCount);
     }
 
     @Override
-    public void setDefaultMaxStorage(SerializableQuotaValue<QuotaSize> maxDefaultSize) throws MailboxException {
-        quotaManagement.setDefaultMaxStorage(maxDefaultSize);
+    public void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) throws MailboxException {
+        quotaManagement.setGlobalMaxStorage(maxGlobalSize);
     }
 
 }

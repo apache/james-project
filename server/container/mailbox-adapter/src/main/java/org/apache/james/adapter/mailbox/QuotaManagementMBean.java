@@ -36,15 +36,15 @@ public interface QuotaManagementMBean {
 
     SerializableQuotaValue<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException;
 
-    SerializableQuotaValue<QuotaCount> getDefaultMaxMessageCount() throws MailboxException;
+    SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException;
 
-    SerializableQuotaValue<QuotaSize> getDefaultMaxStorage() throws MailboxException;
+    SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException;
 
     void setMaxMessageCount(String quotaRoot, SerializableQuotaValue<QuotaCount> maxMessageCount) throws MailboxException;
 
     void setMaxStorage(String quotaRoot, SerializableQuotaValue<QuotaSize> maxSize) throws MailboxException;
 
-    void setDefaultMaxMessageCount(SerializableQuotaValue<QuotaCount> maxDefaultMessageCount) throws MailboxException;
+    void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) throws MailboxException;
 
-    void setDefaultMaxStorage(SerializableQuotaValue<QuotaSize> maxDefaultSize) throws MailboxException;
+    void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) throws MailboxException;
 }

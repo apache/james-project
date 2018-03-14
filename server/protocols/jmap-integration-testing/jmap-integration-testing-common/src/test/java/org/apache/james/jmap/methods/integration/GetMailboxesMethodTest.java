@@ -794,7 +794,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnMaxStorageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setDefaultMaxStorage(SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(42))));
+        quotaProbe.setGlobalMaxStorage(SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(42))));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
 
         given()
@@ -811,7 +811,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnMaxMessageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setDefaultMaxMessageCount(SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(43))));
+        quotaProbe.setGlobalMaxMessageCount(SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(43))));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, DefaultMailboxes.INBOX).serialize();
 
         given()

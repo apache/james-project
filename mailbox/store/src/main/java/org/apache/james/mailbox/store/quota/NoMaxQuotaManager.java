@@ -79,22 +79,22 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxStorage(QuotaSize defaultMaxStorage) throws MailboxException {
+    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void removeDefaultMaxStorage() throws MailboxException {
+    public void removeGlobalMaxStorage() throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void removeDefaultMaxMessage() throws MailboxException {
+    public void removeGlobalMaxMessage() throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount defaultMaxMessageCount) throws MailboxException {
+    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) throws MailboxException {
         throw new MailboxException("Operation is not supported");
     }
 
@@ -129,12 +129,12 @@ public class NoMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaSize> getDefaultMaxStorage() {
+    public Optional<QuotaSize> getGlobalMaxStorage() {
         return Optional.empty();
     }
 
     @Override
-    public Optional<QuotaCount> getDefaultMaxMessage() {
+    public Optional<QuotaCount> getGlobalMaxMessage() {
         return Optional.empty();
     }
 }

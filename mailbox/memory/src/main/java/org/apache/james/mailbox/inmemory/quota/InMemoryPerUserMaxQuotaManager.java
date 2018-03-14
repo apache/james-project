@@ -47,7 +47,7 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     private final Map<String, QuotaCount> userMaxMessage = new ConcurrentHashMap<>();
 
     @Override
-    public void setDefaultMaxStorage(QuotaSize maxStorage) {
+    public void setGlobalMaxStorage(QuotaSize maxStorage) {
         this.maxStorage = Optional.of(maxStorage);
     }
 
@@ -110,7 +110,7 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDefaultMaxMessage(QuotaCount maxMessage) {
+    public void setGlobalMaxMessage(QuotaCount maxMessage) {
         this.maxMessage = Optional.of(maxMessage);
     }
 
@@ -135,12 +135,12 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaSize> getDefaultMaxStorage() {
+    public Optional<QuotaSize> getGlobalMaxStorage() {
         return maxStorage;
     }
 
     @Override
-    public Optional<QuotaCount> getDefaultMaxMessage() {
+    public Optional<QuotaCount> getGlobalMaxMessage() {
         return maxMessage;
     }
 
@@ -155,12 +155,12 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void removeDefaultMaxStorage() {
+    public void removeGlobalMaxStorage() {
         maxStorage = Optional.empty();
     }
 
     @Override
-    public void removeDefaultMaxMessage() {
+    public void removeGlobalMaxMessage() {
         maxMessage = Optional.empty();
     }
 }

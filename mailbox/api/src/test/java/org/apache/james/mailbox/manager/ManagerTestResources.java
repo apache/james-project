@@ -77,8 +77,8 @@ public class ManagerTestResources<T extends MailboxManager> {
         inbox = MailboxPath.inbox(session);
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 
-        maxQuotaManager.setDefaultMaxMessage(QuotaCount.count(1000));
-        maxQuotaManager.setDefaultMaxStorage(QuotaSize.size(1000000));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1000));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000000));
     }
 
     public void createMailboxes() throws MailboxException {
