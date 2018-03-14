@@ -227,7 +227,6 @@ Response codes:
  - 404: The user name does not exist
  - 500: Internal error
 
-
 ## Administrating quotas by users
 
 ### Getting the quota for a user
@@ -412,7 +411,185 @@ Response codes:
  - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
- 
+## Administrating quotas by domains
+
+### Getting the quota for a domain
+
+```
+curl -XGET http://ip:port/quota/domains/domainToBeUsed
+```
+
+Resource name domainToBeUsed should be an existing domain. For example:
+
+```
+curl -XGET http://ip:port/quota/domains/james.org
+```
+
+The answer can contain a fixed value, an empty value (null) or an unlimited value (-1):
+
+```
+{"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
+```
+
+Response codes:
+
+ - 200: The domain's quota was successfully retrieved
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 500: Internal error while accessing the domain's quota
+
+### Updating the quota for a domain
+
+```
+curl -XPUT http://ip:port/quota/domains/domainToBeUsed
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+The body can contain a fixed value, an empty value (null) or an unlimited value (-1):
+
+```
+{"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Getting the quota count for a domain
+
+```
+curl -XGET http://ip:port/quota/domains/domainToBeUsed/count
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The domain's quota was successfully retrieved
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 500: Internal error while accessing the domain's quota
+
+### Updating the quota count for a domain
+
+```
+curl -XPUT http://ip:port/quota/domains/domainToBeUsed/count
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the quota count for a domain
+
+```
+curl -XDELETE http://ip:port/quota/domains/domainToBeUsed/count
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Getting the quota size for a domain
+
+```
+curl -XGET http://ip:port/quota/domains/domainToBeUsed/size
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The domain's quota was successfully retrieved
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 500: Internal error while accessing the domain's quota
+
+### Updating the quota size for a domain
+
+```
+curl -XPUT http://ip:port/quota/domains/domainToBeUsed/size
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The domain does not exist
+ - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the quota size for a domain
+
+```
+curl -XDELETE http://ip:port/quota/domains/domainToBeUsed/size
+```
+
+Resource name domainToBeUsed should be an existing domain.
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The domain does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
 ## Cassandra Schema upgrades
 
 Cassandra upgrades implies the creation of a new table. Thus restarting James is needed, as new tables are created on restart.
