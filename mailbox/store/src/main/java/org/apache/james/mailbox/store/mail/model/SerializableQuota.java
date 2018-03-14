@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store.mail.model;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaValue;
@@ -42,10 +41,6 @@ public class SerializableQuota<T extends QuotaValue<T>> implements Serializable 
             new SerializableQuotaValue<>(used),
             new SerializableQuotaValue<>(max)
         );
-    }
-
-    private static <U extends QuotaValue<U>> SerializableQuotaValue<U> getUsed(Optional<U> quota, Function<U, SerializableQuotaValue<U>> factory) {
-        return quota.map(factory).orElse(null);
     }
 
     private final SerializableQuotaValue<T> max;
