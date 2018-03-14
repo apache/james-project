@@ -70,10 +70,9 @@ public class DomainQuotaRoutesNoVirtualHostingTest {
     @Before
     public void setUp() throws Exception {
         InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
-        memoryDomainList.setAutoDetect(false);
-        memoryDomainList.addDomain(FOUND_COM);
         MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService());
+        domainList.setAutoDetect(false);
+        domainList.setAutoDetectIP(false);
         domainList.addDomain(FOUND_COM);
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
