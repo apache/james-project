@@ -44,22 +44,19 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.UserService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
+class UsersRoutesTest {
 
-@RunWith(HierarchicalContextRunner.class)
-public class UsersRoutesTest {
-
-    public static final Domain DOMAIN = Domain.of("domain");
-    public static final String USERNAME = "username@" + DOMAIN.name();
+    private static final Domain DOMAIN = Domain.of("domain");
+    private static final String USERNAME = "username@" + DOMAIN.name();
     private WebAdminServer webAdminServer;
 
     private void createServer(UsersRepository usersRepository) throws Exception {
@@ -74,15 +71,16 @@ public class UsersRoutesTest {
             .build();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
-    public class NormalBehaviour {
+    @Nested
+    class NormalBehaviour {
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             DomainList domainList = mock(DomainList.class);
             when(domainList.containsDomain(DOMAIN)).thenReturn(true);
 
@@ -93,7 +91,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void getUsersShouldBeEmptyByDefault() {
+        void getUsersShouldBeEmptyByDefault() {
             List<Map<String, String>> users =
                 when()
                     .get()
@@ -109,7 +107,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWhenNoBody() {
+        void putShouldReturnUserErrorWhenNoBody() {
             when()
                 .put(USERNAME)
             .then()
@@ -117,7 +115,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldReturnUserErrorWhenEmptyJsonBody() {
+        void postShouldReturnUserErrorWhenEmptyJsonBody() {
             given()
                 .body("{}")
             .when()
@@ -127,7 +125,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldReturnUserErrorWhenWrongJsonBody() {
+        void postShouldReturnUserErrorWhenWrongJsonBody() {
             given()
                 .body("{\"bad\":\"any\"}")
             .when()
@@ -137,7 +135,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldReturnOkWhenValidJsonBody() {
+        void postShouldReturnOkWhenValidJsonBody() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -147,7 +145,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldReturnRequireNonNullPassword() {
+        void postShouldReturnRequireNonNullPassword() {
             given()
                 .body("{\"password\":null}")
             .when()
@@ -157,7 +155,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldAddTheUser() {
+        void postShouldAddTheUser() {
             with()
                 .body("{\"password\":\"password\"}")
                 .put(USERNAME);
@@ -177,7 +175,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postingTwoTimesShouldBeAllowed() {
+        void postingTwoTimesShouldBeAllowed() {
             // Given
             with()
                 .body("{\"password\":\"password\"}")
@@ -207,7 +205,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOk() {
+        void deleteShouldReturnOk() {
             when()
                 .delete(USERNAME)
             .then()
@@ -215,7 +213,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnBadRequestWhenEmptyUserName() {
+        void deleteShouldReturnBadRequestWhenEmptyUserName() {
             when()
                 .delete("/")
             .then()
@@ -223,7 +221,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnBadRequestWhenUsernameIsTooLong() {
+        void deleteShouldReturnBadRequestWhenUsernameIsTooLong() {
             when()
                 .delete(USERNAME + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
                     "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
@@ -233,7 +231,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnNotFoundWhenUsernameContainsSlash() {
+        void deleteShouldReturnNotFoundWhenUsernameContainsSlash() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -243,7 +241,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void putShouldReturnBadRequestWhenEmptyUserName() {
+        void putShouldReturnBadRequestWhenEmptyUserName() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -253,7 +251,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void putShouldReturnBadRequestWhenUsernameIsTooLong() {
+        void putShouldReturnBadRequestWhenUsernameIsTooLong() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -265,7 +263,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void putShouldReturnNotFoundWhenUsernameContainsSlash() {
+        void putShouldReturnNotFoundWhenUsernameContainsSlash() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -275,7 +273,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldRemoveAssociatedUser() {
+        void deleteShouldRemoveAssociatedUser() {
             // Given
             with()
                 .body("{\"password\":\"password\"}")
@@ -303,7 +301,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldStillBeValidWithExtraBody() {
+        void deleteShouldStillBeValidWithExtraBody() {
             given()
                 .body("{\"bad\":\"any\"}")
             .when()
@@ -313,14 +311,15 @@ public class UsersRoutesTest {
         }
     }
 
-    public class ErrorHandling {
+    @Nested
+    class ErrorHandling {
 
         private UsersRepository usersRepository;
         private String username;
         private String password;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             usersRepository = mock(UsersRepository.class);
             createServer(usersRepository);
             username = "username@domain";
@@ -328,7 +327,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void deleteShouldStillBeOkWhenNoUser() throws Exception {
+        void deleteShouldStillBeOkWhenNoUser() throws Exception {
             doThrow(new UsersRepositoryException("message")).when(usersRepository).removeUser(username);
 
             when()
@@ -338,7 +337,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void getShouldFailOnRepositoryException() throws Exception {
+        void getShouldFailOnRepositoryException() throws Exception {
             when(usersRepository.list()).thenThrow(new UsersRepositoryException("message"));
 
             when()
@@ -348,7 +347,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldFailOnRepositoryExceptionOnGetUserByName() throws Exception {
+        void postShouldFailOnRepositoryExceptionOnGetUserByName() throws Exception {
             when(usersRepository.getUserByName(username)).thenThrow(new UsersRepositoryException("message"));
 
             given()
@@ -360,7 +359,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldNotFailOnRepositoryExceptionOnAddUser() throws Exception {
+        void postShouldNotFailOnRepositoryExceptionOnAddUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(null);
             doThrow(new UsersRepositoryException("message")).when(usersRepository).addUser(username, password);
 
@@ -373,7 +372,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldFailOnRepositoryExceptionOnUpdateUser() throws Exception {
+        void postShouldFailOnRepositoryExceptionOnUpdateUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(mock(User.class));
             doThrow(new UsersRepositoryException("message")).when(usersRepository).updateUser(any());
 
@@ -387,7 +386,7 @@ public class UsersRoutesTest {
 
 
         @Test
-        public void deleteShouldFailOnUnknownException() throws Exception {
+        void deleteShouldFailOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).removeUser(username);
 
             when()
@@ -397,7 +396,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void getShouldFailOnUnknownException() throws Exception {
+        void getShouldFailOnUnknownException() throws Exception {
             when(usersRepository.list()).thenThrow(new RuntimeException());
 
             when()
@@ -407,7 +406,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldFailOnUnknownExceptionOnGetUserByName() throws Exception {
+        void postShouldFailOnUnknownExceptionOnGetUserByName() throws Exception {
             when(usersRepository.getUserByName(username)).thenThrow(new RuntimeException());
 
             given()
@@ -419,7 +418,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldFailOnUnknownExceptionOnAddUser() throws Exception {
+        void postShouldFailOnUnknownExceptionOnAddUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(null);
             doThrow(new RuntimeException()).when(usersRepository).addUser(username, password);
 
@@ -432,7 +431,7 @@ public class UsersRoutesTest {
         }
 
         @Test
-        public void postShouldFailOnUnknownExceptionOnGetUpdateUser() throws Exception {
+        void postShouldFailOnUnknownExceptionOnGetUpdateUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(mock(User.class));
             doThrow(new RuntimeException()).when(usersRepository).updateUser(any());
 

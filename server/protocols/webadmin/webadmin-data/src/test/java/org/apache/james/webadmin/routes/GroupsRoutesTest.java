@@ -37,7 +37,6 @@ import java.util.Map;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
-import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -50,19 +49,17 @@ import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.filter.log.LogDetail;
 import com.jayway.restassured.http.ContentType;
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
 
-@RunWith(HierarchicalContextRunner.class)
-public class GroupsRoutesTest {
+class GroupsRoutesTest {
 
     private static final Domain DOMAIN = Domain.of("b.com");
     private static final String GROUP1 = "group1" + "@" + DOMAIN.name();
@@ -89,19 +86,20 @@ public class GroupsRoutesTest {
             .build();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
-    public class NormalBehaviour {
+    @Nested
+    class NormalBehaviour {
 
         MemoryUsersRepository usersRepository;
         MemoryDomainList domainList;
         MemoryRecipientRewriteTable memoryRecipientRewriteTable;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
@@ -112,7 +110,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getGroupsShouldBeEmpty() {
+        void getGroupsShouldBeEmpty() {
             when()
                 .get()
             .then()
@@ -122,7 +120,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getGroupsShouldListExistingGroupsInOrder() {
+        void getGroupsShouldListExistingGroupsInOrder() {
             given()
                 .put(GROUP2 + SEPARATOR + USER_A);
 
@@ -143,7 +141,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getUnregisteredGroupShouldReturnNotFound() {
+        void getUnregisteredGroupShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
             .then()
@@ -161,7 +159,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldReturnCreated() {
+        void putUserInGroupShouldReturnCreated() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_A)
             .then()
@@ -169,7 +167,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldReturnCreated() {
+        void putUserWithSlashInGroupShouldReturnCreated() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH)
             .then()
@@ -177,7 +175,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldCreateUser() {
+        void putUserWithSlashInGroupShouldCreateUser() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH);
 
@@ -195,7 +193,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldCreateGroup() {
+        void putUserInGroupShouldCreateGroup() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -213,7 +211,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupWithEncodedSlashShouldReturnCreated() {
+        void putUserInGroupWithEncodedSlashShouldReturnCreated() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A)
             .then()
@@ -221,7 +219,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupWithEncodedSlashShouldCreateGroup() {
+        void putUserInGroupWithEncodedSlashShouldCreateGroup() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A);
 
@@ -239,7 +237,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putSameUserInGroupTwiceShouldBeIdempotent() {
+        void putSameUserInGroupTwiceShouldBeIdempotent() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -260,7 +258,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldAllowSeveralUsers() {
+        void putUserInGroupShouldAllowSeveralUsers() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -281,7 +279,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() throws UsersRepositoryException, DomainListException {
+        void putUserInGroupShouldNotAllowGroupOnUnregisteredDomain() {
             Map<String, Object> errors = when()
                 .put("group@unregisteredDomain" + SEPARATOR + USER_A)
             .then()
@@ -300,7 +298,7 @@ public class GroupsRoutesTest {
 
 
         @Test
-        public void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException, DomainListException {
+        void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {
             usersRepository.addUser(USER_A, "whatever");
 
             Map<String, Object> errors = when()
@@ -320,7 +318,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getGroupShouldReturnMembersInOrder() {
+        void getGroupShouldReturnMembersInOrder() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_B);
 
@@ -342,7 +340,7 @@ public class GroupsRoutesTest {
 
 
         @Test
-        public void deleteUserNotInGroupShouldReturnOK() {
+        void deleteUserNotInGroupShouldReturnOK() {
             when()
                 .delete(GROUP1 + SEPARATOR + USER_A)
             .then()
@@ -350,7 +348,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteLastUserInGroupShouldDeleteGroup() {
+        void deleteLastUserInGroupShouldDeleteGroup() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_A);
 
@@ -366,10 +364,11 @@ public class GroupsRoutesTest {
         }
     }
 
-    public class FilteringOtherRewriteRuleTypes extends NormalBehaviour {
+    @Nested
+    class FilteringOtherRewriteRuleTypes extends NormalBehaviour {
 
-        @Before
-        public void setup() throws Exception {
+        @BeforeEach
+        void setup() throws Exception {
             super.setUp();
             memoryRecipientRewriteTable.addErrorMapping("error", DOMAIN, "disabled");
             memoryRecipientRewriteTable.addRegexMapping("regex", DOMAIN, ".*@b\\.com");
@@ -379,12 +378,13 @@ public class GroupsRoutesTest {
 
     }
 
-    public class ExceptionHandling {
+    @Nested
+    class ExceptionHandling {
 
         private RecipientRewriteTable memoryRecipientRewriteTable;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             memoryRecipientRewriteTable = mock(RecipientRewriteTable.class);
             UsersRepository userRepository = mock(UsersRepository.class);
             DomainList domainList = mock(DomainList.class);
@@ -393,7 +393,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getMalformedGroupShouldReturnBadRequest() {
+        void getMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .get("not-an-address")
             .then()
@@ -412,7 +412,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putMalformedGroupShouldReturnBadRequest() {
+        void putMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .put("not-an-address" + SEPARATOR + USER_A)
             .then()
@@ -431,7 +431,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserInGroupWithSlashShouldReturnNotFound() {
+        void putUserInGroupWithSlashShouldReturnNotFound() {
             when()
                 .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
             .then()
@@ -440,7 +440,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putUserWithSlashInGroupShouldReturnNotFound() {
+        void putUserWithSlashInGroupShouldReturnNotFound() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_SLASH)
             .then()
@@ -449,7 +449,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putMalformedAddressShouldReturnBadRequest() {
+        void putMalformedAddressShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .put(GROUP1 + SEPARATOR + "not-an-address")
             .then()
@@ -468,7 +468,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putRequiresTwoPathParams() {
+        void putRequiresTwoPathParams() {
             when()
                 .put(GROUP1)
             .then()
@@ -477,7 +477,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteMalformedGroupShouldReturnBadRequest() {
+        void deleteMalformedGroupShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .delete("not-an-address" + SEPARATOR + USER_A)
             .then()
@@ -496,7 +496,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteMalformedAddressShouldReturnBadRequest() {
+        void deleteMalformedAddressShouldReturnBadRequest() {
             Map<String, Object> errors = when()
                 .delete(GROUP1 + SEPARATOR + "not-an-address")
             .then()
@@ -515,7 +515,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteRequiresTwoPathParams() {
+        void deleteRequiresTwoPathParams() {
             when()
                 .delete(GROUP1)
             .then()
@@ -524,7 +524,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
                 .addAddressMapping(anyString(), any(), anyString());
@@ -537,7 +537,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
+        void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .addAddressMapping(anyString(), any(), anyString());
@@ -550,7 +550,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
                 .addAddressMapping(anyString(), any(), anyString());
@@ -563,7 +563,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
                 .getAllMappings();
@@ -576,7 +576,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getAllShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
+        void getAllShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .getAllMappings();
@@ -589,7 +589,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
                 .getAllMappings();
@@ -602,7 +602,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
                 .removeAddressMapping(anyString(), any(), anyString());
@@ -615,7 +615,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
+        void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .removeAddressMapping(anyString(), any(), anyString());
@@ -628,7 +628,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
                 .removeAddressMapping(anyString(), any(), anyString());
@@ -641,7 +641,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
                 .getMappings(anyString(), any());
@@ -654,7 +654,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .getMappings(anyString(), any());
@@ -667,7 +667,7 @@ public class GroupsRoutesTest {
         }
 
         @Test
-        public void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
                 .getMappings(anyString(), any());
