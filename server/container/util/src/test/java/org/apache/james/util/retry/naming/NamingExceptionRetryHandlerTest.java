@@ -31,24 +31,9 @@ import org.apache.james.util.retry.api.RetrySchedule;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * <code>ExceptionRetryHandlerTest</code>
- */
 public class NamingExceptionRetryHandlerTest {
 
-    private Class<?>[] exceptionClasses = null;
-    private ExceptionRetryingProxy proxy = null;
-    private RetrySchedule schedule = null;
-
-    @Before
-    public void setUp() throws Exception {
-        exceptionClasses = new Class<?>[]{NamingException.class};
-        proxy = new TestRetryingProxy();
-        schedule = new TestRetrySchedule();
-    }
-
-    private class TestRetryingProxy implements ExceptionRetryingProxy {
-
+    private static class TestRetryingProxy implements ExceptionRetryingProxy {
         @Override
         public Context getDelegate() {
             return null;
@@ -64,19 +49,19 @@ public class NamingExceptionRetryHandlerTest {
         }
     }
 
-    private class TestRetrySchedule implements RetrySchedule {
+    private Class<?>[] exceptionClasses;
+    private ExceptionRetryingProxy proxy;
+    private RetrySchedule schedule;
 
-        @Override
-        public long getInterval(int index) {
-            return index;
-        }
+    @Before
+    public void setUp() throws Exception {
+        exceptionClasses = new Class<?>[]{NamingException.class};
+        proxy = new TestRetryingProxy();
+        schedule = i -> i;
     }
 
-    /**
-     * Test method for .
-     */
     @Test
-    public final void testExceptionRetryHandler() {
+    public void testExceptionRetryHandler() {
         assertTrue(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
@@ -87,12 +72,8 @@ public class NamingExceptionRetryHandlerTest {
         }.getClass()));
     }
 
-    /**
-     * Test method for .
-     * @throws Exception
-     */
     @Test
-    public final void testPerform() throws NamingException {
+    public void testPerform() throws NamingException {
         Object result = new NamingExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
