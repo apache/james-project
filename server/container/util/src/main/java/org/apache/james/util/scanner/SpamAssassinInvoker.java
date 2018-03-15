@@ -239,6 +239,6 @@ public class SpamAssassinInvoker {
     }
 
     private boolean hasBeenSet(String line) {
-        return line.startsWith("DidSet: local");
+        return line.startsWith("DidSet: ");
     }
 }

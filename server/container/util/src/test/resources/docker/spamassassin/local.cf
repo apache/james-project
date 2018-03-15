@@ -43,8 +43,11 @@ use_bayes 1
 #
 #bayes_auto_learn 1
 
-bayes_path /etc/mail/spamassassin/bayes_db/bayes
-bayes_file_mode 0777
+bayes_store_module Mail::SpamAssassin::BayesStore::PgSQL
+
+bayes_sql_dsn DBI:Pg:dbname=postgres;host=localhost
+bayes_sql_username postgres
+
 bayes_min_spam_num 1
 bayes_min_ham_num 1
 
