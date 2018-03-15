@@ -198,10 +198,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         }
     }
 
-    /*
-     * This is not longer in the api (deprecated)
-     * @see org.apache.james.user.api.UsersRepository#containsCaseInsensitive(java.lang.String)
-     */
+    @Deprecated
     private boolean containsCaseInsensitive(String name) {
         Iterator<String> it = list();
         while (it.hasNext()) {

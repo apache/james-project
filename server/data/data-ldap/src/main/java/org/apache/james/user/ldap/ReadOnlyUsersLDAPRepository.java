@@ -634,12 +634,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return getUserByName(name) != null;
     }
 
-    /*
-     * TODO Should this be deprecated? At least the method isn't declared in the
-     * interface anymore
-     *
-     * @see UsersRepository#containsCaseInsensitive(java.lang.String)
-     */
+    @Deprecated
     public boolean containsCaseInsensitive(String name) throws UsersRepositoryException {
         return getUserByNameCaseInsensitive(name) != null;
     }
@@ -655,12 +650,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         }
     }
 
-    /*
-     * TODO Should this be deprecated? At least the method isn't declared in the
-     * interface anymore
-     *
-     * @see UsersRepository#getRealName(java.lang.String)
-     */
+    @Deprecated
     public String getRealName(String name) throws UsersRepositoryException {
         User u = getUserByNameCaseInsensitive(name);
         if (u != null) {
@@ -681,12 +671,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         }
     }
 
-    /*
-     * TODO Should this be deprecated? At least the method isn't declared in the
-     * interface anymore
-     *
-     * @see UsersRepository#getUserByNameCaseInsensitive(java.lang.String)
-     */
+    @Deprecated
     public User getUserByNameCaseInsensitive(String name) throws UsersRepositoryException {
         try {
             for (ReadOnlyLDAPUser u : buildUserCollection(getValidUsers())) {
