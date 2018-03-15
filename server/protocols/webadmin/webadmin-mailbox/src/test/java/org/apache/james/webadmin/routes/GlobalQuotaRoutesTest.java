@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
@@ -38,21 +37,21 @@ import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
-public class GlobalQuotaRoutesTest {
+class GlobalQuotaRoutesTest {
 
     private WebAdminServer webAdminServer;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
@@ -64,13 +63,13 @@ public class GlobalQuotaRoutesTest {
             .build();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void getQuotaCountShouldReturnNoContentWhenUndefined() {
+    void getQuotaCountShouldReturnNoContentWhenUndefined() {
         when()
             .get("/quota/count")
         .then()
@@ -78,7 +77,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnStoredValue() throws Exception {
+    void getCountShouldReturnStoredValue() {
         int value = 42;
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(value));
 
@@ -95,7 +94,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectInvalid() {
+    void putCountShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
         .when()
@@ -117,7 +116,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectNegative() {
+    void putCountShouldRejectNegative() {
         Map<String, Object> errors = given()
             .body("-2")
         .when()
@@ -139,7 +138,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldHandleMinusOneAsInfinite() throws MailboxException {
+    void putCountShouldHandleMinusOneAsInfinite() {
         given()
             .body("-1")
         .when()
@@ -152,7 +151,7 @@ public class GlobalQuotaRoutesTest {
 
 
     @Test
-    public void putCountShouldAcceptValidValue() throws Exception {
+    void putCountShouldAcceptValidValue() {
         given()
             .body("42")
         .when()
@@ -176,7 +175,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaSizeShouldReturnNothingByDefault() {
+    void getQuotaSizeShouldReturnNothingByDefault() {
         when()
             .get("/quota/size")
         .then()
@@ -184,7 +183,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnStoredValue() throws Exception {
+    void getSizeShouldReturnStoredValue() {
         long value = 42;
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(value));
 
@@ -202,7 +201,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectInvalid() {
+    void putSizeShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
         .when()
@@ -225,7 +224,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldHandleMinusOneAsInfinite() throws MailboxException {
+    void putSizeShouldHandleMinusOneAsInfinite() {
         given()
             .body("-1")
         .when()
@@ -237,7 +236,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectNegative() {
+    void putSizeShouldRejectNegative() {
         Map<String, Object> errors = given()
             .body("-2")
         .when()
@@ -259,7 +258,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldAcceptValidValue() throws Exception {
+    void putSizeShouldAcceptValidValue() {
         given()
             .body("42")
         .when()
@@ -283,7 +282,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
+    void getQuotaShouldReturnBothWhenValueSpecified() {
         int maxStorage = 42;
         int maxMessage = 52;
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(maxStorage));
@@ -305,7 +304,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnNothingWhenNothingSet() {
+    void getQuotaShouldReturnNothingWhenNothingSet() {
         JsonPath jsonPath =
             when()
                 .get("/quota")
@@ -341,7 +340,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnOnlyCountWhenNoSize() throws Exception {
+    void getQuotaShouldReturnOnlyCountWhenNoSize() {
         int maxMessage = 42;
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(maxMessage));
 
@@ -362,7 +361,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldUpdateBothQuota() throws Exception {
+    void putQuotaShouldUpdateBothQuota() {
         given()
             .body("{\"count\":52,\"size\":42}")
         .when()
@@ -376,7 +375,7 @@ public class GlobalQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldSetBothQuotaToInfinite() throws Exception {
+    void putQuotaShouldSetBothQuotaToInfinite() {
         given()
             .body("{\"count\":-1,\"size\":-1}")
         .when()

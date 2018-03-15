@@ -54,23 +54,20 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 
-import de.bechte.junit.runners.context.HierarchicalContextRunner;
+class UserMailboxesRoutesTest {
 
-@RunWith(HierarchicalContextRunner.class)
-public class UserMailboxesRoutesTest {
-
-    public static final String USERNAME = "username";
-    public static final String MAILBOX_NAME = "myMailboxName";
+    private static final String USERNAME = "username";
+    private static final String MAILBOX_NAME = "myMailboxName";
     private WebAdminServer webAdminServer;
     private UsersRepository usersRepository;
 
@@ -89,22 +86,23 @@ public class UserMailboxesRoutesTest {
             .build();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         webAdminServer.destroy();
     }
 
-    public class NormalBehaviour {
+    @Nested
+    class NormalBehaviour {
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
 
             createServer(inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver()));
         }
 
         @Test
-        public void getMailboxesShouldUserErrorFoundWithNonExistingUser() throws Exception {
+        void getMailboxesShouldUserErrorFoundWithNonExistingUser() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -124,7 +122,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnNotFoundWithNonExistingUser() throws Exception {
+        void getShouldReturnNotFoundWithNonExistingUser() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -144,7 +142,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnNotFoundWithNonExistingUser() throws Exception {
+        void putShouldReturnNotFoundWithNonExistingUser() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -164,7 +162,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnNotFoundWithNonExistingUser() throws Exception {
+        void deleteShouldReturnNotFoundWithNonExistingUser() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -184,7 +182,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
+        void getShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -204,7 +202,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
+        void putShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -224,7 +222,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
+        void deleteShouldReturnUserErrorWithInvalidWildcardMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -244,7 +242,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
+        void getShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -264,7 +262,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
+        void putShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -284,7 +282,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
+        void deleteShouldReturnUserErrorWithInvalidPercentMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -304,7 +302,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
+        void getShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -324,7 +322,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
+        void putShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -344,7 +342,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
+        void deleteShouldReturnUserErrorWithInvalidSharpMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -364,7 +362,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
+        void getShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -384,7 +382,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
+        void putShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -404,7 +402,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
+        void deleteShouldReturnUserErrorWithInvalidAndMailboxName() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -424,7 +422,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteMailboxesShouldReturnUserErrorWithNonExistingUser() throws Exception {
+        void deleteMailboxesShouldReturnUserErrorWithNonExistingUser() throws Exception {
             when(usersRepository.contains(USERNAME)).thenReturn(false);
 
             Map<String, Object> errors = when()
@@ -444,7 +442,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getMailboxesShouldReturnEmptyListByDefault() {
+        void getMailboxesShouldReturnEmptyListByDefault() {
             List<Object> list =
                 when()
                     .get()
@@ -460,7 +458,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnNotFoundWhenNoMailboxName() {
+        void putShouldReturnNotFoundWhenNoMailboxName() {
             when()
                 .put()
             .then()
@@ -469,7 +467,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnNotFoundWhenJustSeparator() {
+        void putShouldReturnNotFoundWhenJustSeparator() {
             when()
                 .put(SEPARATOR)
             .then()
@@ -478,7 +476,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnOk() {
+        void putShouldReturnOk() {
             when()
                 .put(MAILBOX_NAME)
             .then()
@@ -486,7 +484,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnOkWhenIssuedTwoTimes() {
+        void putShouldReturnOkWhenIssuedTwoTimes() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -497,7 +495,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldAddAMailbox() {
+        void putShouldAddAMailbox() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -509,7 +507,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnNotFoundWhenMailboxDoesNotExist() {
+        void getShouldReturnNotFoundWhenMailboxDoesNotExist() {
             Map<String, Object> errors = when()
                 .get(MAILBOX_NAME)
             .then()
@@ -527,7 +525,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldReturnOkWhenMailboxExists() {
+        void getShouldReturnOkWhenMailboxExists() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -538,7 +536,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkWhenMailboxDoesNotExist() {
+        void deleteShouldReturnOkWhenMailboxDoesNotExist() {
             when()
                 .delete(MAILBOX_NAME)
             .then()
@@ -546,7 +544,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkWhenMailboxExists() {
+        void deleteShouldReturnOkWhenMailboxExists() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -557,7 +555,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldRemoveMailbox() {
+        void deleteShouldRemoveMailbox() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -581,7 +579,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteMailboxesShouldReturnOkWhenNoMailboxes() {
+        void deleteMailboxesShouldReturnOkWhenNoMailboxes() {
             when()
                 .delete()
             .then()
@@ -589,7 +587,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteMailboxesShouldReturnOkWhenMailboxes() {
+        void deleteMailboxesShouldReturnOkWhenMailboxes() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -600,7 +598,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteMailboxesShouldRemoveAllUserMailboxes() {
+        void deleteMailboxesShouldRemoveAllUserMailboxes() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -625,7 +623,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkWhenMailboxHasChildren() {
+        void deleteShouldReturnOkWhenMailboxHasChildren() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -639,7 +637,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldDeleteAMailboxAndItsChildren() {
+        void deleteShouldDeleteAMailboxAndItsChildren() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -664,7 +662,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldNotDeleteUnrelatedMailbox() {
+        void deleteShouldNotDeleteUnrelatedMailbox() {
             String mailboxName = MAILBOX_NAME + "!child";
             with()
                 .put(MAILBOX_NAME);
@@ -690,7 +688,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkWhenDeletingChildMailboxes() {
+        void deleteShouldReturnOkWhenDeletingChildMailboxes() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -704,7 +702,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldBeAbleToRemoveChildMailboxes() {
+        void deleteShouldBeAbleToRemoveChildMailboxes() {
             with()
                 .put(MAILBOX_NAME);
 
@@ -729,12 +727,13 @@ public class UserMailboxesRoutesTest {
         }
     }
 
-    public class ExceptionHandling {
+    @Nested
+    class ExceptionHandling {
 
         private MailboxManager mailboxManager;
 
-        @Before
-        public void setUp() throws Exception {
+        @BeforeEach
+        void setUp() throws Exception {
             mailboxManager = mock(MailboxManager.class);
             when(mailboxManager.createSystemSession(any())).thenReturn(new MockMailboxSession(USERNAME));
 
@@ -742,7 +741,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldGenerateInternalErrorOnUnknownException() throws Exception {
+        void putShouldGenerateInternalErrorOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(mailboxManager).createMailbox(any(), any());
 
             when()
@@ -753,7 +752,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
+        void putShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
             doThrow(new MailboxException()).when(mailboxManager).createMailbox(any(), any());
 
             when()
@@ -764,7 +763,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldReturnOkOnMailboxExists() throws Exception {
+        void putShouldReturnOkOnMailboxExists() throws Exception {
             doThrow(new MailboxExistsException(MAILBOX_NAME)).when(mailboxManager).createMailbox(any(), any());
 
             when()
@@ -774,7 +773,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownExceptionOnDelete() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownExceptionOnDelete() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
@@ -791,7 +790,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownExceptionOnSearch() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownExceptionOnSearch() throws Exception {
             when(mailboxManager.search(any(MailboxQuery.class), any())).thenThrow(new RuntimeException());
 
             when()
@@ -802,7 +801,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnDelete() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnDelete() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
@@ -818,7 +817,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnSearch() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownMailboxExceptionOnSearch() throws Exception {
             when(mailboxManager.search(any(MailboxQuery.class), any())).thenThrow(new MailboxException());
 
             when()
@@ -829,7 +828,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkOnMailboxDoesNotExists() throws Exception {
+        void deleteShouldReturnOkOnMailboxDoesNotExists() throws Exception {
             doThrow(new MailboxNotFoundException(MAILBOX_NAME)).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -839,7 +838,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenListingMailboxes() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenListingMailboxes() throws Exception {
             doThrow(new RuntimeException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
@@ -850,7 +849,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnMailboxExceptionWhenListingMailboxes() throws Exception {
+        void deleteShouldGenerateInternalErrorOnMailboxExceptionWhenListingMailboxes() throws Exception {
             doThrow(new MailboxException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
@@ -862,7 +861,7 @@ public class UserMailboxesRoutesTest {
 
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenRemovingMailboxes() throws Exception {
+        void deleteShouldGenerateInternalErrorOnUnknownExceptionWhenRemovingMailboxes() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
@@ -878,7 +877,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnOkOnMailboxNotFoundExceptionWhenRemovingMailboxes() throws Exception {
+        void deleteShouldReturnOkOnMailboxNotFoundExceptionWhenRemovingMailboxes() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
@@ -892,7 +891,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldReturnInternalErrorOnMailboxExceptionWhenRemovingMailboxes() throws Exception {
+        void deleteShouldReturnInternalErrorOnMailboxExceptionWhenRemovingMailboxes() throws Exception {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
@@ -907,7 +906,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldGenerateInternalErrorOnUnknownException() throws Exception {
+        void getShouldGenerateInternalErrorOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(mailboxManager).mailboxExists(any(), any());
 
             when()
@@ -918,7 +917,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
+        void getShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
             doThrow(new MailboxException()).when(mailboxManager).mailboxExists(any(), any());
 
             when()
@@ -929,7 +928,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getMailboxesShouldGenerateInternalErrorOnUnknownException() throws Exception {
+        void getMailboxesShouldGenerateInternalErrorOnUnknownException() throws Exception {
             doThrow(new RuntimeException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
@@ -940,7 +939,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getMailboxesShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
+        void getMailboxesShouldGenerateInternalErrorOnUnknownMailboxException() throws Exception {
             doThrow(new MailboxException()).when(mailboxManager).search(any(MailboxQuery.class), any());
 
             when()
@@ -951,7 +950,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getMailboxesShouldGenerateInternalErrorOnRepositoryException() throws Exception {
+        void getMailboxesShouldGenerateInternalErrorOnRepositoryException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).contains(USERNAME);
 
             when()
@@ -962,7 +961,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void getShouldGenerateInternalErrorOnRepositoryException() throws Exception {
+        void getShouldGenerateInternalErrorOnRepositoryException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).contains(USERNAME);
 
             when()
@@ -973,7 +972,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void putShouldGenerateInternalErrorOnRepositoryException() throws Exception {
+        void putShouldGenerateInternalErrorOnRepositoryException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).contains(USERNAME);
 
             when()
@@ -984,7 +983,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteShouldGenerateInternalErrorOnRepositoryException() throws Exception {
+        void deleteShouldGenerateInternalErrorOnRepositoryException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).contains(USERNAME);
 
             when()
@@ -995,7 +994,7 @@ public class UserMailboxesRoutesTest {
         }
 
         @Test
-        public void deleteMailboxesShouldGenerateInternalErrorOnRepositoryException() throws Exception {
+        void deleteMailboxesShouldGenerateInternalErrorOnRepositoryException() throws Exception {
             doThrow(new RuntimeException()).when(usersRepository).contains(USERNAME);
 
             when()

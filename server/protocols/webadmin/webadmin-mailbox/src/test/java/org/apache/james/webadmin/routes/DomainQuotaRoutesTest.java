@@ -39,16 +39,16 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
-public class DomainQuotaRoutesTest {
+class DomainQuotaRoutesTest {
 
     private static final String QUOTA_DOMAINS = "/quota/domains";
     private static final String PERDU_COM = "perdu.com";
@@ -58,8 +58,8 @@ public class DomainQuotaRoutesTest {
     private WebAdminServer webAdminServer;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
         memoryDomainList.setAutoDetect(false);
@@ -80,13 +80,13 @@ public class DomainQuotaRoutesTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    @After
-    public void stop() {
+    @AfterEach
+    void stop() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void getCountShouldReturnNotFoundWhenDomainDoesntExist() {
+    void getCountShouldReturnNotFoundWhenDomainDoesntExist() {
         when()
             .get(QUOTA_DOMAINS + "/" + PERDU_COM + "/" + COUNT)
         .then()
@@ -94,7 +94,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnNoContentByDefault() {
+    void getCountShouldReturnNoContentByDefault() {
         given()
             .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
         .then()
@@ -102,7 +102,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getCountShouldReturnStoredValue() {
+    void getCountShouldReturnStoredValue() {
         int value = 42;
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(value));
 
@@ -119,7 +119,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldReturnNotFoundWhenDomainDoesntExist() {
+    void putCountShouldReturnNotFoundWhenDomainDoesntExist() {
         given()
             .body("123")
         .when()
@@ -129,7 +129,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectInvalid() {
+    void putCountShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
@@ -149,7 +149,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldSetToInfiniteWhenMinusOne() {
+    void putCountShouldSetToInfiniteWhenMinusOne() {
         given()
             .body("-1")
         .when()
@@ -161,7 +161,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldRejectNegativeOtherThanMinusOne() {
+    void putCountShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
@@ -180,7 +180,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putCountShouldAcceptValidValue() {
+    void putCountShouldAcceptValidValue() {
         given()
             .body("42")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + COUNT)
@@ -191,7 +191,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void deleteCountShouldReturnNotFoundWhenDomainDoesntExist() {
+    void deleteCountShouldReturnNotFoundWhenDomainDoesntExist() {
         when()
             .delete(QUOTA_DOMAINS + "/" + PERDU_COM + "/" + COUNT)
         .then()
@@ -199,7 +199,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void deleteCountShouldSetQuotaToEmpty() {
+    void deleteCountShouldSetQuotaToEmpty() {
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(42));
 
         given()
@@ -211,7 +211,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnNotFoundWhenDomainDoesntExist() {
+    void getSizeShouldReturnNotFoundWhenDomainDoesntExist() {
             when()
                 .get(QUOTA_DOMAINS + "/" + PERDU_COM + "/" + SIZE)
             .then()
@@ -219,7 +219,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnNoContentByDefault() {
+    void getSizeShouldReturnNoContentByDefault() {
         when()
             .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
         .then()
@@ -227,7 +227,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getSizeShouldReturnStoredValue() {
+    void getSizeShouldReturnStoredValue() {
         long value = 42;
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(value));
 
@@ -245,7 +245,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectInvalid() {
+    void putSizeShouldRejectInvalid() {
         Map<String, Object> errors = given()
             .body("invalid")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
@@ -265,7 +265,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldReturnNotFoundWhenDomainDoesntExist() {
+    void putSizeShouldReturnNotFoundWhenDomainDoesntExist() {
         given()
             .body("123")
         .when()
@@ -275,7 +275,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldSetToInfiniteWhenMinusOne() {
+    void putSizeShouldSetToInfiniteWhenMinusOne() {
         given()
             .body("-1")
         .when()
@@ -287,7 +287,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldRejectNegativeOtherThanMinusOne() {
+    void putSizeShouldRejectNegativeOtherThanMinusOne() {
         Map<String, Object> errors = given()
             .body("-2")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name() + "/" + SIZE)
@@ -306,7 +306,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putSizeShouldAcceptValidValue() {
+    void putSizeShouldAcceptValidValue() {
         given()
             .body("42")
         .when()
@@ -318,7 +318,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void deleteSizeShouldReturnNotFoundWhenDomainDoesntExist() {
+    void deleteSizeShouldReturnNotFoundWhenDomainDoesntExist() {
         when()
             .delete(QUOTA_DOMAINS + "/" + PERDU_COM + "/" + SIZE)
         .then()
@@ -326,7 +326,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void deleteSizeShouldSetQuotaToEmpty() {
+    void deleteSizeShouldSetQuotaToEmpty() {
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
 
         given()
@@ -338,7 +338,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnNotFoundWhenDomainDoesntExist() {
+    void getQuotaShouldReturnNotFoundWhenDomainDoesntExist() {
         when()
             .get(QUOTA_DOMAINS + "/" + PERDU_COM)
         .then()
@@ -346,7 +346,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothEmptyWhenDefaultValues() {
+    void getQuotaShouldReturnBothEmptyWhenDefaultValues() {
         JsonPath jsonPath =
             given()
                 .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
@@ -361,7 +361,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnSizeWhenNoCount() {
+    void getQuotaShouldReturnSizeWhenNoCount() {
         int maxStorage = 42;
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(maxStorage));
 
@@ -379,7 +379,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void getQuotaShouldReturnBothWhenNoSize() {
+    void getQuotaShouldReturnBothWhenNoSize() {
         int maxMessage = 42;
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(maxMessage));
 
@@ -398,7 +398,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldReturnNotFoundWhenDomainDoesntExist() {
+    void putQuotaShouldReturnNotFoundWhenDomainDoesntExist() {
         when()
             .put(QUOTA_DOMAINS + "/" + PERDU_COM)
         .then()
@@ -406,7 +406,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldUpdateBothQuota() {
+    void putQuotaShouldUpdateBothQuota() {
         given()
             .body("{\"count\":52,\"size\":42}")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
@@ -418,7 +418,7 @@ public class DomainQuotaRoutesTest {
     }
 
     @Test
-    public void putQuotaShouldBeAbleToRemoveBothQuota() {
+    void putQuotaShouldBeAbleToRemoveBothQuota() {
         given()
             .body("{\"count\":null,\"count\":null}")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())

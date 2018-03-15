@@ -23,14 +23,14 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-public class QuotaValueDeserializerTest {
+class QuotaValueDeserializerTest {
 
     @Test
-    public void objectDeserializeShouldContainGivenValues() throws JsonExtractException {
+    void objectDeserializeShouldContainGivenValues() throws JsonExtractException {
         String payload = "{\"count\":52,\"size\":42}";
         QuotaDTO actual = new JsonExtractor<>(QuotaDTO.class,
             new SimpleModule()
