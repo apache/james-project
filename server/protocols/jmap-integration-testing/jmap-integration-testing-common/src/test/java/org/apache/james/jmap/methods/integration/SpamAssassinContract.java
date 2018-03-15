@@ -56,9 +56,11 @@ public interface SpamAssassinContract {
     String BOBS_DOMAIN = "spamer.com";
     String BOB = "bob@" + BOBS_DOMAIN;
     String BOB_PASSWORD = "bobPassword";
-    String ALICES_DOMAIN = "angels.org";
-    String ALICE = "alice@" + ALICES_DOMAIN;
+    String RECIPIENTS_DOMAIN = "angels.org";
+    String ALICE = "alice@" + RECIPIENTS_DOMAIN;
     String ALICE_PASSWORD = "alicePassword";
+    String PAUL = "paul@" + RECIPIENTS_DOMAIN;
+    String PAUL_PASSWORD = "paulPassword";
     String LOCALHOST = "127.0.0.1";
     int IMAP_PORT = 1143;
 
@@ -75,9 +77,10 @@ public interface SpamAssassinContract {
         RestAssured.defaultParser = Parser.JSON;
 
         james.getJmapServer().getProbe(DataProbeImpl.class).addDomain(BOBS_DOMAIN);
-        james.getJmapServer().getProbe(DataProbeImpl.class).addDomain(ALICES_DOMAIN);
+        james.getJmapServer().getProbe(DataProbeImpl.class).addDomain(RECIPIENTS_DOMAIN);
         james.getJmapServer().getProbe(DataProbeImpl.class).addUser(BOB, BOB_PASSWORD);
         james.getJmapServer().getProbe(DataProbeImpl.class).addUser(ALICE, ALICE_PASSWORD);
+        james.getJmapServer().getProbe(DataProbeImpl.class).addUser(PAUL, PAUL_PASSWORD);
     }
 
     default AccessToken accessTokenFor(GuiceJamesServer james, String user, String password) {
@@ -552,24 +555,6 @@ public interface SpamAssassinContract {
         calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
     }
 
-    default boolean areMessagesFoundInMailbox(AccessToken accessToken, String mailboxId, int expectedNumberOfMessages) {
-        try {
-            with()
-                .header("Authorization", accessToken.serialize())
-                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
-            .when()
-                .post("/jmap")
-            .then()
-                .statusCode(200)
-                .body(NAME, equalTo("messageList"))
-                .body(ARGUMENTS + ".messageIds", hasSize(expectedNumberOfMessages));
-            return true;
-
-        } catch (AssertionError e) {
-            return false;
-        }
-    }
-
     default String setMessageCreate(AccessToken accessToken) {
         return "[" +
             "  [" +
@@ -586,6 +571,99 @@ public interface SpamAssassinContract {
             "    \"#0\"" +
             "  ]" +
             "]";
+    }
+
+    @Test
+    default void spamShouldBeDeliveredInSpamMailboxOrInboxWhenMultipleRecipientsConfigurations(JamesWithSpamAssassin james) throws Exception {
+        james.getSpamAssassinExtension().getSpamAssassin().train(ALICE);
+        AccessToken aliceAccessToken = accessTokenFor(james.getJmapServer(), ALICE, ALICE_PASSWORD);
+        AccessToken bobAccessToken = accessTokenFor(james.getJmapServer(), BOB, BOB_PASSWORD);
+        AccessToken paulAccessToken = accessTokenFor(james.getJmapServer(), PAUL, PAUL_PASSWORD);
+
+        // Bob is sending a message to Alice & Paul
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreateToMultipleRecipients(bobAccessToken))
+        .when()
+            .post("/jmap");
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 1));
+
+        // Alice is moving this message to Spam -> learning in SpamAssassin
+        List<String> messageIds = with()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1))
+            .extract()
+            .path(ARGUMENTS + ".messageIds");
+
+        messageIds
+            .forEach(messageId -> given()
+                .header("Authorization", aliceAccessToken.serialize())
+                .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"mailboxIds\": [\"" + getSpamId(aliceAccessToken) + "\"] } } }, \"#0\"]]", messageId))
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".updated", hasSize(1)));
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 1));
+
+        // Bob is sending again the same message to Alice & Paul
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(setMessageCreateToMultipleRecipients(bobAccessToken))
+        .when()
+            .post("/jmap");
+
+        // This message is delivered in Alice Spam mailbox (she now must have 2 messages in her Spam mailbox)
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getSpamId(aliceAccessToken), 2));
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 0));
+        // This message is delivered in Paul Inbox (he now must have 2 messages in his Inbox)
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(paulAccessToken, getInboxId(paulAccessToken), 2));
+        calmlyAwait.atMost(10, TimeUnit.SECONDS).until(() -> areMessagesFoundInMailbox(paulAccessToken, getSpamId(paulAccessToken), 0));
+    }
+
+    default String setMessageCreateToMultipleRecipients(AccessToken accessToken) {
+        return "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"creationId1337\" : {" +
+            "        \"from\": { \"email\": \"" + BOB + "\"}," +
+            "        \"to\": [{ \"name\": \"alice\", \"email\": \"" + ALICE + "\"}, " +
+            "                 { \"name\": \"paul\", \"email\": \"" + PAUL + "\"}]," +
+            "        \"subject\": \"Happy News\"," +
+            "        \"textBody\": \"This is a SPAM!!!\r\n\r\n\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+    }
+
+    default boolean areMessagesFoundInMailbox(AccessToken accessToken, String mailboxId, int expectedNumberOfMessages) {
+        try {
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", hasSize(expectedNumberOfMessages));
+            return true;
+
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 
     default String getMailboxId(AccessToken accessToken, Role role) {
