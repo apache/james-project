@@ -210,9 +210,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             .distinct();
     }
 
-    /**
-     * @see #getDomainsIP(List, DNSService, Logger)
-     */
     private static Stream<String> getDomainIpStream(String domain, DNSService dns, Logger log) {
         try {
             return dns.getAllByName(domain).stream()

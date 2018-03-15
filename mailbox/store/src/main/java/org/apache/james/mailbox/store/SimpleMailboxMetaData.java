@@ -86,16 +86,12 @@ public class SimpleMailboxMetaData implements MailboxMetaData, Comparable<Mailbo
         return mailboxId;
     }
 
-    /**
-     * @see java.lang.Object#toString()
-     */
+    @Override
     public String toString() {
         return "ListResult: " + path;
     }
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
+    @Override
     public int hashCode() {
         final int PRIME = 31;
         int result = 1;
@@ -103,9 +99,7 @@ public class SimpleMailboxMetaData implements MailboxMetaData, Comparable<Mailbo
         return result;
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

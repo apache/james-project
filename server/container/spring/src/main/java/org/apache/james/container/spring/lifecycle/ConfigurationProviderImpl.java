@@ -72,8 +72,6 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
     /**
      * Responsible to register additional configurations for the injected
      * configurationMappings.
-     * 
-     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
     @Override
     public void afterPropertiesSet() throws Exception {

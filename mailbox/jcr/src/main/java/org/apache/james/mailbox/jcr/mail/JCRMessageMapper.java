@@ -237,12 +237,6 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
 
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#
-     * countUnseenMessagesInMailbox ()
-     */
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
 
@@ -317,11 +311,6 @@ public class JCRMessageMapper extends AbstractMessageMapper implements JCRImapCo
      * 
      * TODO: Maybe we should better use an ItemVisitor and just traverse through
      * the child nodes. This could be a way faster
-     * 
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.MessageMapper#
-     * findRecentMessageUidsInMailbox ()
      */
     @Override
     public List<MessageUid> findRecentMessageUidsInMailbox(Mailbox mailbox) throws MailboxException {

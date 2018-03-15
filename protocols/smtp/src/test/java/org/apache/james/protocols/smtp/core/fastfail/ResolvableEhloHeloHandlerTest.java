@@ -75,10 +75,6 @@ public class ResolvableEhloHeloHandlerTest {
                 return map;
             }
 
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#setAttachment(java.lang.String, java.lang.Object, org.apache.james.protocols.api.ProtocolSession.State)
-             */
             @Override
             public Object setAttachment(String key, Object value, State state) {
                 if (state == State.Connection) {
@@ -96,10 +92,6 @@ public class ResolvableEhloHeloHandlerTest {
                 }
             }
 
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
-             */
             @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {

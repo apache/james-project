@@ -202,8 +202,6 @@ public class JamesMailSpooler implements Runnable, Disposable, Configurable, Mai
      * <p/>
      * This implementation shuts down the LinearProcessors managed by this
      * JamesSpoolManager
-     *
-     * @see org.apache.james.lifecycle.api.Disposable#dispose()
      */
     @PreDestroy
     @Override

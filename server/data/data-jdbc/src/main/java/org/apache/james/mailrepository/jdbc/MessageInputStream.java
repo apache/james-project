@@ -196,9 +196,6 @@ final class MessageInputStream extends InputStream {
                 throw (IOException) caughtException;
             } else {
                 throw new IOException("Exception caugth in worker thread " + caughtException.getMessage()) {
-                    /**
-                     * @see java.lang.Throwable#getCause()
-                     */
                     @Override
                     public Throwable getCause() {
                         return caughtException;

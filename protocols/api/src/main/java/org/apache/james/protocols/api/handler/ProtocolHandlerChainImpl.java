@@ -66,10 +66,6 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
         return ImmutableList.copyOf(handlers);
     }
 
-    /*
-     * (non-Javadoc)
-     * @see java.util.List#size()
-     */
     @Override
     public int size() {
         return handlers.size();
@@ -214,64 +210,36 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
             this.handlers = handlers;
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#hasNext()
-         */
         @Override
         public boolean hasNext() {
             return handlers.hasNext();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#next()
-         */
         @Override
         public ProtocolHandler next() {
             return (ProtocolHandler) handlers.next();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#hasPrevious()
-         */
         @Override
         public boolean hasPrevious() {
             return handlers.hasPrevious();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#previous()
-         */
         @Override
         public ProtocolHandler previous() {
             return handlers.previous();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#nextIndex()
-         */
         @Override
         public int nextIndex() {
             return handlers.nextIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#previousIndex()
-         */
         @Override
         public int previousIndex() {
             return handlers.previousIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#remove()
-         */
         @Override
         public void remove() {
             checkReadOnly();
@@ -279,10 +247,6 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
             handlers.previousIndex();
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#set(java.lang.Object)
-         */
         @Override
         public void set(ProtocolHandler e) {
             checkReadOnly();
@@ -290,10 +254,6 @@ public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain imple
             handlers.set(e);
         }
 
-        /*
-         * (non-Javadoc)
-         * @see java.util.ListIterator#add(java.lang.Object)
-         */
         @Override
         public void add(ProtocolHandler e) {
             checkReadOnly();

@@ -41,15 +41,6 @@ public class ACLResponseEncoder extends AbstractChainedImapEncoder {
         super(next);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.james.imap.encode.base.AbstractChainedImapEncoder#doEncode
-     * (org.apache.james.imap.api.ImapMessage,
-     * org.apache.james.imap.encode.ImapResponseComposer,
-     * org.apache.james.imap.api.process.ImapSession)
-     */
     @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         final ACLResponse aclResponse = (ACLResponse) acceptableMessage;

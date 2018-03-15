@@ -103,9 +103,7 @@ public class SimpleMailbox implements Mailbox {
         return new MailboxPath(getNamespace(), getUser(), getName());
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof SimpleMailbox) {
             SimpleMailbox o = (SimpleMailbox)obj;

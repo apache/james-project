@@ -89,10 +89,6 @@ public class ValidSenderDomainHandlerTest {
                 }
             }
 
-            /*
-             * (non-Javadoc)
-             * @see org.apache.james.protocols.api.ProtocolSession#getAttachment(java.lang.String, org.apache.james.protocols.api.ProtocolSession.State)
-             */
             @Override
             public Object getAttachment(String key, State state) {
                 if (state == State.Connection) {

@@ -47,9 +47,6 @@ public class HBaseUsersRepositoryTest extends AbstractUsersRepositoryTest {
         TablePool.getInstance(cluster.getConf());
     }
 
-    /**
-     * @see org.apache.james.user.lib.AbstractUsersRepositoryTest#setUp()
-     */
     @Before
     @Override
     public void setUp() throws Exception {

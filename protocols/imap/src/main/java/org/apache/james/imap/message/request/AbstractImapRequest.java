@@ -37,8 +37,6 @@ public abstract class AbstractImapRequest implements ImapRequest {
 
     /**
      * Gets the IMAP command whose execution is requested by the client.
-     * 
-     * @see org.apache.james.imap.api.message.request.ImapRequest#getCommand()
      */
     @Override
     public final ImapCommand getCommand() {
@@ -47,8 +45,6 @@ public abstract class AbstractImapRequest implements ImapRequest {
 
     /**
      * Gets the prefix tag identifying this request.
-     * 
-     * @see org.apache.james.imap.api.message.request.ImapRequest#getTag()
      */
     @Override
     public final String getTag() {

@@ -101,12 +101,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             final AtomicBoolean idleActive = new AtomicBoolean(true);
             
             session.pushLineHandler(new ImapLineHandler() {
-
-                /**
-                 * @see
-                 * org.apache.james.imap.api.process.ImapLineHandler
-                 * #onLine(org.apache.james.imap.api.process.ImapSession, byte[])
-                 */
                 @Override
                 public void onLine(ImapSession session, byte[] data) {
                     String line;
@@ -174,10 +168,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
         }
     }
 
-    /**
-    * @see org.apache.james.imap.processor.CapabilityImplementingProcessor
-    * #getImplementedCapabilities(org.apache.james.imap.api.process.ImapSession)
-    */
     @Override
     public List<String> getImplementedCapabilities(ImapSession session) {
         return CAPS;

@@ -276,9 +276,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#list(javax.naming.Name)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<NameClassPair> list(final Name name) throws NamingException {
@@ -292,9 +289,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#list(java.lang.String)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<NameClassPair> list(final String name) throws NamingException {
@@ -308,9 +302,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#listBindings(javax.naming.Name)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<Binding> listBindings(final Name name) throws NamingException {
@@ -324,9 +315,6 @@ public abstract class RetryingContext implements Context, ExceptionRetryingProxy
         }.perform();
     }
 
-    /**
-     * @see javax.naming.Context#listBindings(java.lang.String)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<Binding> listBindings(final String name) throws NamingException {

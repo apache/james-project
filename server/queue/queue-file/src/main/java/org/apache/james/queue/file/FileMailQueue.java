@@ -425,8 +425,6 @@ public class FileMailQueue implements ManageableMailQueue {
 
     /**
      * TODO: implement me
-     *
-     * @see ManageableMailQueue#remove(org.apache.james.queue.api.ManageableMailQueue.Type, String)
      */
     @Override
     public long remove(Type type, String value) throws MailQueueException {

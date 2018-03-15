@@ -88,9 +88,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return lowVal <= value && value <= highVal;
     }
 
-    /**
-     * @see java.lang.Object#hashCode()
-     */
+    @Override
     public int hashCode() {
         final int PRIME = 31;
         int result = 1;
@@ -99,9 +97,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return result;
     }
 
-    /**
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

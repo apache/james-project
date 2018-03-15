@@ -284,10 +284,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(javax.naming.Name,
-     *      javax.naming.directory.Attributes)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final Name name,
@@ -303,10 +299,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(java.lang.String,
-     *      javax.naming.directory.Attributes)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final String name,
@@ -322,10 +314,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(javax.naming.Name,
-     *      javax.naming.directory.Attributes, java.lang.String[])
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final Name name,
@@ -341,10 +329,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(java.lang.String,
-     *      javax.naming.directory.Attributes, java.lang.String[])
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final String name,
@@ -361,10 +345,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(javax.naming.Name,
-     *      java.lang.String, javax.naming.directory.SearchControls)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final Name name, final String filter,
@@ -380,10 +360,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(java.lang.String,
-     *      java.lang.String, javax.naming.directory.SearchControls)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final String name, final String filter,
@@ -399,11 +375,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(javax.naming.Name,
-     *      java.lang.String, java.lang.Object[],
-     *      javax.naming.directory.SearchControls)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final Name name, final String filterExpr,
@@ -418,11 +389,6 @@ public abstract class RetryingDirContext extends RetryingContext implements DirC
         }.perform();
     }
 
-    /**
-     * @see javax.naming.directory.DirContext#search(java.lang.String,
-     *      java.lang.String, java.lang.Object[],
-     *      javax.naming.directory.SearchControls)
-     */
     @SuppressWarnings("unchecked")
     @Override
     public NamingEnumeration<SearchResult> search(final String name, final String filterExpr,

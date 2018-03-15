@@ -77,11 +77,6 @@ public class JCRProperty implements JCRImapConstants, Persistent, Property {
         return node;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.apache.james.mailbox.store.mail.model.Property#getLocalName()
-     */
     @Override
     public String getLocalName() {
         if (isPersistent()) {

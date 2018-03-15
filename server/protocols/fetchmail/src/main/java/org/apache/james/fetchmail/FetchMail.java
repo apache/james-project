@@ -112,16 +112,12 @@ public class FetchMail implements Runnable, Configurable {
             setSequenceNumber(sequenceNumber);
         }
 
-        /**
-         * @see java.lang.Object#equals(Object)
-         */
+        @Override
         public boolean equals(Object obj) {
             return null != obj && obj.getClass() == getClass() && (getUserName().equals(((DynamicAccountKey) obj).getUserName()) && getSequenceNumber() == ((DynamicAccountKey) obj).getSequenceNumber());
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
+        @Override
         public int hashCode() {
             return getUserName().hashCode() ^ getSequenceNumber();
         }

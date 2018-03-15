@@ -67,8 +67,6 @@ public class ToSenderFolder extends GenericMailet {
 
     /**
      * Delivers a mail to a local mailbox in a given folder.
-     * 
-     * @see org.apache.mailet.base.GenericMailet#service(org.apache.mailet.Mail)
      */
     @Override
     public void service(Mail mail) throws MessagingException {

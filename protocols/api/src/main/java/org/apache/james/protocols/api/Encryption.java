@@ -37,10 +37,6 @@ public final class Encryption {
         this.enabledCipherSuites = enabledCipherSuites;
     }
 
-    /**
-     * 
-     * @see #createStartTls(SSLContext, String[])
-     */
     public static Encryption createTls(SSLContext context) {
         return createTls(context, null);
     }
@@ -58,10 +54,6 @@ public final class Encryption {
         return new Encryption(context, false, enabledCipherSuites);
     }
 
-    /**
-     * 
-     * @see #createStartTls(SSLContext, String[])
-     */
     public static Encryption createStartTls(SSLContext context) {
         return createStartTls(context, null);
     }

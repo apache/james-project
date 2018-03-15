@@ -120,9 +120,6 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
         }
     }
 
-    /**
-     * @see #store(Mail)
-     */
     protected abstract void internalStore(Mail mc) throws MessagingException, IOException;
 
     @Override
@@ -151,9 +148,6 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
         }
     }
 
-    /**
-     * @see #remove(String)
-     */
     protected abstract void internalRemove(String key) throws MessagingException;
 
     @Override

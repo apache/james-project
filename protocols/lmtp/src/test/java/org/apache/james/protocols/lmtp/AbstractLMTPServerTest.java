@@ -317,11 +317,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
         public MessageHookAdapter(MessageHook hook) {
             this.hook = hook;
         }
-        
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
-         */
+
         @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (result == null) {
@@ -344,11 +340,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
     private final class TestDeliverHook implements DeliverToRecipientHook {
         
         private final List<MailEnvelope> delivered = new ArrayList<>();
-        
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.lmtp.hook.DeliverToRecipientHook#deliver(org.apache.james.protocols.smtp.SMTPSession, org.apache.james.protocols.smtp.MailAddress, org.apache.james.protocols.smtp.MailEnvelope)
-         */
+
         @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (RCPT1.equals(recipient.toString())) {

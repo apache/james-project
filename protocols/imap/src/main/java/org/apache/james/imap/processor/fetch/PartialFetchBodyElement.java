@@ -106,9 +106,6 @@ final class PartialFetchBodyElement implements BodyElement {
             }
         }
 
-        /**
-         * @see java.io.FilterInputStream#read()
-         */
         @Override
         public int read() throws IOException {
             checkOffset();
@@ -119,17 +116,11 @@ final class PartialFetchBodyElement implements BodyElement {
             return super.read();
         }
 
-        /**
-         * @see java.io.FilterInputStream#read(byte[])
-         */
         @Override
         public int read(byte[] b) throws IOException {
             return read(b, 0, b.length);
         }
 
-        /**
-         * @see java.io.FilterInputStream#read(byte[], int, int)
-         */
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
             checkOffset();
@@ -150,17 +141,11 @@ final class PartialFetchBodyElement implements BodyElement {
 
         }
 
-        /**
-         * Throws {@link IOException}
-         */
         @Override
         public long skip(long n) throws IOException {
             throw new IOException("Not implemented");
         }
 
-        /**
-         * @see java.io.FilterInputStream#available()
-         */
         @Override
         public int available() throws IOException {
             // Correctly calculate in available bytes.

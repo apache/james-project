@@ -85,26 +85,16 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
      */
     public class LMTPConfigurationImpl extends LMTPConfiguration {
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getHelloName()
-         */
         @Override
         public String getHelloName() {
             return LMTPServer.this.getHelloName();
         }
 
-      
-
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getMaxMessageSize()
-         */
         @Override
         public long getMaxMessageSize() {
             return LMTPServer.this.maxMessageSize;
         }
 
-        /**
-         */
         public String getSMTPGreeting() {
             return LMTPServer.this.lmtpGreeting;
         }

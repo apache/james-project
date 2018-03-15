@@ -44,20 +44,12 @@ public class CombinedInputStream extends SequenceInputStream implements Iterable
     public Iterator<InputStream> iterator() {
         return new Iterator<InputStream>() {
             private int count = 0;
-           
-            /*
-             * (non-Javadoc)
-             * @see java.util.Iterator#hasNext()
-             */
+
             @Override
             public boolean hasNext() {
                 return count < streams.length;
             }
 
-            /*
-             * (non-Javadoc)
-             * @see java.util.Iterator#next()
-             */
             @Override
             public InputStream next() {
                 if (hasNext())  {

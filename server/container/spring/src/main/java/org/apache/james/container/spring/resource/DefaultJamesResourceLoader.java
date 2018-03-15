@@ -43,8 +43,6 @@ public class DefaultJamesResourceLoader extends DefaultResourceLoader implements
     /**
      * Return the {@link Resource} for the given url. If the resource can not be
      * found null get returned
-     * 
-     * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
      */
     @Override
     public Resource getResource(String fileURL) {

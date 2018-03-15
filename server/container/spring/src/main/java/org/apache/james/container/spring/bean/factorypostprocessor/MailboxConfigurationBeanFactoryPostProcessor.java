@@ -38,10 +38,6 @@ import com.google.common.collect.ImmutableSet;
  * It will register it with the alias mailboxmanager
  */
 public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-    /**
-     * @see org.springframework.beans.factory.config.BeanFactoryPostProcessor#postProcessBeanFactory
-     * (org.springframework.beans.factory.config.ConfigurableListableBeanFactory)
-     */
 
     private static final String JPA_MAILBOXMANAGER = "jpa-mailboxmanager";
     private static final String MEMORY_MAILBOX_MANAGER = "memory-mailboxManager";

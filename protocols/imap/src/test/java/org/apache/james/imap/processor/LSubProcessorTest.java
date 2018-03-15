@@ -67,26 +67,16 @@ public class LSubProcessorTest {
 
     private static final String TAG = "TAG";
     public static final MailboxSession.User USER = new MailboxSession.User() {
-
-        /**
-         * @see MailboxSession.User#getLocalePreferences()
-         */
         @Override
         public List<Locale> getLocalePreferences() {
             return new ArrayList<>();
         }
 
-        /**
-         * @see MailboxSession.User#getPassword()
-         */
         @Override
         public String getPassword() {
             return "test";
         }
 
-        /**
-         * @see MailboxSession.User#getUserName()
-         */
         @Override
         public String getUserName() {
             return "test";

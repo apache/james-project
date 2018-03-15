@@ -1073,17 +1073,11 @@ public class SearchQuery implements Serializable {
             return ALL;
         }
 
-        /**
-         * @see java.lang.Object#equals(java.lang.Object)
-         */
         @Override
         public boolean equals(Object obj) {
             return obj instanceof AllCriterion;
         }
 
-        /**
-         * @see java.lang.Object#hashCode()
-         */
         @Override
         public int hashCode() {
             return 1729;

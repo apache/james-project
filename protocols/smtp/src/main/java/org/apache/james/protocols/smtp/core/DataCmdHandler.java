@@ -94,12 +94,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
             this.filter = filter;
             this.next = next;
         }
-        
 
-        /*
-         * (non-Javadoc)
-         * @see org.apache.james.protocols.api.handler.LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, java.nio.ByteBuffer)
-         */
         @Override
         public Response onLine(SMTPSession session, ByteBuffer line) {
             line.rewind();

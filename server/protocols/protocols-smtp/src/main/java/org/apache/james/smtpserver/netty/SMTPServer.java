@@ -212,25 +212,16 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
      */
     public class SMTPHandlerConfigurationDataImpl implements SMTPConfiguration {
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getHelloName()
-         */
         @Override
         public String getHelloName() {
             return SMTPServer.this.getHelloName();
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#getMaxMessageSize()
-         */
         @Override
         public long getMaxMessageSize() {
             return SMTPServer.this.maxMessageSize;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#isRelayingAllowed(String)
-         */
         @Override
         public boolean isRelayingAllowed(String remoteIP) {
             boolean relayingAllowed = false;
@@ -240,31 +231,20 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
             return relayingAllowed;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#useHeloEhloEnforcement()
-         */
         @Override
         public boolean useHeloEhloEnforcement() {
             return SMTPServer.this.heloEhloEnforcement;
         }
 
-        /**
-         */
         public String getSMTPGreeting() {
             return SMTPServer.this.smtpGreeting;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#useAddressBracketsEnforcement()
-         */
         @Override
         public boolean useAddressBracketsEnforcement() {
             return SMTPServer.this.addressBracketsEnforcement;
         }
 
-        /**
-         * @see org.apache.james.protocols.smtp.SMTPConfiguration#isAuthRequired(java.lang.String)
-         */
         @Override
         public boolean isAuthRequired(String remoteIP) {
             if (SMTPServer.this.authRequired == AUTH_ANNOUNCE) {

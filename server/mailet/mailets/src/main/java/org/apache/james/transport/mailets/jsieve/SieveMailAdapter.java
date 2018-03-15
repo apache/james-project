@@ -314,9 +314,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
         fieldMailetContext = mailetContext;
     }
     
-    /**
-     * @see java.lang.Object#toString()
-     */
+    @Override
     public String toString() {
         String messageID = null;
         try {

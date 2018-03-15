@@ -757,9 +757,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         return datasource.getConnection();
     }
 
-    /**
-     * @see java.lang.Object#equals(Object)
-     */
+    @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof JDBCMailRepository)) {
             return false;
@@ -770,11 +768,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
         return ((repository.tableName.equals(tableName)) || ((repository.tableName != null) && repository.tableName.equals(tableName))) && ((repository.repositoryName.equals(repositoryName)) || ((repository.repositoryName != null) && repository.repositoryName.equals(repositoryName)));
     }
 
-    /**
-     * Provide a hash code that is consistent with equals for this class
-     * 
-     * @return the hash code
-     */
+    @Override
     public int hashCode() {
         int result = 17;
         if (tableName != null) {

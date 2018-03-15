@@ -52,9 +52,7 @@ public abstract class AbstractResponse implements Response {
         this.setRetCode(code);
         this.appendLine(description);
     }
-    
 
-    
     /**
      * Append the responseLine to the SMTPResponse
      * 
@@ -103,9 +101,7 @@ public abstract class AbstractResponse implements Response {
         this.endSession = endSession;
     }
 
-    /**
-     * @see java.lang.Object#toString()
-     */
+    @Override
     public final String toString() {
         return getLines().toString();
     }

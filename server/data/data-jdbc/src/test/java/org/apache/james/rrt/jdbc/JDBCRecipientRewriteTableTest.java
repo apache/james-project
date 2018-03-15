@@ -45,10 +45,6 @@ public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTable
         super.tearDown();
     }
 
-
-    /**
-     * @see org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest#getRecipientRewriteTable()
-     */
     @SuppressWarnings("deprecation")
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {

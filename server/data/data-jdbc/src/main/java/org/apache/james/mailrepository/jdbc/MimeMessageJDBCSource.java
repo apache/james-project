@@ -117,8 +117,6 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
      * This should be smart enough to work even if the file does not exist. This
      * is to support a repository with the entire message in the database, which
      * is how James 1.2 worked.
-     * 
-     * @see org.apache.james.server.core.MimeMessageSource#getInputStream()
      */
     @Override
     public synchronized InputStream getInputStream() throws IOException {

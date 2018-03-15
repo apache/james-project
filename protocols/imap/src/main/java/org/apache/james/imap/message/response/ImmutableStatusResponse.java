@@ -27,8 +27,6 @@ import com.google.common.base.MoreObjects;
 
 /**
  * Immutable status response. Suitable for unpooled usage.
- * 
- * @see StatusResponse
  */
 public class ImmutableStatusResponse implements StatusResponse {
 
