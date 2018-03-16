@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.cassandra;
+package org.apache.james.jmap.memory;
 
 import org.apache.james.jmap.methods.integration.SpamAssassinContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(CassandraJmapExtension.class)
-public class CassandraSpamAssassinContract implements SpamAssassinContract {
+@ExtendWith(MemoryJmapExtension.class)
+public class MemorySpamAssassinContractTest implements SpamAssassinContract {
 
 }
