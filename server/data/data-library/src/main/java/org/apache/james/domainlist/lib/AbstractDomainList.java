@@ -21,8 +21,8 @@ package org.apache.james.domainlist.lib;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -32,6 +32,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +52,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
-    protected static final String LOCALHOST = "localhost";
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
     public static final String CONFIGURE_DEFAULT_DOMAIN = "defaultDomain";
@@ -85,7 +85,8 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     protected void addConfiguredDomains(HierarchicalConfiguration config) {
-        Arrays.stream(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
+        StreamUtils.ofNullable(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
+            .filter(s -> !s.isEmpty())
             .map(Domain::of)
             .forEach(
                 Throwing.consumer((Domain domain) -> {
@@ -110,7 +111,10 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
         try {
-            setDefaultDomain(Domain.of(config.getString(CONFIGURE_DEFAULT_DOMAIN, LOCALHOST)));
+            Optional.ofNullable(
+                config.getString(CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
+                .map(Domain::of)
+                .ifPresent(Throwing.consumer(this::setDefaultDomain).sneakyThrow());
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
@@ -124,7 +128,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private boolean mayChangeDefaultDomain() {
-        return LOCALHOST.equals(defaultDomain);
+        return Domain.LOCALHOST.equals(defaultDomain);
     }
 
     private void setDefaultDomain(Domain defaultDomain) throws DomainListException {

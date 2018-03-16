@@ -29,6 +29,7 @@ import org.apache.james.rrt.lib.Mappings;
 public interface RecipientRewriteTable {
 
     interface Domains {
+
         Domain WILDCARD = new Domain(RecipientRewriteTable.WILDCARD) {
 
             @Override

@@ -456,22 +456,12 @@ public class JamesMailetContext implements MailetContext, Configurable {
             // list of supported domains that isn't localhost. If that
             // doesn't work, use the hostname, even if it is localhost.
             if (postMasterAddress.indexOf('@') < 0) {
-                Domain domainName = null; // the domain to use
-                // loop through candidate domains until we find one or exhaust
-                // the
-                // list
-                Domain localhost = Domain.of("localhost");
-                for (Domain dom : domains.getDomains()) {
-                    if (!(localhost.equals(dom))) {
-                        domainName = dom; // ok, not localhost, so
-                        // use it
-                    }
-                }
+                Domain domainName = domains.getDomains().stream()
+                    .filter(domain -> !Domain.LOCALHOST.equals(domain))
+                    .findFirst()
+                    .orElse(domains.getDefaultDomain());
 
-                // if we found a suitable domain, use it. Otherwise fallback to
-                // the
-                // host name.
-                postMasterAddress = postMasterAddress + "@" + (domainName != null ? domainName.name() : domains.getDefaultDomain());
+                postMasterAddress = postMasterAddress + "@" + domainName.asString();
             }
             try {
                 this.postmaster = new MailAddress(postMasterAddress);

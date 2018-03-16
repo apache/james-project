@@ -234,7 +234,7 @@ public class SMTPServerTest {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
         MemoryDomainList domainList = new MemoryDomainList(mock(DNSService.class));
-        domainList.addDomain(Domain.of("localhost"));
+        domainList.addDomain(Domain.LOCALHOST);
         chain.put("domainlist", DomainList.class, domainList);
         
     }

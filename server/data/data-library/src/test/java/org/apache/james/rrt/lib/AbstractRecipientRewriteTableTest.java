@@ -88,7 +88,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void testStoreAndRetrieveRegexMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         // String regex = "(.*):{$1}@localhost";
         // String regex2 = "(.+):{$1}@test";
         String regex = "(.*)@localhost";
@@ -119,7 +119,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void testStoreAndRetrieveAddressMapping() throws ErrorMappingException, RecipientRewriteTableException {
 
         String user = "test";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         String address = "test@localhost2";
         String address2 = "test@james";
 
@@ -142,7 +142,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void testStoreAndRetrieveErrorMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         String error = "bounce!";
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
@@ -165,7 +165,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void testStoreAndRetrieveWildCardAddressMapping() throws ErrorMappingException, RecipientRewriteTableException {
         String user = "test";
         String user2 = "test2";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         String address = "test@localhost2";
         String address2 = "test@james";
 
@@ -273,7 +273,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
         String user = "test";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         String address = "test@localhost2";
 
         expectedException.expect(RecipientRewriteTableException.class);
@@ -285,7 +285,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     @Test
     public void addMappingShouldNotThrowWhenMappingAlreadyExistsWithAnOtherType() throws Exception {
         String user = "test";
-        Domain domain = Domain.of("localhost");
+        Domain domain = Domain.LOCALHOST;
         String address = "test@localhost2";
 
         addMapping(user, domain, address, ADDRESS_TYPE);

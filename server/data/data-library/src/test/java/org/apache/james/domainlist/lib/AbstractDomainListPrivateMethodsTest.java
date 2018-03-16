@@ -86,21 +86,21 @@ public class AbstractDomainListPrivateMethodsTest {
     public void setDefaultDomainShouldSetFromConfigurationWhenDifferentFromLocalhost() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
             .thenReturn(expectedDefaultDomain);
 
         domainList.configureDefaultDomain(configuration);
 
-        assertThat(domainList.getDefaultDomain()).isEqualTo(expectedDefaultDomain);
+        assertThat(domainList.getDefaultDomain()).isEqualTo(Domain.of(expectedDefaultDomain));
     }
 
     @Test
     public void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
-            .thenReturn(AbstractDomainList.LOCALHOST);
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
+            .thenReturn(Domain.LOCALHOST.asString());
 
-        String expectedDefaultDomain = InetAddress.getLocalHost().getHostName();
+        Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(configuration);
 
         assertThat(domainList.getDefaultDomain()).isEqualTo(expectedDefaultDomain);
@@ -109,8 +109,8 @@ public class AbstractDomainListPrivateMethodsTest {
     @Test
     public void setDefaultDomainShouldCreateFromHostnameWhenEqualsToLocalhost() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
-            .thenReturn(AbstractDomainList.LOCALHOST);
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
+            .thenReturn(Domain.LOCALHOST.asString());
 
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(configuration);
@@ -121,8 +121,8 @@ public class AbstractDomainListPrivateMethodsTest {
     @Test
     public void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
-            .thenReturn(AbstractDomainList.LOCALHOST);
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
+            .thenReturn(Domain.LOCALHOST.asString());
 
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
         domainList.configureDefaultDomain(configuration);
@@ -135,7 +135,7 @@ public class AbstractDomainListPrivateMethodsTest {
     public void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
             .thenReturn(expectedDefaultDomain);
 
         domainList.configureDefaultDomain(configuration);
@@ -147,7 +147,7 @@ public class AbstractDomainListPrivateMethodsTest {
     public void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, AbstractDomainList.LOCALHOST))
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
             .thenReturn(expectedDefaultDomain);
 
         domainList.addDomain(Domain.of(expectedDefaultDomain));

@@ -186,7 +186,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                         domain = Domain.of(user.substring(index + 1, user.length()));
                     } else {
                         username = user;
-                        domain = Domain.of("localhost");
+                        domain = Domain.LOCALHOST;
                     }
                     try {
                         mappings.put(user, getMappings(username, domain));

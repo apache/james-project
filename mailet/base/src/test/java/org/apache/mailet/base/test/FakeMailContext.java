@@ -417,7 +417,7 @@ public class FakeMailContext implements MailetContext {
 
     @Override
     public boolean isLocalServer(Domain domain) {
-        return domain.equals(Domain.of("localhost"));
+        return domain.equals(Domain.LOCALHOST);
     }
 
     /**

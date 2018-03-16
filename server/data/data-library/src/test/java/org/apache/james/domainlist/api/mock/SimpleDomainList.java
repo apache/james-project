@@ -61,6 +61,6 @@ public class SimpleDomainList implements DomainList {
 
     @Override
     public Domain getDefaultDomain() {
-        return Domain.of("localhost");
+        return Domain.LOCALHOST;
     }
 }

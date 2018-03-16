@@ -26,6 +26,8 @@ import com.google.common.base.Preconditions;
 
 public class Domain {
 
+    public static final Domain LOCALHOST = Domain.of("localhost");
+
     public static Domain of(String domain) {
         Preconditions.checkNotNull(domain);
         Preconditions.checkArgument(!domain.isEmpty() && !domain.contains("@"));

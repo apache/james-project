@@ -116,8 +116,8 @@ public class ValidRcptHandlerTest {
     private RecipientRewriteTable setUpRecipientRewriteTable(DomainList domainList) throws RecipientRewriteTableException {
         MemoryRecipientRewriteTable memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(domainList);
-        memoryRecipientRewriteTable.addAddressMapping(USER1, Domain.of("localhost"), "address");
-        memoryRecipientRewriteTable.addErrorMapping(USER2, Domain.of("localhost"), "554 BOUNCE");
+        memoryRecipientRewriteTable.addAddressMapping(USER1, Domain.LOCALHOST, "address");
+        memoryRecipientRewriteTable.addErrorMapping(USER2, Domain.LOCALHOST, "554 BOUNCE");
         return memoryRecipientRewriteTable;
     }
 
