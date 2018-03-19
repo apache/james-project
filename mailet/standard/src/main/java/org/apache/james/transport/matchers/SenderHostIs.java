@@ -17,23 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
-import java.util.Locale;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * <p>Checkes the sender's displayed domain name against a supplied list.</p>
@@ -50,7 +48,7 @@ import com.google.common.collect.ImmutableSet;
 public class SenderHostIs extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(SenderHostIs.class);
 
-    private Collection<String> senderHosts;
+    private Collection<Domain> senderHosts;
     
     @Override
     public void init()  {
@@ -60,11 +58,13 @@ public class SenderHostIs extends GenericMatcher {
         senderHosts = parseDomainsList(condition);
     }
 
-    @VisibleForTesting Collection<String> parseDomainsList(String condition) {
-        return ImmutableSet
-                .copyOf(Splitter.onPattern("(, |,| )")
-                        .omitEmptyStrings()
-                        .split(condition));
+    @VisibleForTesting Collection<Domain> parseDomainsList(String condition) {
+        return Splitter.onPattern("(, |,| )")
+            .omitEmptyStrings()
+            .splitToList(condition)
+            .stream()
+            .map(Domain::of)
+            .collect(Guavate.toImmutableList());
     }
 
     /**
@@ -78,7 +78,7 @@ public class SenderHostIs extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
         try {
-            if (mail.getSender() != null && senderHosts.contains(mail.getSender().getDomain().toLowerCase(Locale.US))) {
+            if (mail.getSender() != null && senderHosts.contains(mail.getSender().getDomain())) {
                 return mail.getRecipients();
             }
         } catch (Exception e) {

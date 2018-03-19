@@ -239,7 +239,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 }
             }
             if ((senderAddress == null) || 
-                    ((senderAddress.getLocalPart().length() == 0) && (senderAddress.getDomain().length() == 0))) {
+                    ((senderAddress.getLocalPart().length() == 0) && (senderAddress.getDomain().name().length() == 0))) {
                 senderAddress = MailAddress.nullSender();
             }
             // Store the senderAddress in session map

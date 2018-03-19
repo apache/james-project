@@ -32,7 +32,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.ParseException;
 
-import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.server.core.MailImpl;
@@ -850,7 +849,7 @@ public class MessageProcessor extends ProcessorAbstract {
      */
     protected boolean isLocalServer(MailAddress recipient) {
         try {
-            return getConfiguration().getDomainList().containsDomain(Domain.of(recipient.getDomain()));
+            return getConfiguration().getDomainList().containsDomain(recipient.getDomain());
         } catch (DomainListException e) {
             LOGGER.error("Unable to access DomainList", e);
             return false;

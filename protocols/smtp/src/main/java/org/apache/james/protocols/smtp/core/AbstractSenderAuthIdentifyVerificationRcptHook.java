@@ -62,7 +62,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             // the user was already authenticated
             if ((senderAddress == null)
                 || (!authUser.equalsIgnoreCase(username))
-                || (!isLocalDomain(Domain.of(senderAddress.getDomain())))) {
+                || (!isLocalDomain(senderAddress.getDomain()))) {
                 return INVALID_AUTH;
             }
         }

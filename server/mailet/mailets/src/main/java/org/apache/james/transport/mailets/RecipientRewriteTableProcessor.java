@@ -118,7 +118,7 @@ public class RecipientRewriteTableProcessor {
 
     private RrtExecutionResult getRrtExecutionResult(Mail mail, MailAddress recipient) {
         try {
-            Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), Domain.of(recipient.getDomain()));
+            Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
@@ -155,7 +155,7 @@ public class RecipientRewriteTableProcessor {
 
     private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
         return mailAddresses.stream()
-            .filter(mailAddress -> mailetContext.isLocalServer(Domain.of(mailAddress.getDomain())))
+            .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
             .collect(Guavate.toImmutableList());
     }
 
@@ -184,7 +184,7 @@ public class RecipientRewriteTableProcessor {
 
     private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) throws MessagingException {
         ImmutableList<MailAddress> remoteAddress = mailAddresses.stream()
-            .filter(mailAddress -> !mailetContext.isLocalServer(Domain.of(mailAddress.getDomain())))
+            .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
             .collect(Guavate.toImmutableList());
 
         if (!remoteAddress.isEmpty()) {

@@ -22,7 +22,6 @@ package org.apache.james.core;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.core.MailAddress;
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,7 +31,7 @@ public class MailAddressTest {
     private static final String GOOD_LOCAL_PART = "\"quoted@local part\"";
     private static final String GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org";
     private static final String GOOD_ADDRESS = "server-dev@james.apache.org";
-    private static final String GOOD_DOMAIN = "james.apache.org";
+    private static final Domain GOOD_DOMAIN = Domain.of("james.apache.org");
 
     private static final String[] GOOD_ADDRESSES = {
             GOOD_ADDRESS,

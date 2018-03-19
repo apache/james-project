@@ -250,7 +250,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     @Override
     public boolean isLocalEmail(MailAddress mailAddress) {
         if (mailAddress != null) {
-            if (!isLocalServer(Domain.of(mailAddress.getDomain()))) {
+            if (!isLocalServer(mailAddress.getDomain())) {
                 return false;
             }
             try {
@@ -465,7 +465,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
             }
             try {
                 this.postmaster = new MailAddress(postMasterAddress);
-                if (!domains.containsDomain(Domain.of(postmaster.getDomain()))) {
+                if (!domains.containsDomain(postmaster.getDomain())) {
                     LOGGER.warn("The specified postmaster address ( {} ) is not a local " +
                         "address.  This is not necessarily a problem, but it does mean that emails addressed to " +
                         "the postmaster will be routed to another server.  For some configurations this may " +

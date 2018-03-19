@@ -27,6 +27,7 @@ import java.util.Locale;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -80,14 +81,14 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
     protected boolean matchedWhitelist(MailAddress recipientMailAddress, Mail mail) throws MessagingException {
         MailAddress senderMailAddress = mail.getSender();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
-        String senderHost = senderMailAddress.getDomain().toLowerCase(Locale.US);
+        Domain senderHost = senderMailAddress.getDomain();
 
         Connection conn = null;
         PreparedStatement selectStmt = null;
         ResultSet selectRS = null;
         try {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
-            String recipientHost = recipientMailAddress.getDomain().toLowerCase(Locale.US);
+            Domain recipientHost = recipientMailAddress.getDomain();
 
             if (conn == null) {
                 conn = datasource.getConnection();
@@ -98,9 +99,9 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
                     selectStmt = conn.prepareStatement(selectByPK);
                 }
                 selectStmt.setString(1, recipientUser);
-                selectStmt.setString(2, recipientHost);
+                selectStmt.setString(2, recipientHost.asString());
                 selectStmt.setString(3, senderUser);
-                selectStmt.setString(4, senderHost);
+                selectStmt.setString(4, senderHost.asString());
                 selectRS = selectStmt.executeQuery();
                 if (selectRS.next()) {
                     // This address was already in the list
@@ -116,9 +117,9 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
                 selectStmt = conn.prepareStatement(selectByPK);
     
                 selectStmt.setString(1, recipientUser);
-                selectStmt.setString(2, recipientHost);
+                selectStmt.setString(2, recipientHost.asString());
                 selectStmt.setString(3, "*");
-                selectStmt.setString(4, senderHost);
+                selectStmt.setString(4, senderHost.asString());
                 selectRS = selectStmt.executeQuery();
                 if (selectRS.next()) {
                     // This address was already in the list
@@ -134,9 +135,9 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
                 selectStmt = conn.prepareStatement(selectByPK);
     
                 selectStmt.setString(1, "*");
-                selectStmt.setString(2, recipientHost);
+                selectStmt.setString(2, recipientHost.asString());
                 selectStmt.setString(3, senderUser);
-                selectStmt.setString(4, senderHost);
+                selectStmt.setString(4, senderHost.asString());
                 selectRS = selectStmt.executeQuery();
                 if (selectRS.next()) {
                     // This address was already in the list
@@ -152,9 +153,9 @@ public class IsInWhiteList extends AbstractSQLWhitelistMatcher {
                 selectStmt = conn.prepareStatement(selectByPK);
     
                 selectStmt.setString(1, "*");
-                selectStmt.setString(2, recipientHost);
+                selectStmt.setString(2, recipientHost.asString());
                 selectStmt.setString(3, "*");
-                selectStmt.setString(4, senderHost);
+                selectStmt.setString(4, senderHost.asString());
                 selectRS = selectStmt.executeQuery();
                 if (selectRS.next()) {
                     // This address was already in the list

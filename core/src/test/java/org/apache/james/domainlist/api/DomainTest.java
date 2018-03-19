@@ -40,6 +40,51 @@ public class DomainTest {
     }
 
     @Test
+    public void shouldRemoveBrackets() {
+        assertThat(Domain.of("[domain]")).isEqualTo(Domain.of("domain"));
+    }
+
+    @Test
+    public void openBracketWithTextShouldNotBeRemoved() {
+        assertThat(Domain.of("[domain")).isEqualTo(Domain.of("[Domain"));
+    }
+
+    @Test
+    public void singleOpenBracketShouldNotBeRemoved() {
+        assertThat(Domain.of("[")).isEqualTo(Domain.of("["));
+    }
+
+    @Test
+    public void singleClosingBracketShouldNotBeRemoved() {
+        assertThat(Domain.of("]")).isEqualTo(Domain.of("]"));
+    }
+
+    @Test
+    public void closeBracketWithTextShouldNotBeRemoved() {
+        assertThat(Domain.of("aaa]")).isEqualTo(Domain.of("aaa]"));
+    }
+
+    @Test
+    public void bracketSurroundedWithTextShouldNotBeRemoved() {
+        assertThat(Domain.of("a[aaa]a")).isEqualTo(Domain.of("a[aaa]a"));
+    }
+
+    @Test
+    public void bracketWithTextSuffixShouldNotBeRemoved() {
+        assertThat(Domain.of("[aaa]a")).isEqualTo(Domain.of("[aaa]a"));
+    }
+
+    @Test
+    public void bracketWithTextPrefixShouldNotBeRemoved() {
+        assertThat(Domain.of("a[aaa]")).isEqualTo(Domain.of("a[aaa]"));
+    }
+
+    @Test
+    public void singleBracketShouldNotBeRemoved() {
+        assertThat(Domain.of("[]")).isEqualTo(Domain.of("[]"));
+    }
+
+    @Test
     public void shouldThrowWhenDomainContainAtSymbol() {
         assertThatThrownBy(() -> Domain.of("Dom@in")).isInstanceOf(IllegalArgumentException.class);
     }

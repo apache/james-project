@@ -19,6 +19,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -83,5 +84,5 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
      * @param domain
      * @return local
      */
-    protected abstract boolean isLocalDomain(SMTPSession session, String domain);
+    protected abstract boolean isLocalDomain(SMTPSession session, Domain domain);
 }

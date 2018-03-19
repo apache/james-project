@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -154,7 +155,7 @@ public class GroupsRoutes implements Routes {
     })
     public HaltException addToGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException, UsersRepositoryException, DomainListException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Domain domain = Domain.of(groupAddress.getDomain());
+        Domain domain = groupAddress.getDomain();
         ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
@@ -202,7 +203,7 @@ public class GroupsRoutes implements Routes {
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
         recipientRewriteTable.removeAddressMapping(
             groupAddress.getLocalPart(),
-            Domain.of(groupAddress.getDomain()),
+            groupAddress.getDomain(),
             userAddress.asString());
         return halt(HttpStatus.OK_200);
     }
@@ -222,7 +223,7 @@ public class GroupsRoutes implements Routes {
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), Domain.of(groupAddress.getDomain()));
+        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), groupAddress.getDomain());
 
         ensureNonEmptyMappings(mappings);
 

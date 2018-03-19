@@ -145,10 +145,8 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
         }
 
         String senderUser = senderMailAddress.getLocalPart();
-        String senderHost = senderMailAddress.getDomain();
 
         senderUser = senderUser.toLowerCase(Locale.US);
-        senderHost = senderHost.toLowerCase(Locale.US);
 
         Collection<MailAddress> recipients = mail.getRecipients();
 
@@ -156,9 +154,9 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
 
         for (MailAddress recipientMailAddress : recipients) {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
-            String recipientHost = recipientMailAddress.getDomain();
+            Domain recipientHost = recipientMailAddress.getDomain();
 
-            if (!getMailetContext().isLocalServer(Domain.of(recipientHost))) {
+            if (!getMailetContext().isLocalServer(recipientHost)) {
                 // not a local recipient, so skip
                 continue;
             }

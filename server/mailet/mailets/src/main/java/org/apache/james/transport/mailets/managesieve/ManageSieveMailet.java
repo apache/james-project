@@ -127,7 +127,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
             LOGGER.error("Sender is null");
             return;
         }
-        if (!getMailetContext().isLocalServer(Domain.of(mail.getSender().getDomain()))) {
+        if (!getMailetContext().isLocalServer(mail.getSender().getDomain())) {
             LOGGER.error("Sender not local");
             return;
         }
@@ -139,7 +139,8 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         } else {
             session.setState(Session.State.UNAUTHENTICATED);
         }
-        session.setUser(mail.getSender().getLocalPart() + '@' + (mail.getSender().getDomain() == null ? "localhost" : mail.getSender().getDomain()));
+        Domain domain = mail.getSender().getDomain() == null ? Domain.LOCALHOST : mail.getSender().getDomain();
+        session.setUser(mail.getSender().getLocalPart() + '@' + domain.name());
         getMailetContext().sendMail(mail.getRecipients().iterator().next(), Lists.newArrayList(mail.getSender()),transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         

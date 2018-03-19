@@ -21,7 +21,6 @@
 
 package org.apache.james.transport.matchers;
 
-import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericRecipientMatcher;
 
@@ -33,6 +32,6 @@ public class HostIsLocal extends GenericRecipientMatcher {
 
     @Override
     public boolean matchRecipient(MailAddress recipient) {
-        return getMailetContext().isLocalServer(Domain.of(recipient.getDomain()));
+        return getMailetContext().isLocalServer(recipient.getDomain());
     }
 }

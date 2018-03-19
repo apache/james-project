@@ -35,7 +35,7 @@ public abstract class ValidSenderDomainHandler implements MailHook {
 
     @Override
     public HookResult doMail(SMTPSession session, MailAddress sender) {
-        if (sender != null  && !hasMXRecord(session,sender.getDomain())) {
+        if (sender != null  && !hasMXRecord(session,sender.getDomain().name())) {
             return new HookResult(HookReturnCode.DENY,SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_SYNTAX_SENDER) + " sender " + sender + " contains a domain with no valid MX records");
         } else {
             return HookResult.declined();

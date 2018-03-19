@@ -85,7 +85,7 @@ public class NetworkIsInWhitelist extends AbstractSQLWhitelistMatcher {
         ResultSet selectRS = null;
         try {
             String recipientUser = recipientMailAddress.getLocalPart().toLowerCase(Locale.US);
-            String recipientHost = recipientMailAddress.getDomain().toLowerCase(Locale.US);
+            String recipientHost = recipientMailAddress.getDomain().asString();
 
             if (conn == null) {
                 conn = datasource.getConnection();

@@ -188,8 +188,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 ResultSet mappingRS = null;
                 try {
                     mappingStmt.setString(1, recipient.getLocalPart());
-                    mappingStmt.setString(2, recipient.getDomain());
-                    mappingStmt.setString(3, recipient.getDomain());
+                    mappingStmt.setString(2, recipient.getDomain().asString());
+                    mappingStmt.setString(3, recipient.getDomain().asString());
                     mappingRS = mappingStmt.executeQuery();
                     if (mappingRS.next()) {
                         String targetString = mappingRS.getString(1);

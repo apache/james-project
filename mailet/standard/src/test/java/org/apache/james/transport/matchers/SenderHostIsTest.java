@@ -29,6 +29,7 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -141,48 +142,73 @@ public class SenderHostIsTest {
     @Test
     void parseDomainsListShouldParseWhenOnlyOneDomain() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org");
+        assertThat(senderHosts).containsOnly(Domain.of("james.apache.org"));
     }
 
     @Test
     void parseDomainsListShouldParseWhenCommaSpacePattern() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org, james2.apache.org, james3.apache.org, james4.apache.org, james5.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org, james2.apache.org, james3.apache.org, james4.apache.org, james5.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org", "james2.apache.org", "james3.apache.org", "james4.apache.org", "james5.apache.org");
+        assertThat(senderHosts).containsOnly(
+            Domain.of("james.apache.org"),
+            Domain.of("james2.apache.org"),
+            Domain.of("james3.apache.org"),
+            Domain.of("james4.apache.org"),
+            Domain.of("james5.apache.org"));
     }
 
     @Test
     void parseDomainsListShouldParseWhenCommaPattern() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org,james2.apache.org,james3.apache.org,james4.apache.org,james5.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org,james2.apache.org,james3.apache.org,james4.apache.org,james5.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org", "james2.apache.org", "james3.apache.org", "james4.apache.org", "james5.apache.org");
+        assertThat(senderHosts).containsOnly(
+            Domain.of("james.apache.org"),
+            Domain.of("james2.apache.org"),
+            Domain.of("james3.apache.org"),
+            Domain.of("james4.apache.org"),
+            Domain.of( "james5.apache.org"));
     }
 
     @Test
     void parseDomainsListShouldParseWhenSpacePattern() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org james3.apache.org james4.apache.org james5.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org james3.apache.org james4.apache.org james5.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org", "james2.apache.org", "james3.apache.org", "james4.apache.org", "james5.apache.org");
+        assertThat(senderHosts).containsOnly(
+            Domain.of("james.apache.org"),
+            Domain.of("james2.apache.org"),
+            Domain.of("james3.apache.org"),
+            Domain.of("james4.apache.org"),
+            Domain.of("james5.apache.org"));
     }
 
     @Test
     void parseDomainsListShouldParseWhenMixedPatterns() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org,james3.apache.org, james4.apache.org james5.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org,james3.apache.org, james4.apache.org james5.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org", "james2.apache.org", "james3.apache.org", "james4.apache.org", "james5.apache.org");
+        assertThat(senderHosts).containsOnly(
+            Domain.of("james.apache.org"),
+            Domain.of("james2.apache.org"),
+            Domain.of("james3.apache.org"),
+            Domain.of("james4.apache.org"),
+            Domain.of("james5.apache.org"));
     }
 
     @Test
     void parseDomainsListShouldIgnoreEmptyDomains() {
         //When
-        Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org   james2.apache.org james3.apache.org , james4.apache.org,,,james5.apache.org");
+        Collection<Domain> senderHosts = matcher.parseDomainsList("james.apache.org   james2.apache.org james3.apache.org , james4.apache.org,,,james5.apache.org");
         //Then
-        assertThat(senderHosts).containsOnly("james.apache.org", "james2.apache.org", "james3.apache.org", "james4.apache.org", "james5.apache.org");
+        assertThat(senderHosts).containsOnly(
+            Domain.of("james.apache.org"),
+            Domain.of("james2.apache.org"),
+            Domain.of("james3.apache.org"),
+            Domain.of("james4.apache.org"),
+            Domain.of("james5.apache.org"));
     }
 }

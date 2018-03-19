@@ -104,7 +104,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
         for (MailAddress source : recipients) {
             String user = source.getLocalPart().toLowerCase(Locale.US);
-            Domain domain = Domain.of(source.getDomain());
+            Domain domain = source.getDomain();
 
             String targetString = RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
 

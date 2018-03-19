@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -96,11 +97,11 @@ public class MailDelivrer {
             LOGGER.debug("Attempting to deliver {}", mail.getName());
         }
 
-        String host = retrieveTargetHostname(mail);
+        Domain host = retrieveTargetHostname(mail);
         try {
             // Figure out which servers to try to send to. This collection
             // will hold all the possible target servers
-            Iterator<HostAddress> targetServers = dnsHelper.retrieveHostAddressIterator(host);
+            Iterator<HostAddress> targetServers = dnsHelper.retrieveHostAddressIterator(host.asString());
             if (!targetServers.hasNext()) {
                 return handleNoTargetServer(mail, host);
             }
@@ -111,7 +112,7 @@ public class MailDelivrer {
         }
     }
 
-    private String retrieveTargetHostname(Mail mail) {
+    private Domain retrieveTargetHostname(Mail mail) {
         Preconditions.checkArgument(!mail.getRecipients().isEmpty(), "Mail should have recipients to attempt delivery");
         MailAddress rcpt = Iterables.getFirst(mail.getRecipients(), null);
         return rcpt.getDomain();
@@ -234,8 +235,8 @@ public class MailDelivrer {
         }
     }
 
-    private ExecutionResult handleNoTargetServer(Mail mail, String host) {
-        LOGGER.info("No mail server found for: {}", host);
+    private ExecutionResult handleNoTargetServer(Mail mail, Domain host) {
+        LOGGER.info("No mail server found for: {}", host.name());
         MessagingException messagingException = new MessagingException("There are no DNS entries for the hostname " + host + ".  I cannot determine where to send this message.");
         int retry = DeliveryRetriesHelper.retrieveRetries(mail);
         if (retry >= configuration.getDnsProblemRetry()) {

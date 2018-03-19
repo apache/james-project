@@ -178,6 +178,10 @@ public class ProcessRedirectNotify {
     private boolean senderDomainIsValid(Mail mail) throws MessagingException {
         return !mailet.getInitParameters().getFakeDomainCheck()
                 || mail.getSender() == null
-                || !mailet.getMailetContext().getMailServers(mail.getSender().getDomain()).isEmpty();
+                || !mailet.getMailetContext()
+            .getMailServers(mail.getSender()
+                .getDomain()
+                .name())
+            .isEmpty();
     }
 }

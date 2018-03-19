@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -49,8 +50,8 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
     public HookResult doRcpt(SMTPSession session, MailAddress sender,
                              MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
-            String toDomain = rcpt.getDomain();
-            if (isLocalDomain(toDomain) == false) {
+            Domain toDomain = rcpt.getDomain();
+            if (!isLocalDomain(toDomain)) {
                 if (session.isAuthSupported()) {
                     return AUTH_REQUIRED;
                 } else {
@@ -69,6 +70,6 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
      * @param domain
      * @return isLocal
      */
-    protected abstract boolean isLocalDomain(String domain);
+    protected abstract boolean isLocalDomain(Domain domain);
     
 }

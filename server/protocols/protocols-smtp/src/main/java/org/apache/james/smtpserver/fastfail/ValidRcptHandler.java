@@ -112,7 +112,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
                     LOGGER.debug("Unknown user {} check if it's an alias", username);
 
                     try {
-                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), Domain.of(recipient.getDomain()));
+                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
                         if (targetString != null && !targetString.isEmpty()) {
                             return true;
@@ -135,9 +135,9 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     }
 
     @Override
-    protected boolean isLocalDomain(SMTPSession session, String domain) {
+    protected boolean isLocalDomain(SMTPSession session, Domain domain) {
         try {
-            return domains.containsDomain(Domain.of(domain));
+            return domains.containsDomain(domain);
         } catch (DomainListException e) {
             LOGGER.error("Unable to get domains", e);
             return false;

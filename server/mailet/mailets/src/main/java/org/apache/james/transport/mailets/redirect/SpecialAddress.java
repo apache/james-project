@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.redirect;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Throwables;
@@ -37,7 +38,7 @@ public class SpecialAddress {
 
     public static class AddressMarker {
 
-        public static final String ADDRESS_MARKER = "address.marker";
+        public static final Domain ADDRESS_MARKER = Domain.of("address.marker");
         public static final MailAddress SENDER = mailAddressUncheckedException(SpecialAddressKind.SENDER, ADDRESS_MARKER);
         public static final MailAddress REVERSE_PATH = mailAddressUncheckedException(SpecialAddressKind.REVERSE_PATH, ADDRESS_MARKER);
         public static final MailAddress FROM = mailAddressUncheckedException(SpecialAddressKind.FROM, ADDRESS_MARKER);
@@ -48,7 +49,7 @@ public class SpecialAddress {
         public static final MailAddress UNALTERED = mailAddressUncheckedException(SpecialAddressKind.UNALTERED, ADDRESS_MARKER);
         public static final MailAddress NULL = mailAddressUncheckedException(SpecialAddressKind.NULL, ADDRESS_MARKER);
 
-        private static MailAddress mailAddressUncheckedException(SpecialAddressKind kind, String domain) {
+        private static MailAddress mailAddressUncheckedException(SpecialAddressKind kind, Domain domain) {
             try {
                 return new MailAddress(kind.getValue(), domain);
             } catch (Exception e) {
@@ -58,6 +59,6 @@ public class SpecialAddress {
     }
 
     public static boolean isSpecialAddress(MailAddress mailAddress) {
-        return mailAddress.getDomain().equalsIgnoreCase(AddressMarker.ADDRESS_MARKER);
+        return mailAddress.getDomain().equals(AddressMarker.ADDRESS_MARKER);
     }
 }

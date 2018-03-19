@@ -21,6 +21,7 @@ package org.apache.james.transport.matchers;
 
 import java.util.Collection;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -40,10 +41,10 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
         if (mail.getSender() == null) {
             return null;
         }
-        String domain = mail.getSender().getDomain();
+        Domain domain = mail.getSender().getDomain();
         // DNS Lookup for this domain
         @SuppressWarnings("deprecation")
-        Collection<String> servers = getMailetContext().getMailServers(domain);
+        Collection<String> servers = getMailetContext().getMailServers(domain.name());
         if (servers.size() == 0) {
             // No records...could not deliver to this domain, so matches
             // criteria.

@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets;
 
 import java.net.UnknownHostException;
 import java.util.Collection;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -222,18 +222,18 @@ public class RemoteDelivery extends GenericMailet {
 
     private void serviceNoGateway(Mail mail) {
         String mailName = mail.getName();
-        Map<String, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
-        for (Map.Entry<String, Collection<MailAddress>> entry : targets.entrySet()) {
+        Map<Domain, Collection<MailAddress>> targets = groupByServer(mail.getRecipients());
+        for (Map.Entry<Domain, Collection<MailAddress>> entry : targets.entrySet()) {
             serviceSingleServer(mail, mailName, entry);
         }
     }
 
-    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<String, Collection<MailAddress>> entry) {
+    private void serviceSingleServer(Mail mail, String originalName, Map.Entry<Domain, Collection<MailAddress>> entry) {
         if (configuration.isDebug()) {
             LOGGER.debug("Sending mail to {} on host {}", entry.getValue(), entry.getKey());
         }
         mail.setRecipients(entry.getValue());
-        mail.setName(originalName + NAME_JUNCTION + entry.getKey());
+        mail.setName(originalName + NAME_JUNCTION + entry.getKey().name());
         try {
             queue.enQueue(mail);
         } catch (MailQueueException e) {
@@ -241,11 +241,11 @@ public class RemoteDelivery extends GenericMailet {
         }
     }
 
-    private Map<String, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
+    private Map<Domain, Collection<MailAddress>> groupByServer(Collection<MailAddress> recipients) {
         // Must first organize the recipients into distinct servers (name made case insensitive)
-        HashMultimap<String, MailAddress> groupByServerMultimap = HashMultimap.create();
+        HashMultimap<Domain, MailAddress> groupByServerMultimap = HashMultimap.create();
         for (MailAddress recipient : recipients) {
-            groupByServerMultimap.put(recipient.getDomain().toLowerCase(Locale.US), recipient);
+            groupByServerMultimap.put(recipient.getDomain(), recipient);
         }
         return groupByServerMultimap.asMap();
     }
