@@ -44,7 +44,7 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
         Domain domain = mail.getSender().getDomain();
         // DNS Lookup for this domain
         @SuppressWarnings("deprecation")
-        Collection<String> servers = getMailetContext().getMailServers(domain.name());
+        Collection<String> servers = getMailetContext().getMailServers(domain);
         if (servers.size() == 0) {
             // No records...could not deliver to this domain, so matches
             // criteria.

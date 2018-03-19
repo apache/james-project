@@ -381,7 +381,7 @@ public class FakeMailContext implements MailetContext {
      * @deprecated use the generic dnsLookup method
      */
     @Override
-    public Collection<String> getMailServers(String host) {
+    public Collection<String> getMailServers(Domain host) {
         return null;  // trivial implementation
     }
 
@@ -521,7 +521,7 @@ public class FakeMailContext implements MailetContext {
      * @deprecated use the generic dnsLookup method
      */
     @Override
-    public Iterator<HostAddress> getSMTPHostAddresses(String domainName) {
+    public Iterator<HostAddress> getSMTPHostAddresses(Domain domainName) {
         return null;  // trivial implementation
     }
 

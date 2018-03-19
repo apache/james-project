@@ -180,8 +180,7 @@ public class ProcessRedirectNotify {
                 || mail.getSender() == null
                 || !mailet.getMailetContext()
             .getMailServers(mail.getSender()
-                .getDomain()
-                .name())
+                .getDomain())
             .isEmpty();
     }
 }

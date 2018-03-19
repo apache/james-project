@@ -101,9 +101,9 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
-    public Collection<String> getMailServers(String host) {
+    public Collection<String> getMailServers(Domain host) {
         try {
-            return dns.findMXRecords(host);
+            return dns.findMXRecords(host.asString());
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later
@@ -293,9 +293,9 @@ public class JamesMailetContext implements MailetContext, Configurable {
      */
     @Override
     @Deprecated
-    public Iterator<org.apache.mailet.HostAddress> getSMTPHostAddresses(String domainName) {
+    public Iterator<org.apache.mailet.HostAddress> getSMTPHostAddresses(Domain domainName) {
         try {
-            return new MXHostAddressIterator(dns.findMXRecords(domainName).iterator(), dns, false);
+            return new MXHostAddressIterator(dns.findMXRecords(domainName.asString()).iterator(), dns, false);
         } catch (TemporaryResolutionException e) {
             // TODO: We only do this to not break backward compatiblity. Should
             // fixed later

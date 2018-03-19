@@ -272,7 +272,7 @@ public interface MailetContext {
      * @return the sorted mail-handling hostnames for the domain
      * @deprecated use the generic dnsLookup method
      */
-    Collection<String> getMailServers(String domain);
+    Collection<String> getMailServers(Domain domain);
 
     /**
      * Returns the SMTP host addresses specified as mail handlers for
@@ -288,7 +288,7 @@ public interface MailetContext {
      * @since Mailet API v2.3
      * @deprecated use the generic dnsLookup method
      */
-    Iterator<HostAddress> getSMTPHostAddresses(String domain);
+    Iterator<HostAddress> getSMTPHostAddresses(Domain domain);
 
     /**
      * Sends an outgoing message to the top of this mailet container's root queue.
