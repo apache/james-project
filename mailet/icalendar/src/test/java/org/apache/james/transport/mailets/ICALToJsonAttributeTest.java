@@ -63,7 +63,7 @@ public class ICALToJsonAttributeTest {
     }
 
     @Test
-    public void getMailetInfoShouldReturnExpectedValue() throws Exception {
+    public void getMailetInfoShouldReturnExpectedValue() {
         assertThat(testee.getMailetInfo()).isEqualTo("ICALToJson Mailet");
     }
 

@@ -24,13 +24,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +60,7 @@ public class ExtendedClassLoader {
     }
 
     private Stream<URL> recursiveExpand(File file) {
-        return Optional.ofNullable(file.listFiles())
-            .map(Arrays::stream)
-            .orElse(Stream.of())
+        return StreamUtils.ofNullable(file.listFiles())
             .flatMap(Throwing.function(this::expandFile).sneakyThrow());
     }
 

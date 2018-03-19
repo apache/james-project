@@ -98,4 +98,18 @@ public class StreamUtilsTest {
         assertThat(StreamUtils.flatten(Stream.of(1), Stream.of(2)).collect(Guavate.toImmutableList()))
             .containsExactly(1, 2);
     }
+
+    @Test
+    public void ofNullableShouldReturnEmptyStreamWhenNull() {
+        assertThat(StreamUtils.ofNullable(null)
+            .collect(Guavate.toImmutableList()))
+            .isEmpty();
+    }
+
+    @Test
+    public void ofNullableShouldReturnAStreamWithElementsOfTheArray() {
+        assertThat(StreamUtils.ofNullable(ImmutableList.of(1, 2).toArray())
+            .collect(Guavate.toImmutableList()))
+            .containsExactly(1, 2);
+    }
 }
