@@ -213,7 +213,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullAccountId() throws Exception {
+    public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullAccountId() {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"accountId\": \"1\"}, \"#0\"]]")
@@ -227,7 +227,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullIfInState() throws Exception {
+    public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullIfInState() {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"ifInState\": \"1\"}, \"#0\"]]")
@@ -241,7 +241,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnNotDestroyedWhenUnknownMailbox() throws Exception {
+    public void setMessagesShouldReturnNotDestroyedWhenUnknownMailbox() {
 
         String unknownMailboxMessageId = randomMessageId().serialize();
         given()
@@ -262,7 +262,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnNotDestroyedWhenNoMatchingMessage() throws Exception {
+    public void setMessagesShouldReturnNotDestroyedWhenNoMatchingMessage() {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "mailbox");
 
         String messageId = randomMessageId().serialize();
@@ -1564,7 +1564,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         with()
             .header("Authorization", accessToken.serialize())
@@ -2218,7 +2218,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
 
 
@@ -2237,7 +2237,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldMoveMessageInSentWhenMessageIsSent() throws MailboxException {
+    public void setMessagesShouldMoveMessageInSentWhenMessageIsSent() {
         // Given
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
@@ -3529,7 +3529,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldReturnAttachmentsNotFoundWhenBlobIdDoesntExist() throws Exception {
+    public void setMessagesShouldReturnAttachmentsNotFoundWhenBlobIdDoesntExist() {
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
         String outboxId = getOutboxId(accessToken);
@@ -4352,7 +4352,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldSetUserAddedHeaders() throws Exception {
+    public void setMessagesShouldSetUserAddedHeaders() {
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -4379,7 +4379,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
@@ -4452,7 +4452,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldSetMultivaluedUserAddedHeaders() throws Exception {
+    public void setMessagesShouldSetMultivaluedUserAddedHeaders() {
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -4479,7 +4479,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
@@ -4536,7 +4536,7 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
-    public void setMessagesShouldFilterComputedHeadersFromUserAddedHeaders() throws Exception {
+    public void setMessagesShouldFilterComputedHeadersFromUserAddedHeaders() {
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -4563,7 +4563,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
@@ -4679,7 +4679,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
@@ -4919,7 +4919,7 @@ public abstract class SetMessagesMethodTest {
             .sender(fromAddress)
             .recipient(fromAddress)
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, USERS_DOMAIN);) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, USERS_DOMAIN)) {
             messageSender.sendMessage(mail);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
         }
@@ -5039,7 +5039,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         with()
             .header("Authorization", accessToken.serialize())
@@ -5085,7 +5085,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         String updateRequestBody = "[" +
                 "  [" +
@@ -5155,7 +5155,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         String updateRequestBody = "[" +
                 "  [" +
@@ -5225,7 +5225,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         String updateRequestBody = "[" +
                 "  [" +
@@ -5287,7 +5287,7 @@ public abstract class SetMessagesMethodTest {
         .then()
             .extract()
             .body()
-            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+            .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         String updateRequestBody = "[" +
                 "  [" +
