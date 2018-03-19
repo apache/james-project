@@ -124,7 +124,7 @@ public class CassandraDomainList extends AbstractDomainList {
             .setString(DOMAIN, domain.asString()))
             .join();
         if (!executed) {
-            throw new DomainListException(domain + " was not found");
+            throw new DomainListException(domain.name() + " was not found");
         }
     }
 

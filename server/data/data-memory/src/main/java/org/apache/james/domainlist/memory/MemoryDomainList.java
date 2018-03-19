@@ -54,7 +54,7 @@ public class MemoryDomainList extends AbstractDomainList {
     @Override
     public void addDomain(Domain domain) throws DomainListException {
         if (containsDomain(domain)) {
-            throw new DomainListException(domain + " already exists.");
+            throw new DomainListException(domain.name() + " already exists.");
         }
         domains.add(domain);
     }
@@ -62,7 +62,7 @@ public class MemoryDomainList extends AbstractDomainList {
     @Override
     public void removeDomain(Domain domain) throws DomainListException {
         if (!domains.remove(domain)) {
-            throw new DomainListException(domain + " was not found");
+            throw new DomainListException(domain.name() + " was not found");
         }
     }
 }

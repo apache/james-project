@@ -167,7 +167,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
         if (LOGGER.isDebugEnabled()) {
             for (Domain domain : allDomains) {
-                LOGGER.debug("Handling mail for: " + domain);
+                LOGGER.debug("Handling mail for: " + domain.name());
             }
         }
 

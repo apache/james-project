@@ -84,7 +84,7 @@ public class HBaseDomainList extends AbstractDomainList {
     @Override
     public void addDomain(Domain domain) throws DomainListException {
         if (containsDomain(domain)) {
-            throw new DomainListException(domain + " already exists.");
+            throw new DomainListException(domain.name() + " already exists.");
         }
         HTableInterface table = null;
         try {
