@@ -35,16 +35,24 @@ import static org.hamcrest.Matchers.startsWith;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
+import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
@@ -401,6 +409,45 @@ public abstract class SendMDNMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", is("invalidArguments"))
             .body(ARGUMENTS + ".description", containsString("problem: 'subject' is mandatory"));
+    }
+
+    @Test
+    public void sendMDNShouldReturnMaxQuotaReachedWhenUserReachedHisQuota() throws MailboxException {
+        sendAnInitialMessage();
+
+        List<String> messageIds = getMessageIdListForAccount(accessToken.serialize());
+
+        QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
+        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME, DefaultMailboxes.INBOX);
+        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
+
+        MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), USERNAME, MailboxConstants.INBOX);
+
+        String creationId = "creation-1";
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"setMessages\", {\"sendMDN\": {" +
+                "\"" + creationId + "\":{" +
+                "    \"messageId\":\"" + messageIds.get(0) + "\"," +
+                "    \"subject\":\"subject\"," +
+                "    \"textBody\":\"textBody\"," +
+                "    \"reportingUA\":\"reportingUA\"," +
+                "    \"disposition\":{" +
+                "        \"actionMode\":\"automatic-action\"," +
+                "        \"sendingMode\":\"MDN-sent-automatically\"," +
+                "        \"type\":\"processed\"" +
+                "    }" +
+                "}" +
+                "}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".MDNNotSent", hasEntry(
+                equalTo(creationId),
+                hasEntry("type", "maxQuotaReached")));
     }
 
     @Test

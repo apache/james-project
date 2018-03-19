@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -118,6 +119,14 @@ public class SendMDNProcessor implements SetMessagesProcessor {
                         .description(String.format("Message with id %s not found. Thus could not send MDN.",
                             MDNCreationEntry.getValue().getMessageId().serialize()))
                         .type("invalidArgument")
+                        .build());
+
+        } catch (OverQuotaException e) {
+            return SetMessagesResponse.builder()
+                .mdnNotSent(MDNCreationEntry.getCreationId(),
+                    SetError.builder()
+                        .description(e.getMessage())
+                        .type("maxQuotaReached")
                         .build());
 
         } catch (Exception e) {

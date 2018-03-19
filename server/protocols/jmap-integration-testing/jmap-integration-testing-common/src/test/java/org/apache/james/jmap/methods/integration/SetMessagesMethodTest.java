@@ -47,6 +47,7 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
+import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.Event;
@@ -73,11 +75,15 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
@@ -139,6 +145,7 @@ public abstract class SetMessagesMethodTest {
     private DataProbe dataProbe;
     private MessageIdProbe messageProbe;
     private ACLProbe aclProbe;
+    private MailboxId inboxId;
 
     @Before
     public void setup() throws Throwable {
@@ -161,7 +168,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addDomain(USERS_DOMAIN);
         dataProbe.addUser(USERNAME, PASSWORD);
         dataProbe.addUser(BOB, BOB_PASSWORD);
-        mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
+        inboxId = mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
 
@@ -1349,6 +1356,46 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(ARGUMENTS + ".created", hasKey(messageCreationId));
+    }
+
+    @Test
+    public void setMessagesShouldNotAllowDraftCreationWhenOverQuota() throws MailboxException {
+        QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
+        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME, DefaultMailboxes.INBOX);
+        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
+
+        MessageAppender.fillMailbox(mailboxProbe, USERNAME, MailboxConstants.INBOX);
+
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", aMapWithSize(0))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("maxQuotaReached"));
     }
 
     @Test
@@ -2663,6 +2710,56 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
+    }
+
+    @Test
+    public void setMessagesShouldTriggerMaxQuotaReachedWhenTryingToSendMessageAndQuotaReached() throws Exception {
+        QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
+        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME, DefaultMailboxes.INBOX);
+        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
+
+        MessageAppender.fillMailbox(mailboxProbe, USERNAME, MailboxConstants.INBOX);
+
+        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String password = "password";
+        dataProbe.addUser(recipientAddress, password);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        await();
+
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + recipientAddress + "\"}]," +
+            "        \"cc\": [{ \"name\": \"ALICE\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        // Given
+        given()
+            .header("Authorization", this.accessToken.serialize())
+            .body(requestBody)
+        // When
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", aMapWithSize(0))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("maxQuotaReached"));
     }
 
     @Test

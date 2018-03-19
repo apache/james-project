@@ -56,6 +56,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -173,12 +174,19 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
         } catch (MailboxNotOwnedException e) {
             LOG.error("Appending message in an unknown mailbox", e);
-            responseBuilder.notCreated(create.getCreationId(), 
-                    SetError.builder()
-                        .type("error")
-                        .properties(MessageProperty.mailboxIds)
-                        .description("MailboxId invalid")
-                        .build());
+            responseBuilder.notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type("error")
+                    .properties(MessageProperty.mailboxIds)
+                    .description("MailboxId invalid")
+                    .build());
+
+        } catch (OverQuotaException e) {
+            responseBuilder.notCreated(create.getCreationId(),
+                SetError.builder()
+                    .type("maxQuotaReached")
+                    .description(e.getMessage())
+                    .build());
 
         } catch (MailboxException | MessagingException e) {
             LOG.error("Unexpected error while creating message", e);
