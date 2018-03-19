@@ -60,19 +60,19 @@ public class AddDeliveredToHeaderTest {
 
         testee.service(mail);
 
-        PerRecipientHeaders expectedResult = new PerRecipientHeaders();
-        expectedResult.addHeaderForRecipient(
-            PerRecipientHeaders.Header.builder()
-                .name(AddDeliveredToHeader.DELIVERED_TO)
-                .value(MailAddressFixture.ANY_AT_JAMES.asString())
-                .build(),
-            MailAddressFixture.ANY_AT_JAMES);
-        expectedResult.addHeaderForRecipient(
-            PerRecipientHeaders.Header.builder()
-                .name(AddDeliveredToHeader.DELIVERED_TO)
-                .value(MailAddressFixture.OTHER_AT_JAMES.asString())
-                .build(),
-            MailAddressFixture.OTHER_AT_JAMES);
+        PerRecipientHeaders expectedResult = new PerRecipientHeaders()
+            .addHeaderForRecipient(
+                PerRecipientHeaders.Header.builder()
+                    .name(AddDeliveredToHeader.DELIVERED_TO)
+                    .value(MailAddressFixture.ANY_AT_JAMES.asString())
+                    .build(),
+                MailAddressFixture.ANY_AT_JAMES)
+            .addHeaderForRecipient(
+                PerRecipientHeaders.Header.builder()
+                    .name(AddDeliveredToHeader.DELIVERED_TO)
+                    .value(MailAddressFixture.OTHER_AT_JAMES.asString())
+                    .build(),
+                MailAddressFixture.OTHER_AT_JAMES);
 
         assertThat(mail.getPerRecipientSpecificHeaders())
             .isEqualTo(expectedResult);

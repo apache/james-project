@@ -43,4 +43,5 @@ public class Constants {
     public static final String PASSWORD = "secret";
     public static final String FROM = "user@" + DEFAULT_DOMAIN;
     public static final String RECIPIENT = "user2@" + DEFAULT_DOMAIN;
+    public static final String RECIPIENT2 = "user3@" + DEFAULT_DOMAIN;
 }

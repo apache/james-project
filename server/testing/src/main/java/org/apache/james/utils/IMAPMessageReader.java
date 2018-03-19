@@ -51,6 +51,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         return this;
     }
 
+    public IMAPMessageReader disconnect() throws IOException {
+        imapClient.disconnect();
+        return this;
+    }
+
     public IMAPMessageReader login(String user, String password) throws IOException {
         imapClient.login(user, password);
         return this;

@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
+import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -78,12 +79,6 @@ public class SpamAssassinTest {
                         .matcher(All.class)
                         .mailet(SpamAssassin.class)
                         .addProperty(SpamAssassin.SPAMD_HOST, spamAssassinContainer.getContainerIp()))
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(MailAttributesToMimeHeaders.class)
-                        .addProperty("simplemapping",
-                            SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME + "," +
-                                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ";" + SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME))
                     .addMailetsFrom(CommonProcessors.deliverOnlyTransport()));
 
         jamesServer = TemporaryJamesServer.builder()
@@ -95,6 +90,7 @@ public class SpamAssassinTest {
         probe.addDomain(DEFAULT_DOMAIN);
         probe.addUser(FROM, PASSWORD);
         probe.addUser(RECIPIENT, PASSWORD);
+        probe.addUser(RECIPIENT2, PASSWORD);
     }
 
     @After
@@ -105,7 +101,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content"))
+            .sendMessage(mailWithContent("This is the content", RECIPIENT))
             .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -122,7 +118,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent(SPAM_CONTENT))
+            .sendMessage(mailWithContent(SPAM_CONTENT, RECIPIENT))
             .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -138,7 +134,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content"))
+            .sendMessage(mailWithContent("This is the content", RECIPIENT))
             .awaitSent(awaitAtMostOneMinute);
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
@@ -151,14 +147,42 @@ public class SpamAssassinTest {
         assertThat(receivedHeaders).contains(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME + ": No");
     }
 
-    private FakeMail.Builder mailWithContent(String textContent) throws MessagingException {
+    @Test
+    public void spamAssassinShouldAppendNewHeaderPerRecipientOnMessage() throws Exception {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(mailWithContent("This is the content", RECIPIENT, RECIPIENT2))
+            .awaitSent(awaitAtMostOneMinute);
+
+        messageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(messageReader.readFirstMessageHeaders())
+            .contains(
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+
+        messageReader.disconnect()
+            .connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT2, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+
+        assertThat(messageReader.readFirstMessageHeaders())
+            .contains(
+                SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME,
+                SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME);
+    }
+
+    private FakeMail.Builder mailWithContent(String textContent, String... recipients) throws MessagingException {
         return FakeMail.builder()
             .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                 .setSender(FROM)
-                .addToRecipient(RECIPIENT)
+                .addToRecipient(recipients)
                 .setSubject("This is the subject")
                 .setText(textContent))
             .sender(FROM)
-            .recipient(RECIPIENT);
+            .recipients(recipients);
     }
 }
