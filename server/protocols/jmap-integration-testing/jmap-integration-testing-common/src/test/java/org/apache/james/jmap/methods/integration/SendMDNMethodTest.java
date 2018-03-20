@@ -135,7 +135,7 @@ public abstract class SendMDNMethodTest {
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
-        calmlyAwait.until(() -> !getMessageIdListForAccount(homerAccessToken.serialize()).isEmpty());
+        calmlyAwait.until(() -> !getMessageIdListForAccount(homerAccessToken).isEmpty());
     }
 
     private void sendAWrongInitialMessage() {
@@ -167,7 +167,7 @@ public abstract class SendMDNMethodTest {
             .body()
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
-        calmlyAwait.until(() -> !getMessageIdListForAccount(homerAccessToken.serialize()).isEmpty());
+        calmlyAwait.until(() -> !getMessageIdListForAccount(homerAccessToken).isEmpty());
     }
 
     private URIBuilder baseUri() {
@@ -188,7 +188,7 @@ public abstract class SendMDNMethodTest {
     public void sendMDNShouldReturnCreatedMessageId() {
         bartSendMessageToHomer();
 
-        List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
+        List<String> messageIds = getMessageIdListForAccount(homerAccessToken);
 
         String creationId = "creation-1";
         given()
@@ -253,7 +253,7 @@ public abstract class SendMDNMethodTest {
     @Test
     public void sendMDNShouldFailOnInvalidMessages() {
         sendAWrongInitialMessage();
-        List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
+        List<String> messageIds = getMessageIdListForAccount(homerAccessToken);
 
         String creationId = "creation-1";
 
@@ -292,7 +292,7 @@ public abstract class SendMDNMethodTest {
     public void sendMDNShouldSendAMDNBackToTheOriginalMessageAuthor() {
         bartSendMessageToHomer();
 
-        List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
+        List<String> messageIds = getMessageIdListForAccount(homerAccessToken);
 
         // HOMER sends a MDN back to BART
         String creationId = "creation-1";
@@ -337,7 +337,7 @@ public abstract class SendMDNMethodTest {
     public void sendMDNShouldPositionTheReportAsAnAttachment() {
         bartSendMessageToHomer();
 
-        List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
+        List<String> messageIds = getMessageIdListForAccount(homerAccessToken);
 
         // USER sends a MDN back to BART
         String creationId = "creation-1";
@@ -415,7 +415,7 @@ public abstract class SendMDNMethodTest {
     public void sendMDNShouldReturnMaxQuotaReachedWhenUserReachedHisQuota() throws MailboxException {
         bartSendMessageToHomer();
 
-        List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
+        List<String> messageIds = getMessageIdListForAccount(homerAccessToken);
 
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER, DefaultMailboxes.INBOX);
@@ -532,9 +532,9 @@ public abstract class SendMDNMethodTest {
             .getList(ARGUMENTS + ".list");
     }
 
-    private List<String> getMessageIdListForAccount(String accessToken) {
+    private List<String> getMessageIdListForAccount(AccessToken accessToken) {
         return with()
-            .header("Authorization", accessToken)
+            .header("Authorization", accessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
             .post("/jmap")
         .then()
