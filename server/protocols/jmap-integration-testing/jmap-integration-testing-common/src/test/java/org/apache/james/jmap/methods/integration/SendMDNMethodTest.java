@@ -105,7 +105,7 @@ public abstract class SendMDNMethodTest {
         bartAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BART, BOB_PASSWORD);
     }
 
-    private void sendAnInitialMessage() {
+    private void bartSendMessageToHomer() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
         String requestBody = "[" +
@@ -186,7 +186,7 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldReturnCreatedMessageId() {
-        sendAnInitialMessage();
+        bartSendMessageToHomer();
 
         List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
 
@@ -217,7 +217,7 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldFailOnUnknownMessageId() {
-        sendAnInitialMessage();
+        bartSendMessageToHomer();
 
         String creationId = "creation-1";
         String randomMessageId = randomMessageId().serialize();
@@ -290,7 +290,7 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldSendAMDNBackToTheOriginalMessageAuthor() {
-        sendAnInitialMessage();
+        bartSendMessageToHomer();
 
         List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
 
@@ -335,7 +335,7 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldPositionTheReportAsAnAttachment() {
-        sendAnInitialMessage();
+        bartSendMessageToHomer();
 
         List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
 
@@ -413,7 +413,7 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldReturnMaxQuotaReachedWhenUserReachedHisQuota() throws MailboxException {
-        sendAnInitialMessage();
+        bartSendMessageToHomer();
 
         List<String> messageIds = getMessageIdListForAccount(homerAccessToken.serialize());
 
