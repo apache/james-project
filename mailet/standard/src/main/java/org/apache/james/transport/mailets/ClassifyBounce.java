@@ -91,7 +91,7 @@ public class ClassifyBounce extends GenericMailet {
             try {
                 text = getRawText(message.getContent());
             } catch (IOException e) {
-                throw (new MessagingException("Unable to extract message body. [" + e.getClass().getName() + "] " + e.getMessage()));
+                throw (new MessagingException("Unable to extract message body.",  e));
             }
         }
 

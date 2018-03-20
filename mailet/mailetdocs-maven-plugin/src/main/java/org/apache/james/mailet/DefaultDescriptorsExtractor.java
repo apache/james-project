@@ -119,11 +119,11 @@ public class DefaultDescriptorsExtractor {
             }
 
         } catch (NoClassDefFoundError | ClassNotFoundException e) {
-            log.error("NotFound: " + e.getMessage());
+            log.error("NotFound", e);
         } catch (SecurityException e) {
-            log.error("SE: " + e.getMessage());
+            log.error("Security exception", e);
         } catch (IllegalArgumentException e) {
-            log.error("IAE2: " + e.getMessage());
+            log.error("IllegalArgumentException", e);
         }
 
         logInterfacesImplemented(log, nextClass);
@@ -189,7 +189,7 @@ public class DefaultDescriptorsExtractor {
 
     private void handleInfoLoadFailure(Log log, String nameOfClass,
             final Type type, Exception e) {
-        log.info("Cannot load " + type + " info for " + nameOfClass + ": " + e.getMessage());
+        log.info("Cannot load " + type + " info for " + nameOfClass, e);
         log.debug(e);
     }
 

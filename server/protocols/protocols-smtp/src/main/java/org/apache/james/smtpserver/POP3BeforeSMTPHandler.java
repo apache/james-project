@@ -42,7 +42,7 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
         try {
             setExpireTime(config.getString("expireTime", null));
         } catch (NumberFormatException e) {
-            throw new ConfigurationException("Please configure a valid expireTime: " + e.getMessage());
+            throw new ConfigurationException("Please configure a valid expireTime", e);
         }
     }
 

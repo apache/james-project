@@ -629,7 +629,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
                 new MailHeaders(is);
                 return is;
             } catch (IOException e) {
-                throw new MessagingException("Unable to read the stream: " + e.getMessage(), e);
+                throw new MessagingException("Unable to read the stream", e);
             }
         } else {
             return super.getRawInputStream();

@@ -116,7 +116,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         try {
             objectRepository.put(user.getUserName(), user);
         } catch (Exception e) {
-            throw new UsersRepositoryException("Exception caught while storing user: " + e);
+            throw new UsersRepositoryException("Exception caught while storing user", e);
         }
     }
 
@@ -132,7 +132,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
             try {
                 return (User) objectRepository.get(name);
             } catch (Exception e) {
-                throw new UsersRepositoryException("Exception while retrieving user: " + e.getMessage());
+                throw new UsersRepositoryException("Exception while retrieving user", e);
             }
         } else {
             return null;
@@ -178,7 +178,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         try {
             objectRepository.put(user.getUserName(), user);
         } catch (Exception e) {
-            throw new UsersRepositoryException("Exception caught while storing user: " + e);
+            throw new UsersRepositoryException("Exception caught while storing user", e);
         }
     }
 
@@ -218,7 +218,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
                 return false;
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception retrieving User" + e);
+            throw new RuntimeException("Exception retrieving User", e);
         }
         return user.verifyPassword(password);
     }

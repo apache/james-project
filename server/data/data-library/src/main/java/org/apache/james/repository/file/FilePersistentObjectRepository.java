@@ -60,7 +60,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 inputStream.close();
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Exception caught while retrieving an object, cause: " + e.toString());
+            throw new RuntimeException("Exception caught while retrieving an object", e);
         }
     }
 
@@ -86,7 +86,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 inputStream.close();
             }
         } catch (Throwable e) {
-            throw new RuntimeException("Exception caught while retrieving an object: " + e);
+            throw new RuntimeException("Exception caught while retrieving an object", e);
         }
 
     }
@@ -100,7 +100,7 @@ public class FilePersistentObjectRepository extends AbstractFileRepository imple
                 LOGGER.debug("storing object {} for key {}", value, key);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Exception caught while storing an object: " + e);
+            throw new RuntimeException("Exception caught while storing an object", e);
         }
     }
 

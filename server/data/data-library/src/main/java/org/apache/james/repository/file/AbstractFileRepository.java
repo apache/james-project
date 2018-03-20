@@ -172,7 +172,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         try {
             child = createChildRepository();
         } catch (Exception e) {
-            throw new RuntimeException("Cannot create child repository " + childName + " : " + e);
+            throw new RuntimeException("Cannot create child repository " + childName, e);
         }
 
         child.setFileSystem(fileSystem);
@@ -186,7 +186,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         try {
             child.init();
         } catch (Exception e) {
-            throw new RuntimeException("Cannot initialize child " + "repository " + childName + " : " + e);
+            throw new RuntimeException("Cannot initialize child " + "repository " + childName, e);
         }
 
         if (LOGGER.isDebugEnabled()) {
@@ -255,7 +255,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
         } catch (FileNotFoundException e) { 
             return false;
         } catch (Exception e) {
-            throw new RuntimeException("Exception caught while removing" + " an object: " + e);
+            throw new RuntimeException("Exception caught while removing" + " an object", e);
         }
     }
     
@@ -275,7 +275,7 @@ public abstract class AbstractFileRepository implements Repository, Configurable
             }
             return file.exists();
         } catch (Exception e) {
-            throw new RuntimeException("Exception caught while searching " + "an object: " + e);
+            throw new RuntimeException("Exception caught while searching " + "an object", e);
         }
     }
 
