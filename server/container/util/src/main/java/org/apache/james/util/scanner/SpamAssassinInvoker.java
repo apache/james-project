@@ -115,10 +115,10 @@ public class SpamAssassinInvoker {
                 .map(this::processSpam)
                 .findFirst()
                 .orElse(SpamAssassinResult.empty());
-        } catch (UnknownHostException e1) {
+        } catch (UnknownHostException e) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
-        } catch (IOException | MessagingException e1) {
-            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e1);
+        } catch (IOException | MessagingException e) {
+            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort, e);
         }
     }
 
@@ -189,7 +189,7 @@ public class SpamAssassinInvoker {
         } catch (UnknownHostException e) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
         } catch (IOException e) {
-            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e);
+            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort, e);
         }
     }
 
@@ -230,7 +230,7 @@ public class SpamAssassinInvoker {
         } catch (UnknownHostException e) {
             throw new MessagingException("Error communicating with spamd. Unknown host: " + spamdHost);
         } catch (IOException e) {
-            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort + " Exception: " + e);
+            throw new MessagingException("Error communicating with spamd on " + spamdHost + ":" + spamdPort, e);
         }
     }
 
