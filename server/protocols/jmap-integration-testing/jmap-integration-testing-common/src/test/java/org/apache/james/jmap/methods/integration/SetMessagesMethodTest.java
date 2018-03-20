@@ -145,7 +145,6 @@ public abstract class SetMessagesMethodTest {
     private DataProbe dataProbe;
     private MessageIdProbe messageProbe;
     private ACLProbe aclProbe;
-    private MailboxId inboxId;
 
     @Before
     public void setup() throws Throwable {
@@ -168,7 +167,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addDomain(USERS_DOMAIN);
         dataProbe.addUser(USERNAME, PASSWORD);
         dataProbe.addUser(BOB, BOB_PASSWORD);
-        inboxId = mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
 
@@ -195,6 +194,10 @@ public abstract class SetMessagesMethodTest {
 
     private String getOutboxId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.OUTBOX);
+    }
+
+    private String getInboxId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.INBOX);
     }
 
     private String getDraftId(AccessToken accessToken) {
@@ -1175,7 +1178,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
-            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("error"))
+            .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("anErrorOccurred"))
             .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", endsWith("can not be found"));
     }
 
@@ -1249,7 +1252,7 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("error"))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("anErrorOccurred"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("MailboxId invalid"));
     }
@@ -1396,6 +1399,41 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("maxQuotaReached"));
+    }
+
+    @Test
+    public void setMessagesShouldNotAllowCopyWhenOverQuota() throws MailboxException {
+        QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
+        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME, DefaultMailboxes.INBOX);
+        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
+
+        List<ComposedMessageId> composedMessageIds = MessageAppender.fillMailbox(mailboxProbe, USERNAME, MailboxConstants.INBOX);
+
+        String messageId = composedMessageIds.get(0).getMessageId().serialize();
+        String requestBody =  "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"update\": { \"" + messageId + "\" : {" +
+            "        \"mailboxIds\": [\"" + getInboxId(accessToken) + "\",\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".updated", hasSize(0))
+            .body(ARGUMENTS + ".notUpdated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notUpdated." + messageId + ".type", equalTo("maxQuotaReached"));
     }
 
     @Test
@@ -1989,7 +2027,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("error"))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("anErrorOccurred"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("can not be found"));
     }
 
@@ -2034,7 +2072,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
-            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("error"))
+            .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("anErrorOccurred"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].properties", contains("mailboxIds"))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].description", endsWith("MailboxId invalid"));
     }

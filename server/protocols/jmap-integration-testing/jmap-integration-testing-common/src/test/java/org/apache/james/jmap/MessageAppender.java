@@ -22,6 +22,7 @@ package org.apache.james.jmap;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.List;
 
 import javax.mail.Flags;
 
@@ -29,19 +30,24 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 public class MessageAppender {
 
     private MessageAppender() {}
 
-    public static void fillMailbox(MailboxProbe mailboxProbe, String user, String mailbox) {
+    public static List<ComposedMessageId> fillMailbox(MailboxProbe mailboxProbe, String user, String mailbox) {
+        ImmutableList.Builder<ComposedMessageId> insertedMessages = ImmutableList.builder();
         try {
             for (int i = 0; i < 1000; ++i) {
-                ComposedMessageId message = mailboxProbe.appendMessage(user, MailboxPath.forUser(user, mailbox),
-                    new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), new Date(), false, new Flags());
+                String mailContent = "Subject: test\r\n\r\ntestmail" + String.valueOf(i);
+                ByteArrayInputStream messagePayload = new ByteArrayInputStream(mailContent.getBytes(StandardCharsets.UTF_8));
+                insertedMessages.add(
+                    mailboxProbe.appendMessage(user, MailboxPath.forUser(user, mailbox), messagePayload, new Date(), false, new Flags()));
             }
         } catch (MailboxException ignored) {
             //we expect an exception to be thrown because of quota reached
         }
+        return insertedMessages.build();
     }
 }

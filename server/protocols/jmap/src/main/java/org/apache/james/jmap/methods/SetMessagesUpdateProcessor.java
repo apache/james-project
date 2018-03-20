@@ -145,6 +145,12 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .build();
 
             handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyMailboxIds));
+        } catch (OverQuotaException e) {
+            builder.notUpdated(messageId,
+                SetError.builder()
+                    .type(SetError.Type.MAX_QUOTA_REACHED)
+                    .description(e.getMessage())
+                    .build());
         } catch (MailboxException | IOException | MessagingException e) {
             handleMessageUpdateException(messageId, builder, e);
         } catch (IllegalArgumentException e) {
