@@ -107,7 +107,7 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
             .forEach(entry ->
                 builder.notCreated(entry.getKey(),
                         SetError.builder()
-                        .type("invalidArguments")
+                        .type(SetError.Type.INVALID_ARGUMENTS)
                         .description("The created mailboxes introduce a cycle.")
                         .build()));
     }
@@ -128,36 +128,36 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                 creationIdsToCreatedMailboxId.put(mailboxCreationId, mailbox.get().getId());
             } else {
                 builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type("anErrorOccurred")
+                    .type(SetError.Type.ERROR)
                     .description("An error occurred when creating the mailbox")
                     .build());
             }
         } catch (TooLongMailboxNameException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("The mailbox name length is too long")
                 .build());
         } catch (MailboxNotOwnedException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("The mailbox can not be created with a parent mailbox belonging to another user")
                 .build());
         } catch (MailboxNameException | MailboxParentNotFoundException e) {
             builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(e.getMessage())
                     .build());
         } catch (MailboxExistsException e) {
             String message = String.format("The mailbox '%s' already exists.", mailboxCreationId.getCreationId());
             builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type("invalidArguments")
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(message)
                     .build());
         } catch (MailboxException e) {
             String message = String.format("An error occurred when creating the mailbox '%s'", mailboxCreationId.getCreationId());
             LOGGER.error(message, e);
             builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type("anErrorOccurred")
+                    .type(SetError.Type.ERROR)
                     .description(message)
                     .build());
         }

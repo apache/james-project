@@ -70,10 +70,10 @@ public class SetMessagesResponseTest {
                 .build());
         ImmutableList<MessageId> updated = ImmutableList.of(TestMessageId.of(2));
         ImmutableList<MessageId> destroyed = ImmutableList.of(TestMessageId.of(3));
-        ImmutableMap<CreationMessageId, SetError> notCreated = ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type("created").build());
-        ImmutableMap<MessageId, SetError> notUpdated = ImmutableMap.of(TestMessageId.of(4), SetError.builder().type("updated").build());
-        ImmutableMap<MessageId, SetError> notDestroyed  = ImmutableMap.of(TestMessageId.of(5), SetError.builder().type("destroyed").build());
-        ImmutableMap<CreationMessageId, SetError> mdnNotSent = ImmutableMap.of(CreationMessageId.of("dead-beef-defec9"), SetError.builder().type("MDNNotSent").build());
+        ImmutableMap<CreationMessageId, SetError> notCreated = ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type(SetError.Type.INVALID_PROPERTIES).build());
+        ImmutableMap<MessageId, SetError> notUpdated = ImmutableMap.of(TestMessageId.of(4), SetError.builder().type(SetError.Type.INVALID_ARGUMENTS).build());
+        ImmutableMap<MessageId, SetError> notDestroyed  = ImmutableMap.of(TestMessageId.of(5), SetError.builder().type(SetError.Type.ERROR).build());
+        ImmutableMap<CreationMessageId, SetError> mdnNotSent = ImmutableMap.of(CreationMessageId.of("dead-beef-defec9"), SetError.builder().type(SetError.Type.NOT_FOUND).build());
         ImmutableMap<CreationMessageId, MessageId> mdnSent = ImmutableMap.of(CreationMessageId.of("dead-beef-defed0"), TestMessageId.of(12));
         SetMessagesResponse expected = new SetMessagesResponse(null, null, null, created, mdnSent, updated, destroyed, notCreated, mdnNotSent, notUpdated, notDestroyed);
 
@@ -99,9 +99,9 @@ public class SetMessagesResponseTest {
                 .created(buildMessage(CreationMessageId.of("user|inbox|1"), TestMessageId.of(1)))
                 .updated(ImmutableList.of(TestMessageId.of(2)))
                 .destroyed(ImmutableList.of(TestMessageId.of(3)))
-                .notCreated(ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type("type").build()))
-                .notUpdated(ImmutableMap.of(TestMessageId.of(5), SetError.builder().type("type").build()))
-                .notDestroyed(ImmutableMap.of(TestMessageId.of(6), SetError.builder().type("type").build()))
+                .notCreated(ImmutableMap.of(CreationMessageId.of("dead-beef-defec8"), SetError.builder().type(SetError.Type.INVALID_PROPERTIES).build()))
+                .notUpdated(ImmutableMap.of(TestMessageId.of(5), SetError.builder().type(SetError.Type.ERROR).build()))
+                .notDestroyed(ImmutableMap.of(TestMessageId.of(6), SetError.builder().type(SetError.Type.NOT_FOUND).build()))
                 .build();
 
         // When

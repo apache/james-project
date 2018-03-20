@@ -98,7 +98,7 @@ public class SetMailboxesUpdateProcessorTest {
         verify(mockBuilder, times(1)).id(Mockito.eq(mailboxId));
         verify(mockBuilder, times(1)).session(Mockito.eq(mockedMailboxSession));
         assertThat(setMailboxesResponse.getUpdated()).isEmpty();
-        assertThat(setMailboxesResponse.getNotUpdated()).containsEntry(mailboxId, SetError.builder().type("anErrorOccurred").description("An error occurred when updating the mailbox").build());
+        assertThat(setMailboxesResponse.getNotUpdated()).containsEntry(mailboxId, SetError.builder().type(SetError.Type.ERROR).description("An error occurred when updating the mailbox").build());
     }
 
     @Test

@@ -31,12 +31,30 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 @JsonDeserialize(builder = SetError.Builder.class)
 public class SetError {
+
+    public enum Type {
+        INVALID_ARGUMENTS("invalidArguments"),
+        INVALID_PROPERTIES("invalidProperties"),
+        ERROR("anErrorOccurred"),
+        MAX_QUOTA_REACHED("maxQuotaReached"),
+        MAILBOX_HAS_CHILD("mailboxHasChild"),
+        NOT_FOUND("notFound");
+
+        private final String stringValue;
+
+        Type(String stringValue) {
+            this.stringValue = stringValue;
+        }
+
+        public String asString() {
+            return stringValue;
+        }
+    }
 
     public static Builder builder() {
         return new Builder();
@@ -45,14 +63,14 @@ public class SetError {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
 
-        private String type;
+        private Type type;
         private String description;
         private Optional<ImmutableSet<MessageProperty>> properties = Optional.empty();
 
         protected Builder() {
         }
 
-        public Builder type(String type) {
+        public Builder type(Type type) {
             this.type = type;
             return this;
         }
@@ -75,17 +93,17 @@ public class SetError {
         }
 
         public SetError build() {
-            Preconditions.checkState(!Strings.isNullOrEmpty(type), "'type' is mandatory");
+            Preconditions.checkState(type != null, "'type' is mandatory");
             return new SetError(type, Optional.ofNullable(description), properties);
         }
     }
 
-    private final String type;
+    private final Type type;
     private final Optional<String> description;
     private final Optional<ImmutableSet<MessageProperty>> properties;
 
 
-    @VisibleForTesting SetError(String type, Optional<String> description, Optional<ImmutableSet<MessageProperty>> properties) {
+    @VisibleForTesting SetError(Type type, Optional<String> description, Optional<ImmutableSet<MessageProperty>> properties) {
         this.type = type;
         this.description = description;
         this.properties = properties;
@@ -100,7 +118,7 @@ public class SetError {
     
     @JsonSerialize
     public String getType() {
-        return type;
+        return type.asString();
     }
 
     @JsonSerialize

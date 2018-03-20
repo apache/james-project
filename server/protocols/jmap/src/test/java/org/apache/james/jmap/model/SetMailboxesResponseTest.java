@@ -40,9 +40,9 @@ public class SetMailboxesResponseTest {
                 .build());
         ImmutableList<MailboxId> updated = ImmutableList.of(InMemoryId.of(2));
         ImmutableList<MailboxId> destroyed = ImmutableList.of(InMemoryId.of(3));
-        ImmutableMap<MailboxCreationId, SetError> notCreated = ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type("created").build());
-        ImmutableMap<MailboxId, SetError> notUpdated = ImmutableMap.of(InMemoryId.of(4), SetError.builder().type("updated").build());
-        ImmutableMap<MailboxId, SetError> notDestroyed  = ImmutableMap.of(InMemoryId.of(5), SetError.builder().type("destroyed").build());
+        ImmutableMap<MailboxCreationId, SetError> notCreated = ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type(SetError.Type.INVALID_PROPERTIES).build());
+        ImmutableMap<MailboxId, SetError> notUpdated = ImmutableMap.of(InMemoryId.of(4), SetError.builder().type(SetError.Type.INVALID_ARGUMENTS).build());
+        ImmutableMap<MailboxId, SetError> notDestroyed  = ImmutableMap.of(InMemoryId.of(5), SetError.builder().type(SetError.Type.NOT_FOUND).build());
         SetMailboxesResponse expected = new SetMailboxesResponse(created, updated, destroyed, notCreated, notUpdated, notDestroyed);
 
         SetMailboxesResponse setMessagesResponse = SetMailboxesResponse.builder()
@@ -64,8 +64,8 @@ public class SetMailboxesResponseTest {
         SetMailboxesResponse testee = SetMailboxesResponse.builder()
                 .created(buildMailbox(MailboxCreationId.of("1")))
                 .destroyed(InMemoryId.of(2))
-                .notCreated(ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type("type").build()))
-                .notDestroyed(ImmutableMap.of(InMemoryId.of(3), SetError.builder().type("type").build()))
+                .notCreated(ImmutableMap.of(MailboxCreationId.of("dead-beef-defec8"), SetError.builder().type(SetError.Type.INVALID_PROPERTIES).build()))
+                .notDestroyed(ImmutableMap.of(InMemoryId.of(3), SetError.builder().type(SetError.Type.INVALID_PROPERTIES).build()))
                 .build();
 
         // When

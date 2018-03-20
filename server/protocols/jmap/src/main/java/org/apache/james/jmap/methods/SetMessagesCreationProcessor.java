@@ -122,7 +122,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (MailboxSendingNotAllowedException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
-                        .type("invalidProperties")
+                        .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.from)
                         .description("Invalid 'from' field. Must be " +
                                 e.getAllowedFrom())
@@ -131,7 +131,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (InvalidDraftKeywordsException e) {
             responseBuilder.notCreated(create.getCreationId(),
                 SetError.builder()
-                    .type("invalidProperties")
+                    .type(SetError.Type.INVALID_PROPERTIES)
                     .properties(MessageProperty.keywords)
                     .description(e.getMessage())
                     .build());
@@ -139,7 +139,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (AttachmentsNotFoundException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetMessagesError.builder()
-                        .type("invalidProperties")
+                        .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.attachments)
                         .attachmentsNotFound(e.getAttachmentIds())
                         .description("Attachment not found")
@@ -148,7 +148,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (InvalidMailboxForCreationException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
-                        .type("invalidProperties")
+                        .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.mailboxIds)
                         .description("Message creation is only supported in mailboxes with role Draft and Outbox")
                         .build());
@@ -156,7 +156,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (MessageHasNoMailboxException e) {
             responseBuilder.notCreated(create.getCreationId(),
                     SetError.builder()
-                        .type("invalidProperties")
+                        .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.mailboxIds)
                         .description("Message needs to be in at least one mailbox")
                         .build());
@@ -168,7 +168,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (MailboxNotFoundException e) {
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
-                        .type("error")
+                        .type(SetError.Type.ERROR)
                         .description(e.getMessage())
                         .build());
 
@@ -176,7 +176,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             LOG.error("Appending message in an unknown mailbox", e);
             responseBuilder.notCreated(create.getCreationId(),
                 SetError.builder()
-                    .type("error")
+                    .type(SetError.Type.ERROR)
                     .properties(MessageProperty.mailboxIds)
                     .description("MailboxId invalid")
                     .build());
@@ -184,7 +184,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         } catch (OverQuotaException e) {
             responseBuilder.notCreated(create.getCreationId(),
                 SetError.builder()
-                    .type("maxQuotaReached")
+                    .type(SetError.Type.MAX_QUOTA_REACHED)
                     .description(e.getMessage())
                     .build());
 
@@ -192,7 +192,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             LOG.error("Unexpected error while creating message", e);
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
-                        .type("error")
+                        .type(SetError.Type.ERROR)
                         .description("unexpected error")
                         .build());
         }
@@ -308,7 +308,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {
         return SetError.builder()
-                .type("invalidProperties")
+                .type(SetError.Type.INVALID_PROPERTIES)
                 .properties(collectMessageProperties(validationErrors))
                 .description(formatValidationErrorMessge(validationErrors))
                 .build();

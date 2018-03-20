@@ -79,7 +79,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
             } catch (MessageNotFoundException e) {
                 return SetMessagesResponse.builder().notDestroyed(messageId,
                         SetError.builder()
-                                .type("notFound")
+                                .type(SetError.Type.NOT_FOUND)
                                 .description("The message " + messageId.serialize() + " can't be found")
                                 .build())
                         .build();
@@ -87,7 +87,7 @@ public class SetMessagesDestructionProcessor implements SetMessagesProcessor {
                 LOGGER.error("An error occurred when deleting a message", e);
                 return SetMessagesResponse.builder().notDestroyed(messageId,
                         SetError.builder()
-                                .type("anErrorOccurred")
+                                .type(SetError.Type.ERROR)
                                 .description("An error occurred while deleting message " + messageId.serialize())
                                 .build())
                         .build();

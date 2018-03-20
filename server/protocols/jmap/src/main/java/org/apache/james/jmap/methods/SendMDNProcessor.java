@@ -109,7 +109,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
                                 " A Message Delivery Notification can not be generated for it." +
                                 " Explanation: " + e.getExplanation(),
                             MDNCreationEntry.getValue().getMessageId().serialize()))
-                        .type("invalidArgument")
+                        .type(SetError.Type.INVALID_ARGUMENTS)
                         .build());
 
         } catch (MessageNotFoundException e) {
@@ -118,7 +118,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
                     SetError.builder()
                         .description(String.format("Message with id %s not found. Thus could not send MDN.",
                             MDNCreationEntry.getValue().getMessageId().serialize()))
-                        .type("invalidArgument")
+                        .type(SetError.Type.INVALID_ARGUMENTS)
                         .build());
 
         } catch (OverQuotaException e) {
@@ -126,7 +126,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
                 .mdnNotSent(MDNCreationEntry.getCreationId(),
                     SetError.builder()
                         .description(e.getMessage())
-                        .type("maxQuotaReached")
+                        .type(SetError.Type.MAX_QUOTA_REACHED)
                         .build());
 
         } catch (Exception e) {
@@ -135,7 +135,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
                 .mdnNotSent(MDNCreationEntry.getCreationId(),
                     SetError.builder()
                         .description(String.format("Could not send MDN %s", MDNCreationEntry.getCreationId().getId()))
-                        .type("error")
+                        .type(SetError.Type.ERROR)
                         .build());
         }
     }

@@ -40,10 +40,10 @@ public class SetErrorTest {
 
     @Test
     public void buildShouldWorkWhenAllMandatoryFieldsAreGiven() {
-        SetError expected = new SetError("type", Optional.empty(), Optional.empty());
+        SetError expected = new SetError(SetError.Type.ERROR, Optional.empty(), Optional.empty());
 
         SetError setError = SetError.builder()
-            .type("type")
+            .type(SetError.Type.ERROR)
             .build();
 
         assertThat(setError).isEqualToComparingFieldByField(expected);
@@ -53,10 +53,10 @@ public class SetErrorTest {
     public void buildShouldWorkWhenAllFieldsAreGiven() {
         ImmutableSet<MessageProperty> props = ImmutableSet.of(MessageProperty.attachedMessages);
 
-        SetError expected = new SetError("type", Optional.of("description"), Optional.of(props));
+        SetError expected = new SetError(SetError.Type.ERROR, Optional.of("description"), Optional.of(props));
 
         SetError setError = SetError.builder()
-                .type("type")
+                .type(SetError.Type.ERROR)
                 .description("description")
                 .properties(ImmutableSet.of(MessageProperty.attachedMessages))
                 .build();
@@ -67,7 +67,7 @@ public class SetErrorTest {
     @Test
     public void buildShouldMergePassedProperties() {
         SetError result = SetError.builder()
-                .type("a type").description("a description")
+                .type(SetError.Type.ERROR).description("a description")
                 .properties(ImmutableSet.of(MessageProperty.bcc))
                 .properties(ImmutableSet.of(MessageProperty.cc))
                 .build();
@@ -78,7 +78,7 @@ public class SetErrorTest {
     @Test
     public void buildShouldDefaultToEmptyWhenPropertiesOmitted() {
         SetError result = SetError.builder()
-                .type("a type").description("a description")
+                .type(SetError.Type.ERROR).description("a description")
                 .build();
 
         assertThat(result.getProperties()).isEmpty();
@@ -87,7 +87,7 @@ public class SetErrorTest {
     @Test
     public void buildShouldDefaultToEmptyWhenPropertiesNull() {
         SetError result = SetError.builder()
-                .type("a type").description("a description").properties((Set<MessageProperty>)null)
+                .type(SetError.Type.ERROR).description("a description").properties((Set<MessageProperty>)null)
                 .build();
 
         assertThat(result.getProperties()).isPresent();
@@ -98,7 +98,7 @@ public class SetErrorTest {
     public void buildShouldBeIdempotentWhenNullPropertiesSet() {
         ImmutableSet<MessageProperty> nonNullProperty = ImmutableSet.of(MessageProperty.from);
         SetError result = SetError.builder()
-                .type("a type").description("a description")
+                .type(SetError.Type.ERROR).description("a description")
                 .properties(nonNullProperty)
                 .properties((Set<MessageProperty>)null)
                 .build();
@@ -107,9 +107,10 @@ public class SetErrorTest {
         assertThat(result.getProperties().get()).isEqualTo(nonNullProperty);
     }
 
+    @Test
     public void buildShouldDefaultToEmptyWhenPropertiesWithNoArgument() {
         SetError result = SetError.builder()
-                .type("a type").description("a description").properties()
+                .type(SetError.Type.ERROR).description("a description").properties()
                 .build();
 
         assertThat(result.getProperties()).isPresent();
@@ -120,7 +121,7 @@ public class SetErrorTest {
     public void buildShouldBeIdempotentWhenPropertiesWithNoArgument() {
         ImmutableSet<MessageProperty> nonNullProperty = ImmutableSet.of(MessageProperty.from);
         SetError result = SetError.builder()
-                .type("a type").description("a description")
+                .type(SetError.Type.ERROR).description("a description")
                 .properties(nonNullProperty)
                 .properties()
                 .build();

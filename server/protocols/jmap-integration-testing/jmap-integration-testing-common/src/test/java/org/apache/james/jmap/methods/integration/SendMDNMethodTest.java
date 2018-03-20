@@ -244,7 +244,7 @@ public abstract class SendMDNMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".MDNNotSent", hasEntry(
                 equalTo(creationId),
-                hasEntry("type", "invalidArgument")))
+                hasEntry("type", "invalidArguments")))
             .body(ARGUMENTS + ".MDNNotSent", hasEntry(
                 equalTo(creationId),
                 hasEntry("description", "Message with id " + randomMessageId + " not found. Thus could not send MDN.")));
@@ -280,7 +280,7 @@ public abstract class SendMDNMethodTest {
             .body(NAME, equalTo("messagesSet"))
             .body(ARGUMENTS + ".MDNNotSent", hasEntry(
                 equalTo(creationId),
-                hasEntry("type", "invalidArgument")))
+                hasEntry("type", "invalidArguments")))
             .body(ARGUMENTS + ".MDNNotSent", hasEntry(
                 equalTo(creationId),
                 hasEntry("description", "Origin messageId '" + messageIds.get(0) + "' is invalid. " +

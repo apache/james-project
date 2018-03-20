@@ -33,7 +33,7 @@ public class SetVacationResponseTest {
 
     @Test
     public void setVacationResponseShouldBeConstructedWithTheRightInformation() {
-        SetError setError = SetError.builder().type(ERROR_TYPE).description(ERROR_DESCRIPTION).build();
+        SetError setError = SetError.builder().type(SetError.Type.ERROR).description(ERROR_DESCRIPTION).build();
         SetVacationResponse setVacationResponse = SetVacationResponse.builder()
             .updatedId(UPDATED_VACATION_ID)
             .notUpdated(NOT_UPDATED_VACATION_ID, setError)

@@ -52,6 +52,7 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
@@ -279,7 +280,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private void addMessageIdNotFoundToResponse(MessageId messageId, SetMessagesResponse.Builder builder) {
         builder.notUpdated(ImmutableMap.of(messageId,
                 SetError.builder()
-                        .type("notFound")
+                        .type(SetError.Type.NOT_FOUND)
                         .properties(ImmutableSet.of(MessageProperties.MessageProperty.id))
                         .description("message not found")
                         .build()));
@@ -289,7 +290,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                                                                      SetMessagesResponse.Builder builder,
                                                                      DraftMessageMailboxUpdateException e) {
         return builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
-            .type("invalidArguments")
+            .type(SetError.Type.INVALID_ARGUMENTS)
             .properties(MessageProperties.MessageProperty.mailboxIds)
             .description(e.getMessage())
             .build()));
@@ -300,7 +301,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                                               Exception e) {
         LOGGER.error("An error occurred when updating a message", e);
         return builder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
-                .type("anErrorOccurred")
+                .type(SetError.Type.ERROR)
                 .description("An error occurred when updating a message")
                 .build()));
     }
@@ -318,7 +319,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .collect(Collectors.toSet());
 
         responseBuilder.notUpdated(ImmutableMap.of(messageId, SetError.builder()
-                .type("invalidProperties")
+                .type(SetError.Type.INVALID_PROPERTIES)
                 .properties(properties)
                 .description(formattedValidationErrorMessage)
                 .build()));

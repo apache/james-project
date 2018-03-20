@@ -120,7 +120,7 @@ public class SetVacationResponseMethod implements Method {
                 .response(SetVacationResponse.builder()
                     .notUpdated(Vacation.ID,
                         SetError.builder()
-                            .type(INVALID_ARGUMENTS)
+                            .type(SetError.Type.INVALID_ARGUMENTS)
                             .description(ERROR_MESSAGE_BASE + vacationResponse.getId())
                             .build())
                     .build())

@@ -142,6 +142,11 @@ public class SetMessagesResponse implements Method.Response {
             return this;
         }
 
+        public Builder notUpdated(MessageId messageId, SetError error) {
+            this.notUpdated.put(messageId, error);
+            return this;
+        }
+
         public Builder notDestroyed(MessageId messageId, SetError notDestroyed) {
             this.notDestroyed.put(messageId, notDestroyed);
             return this;

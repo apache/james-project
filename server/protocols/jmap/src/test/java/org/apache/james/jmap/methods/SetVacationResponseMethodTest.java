@@ -235,7 +235,7 @@ public class SetVacationResponseMethodTest {
             .responseName(SetVacationResponseMethod.RESPONSE_NAME)
             .response(SetVacationResponse.builder()
                 .notUpdated(Vacation.ID, SetError.builder()
-                    .type(SetVacationResponseMethod.INVALID_ARGUMENTS)
+                    .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(SetVacationResponseMethod.ERROR_MESSAGE_BASE + WRONG_ID)
                     .build())
                 .build())

@@ -122,24 +122,24 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
             builder.destroyed(entry.getKey());
         } catch (MailboxHasChildException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
-                    .type("mailboxHasChild")
+                    .type(SetError.Type.MAILBOX_HAS_CHILD)
                     .description(String.format("The mailbox '%s' has a child.", entry.getKey().serialize()))
                     .build());
         } catch (SystemMailboxNotUpdatableException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description(String.format("The mailbox '%s' is a system mailbox.", entry.getKey().serialize()))
                 .build());
         } catch (TooLongMailboxNameException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
-                .type("invalidArguments")
+                .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("The mailbox name length is too long")
                 .build());
         } catch (MailboxException e) {
             String message = String.format("An error occurred when deleting the mailbox '%s'", entry.getKey().serialize());
             LOGGER.error(message, e);
             builder.notDestroyed(entry.getKey(), SetError.builder()
-                    .type("anErrorOccurred")
+                    .type(SetError.Type.ERROR)
                     .description(message)
                     .build());
         }
@@ -164,7 +164,7 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
 
     private void notDestroy(MailboxId id, Builder builder) {
         builder.notDestroyed(id, SetError.builder()
-                .type("notFound")
+                .type(SetError.Type.NOT_FOUND)
                 .description(String.format("The mailbox '%s' was not found.", id.serialize()))
                 .build());
     }
