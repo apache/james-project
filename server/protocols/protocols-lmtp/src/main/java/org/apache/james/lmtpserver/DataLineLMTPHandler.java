@@ -24,8 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.WiringException;
@@ -55,16 +53,9 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
         final ReadOnlyMailEnvelope env = new ReadOnlyMailEnvelope(mail);
 
         for (MailAddress recipient : mail.getRecipients()) {
-            // TODO: the transformation code between MailAddress is purely to compile. No idea if it does what it's supposed
-            MailAddress recipientAddress;
-            try {
-                recipientAddress = new MailAddress(recipient.getLocalPart(), recipient.getDomain());
-            } catch (AddressException e) {
-                throw new RuntimeException(e);
-            }
             Response response = null;
             for (DeliverToRecipientHook handler : handlers) {
-                response = AbstractHookableCmdHandler.calcDefaultSMTPResponse(handler.deliver(session, recipientAddress, env));
+                response = AbstractHookableCmdHandler.calcDefaultSMTPResponse(handler.deliver(session, recipient, env));
                 if (response != null) {
                     break;
                 }
