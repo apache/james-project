@@ -48,8 +48,7 @@ public class MessageSender {
                             MailboxSession session) throws MailboxException, MessagingException {
         Mail mail = mailFactory.build(message, envelope);
         try {
-            MailMetadata metadata = new MailMetadata(message.getMessageId(), session.getUser().getUserName());
-            mailSpool.send(mail, metadata);
+            sendMessage(message.getMessageId(), mail, session);
         } finally {
             LifecycleUtil.dispose(mail);
         }
