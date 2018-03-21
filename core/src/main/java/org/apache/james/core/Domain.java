@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 public class Domain implements Serializable {
 
     public static final Domain LOCALHOST = Domain.of("localhost");
-    public static final Domain NULL = new Domain("");
 
     private static String removeBrackets(String domainName) {
         if (!(domainName.startsWith("[") && domainName.endsWith("]"))) {

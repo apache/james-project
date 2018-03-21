@@ -76,12 +76,12 @@ public class MailAddress implements java.io.Serializable {
 
         @Override
         public Domain getDomain() {
-            return Domain.NULL;
+            throw new IllegalStateException("NULL sender '<>' do not have domain part");
         }
 
         @Override
         public String getLocalPart() {
-            return "";
+            throw new IllegalStateException("NULL sender '<>' do not have local part");
         }
 
         @Override
