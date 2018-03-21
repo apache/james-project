@@ -24,6 +24,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
+
 @Entity(name = "CurrentQuota")
 @Table(name = "JAMES_QUOTA_CURRENTQUOTA")
 public class JpaCurrentQuota {
@@ -47,11 +50,20 @@ public class JpaCurrentQuota {
         this.size = size;
     }
 
-    public long getMessageCount() {
-        return messageCount;
+    public QuotaCount getMessageCount() {
+        return QuotaCount.count(messageCount);
     }
 
-    public long getSize() {
-        return size;
+    public QuotaSize getSize() {
+        return QuotaSize.size(size);
+    }
+
+    @Override
+    public String toString() {
+        return "JpaCurrentQuota{" +
+            "quotaRoot='" + quotaRoot + '\'' +
+            ", messageCount=" + messageCount +
+            ", size=" + size +
+            '}';
     }
 }
