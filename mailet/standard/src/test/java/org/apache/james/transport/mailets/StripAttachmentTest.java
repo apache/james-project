@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,6 +39,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.transport.mailets.StripAttachment.OutputFileName;
@@ -46,59 +48,55 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class StripAttachmentTest {
+import com.google.common.io.Files;
+
+class StripAttachmentTest {
 
     private static final String EXPECTED_ATTACHMENT_CONTENT = "#¤ãàé";
     private static final Optional<String> ABSENT_MIME_TYPE = Optional.empty();
     private static final String CONTENT_TRANSFER_ENCODING_VALUE = "8bit";
 
-    public static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
-    public static final String CONTENT_TYPE = "Content-Type";
-    public static final String CONTENT_TYPE_DEFAULT = "application/octet-stream; charset=utf-8";
-    public static final String TEXT_CALENDAR_CHARSET_UTF_8 = "text/calendar; charset=utf-8";
-    public static final String TEXT_HTML_CHARSET_UTF_8 = "text/html; charset=utf-8";
+    private static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_TYPE_DEFAULT = "application/octet-stream; charset=utf-8";
+    private static final String TEXT_CALENDAR_CHARSET_UTF_8 = "text/calendar; charset=utf-8";
+    private static final String TEXT_HTML_CHARSET_UTF_8 = "text/html; charset=utf-8";
 
-    private static MimeMessageBuilder.Header[] TEXT_HEADERS = {
+    private static final MimeMessageBuilder.Header[] TEXT_HEADERS = {
         new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
         new MimeMessageBuilder.Header(CONTENT_TYPE, CONTENT_TYPE_DEFAULT)
     };
 
-    private static MimeMessageBuilder.Header[] HTML_HEADERS = {
+    private static final MimeMessageBuilder.Header[] HTML_HEADERS = {
         new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
         new MimeMessageBuilder.Header(CONTENT_TYPE, TEXT_HTML_CHARSET_UTF_8)
     };
 
-    private static MimeMessageBuilder.Header[] CALENDAR_HEADERS = {
+    private static final MimeMessageBuilder.Header[] CALENDAR_HEADERS = {
         new MimeMessageBuilder.Header(CONTENT_TRANSFER_ENCODING, CONTENT_TRANSFER_ENCODING_VALUE),
         new MimeMessageBuilder.Header(CONTENT_TYPE, TEXT_CALENDAR_CHARSET_UTF_8)
     };
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-
     private String folderPath;
+    private File tempDir;
 
-    @Before
-    public void setUp() throws IOException {
-        folderPath = folder.getRoot().getPath() + "/";
+    @BeforeEach
+    void setUp() {
+        tempDir = Files.createTempDir();
+        folderPath = tempDir.getPath() + "/";
     }
 
-    @After
-    public void tearDown() throws IOException {
-        folder.delete();
+    @AfterEach
+    void tearDown() throws IOException {
+        FileUtils.deleteDirectory(tempDir);
     }
 
     @Test
-    public void serviceShouldNotModifyMailWhenNotMultipart() throws MessagingException, IOException {
+    void serviceShouldNotModifyMailWhenNotMultipart() throws MessagingException, IOException {
         Mailet mailet = initMailet();
         MimeMessageBuilder message = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -118,7 +116,7 @@ public class StripAttachmentTest {
     }
     
     @Test
-    public void serviceShouldSaveAttachmentInAFolderWhenPatternMatch() throws MessagingException, IOException {
+    void serviceShouldSaveAttachmentInAFolderWhenPatternMatch() throws MessagingException {
         Mailet mailet = initMailet();
 
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
@@ -144,7 +142,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldRemoveWhenMimeTypeMatches() throws MessagingException, IOException {
+    void serviceShouldRemoveWhenMimeTypeMatches() throws MessagingException {
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("mimeType", "text/calendar")
@@ -172,7 +170,7 @@ public class StripAttachmentTest {
         assertThat(removedAttachments).containsOnly(expectedFileName);
     }
 
-    private MimeMessageBuilder.BodyPartBuilder createAttachmentBodyPart(String body, String fileName, MimeMessageBuilder.Header... headers) throws MessagingException, IOException {
+    private MimeMessageBuilder.BodyPartBuilder createAttachmentBodyPart(String body, String fileName, MimeMessageBuilder.Header... headers) {
         return MimeMessageBuilder.bodyPartBuilder()
             .data(body)
             .addHeaders(headers)
@@ -181,7 +179,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldSaveAttachmentInAFolderWhenNotPatternDoesntMatch() throws MessagingException, IOException {
+    void serviceShouldSaveAttachmentInAFolderWhenNotPatternDoesntMatch() throws MessagingException {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -214,7 +212,7 @@ public class StripAttachmentTest {
         assertThat(new File(folderPath + attachmentFilename)).hasContent(expectedAttachmentContent);
     }
 
-    private String retrieveFilenameStartingWith(Collection<String> savedAttachments, final String filename) {
+    private String retrieveFilenameStartingWith(Collection<String> savedAttachments, String filename) {
         return savedAttachments.stream()
                 .filter(attachmentFilename -> attachmentFilename.startsWith(filename))
                 .findFirst()
@@ -222,7 +220,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldDecodeFilenameAndSaveAttachmentInAFolderWhenPatternMatchAndDecodeFilenameTrue() throws MessagingException, IOException {
+    void serviceShouldDecodeFilenameAndSaveAttachmentInAFolderWhenPatternMatchAndDecodeFilenameTrue() throws MessagingException {
         Mailet mailet = initMailet();
 
         String expectedAttachmentContent = EXPECTED_ATTACHMENT_CONTENT;
@@ -251,7 +249,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldSaveFilenameAttachmentAndFileContentInCustomAttribute() throws MessagingException, IOException {
+    void serviceShouldSaveFilenameAttachmentAndFileContentInCustomAttribute() throws MessagingException, IOException {
         StripAttachment mailet = new StripAttachment();
 
         String customAttribute = "my.custom.attribute";
@@ -286,7 +284,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldDecodeHeaderFilenames() throws MessagingException, IOException {
+    void serviceShouldDecodeHeaderFilenames() throws MessagingException, IOException {
         StripAttachment mailet = new StripAttachment();
 
         String customAttribute = "my.custom.attribute";
@@ -318,20 +316,20 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldThrowWhenPatternAndNotPatternAndMimeTypeAreNull() throws MessagingException {
+    void initShouldThrowWhenPatternAndNotPatternAndMimeTypeAreNull() {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("At least one of 'pattern', 'notpattern' or 'mimeType' parameter should be provided.");
-        mailet.init(mci);
+        assertThatThrownBy(() -> mailet.init(mci))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("At least one of 'pattern', 'notpattern' or 'mimeType' parameter should be provided.");
     }
 
     @Test
-    public void initShouldThrowWhenMimeTypeIsEmpty() throws MessagingException {
+    void initShouldThrowWhenMimeTypeIsEmpty() {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -339,13 +337,13 @@ public class StripAttachmentTest {
                 .setProperty("mimeType", "")
                 .build();
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("At least one of 'pattern', 'notpattern' or 'mimeType' parameter should be provided.");
-        mailet.init(mci);
+        assertThatThrownBy(() -> mailet.init(mci))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("At least one of 'pattern', 'notpattern' or 'mimeType' parameter should be provided.");
     }
 
     @Test
-    public void initShouldWorkWhenPatternIsDefinedAndValid() throws MessagingException {
+    void initShouldWorkWhenPatternIsDefinedAndValid() throws MessagingException {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -357,7 +355,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldWorkWhenNotPatternIsDefinedAndValid() throws MessagingException {
+    void initShouldWorkWhenNotPatternIsDefinedAndValid() throws MessagingException {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -369,7 +367,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldWorkWhenMimeTypeIsDefined() throws MessagingException {
+    void initShouldWorkWhenMimeTypeIsDefined() throws MessagingException {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -381,7 +379,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldThrowWhenWrongPattern() throws MessagingException {
+    void initShouldThrowWhenWrongPattern() {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -389,13 +387,13 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".****\\.tmp")
                 .build();
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("Could not compile regex [.****\\.tmp]");
-        mailet.init(mci);
+        assertThatThrownBy(() -> mailet.init(mci))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("Could not compile regex [.****\\.tmp].");
     }
 
     @Test
-    public void initShouldThrowWhenWrongNotPattern() throws MessagingException {
+    void initShouldThrowWhenWrongNotPattern() {
         Mailet mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -403,13 +401,13 @@ public class StripAttachmentTest {
                 .setProperty("notpattern", ".****\\.tmp")
                 .build();
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("Could not compile regex [.****\\.tmp]");
-        mailet.init(mci);
+        assertThatThrownBy(() -> mailet.init(mci))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("Could not compile regex [.****\\.tmp].");
     }
 
     @Test
-    public void initShouldThrowWhenRemoveParameterIsUnknown() throws MessagingException {
+    void initShouldThrowWhenRemoveParameterIsUnknown() {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -418,13 +416,13 @@ public class StripAttachmentTest {
                 .setProperty("pattern", ".*\\.tmp")
                 .build();
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("Unknown remove parameter value 'unknown' waiting for 'matched', 'all' or 'no'.");
-        mailet.init(mci);
+        assertThatThrownBy(() -> mailet.init(mci))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("Unknown remove parameter value 'unknown' waiting for 'matched', 'all' or 'no'.");
     }
 
     @Test
-    public void initShouldSetRemoveParameterWhenEqualsMatched() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsMatched() throws MessagingException {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -438,7 +436,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldSetRemoveParameterWhenEqualsAll() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsAll() throws MessagingException {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -452,7 +450,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldSetRemoveParameterWhenEqualsNo() throws MessagingException {
+    void initShouldSetRemoveParameterWhenEqualsNo() throws MessagingException {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -466,7 +464,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void initShouldSetRemoveParameterDefaultValueWhenNotGiven() throws MessagingException {
+    void initShouldSetRemoveParameterDefaultValueWhenNotGiven() throws MessagingException {
         StripAttachment mailet = new StripAttachment();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -479,21 +477,20 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void serviceShouldThrowWhenUnretrievableMessage() throws MessagingException {
+    void serviceShouldThrowWhenUnretrievableMessage() throws MessagingException {
         Mailet mailet = initMailet();
         
         Mail mail = mock(Mail.class);
         when(mail.getMessage())
             .thenThrow(new MessagingException("Test exception"));
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("Could not retrieve message from Mail object");
-        
-        mailet.service(mail);
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("Could not retrieve message from Mail object");
     }
 
     @Test
-    public void serviceShouldThrowWhenUnretrievableContentTypeMessage() throws MessagingException {
+    void serviceShouldThrowWhenUnretrievableContentTypeMessage() throws MessagingException {
         Mailet mailet = initMailet();
 
         MimeMessage message = mock(MimeMessage.class);
@@ -503,21 +500,20 @@ public class StripAttachmentTest {
         when(message.isMimeType("multipart/*"))
             .thenThrow(new MessagingException("Test exception"));
 
-        expectedException.expect(MailetException.class);
-        expectedException.expectMessage("Could not retrieve contenttype of MimePart.");
-        
-        mailet.service(mail);
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MailetException.class)
+            .hasMessage("Could not retrieve contenttype of MimePart.");
     }
 
     @Test
-    public void getMailetInfoShouldReturn() throws MessagingException {
+    void getMailetInfoShouldReturn() {
         StripAttachment mailet = new StripAttachment();
 
         assertThat(mailet.getMailetInfo()).isEqualTo("StripAttachment");
     }
 
     @Test
-    public void processMultipartPartMessageShouldReturnFalseWhenPartIsNotMultipart() throws Exception {
+    void processMultipartPartMessageShouldReturnFalseWhenPartIsNotMultipart() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
         Part part = new MimeBodyPart(new ByteArrayInputStream(new byte[0]));
@@ -529,7 +525,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneMultipartShouldHaveBeenRemoved() throws Exception {
+    void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneMultipartShouldHaveBeenRemoved() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -552,7 +548,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneMultipartShouldHaveBeenRemovedAndPartialRemove() throws Exception {
+    void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneMultipartShouldHaveBeenRemovedAndPartialRemove() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -576,7 +572,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldPutTwoPartsInDefaultAttributeWhenTwoPartsMatch() throws Exception {
+    void processMultipartPartMessageShouldPutTwoPartsInDefaultAttributeWhenTwoPartsMatch() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -607,7 +603,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldPutTwoPartsInCustomAttributeWhenTwoPartsMatch() throws Exception {
+    void processMultipartPartMessageShouldPutTwoPartsInCustomAttributeWhenTwoPartsMatch() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -642,7 +638,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneSubMultipartShouldHaveBeenRemoved() throws Exception {
+    void processMultipartPartMessageShouldReturnTrueWhenAtLeastOneSubMultipartShouldHaveBeenRemoved() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -668,7 +664,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldReturnFalseWhenNoPartHasBeenRemovedInSubMultipart() throws Exception {
+    void processMultipartPartMessageShouldReturnFalseWhenNoPartHasBeenRemovedInSubMultipart() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -694,7 +690,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldRemovePartWhenOnePartShouldHaveBeenRemoved() throws Exception {
+    void processMultipartPartMessageShouldRemovePartWhenOnePartShouldHaveBeenRemoved() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -721,7 +717,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void processMultipartPartMessageShouldSetFilenameToMatchingAttachmentsWhenAttachmentWithoutFilename() throws Exception {
+    void processMultipartPartMessageShouldSetFilenameToMatchingAttachmentsWhenAttachmentWithoutFilename() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
 
@@ -750,7 +746,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void saveAttachmentShouldUsePartNameIfNoFilename() throws Exception {
+    void saveAttachmentShouldUsePartNameIfNoFilename() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -772,7 +768,7 @@ public class StripAttachmentTest {
     }
     
     @Test
-    public void saveAttachmentShouldReturnAbsentWhenNoFilenameAtAll() throws Exception {
+    void saveAttachmentShouldReturnAbsentWhenNoFilenameAtAll() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("directory", folderPath)
@@ -786,7 +782,7 @@ public class StripAttachmentTest {
     }
     
     @Test
-    public void saveAttachmentShouldAddBinExtensionWhenNoFileNameExtension() throws Exception {
+    void saveAttachmentShouldAddBinExtensionWhenNoFileNameExtension() throws Exception {
         //Given
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
@@ -836,19 +832,18 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldThrowWhenPatternIsNull() throws Exception {
+    void fileNameMatchesShouldThrowWhenPatternIsNull() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
                 .build();
         mailet.init(mci);
-        
-        expectedException.expect(NullPointerException.class);
-        mailet.fileNameMatches(null);
+
+        assertThatThrownBy(() -> mailet.fileNameMatches(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fileNameMatchesShouldReturnFalseWhenPatternDoesntMatch() throws Exception {
+    void fileNameMatchesShouldReturnFalseWhenPatternDoesntMatch() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
@@ -859,7 +854,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnTrueWhenPatternMatches() throws Exception {
+    void fileNameMatchesShouldReturnTrueWhenPatternMatches() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
@@ -870,7 +865,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnFalseWhenNotPatternMatches() throws Exception {
+    void fileNameMatchesShouldReturnFalseWhenNotPatternMatches() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("notpattern", ".*pattern.*")
@@ -881,7 +876,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnTrueWhenNotPatternDoesntMatch() throws Exception {
+    void fileNameMatchesShouldReturnTrueWhenNotPatternDoesntMatch() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("notpattern", ".*pattern.*")
@@ -892,7 +887,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnFalseWhenPatternAndNotPatternAreTheSame() throws Exception {
+    void fileNameMatchesShouldReturnFalseWhenPatternAndNotPatternAreTheSame() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
@@ -905,7 +900,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnTrueWhenPatternMatchesAndNotPatternDoesntMatch() throws Exception {
+    void fileNameMatchesShouldReturnTrueWhenPatternMatchesAndNotPatternDoesntMatch() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
@@ -917,7 +912,7 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void fileNameMatchesShouldReturnTrueWhenPatternDoesntMatchesAndNotPatternDoesntMatch() throws Exception {
+    void fileNameMatchesShouldReturnTrueWhenPatternDoesntMatchesAndNotPatternDoesntMatch() throws Exception {
         StripAttachment mailet = new StripAttachment();
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .setProperty("pattern", ".*pattern.*")
@@ -929,13 +924,13 @@ public class StripAttachmentTest {
     }
 
     @Test
-    public void prependedPrefixShouldAddUnderscoreWhenPrefixIsLessThanThreeCharacters() {
+    void prependedPrefixShouldAddUnderscoreWhenPrefixIsLessThanThreeCharacters() {
         String prefix = OutputFileName.prependedPrefix("a");
         assertThat(prefix).isEqualTo("__a");
     }
 
     @Test
-    public void prependedPrefixShouldReturnPrefixWhenPrefixIsGreaterThanThreeCharacters() {
+    void prependedPrefixShouldReturnPrefixWhenPrefixIsGreaterThanThreeCharacters() {
         String expectedPrefix = "abcd";
         String prefix = OutputFileName.prependedPrefix(expectedPrefix);
         assertThat(prefix).isEqualTo(expectedPrefix);

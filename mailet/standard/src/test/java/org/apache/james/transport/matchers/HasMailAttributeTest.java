@@ -24,10 +24,6 @@ import org.apache.mailet.base.GenericMatcher;
 
 public class HasMailAttributeTest extends AbstractHasMailAttributeTest {
 
-    public HasMailAttributeTest() {
-        super();
-    }
-
     @Override
     protected GenericMatcher createMatcher() {
         return new HasMailAttribute();

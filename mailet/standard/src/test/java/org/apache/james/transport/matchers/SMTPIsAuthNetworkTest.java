@@ -24,15 +24,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SMTPIsAuthNetworkTest {
 
     private SMTPIsAuthNetwork testee;
     private MailAddress recipient;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         testee = new SMTPIsAuthNetwork();
         recipient = new MailAddress("recipient@domain.com");

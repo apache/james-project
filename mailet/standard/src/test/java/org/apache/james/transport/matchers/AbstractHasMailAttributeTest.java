@@ -20,6 +20,10 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Collection;
 
 import javax.mail.MessagingException;
@@ -30,42 +34,38 @@ import org.apache.mailet.base.GenericMatcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
 
-public abstract class AbstractHasMailAttributeTest extends TestCase {
+public abstract class AbstractHasMailAttributeTest {
 
-    protected FakeMail mockedMail;
+    FakeMail mockedMail;
 
     protected Matcher matcher;
 
-    protected static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.test.junit";
+    static final String MAIL_ATTRIBUTE_NAME = "org.apache.james.test.junit";
 
-    protected static final String MAIL_ATTRIBUTE_VALUE = "true";
+    static final String MAIL_ATTRIBUTE_VALUE = "true";
 
-    protected String mailAttributeName = "org.apache.james";
+    private String mailAttributeName = "org.apache.james";
 
-    protected String mailAttributeValue = "false";
+    private String mailAttributeValue = "false";
 
-    public AbstractHasMailAttributeTest() {
-        super(null);
-    }
-
-    protected void setMailAttributeName(String mailAttributeName) {
+    void setMailAttributeName(String mailAttributeName) {
         this.mailAttributeName = mailAttributeName;
     }
 
-    protected void setMailAttributeValue(String mailAttributeValue) {
+    void setMailAttributeValue(String mailAttributeValue) {
         this.mailAttributeValue = mailAttributeValue;
     }
 
-    protected void setupMockedMail() throws MessagingException {
+    void setupMockedMail() throws MessagingException {
         mockedMail = MailUtil.createMockMail2Recipients();
         mockedMail.setAttribute(mailAttributeName,
                 mailAttributeValue);
     }
 
-    protected void setupMatcher() throws MessagingException {
+    void setupMatcher() throws MessagingException {
         matcher = createMatcher();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()
                 .matcherName(getMatcherName())
@@ -76,7 +76,7 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
 
     }
 
-    // test if the mail attribute was matched
+    @Test
     public void testAttributeIsMatched() throws MessagingException {
         init();
 
@@ -94,12 +94,12 @@ public abstract class AbstractHasMailAttributeTest extends TestCase {
         setMailAttributeValue(MAIL_ATTRIBUTE_VALUE);
     }
 
-    protected void setupAll() throws MessagingException {
+    void setupAll() throws MessagingException {
         setupMockedMail();
         setupMatcher();
     }
 
-    // test if the mail attribute was not matched
+    @Test
     public void testAttributeIsNotMatched() throws MessagingException {
         setupAll();
 

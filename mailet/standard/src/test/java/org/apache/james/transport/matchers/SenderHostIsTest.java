@@ -22,6 +22,7 @@ package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.util.Collection;
@@ -33,23 +34,23 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SenderHostIsTest {
 
     private SenderHostIs matcher;
     private MailetContext mailContext;
 
-    @Before
-    public void setUp() throws MessagingException {
+    @BeforeEach
+    void setUp() {
         mailContext = mock(MailetContext.class);
         matcher = new SenderHostIs();
 
     }
 
     @Test
-    public void shouldMatchWhenSenderHostIsKnown() throws MessagingException {
+    void shouldMatchWhenSenderHostIsKnown() throws MessagingException {
         //Given
         FakeMatcherConfig mci = FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
@@ -70,7 +71,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void shouldNotMatchWhenSenderHostIsUnknown() throws MessagingException {
+    void shouldNotMatchWhenSenderHostIsUnknown() throws MessagingException {
         //Given
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
@@ -90,7 +91,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void shouldNotMatchWhenEmptyList() throws MessagingException {
+    void shouldNotMatchWhenEmptyList() throws MessagingException {
         //Given
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
@@ -109,7 +110,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void shouldNotMatchWhenNullSender() throws MessagingException {
+    void shouldNotMatchWhenNullSender() throws MessagingException {
         //Given
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
@@ -126,18 +127,19 @@ public class SenderHostIsTest {
         assertThat(actual).isNull();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void shouldThrowWhenNullCondition() throws Exception {
-        //When
-        matcher.init(FakeMatcherConfig.builder()
+    @Test
+    void shouldThrowWhenNullCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderHostIs")
                 .mailetContext(mailContext)
                 .condition(null)
-                .build());
+                .build()))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void parseDomainsListShouldParseWhenOnlyOneDomain() {
+    void parseDomainsListShouldParseWhenOnlyOneDomain() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org");
         //Then
@@ -145,7 +147,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void parseDomainsListShouldParseWhenCommaSpacePattern() {
+    void parseDomainsListShouldParseWhenCommaSpacePattern() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org, james2.apache.org, james3.apache.org, james4.apache.org, james5.apache.org");
         //Then
@@ -153,7 +155,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void parseDomainsListShouldParseWhenCommaPattern() {
+    void parseDomainsListShouldParseWhenCommaPattern() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org,james2.apache.org,james3.apache.org,james4.apache.org,james5.apache.org");
         //Then
@@ -161,7 +163,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void parseDomainsListShouldParseWhenSpacePattern() {
+    void parseDomainsListShouldParseWhenSpacePattern() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org james3.apache.org james4.apache.org james5.apache.org");
         //Then
@@ -169,7 +171,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void parseDomainsListShouldParseWhenMixedPatterns() {
+    void parseDomainsListShouldParseWhenMixedPatterns() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org james2.apache.org,james3.apache.org, james4.apache.org james5.apache.org");
         //Then
@@ -177,7 +179,7 @@ public class SenderHostIsTest {
     }
 
     @Test
-    public void parseDomainsListShouldIgnoreEmptyDomains() {
+    void parseDomainsListShouldIgnoreEmptyDomains() {
         //When
         Collection<String> senderHosts = matcher.parseDomainsList("james.apache.org   james2.apache.org james3.apache.org , james4.apache.org,,,james5.apache.org");
         //Then

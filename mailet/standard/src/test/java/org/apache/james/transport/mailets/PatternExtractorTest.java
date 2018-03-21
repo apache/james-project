@@ -20,30 +20,26 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.mailet.MailetException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PatternExtractorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class PatternExtractorTest {
 
     private PatternExtractor testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         testee = new PatternExtractor();
     }
 
     @Test
-    public void getPatternsFromStringShouldReturnValuesWhenMultiplePatterns() throws Exception {
+    void getPatternsFromStringShouldReturnValuesWhenMultiplePatterns() throws Exception {
         List<ReplacingPattern> patternsFromString = testee.getPatternsFromString("/test/TEST/i/,/a/e//,/o/o/ir/");
 
         assertThat(patternsFromString).containsOnly(
@@ -53,7 +49,7 @@ public class PatternExtractorTest {
     }
 
     @Test
-    public void getPatternsFromFileListShouldReturnValuesWhenMultiplePatterns() throws Exception {
+    void getPatternsFromFileListShouldReturnValuesWhenMultiplePatterns() throws Exception {
         List<ReplacingPattern> patternsFromFileList = testee.getPatternsFromFileList("#/org/apache/james/mailet/standard/mailets/replaceSubject.patterns");
 
         assertThat(patternsFromFileList).containsOnly(
@@ -63,40 +59,34 @@ public class PatternExtractorTest {
     }
 
     @Test
-    public void getPatternsFromStringShouldThrowWhenPatternIsLessThanTwoCharacters() throws Exception {
-        expectedException.expect(MailetException.class);
-
-        testee.getPatternsFromString("a");
+    void getPatternsFromStringShouldThrowWhenPatternIsLessThanTwoCharacters() {
+        assertThatThrownBy(() -> testee.getPatternsFromString("a")).isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void getPatternsFromStringShouldThrowWhenPatternDoesNotStartWithSlash() throws Exception {
-        expectedException.expect(MailetException.class);
-
-        testee.getPatternsFromString("abc/");
+    void getPatternsFromStringShouldThrowWhenPatternDoesNotStartWithSlash() {
+        assertThatThrownBy(() -> testee.getPatternsFromString("abc/")).isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void getPatternsFromStringShouldThrowWhenPatternDoesNotEndWithSlash() throws Exception {
-        expectedException.expect(MailetException.class);
-
-        testee.getPatternsFromString("/abc");
+    void getPatternsFromStringShouldThrowWhenPatternDoesNotEndWithSlash() {
+        assertThatThrownBy(() -> testee.getPatternsFromString("/abc")).isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void serviceShouldUnescapeCarriageReturn() throws Exception {
+    void serviceShouldUnescapeCarriageReturn() throws Exception {
         List<ReplacingPattern> patternsFromString = testee.getPatternsFromString("/a/\\\\r/i/");
         assertThat(patternsFromString).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\r"));
     }
 
     @Test
-    public void serviceShouldUnescapeLineBreak() throws Exception {
+    void serviceShouldUnescapeLineBreak() throws Exception {
         List<ReplacingPattern> patternsFromString = testee.getPatternsFromString("/a/\\\\n/i/");
         assertThat(patternsFromString).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\n"));
     }
 
     @Test
-    public void serviceShouldUnescapeTabReturn() throws Exception {
+    void serviceShouldUnescapeTabReturn() throws Exception {
         List<ReplacingPattern> patternsFromString = testee.getPatternsFromString("/a/\\\\t/i/");
         assertThat(patternsFromString).containsOnly(new ReplacingPattern(Pattern.compile("a"), false, "\\\t"));
     }

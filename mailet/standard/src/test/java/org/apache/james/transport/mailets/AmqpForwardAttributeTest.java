@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -37,10 +38,8 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.Logger;
 
@@ -55,7 +54,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownSignalException;
 
-public class AmqpForwardAttributeTest {
+class AmqpForwardAttributeTest {
 
     private static final String MAIL_ATTRIBUTE = "ampq.attachments";
     private static final String EXCHANGE_NAME = "exchangeName";
@@ -64,18 +63,14 @@ public class AmqpForwardAttributeTest {
     private static final byte[] ATTACHMENT_CONTENT = "Attachment content".getBytes(StandardCharsets.UTF_8);
     private static final ImmutableMap<String, byte[]> ATTRIBUTE_CONTENT = ImmutableMap.of("attachment1.txt", ATTACHMENT_CONTENT);
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private AmqpForwardAttribute mailet;
-    private Logger logger;
     private MailetContext mailetContext;
     private FakeMailetConfig mailetConfig;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mailet = new AmqpForwardAttribute();
-        logger = mock(Logger.class);
+        Logger logger = mock(Logger.class);
         mailetContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
@@ -90,40 +85,40 @@ public class AmqpForwardAttributeTest {
     }
 
     @Test
-    public void initShouldThrowWhenNoUriParameter() throws MessagingException {
+    void initShouldThrowWhenNoUriParameter() {
         FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .build();
-        expectedException.expect(MailetException.class);
-        mailet.init(customMailetConfig);
+        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void initShouldThrowWhenNoExchangeParameter() throws MessagingException {
+    void initShouldThrowWhenNoExchangeParameter() {
         FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .setProperty("uri", AMQP_URI)
                 .build();
-        expectedException.expect(MailetException.class);
-        mailet.init(customMailetConfig);
+        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void initShouldThrowWhenNoAttributeParameter() throws MessagingException {
+    void initShouldThrowWhenNoAttributeParameter() {
         FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .setProperty("uri", AMQP_URI)
                 .setProperty("exchange", EXCHANGE_NAME)
                 .build();
-        expectedException.expect(MailetException.class);
-        mailet.init(customMailetConfig);
+        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void initShouldThrowWhenInvalidUri() throws MessagingException {
+    void initShouldThrowWhenInvalidUri() {
         FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
@@ -131,17 +126,17 @@ public class AmqpForwardAttributeTest {
                 .setProperty("exchange", EXCHANGE_NAME)
                 .setProperty("attribute", MAIL_ATTRIBUTE)
                 .build();
-        expectedException.expect(MailetException.class);
-        mailet.init(customMailetConfig);
+        assertThatThrownBy(() -> mailet.init(customMailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void getMailetInfoShouldReturnInfo() {
+    void getMailetInfoShouldReturnInfo() {
         assertThat(mailet.getMailetInfo()).isEqualTo("AmqpForwardAttribute");
     }
 
     @Test
-    public void initShouldIntializeEmptyRoutingKeyWhenAllParametersButRoutingKey() throws MessagingException {
+    void initShouldIntializeEmptyRoutingKeyWhenAllParametersButRoutingKey() throws MessagingException {
         FakeMailetConfig customMailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
@@ -155,7 +150,7 @@ public class AmqpForwardAttributeTest {
     }
 
     @Test
-    public void initShouldNotThrowWithAllParameters() throws MessagingException {
+    void initShouldNotThrowWithAllParameters() throws MessagingException {
         mailet.init(mailetConfig);
     }
 
@@ -180,9 +175,8 @@ public class AmqpForwardAttributeTest {
         Mail mail = mock(Mail.class);
         when(mail.getAttribute(MAIL_ATTRIBUTE)).thenReturn(2);
 
-        expectedException.expect(MailetException.class);
-
-        mailet.service(mail);
+        assertThatThrownBy(() -> mailet.service(mail))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test

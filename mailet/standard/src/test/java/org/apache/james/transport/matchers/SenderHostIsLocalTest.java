@@ -38,14 +38,14 @@ import org.apache.mailet.MailetContext;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SenderHostIsLocalTest {
 
     private Matcher matcher;
     
-    @Before
+    @BeforeEach
     public void setUp() throws MessagingException {
         MailetContext mailContext = mock(MailetContext.class);
         when(mailContext.isLocalServer(JAMES_APACHE_ORG)).thenReturn(true);

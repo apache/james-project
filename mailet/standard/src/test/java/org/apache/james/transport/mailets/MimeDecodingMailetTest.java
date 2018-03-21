@@ -19,6 +19,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
@@ -32,58 +33,52 @@ import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.assertj.core.data.MapEntry;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MimeDecodingMailetTest {
+class MimeDecodingMailetTest {
 
     private static final String MAIL_ATTRIBUTE = "mime.attachments";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    private Logger logger;
     private MailetContext mailetContext;
     private MimeDecodingMailet testee;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         testee = new MimeDecodingMailet();
-        logger = mock(Logger.class);
+        Logger logger = mock(Logger.class);
         mailetContext = FakeMailContext.builder()
                 .logger(logger)
                 .build();
     }
 
     @Test
-    public void initShouldThrowWhenNoAttributeParameter() throws MessagingException {
+    void initShouldThrowWhenNoAttributeParameter() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .build();
-        expectedException.expect(MailetException.class);
-        testee.init(mailetConfig);
+        assertThatThrownBy(() -> testee.init(mailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void initShouldThrowWhenAttributeParameterIsEmpty() throws MessagingException {
+    void initShouldThrowWhenAttributeParameterIsEmpty() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
                 .setProperty(MimeDecodingMailet.ATTRIBUTE_PARAMETER_NAME, "")
                 .build();
-        expectedException.expect(MailetException.class);
-        testee.init(mailetConfig);
+        assertThatThrownBy(() -> testee.init(mailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void serviceShouldNotThrowWhenAttributeContentIsNotAMap() throws MessagingException {
+    void serviceShouldNotThrowWhenAttributeContentIsNotAMap() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
@@ -98,7 +93,7 @@ public class MimeDecodingMailetTest {
     }
 
     @Test
-    public void serviceShouldNotThrowWhenAttributeContentIsAMapOfWrongTypes() throws MessagingException {
+    void serviceShouldNotThrowWhenAttributeContentIsAMapOfWrongTypes() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
@@ -113,7 +108,7 @@ public class MimeDecodingMailetTest {
     }
 
     @Test
-    public void serviceShouldNotSetAttributeWhenNone() throws MessagingException {
+    void serviceShouldNotSetAttributeWhenNone() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)
@@ -129,7 +124,7 @@ public class MimeDecodingMailetTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void serviceShouldChangeAttributeWhenDefined() throws MessagingException {
+    void serviceShouldChangeAttributeWhenDefined() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailetContext)

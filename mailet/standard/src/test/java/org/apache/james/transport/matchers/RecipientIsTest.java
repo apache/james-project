@@ -24,30 +24,26 @@ import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RecipientIsTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class RecipientIsTest {
 
     private RecipientIs matcher;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         matcher = new RecipientIs();
     }
 
     @Test
-    public void shouldMatchCorrespondingAddres() throws Exception {
+    void shouldMatchCorrespondingAddres() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
                 .condition(ANY_AT_JAMES.toString())
@@ -61,7 +57,7 @@ public class RecipientIsTest {
     }
 
     @Test
-    public void shouldOnlyMatchCorrespondingAddress() throws Exception {
+    void shouldOnlyMatchCorrespondingAddress() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
                 .condition(ANY_AT_JAMES.toString())
@@ -75,7 +71,7 @@ public class RecipientIsTest {
     }
 
     @Test
-    public void shouldNotMatchUnrelatedAddresses() throws Exception {
+    void shouldNotMatchUnrelatedAddresses() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
                 .condition(ANY_AT_JAMES.toString())
@@ -89,23 +85,25 @@ public class RecipientIsTest {
     }
 
     @Test
-    public void initShouldThrowOnMissingCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowOnMissingCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowOnEmptyCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void shouldBeAbleToMatchSeveralAddresses() throws Exception {
+    void shouldBeAbleToMatchSeveralAddresses() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("RecipientIs")
                 .condition(ANY_AT_JAMES + ", " + ANY_AT_JAMES2)

@@ -29,8 +29,8 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class FetchedFromTest {
     private static final String EXPECTED_HEADER_VALUE = "james-user";
@@ -38,7 +38,7 @@ public class FetchedFromTest {
 
     private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws MessagingException {
         matcher = new FetchedFrom();
         FakeMatcherConfig matcherConfig = FakeMatcherConfig.builder()

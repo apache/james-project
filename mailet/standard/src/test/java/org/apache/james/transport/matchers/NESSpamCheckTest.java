@@ -27,14 +27,14 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NESSpamCheckTest {
 
     private NESSpamCheck matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         matcher = new NESSpamCheck();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()

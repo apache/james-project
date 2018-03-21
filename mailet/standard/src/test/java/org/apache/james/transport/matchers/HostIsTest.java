@@ -32,14 +32,14 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HostIsTest {
 
    private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         matcher = new HostIs();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()

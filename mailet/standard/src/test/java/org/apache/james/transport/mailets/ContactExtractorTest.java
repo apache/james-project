@@ -35,8 +35,8 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -51,7 +51,7 @@ public class ContactExtractorTest {
     private MailetContext mailetContext;
     private FakeMailetConfig mailetConfig;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         mailet = new ContactExtractor();
         mailetContext = FakeMailContext.builder()

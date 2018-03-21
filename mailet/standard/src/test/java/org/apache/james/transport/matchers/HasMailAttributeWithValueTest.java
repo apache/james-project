@@ -20,18 +20,17 @@
 
 package org.apache.james.transport.matchers;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import java.util.Collection;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericMatcher;
+import org.junit.jupiter.api.Test;
 
 public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest {
-
-    public HasMailAttributeWithValueTest() {
-        super();
-    }
 
     @Override
     protected String getHasMailAttribute() {
@@ -43,8 +42,8 @@ public class HasMailAttributeWithValueTest extends AbstractHasMailAttributeTest 
         return new HasMailAttributeWithValue();
     }
 
-    // test if the mail attribute was not matched cause diffrent value
-    public void testAttributeIsNotMatchedCauseValue() throws MessagingException {
+    @Test
+    void testAttributeIsNotMatchedCauseValue() throws MessagingException {
         setMailAttributeName(MAIL_ATTRIBUTE_NAME);
         setupMockedMail();
         setupMatcher();

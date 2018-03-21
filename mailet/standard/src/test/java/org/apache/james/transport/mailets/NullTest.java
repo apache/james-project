@@ -26,14 +26,14 @@ import javax.mail.MessagingException;
 
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class NullTest {
 
     private Mailet mailet;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mailet = new Null();
     }

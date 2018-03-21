@@ -21,34 +21,30 @@
 package org.apache.james.transport.matchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SenderIsRegexTest {
+class SenderIsRegexTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    public static final String SENDER_NAME = "test@james.apache.org";
+    private static final String SENDER_NAME = "test@james.apache.org";
     private SenderIsRegex matcher;
     private MailAddress recipient;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         matcher = new SenderIsRegex();
         recipient = new MailAddress("recipient@apache.org");
     }
 
     @Test
-    public void shouldMatchOnMatchingPattern() throws Exception {
+    void shouldMatchOnMatchingPattern() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition(".*@.*")
@@ -63,7 +59,7 @@ public class SenderIsRegexTest {
     }
 
     @Test
-    public void shouldNotMatchSubParts() throws Exception {
+    void shouldNotMatchSubParts() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition("test")
@@ -78,7 +74,7 @@ public class SenderIsRegexTest {
     }
 
     @Test
-    public void shouldNotMatchWhenNullSender() throws Exception {
+    void shouldNotMatchWhenNullSender() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition(".*@.*")
@@ -92,7 +88,7 @@ public class SenderIsRegexTest {
     }
 
     @Test
-    public void shouldNotMatchOnNonMatchingPattern() throws Exception {
+    void shouldNotMatchOnNonMatchingPattern() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition("^\\.")
@@ -107,27 +103,30 @@ public class SenderIsRegexTest {
     }
 
     @Test
-    public void initShouldThrowWhenEmptyCondition() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowWhenEmptyCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowWhenNoConditions() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowWhenNoConditions() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowWhenInvalidPattern() throws MessagingException {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowWhenInvalidPattern() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition("(.")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 }

@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import javax.mail.MessagingException;
@@ -32,47 +33,40 @@ import org.apache.mailet.MailetException;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class ToProcessorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class ToProcessorTest {
 
     private Mailet mailet;
-    private Logger logger;
     private FakeMailContext mailContext;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = new ToProcessor();
-        logger = mock(Logger.class);
+        Logger logger = mock(Logger.class);
         mailContext = FakeMailContext.builder().logger(logger).build();
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(mailet.getMailetInfo()).isEqualTo("ToProcessor Mailet");
     }
 
     @Test
-    public void initShouldThrowWhenProcessorIsNotGiven() throws MessagingException {
+    void initShouldThrowWhenProcessorIsNotGiven() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .mailetContext(mailContext)
                 .setProperty("notice", "error in message")
                 .build();
-        expectedException.expect(MailetException.class);
-
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig))
+            .isInstanceOf(MailetException.class);
     }
 
     @Test
-    public void serviceShouldSetTheStateOfTheMail() throws MessagingException {
+    void serviceShouldSetTheStateOfTheMail() throws MessagingException {
         String processor = "error";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -90,7 +84,7 @@ public class ToProcessorTest {
     }
 
     @Test
-    public void serviceShouldSetTheErrorMessageOfTheMailWhenNotAlreadySet() throws MessagingException {
+    void serviceShouldSetTheErrorMessageOfTheMailWhenNotAlreadySet() throws MessagingException {
         String processor = "error";
         String notice = "error in message";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -110,7 +104,7 @@ public class ToProcessorTest {
     }
 
     @Test
-    public void serviceShouldAppendTheErrorMessageOfTheMailWhenSomeErrorMessageOnMail() throws MessagingException {
+    void serviceShouldAppendTheErrorMessageOfTheMailWhenSomeErrorMessageOnMail() throws MessagingException {
         String processor = "error";
         String notice = "error in message";
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()

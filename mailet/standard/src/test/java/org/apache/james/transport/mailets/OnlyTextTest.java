@@ -19,6 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -32,10 +35,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.jupiter.api.Test;
 
-import junit.framework.TestCase;
-
-public class OnlyTextTest extends TestCase {
+class OnlyTextTest {
 
     /**
      * Test method for
@@ -45,7 +47,8 @@ public class OnlyTextTest extends TestCase {
      * @throws MessagingException
      * @throws IOException
      */
-    public void testService() throws MessagingException, IOException {
+    @Test
+    void testService() throws MessagingException, IOException {
         Mailet mailet;
         FakeMailetConfig mci;
         MimeMessage message;
@@ -177,7 +180,8 @@ public class OnlyTextTest extends TestCase {
         assertTrue(mail.getMessage().isMimeType("text/plain"));
     }
 
-    public void testHtml2Text() throws MessagingException {
+    @Test
+    void testHtml2Text() throws MessagingException {
         OnlyText mailet = new OnlyText();
         mailet.init(FakeMailetConfig.builder()
                 .mailetName("Test")

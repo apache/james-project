@@ -32,33 +32,28 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class RemoveMimeHeaderTest {
+class RemoveMimeHeaderTest {
 
     private static final String HEADER1 = "header1";
     private static final String HEADER2 = "header2";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     private GenericMailet mailet;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         mailet = new RemoveMimeHeader();
     }
 
     @Test
-    public void getMailetInfoShouldReturnValue() {
+    void getMailetInfoShouldReturnValue() {
         assertThat(mailet.getMailetInfo()).isEqualTo("RemoveMimeHeader Mailet");
     }
 
     @Test
-    public void serviceShouldRemoveHeaderWhenOneMatching() throws MessagingException {
+    void serviceShouldRemoveHeaderWhenOneMatching() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", HEADER1)
@@ -76,7 +71,7 @@ public class RemoveMimeHeaderTest {
     }
 
     @Test
-    public void serviceShouldRemoveHeadersWhenTwoMatching() throws MessagingException {
+    void serviceShouldRemoveHeadersWhenTwoMatching() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", HEADER1 + "," + HEADER2)
@@ -94,7 +89,7 @@ public class RemoveMimeHeaderTest {
     }
 
     @Test
-    public void serviceShouldNotRemoveHeaderWhenNoneMatching() throws MessagingException {
+    void serviceShouldNotRemoveHeaderWhenNoneMatching() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "other1")
@@ -113,7 +108,7 @@ public class RemoveMimeHeaderTest {
     }
 
     @Test
-    public void serviceShouldNotRemoveHeaderWhenEmptyConfig() throws MessagingException {
+    void serviceShouldNotRemoveHeaderWhenEmptyConfig() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "")
@@ -131,17 +126,16 @@ public class RemoveMimeHeaderTest {
     }
 
     @Test
-    public void initShouldThrowWhenInvalidConfig() throws MessagingException {
-        expectedException.expect(MessagingException.class);
+    void initShouldThrowWhenInvalidConfig() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
 
     @SuppressWarnings("unchecked")
     @Test
-    public void serviceShouldThrowWhenExceptionOccured() throws MessagingException {
+    void serviceShouldThrowWhenExceptionOccured() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "")

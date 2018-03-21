@@ -31,8 +31,8 @@ import javax.mail.internet.MimeMultipart;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HasAttachmentTest {
 
@@ -40,7 +40,7 @@ public class HasAttachmentTest {
     private MimeMessage mimeMessage;
     private Mail mail;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         testee = new HasAttachment();
 

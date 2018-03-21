@@ -25,8 +25,8 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HasMimeTypeTest {
 
@@ -37,7 +37,7 @@ public class HasMimeTypeTest {
 
     private HasMimeType matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         matcher = new HasMimeType();
     }

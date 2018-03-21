@@ -26,14 +26,14 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AddDeliveredToHeaderTest {
 
     private AddDeliveredToHeader testee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         testee = new AddDeliveredToHeader();
         testee.init(FakeMailetConfig.builder()

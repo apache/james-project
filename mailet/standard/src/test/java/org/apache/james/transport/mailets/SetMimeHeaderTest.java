@@ -32,24 +32,20 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SetMimeHeaderTest {
+class SetMimeHeaderTest {
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-    
     private Mailet mailet;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         mailet = new SetMimeHeader();
     }
 
     @Test
-    public void shouldAddHeaderToMime() throws MessagingException {
+    void shouldAddHeaderToMime() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "header-name")
@@ -66,7 +62,7 @@ public class SetMimeHeaderTest {
     }
 
     @Test
-    public void shouldAddHeaderWhenAlreadyPresent() throws MessagingException {
+    void shouldAddHeaderWhenAlreadyPresent() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "header-name")
@@ -84,7 +80,7 @@ public class SetMimeHeaderTest {
     }
 
     @Test
-    public void shouldThrowOnMessagingException() throws MessagingException {
+    void shouldThrowOnMessagingException() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "header-name")
@@ -100,53 +96,48 @@ public class SetMimeHeaderTest {
     }
     
     @Test
-    public void shouldThrowWhenNoConfiguration() throws MessagingException {
+    void shouldThrowWhenNoConfiguration() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .build();
-        expectedException.expect(MessagingException.class);
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
     
     @Test
-    public void shouldThrowWhenNoValue() throws MessagingException {
+    void shouldThrowWhenNoValue() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "correct")
                 .build();
-        expectedException.expect(MessagingException.class);
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
     
     @Test
-    public void shouldThrowWhenNoHeader() throws MessagingException {
+    void shouldThrowWhenNoHeader() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("value", "correct")
                 .build();
-        expectedException.expect(MessagingException.class);
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
     
     @Test
-    public void shouldThrowWhenEmptyValue() throws MessagingException {
+    void shouldThrowWhenEmptyValue() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("value", "")
                 .setProperty("name", "correct")
                 .build();
-        expectedException.expect(MessagingException.class);
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
     
     @Test
-    public void shouldThrowWhenEmptyHeader() throws MessagingException {
+    void shouldThrowWhenEmptyHeader() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
                 .setProperty("name", "")
                 .setProperty("value", "correct")
                 .build();
-        expectedException.expect(MessagingException.class);
-        mailet.init(mailetConfig);
+        assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
 }

@@ -32,8 +32,8 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class HasHeaderTest {
 
@@ -45,7 +45,7 @@ public class HasHeaderTest {
     private FakeMail mockedMail;
     private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         MimeMessage mimeMessage = MailUtil.createMimeMessage(HEADER_NAME_1, HEADER_VALUE_1);
         mockedMail = MailUtil.createMockMail2Recipients(mimeMessage);

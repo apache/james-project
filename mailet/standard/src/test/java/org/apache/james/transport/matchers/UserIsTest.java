@@ -24,30 +24,26 @@ import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class UserIsTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class UserIsTest {
 
     private UserIs matcher;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         matcher = new UserIs();
     }
 
     @Test
-    public void shouldMatchCorrespondingUser() throws MessagingException {
+    void shouldMatchCorrespondingUser() throws MessagingException {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
                 .condition("any")
@@ -61,7 +57,7 @@ public class UserIsTest {
     }
 
     @Test
-    public void shouldMatchCorrespondingUserAccrossDomains() throws MessagingException {
+    void shouldMatchCorrespondingUserAccrossDomains() throws MessagingException {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
                 .condition("any")
@@ -75,7 +71,7 @@ public class UserIsTest {
     }
 
     @Test
-    public void shouldNotMatchNonSpecifiedUsersButPreserveSpecifiedUsers() throws MessagingException {
+    void shouldNotMatchNonSpecifiedUsersButPreserveSpecifiedUsers() throws MessagingException {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
                 .condition("any")
@@ -89,7 +85,7 @@ public class UserIsTest {
     }
 
     @Test
-    public void shouldNotMatchNonSpecifiedUsers() throws MessagingException {
+    void shouldNotMatchNonSpecifiedUsers() throws MessagingException {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
                 .condition("any")
@@ -103,18 +99,20 @@ public class UserIsTest {
     }
 
     @Test
-    public void initShouldThrowOnMissingCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowOnMissingCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 
     @Test
-    public void initShouldThrowOnEmptyCondition() throws Exception {
-        expectedException.expect(MessagingException.class);
-        matcher.init(FakeMatcherConfig.builder()
+    void initShouldThrowOnEmptyCondition() {
+        assertThatThrownBy(() ->
+            matcher.init(FakeMatcherConfig.builder()
                 .matcherName("UserIs")
-                .build());
+                .build()))
+            .isInstanceOf(MessagingException.class);
     }
 }

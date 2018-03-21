@@ -25,14 +25,14 @@ import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class RecipientToLowerCaseTest {
 
     private RecipientToLowerCase testee;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         testee = new RecipientToLowerCase();
     }

@@ -29,14 +29,14 @@ import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class SentByMailetTest {
 
     private SentByMailet testee;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         testee = new SentByMailet();
         testee.init(FakeMatcherConfig.builder().matcherName("matcherName")

@@ -30,14 +30,14 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class AllTest {
 
     private Matcher matcher;
 
-    @Before
+    @BeforeEach
     public void setupMatcher() throws MessagingException {
         matcher = new All();
         FakeMatcherConfig mci = FakeMatcherConfig.builder()
