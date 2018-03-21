@@ -459,6 +459,33 @@ public class ManageSieveMailetTestCase {
         ensureResponse("Re: SETACTIVE", "NO \"Missing argument: script name\"");
     }
 
+    @Test
+    public final void manageSieveMailetShouldIgnoreNullSender() throws Exception {
+        MimeMessage message = prepareMimeMessage("SETACTIVE");
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .sender(MailAddress.nullSender())
+            .recipient(SIEVE_LOCALHOST)
+            .build();
+
+        mailet.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
+    public final void manageSieveMailetShouldIgnoreMailWhenNoSender() throws Exception {
+        MimeMessage message = prepareMimeMessage("SETACTIVE");
+        Mail mail = FakeMail.builder()
+            .mimeMessage(message)
+            .recipient(SIEVE_LOCALHOST)
+            .build();
+
+        mailet.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
     private void initializeMailet() throws MessagingException {
         mailet = new ManageSieveMailet();
         mailet.setSieveParser(sieveParser);

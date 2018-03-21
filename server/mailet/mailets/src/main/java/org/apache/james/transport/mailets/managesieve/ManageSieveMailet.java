@@ -29,7 +29,6 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.james.core.Domain;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -123,7 +122,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
     @Override
     public void service(Mail mail) throws MessagingException {
         // Sanity checks
-        if (mail.getSender() == null) {
+        if (mail.getSender() == null || mail.getSender().isNullSender()) {
             LOGGER.error("Sender is null");
             return;
         }
@@ -139,8 +138,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         } else {
             session.setState(Session.State.UNAUTHENTICATED);
         }
-        Domain domain = mail.getSender().getDomain() == null ? Domain.LOCALHOST : mail.getSender().getDomain();
-        session.setUser(mail.getSender().getLocalPart() + '@' + domain.name());
+        session.setUser(mail.getSender().asString());
         getMailetContext().sendMail(mail.getRecipients().iterator().next(), Lists.newArrayList(mail.getSender()),transcoder.execute(session, mail.getMessage()));
         mail.setState(Mail.GHOST);
         
