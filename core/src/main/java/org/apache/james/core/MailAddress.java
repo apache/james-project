@@ -90,6 +90,11 @@ public class MailAddress implements java.io.Serializable {
         }
 
         @Override
+        public String asString() {
+            return "<>";
+        }
+
+        @Override
         public boolean isNullSender() {
             return true;
         }

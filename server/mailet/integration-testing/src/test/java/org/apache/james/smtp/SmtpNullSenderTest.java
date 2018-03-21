@@ -20,6 +20,7 @@
 package org.apache.james.smtp;
 
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
@@ -68,5 +69,17 @@ public class SmtpNullSenderTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessageWithHeaders("", USER,"Short message")
             .awaitSent(awaitAtMostOneMinute);
+    }
+
+    @Test
+    public void mailProcessingShouldDeliverNullSender() throws Exception {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessageWithHeaders("", USER,"Short message")
+            .awaitSent(awaitAtMostOneMinute);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(USER, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
     }
 }
