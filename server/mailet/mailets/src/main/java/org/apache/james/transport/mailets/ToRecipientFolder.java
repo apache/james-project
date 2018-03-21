@@ -48,8 +48,12 @@ import org.apache.mailet.base.GenericMailet;
  *    &lt;consume&gt; <i>false</i> &lt;/consume&gt;
  * &lt;/mailet&gt;
  * </pre>
- * 
+ *
+ * @Deprecated This mailet duplicates the behaviour of LocalDelivery. Prefer using WithStorageDirective
+ * in order to tell LocalDelivery in which folder the mail should be appended.
+ *
  */
+@Deprecated
 public class ToRecipientFolder extends GenericMailet {
 
     public static final String FOLDER_PARAMETER = "folder";

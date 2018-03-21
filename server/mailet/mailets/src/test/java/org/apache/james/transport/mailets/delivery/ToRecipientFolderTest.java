@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Throwables;
 
+@Deprecated
 public class ToRecipientFolderTest {
 
     public static final String USER_LOCAL_PART = "receiver";
