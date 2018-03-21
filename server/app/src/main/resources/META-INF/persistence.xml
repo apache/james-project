@@ -39,6 +39,8 @@
         <class>org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.MaxUserStorage</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage</class>
+        <class>org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount</class>
         <class>org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota</class>
 
         <properties>
