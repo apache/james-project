@@ -43,9 +43,8 @@ import com.github.steveash.guavate.Guavate;
  *         <spamdHost>spamassassin</spamdHost>
  *         <spamdPort>783</spamdPort>
  *     </mailet>
- *     <mailet match="IsMarkedAsSpam" class="ToRecipientFolder">
- *         <folder>Spam</folder>
- *         <consume>true</consume>
+ *     <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
+ *         <targetFolderName>Spam</targetFolderName>
  *     </mailet>
  * <!-- End of SpamAssassing mailets pipeline -->
  * }</pre>
