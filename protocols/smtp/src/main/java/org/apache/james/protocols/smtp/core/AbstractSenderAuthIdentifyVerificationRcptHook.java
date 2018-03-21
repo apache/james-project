@@ -49,9 +49,9 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
                     SMTPSession.SENDER, ProtocolSession.State.Transaction);
             String username = null;
 
-            if (senderAddress != null) {
+            if (senderAddress != null && !sender.isNullSender()) {
                 if (useVirtualHosting()) {
-                    username = senderAddress.toString();
+                    username = senderAddress.asString();
                 } else {
                     username = senderAddress.getLocalPart();
                 }
