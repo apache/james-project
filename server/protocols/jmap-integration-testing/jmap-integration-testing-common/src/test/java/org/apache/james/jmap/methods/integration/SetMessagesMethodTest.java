@@ -4536,6 +4536,55 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldSetUserAddedHeadersForReplyAndForwardWhenAskedTo() throws Exception {
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}]," +
+            "        \"headers\": { \"In-Reply-To\": \"inreplyto value\", \"X-Forwarded-Message-Id\": \"forward value\"}," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String messageId = given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .<String>path(ARGUMENTS + ".created." + messageCreationId + ".id");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".headers", Matchers.allOf(
+                hasEntry("In-Reply-To", "inreplyto value"),
+                hasEntry("X-Forwarded-Message-Id", "forward value")));
+    }
+
+    @Test
     public void setMessagesShouldSetUserAddedHeadersInSent() throws Exception {
         String toUsername = "username1@" + USERS_DOMAIN;
         String password = "password";

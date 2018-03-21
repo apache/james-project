@@ -91,7 +91,6 @@ public class MIMEMessageConverter {
             FieldName.SUBJECT,
             FieldName.MESSAGE_ID,
             FieldName.DATE,
-            IN_REPLY_TO_HEADER,
             FieldName.CONTENT_TYPE,
             FieldName.MIME_VERSION,
             FieldName.CONTENT_TRANSFER_ENCODING);
