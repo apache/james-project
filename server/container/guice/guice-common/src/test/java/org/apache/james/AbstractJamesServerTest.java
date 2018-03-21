@@ -40,7 +40,7 @@ public abstract class AbstractJamesServerTest {
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
 
-    private GuiceJamesServer server;
+    protected GuiceJamesServer server;
     private SocketChannel socketChannel;
 
     @Before

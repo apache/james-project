@@ -176,4 +176,9 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
     public void expunge() throws IOException {
         imapClient.expunge();
     }
+
+    public String getQuotaRoot(String mailbox) throws IOException {
+        imapClient.sendCommand("GETQUOTAROOT " + mailbox);
+        return imapClient.getReplyString();
+    }
 }
