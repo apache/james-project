@@ -35,4 +35,9 @@ public class DefaultMessageId implements MessageId {
     public final int hashCode() {
         throw new IllegalStateException("Capabilities should prevent calling this method");
     }
+
+    @Override
+    public String toString() {
+        return "DefaultMessageId{}";
+    }
 }
