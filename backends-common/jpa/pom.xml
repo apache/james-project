@@ -29,5 +29,9 @@
             <artifactId>openjpa</artifactId>
             <version>2.4.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

@@ -26,7 +26,12 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class TransactionRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TransactionRunner.class);
 
     private final EntityManagerFactory entityManagerFactory;
 
@@ -42,6 +47,7 @@ public class TransactionRunner {
             runnable.accept(entityManager);
             transaction.commit();
         } catch (PersistenceException e) {
+            LOGGER.warn("Could not execute transaction", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
