@@ -82,6 +82,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private final MetricFactory metricFactory;
     private final MessageSender messageSender;
 
+    private final ReferenceUpdater referenceUpdater;
+
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
             UpdateMessagePatchConverter updatePatchConverter,
@@ -89,13 +91,15 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             SystemMailboxesProvider systemMailboxesProvider,
             Factory mailboxIdFactory,
             MessageSender messageSender,
-            MetricFactory metricFactory) {
+            MetricFactory metricFactory,
+            ReferenceUpdater referenceUpdater) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.mailboxIdFactory = mailboxIdFactory;
         this.metricFactory = metricFactory;
         this.messageSender = messageSender;
+        this.referenceUpdater = referenceUpdater;
     }
 
     @Override
@@ -165,15 +169,17 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
     private void sendMessageWhenOutboxInTargetMailboxIds(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession, SetMessagesResponse.Builder builder) throws MailboxException, MessagingException, IOException {
         if (isTargetingOutbox(mailboxSession, listTargetMailboxIds(updateMessagePatch))) {
-            Optional<MessageResult> messagesToSend =
+            Optional<MessageResult> maybeMessageToSend =
                 messageIdManager.getMessages(
                     ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession)
                     .stream()
                     .findFirst();
-            if (messagesToSend.isPresent()) {
-                MailImpl mail = buildMailFromMessage(messagesToSend.get());
+            if (maybeMessageToSend.isPresent()) {
+                MessageResult messageToSend = maybeMessageToSend.get();
+                MailImpl mail = buildMailFromMessage(messageToSend);
                 assertUserIsSender(mailboxSession, mail.getSender());
                 messageSender.sendMessage(messageId, mail, mailboxSession);
+                referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
             } else {
                 addMessageIdNotFoundToResponse(messageId, builder);
             }

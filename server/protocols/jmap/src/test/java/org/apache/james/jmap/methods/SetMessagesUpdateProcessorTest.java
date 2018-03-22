@@ -50,12 +50,14 @@ public class SetMessagesUpdateProcessorTest {
         SystemMailboxesProvider systemMailboxesProvider = null;
         MailboxId.Factory mailboxIdFactory = null;
         MessageSender messageSender = null;
+        ReferenceUpdater referenceUpdater = null;
         SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(updatePatchConverter,
             messageIdManager,
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory());
+            new NoopMetricFactory(),
+            referenceUpdater);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
         SetMessagesResponse result = sut.process(requestWithEmptyUpdate, null);
@@ -83,12 +85,14 @@ public class SetMessagesUpdateProcessorTest {
         SystemMailboxesProvider systemMailboxesProvider = null;
         MailboxId.Factory mailboxIdFactory = null;
         MessageSender messageSender = null;
+        ReferenceUpdater referenceUpdater = null;
         SetMessagesUpdateProcessor sut = new SetMessagesUpdateProcessor(mockConverter,
             messageIdManager,
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory());
+            new NoopMetricFactory(),
+            referenceUpdater);
         MessageId requestMessageId = TestMessageId.of(1);
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()
                 .update(ImmutableMap.of(requestMessageId, JsonNodeFactory.instance.objectNode()))

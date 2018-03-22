@@ -121,6 +121,7 @@ public class SetMessagesCreationProcessorTest {
     public ExpectedException expectedException = ExpectedException.none();
     private MessageAppender messageAppender;
     private MessageSender messageSender;
+    private ReferenceUpdater referenceUpdater;
 
     @Before
     public void setUp() throws MailboxException {
@@ -143,6 +144,7 @@ public class SetMessagesCreationProcessorTest {
         MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter();
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mockedAttachmentManager, mimeMessageConverter);
         messageSender = new MessageSender(mockedMailSpool, mockedMailFactory);
+        referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
         sut = new SetMessagesCreationProcessor(messageFactory,
             fakeSystemMailboxesProvider,
             new AttachmentChecker(mockedAttachmentManager),
@@ -150,7 +152,8 @@ public class SetMessagesCreationProcessorTest {
             mockedMailboxManager,
             mockedMailboxIdFactory,
             messageAppender,
-            messageSender);
+            messageSender,
+            referenceUpdater);
         
         outbox = mock(MessageManager.class);
         when(mockedMailboxIdFactory.fromString(OUTBOX_ID.serialize()))
@@ -234,7 +237,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(messageFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender);
+        sut = new SetMessagesCreationProcessor(messageFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -252,7 +255,8 @@ public class SetMessagesCreationProcessorTest {
         SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(messageFactory, doNotProvideOutbox,
             new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
             messageAppender,
-            messageSender);
+            messageSender,
+            referenceUpdater);
         // When
         SetMessagesResponse actual = sut.process(createMessageInOutbox, session);
         

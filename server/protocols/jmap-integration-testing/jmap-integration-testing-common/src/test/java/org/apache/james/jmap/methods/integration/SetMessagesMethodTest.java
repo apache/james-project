@@ -4134,7 +4134,7 @@ public abstract class SetMessagesMethodTest {
 
     private boolean isAnyMessageFoundInInbox(AccessToken recipientToken) {
         try {
-            String inboxId = getMailboxId(accessToken, Role.INBOX);
+            String inboxId = getMailboxId(recipientToken, Role.INBOX);
             with()
                 .header("Authorization", recipientToken.serialize())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
@@ -4582,6 +4582,290 @@ public abstract class SetMessagesMethodTest {
             .body(message + ".headers", Matchers.allOf(
                 hasEntry("In-Reply-To", "inreplyto value"),
                 hasEntry("X-Forwarded-Message-Id", "forward value")));
+    }
+
+    @Test
+    public void setMessagesShouldUpdateIsAnsweredWhenInReplyToHeaderSentViaOutbox() throws Exception {
+        OriginalMessage firstMessage = receiveFirstMessage();
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}," +
+            "        \"to\": [{ \"name\": \"Bob\", \"email\": \"" + BOB + "\"}]," +
+            "        \"headers\": { \"In-Reply-To\": \"" + firstMessage.mimeMessageId + "\"}," +
+            "        \"subject\": \"RE: Hi!\"," +
+            "        \"textBody\": \"Fine, thank you!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(bobAccessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".keywords.$Answered", equalTo(true))
+            .body(message + ".isAnswered", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldUpdateIsForwardedWhenXForwardedHeaderSentViaOutbox() throws Exception {
+        OriginalMessage firstMessage = receiveFirstMessage();
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}," +
+            "        \"to\": [{ \"name\": \"Bob\", \"email\": \"" + BOB + "\"}]," +
+            "        \"headers\": { \"X-Forwarded-Message-Id\": \"" + firstMessage.mimeMessageId + "\"}," +
+            "        \"subject\": \"Fwd: Hi!\"," +
+            "        \"textBody\": \"You talking to me?\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(bobAccessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".keywords.$Forwarded", equalTo(true))
+            .body(message + ".isForwarded", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldUpdateIsAnsweredWhenInReplyToHeaderSentViaDraft() throws Exception {
+        OriginalMessage firstMessage = receiveFirstMessage();
+        
+        String draftCreationId = "creationId1337";
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}," +
+            "        \"to\": [{ \"name\": \"Bob\", \"email\": \"" + BOB + "\"}]," +
+            "        \"headers\": { \"In-Reply-To\": \"" + firstMessage.mimeMessageId + "\"}," +
+            "        \"subject\": \"RE: Hi!\"," +
+            "        \"textBody\": \"Fine, thank you!\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body(createDraft)
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String moveDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"keywords\": {}," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body(moveDraftToOutBox)
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(bobAccessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".keywords.$Answered", equalTo(true))
+            .body(message + ".isAnswered", equalTo(true));
+    }
+
+    @Test
+    public void setMessagesShouldUpdateIsForwardedWhenXForwardedHeaderSentViaDraft() throws Exception {
+        OriginalMessage firstMessage = receiveFirstMessage();
+        
+        String draftCreationId = "creationId1337";
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}," +
+            "        \"to\": [{ \"name\": \"Bob\", \"email\": \"" + BOB + "\"}]," +
+            "        \"headers\": { \"X-Forwarded-Message-Id\": \"" + firstMessage.mimeMessageId + "\"}," +
+            "        \"subject\": \"Fwd: Hi!\"," +
+            "        \"textBody\": \"You talking to me?\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.serialize())
+                .body(createDraft)
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String moveDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"keywords\": {}," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body(moveDraftToOutBox)
+            .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(bobAccessToken));
+
+        String message = ARGUMENTS + ".list[0]";
+
+        with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(NAME, equalTo("messages"))
+            .body(ARGUMENTS + ".list", hasSize(1))
+            .body(message + ".keywords.$Forwarded", equalTo(true))
+            .body(message + ".isForwarded", equalTo(true));
+    }
+
+    private OriginalMessage receiveFirstMessage() {
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}]," +
+            "        \"subject\": \"Hi!\"," +
+            "        \"textBody\": \"How are you?\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(requestBody)
+        .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
+
+        String jmapMessageId = with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .extract()
+            .<String>path(ARGUMENTS + ".messageIds[0]");
+
+        String mimeMessageId = with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .<String>path(ARGUMENTS + ".list[0].headers['Message-ID']");
+        return new OriginalMessage(jmapMessageId, mimeMessageId);
+    }
+
+    private static class OriginalMessage {
+        final String jmapMessageId;
+        final String mimeMessageId;
+
+        OriginalMessage(String jmapMessageId, String mimeMessageId) {
+            this.jmapMessageId = jmapMessageId;
+            this.mimeMessageId = mimeMessageId;
+        }
     }
 
     @Test

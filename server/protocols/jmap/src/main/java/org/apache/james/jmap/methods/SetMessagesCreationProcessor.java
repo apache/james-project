@@ -82,6 +82,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageAppender messageAppender;
     private final MessageSender messageSender;
+    private final ReferenceUpdater referenceUpdater;
     
     @VisibleForTesting
     @Inject
@@ -90,7 +91,10 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  AttachmentChecker attachmentChecker,
                                  MetricFactory metricFactory,
                                  MailboxManager mailboxManager,
-                                 MailboxId.Factory mailboxIdFactory, MessageAppender messageAppender, MessageSender messageSender) {
+                                 MailboxId.Factory mailboxIdFactory,
+                                 MessageAppender messageAppender,
+                                 MessageSender messageSender,
+                                 ReferenceUpdater referenceUpdater) {
         this.messageFactory = messageFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentChecker = attachmentChecker;
@@ -99,6 +103,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageAppender = messageAppender;
         this.messageSender = messageSender;
+        this.referenceUpdater = referenceUpdater;
     }
 
     @Override
@@ -272,6 +277,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         Message jmapMessage = messageFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = Envelope.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
+        referenceUpdater.updateReferences(entry.getValue().getHeaders(), session);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
 
