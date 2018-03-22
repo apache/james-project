@@ -18,19 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap.methods.integration;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Optional;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.util.Host;
 import org.apache.james.util.scanner.SpamAssassinExtension;
 import org.apache.james.util.scanner.SpamAssassinExtension.SpamAssassin;
-import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -52,7 +48,7 @@ public class SpamAssassinModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private SpamAssassinConfiguration getSpamAssassinConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, IOException, URISyntaxException {
+    private SpamAssassinConfiguration getSpamAssassinConfiguration() {
         SpamAssassin spamAssassin = spamAssassinExtension.getSpamAssassin();
         return new SpamAssassinConfiguration(Optional.of(Host.from(spamAssassin.getIp(), spamAssassin.getBindingPort())));
     }

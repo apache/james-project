@@ -40,7 +40,6 @@ import org.apache.james.mailbox.Role;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,8 +65,6 @@ public interface SpamAssassinContract {
 
     @BeforeEach
     default void setup(JamesWithSpamAssassin james) throws Throwable {
-        james.getJmapServer().start();
-
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
@@ -94,11 +91,6 @@ public interface SpamAssassinContract {
             .setPort(james.getProbe(JmapGuiceProbe.class)
                 .getJmapPort())
             .setCharset(StandardCharsets.UTF_8);
-    }
-
-    @AfterEach
-    default void teardown(JamesWithSpamAssassin james) {
-        james.getJmapServer().stop();
     }
 
     @Test

@@ -51,14 +51,13 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     private final DockerCassandraRule cassandra;
     private final EmbeddedElasticSearch elasticSearch;
     private final SpamAssassinExtension spamAssassinExtension;
-    private final JamesWithSpamAssassin james;
+    private JamesWithSpamAssassin james;
 
     public CassandraJmapExtension() {
         this.temporaryFolder = new TemporaryFolder();
         this.cassandra = new DockerCassandraRule();
         this.elasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
         this.spamAssassinExtension = new SpamAssassinExtension();
-        this.james = james();
     }
 
     private JamesWithSpamAssassin james() {
@@ -90,12 +89,15 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     }
 
     @Override
-    public void beforeEach(ExtensionContext context) {
+    public void beforeEach(ExtensionContext context) throws Exception {
+        james = james();
         spamAssassinExtension.beforeEach(context);
+        james.getJmapServer().start();
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
+        james.getJmapServer().stop();
         spamAssassinExtension.afterEach(context);
     }
 

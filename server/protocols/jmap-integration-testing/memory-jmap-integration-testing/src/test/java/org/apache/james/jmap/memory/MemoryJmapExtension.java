@@ -70,10 +70,12 @@ public class MemoryJmapExtension implements BeforeEachCallback, AfterEachCallbac
     public void beforeEach(ExtensionContext context) throws Exception {
         spamAssassinExtension.beforeEach(context);
         temporaryFolder.create();
+        james.getJmapServer().start();
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
+        james.getJmapServer().stop();
         spamAssassinExtension.afterEach(context);
         temporaryFolder.delete();
     }

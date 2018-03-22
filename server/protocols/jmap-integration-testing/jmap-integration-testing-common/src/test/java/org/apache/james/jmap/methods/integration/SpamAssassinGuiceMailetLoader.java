@@ -62,7 +62,7 @@ public class SpamAssassinGuiceMailetLoader implements MailetLoader {
         }
     }
 
-    private Mailet configureSpamAssassinMailet(String mailetName) throws Exception, MessagingException {
+    private Mailet configureSpamAssassinMailet(String mailetName) throws Exception {
         Mailet mailet = genericLoader.instanciate(mailetName);
         mailet.init(spamAssassinMailetConfig());
         return mailet;
