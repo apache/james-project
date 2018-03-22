@@ -5793,4 +5793,57 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".list[0].isDraft", equalTo(false))
             .body(ARGUMENTS + ".list[0].isForwarded", equalTo(true));
     }
+
+    @Test
+    public void mimeMessageIdShouldBePreservedWhenSending() {
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
+            "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + USERNAME + "\"}]," +
+            "        \"subject\": \"Hi!\"," +
+            "        \"textBody\": \"How are you?\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String creationMimeMessageId = given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .body()
+            .path(ARGUMENTS + ".created." + messageCreationId + ".headers['Message-ID']");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
+
+        String jmapMessageId = with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .path(ARGUMENTS + ".messageIds[0]");
+
+        String receivedMimeMessageId = with()
+            .header("Authorization", accessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [\"" + jmapMessageId + "\"]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .extract()
+            .path(ARGUMENTS + ".list[0].headers['Message-ID']");
+
+        assertThat(receivedMimeMessageId).isEqualTo(creationMimeMessageId);
+    }
+
 }
