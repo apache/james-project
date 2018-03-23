@@ -27,13 +27,14 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 public class User {
     public static User fromUsername(String username) {
         Preconditions.checkNotNull(username);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
 
-        List<String> parts = Splitter.on('@').splitToList(username);
+        List<String> parts = ImmutableList.copyOf(Splitter.on('@').split(username));
         switch (parts.size()) {
             case 1:
                 return fromLocalPartWithoutDomain(username);
