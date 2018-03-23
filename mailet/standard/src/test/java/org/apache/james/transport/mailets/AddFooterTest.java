@@ -37,9 +37,11 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ArgumentsProvider;
+import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -51,30 +53,33 @@ class AddFooterTest {
     private Mailet mailet;
     
 
-    private static Stream<Arguments> charsetTuples() {
-        //javamail has its own charset handling logic, it needs to be exercised
-        List<String> charsetNamesToTest = Lists.newArrayList(
-                "ANSI_X3.4-1968", 
-                "iso-ir-6", 
-                "ANSI_X3.4-1986", 
-                "ISO_646.irv:1991", 
-                "ASCII", 
-                "ISO646-US", 
-                "US-ASCII",
-                "us", 
-                "IBM367", 
-                "cp367",
-                "csASCII");
-        return charsetNamesToTest.stream().flatMap(from -> charsetNamesToTest.stream().map(to -> Arguments.of(from, to)));
+    static class CharsetTuples implements ArgumentsProvider {
+        @Override
+        public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+            //javamail has its own charset handling logic, it needs to be exercised
+            List<String> charsetNamesToTest = Lists.newArrayList(
+                    "ANSI_X3.4-1968", 
+                    "iso-ir-6", 
+                    "ANSI_X3.4-1986", 
+                    "ISO_646.irv:1991", 
+                    "ASCII", 
+                    "ISO646-US", 
+                    "US-ASCII",
+                    "us", 
+                    "IBM367", 
+                    "cp367",
+                    "csASCII");
+            return charsetNamesToTest.stream().flatMap(from -> charsetNamesToTest.stream().map(to -> Arguments.of(from, to)));
+        }
     }
-    
+
     @BeforeEach
     void setup() {
         mailet = new AddFooter();
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldAddFooterWhenQuotedPrintableTextPlainMessage(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -100,7 +105,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldEnsureCarriageReturnWhenAddFooterWithTextPlainMessage(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -126,7 +131,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldNotAddFooterWhenUnsupportedEncoding(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -150,7 +155,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldNotAddFooterWhenUnsupportedTextContentType(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -178,7 +183,7 @@ class AddFooterTest {
      * This should not add the header and should leave the multipart/mixed Content-Type intact
      */
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldNotAddFooterWhenNestedUnsupportedMultipart(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -215,7 +220,7 @@ class AddFooterTest {
      * Test for JAMES-368
      */
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldAddFooterWhenMultipartRelatedHtmlMessage(String javaCharset, String javaMailCharset) throws MessagingException, IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -268,7 +273,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldAddFooterWhenMultipartAlternivateMessage(String javaCharset, String javaMailCharset) throws MessagingException,
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -306,7 +311,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldAddFooterWhenHtmlMessageWithMixedCaseBodyTag(String javaCharset, String javaMailCharset) throws MessagingException,
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -334,7 +339,7 @@ class AddFooterTest {
     }
 
     @ParameterizedTest
-    @MethodSource("charsetTuples")
+    @ArgumentsSource(CharsetTuples.class)
     void shouldAddFooterWhenHtmlMessageWithNoBodyTag(String javaCharset, String javaMailCharset) throws MessagingException,
             IOException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
