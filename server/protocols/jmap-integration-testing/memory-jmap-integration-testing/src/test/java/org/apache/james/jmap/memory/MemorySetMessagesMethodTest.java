@@ -26,9 +26,7 @@ import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
-import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.Test;
 
 public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
 
@@ -49,12 +47,6 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     @Override
     protected MessageId randomMessageId() {
         return new InMemoryMessageId.Factory().fromString(String.valueOf(random.nextInt(100000) + 100));
-    }
-
-    @Ignore("JAMES-2363 Bug: memory implementation should preserver mime message ids")
-    @Override
-    @Test
-    public void mimeMessageIdShouldBePreservedWhenSending() {
     }
 
 }
