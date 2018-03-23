@@ -18,13 +18,14 @@
  ****************************************************************/
 package org.apache.james.mailbox.store;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -56,15 +57,14 @@ public class ImmutableMailboxMessage implements MailboxMessage {
             try {
                 return new ImmutableMailboxMessage(message.getMessageId(),
                         message.getInternalDate(),
-                        copy(message.getBodyContent()),
+                        IOUtils.toByteArray(message.getBodyContent()),
                         message.getMediaType(),
                         message.getSubType(),
                         message.getBodyOctets(),
                         message.getFullContentOctets(),
                         message.getFullContentOctets() - message.getBodyOctets(),
                         message.getTextualLineCount(),
-                        copy(message.getHeaderContent()),
-                        copy(message.getFullContent()),
+                        IOUtils.toByteArray(message.getHeaderContent()),
                         ImmutableList.copyOf(message.getProperties()),
                         attachments(message),
                         mailboxId,
@@ -88,23 +88,18 @@ public class ImmutableMailboxMessage implements MailboxMessage {
             }
             return ImmutableList.of();
         }
-
-        private static SharedByteArrayInputStream copy(InputStream inputStream) throws IOException {
-            return new SharedByteArrayInputStream(IOUtils.toByteArray(inputStream));
-        }
     }
 
     private final MessageId messageId;
     private final Date internalDate;
-    private final InputStream bodyContent;
+    private final byte[] bodyContent;
     private final String mediaType;
     private final String subType;
     private final long bodyOctets;
     private final long fullContentOctets;
     private final long headerOctets;
     private final Long textualLineCount;
-    private final InputStream headerContent;
-    private final InputStream fullContent;
+    private final byte[] headerContent;
     private final List<Property> properties;
     private final List<MessageAttachment> attachments;
     private final MailboxId mailboxId;
@@ -118,8 +113,8 @@ public class ImmutableMailboxMessage implements MailboxMessage {
     private final boolean seen;
     private final String[] userFlags;
 
-    private ImmutableMailboxMessage(MessageId messageId, Date internalDate, InputStream bodyContent, String mediaType, String subType, long bodyOctets, long fullContentOctets, long headerOctets, Long textualLineCount, InputStream headerContent,
-                                    InputStream fullContent, List<Property> properties, List<MessageAttachment> attachments, MailboxId mailboxId, MessageUid uid, long modSeq, boolean answered, boolean deleted, boolean draft, boolean flagged, boolean recent,
+    private ImmutableMailboxMessage(MessageId messageId, Date internalDate, byte[] bodyContent, String mediaType, String subType, long bodyOctets, long fullContentOctets, long headerOctets, Long textualLineCount, byte[] headerContent,
+                                    List<Property> properties, List<MessageAttachment> attachments, MailboxId mailboxId, MessageUid uid, long modSeq, boolean answered, boolean deleted, boolean draft, boolean flagged, boolean recent,
                                     boolean seen, String[] userFlags) {
         this.messageId = messageId;
         this.internalDate = internalDate;
@@ -131,7 +126,6 @@ public class ImmutableMailboxMessage implements MailboxMessage {
         this.headerOctets = headerOctets; 
         this.textualLineCount = textualLineCount;
         this.headerContent = headerContent;
-        this.fullContent = fullContent;
         this.properties = properties;
         this.attachments = attachments;
         this.mailboxId = mailboxId;
@@ -167,7 +161,7 @@ public class ImmutableMailboxMessage implements MailboxMessage {
 
     @Override
     public InputStream getBodyContent() {
-        return bodyContent;
+        return new ByteArrayInputStream(bodyContent);
     }
 
     @Override
@@ -202,12 +196,14 @@ public class ImmutableMailboxMessage implements MailboxMessage {
 
     @Override
     public InputStream getHeaderContent() {
-        return headerContent;
+        return new ByteArrayInputStream(headerContent);
     }
 
     @Override
     public InputStream getFullContent() {
-        return fullContent;
+        return new SequenceInputStream(
+            new ByteArrayInputStream(headerContent),
+            new ByteArrayInputStream(bodyContent));
     }
 
     @Override
