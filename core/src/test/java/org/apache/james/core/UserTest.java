@@ -166,4 +166,16 @@ public class UserTest {
             .isEqualTo(User.from("aa", Optional.empty()));
     }
 
+    @Test
+    public void hasDomainPartShouldReturnFalseWhenNoDomain() {
+        assertThat(User.fromLocalPartWithoutDomain("aa").hasDomainPart())
+            .isFalse();
+    }
+
+    @Test
+    public void hasDomainPartShouldReturnTrueWhenHasADomain() {
+        assertThat(User.fromLocalPartWithDomain("aa", "domain").hasDomainPart())
+            .isTrue();
+    }
+
 }

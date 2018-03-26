@@ -80,6 +80,10 @@ public class User {
         return domainPart;
     }
 
+    public boolean hasDomainPart() {
+        return domainPart.isPresent();
+    }
+
     public String asString() {
         return domainPart.map(domain -> localPart + "@" + domain.asString())
             .orElse(localPart);

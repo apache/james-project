@@ -68,13 +68,13 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     }
 
     protected void isValidUsername(String username) throws UsersRepositoryException {
-        int i = username.indexOf("@");
+        User user = User.fromUsername(username);
         if (supportVirtualHosting()) {
             // need a @ in the username
-            if (i == -1) {
+            if (!user.hasDomainPart()) {
                 throw new UsersRepositoryException("Given Username needs to contain a @domainpart");
             } else {
-                Domain domain = Domain.of(username.substring(i + 1));
+                Domain domain = user.getDomainPart().get();
                 try {
                     if (!domainList.containsDomain(domain)) {
                         throw new UsersRepositoryException("Domain does not exist in DomainList");
@@ -85,7 +85,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
             }
         } else {
             // @ only allowed when virtualhosting is supported
-            if (i != -1) {
+            if (user.hasDomainPart()) {
                 throw new UsersRepositoryException("Given Username contains a @domainpart but virtualhosting support is disabled");
             }
         }
