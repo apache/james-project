@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -111,7 +112,7 @@ public class SpamAssassinHandlerTest {
     public void testNonSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage("test")));
 
-        SpamAssassinHandler handler = new SpamAssassinHandler();
+        SpamAssassinHandler handler = new SpamAssassinHandler(new NoopMetricFactory());
 
         handler.setSpamdHost(SPAMD_HOST);
         handler.setSpamdPort(spamd.getPort());
@@ -128,7 +129,7 @@ public class SpamAssassinHandlerTest {
     public void testSpam() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
-        SpamAssassinHandler handler = new SpamAssassinHandler();
+        SpamAssassinHandler handler = new SpamAssassinHandler(new NoopMetricFactory());
 
         handler.setSpamdHost(SPAMD_HOST);
         handler.setSpamdPort(spamd.getPort());
@@ -144,7 +145,7 @@ public class SpamAssassinHandlerTest {
     public void testSpamReject() throws Exception {
         SMTPSession session = setupMockedSMTPSession(setupMockedMail(setupMockedMimeMessage(MockSpamd.GTUBE)));
 
-        SpamAssassinHandler handler = new SpamAssassinHandler();
+        SpamAssassinHandler handler = new SpamAssassinHandler(new NoopMetricFactory());
 
         handler.setSpamdHost(SPAMD_HOST);
         handler.setSpamdPort(spamd.getPort());

@@ -23,6 +23,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.Host;
 import org.apache.james.util.scanner.SpamAssassinInvoker;
 
@@ -30,17 +31,19 @@ import com.github.fge.lambdas.Throwing;
 
 public class SpamAssassin {
 
+    private final MetricFactory metricFactory;
     private final SpamAssassinConfiguration spamAssassinConfiguration;
 
     @Inject
-    public SpamAssassin(SpamAssassinConfiguration spamAssassinConfiguration) {
+    public SpamAssassin(MetricFactory metricFactory, SpamAssassinConfiguration spamAssassinConfiguration) {
+        this.metricFactory = metricFactory;
         this.spamAssassinConfiguration = spamAssassinConfiguration;
     }
 
     public void learnSpam(List<InputStream> messages, String user) {
         if (spamAssassinConfiguration.isEnable()) {
             Host host = spamAssassinConfiguration.getHost().get();
-            SpamAssassinInvoker invoker = new SpamAssassinInvoker(host.getHostName(), host.getPort());
+            SpamAssassinInvoker invoker = new SpamAssassinInvoker(metricFactory, host.getHostName(), host.getPort());
             messages
                 .forEach(Throwing.consumer(message -> invoker.learnAsSpam(message, user)));
         }
@@ -49,7 +52,7 @@ public class SpamAssassin {
     public void learnHam(List<InputStream> messages, String user) {
         if (spamAssassinConfiguration.isEnable()) {
             Host host = spamAssassinConfiguration.getHost().get();
-            SpamAssassinInvoker invoker = new SpamAssassinInvoker(host.getHostName(), host.getPort());
+            SpamAssassinInvoker invoker = new SpamAssassinInvoker(metricFactory, host.getHostName(), host.getPort());
             messages
                 .forEach(Throwing.consumer(message -> invoker.learnAsHam(message, user)));
         }

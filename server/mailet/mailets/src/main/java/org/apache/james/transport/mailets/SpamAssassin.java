@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.Port;
@@ -69,13 +70,15 @@ public class SpamAssassin extends GenericMailet {
     public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 783;
 
+    private final MetricFactory metricFactory;
     private final UsersRepository usersRepository;
 
     private String spamdHost;
     private int spamdPort;
 
     @Inject
-    public SpamAssassin(UsersRepository usersRepository) {
+    public SpamAssassin(MetricFactory metricFactory, UsersRepository usersRepository) {
+        this.metricFactory = metricFactory;
         this.usersRepository = usersRepository;
     }
 
@@ -94,7 +97,7 @@ public class SpamAssassin extends GenericMailet {
         MimeMessage message = mail.getMessage();
 
         // Invoke SpamAssassin connection and scan the message
-        SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
+        SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamdHost, spamdPort);
         mail.getRecipients()
             .forEach(
                 Throwing.consumer((MailAddress recipient) -> querySpamAssassin(mail, message, sa, recipient))

@@ -19,11 +19,13 @@
 
 package org.apache.james.smtpserver.fastfail;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -69,6 +71,8 @@ import org.slf4j.LoggerFactory;
 public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinHandler.class);
 
+    private final MetricFactory metricFactory;
+
     /** The port spamd is listen on */
     private int spamdPort = 783;
 
@@ -77,6 +81,11 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
     /** The hits on which the message get rejected */
     private double spamdRejectionHits = 0.0;
+
+    @Inject
+    public SpamAssassinHandler(MetricFactory metricFactory) {
+        this.metricFactory = metricFactory;
+    }
 
     /**
      * Set the host the spamd daemon is running at
@@ -114,7 +123,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
 
         try {
             MimeMessage message = mail.getMessage();
-            SpamAssassinInvoker sa = new SpamAssassinInvoker(spamdHost, spamdPort);
+            SpamAssassinInvoker sa = new SpamAssassinInvoker(metricFactory, spamdHost, spamdPort);
             SpamAssassinResult result = sa.scanMail(message);
 
             // Add the headers

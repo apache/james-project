@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.Port;
 import org.apache.james.util.scanner.SpamAssassinResult;
@@ -41,7 +42,7 @@ public class SpamAssassinTest {
     @Rule
     public MockSpamdTestRule spamd = new MockSpamdTestRule();
 
-    private SpamAssassin mailet = new SpamAssassin(MemoryUsersRepository.withVirtualHosting());
+    private SpamAssassin mailet = new SpamAssassin(new NoopMetricFactory(), MemoryUsersRepository.withVirtualHosting());
 
     @Test
     public void initShouldSetDefaultSpamdHostWhenNone() throws Exception {

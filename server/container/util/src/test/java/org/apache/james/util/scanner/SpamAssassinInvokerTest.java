@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.scanner.SpamAssassinExtension.SpamAssassin;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +42,7 @@ public class SpamAssassinInvokerTest {
     @BeforeEach
     public void setup(SpamAssassin spamAssassin) throws Exception {
         this.spamAssassin = spamAssassin;
-        testee = new SpamAssassinInvoker(spamAssassin.getIp(), spamAssassin.getBindingPort());
+        testee = new SpamAssassinInvoker(new NoopMetricFactory(), spamAssassin.getIp(), spamAssassin.getBindingPort());
     }
 
     @Test
