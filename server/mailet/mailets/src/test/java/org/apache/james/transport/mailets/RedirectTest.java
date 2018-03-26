@@ -397,4 +397,56 @@ public class RedirectTest {
         SentMail newMail = fakeMailContext.getSentMails().get(0);
         assertThat(newMail.getSubject()).contains("pre subj");
     }
+
+    @Test
+    public void unalteredShouldPreserveMessageId() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("inline", "unaltered")
+            .build();
+        redirect.init(mailetConfig);
+
+        String messageId = "<matchme@localhost>";
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("Message-ID", messageId)
+                .setSubject("My subject")
+                .setText("Content"))
+            .build();
+
+        redirect.service(mail);
+
+        SentMail newMail = fakeMailContext.getSentMails().get(0);
+        assertThat(newMail.getMsg().getMessageID())
+            .isEqualTo(messageId);
+    }
+
+    @Test
+    public void alteredShouldResetMessageId() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+            .mailetName(MAILET_NAME)
+            .mailetContext(fakeMailContext)
+            .setProperty("inline", "all")
+            .build();
+        redirect.init(mailetConfig);
+
+        String messageId = "<matchme@localhost>";
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("Message-ID", messageId)
+                .setSubject("My subject")
+                .setText("Content"))
+            .build();
+
+        redirect.service(mail);
+
+        SentMail newMail = fakeMailContext.getSentMails().get(0);
+        assertThat(newMail.getMsg().getMessageID())
+            .isNotEqualTo(messageId);
+    }
 }

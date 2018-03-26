@@ -210,8 +210,7 @@ public class MailModifier {
         }
     }
 
-    public void setMessageId(Mail originalMail) throws MessagingException {
-        String messageId = originalMail.getMessage().getMessageID();
+    public void setMessageId(String messageId) throws MessagingException {
         if (messageId != null) {
             mail.getMessage().setHeader(RFC2822Headers.MESSAGE_ID, messageId);
             if (mailet.getInitParameters().isDebug()) {
