@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -44,6 +45,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -52,11 +54,13 @@ import com.google.common.collect.ImmutableList;
 
 public class TikaTextExtractor implements TextExtractor {
 
+    private final MetricFactory metricFactory;
     private final TikaHttpClient tikaHttpClient;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public TikaTextExtractor(TikaHttpClient tikaHttpClient) {
+    public TikaTextExtractor(MetricFactory metricFactory, TikaHttpClient tikaHttpClient) {
+        this.metricFactory = metricFactory;
         this.tikaHttpClient = tikaHttpClient;
         this.objectMapper = initializeObjectMapper();
     }
@@ -71,6 +75,12 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        return metricFactory.withMetric("tikaTextExtraction", Throwing.supplier(
+            () -> performContentExtraction(inputStream, contentType))
+            .sneakyThrow());
+    }
+
+    public ParsedContent performContentExtraction(InputStream inputStream, String contentType) throws IOException {
         ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
         return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
     }

@@ -54,6 +54,7 @@ import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainer;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.elasticsearch.client.Client;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -81,7 +82,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Override
     public void setUp() throws Exception {
-        textExtractor = new TikaTextExtractor(new TikaHttpClientImpl(TikaConfiguration.builder()
+        textExtractor = new TikaTextExtractor(new NoopMetricFactory(),
+            new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
                 .timeoutInMillis(tika.getTimeoutInMillis())
