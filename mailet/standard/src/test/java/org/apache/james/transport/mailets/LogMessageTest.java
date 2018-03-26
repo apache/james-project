@@ -28,7 +28,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Properties;
+
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -81,11 +84,13 @@ class LogMessageTest {
                 .build();
         mailet.init(mailetConfig);
 
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100");
+        message.setSubject("subject");
+        message.setText("This is a fake mail");
+
         mailet.service(FakeMail.builder()
-                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
-                    .setSubject("subject")
-                    .setText("This is a fake mail"))
+                .mimeMessage(message)
                 .build());
 
         verify(logger).info("Logging mail {}", (Object) null);

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,6 +37,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.lifecycle.api.LifecycleUtil;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
 import org.junit.After;
 import org.junit.Before;
@@ -282,5 +284,21 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         MimeMessage message = new MimeMessage(session, stream);
         MimeMessageWrapper wrapper = new MimeMessageWrapper(message);
         assertEquals("\"base64\"", wrapper.getEncoding());
+    }
+
+    @Test
+    public void saveChangesShouldPreserveMessageId() throws Exception {
+        String messageId = "<5436@ab.com>";
+        MimeMessage message = MimeMessageUtil.mimeMessageFromString("Message-ID: " + messageId + "\r\n" +
+            "Subject: test\r\n" +
+            "\r\n" +
+            "Content!");
+
+        MimeMessageWrapper mimeMessageWrapper = new MimeMessageWrapper(message);
+
+        mimeMessageWrapper.saveChanges();
+
+        assertThat(mimeMessageWrapper.getMessageID())
+            .isEqualTo(messageId);
     }
 }

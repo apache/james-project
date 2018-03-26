@@ -165,7 +165,7 @@ public interface Mail extends Serializable, Cloneable {
      *
      * @param message the new message that this Mail instance will wrap
      */
-    void setMessage(MimeMessage message);
+    void setMessage(MimeMessage message) throws MessagingException;
     
     /**
      * Sets the state of this message.

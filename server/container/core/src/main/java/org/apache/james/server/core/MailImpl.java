@@ -231,7 +231,7 @@ public class MailImpl implements Disposable, Mail {
 
         public MailImpl build() {
             MailImpl mail = new MailImpl();
-            mimeMessage.ifPresent(mail::setMessage);
+            mimeMessage.ifPresent(Throwing.consumer(mail::setMessage).sneakyThrow());
             name.ifPresent(mail::setName);
             sender.ifPresent(mail::setSender);
             mail.setRecipients(recipients);
@@ -323,7 +323,7 @@ public class MailImpl implements Disposable, Mail {
     /**
      * The MimeMessage that holds the mail data.
      */
-    private MimeMessage message;
+    private MimeMessageCopyOnWriteProxy message;
     /**
      * The sender of this mail.
      */
@@ -437,7 +437,7 @@ public class MailImpl implements Disposable, Mail {
      * A constructor that creates a MailImpl with the specified name, sender,
      * recipients, and MimeMessage.
      */
-    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) {
+    public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients, MimeMessage message) throws MessagingException {
         this(name, sender, recipients);
         this.setMessage(new MimeMessageCopyOnWriteProxy(message));
     }
@@ -538,7 +538,7 @@ public class MailImpl implements Disposable, Mail {
      * @param message the new MimeMessage associated with this MailImpl
      */
     @Override
-    public void setMessage(MimeMessage message) {
+    public void setMessage(MimeMessage message) throws MessagingException {
 
         // TODO: We should use the MimeMessageCopyOnWriteProxy
         // everytime we set the MimeMessage. We should
@@ -551,7 +551,11 @@ public class MailImpl implements Disposable, Mail {
             if (this.message != null) {
                 LifecycleUtil.dispose(this.message);
             }
-            this.message = message;
+            if (message instanceof MimeMessageCopyOnWriteProxy) {
+                this.message = (MimeMessageCopyOnWriteProxy) message;
+            } else {
+                this.message = new MimeMessageCopyOnWriteProxy(message);
+            }
         }
     }
 

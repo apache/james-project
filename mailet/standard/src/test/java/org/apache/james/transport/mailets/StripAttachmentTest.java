@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
@@ -686,19 +687,19 @@ class StripAttachmentTest {
                 .build();
         mailet.init(mci);
 
-        MimeMultipart mimeMultipart = MimeMessageBuilder.multipartBuilder()
-            .addBody(MimeMessageBuilder.bodyPartBuilder()
-                .filename("removeMe.tmp"))
-            .build();
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-            .setContent(mimeMultipart)
+            .setContent(MimeMessageBuilder.multipartBuilder()
+                .addBody(MimeMessageBuilder.bodyPartBuilder()
+                    .filename("removeMe.tmp")))
             .build();
 
         Mail mail = mock(Mail.class);
         //When
         mailet.processMultipartPartMessage(mimeMessage, mail);
         //Then
-        assertThat(mimeMultipart.getCount()).isZero();
+        assertThat(mimeMessage.getContent()).isInstanceOf(MimeMultipart.class);
+        MimeMultipart multipart = (MimeMultipart) mimeMessage.getContent();
+        assertThat(multipart.getCount()).isZero();
     }
 
     @Test

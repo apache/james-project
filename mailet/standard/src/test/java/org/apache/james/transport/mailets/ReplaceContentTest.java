@@ -22,7 +22,9 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -78,10 +80,11 @@ public class ReplaceContentTest {
                 .build();
         mailet.init(mailetConfig);
 
+        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
+        message.setText("This is one simple test/ è one simple test.\n"
+            + "Blo blo blo blo.\n");
         Mail mail = FakeMail.builder()
-                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
-                    .setText("This is one simple test/ è one simple test.\n"
-                        + "Blo blo blo blo.\n"))
+                .mimeMessage(message)
                 .build();
         mailet.service(mail);
 

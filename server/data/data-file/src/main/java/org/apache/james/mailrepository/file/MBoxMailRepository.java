@@ -526,7 +526,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public Mail retrieve(String key) {
+    public Mail retrieve(String key) throws MessagingException {
 
         loadKeys();
         MailImpl res;
@@ -669,7 +669,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public void remove(String key) {
+    public void remove(String key) throws MessagingException {
         loadKeys();
         try {
             lockMBox();

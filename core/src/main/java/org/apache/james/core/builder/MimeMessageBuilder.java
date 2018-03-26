@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -59,6 +60,22 @@ public class MimeMessageBuilder {
         public Header(String name, String value) {
             this.name = name;
             this.value = value;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Header) {
+                Header header = (Header) o;
+
+                return Objects.equals(this.name, header.name)
+                    && Objects.equals(this.value, header.value);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(name, value);
         }
     }
 
@@ -380,8 +397,10 @@ public class MimeMessageBuilder {
         for (Header header: headerList) {
             mimeMessage.addHeader(header.name, header.value);
         }
-        mimeMessage.saveChanges();
-        return mimeMessage;
+
+        MimeMessage wrappedMessage = MimeMessageWrapper.wrap(mimeMessage);
+        wrappedMessage.saveChanges();
+        return wrappedMessage;
     }
 
 }
