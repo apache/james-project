@@ -640,7 +640,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldReturnErrorInvalidArgumentsWhenRequestIsInvalid() throws Exception {
+    public void getMessageListShouldReturnErrorInvalidArgumentsWhenRequestIsInvalid() {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\": true}, \"#0\"]]")
@@ -653,7 +653,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldReturnErrorInvalidArgumentsWhenHeaderIsInvalid() throws Exception {
+    public void getMessageListShouldReturnErrorInvalidArgumentsWhenHeaderIsInvalid() {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"header\":[\"132\", \"456\", \"789\"]}}, \"#0\"]]")
@@ -712,7 +712,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFailWhenHeaderIsValid() throws Exception {
+    public void getMessageListShouldNotFailWhenHeaderIsValid() {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {\"filter\":{\"header\":[\"132\", \"456\"]}}, \"#0\"]]")
@@ -798,7 +798,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenInMailboxesFilterMatches() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -816,7 +816,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenMultipleInMailboxesFilterMatches() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenMultipleInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -836,7 +836,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatches() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenNotInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -855,7 +855,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenNotInMailboxesFilterMatchesTwice() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenNotInMailboxesFilterMatchesTwice() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -877,7 +877,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -895,7 +895,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFilterMessagesWhenNotInMailboxesFilterDoesNotMatch() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenNotInMailboxesFilterDoesNotMatch() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -915,7 +915,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFilterMessagesWhenEmptyNotInMailboxesFilter() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenEmptyNotInMailboxesFilter() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -935,7 +935,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenInMailboxesFilterDoesntMatches() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenInMailboxesFilterDoesntMatches() throws Exception {
         MailboxId emptyMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "emptyMailbox");
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
@@ -954,7 +954,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenTextFilterDoesntMatches() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenTextFilterDoesntMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -962,7 +962,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"text\":\"bad\"}}, \"#0\"]]"))
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"bad\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -971,7 +971,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFilterMessagesWhenTextFilterMatchesBody() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBody() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
                 ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
@@ -979,7 +979,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"text\":\"html\"}}, \"#0\"]]"))
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"html\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -988,7 +988,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFilterMessagesWhenSubjectFilterMatchesSubject() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenSubjectFilterMatchesSubject() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
             ClassLoader.getSystemResourceAsStream("eml/twoAttachments.eml"), new Date(), false, new Flags());
@@ -996,16 +996,152 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"subject\":\"Image\"}}, \"#0\"]]"))
-            .when()
+            .body("[[\"getMessageList\", {\"filter\":{\"subject\":\"Image\"}}, \"#0\"]]")
+        .when()
             .post("/jmap")
-            .then()
+        .then()
             .statusCode(200)
             .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
     }
 
     @Test
-    public void getMessageListShouldFilterMessagesWhenAttachmentFilterDoesntMatches() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenFromFilterMatchesFrom() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"from\":\"from@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldExcludeMessagesWhenFromFilterDoesntMatchFrom() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"from\":\"to@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldIncludeMessagesWhenToFilterMatchesTo() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"to\":\"to@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldExcludeMessagesWhenToFilterDoesntMatchTo() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"to\":\"from@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldIncludeMessagesWhenCcFilterMatchesCc() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"cc\":\"cc@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldExcludeMessagesWhenCcFilterDoesntMatchCc() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"cc\":\"bcc@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldIncludeMessagesWhenBccFilterMatchesBcc() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"bcc\":\"bcc@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListShouldExcludeMessagesWhenBccFilterDoesntMatchBcc() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
+        mailboxProbe.appendMessage(alice, MailboxPath.forUser(alice, "mailbox"),
+            ClassLoader.getSystemResourceAsStream("eml/mailWithRecipients.eml"), new Date(), false, new Flags());
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"bcc\":\"to@james.org\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", empty());
+    }
+
+    @Test
+    public void getMessageListShouldExcludeMessagesWhenAttachmentFilterDoesntMatch() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
@@ -1026,7 +1162,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"attachments\":\"no apple inside\"}}, \"#0\"]]"))
+            .body("[[\"getMessageList\", {\"filter\":{\"attachments\":\"no apple inside\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -1035,7 +1171,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldNotFilterMessagesWhenAttachmentFilterMatches() throws Exception {
+    public void getMessageListShouldIncludeMessagesWhenAttachmentFilterMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         BodyPart attachment = BodyPartBuilder.create()
@@ -1056,7 +1192,7 @@ public abstract class GetMessageListMethodTest {
 
         given()
             .header("Authorization", aliceAccessToken.serialize())
-            .body(String.format("[[\"getMessageList\", {\"filter\":{\"attachments\":\"beautiful banana\"}}, \"#0\"]]"))
+            .body("[[\"getMessageList\", {\"filter\":{\"attachments\":\"beautiful banana\"}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -1612,8 +1748,7 @@ public abstract class GetMessageListMethodTest {
             .body("[1][0]", equalTo("messages"))
             .body("[0][1].messageIds", hasSize(1))
             .body("[1][1].list[0].htmlBody", equalTo("Hello <b>someone</b>, and thank you for joining example.com!"))
-            .body("[1][1].list[0].textBody", equalTo("Hello someone, and thank you for joining example.com!"))
-        ;
+            .body("[1][1].list[0].textBody", equalTo("Hello someone, and thank you for joining example.com!"));
     }
 
     @Test
@@ -1894,7 +2029,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldAcceptLessThan2Pow53NumberForPosition() throws Exception {
+    public void getMessageListShouldAcceptLessThan2Pow53NumberForPosition() {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + "}, \"#0\"]]")
@@ -1906,7 +2041,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldErrorWhenPositionOver2Pow53() throws Exception {
+    public void getMessageListShouldErrorWhenPositionOver2Pow53() {
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {\"position\":" + Number.MAX_VALUE + 1 + "}, \"#0\"]]")
