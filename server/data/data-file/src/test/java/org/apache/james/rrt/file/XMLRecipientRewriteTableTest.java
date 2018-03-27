@@ -24,10 +24,10 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.core.Domain;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
@@ -70,7 +70,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected void addMapping(String user, Domain domain, String mapping, int type) throws
+    protected void addMapping(String user, Domain domain, String mapping, Type type) throws
             RecipientRewriteTableException {
 
         Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
@@ -80,16 +80,8 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         }
 
         Builder builder = MappingsImpl.from(Optional.ofNullable(mappings).orElse(MappingsImpl.empty()));
-        
-        if (type == ERROR_TYPE) {
-            builder.add(RecipientRewriteTable.ERROR_PREFIX + mapping);
-        } else if (type == REGEX_TYPE) {
-            builder.add(RecipientRewriteTable.REGEX_PREFIX + mapping);
-        } else if (type == ADDRESS_TYPE) {
-            builder.add(mapping);
-        } else if (type == ALIASDOMAIN_TYPE) {
-            builder.add(RecipientRewriteTable.ALIASDOMAIN_PREFIX + mapping);
-        }
+
+        builder.add(type.asPrefix() + mapping);
 
         Mappings updatedMappings = builder.build();
         
@@ -108,7 +100,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected void removeMapping(String user, Domain domain, String mapping, int type) throws
+    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws
             RecipientRewriteTableException {
 
         Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
@@ -119,13 +111,13 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
         removeMappingsFromConfig(user, domain, mappings);
 
-        if (type == ERROR_TYPE) {
+        if (type == Type.Error) {
             mappings = mappings.remove(MappingImpl.error(mapping));
-        } else if (type == REGEX_TYPE) {
+        } else if (type == Type.Regex) {
             mappings = mappings.remove(MappingImpl.regex(mapping));
-        } else if (type == ADDRESS_TYPE) {
+        } else if (type == Type.Address) {
             mappings = mappings.remove(MappingImpl.address(mapping));
-        } else if (type == ALIASDOMAIN_TYPE) {
+        } else if (type == Type.Domain) {
             mappings = mappings.remove(MappingImpl.domain(Domain.of(mapping)));
         }
 

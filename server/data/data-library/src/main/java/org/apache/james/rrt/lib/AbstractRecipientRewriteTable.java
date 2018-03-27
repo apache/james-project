@@ -119,14 +119,14 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 MappingsImpl.Builder mappings = MappingsImpl.builder();
 
                 for (String target : targetMappings.asStrings()) {
-                    if (target.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
+                    if (target.startsWith(Type.Regex.asPrefix())) {
                         try {
                             target = RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain.asString()), target);
                         } catch (PatternSyntaxException | ParseException e) {
                             LOGGER.error("Exception during regexMap processing: ", e);
                         }
-                    } else if (target.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-                        target = user + "@" + target.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length());
+                    } else if (target.startsWith(Type.Domain.asPrefix())) {
+                        target = user + "@" + target.substring(Type.Domain.asPrefix().length());
                     }
 
                     if (target == null) {
@@ -249,15 +249,15 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         String map = mapping.toLowerCase(Locale.US);
 
-        if (map.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
-            addErrorMapping(user, domain, map.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
-        } else if (map.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
-            addRegexMapping(user, domain, map.substring(RecipientRewriteTable.REGEX_PREFIX.length()));
-        } else if (map.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
+        if (map.startsWith(Type.Error.asPrefix())) {
+            addErrorMapping(user, domain, map.substring(Type.Error.asPrefix().length()));
+        } else if (map.startsWith(Type.Regex.asPrefix())) {
+            addRegexMapping(user, domain, map.substring(Type.Regex.asPrefix().length()));
+        } else if (map.startsWith(Type.Domain.asPrefix())) {
             if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
             }
-            String domainName = map.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length());
+            String domainName = map.substring(Type.Domain.asPrefix().length());
             addAliasDomainMapping(domain, Domain.of(domainName));
         } else {
             addAddressMapping(user, domain, map);
@@ -270,15 +270,15 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         String map = mapping.toLowerCase(Locale.US);
 
-        if (map.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
-            removeErrorMapping(user, domain, map.substring(RecipientRewriteTable.ERROR_PREFIX.length()));
-        } else if (map.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
-            removeRegexMapping(user, domain, map.substring(RecipientRewriteTable.REGEX_PREFIX.length()));
-        } else if (map.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
+        if (map.startsWith(Type.Error.asPrefix())) {
+            removeErrorMapping(user, domain, map.substring(Type.Error.asPrefix().length()));
+        } else if (map.startsWith(Type.Regex.asPrefix())) {
+            removeRegexMapping(user, domain, map.substring(Type.Regex.asPrefix().length()));
+        } else if (map.startsWith(Type.Domain.asPrefix())) {
             if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
             }
-            String domainName = map.substring(RecipientRewriteTable.ALIASDOMAIN_PREFIX.length());
+            String domainName = map.substring(Type.Domain.asPrefix().length());
             removeAliasDomainMapping(domain, Domain.of(domainName));
         } else {
             removeAddressMapping(user, domain, map);

@@ -26,7 +26,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.core.Domain;
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class MappingImplTest {
+
+    @Test
+    public void beanShouldRespectBeanContract() {
+        EqualsVerifier.forClass(MappingImpl.class)
+            .verify();
+    }
 
     @Test(expected = NullPointerException.class)
     public void addressFactoryMethodShouldThrowOnNull() {
@@ -123,11 +131,6 @@ public class MappingImplTest {
     @Test
     public void getErrorMessageShouldReturnWhenErrorWithoutMessage() {
         assertThat(MappingImpl.error("").getErrorMessage()).isEqualTo("");
-    }
-
-    @Test
-    public void toStringShouldReturnValuePrefixedAsByMoreObject() {
-        assertThat(MappingImpl.of("value").toString()).isEqualTo("MappingImpl{mapping=value}");
     }
 
     @Test

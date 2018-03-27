@@ -25,6 +25,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.apache.james.rrt.lib.Mapping.Type;
 import org.junit.After;
 import org.junit.Before;
 
@@ -57,18 +58,18 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected void addMapping(String user, Domain domain, String mapping, int type) throws RecipientRewriteTableException {
+    protected void addMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
         switch (type) {
-        case ERROR_TYPE:
+        case Error:
             virtualUserTable.addErrorMapping(user, domain, mapping);
             break;
-        case REGEX_TYPE:
+        case Regex:
             virtualUserTable.addRegexMapping(user, domain, mapping);
             break;
-        case ADDRESS_TYPE:
+        case Address:
             virtualUserTable.addAddressMapping(user, domain, mapping);
             break;
-        case ALIASDOMAIN_TYPE:
+        case Domain:
             virtualUserTable.addAliasDomainMapping(domain, Domain.of(mapping));
             break;
         default:
@@ -77,18 +78,18 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected void removeMapping(String user, Domain domain, String mapping, int type) throws RecipientRewriteTableException {
+    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
         switch (type) {
-        case ERROR_TYPE:
+        case Error:
             virtualUserTable.removeErrorMapping(user, domain, mapping);
             break;
-        case REGEX_TYPE:
+        case Regex:
             virtualUserTable.removeRegexMapping(user, domain, mapping);
             break;
-        case ADDRESS_TYPE:
+        case Address:
             virtualUserTable.removeAddressMapping(user, domain, mapping);
             break;
-        case ALIASDOMAIN_TYPE:
+        case Domain:
             virtualUserTable.removeAliasDomainMapping(domain, Domain.of(mapping));
             break;
         default:

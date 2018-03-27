@@ -28,7 +28,7 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.Mapping.Type;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
@@ -57,7 +57,7 @@ public class RecipientRewriteTableUtil {
      */
     public static String regexMap(MailAddress address, String targetString) {
         String result = null;
-        int identifierLength = RecipientRewriteTable.REGEX_PREFIX.length();
+        int identifierLength = Type.Regex.asPrefix().length();
 
         int msgPos = targetString.indexOf(':', identifierLength + 1);
 
@@ -180,7 +180,7 @@ public class RecipientRewriteTableUtil {
      * @return the character to tokenize on
      */
     public static String getSeparator(String targetString) {
-        return (targetString.indexOf(',') > -1 ? "," : (targetString.indexOf(';') > -1 ? ";" : ((targetString.contains(RecipientRewriteTable.ERROR_PREFIX) || targetString.contains(RecipientRewriteTable.REGEX_PREFIX) || targetString.contains(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) ? "" : ":")));
+        return (targetString.indexOf(',') > -1 ? "," : (targetString.indexOf(';') > -1 ? ";" : ((targetString.contains(Type.Error.asPrefix()) || targetString.contains(Type.Regex.asPrefix()) || targetString.contains(Type.Domain.asPrefix())) ? "" : ":")));
     }
 
     /**

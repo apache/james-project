@@ -23,7 +23,6 @@ package org.apache.james.rrt.lib;
 import java.io.Serializable;
 
 import org.apache.james.core.Domain;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -33,38 +32,48 @@ public class MappingImpl implements Mapping, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String ADDRESS_PREFIX = "";
-
     public static MappingImpl of(String mapping) {
-        return new MappingImpl("", mapping);
+        if (mapping.startsWith(Type.Regex.asPrefix())) {
+            return new MappingImpl(Type.Regex, mapping.substring(Type.Regex.asPrefix().length()));
+        }
+        if (mapping.startsWith(Type.Error.asPrefix())) {
+            return new MappingImpl(Type.Error, mapping.substring(Type.Error.asPrefix().length()));
+        }
+        if (mapping.startsWith(Type.Domain.asPrefix())) {
+            return new MappingImpl(Type.Domain, mapping.substring(Type.Domain.asPrefix().length()));
+        }
+        return new MappingImpl(Type.Address, mapping.substring(Type.Address.asPrefix().length()));
     }
     
     public static MappingImpl address(String mapping) {
-        return new MappingImpl(ADDRESS_PREFIX, mapping);
+        return new MappingImpl(Type.Address, mapping);
     }
 
     public static MappingImpl regex(String mapping) {
-        return new MappingImpl(RecipientRewriteTable.REGEX_PREFIX, mapping);
+        return new MappingImpl(Type.Regex, mapping);
     }
 
     public static MappingImpl error(String mapping) {
-        return new MappingImpl(RecipientRewriteTable.ERROR_PREFIX, mapping);
+        return new MappingImpl(Type.Error, mapping);
     }
 
     public static MappingImpl domain(Domain mapping) {
-        return new MappingImpl(RecipientRewriteTable.ALIASDOMAIN_PREFIX, mapping.asString());
+        return new MappingImpl(Type.Domain, mapping.asString());
     }
     
+    private final Type type;
     private final String mapping;
 
-    private MappingImpl(String prefix, String mapping) {
+    private MappingImpl(Type type, String mapping) {
+        Preconditions.checkNotNull(type);
         Preconditions.checkNotNull(mapping);
-        this.mapping = prefix + mapping;
+        this.type = type;
+        this.mapping = mapping;
     }
     
     @Override
     public String asString() {
-        return mapping;
+        return type.asPrefix() + mapping;
     }
     
     @Override
@@ -75,26 +84,18 @@ public class MappingImpl implements Mapping, Serializable {
     @Override
     public Mapping appendDomain(Domain domain) {
         Preconditions.checkNotNull(domain);
-        return new MappingImpl("", mapping + "@" + domain.asString());
+        return new MappingImpl(type, mapping + "@" + domain.asString());
     }
     
     @Override
     public Type getType() {
-        if (mapping.startsWith(RecipientRewriteTable.ALIASDOMAIN_PREFIX)) {
-            return Type.Domain;
-        } else if (mapping.startsWith(RecipientRewriteTable.REGEX_PREFIX)) {
-            return Type.Regex;
-        } else if (mapping.startsWith(RecipientRewriteTable.ERROR_PREFIX)) {
-            return Type.Error;
-        } else {
-            return Type.Address;
-        }
+        return type;
     }
     
     @Override
     public String getErrorMessage() {
         Preconditions.checkState(getType() == Type.Error);
-        return mapping.substring(RecipientRewriteTable.ERROR_PREFIX.length());
+        return mapping;
     }
 
     @Override
@@ -104,21 +105,22 @@ public class MappingImpl implements Mapping, Serializable {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public final boolean equals(Object other) {
         if (other instanceof MappingImpl) {
             MappingImpl otherMapping = (MappingImpl) other;
-            return Objects.equal(mapping, otherMapping.mapping);
+            return Objects.equal(type, otherMapping.type)
+                && Objects.equal(mapping, otherMapping.mapping);
         }
         return false;
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hashCode(mapping);
+    public final int hashCode() {
+        return Objects.hashCode(type, mapping);
     }
 
     @Override
     public String toString() {
-        return "MappingImpl{mapping=" + mapping + "}";
+        return "MappingImpl{type=" + type + " mapping=" + mapping + "}";
     }
 }

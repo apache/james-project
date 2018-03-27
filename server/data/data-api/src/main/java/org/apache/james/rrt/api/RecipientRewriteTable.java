@@ -45,30 +45,6 @@ public interface RecipientRewriteTable {
     }
 
     /**
-     * 
-     * Prefixes used for:
-     *  - error mappings
-     *  - regex mappings
-     *  - alias domain mappings
-     *
-     */
-    public enum Prefix {
-        ERROR("error:"),
-        REGEX("regex:"),
-        ALIASDOMAIN("domain:");
-
-        private final String asString;
-
-        private Prefix(String asString) {
-            this.asString = asString;
-        }
-
-        public String asString() {
-            return asString;
-        }
-    }
-
-    /**
      * The wildcard used for alias domain mappings
      */
     String WILDCARD = "*";

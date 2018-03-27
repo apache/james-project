@@ -26,7 +26,22 @@ public interface Mapping {
 
     String getAddress();
 
-    enum Type { Regex, Domain, Error, Address }
+    enum Type { 
+        Regex("regex:"), 
+        Domain("domain:"), 
+        Error("error:"), 
+        Address(""); 
+
+        private final String asPrefix;
+
+        private Type(String asPrefix) {
+            this.asPrefix = asPrefix;
+        }
+
+        public String asPrefix() {
+            return asPrefix;
+        }
+    }
 
     Type getType();
     
