@@ -26,6 +26,8 @@ import javax.activation.ActivationDataFlavor;
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
 
+import org.apache.james.javax.MimeMultipartReport;
+
 
 /**
  * <p>Data Content Handler for...</p>

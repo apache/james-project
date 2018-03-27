@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.transport.mailets.redirect.InitParameters;
@@ -57,7 +58,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.DateFormats;
 import org.apache.mailet.base.GenericMailet;
 import org.apache.mailet.base.RFC2822Headers;
-import org.apache.mailet.base.mail.MimeMultipartReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
