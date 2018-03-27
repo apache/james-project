@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.Header;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -86,20 +87,20 @@ public class ReferenceUpdater {
 
     private void updateFlag(String messageId, MailboxSession session, Flags flag) throws MailboxException {
         int limit = 2;
-        MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery.from(new SearchQuery(SearchQuery.headerContains(RFC2822Headers.MESSAGE_ID, messageId))).build();
+        MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
+            .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))
+            .build();
         List<MessageId> references = mailboxManager.search(searchByRFC822MessageId, session, limit);
         try {
             MessageId reference = Iterables.getOnlyElement(references);
             List<MailboxId> mailboxIds = messageIdManager.getMessages(references, FetchGroupImpl.MINIMAL, session).stream()
-                .map(result -> result.getMailboxId())
+                .map(MessageResult::getMailboxId)
                 .collect(Guavate.toImmutableList());
             messageIdManager.setFlags(flag, FlagsUpdateMode.ADD, reference, mailboxIds, session);
         } catch (NoSuchElementException e) {
             logger.info("Unable to find a message with this Mime Message Id: " + messageId);
-            return;
         } catch (IllegalArgumentException e) {
             logger.info("Too many messages are matching this Mime Message Id: " + messageId);
-            return;
         }
     }
 }
