@@ -2762,7 +2762,7 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
         await();
 
         String messageCreationId = "creationId1337";
