@@ -22,6 +22,8 @@ package org.apache.james.modules.mailbox;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Named;
+
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
@@ -42,7 +44,6 @@ import com.google.inject.Inject;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 
 public class DefaultEventModule extends AbstractModule {
 
