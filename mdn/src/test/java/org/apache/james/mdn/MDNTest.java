@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 import javax.mail.internet.MimeMessage;
 
@@ -32,6 +33,7 @@ import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -56,6 +58,22 @@ public class MDNTest {
         EqualsVerifier.forClass(MDN.class)
             .allFieldsShouldBeUsed()
             .verify();
+    }
+
+    @Test
+    public void asMimeMessageShouldGenerateExpectedContentType() throws Exception {
+        MimeMessage mimeMessage = MDN.builder()
+            .humanReadableText("Explanation")
+            .report(MINIMAL_REPORT)
+            .build()
+            .asMimeMessage();
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+
+        assertThat(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8))
+            .containsPattern(
+                Pattern.compile("Content-Type: multipart/report;.*report-type=disposition-notification", Pattern.DOTALL));
     }
 
     @Test
@@ -190,6 +208,21 @@ public class MDNTest {
             "\r\n" +
             "Final-Recipient: rfc822; final@domain.com\r\n" +
             "Disposition: automatic-action/MDN-sent-automatically;deleted");
+    }
+
+
+    @Ignore("Content-Type Parameters are not supported by mime4j")
+    @Test
+    public void mime4JMessageExportShouldGenerateExpectedContentType() throws Exception {
+        Message message = MDN.builder()
+            .humanReadableText("RFCs are not funny")
+            .report(MINIMAL_REPORT)
+            .build()
+            .asMime4JMessageBuilder()
+            .build();
+
+        assertThat(asString(message))
+            .containsPattern(Pattern.compile("Content-Type: multipart/report;.*report-type=disposition-notification", Pattern.DOTALL));
     }
 
     private String asString(Message message) throws Exception {
