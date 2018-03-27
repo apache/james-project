@@ -759,6 +759,10 @@ public class SearchQuery implements Serializable {
         return AllCriterion.all();
     }
 
+    public static Criterion mimeMessageID(String messageId) {
+        return new MimeMessageIDCriterion(messageId);
+    }
+
     private final Set<MessageUid> recentMessageUids = new HashSet<>();
 
     private final List<Criterion> criterias;
@@ -1157,6 +1161,40 @@ public class SearchQuery implements Serializable {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("operator", operator)
+                .toString();
+        }
+    }
+
+    public static class MimeMessageIDCriterion extends Criterion {
+        private final String messageID;
+
+        public MimeMessageIDCriterion(String messageID) {
+            this.messageID = messageID;
+        }
+
+        public String getMessageID() {
+            return messageID;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MimeMessageIDCriterion) {
+                MimeMessageIDCriterion that = (MimeMessageIDCriterion) o;
+
+                return java.util.Objects.equals(this.messageID, that.messageID);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return java.util.Objects.hash(messageID);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("messageID", messageID)
                 .toString();
         }
     }
