@@ -21,17 +21,14 @@ package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Properties;
-
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -77,27 +74,21 @@ class LogMessageTest {
     }
 
     @Test
-    void serviceShouldFailWhenMailHasNoStream() throws Exception {
+    public void serviceShouldNotFailWhenTextContent() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("LogContext")
                 .mailetContext(mailContext)
                 .build();
         mailet.init(mailetConfig);
 
-        MimeMessage message = new MimeMessage(Session.getDefaultInstance(new Properties()));
-        message.addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100");
-        message.setSubject("subject");
-        message.setText("This is a fake mail");
-
         mailet.service(FakeMail.builder()
-                .mimeMessage(message)
-                .build());
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("Date", "Tue, 16 Jan 2018 10:23:03 +0100")
+                .setSubject("subject")
+                .setText("This is a fake mail"))
+            .build());
 
-        verify(logger).info("Logging mail {}", (Object) null);
-        verify(logger, times(2)).isInfoEnabled();
-        verify(logger).info("\n");
-        verify(logger).info("Subject: subject\n");
-        verify(logger).error(eq("Error logging message."), any(MessagingException.class));
+        verify(logger, times(0)).error(anyString(), any(MessagingException.class));
     }
 
     @Test

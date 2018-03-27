@@ -117,12 +117,20 @@ public class LogMessage extends GenericMailet {
 
     private void logBody(MimeMessage message) throws MessagingException, IOException {
         if (body && logger.isInfoEnabled()) {
-            InputStream inputStream = ByteStreams.limit(message.getRawInputStream(), lengthToLog(message));
+            InputStream inputStream = ByteStreams.limit(message.getDataHandler().getInputStream(), lengthToLog(message));
             logger.info(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
         }
     }
 
     private int lengthToLog(MimeMessage message) throws MessagingException {
-        return bodyMax > 0 ? bodyMax : message.getSize();
+        return bodyMax > 0 ? bodyMax : messageSizeOrUnlimited(message);
+    }
+
+    private int messageSizeOrUnlimited(MimeMessage message) throws MessagingException {
+        int computedSize = message.getSize();
+        if (computedSize > 0) {
+            return computedSize;
+        }
+        return Integer.MAX_VALUE;
     }
 }
