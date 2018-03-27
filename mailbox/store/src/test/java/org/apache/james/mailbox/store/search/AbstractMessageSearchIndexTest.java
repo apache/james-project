@@ -1428,4 +1428,14 @@ public abstract class AbstractMessageSearchIndexTest {
                 message1.getUid(),
                 message3.getUid());
     }
+
+    @Test
+    public void searchShouldRetrieveExactlyMatchingMimeMessageID() throws Exception {
+        SearchQuery searchQuery = new SearchQuery();
+        searchQuery.andCriteria(SearchQuery.mimeMessageID("<JIRA.12781874.1426269127000.9353.1433410057953@Atlassian.JIRA>"));
+        // Correspond to mail.eml
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(m3.getUid());
+    }
 }

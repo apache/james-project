@@ -1240,12 +1240,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createConjunctionQuery(crit, inMailboxes, recentUids);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return createModSeqQuery((SearchQuery.ModSeqCriterion) criterion);
+        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
+            SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
+            return createHeaderQuery(mimeMessageIDCriterion.asHeaderCriterion());
         }
         throw new UnsupportedSearchException();
-
     }
-
-    
 
     @Override
     public void add(MailboxSession session, Mailbox mailbox, MailboxMessage membership) throws MailboxException {

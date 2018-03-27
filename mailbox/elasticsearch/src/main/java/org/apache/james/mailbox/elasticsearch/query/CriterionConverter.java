@@ -83,6 +83,7 @@ public class CriterionConverter {
             criterion -> dateRangeFilter(JsonMessageConstants.DATE, criterion.getOperator()));
 
         registerCriterionConverter(SearchQuery.AttachmentCriterion.class, this::convertAttachmentCriterion);
+        registerCriterionConverter(SearchQuery.MimeMessageIDCriterion.class, this::convertMimeMessageIDCriterion);
     }
     
     @SuppressWarnings("unchecked")
@@ -122,6 +123,10 @@ public class CriterionConverter {
 
     private QueryBuilder convertAttachmentCriterion(SearchQuery.AttachmentCriterion criterion) {
         return termQuery(JsonMessageConstants.HAS_ATTACHMENT, criterion.getOperator().isSet());
+    }
+
+    private QueryBuilder convertMimeMessageIDCriterion(SearchQuery.MimeMessageIDCriterion criterion) {
+        return termQuery(JsonMessageConstants.MIME_MESSAGE_ID, criterion.getMessageID());
     }
 
     private QueryBuilder convertCustomFlagCriterion(SearchQuery.CustomFlagCriterion criterion) {

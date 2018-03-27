@@ -1176,6 +1176,10 @@ public class SearchQuery implements Serializable {
             return messageID;
         }
 
+        public HeaderCriterion asHeaderCriterion() {
+            return new HeaderCriterion("Message-ID", new ContainsOperator(messageID));
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof MimeMessageIDCriterion) {

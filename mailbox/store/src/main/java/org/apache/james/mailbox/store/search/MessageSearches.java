@@ -184,6 +184,9 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
             return matches((SearchQuery.AttachmentCriterion) criterion, message);
         } else if (criterion instanceof SearchQuery.ModSeqCriterion) {
             return matches((SearchQuery.ModSeqCriterion) criterion, message);
+        } else if (criterion instanceof SearchQuery.MimeMessageIDCriterion) {
+            SearchQuery.MimeMessageIDCriterion mimeMessageIDCriterion = (SearchQuery.MimeMessageIDCriterion) criterion;
+            return isMatch(mimeMessageIDCriterion.asHeaderCriterion(), message, recentMessageUids);
         } else {
             throw new UnsupportedSearchException();
         }
