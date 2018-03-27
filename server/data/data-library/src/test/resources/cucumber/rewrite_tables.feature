@@ -219,3 +219,25 @@ Feature: Rewrite Tables tests
     And store "domain3" alias domain mapping for domain "domain2"
     And store "domain4" alias domain mapping for domain "domain3"
     Then mappings for user "test" at domain "domain4" should contains only "test@domain1"
+
+# Forward mapping
+
+  Scenario: stored forward mapping should be retrieved when one mapping is matching
+    Given store "test@localhost2" forward mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "forward:test@localhost2"
+
+  Scenario: stored forward mapping should be retrieved when two mappings are matching
+    Given store "test@localhost2" forward mapping for user "test" at domain "localhost"
+    And store "test@james" forward mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contains only "forward:test@localhost2, forward:test@james"
+
+  Scenario: stored forward mapping should not be retrieved by another user
+    Given store "test@localhost2" forward mapping for user "test" at domain "localhost"
+    And store "test@james" forward mapping for user "test" at domain "localhost"
+    Then mappings for user "test2" at domain "localhost" should be empty
+
+  Scenario: removing a stored forward mapping should work
+    Given store "test@localhost2" forward mapping for user "test" at domain "localhost"
+    And store "test@james" forward mapping for user "test" at domain "localhost"
+    When user "test" at domain "localhost" removes a forward mapping "test@james"
+    Then mappings for user "test" at domain "localhost" should contains only "forward:test@localhost2"

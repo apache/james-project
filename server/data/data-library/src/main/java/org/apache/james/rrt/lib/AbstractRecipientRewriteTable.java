@@ -207,35 +207,37 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        String addressWithDomain = addDefaultDomainIfNone(address);
+        checkAddressIsValid(addressWithDomain);
+        checkMapping(user, domain, MappingImpl.address(addressWithDomain));
+        LOGGER.info("Add address mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
+        addMappingInternal(user, domain, MappingImpl.address(addressWithDomain));
+    }
+
+    private String addDefaultDomainIfNone(String address) throws RecipientRewriteTableException {
         if (address.indexOf('@') < 0) {
             try {
-                address = address + "@" + domainList.getDefaultDomain().asString();
+                return address + "@" + domainList.getDefaultDomain().asString();
             } catch (DomainListException e) {
                 throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
             }
         }
-        try {
-            new MailAddress(address);
-        } catch (ParseException e) {
-            throw new RecipientRewriteTableException("Invalid emailAddress: " + address, e);
-        }
-        checkMapping(user, domain, MappingImpl.address(address));
-        LOGGER.info("Add address mapping => {} for user: {} domain: {}", address, user, domain.name());
-        addMappingInternal(user, domain, MappingImpl.address(address));
+        return address;
+    }
 
+    private void checkAddressIsValid(String addressWithDomain) throws RecipientRewriteTableException {
+        try {
+            new MailAddress(addressWithDomain);
+        } catch (ParseException e) {
+            throw new RecipientRewriteTableException("Invalid emailAddress: " + addressWithDomain, e);
+        }
     }
 
     @Override
     public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        if (address.indexOf('@') < 0) {
-            try {
-                address = address + "@" + domainList.getDefaultDomain().asString();
-            } catch (DomainListException e) {
-                throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
-            }
-        }
-        LOGGER.info("Remove address mapping => {} for user: {} domain: {}", address, user, domain.name());
-        removeMappingInternal(user, domain, MappingImpl.address(address));
+        String addressWithDomain = addDefaultDomainIfNone(address);
+        LOGGER.info("Remove address mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
+        removeMappingInternal(user, domain, MappingImpl.address(addressWithDomain));
     }
 
     @Override
@@ -294,6 +296,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             case Address:
                 removeAddressMapping(user, domain, map);
                 break;
+            case Forward:
+                removeForwardMapping(user, domain, map);
+                break;
         }
     }
 
@@ -324,6 +329,22 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     public void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Remove domain mapping: {} => {}", aliasDomain, realDomain);
         removeMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
+    }
+
+    @Override
+    public void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        String addressWithDomain = addDefaultDomainIfNone(address);
+        checkAddressIsValid(addressWithDomain);
+        checkMapping(user, domain, MappingImpl.forward(addressWithDomain));
+        LOGGER.info("Add forward mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
+        addMappingInternal(user, domain, MappingImpl.forward(addressWithDomain));
+    }
+
+    @Override
+    public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        String addressWithDomain = addDefaultDomainIfNone(address);
+        LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
+        removeMappingInternal(user, domain, MappingImpl.forward(addressWithDomain));
     }
 
     /**

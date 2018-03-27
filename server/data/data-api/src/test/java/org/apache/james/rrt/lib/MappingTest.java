@@ -45,6 +45,12 @@ public class MappingTest {
     }
 
     @Test
+    public void hasPrefixShouldReturnTrueWhenForward() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Forward.asPrefix() + "myRegex");
+        assertThat(hasPrefix).isTrue();
+    }
+
+    @Test
     public void hasPrefixShouldReturnFalseWhenAddress() {
         boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
         assertThat(hasPrefix).isFalse();
@@ -72,6 +78,12 @@ public class MappingTest {
     public void detectTypeShouldReturnDomainWhenDomainPrefix() {
         assertThat(Mapping.detectType(Type.Domain.asPrefix() + "mapping"))
             .isEqualTo(Type.Domain);
+    }
+
+    @Test
+    public void detectTypeShouldReturnForwardWhenForwardPrefix() {
+        assertThat(Mapping.detectType(Type.Forward.asPrefix() + "mapping"))
+            .isEqualTo(Type.Forward);
     }
 
     @Test
@@ -105,6 +117,12 @@ public class MappingTest {
     }
 
     @Test
+    public void withoutPrefixShouldRemoveForwardPrefix() {
+        assertThat(Type.Forward.withoutPrefix(Type.Forward.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
     public void withoutPrefixShouldThrowOnBadPrefix() {
         assertThatThrownBy(() -> Type.Regex.withoutPrefix(Type.Domain.asPrefix() + "mapping"))
             .isInstanceOf(IllegalArgumentException.class);
@@ -113,6 +131,12 @@ public class MappingTest {
     @Test
     public void withoutPrefixShouldThrowWhenNoPrefix() {
         assertThatThrownBy(() -> Type.Regex.withoutPrefix("mapping"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void withoutPrefixShouldThrowWhenNoPrefixOnForwardType() {
+        assertThatThrownBy(() -> Type.Forward.withoutPrefix("mapping"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 }

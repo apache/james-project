@@ -207,6 +207,10 @@ public interface RecipientRewriteTable {
      */
     void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException;
 
+    void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException;
+
+    void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException;
+
     class ErrorMappingException extends Exception {
 
         private static final long serialVersionUID = 2348752938798L;

@@ -36,44 +36,53 @@ public class MappingImplTest {
             .verify();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void addressFactoryMethodShouldThrowOnNull() {
-        assertThat(MappingImpl.address(null));
-    }
-    
-    @Test(expected = NullPointerException.class)
-    public void regexFactoryMethodShouldThrowOnNull() {
-        assertThat(MappingImpl.regex(null));
-    }
-    
-    @Test(expected = NullPointerException.class)
-    public void domainFactoryMethodShouldThrowOnNull() {
-        assertThat(MappingImpl.domain(null));
-    }
-    
-    
-    @Test(expected = NullPointerException.class)
-    public void errorFactoryMethodShouldThrowOnNull() {
-        assertThat(MappingImpl.error(null));
+        assertThatThrownBy(() -> MappingImpl.address(null))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
-    public void hasDomainshouldReturnTrueWhenMappingContainAtMark() {
+    public void regexFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> MappingImpl.regex(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+    
+    @Test
+    public void domainFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> MappingImpl.domain(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void errorFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> MappingImpl.error(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+    
+    @Test
+    public void forwardFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> MappingImpl.forward(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+    
+    @Test
+    public void hasDomainShouldReturnTrueWhenMappingContainAtMark() {
         assertThat(MappingImpl.address("a@b").hasDomain()).isTrue();
     }
     
     @Test
-    public void hasDomainshouldReturnFalseWhenMappingIsEmpty() {
+    public void hasDomainShouldReturnFalseWhenMappingIsEmpty() {
         assertThat(MappingImpl.address("").hasDomain()).isFalse();
     }
 
     @Test
-    public void hasDomainshouldReturnFalseWhenMappingIsBlank() {
+    public void hasDomainShouldReturnFalseWhenMappingIsBlank() {
         assertThat(MappingImpl.address(" ").hasDomain()).isFalse();
     }
 
     @Test
-    public void hasDefaultDomainShouldReturnFalseWhenMappingDoesntContainAtMark() {
+    public void hasDomainShouldReturnFalseWhenMappingDoesntContainAtMark() {
         assertThat(MappingImpl.address("abc").hasDomain()).isFalse();
     }
     
@@ -116,6 +125,11 @@ public class MappingImplTest {
     public void getTypeShouldReturnDomainWhenDomainPrefix() {
         assertThat(MappingImpl.domain(Domain.of("abc")).getType()).isEqualTo(Mapping.Type.Domain);
     }
+
+    @Test
+    public void getTypeShouldReturnForwardWhenForwardPrefix() {
+        assertThat(MappingImpl.forward("abc").getType()).isEqualTo(Mapping.Type.Forward);
+    }
     
     @Test(expected = IllegalStateException.class)
     public void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
@@ -151,5 +165,10 @@ public class MappingImplTest {
     @Test
     public void getAddressShouldThrowForDomain() {
         assertThatThrownBy(() -> MappingImpl.domain(Domain.of("value")).getAddress()).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    public void getAddressShouldThrowForForward() {
+        assertThatThrownBy(() -> MappingImpl.forward("value").getAddress()).isInstanceOf(IllegalStateException.class);
     }
 }

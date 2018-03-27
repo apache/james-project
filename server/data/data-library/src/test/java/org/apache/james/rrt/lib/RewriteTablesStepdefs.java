@@ -71,6 +71,11 @@ public class RewriteTablesStepdefs {
         rewriteTable.addAliasDomainMapping(Domain.of(aliasDomain), Domain.of(domain));
     }
 
+    @Given("store \"([^\"]*)\" forward mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeForwardMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
+        rewriteTable.addForwardMapping(user, Domain.of(domain), address);
+    }
+
     @Given("recursive mapping is disable")
     public void disableRecursiveMapping() {
         rewriteTable.setRecursiveMapping(false);
@@ -94,6 +99,11 @@ public class RewriteTablesStepdefs {
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a error mapping \"([^\"]*)\"")
     public void userAtDomainRemovesErrorMapping(String user, String domain, String error) throws Throwable {
         rewriteTable.removeErrorMapping(user, Domain.of(domain), error);
+    }
+
+    @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a forward mapping \"([^\"]*)\"")
+    public void userAtDomainRemovesForwardMapping(String user, String domain, String address) throws Throwable {
+        rewriteTable.removeForwardMapping(user, Domain.of(domain), address);
     }
 
     @When("wildcard address mapping \"([^\"]*)\" at domain \"([^\"]*)\" is removed")

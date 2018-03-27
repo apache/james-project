@@ -211,7 +211,6 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     @Test
     public void testAliasDomainMapping() throws ErrorMappingException, RecipientRewriteTableException {
-
         String domain = "realdomain";
         Domain aliasDomain = Domain.of("aliasdomain");
         String user = "user";
@@ -291,6 +290,36 @@ public abstract class AbstractRecipientRewriteTableTest {
         assertThat(virtualUserTable.getMappings(user, domain)).hasSize(2);
     }
 
+    @Test
+    public void addForwardMappingShouldStore() throws ErrorMappingException, RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.LOCALHOST;
+        String address = "test@localhost2";
+        String address2 = "test@james";
+
+        addMapping(user, domain, address, Type.Forward);
+        addMapping(user, domain, address2, Type.Forward);
+
+        assertThat(virtualUserTable.getMappings(user, domain)).hasSize(2);
+    }
+
+    @Test
+    public void removeForwardMappingShouldDelete() throws ErrorMappingException, RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.LOCALHOST;
+        String address = "test@localhost2";
+        String address2 = "test@james";
+
+        addMapping(user, domain, address, Type.Forward);
+        addMapping(user, domain, address2, Type.Forward);
+
+
+        removeMapping(user, domain, address, Type.Forward);
+        removeMapping(user, domain, address2, Type.Forward);
+
+        assertThat(virtualUserTable.getMappings(user, domain)).isNull();
+    }
+
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
 
@@ -308,11 +337,13 @@ public abstract class AbstractRecipientRewriteTableTest {
             case Domain:
                 virtualUserTable.addAliasDomainMapping(domain, Domain.of(mapping));
                 break;
+            case Forward:
+                virtualUserTable.addForwardMapping(user, domain, mapping);
+                break;
             default:
                 throw new RuntimeException("Invalid mapping type: " + type.asPrefix());
         }
     }
-
 
     protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
         switch (type) {
@@ -327,6 +358,9 @@ public abstract class AbstractRecipientRewriteTableTest {
                 break;
             case Domain:
                 virtualUserTable.removeAliasDomainMapping(domain, Domain.of(mapping));
+                break;
+            case Forward:
+                virtualUserTable.removeForwardMapping(user, domain, mapping);
                 break;
             default:
                 throw new RuntimeException("Invalid mapping type: " + type.asPrefix());

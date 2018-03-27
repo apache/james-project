@@ -53,6 +53,10 @@ public class MappingImpl implements Mapping, Serializable {
     public static MappingImpl domain(Domain mapping) {
         return new MappingImpl(Type.Domain, mapping.asString());
     }
+
+    public static MappingImpl forward(String mapping) {
+        return new MappingImpl(Type.Forward, mapping);
+    }
     
     private final Type type;
     private final String mapping;

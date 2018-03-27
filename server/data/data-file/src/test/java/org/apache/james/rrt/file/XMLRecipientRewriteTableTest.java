@@ -119,6 +119,8 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
             mappings = mappings.remove(MappingImpl.address(mapping));
         } else if (type == Type.Domain) {
             mappings = mappings.remove(MappingImpl.domain(Domain.of(mapping)));
+        } else if (type == Type.Forward) {
+            mappings = mappings.remove(MappingImpl.forward(mapping));
         }
 
         if (mappings.size() > 0) {
