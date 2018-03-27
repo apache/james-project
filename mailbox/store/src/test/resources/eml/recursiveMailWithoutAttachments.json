@@ -7,6 +7,7 @@
   "date": "2015-06-07T00:00:00+02:00",
   "mediaType": "plain",
   "subtype": "text",
+  "mimeMessageID": "<5577F927.2040409@linagora.com>",
   "userFlags": [
     "security",
     "debian"

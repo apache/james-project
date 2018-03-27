@@ -46,6 +46,7 @@ public interface JsonMessageConstants {
     String SENT_DATE = "sentDate";
     String ATTACHMENTS = "attachments";
     String TEXT = "text";
+    String MIME_MESSAGE_ID = "mimeMessageID";
 
     /*
     James properties we can easily get

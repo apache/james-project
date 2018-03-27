@@ -8,6 +8,7 @@
   "mediaType":"plain",
   "subtype":"text",
   "userFlags":["social","pocket-money"],
+  "mimeMessageID": "<556fffe8cac78_7ed0e0fe204457be@i-dee0850e.mail>",
   "headers":{
     "date":[
       "Thu, 04 Jun 2015 07:36:08 +0000"

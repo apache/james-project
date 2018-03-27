@@ -140,6 +140,7 @@ public class IndexableMessage {
             EMailers cc = EMailers.from(headerCollection.getCcAddressSet());
             EMailers bcc = EMailers.from(headerCollection.getBccAddressSet());
             String sentDate = DateResolutionFormater.DATE_TIME_FOMATTER.format(headerCollection.getSentDate().orElse(internalDate));
+            Optional<String> mimeMessageID = headerCollection.getMessageID();
 
             String text = Stream.of(from.serialize(),
                         to.serialize(),
@@ -197,7 +198,8 @@ public class IndexableMessage {
                     to,
                     uid,
                     userFlags,
-                    stringifiedUsers);
+                    stringifiedUsers,
+                    mimeMessageID);
         }
 
         private List<MimePart> setFlattenedAttachments(MimePart parsingResult, IndexAttachments indexAttachments) {
@@ -246,6 +248,7 @@ public class IndexableMessage {
     private final long uid;
     private final String[] userFlags;
     private final List<String> users;
+    private final Optional<String> mimeMessageID;
 
     private IndexableMessage(
             List<MimePart> attachments,
@@ -277,7 +280,8 @@ public class IndexableMessage {
             EMailers to,
             long uid,
             String[] userFlags,
-            List<String> users) {
+            List<String> users,
+            Optional<String> mimeMessageID) {
         this.attachments = attachments;
         this.bcc = bcc;
         this.bodyHtml = bodyHtml;
@@ -308,6 +312,7 @@ public class IndexableMessage {
         this.uid = uid;
         this.userFlags = userFlags;
         this.users = users;
+        this.mimeMessageID = mimeMessageID;
     }
 
     @JsonProperty(JsonMessageConstants.ATTACHMENTS)
@@ -458,5 +463,10 @@ public class IndexableMessage {
     @JsonProperty(JsonMessageConstants.IS_UNREAD)
     public boolean isUnRead() {
         return isUnRead;
+    }
+
+    @JsonProperty(JsonMessageConstants.MIME_MESSAGE_ID)
+    public Optional<String> getMimeMessageID() {
+        return mimeMessageID;
     }
 }
