@@ -20,39 +20,32 @@ package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.MailAddress;
-import org.junit.Test;
+import org.apache.james.rrt.lib.Mapping.Type;
+import org.junit.jupiter.api.Test;
 
-public class RecipientRewriteTableUtilTest {
+public class MappingTest {
 
     @Test
-    public void regexMapShouldCorrectlyReplaceMatchingUsername() throws Exception {
-        MailAddress mailAddress = new MailAddress("prefix_abc@test");
-        assertThat(RecipientRewriteTableUtil.regexMap(mailAddress, "regex:prefix_.*:admin@test"))
-            .isEqualTo("admin@test");
+    public void hasPrefixShouldReturnTrueWhenRegex() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Regex.asPrefix() + "myRegex");
+        assertThat(hasPrefix).isTrue();
     }
 
     @Test
-    public void getSeparatorShouldReturnCommaWhenCommaIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost, regex:user@test");
-        assertThat(separator).isEqualTo(",");
+    public void hasPrefixShouldReturnTrueWhenDomain() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Domain.asPrefix() + "myRegex");
+        assertThat(hasPrefix).isTrue();
     }
 
     @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresentInPrefix() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost");
-        assertThat(separator).isEqualTo("");
+    public void hasPrefixShouldReturnTrueWhenError() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Error.asPrefix() + "myRegex");
+        assertThat(hasPrefix).isTrue();
     }
 
     @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("(.*)@localhost: user@test");
-        assertThat(separator).isEqualTo(":");
-    }
-
-    @Test
-    public void getSeparatorShouldReturnColonWhenNoSeparator() {
-        String separator = RecipientRewriteTableUtil.getSeparator("user@test");
-        assertThat(separator).isEqualTo(":");
+    public void hasPrefixShouldReturnFalseWhenAddress() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
+        assertThat(hasPrefix).isFalse();
     }
 }

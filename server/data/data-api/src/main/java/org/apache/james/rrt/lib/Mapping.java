@@ -49,7 +49,7 @@ public interface Mapping {
 
         private final String asPrefix;
 
-        private Type(String asPrefix) {
+        Type(String asPrefix) {
             this.asPrefix = asPrefix;
         }
 
@@ -60,6 +60,12 @@ public interface Mapping {
         public String withoutPrefix(String input) {
             Preconditions.checkArgument(input.startsWith(asPrefix));
             return input.substring(asPrefix.length());
+        }
+
+        public static boolean hasPrefix(String mapping) {
+            return mapping.startsWith(Regex.asPrefix())
+                || mapping.startsWith(Domain.asPrefix())
+                || mapping.startsWith(Error.asPrefix());
         }
     }
 

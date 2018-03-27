@@ -21,6 +21,7 @@ package org.apache.james.rrt.lib;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,6 +30,7 @@ import java.util.regex.PatternSyntaxException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.lib.Mapping.Type;
+import org.apache.james.util.OptionalUtils;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
@@ -37,10 +39,6 @@ public class RecipientRewriteTableUtil {
 
     private RecipientRewriteTableUtil() {
     }
-
-    // @deprecated QUERY is deprecated - SQL queries are now located in
-    // sqlResources.xml
-    public static final String QUERY = "select RecipientRewriteTable.target_address from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where (RecipientRewriteTable.user like ? or RecipientRewriteTable.user like '\\%') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain like '%*%' and VUTDomains.domain like ?)) order by concat(RecipientRewriteTable.user,'@',RecipientRewriteTable.domain) desc limit 1";
 
     /**
      * Processes regex virtual user mapping
@@ -130,8 +128,7 @@ public class RecipientRewriteTableUtil {
             index = input.indexOf(find, index + findLength);
         }
 
-        String result = output.toString();
-        return result;
+        return output.toString();
     }
 
     /**
@@ -180,7 +177,31 @@ public class RecipientRewriteTableUtil {
      * @return the character to tokenize on
      */
     public static String getSeparator(String targetString) {
-        return (targetString.indexOf(',') > -1 ? "," : (targetString.indexOf(';') > -1 ? ";" : ((targetString.contains(Type.Error.asPrefix()) || targetString.contains(Type.Regex.asPrefix()) || targetString.contains(Type.Domain.asPrefix())) ? "" : ":")));
+        return OptionalUtils.or(
+                mayContainComma(targetString),
+                mayContainSemicolon(targetString),
+                mayContainColon(targetString))
+            .orElse("");
+    }
+
+    private static Optional<String> mayContainComma(String targetString) {
+        return mayContain(targetString, ",");
+    }
+
+    private static Optional<String> mayContainSemicolon(String targetString) {
+        return mayContain(targetString, ";");
+    }
+
+    private static Optional<String> mayContainColon(String targetString) {
+        if (Type.hasPrefix(targetString)) {
+            return Optional.empty();
+        }
+        return Optional.of(":");
+    }
+
+    private static Optional<String> mayContain(String targetString, String expectedCharacter) {
+        return Optional.of(expectedCharacter)
+            .filter(targetString::contains);
     }
 
     /**

@@ -32,7 +32,6 @@ import javax.mail.MessagingException;
 import javax.sql.DataSource;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.MailetException;
@@ -111,6 +110,11 @@ import org.apache.mailet.MailetException;
 @Experimental
 @Deprecated
 public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
+
+    // @deprecated QUERY is deprecated - SQL queries are now located in
+    // sqlResources.xml
+    private static final String QUERY = "select RecipientRewriteTable.target_address from RecipientRewriteTable, RecipientRewriteTable as VUTDomains where (RecipientRewriteTable.user like ? or RecipientRewriteTable.user like '\\%') and (RecipientRewriteTable.domain like ? or (RecipientRewriteTable.domain like '%*%' and VUTDomains.domain like ?)) order by concat(RecipientRewriteTable.user,'@',RecipientRewriteTable.domain) desc limit 1";
+
     protected DataSource datasource;
 
     /**
@@ -156,7 +160,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
 
             // Build the query
-            query = getInitParameter("sqlquery", RecipientRewriteTableUtil.QUERY);
+            query = getInitParameter("sqlquery", QUERY);
         } catch (MailetException me) {
             throw me;
         } catch (Exception e) {
