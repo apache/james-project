@@ -19,11 +19,9 @@
 
 package org.apache.james.transport.mailets;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
@@ -53,21 +51,60 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 public class RecipientRewriteTableProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecipientRewriteTableProcessor.class);
 
-    private final org.apache.james.rrt.api.RecipientRewriteTable virtualTableStore;
+    private static class RrtExecutionResult {
+        private static RrtExecutionResult empty() {
+            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of());
+        }
+
+        private static RrtExecutionResult error(MailAddress mailAddress) {
+            return new RrtExecutionResult(ImmutableList.of(), ImmutableList.of(mailAddress));
+        }
+
+        private static RrtExecutionResult success(MailAddress mailAddress) {
+            return new RrtExecutionResult(ImmutableList.of(mailAddress), ImmutableList.of());
+        }
+
+        private static RrtExecutionResult success(List<MailAddress> mailAddresses) {
+            return new RrtExecutionResult(ImmutableList.copyOf(mailAddresses), ImmutableList.of());
+        }
+
+        private static RrtExecutionResult merge(RrtExecutionResult result1, RrtExecutionResult result2) {
+            return new RrtExecutionResult(
+                ImmutableList.<MailAddress>builder()
+                    .addAll(result1.getNewRecipients())
+                    .addAll(result2.getNewRecipients())
+                    .build(),
+                ImmutableList.<MailAddress>builder()
+                    .addAll(result1.getRecipientWithError())
+                    .addAll(result2.getRecipientWithError())
+                    .build());
+        }
+
+        private final ImmutableList<MailAddress> newRecipients;
+        private final ImmutableList<MailAddress> recipientWithError;
+
+        public RrtExecutionResult(ImmutableList<MailAddress> newRecipients, ImmutableList<MailAddress> recipientWithError) {
+            this.newRecipients = newRecipients;
+            this.recipientWithError = recipientWithError;
+        }
+
+        public List<MailAddress> getNewRecipients() {
+            return newRecipients;
+        }
+
+        public List<MailAddress> getRecipientWithError() {
+            return recipientWithError;
+        }
+
+    }
+
+    private final RecipientRewriteTable virtualTableStore;
     private final DomainList domainList;
     private final MailetContext mailetContext;
-
-    private static final Function<RrtExecutionResult, Stream<MailAddress>> mailAddressesFromMappingData =
-        mappingData ->
-                OptionalUtils.or(
-                    mappingData.getNewRecipients(),
-                    mappingData.getRecipientWithError())
-            .map(Collection::stream).orElse(Stream.of());
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
         addressMapping -> {
@@ -85,56 +122,44 @@ public class RecipientRewriteTableProcessor {
     }
 
     public void processMail(Mail mail) throws MessagingException {
-        ImmutableList<RrtExecutionResult> mappingDatas = toMappingDatas(mail);
+        RrtExecutionResult executionResults = executeRrtFor(mail);
 
-        ImmutableSet<MailAddress> newRecipients = getRecipientsByCondition(mappingDatas, mappingData -> !mappingData.isError());
-
-        ImmutableSet<MailAddress> errorMailAddresses = getRecipientsByCondition(mappingDatas, RrtExecutionResult::isError);
-
-        if (!errorMailAddresses.isEmpty()) {
-            mailetContext.sendMail(mail.getSender(), errorMailAddresses, mail.getMessage(), Mail.ERROR);
+        if (!executionResults.recipientWithError.isEmpty()) {
+            mailetContext.sendMail(mail.getSender(), executionResults.recipientWithError, mail.getMessage(), Mail.ERROR);
         }
 
-        if (newRecipients.isEmpty()) {
+        if (executionResults.newRecipients.isEmpty()) {
             mail.setState(Mail.GHOST);
         }
 
-        mail.setRecipients(newRecipients);
+        mail.setRecipients(executionResults.newRecipients);
     }
 
-
-    private ImmutableSet<MailAddress> getRecipientsByCondition(ImmutableList<RrtExecutionResult> mappingDatas, Predicate<RrtExecutionResult> filterCondition) {
-        return mappingDatas.stream()
-            .filter(filterCondition)
-            .flatMap(mailAddressesFromMappingData)
-            .collect(Guavate.toImmutableSet());
-    }
-
-    private ImmutableList<RrtExecutionResult> toMappingDatas(Mail mail) {
+    private RrtExecutionResult executeRrtFor(Mail mail) {
         Function<MailAddress, RrtExecutionResult> convertToMappingData = recipient -> {
             Preconditions.checkNotNull(recipient);
 
-            return getRrtExecutionResult(mail, recipient);
+            return executeRrtForRecipient(mail, recipient);
         };
 
         return mail.getRecipients()
             .stream()
             .map(convertToMappingData)
-            .collect(Guavate.toImmutableList());
+            .reduce(RrtExecutionResult.empty(), RrtExecutionResult::merge);
     }
 
-    private RrtExecutionResult getRrtExecutionResult(Mail mail, MailAddress recipient) {
+    private RrtExecutionResult executeRrtForRecipient(Mail mail, MailAddress recipient) {
         try {
             Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
-                return new RrtExecutionResult(Optional.of(newMailAddresses), Optional.empty());
+                return RrtExecutionResult.success(newMailAddresses);
             }
-            return origin(recipient);
+            return RrtExecutionResult.success(recipient);
         } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
             LOGGER.info("Error while process mail.", e);
-            return error(recipient);
+            return RrtExecutionResult.error(recipient);
         }
     }
 
@@ -198,35 +223,5 @@ public class RecipientRewriteTableProcessor {
             throw new MessagingException("Unable to access DomainList", e);
         }
     }
-    
-    private RrtExecutionResult error(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.empty(), Optional.of(ImmutableList.of(mailAddress)));
-    }
 
-    private RrtExecutionResult origin(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.of(ImmutableList.of(mailAddress)), Optional.empty());
-    }
-
-    class RrtExecutionResult {
-        private final Optional<List<MailAddress>> newRecipients;
-        private final Optional<List<MailAddress>> recipientWithError;
-
-        public RrtExecutionResult(Optional<List<MailAddress>> newRecipients, Optional<List<MailAddress>> recipientWithError) {
-            this.newRecipients = newRecipients;
-            this.recipientWithError = recipientWithError;
-        }
-
-        public Optional<List<MailAddress>> getNewRecipients() {
-            return newRecipients;
-        }
-
-        public Optional<List<MailAddress>> getRecipientWithError() {
-            return recipientWithError;
-        }
-
-        public boolean isError() {
-            return recipientWithError.isPresent();
-        }
-
-    }
 }
