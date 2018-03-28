@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -38,6 +39,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -57,9 +59,11 @@ public class RecipientRewriteTableProcessor {
     private final MailetContext mailetContext;
 
     private static final Function<RrtExecutionResult, Stream<MailAddress>> mailAddressesFromMappingData =
-        mappingData -> mappingData.getNewRecipients()
-            .orElse(mappingData.getRecipientWithError()
-                .orElse(ImmutableList.of())).stream();
+        mappingData ->
+                OptionalUtils.or(
+                    mappingData.getNewRecipients(),
+                    mappingData.getRecipientWithError())
+            .map(Collection::stream).orElse(Stream.of());
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
         addressMapping -> {
