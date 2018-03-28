@@ -102,7 +102,7 @@ public class RecipientRewriteTableProcessor {
             .collect(Guavate.toImmutableSet());
     }
 
-    private ImmutableList<RrtExecutionResult> toMappingDatas(final Mail mail) {
+    private ImmutableList<RrtExecutionResult> toMappingDatas(Mail mail) {
         Function<MailAddress, RrtExecutionResult> convertToMappingData = recipient -> {
             Preconditions.checkNotNull(recipient);
 
@@ -171,7 +171,7 @@ public class RecipientRewriteTableProcessor {
             .collect(Guavate.toImmutableList());
         
         if (!addressWithoutDomains.isEmpty()) {
-            final Domain defaultDomain = getDefaultDomain(domainList);
+            Domain defaultDomain = getDefaultDomain(domainList);
 
             return addressWithoutDomains.stream()
                 .map(address -> address.appendDomain(defaultDomain))
@@ -180,7 +180,7 @@ public class RecipientRewriteTableProcessor {
         return ImmutableList.of();
     }
 
-    private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) throws MessagingException {
+    private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) {
         ImmutableList<MailAddress> remoteAddress = mailAddresses.stream()
             .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
             .collect(Guavate.toImmutableList());
@@ -204,11 +204,11 @@ public class RecipientRewriteTableProcessor {
     }
     
     private RrtExecutionResult error(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.empty(), Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)));
+        return new RrtExecutionResult(Optional.empty(), Optional.of(ImmutableList.of(mailAddress)));
     }
 
     private RrtExecutionResult origin(MailAddress mailAddress) {
-        return new RrtExecutionResult(Optional.<List<MailAddress>>of(ImmutableList.of(mailAddress)), Optional.empty());
+        return new RrtExecutionResult(Optional.of(ImmutableList.of(mailAddress)), Optional.empty());
     }
 
     class RrtExecutionResult {
