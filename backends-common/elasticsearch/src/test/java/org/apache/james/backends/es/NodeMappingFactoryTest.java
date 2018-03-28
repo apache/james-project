@@ -64,6 +64,21 @@ public class NodeMappingFactoryTest {
             getMappingsSources());
     }
 
+    @Test
+    public void applyMappingShouldNotThrowWhenIndexerChanges() throws Exception {
+        NodeMappingFactory.applyMapping(clientProvider.get(),
+            INDEX_NAME,
+            TYPE_NAME,
+            getMappingsSources());
+
+        embeddedElasticSearch.awaitForElasticSearch();
+
+        NodeMappingFactory.applyMapping(clientProvider.get(),
+            INDEX_NAME,
+            TYPE_NAME,
+            getOtherMappingsSources());
+    }
+
     private XContentBuilder getMappingsSources() throws Exception {
         return jsonBuilder()
             .startObject()
@@ -71,6 +86,20 @@ public class NodeMappingFactoryTest {
                     .startObject(NodeMappingFactory.PROPERTIES)
                         .startObject(MESSAGE)
                             .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
+                        .endObject()
+                    .endObject()
+                .endObject()
+            .endObject();
+    }
+
+    private XContentBuilder getOtherMappingsSources() throws Exception {
+        return jsonBuilder()
+            .startObject()
+                .startObject(TYPE_NAME.getValue())
+                    .startObject(NodeMappingFactory.PROPERTIES)
+                        .startObject(MESSAGE)
+                            .field(NodeMappingFactory.TYPE, NodeMappingFactory.STRING)
+                            .field(NodeMappingFactory.INDEX, NodeMappingFactory.NOT_ANALYZED)
                         .endObject()
                     .endObject()
                 .endObject()

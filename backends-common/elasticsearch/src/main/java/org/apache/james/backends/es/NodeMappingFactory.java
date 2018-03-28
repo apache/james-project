@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.es;
 
+import org.apache.james.util.streams.Iterators;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
@@ -43,6 +44,24 @@ public class NodeMappingFactory {
     public static final String IGNORE_ABOVE = "ignore_above";
 
     public static Client applyMapping(Client client, IndexName indexName, TypeName typeName, XContentBuilder mappingsSources) {
+        if (!mappingAlreadyExist(client, indexName, typeName)) {
+            createMapping(client, indexName, typeName, mappingsSources);
+        }
+        return client;
+    }
+
+    public static boolean mappingAlreadyExist(Client client, IndexName indexName, TypeName typeName) {
+        return Iterators.toStream(client.admin()
+            .indices()
+            .prepareGetMappings(indexName.getValue())
+            .execute()
+            .actionGet()
+            .getMappings()
+            .valuesIt())
+            .anyMatch(mapping -> mapping.keys().contains(typeName.getValue()));
+    }
+
+    public static void createMapping(Client client, IndexName indexName, TypeName typeName, XContentBuilder mappingsSources) {
         client.admin()
             .indices()
             .preparePutMapping(indexName.getValue())
@@ -50,7 +69,6 @@ public class NodeMappingFactory {
             .setSource(mappingsSources)
             .execute()
             .actionGet();
-        return client;
     }
 
 }
