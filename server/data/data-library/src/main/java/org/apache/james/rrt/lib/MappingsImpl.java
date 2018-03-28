@@ -209,6 +209,11 @@ public class MappingsImpl implements Mappings, Serializable {
     }
 
     @Override
+    public Stream<Mapping> asStream() {
+        return mappings.stream();
+    }
+
+    @Override
     public int hashCode() {
         return Objects.hashCode(mappings);
     }

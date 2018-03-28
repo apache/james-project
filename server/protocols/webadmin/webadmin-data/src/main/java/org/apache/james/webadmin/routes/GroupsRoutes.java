@@ -48,7 +48,6 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -227,8 +226,8 @@ public class GroupsRoutes implements Routes {
 
         ensureNonEmptyMappings(mappings);
 
-        return Iterators
-                .toStream(mappings.select(Mapping.Type.Address).iterator())
+        return mappings.select(Mapping.Type.Address)
+                .asStream()
                 .map(Mapping::getAddress)
                 .collect(Guavate.toImmutableSortedSet());
     }

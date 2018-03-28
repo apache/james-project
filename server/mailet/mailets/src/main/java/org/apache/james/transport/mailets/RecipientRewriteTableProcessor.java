@@ -38,7 +38,6 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
@@ -145,10 +144,9 @@ public class RecipientRewriteTableProcessor {
         return getLocalAddresses(mailAddresses);
     }
 
-    private ImmutableList<Mapping> convertToNewMappings(final Mappings mappings,
-            ImmutableList<Mapping> addressWithoutDomains) {
-        return Stream.concat(Iterators.toStream(mappings.iterator())
-                    .filter(Mapping::hasDomain),
+    private ImmutableList<Mapping> convertToNewMappings(Mappings mappings, ImmutableList<Mapping> addressWithoutDomains) {
+        return Stream.concat(
+                mappings.asStream().filter(Mapping::hasDomain),
                 addressWithoutDomains.stream())
             .collect(Guavate.toImmutableList());
     }
@@ -168,7 +166,7 @@ public class RecipientRewriteTableProcessor {
     }
 
     private ImmutableList<Mapping> getAddressWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        ImmutableList<Mapping> addressWithoutDomains = Iterators.toStream(mappings.iterator())
+        ImmutableList<Mapping> addressWithoutDomains = mappings.asStream()
             .filter(address -> !address.hasDomain())
             .collect(Guavate.toImmutableList());
         
