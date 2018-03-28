@@ -36,9 +36,6 @@ public class JPAProperty implements Property {
     @Id
     @GeneratedValue
     @Column(name = "PROPERTY_ID", nullable = true)
-    // TODO The columnNames are not interpreted, see OPENJPA-223 to fix
-    // MAILBOX-186
-    @Index(name = "INDEX_PROPERTY_MSG_ID", columnNames = { "MAILBOX_ID", "MAIL_UID" })
     private long id;
 
     /** Order within the list of properties */
