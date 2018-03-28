@@ -19,6 +19,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.junit.jupiter.api.Test;
@@ -47,5 +48,71 @@ public class MappingTest {
     public void hasPrefixShouldReturnFalseWhenAddress() {
         boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
         assertThat(hasPrefix).isFalse();
+    }
+
+    @Test
+    public void detectTypeShouldReturnAddressWhenAddressPrefix() {
+        assertThat(Mapping.detectType(Type.Address.asPrefix() + "mapping"))
+            .isEqualTo(Type.Address);
+    }
+
+    @Test
+    public void detectTypeShouldReturnRegexWhenRegexPrefix() {
+        assertThat(Mapping.detectType(Type.Regex.asPrefix() + "mapping"))
+            .isEqualTo(Type.Regex);
+    }
+
+    @Test
+    public void detectTypeShouldReturnErrorWhenErrorPrefix() {
+        assertThat(Mapping.detectType(Type.Error.asPrefix() + "mapping"))
+            .isEqualTo(Type.Error);
+    }
+
+    @Test
+    public void detectTypeShouldReturnDomainWhenDomainPrefix() {
+        assertThat(Mapping.detectType(Type.Domain.asPrefix() + "mapping"))
+            .isEqualTo(Type.Domain);
+    }
+
+    @Test
+    public void withoutPrefixShouldRemoveAddressPrefix() {
+        assertThat(Type.Address.withoutPrefix(Type.Address.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    public void withoutPrefixShouldDoNothingWhenAddressAndNoPrefix() {
+        assertThat(Type.Address.withoutPrefix("mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    public void withoutPrefixShouldRemoveDomainPrefix() {
+        assertThat(Type.Domain.withoutPrefix(Type.Domain.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    public void withoutPrefixShouldRemoveErrorPrefix() {
+        assertThat(Type.Error.withoutPrefix(Type.Error.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    public void withoutPrefixShouldRemoveRegexPrefix() {
+        assertThat(Type.Regex.withoutPrefix(Type.Regex.asPrefix() + "mapping"))
+            .isEqualTo("mapping");
+    }
+
+    @Test
+    public void withoutPrefixShouldThrowOnBadPrefix() {
+        assertThatThrownBy(() -> Type.Regex.withoutPrefix(Type.Domain.asPrefix() + "mapping"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void withoutPrefixShouldThrowWhenNoPrefix() {
+        assertThatThrownBy(() -> Type.Regex.withoutPrefix("mapping"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }
