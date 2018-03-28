@@ -34,4 +34,8 @@ public class GuavaUtils {
             .flatMap(e -> e.getValue().stream().map(right -> Pair.of(e.getKey(), right)))
             .collect(Guavate.toImmutableListMultimap(Pair::getKey, Pair::getValue));
     }
+
+    public static <T> com.google.common.base.Supplier<T> toGuava(java.util.function.Supplier<T> javaSupplier) {
+        return javaSupplier::get;
+    }
 }
