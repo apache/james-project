@@ -92,8 +92,12 @@ public class SpamAssassinInvoker {
      *             if an error on scanning is detected
      */
     public SpamAssassinResult scanMail(MimeMessage message, String user) throws MessagingException {
-        return scanMailWithAdditionalHeaders(message,
-            "User: " + user);
+        return metricFactory.withMetric(
+            "spamAssassin-check",
+            Throwing.supplier(
+                () -> scanMailWithAdditionalHeaders(message,
+                    "User: " + user))
+                .sneakyThrow());
     }
 
     public SpamAssassinResult scanMail(MimeMessage message) throws MessagingException {
