@@ -153,6 +153,74 @@ public class OptionalUtilsTest {
     }
 
     @Test
+    public void orSuppliersShouldReturnEmptyWhenNoParameter() {
+        assertThat(OptionalUtils.or())
+            .isEmpty();
+    }
+
+    @Test
+    public void orSuppliersShouldReturnEmptyWhenEmpty() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                Optional::empty))
+            .isEmpty();
+    }
+
+    @Test
+    public void orSuppliersShouldReturnValueWhenValue() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                () -> Optional.of(1)))
+            .contains(1);
+    }
+
+    @Test
+    public void orSuppliersShouldReturnEmptyWhenBothEmpty() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                () -> Optional.empty(),
+                () -> Optional.empty()))
+            .isEmpty();
+    }
+
+    @Test
+    public void orSuppliersShouldReturnFirstValueWhenOnlyFirstValue() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                () -> Optional.of(18),
+                Optional::empty))
+            .contains(18);
+    }
+
+    @Test
+    public void orSuppliersShouldReturnSecondValueWhenOnlySecondValue() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                Optional::empty,
+                () -> Optional.of(18)))
+            .contains(18);
+    }
+
+    @Test
+    public void orSuppliersShouldReturnFirstValueWhenBothValues() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                () -> Optional.of(1),
+                () -> Optional.of(2)))
+            .contains(1);
+    }
+
+    @Test
+    public void orSuppliersShouldReturnThirdValueWhenOnlyThirdValue() {
+        assertThat(
+            OptionalUtils.orSuppliers(
+                Optional::empty,
+                Optional::empty,
+                () -> Optional.of(1)))
+            .contains(1);
+    }
+
+    @Test
     public void containsDifferentShouldReturnTrueWhenNullStoreValue() throws Exception {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), null)).isTrue();
     }
