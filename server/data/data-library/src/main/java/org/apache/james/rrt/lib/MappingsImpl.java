@@ -63,14 +63,13 @@ public class MappingsImpl implements Mappings, Serializable {
     }
     
     public static MappingsImpl fromCollection(Collection<String> mappings) {
-        return mappings.stream()
-            .reduce(builder(), (builder, mapping) -> builder.add(mapping), (builder1, builder2) -> builder1.addAll(builder2.build()))
-            .build();
+        return fromMappings(mappings.stream()
+            .map(MappingImpl::of));
     }
     
     public static MappingsImpl fromMappings(Stream<Mapping> mappings) {
         return mappings
-            .reduce(builder(), (builder, mapping) -> builder.add(mapping), (builder1, builder2) -> builder1.addAll(builder2.build()))
+            .reduce(builder(), Builder::add, Builder::merge)
             .build();
     }
     
@@ -85,6 +84,10 @@ public class MappingsImpl implements Mappings, Serializable {
     }
     
     public static class Builder {
+
+        public static Builder merge(Builder builder1, Builder builder2) {
+            return builder1.addAll(builder2.build());
+        }
         
         private final ImmutableList.Builder<Mapping> mappings;
         

@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
@@ -252,5 +253,62 @@ public class MappingsImplTest {
     public void unionShouldReturnMergedWhenBothContainsData() {
         Mappings mappings = MappingsImpl.fromRawString("toto").union(MappingsImpl.fromRawString("tata"));
         assertThat(mappings).containsExactly(MappingImpl.address("toto"),MappingImpl.address("tata"));
+    }
+
+    @Test
+    public void mergeShouldThrowWhenLeftIsNull() {
+        MappingsImpl.Builder left = null;
+        assertThatThrownBy(() -> MappingsImpl.Builder.merge(left, MappingsImpl.builder()))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void mergeShouldThrowWhenRightIsNull() {
+        MappingsImpl.Builder right = null;
+        assertThatThrownBy(() -> MappingsImpl.Builder.merge(MappingsImpl.builder(), right))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void mergeShouldReturnEmptyWhenBothAreEmpty() {
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(empty, empty)
+                .build();
+        assertThat(mappingsImpl.isEmpty()).isTrue();
+    }
+
+    @Test
+    public void mergeShouldReturnLeftWhenRightIsEmpty() {
+        MappingImpl expectedMapping = MappingImpl.address("toto");
+        MappingsImpl.Builder left = MappingsImpl.builder().add(expectedMapping);
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(left, empty)
+                .build();
+        assertThat(mappingsImpl).containsExactly(expectedMapping);
+    }
+
+    @Test
+    public void mergeShouldReturnRightWhenLeftIsEmpty() {
+        MappingImpl expectedMapping = MappingImpl.address("toto");
+        MappingsImpl.Builder right = MappingsImpl.builder().add(expectedMapping);
+        MappingsImpl.Builder empty = MappingsImpl.builder();
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(empty, right)
+                .build();
+        assertThat(mappingsImpl).containsExactly(expectedMapping);
+    }
+
+    @Test
+    public void mergeShouldReturnBothWhenBothAreNotEmpty() {
+        MappingImpl leftMapping = MappingImpl.address("toto");
+        MappingsImpl.Builder left = MappingsImpl.builder().add(leftMapping);
+        MappingImpl rightMapping = MappingImpl.address("titi");
+        MappingsImpl.Builder right = MappingsImpl.builder().add(rightMapping);
+        MappingsImpl mappingsImpl = MappingsImpl.Builder
+                .merge(left, right)
+                .build();
+        assertThat(mappingsImpl).containsExactly(leftMapping, rightMapping);
     }
 }
