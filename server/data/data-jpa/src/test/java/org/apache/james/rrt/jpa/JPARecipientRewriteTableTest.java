@@ -20,12 +20,9 @@ package org.apache.james.rrt.jpa;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.core.Domain;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
-import org.apache.james.rrt.lib.Mapping.Type;
 import org.junit.After;
 import org.junit.Before;
 
@@ -55,45 +52,5 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
         localVirtualUserTable.configure(defaultConfiguration);
         return localVirtualUserTable;
-    }
-
-    @Override
-    protected void addMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
-        switch (type) {
-        case Error:
-            virtualUserTable.addErrorMapping(user, domain, mapping);
-            break;
-        case Regex:
-            virtualUserTable.addRegexMapping(user, domain, mapping);
-            break;
-        case Address:
-            virtualUserTable.addAddressMapping(user, domain, mapping);
-            break;
-        case Domain:
-            virtualUserTable.addAliasDomainMapping(domain, Domain.of(mapping));
-            break;
-        default:
-            throw new RuntimeException("Invalid mapping type: " + type);
-        }
-    }
-
-    @Override
-    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
-        switch (type) {
-        case Error:
-            virtualUserTable.removeErrorMapping(user, domain, mapping);
-            break;
-        case Regex:
-            virtualUserTable.removeRegexMapping(user, domain, mapping);
-            break;
-        case Address:
-            virtualUserTable.removeAddressMapping(user, domain, mapping);
-            break;
-        case Domain:
-            virtualUserTable.removeAliasDomainMapping(domain, Domain.of(mapping));
-            break;
-        default:
-            throw new RuntimeException("Invalid mapping type: " + type);
-        }
     }
 }

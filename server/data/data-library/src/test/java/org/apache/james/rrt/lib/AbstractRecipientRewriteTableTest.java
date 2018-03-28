@@ -293,11 +293,45 @@ public abstract class AbstractRecipientRewriteTableTest {
 
     protected abstract AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception;
 
-    protected abstract void addMapping(String user, Domain domain, String mapping, Mapping.Type type) throws
-            RecipientRewriteTableException;
 
-    protected abstract void removeMapping(String user, Domain domain, String mapping, Mapping.Type type) throws
-            RecipientRewriteTableException;
+    protected void addMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+        switch (type) {
+            case Error:
+                virtualUserTable.addErrorMapping(user, domain, mapping);
+                break;
+            case Regex:
+                virtualUserTable.addRegexMapping(user, domain, mapping);
+                break;
+            case Address:
+                virtualUserTable.addAddressMapping(user, domain, mapping);
+                break;
+            case Domain:
+                virtualUserTable.addAliasDomainMapping(domain, Domain.of(mapping));
+                break;
+            default:
+                throw new RuntimeException("Invalid mapping type: " + type.asPrefix());
+        }
+    }
+
+
+    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+        switch (type) {
+            case Error:
+                virtualUserTable.removeErrorMapping(user, domain, mapping);
+                break;
+            case Regex:
+                virtualUserTable.removeRegexMapping(user, domain, mapping);
+                break;
+            case Address:
+                virtualUserTable.removeAddressMapping(user, domain, mapping);
+                break;
+            case Domain:
+                virtualUserTable.removeAliasDomainMapping(domain, Domain.of(mapping));
+                break;
+            default:
+                throw new RuntimeException("Invalid mapping type: " + type.asPrefix());
+        }
+    }
 
     private void removeMapping(String user, Domain domain, String rawMapping) throws RecipientRewriteTableException {
         Type type = Mapping.detectType(rawMapping);
