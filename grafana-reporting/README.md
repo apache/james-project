@@ -32,3 +32,5 @@ Note that you need to run a guice version of James.
  - Statistics about DNS calls
  - Some other, diverse informations on the James server internals
  - Cassandra driver statistics
+ - Tika HTTP client statistics
+ - SpamAssassin TCP client statistics

@@ -63,6 +63,8 @@
                     <li>Per mailet and per matcher Response time percentiles</li>
                     <li>Diverse Response time percentiles, counts and rates for DNS</li>
                     <li>Cassandra Java driver metrics</li>
+                    <li>Tika HTTP client statistics</li>
+                    <li>SpamAssassin TCP client statistics</li>
                 </ul>
 
                 Retrieve <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">available boards</a> for Grafana.
