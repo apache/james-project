@@ -119,14 +119,14 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 MappingsImpl.Builder mappings = MappingsImpl.builder();
 
                 for (String target : targetMappings.asStrings()) {
-                    if (target.startsWith(Type.Regex.asPrefix())) {
+                    if (Mapping.detectType(target).equals(Type.Regex)) {
                         try {
                             target = RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain.asString()), target);
                         } catch (PatternSyntaxException | ParseException e) {
                             LOGGER.error("Exception during regexMap processing: ", e);
                         }
-                    } else if (target.startsWith(Type.Domain.asPrefix())) {
-                        target = user + "@" + target.substring(Type.Domain.asPrefix().length());
+                    } else if (Mapping.detectType(target).equals(Type.Domain)) {
+                        target = user + "@" + Type.Domain.withoutPrefix(target);
                     }
 
                     if (target == null) {
@@ -246,44 +246,42 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
-
         String map = mapping.toLowerCase(Locale.US);
+        Type mappingType = Mapping.detectType(map);
+        String mappingSuffix = mappingType.withoutPrefix(map);
 
-        if (map.startsWith(Type.Error.asPrefix())) {
-            addErrorMapping(user, domain, map.substring(Type.Error.asPrefix().length()));
-        } else if (map.startsWith(Type.Regex.asPrefix())) {
-            addRegexMapping(user, domain, map.substring(Type.Regex.asPrefix().length()));
-        } else if (map.startsWith(Type.Domain.asPrefix())) {
+        if (mappingType.equals(Type.Error)) {
+            addErrorMapping(user, domain, mappingSuffix);
+        } else if (mappingType.equals(Type.Regex)) {
+            addRegexMapping(user, domain, mappingSuffix);
+        } else if (mappingType.equals(Type.Domain)) {
             if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
             }
-            String domainName = map.substring(Type.Domain.asPrefix().length());
-            addAliasDomainMapping(domain, Domain.of(domainName));
+            addAliasDomainMapping(domain, Domain.of(mappingSuffix));
         } else {
-            addAddressMapping(user, domain, map);
+            addAddressMapping(user, domain, mappingSuffix);
         }
-
     }
 
     @Override
     public void removeMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
-
         String map = mapping.toLowerCase(Locale.US);
+        Type mappingType = Mapping.detectType(map);
+        String mappingSuffix = mappingType.withoutPrefix(map);
 
-        if (map.startsWith(Type.Error.asPrefix())) {
-            removeErrorMapping(user, domain, map.substring(Type.Error.asPrefix().length()));
-        } else if (map.startsWith(Type.Regex.asPrefix())) {
-            removeRegexMapping(user, domain, map.substring(Type.Regex.asPrefix().length()));
-        } else if (map.startsWith(Type.Domain.asPrefix())) {
+        if (mappingType.equals(Type.Error)) {
+            removeErrorMapping(user, domain, mappingSuffix);
+        } else if (mappingType.equals(Type.Regex)) {
+            removeRegexMapping(user, domain, mappingSuffix);
+        } else if (mappingType.equals(Type.Domain)) {
             if (user != null) {
                 throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
             }
-            String domainName = map.substring(Type.Domain.asPrefix().length());
-            removeAliasDomainMapping(domain, Domain.of(domainName));
+            removeAliasDomainMapping(domain, Domain.of(mappingSuffix));
         } else {
             removeAddressMapping(user, domain, map);
         }
-
     }
 
     @Override

@@ -300,14 +300,9 @@ public abstract class AbstractRecipientRewriteTableTest {
             RecipientRewriteTableException;
 
     private void removeMapping(String user, Domain domain, String rawMapping) throws RecipientRewriteTableException {
-        if (rawMapping.startsWith(Type.Error.asPrefix())) {
-            removeMapping(user, domain, rawMapping.substring(Type.Error.asPrefix().length()), Type.Error);
-        } else if (rawMapping.startsWith(Type.Regex.asPrefix())) {
-            removeMapping(user, domain, rawMapping.substring(Type.Regex.asPrefix().length()), Type.Regex);
-        } else if (rawMapping.startsWith(Type.Domain.asPrefix())) {
-            removeMapping(user, domain, rawMapping.substring(Type.Domain.asPrefix().length()), Type.Domain);
-        } else {
-            removeMapping(user, domain, rawMapping, Type.Address);
-        }
+        Type type = Mapping.detectType(rawMapping);
+        String mappingSuffix = type.withoutPrefix(rawMapping);
+
+        removeMapping(user, domain, mappingSuffix, type);
     }
 }

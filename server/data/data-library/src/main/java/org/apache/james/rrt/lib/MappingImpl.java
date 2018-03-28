@@ -33,16 +33,8 @@ public class MappingImpl implements Mapping, Serializable {
     private static final long serialVersionUID = 1L;
 
     public static MappingImpl of(String mapping) {
-        if (mapping.startsWith(Type.Regex.asPrefix())) {
-            return new MappingImpl(Type.Regex, mapping.substring(Type.Regex.asPrefix().length()));
-        }
-        if (mapping.startsWith(Type.Error.asPrefix())) {
-            return new MappingImpl(Type.Error, mapping.substring(Type.Error.asPrefix().length()));
-        }
-        if (mapping.startsWith(Type.Domain.asPrefix())) {
-            return new MappingImpl(Type.Domain, mapping.substring(Type.Domain.asPrefix().length()));
-        }
-        return new MappingImpl(Type.Address, mapping.substring(Type.Address.asPrefix().length()));
+        Type type = Mapping.detectType(mapping);
+        return new MappingImpl(type, type.withoutPrefix(mapping));
     }
     
     public static MappingImpl address(String mapping) {

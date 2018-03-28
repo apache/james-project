@@ -22,11 +22,26 @@ package org.apache.james.rrt.lib;
 
 import org.apache.james.core.Domain;
 
+import com.google.common.base.Preconditions;
+
 public interface Mapping {
+
+    static Type detectType(String input) {
+        if (input.startsWith(Type.Regex.asPrefix())) {
+            return Type.Regex;
+        }
+        if (input.startsWith(Type.Domain.asPrefix())) {
+            return Type.Domain;
+        }
+        if (input.startsWith(Type.Error.asPrefix())) {
+            return Type.Error;
+        }
+        return Type.Address;
+    }
 
     String getAddress();
 
-    enum Type { 
+    enum Type {
         Regex("regex:"), 
         Domain("domain:"), 
         Error("error:"), 
@@ -40,6 +55,11 @@ public interface Mapping {
 
         public String asPrefix() {
             return asPrefix;
+        }
+
+        public String withoutPrefix(String input) {
+            Preconditions.checkArgument(input.startsWith(asPrefix));
+            return input.substring(asPrefix.length());
         }
     }
 
