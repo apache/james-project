@@ -36,6 +36,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
@@ -105,13 +106,25 @@ public class RecipientRewriteTableProcessor {
     private final Supplier<Domain> defaultDomainSupplier;
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
-        addressMapping -> {
-            try {
-                return Optional.of(new MailAddress(addressMapping.asString()));
-            } catch (AddressException e) {
-                return Optional.empty();
+        mapping -> {
+            Type type = mapping.getType();
+            switch (type) {
+                case Address:
+                    return parseMappingToMailAddress(mapping.asString());
+                case Forward:
+                    return parseMappingToMailAddress(type.withoutPrefix(mapping.asString()));
+                default:
+                    return Optional.empty();
             }
         };
+
+    private static Optional<MailAddress> parseMappingToMailAddress(String mapping) {
+        try {
+            return Optional.of(new MailAddress(mapping));
+        } catch (AddressException e) {
+            return Optional.empty();
+        }
+    }
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
         this.virtualTableStore = virtualTableStore;

@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -39,11 +40,16 @@ import org.junit.rules.TemporaryFolder;
 public class RecipientRewriteTableIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
-    private static final String FROM = "fromUser@" + DEFAULT_DOMAIN;
-    private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
-    private static final String ANY_AT_JAMES = "any@" + DEFAULT_DOMAIN;
+    private static final String FROM_LOCAL_PART = "fromUser";
+    private static final String FROM = FROM_LOCAL_PART + "@" + DEFAULT_DOMAIN;
+    private static final String RECIPIENT_LOCAL_PART = "touser";
+    private static final String RECIPIENT = RECIPIENT_LOCAL_PART + "@" + DEFAULT_DOMAIN;
+    private static final String ANY_LOCAL_PART = "any";
+    private static final String ANY_AT_JAMES = ANY_LOCAL_PART + "@" + DEFAULT_DOMAIN;
     private static final String OTHER_AT_JAMES = "other@" + DEFAULT_DOMAIN;
-    private static final String ANY_AT_ANOTHER_DOMAIN = "any@" + JAMES_ANOTHER_DOMAIN;
+    private static final String ANY_AT_ANOTHER_DOMAIN = ANY_LOCAL_PART + "@" + JAMES_ANOTHER_DOMAIN;
+    private static final String GROUP_LOCAL_PART = "group";
+    private static final String GROUP = GROUP_LOCAL_PART + "@" + DEFAULT_DOMAIN;
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -75,8 +81,8 @@ public class RecipientRewriteTableIntegrationTest {
 
     @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -86,16 +92,18 @@ public class RecipientRewriteTableIntegrationTest {
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
     public void rrtServiceShouldNotDeliverEmailToRecipientWhenHaveMappingRecipients() throws Exception {
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, ANY_AT_JAMES);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -105,6 +113,7 @@ public class RecipientRewriteTableIntegrationTest {
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitNoMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -113,8 +122,8 @@ public class RecipientRewriteTableIntegrationTest {
         String localUser = nonDomainUser + "@" + dataProbe.getDefaultDomain();
         dataProbe.addUser(localUser, PASSWORD);
 
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, nonDomainUser);
-        dataProbe.addAddressMapping("touser", DEFAULT_DOMAIN, OTHER_AT_JAMES);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, nonDomainUser);
+        dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT)
@@ -124,10 +133,12 @@ public class RecipientRewriteTableIntegrationTest {
             .login(localUser, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -143,6 +154,7 @@ public class RecipientRewriteTableIntegrationTest {
             .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
     @Test
@@ -158,6 +170,43 @@ public class RecipientRewriteTableIntegrationTest {
             .login(ANY_AT_JAMES, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitNoMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
     }
 
+    @Test
+    public void rrtServiceShouldDeliverEmailToForwardRecipients() throws Exception {
+        dataProbe.addForwardMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+        dataProbe.addForwardMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(ANY_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
+    public void rrtServiceShouldFollowForwardWhenSendingToAGroup() throws Exception {
+        dataProbe.addAddressMapping(GROUP_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
+
+        dataProbe.addForwardMapping(ANY_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, GROUP)
+            .awaitSent(awaitAtMostOneMinute);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(OTHER_AT_JAMES, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
 }
