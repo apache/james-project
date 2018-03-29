@@ -388,6 +388,7 @@ public class DSNBounceTest {
             .lastUpdated(DateTime.parse("2016-09-08T14:25:52.000Z").toDate())
             .mimeMessage(mimeMessage)
             .build();
+        MimeMessage mimeMessageCopy = new MimeMessage(mimeMessage);
 
         dsnBounce.service(mail);
 
@@ -401,7 +402,7 @@ public class DSNBounceTest {
 
         assertThat(sentMail.getMsg().getContentType()).startsWith("multipart/report;");
         assertThat(MimeMessageUtil.asString((MimeMessage) content.getBodyPart(2).getContent()))
-            .isEqualTo(MimeMessageUtil.asString(mimeMessage));
+            .isEqualTo(MimeMessageUtil.asString(mimeMessageCopy));
     }
 
     @Test
