@@ -765,6 +765,8 @@ You can use **webadmin** to define address groups.
 
 When a specific email is sent to the group mail address, every group member will receive it.
 
+Note that the group mail address is virtual: it does not correspond to an existing user.
+
 This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
 the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
 to be configured.
@@ -835,6 +837,92 @@ Response codes:
 
  - 200: Success
  - 400: Group structure or member is not valid
+ - 500: Internal error
+
+## Creating address forwards
+
+You can use **webadmin** to define address forwards.
+
+When a specific email is sent to the base mail address, every forward destination addresses will receive it.
+
+Please note that the base address can be optionaly part of the forward destination. In that case, the base recipient
+also receive a copy of the mail. Otherwise he is ommitted.
+
+Forwards can be defined for existing users. It then defers from "groups".
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+### Listing Forwards
+
+```
+curl -XGET http://ip:port/address/forwards
+```
+
+Will return the users having forwards configured as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["user1@domain.com", "user2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+ - 500: Internal error
+
+### Listing destinations in a forward
+
+```
+curl -XGET http://ip:port/address/forwards/user@domain.com
+```
+
+Will return the destination addresses of this forward as a list of JSON Strings representing mail addresses. For instance:
+
+```
+[
+  {"mailAddres":"destination1@domain.com"},
+  {"mailAddres":"destination2@domain.com"}
+]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Forward structure is not valid
+ - 404: The given user don't have forwards or does not exist
+ - 500: Internal error
+
+### Adding a new destination to a forward
+
+```
+curl -XPUT http://ip:port/address/forwards/user@domain.com/targets/destination@domain.com
+```
+
+Will add destination@domain.com to user@domain.com, creating the forward if needed
+
+Response codes:
+
+ - 200: Success
+ - 400: Forward structure or member is not valid
+ - 403: Server does not own the requested domain
+ - 404: Requested forward address does not match an existing user
+ - 500: Internal error
+
+### Removing a destination of a forward
+
+```
+curl -XDELETE http://ip:port/address/forwards/user@domain.com/targets/destination@domain.com
+```
+
+Will remove destination@domain.com from user@domain.com, removing the forward if forward is empty after deletion
+
+Response codes:
+
+ - 200: Success
+ - 400: Forward structure or member is not valid
  - 500: Internal error
 
 ## Administrating mail repositories
