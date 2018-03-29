@@ -22,7 +22,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.Enumeration;
 
 import javax.mail.BodyPart;
+import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.Session;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -37,8 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-public class MailMessageAlteringUtils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailMessageAlteringUtils.class);
+public class MessageAlteringUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageAlteringUtils.class);
     private static final char LINE_BREAK = '\n';
 
     public static Builder from(RedirectNotify mailet) {
@@ -49,7 +51,6 @@ public class MailMessageAlteringUtils {
 
         private RedirectNotify mailet;
         private Mail originalMail;
-        private Mail newMail;
 
         private Builder(RedirectNotify mailet) {
             this.mailet = mailet;
@@ -60,40 +61,32 @@ public class MailMessageAlteringUtils {
             return this;
         }
 
-        public Builder newMail(Mail newMail) {
-            this.newMail = newMail;
-            return this;
+
+        public MimeMessage alteredMessage() throws MessagingException {
+            return build().alteredMessage();
         }
 
-        public void alterNewMessage() throws MessagingException {
-            build().alterNewMessage();
-        }
-
-        @VisibleForTesting MailMessageAlteringUtils build() {
+        @VisibleForTesting MessageAlteringUtils build() {
             Preconditions.checkNotNull(mailet, "'mailet' is mandatory");
             Preconditions.checkNotNull(originalMail, "'originalMail' is mandatory");
-            Preconditions.checkNotNull(newMail, "'newMail' is mandatory");
-            return new MailMessageAlteringUtils(mailet, originalMail, newMail);
+            return new MessageAlteringUtils(mailet, originalMail);
         }
     }
 
     private final RedirectNotify mailet;
     private final Mail originalMail;
-    private final Mail newMail;
 
-    private MailMessageAlteringUtils(RedirectNotify mailet, Mail originalMail, Mail newMail) {
+    private MessageAlteringUtils(RedirectNotify mailet, Mail originalMail) {
         this.mailet = mailet;
         this.originalMail = originalMail;
-        this.newMail = newMail;
     }
 
     /**
      * Builds the message of the newMail in case it has to be altered.
      */
-    private void alterNewMessage() throws MessagingException {
-
+    private MimeMessage alteredMessage() throws MessagingException {
         MimeMessage originalMessage = originalMail.getMessage();
-        MimeMessage newMessage = newMail.getMessage();
+        MimeMessage newMessage = new MimeMessage(Session.getDefaultInstance(System.getProperties(), null));
 
         // Copy the relevant headers
         copyRelevantHeaders(originalMessage, newMessage);
@@ -122,9 +115,9 @@ public class MailMessageAlteringUtils {
             if (mailet.getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
                 multipart.addBodyPart(getErrorPart(originalMail));
             }
-            newMail.getMessage().setContent(multipart);
-            newMail.getMessage().setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
-
+            newMessage.setContent(multipart);
+            newMessage.setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
+            return newMessage;
         } catch (Exception ioe) {
             throw new MessagingException("Unable to create multipart body", ioe);
         }
@@ -243,11 +236,12 @@ public class MailMessageAlteringUtils {
     }
 
     private void copyRelevantHeaders(MimeMessage originalMessage, MimeMessage newMessage) throws MessagingException {
-        Enumeration<String> headerEnum = originalMessage.getMatchingHeaderLines(
+        Enumeration<Header> headerEnum = originalMessage.getMatchingHeaders(
                 new String[] { RFC2822Headers.DATE, RFC2822Headers.FROM, RFC2822Headers.REPLY_TO, RFC2822Headers.TO, 
                         RFC2822Headers.SUBJECT, RFC2822Headers.RETURN_PATH });
         while (headerEnum.hasMoreElements()) {
-            newMessage.addHeaderLine(headerEnum.nextElement());
+            Header header = headerEnum.nextElement();
+            newMessage.addHeader(header.getName(), header.getValue());
         }
     }
 

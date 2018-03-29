@@ -26,7 +26,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class MailMessageAlteringUtilsTest {
+public class MessageAlteringUtilsTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -35,39 +35,28 @@ public class MailMessageAlteringUtilsTest {
     public void buildShouldThrowWhenMailetIsNull() {
         expectedException.expect(NullPointerException.class);
         expectedException.expectMessage("'mailet' is mandatory");
-        MailMessageAlteringUtils.from(null).build();
+        MessageAlteringUtils.from(null).build();
     }
 
     @Test
     public void buildShouldThrowWhenOriginalMailIsNull() {
         expectedException.expect(NullPointerException.class);
         expectedException.expectMessage("'originalMail' is mandatory");
-        MailMessageAlteringUtils.from(mock(RedirectNotify.class))
-            .build();
-    }
-
-    @Test
-    public void buildShouldThrowWhenNewMailIsNull() {
-        expectedException.expect(NullPointerException.class);
-        expectedException.expectMessage("'newMail' is mandatory");
-        MailMessageAlteringUtils.from(mock(RedirectNotify.class))
-            .originalMail(mock(Mail.class))
+        MessageAlteringUtils.from(mock(RedirectNotify.class))
             .build();
     }
 
     @Test
     public void buildShouldWorkWhenEverythingProvided() {
-        MailMessageAlteringUtils.from(mock(RedirectNotify.class))
+        MessageAlteringUtils.from(mock(RedirectNotify.class))
             .originalMail(mock(Mail.class))
-            .newMail(mock(Mail.class))
             .build();
     }
 
     @Test
     public void getFileNameShouldReturnNoSubjectWhenSubjectIsNull() {
-        MailMessageAlteringUtils alteredMailUtils = MailMessageAlteringUtils.from(mock(RedirectNotify.class))
+        MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
                 .originalMail(mock(Mail.class))
-                .newMail(mock(Mail.class))
                 .build();
 
         String fileName = alteredMailUtils.getFileName(null);
@@ -77,9 +66,8 @@ public class MailMessageAlteringUtilsTest {
 
     @Test
     public void getFileNameShouldReturnNoSubjectWhenSubjectContainsOnlySpaces() {
-        MailMessageAlteringUtils alteredMailUtils = MailMessageAlteringUtils.from(mock(RedirectNotify.class))
+        MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
                 .originalMail(mock(Mail.class))
-                .newMail(mock(Mail.class))
                 .build();
 
         String fileName = alteredMailUtils.getFileName("    ");
@@ -89,9 +77,8 @@ public class MailMessageAlteringUtilsTest {
 
     @Test
     public void getFileNameShouldReturnSubjectWhenSubjectIsGiven() {
-        MailMessageAlteringUtils alteredMailUtils = MailMessageAlteringUtils.from(mock(RedirectNotify.class))
+        MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
                 .originalMail(mock(Mail.class))
-                .newMail(mock(Mail.class))
                 .build();
 
         String fileName = alteredMailUtils.getFileName("my Subject");
@@ -101,9 +88,8 @@ public class MailMessageAlteringUtilsTest {
 
     @Test
     public void getFileNameShouldReturnTrimmedSubjectWhenSubjectStartsWithSpaces() {
-        MailMessageAlteringUtils alteredMailUtils = MailMessageAlteringUtils.from(mock(RedirectNotify.class))
+        MessageAlteringUtils alteredMailUtils = MessageAlteringUtils.from(mock(RedirectNotify.class))
                 .originalMail(mock(Mail.class))
-                .newMail(mock(Mail.class))
                 .build();
 
         String fileName = alteredMailUtils.getFileName("    my Subject");

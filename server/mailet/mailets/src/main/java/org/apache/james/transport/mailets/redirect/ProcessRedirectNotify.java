@@ -19,7 +19,6 @@
 package org.apache.james.transport.mailets.redirect;
 
 import javax.mail.MessagingException;
-import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.server.core.MailImpl;
@@ -116,13 +115,10 @@ public class ProcessRedirectNotify {
         if (isDebug) {
             LOGGER.debug("Alter message");
         }
-        newMail.setMessage(new MimeMessage(Session.getDefaultInstance(System.getProperties(), null)));
-
-        // handle the new message if altered
-        MailMessageAlteringUtils.from(mailet)
-            .originalMail(originalMail)
-            .newMail(newMail)
-            .alterNewMessage();
+        newMail.setMessage(
+            MessageAlteringUtils.from(mailet)
+                .originalMail(originalMail)
+                .alteredMessage());
     }
 
     private void createUnalteredMessage(Mail originalMail, MailImpl newMail) throws MessagingException {
