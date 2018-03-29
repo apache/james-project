@@ -47,16 +47,18 @@ public interface Mapping {
     String getAddress();
 
     enum Type {
-        Regex("regex:"), 
-        Domain("domain:"), 
-        Error("error:"), 
-        Forward("forward:"),
-        Address(""); 
+        Regex("regex:", 3),
+        Domain("domain:", 1),
+        Error("error:", 3),
+        Forward("forward:", 2),
+        Address("", 3);
 
         private final String asPrefix;
+        private final int order;
 
-        Type(String asPrefix) {
+        Type(String asPrefix, Integer order) {
             this.asPrefix = asPrefix;
+            this.order = order;
         }
 
         public String asPrefix() {
@@ -73,6 +75,10 @@ public interface Mapping {
                 || mapping.startsWith(Domain.asPrefix())
                 || mapping.startsWith(Error.asPrefix())
                 || mapping.startsWith(Forward.asPrefix());
+        }
+
+        public int getOrder() {
+            return order;
         }
     }
 

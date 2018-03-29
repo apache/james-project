@@ -44,6 +44,10 @@ public class MappingsImpl implements Mappings, Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public static final Comparator<Mapping> MAPPING_COMPARATOR = Comparator
+        .<Mapping, Integer>comparing(mapping -> mapping.getType().getOrder())
+        .thenComparing(Mapping::asString);
+
     public static MappingsImpl empty() {
         return builder().build();
     }
@@ -103,7 +107,6 @@ public class MappingsImpl implements Mappings, Serializable {
             mappings.add(mapping);
             return this;
         }
-
         
         public Builder addAll(Mappings mappings) {
             this.mappings.addAll(mappings);
@@ -111,24 +114,12 @@ public class MappingsImpl implements Mappings, Serializable {
         }
         
         public MappingsImpl build() {
-            Comparator<? super Mapping> byTypeComparator = (mapping1, mapping2) -> {
-                if (mapping1.getType() == mapping2.getType()) {
-                    return mapping1.asString().compareTo(mapping2.asString());
-                }
-                if (mapping1.getType() == Type.Domain) {
-                    return -1;
-                }
-                if (mapping2.getType() == Type.Domain) {
-                    return 1;
-                }
-                return mapping1.asString().compareTo(mapping2.asString());
-            };
-            return new MappingsImpl(mappings.build().stream()
-                    .sorted(byTypeComparator)
-                    .collect(Guavate.toImmutableList()));
+            return new MappingsImpl(mappings.build()
+                .stream()
+                .sorted(MAPPING_COMPARATOR)
+                .collect(Guavate.toImmutableList()));
         }
 
-        
     }
     
     private final ImmutableList<Mapping> mappings;

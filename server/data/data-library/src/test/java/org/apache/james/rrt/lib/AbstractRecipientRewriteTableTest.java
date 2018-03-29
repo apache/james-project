@@ -223,7 +223,10 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.getMappings(user, aliasDomain))
             .describedAs("Domain mapped as first, Address mapped as second")
-            .containsExactly(MappingImpl.address(user + "@" + domain), MappingImpl.address(user2 + "@" + domain));
+            .isEqualTo(MappingsImpl.builder()
+                .add(MappingImpl.address(user + "@" + domain))
+                .add(MappingImpl.address(user2 + "@" + domain))
+                .build());
 
         removeMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain, Type.Address);
 

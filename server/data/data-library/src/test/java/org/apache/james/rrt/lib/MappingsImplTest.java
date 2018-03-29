@@ -326,4 +326,17 @@ public class MappingsImplTest {
                 .build();
         assertThat(mappingsImpl).containsExactly(domainMapping, domain2Mapping, addressMapping, errorMapping);
     }
+    
+    @Test
+    public void builderShouldPutDomainAliasFirstThenForwardWhenVariousMappings() {
+        MappingImpl regexMapping = MappingImpl.regex("regex");
+        MappingImpl forwardMapping = MappingImpl.forward("forward");
+        MappingImpl domainMapping = MappingImpl.domain(Domain.of("domain"));
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(forwardMapping)
+                .add(domainMapping)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainMapping, forwardMapping, regexMapping);
+    }
 }
