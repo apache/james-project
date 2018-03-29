@@ -40,8 +40,6 @@ import org.apache.james.rrt.lib.Mapping.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-
 /**
  * 
  */
@@ -423,21 +421,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         String mappings = mapAddressInternal(user, domain);
 
         if (mappings != null) {
-            return sortMappings(MappingsImpl.fromRawString(mappings));
+            return MappingsImpl.fromRawString(mappings);
         } else {
             return null;
-        }
-    }
-
-    @VisibleForTesting static Mappings sortMappings(Mappings mappings) {
-        if (mappings.contains(Mapping.Type.Domain)) {
-            return
-                    MappingsImpl.builder()
-                        .addAll(mappings.select(Mapping.Type.Domain))
-                        .addAll(mappings.exclude(Mapping.Type.Domain))
-                        .build();
-        } else {
-            return mappings;
         }
     }
 

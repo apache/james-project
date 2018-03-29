@@ -231,42 +231,6 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void sortMappingsShouldReturnEmptyWhenEmpty() {
-        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.empty())).isEmpty();
-    }
-
-    @Test
-    public void sortMappingsShouldReturnSameStringWhenSingleDomainAlias() {
-        String singleDomainAlias = Type.Domain.asPrefix() + "first";
-        assertThat(AbstractRecipientRewriteTable.sortMappings(MappingsImpl.fromRawString(singleDomainAlias)))
-            .containsExactly(MappingImpl.domain(Domain.of("first")));
-    }
-     
-    @Test
-    public void sortMappingsShouldReturnSameStringWhenTwoDomainAliases() {
-        MappingsImpl mappings = MappingsImpl.builder()
-                .add(Type.Domain.asPrefix() + "first")
-                .add(Type.Domain.asPrefix() + "second")
-                .build();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings)).isEqualTo(mappings);
-    }
-    
-    @Test
-    public void sortMappingsShouldPutDomainAliasFirstWhenVariousMappings() {
-        String regexMapping = Type.Regex.asPrefix() + "first";
-        String domainMapping = Type.Domain.asPrefix() + "second";
-        MappingsImpl mappings = MappingsImpl.builder()
-                .add(regexMapping)
-                .add(domainMapping)
-                .build();
-        assertThat(AbstractRecipientRewriteTable.sortMappings(mappings))
-                .isEqualTo(MappingsImpl.builder()
-                        .add(domainMapping)
-                        .add(regexMapping)
-                        .build());
-    }
-
-    @Test
     public void addMappingShouldThrowWhenMappingAlreadyExists() throws Exception {
         String user = "test";
         Domain domain = Domain.LOCALHOST;
