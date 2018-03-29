@@ -19,19 +19,12 @@
 
 package org.apache.james.util;
 
-import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
-import org.apache.commons.lang3.tuple.Pair;
+import com.google.common.base.Suppliers;
 
-import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableListMultimap;
-
-public class GuavaUtils {
-    public static <K, V> ImmutableListMultimap<K, V> toMultimap(Map<K, List<V>> rights) {
-        return rights.entrySet()
-            .stream()
-            .flatMap(e -> e.getValue().stream().map(right -> Pair.of(e.getKey(), right)))
-            .collect(Guavate.toImmutableListMultimap(Pair::getKey, Pair::getValue));
+public class MemoizedSupplier {
+    public static <T> Supplier<T> of(Supplier<T> originalSupplier) {
+        return Suppliers.memoize(originalSupplier::get)::get;
     }
 }

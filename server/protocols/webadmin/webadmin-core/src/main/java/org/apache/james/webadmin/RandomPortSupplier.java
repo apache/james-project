@@ -21,27 +21,25 @@ package org.apache.james.webadmin;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.function.Supplier;
 
+import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.Port;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
+import com.github.fge.lambdas.Throwing;
 
 public class RandomPortSupplier implements PortSupplier {
 
-    public static int findFreePort() {
+    public static int findFreePort() throws IOException {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
         }
     }
 
     private final Supplier<Integer> portSupplier;
 
     public RandomPortSupplier() {
-        portSupplier = Suppliers.memoize(RandomPortSupplier::findFreePort);
+        portSupplier = MemoizedSupplier.of(Throwing.supplier(RandomPortSupplier::findFreePort));
     }
 
     @Override

@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
@@ -37,7 +38,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.util.GuavaUtils;
+import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
@@ -48,8 +49,6 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 public class RecipientRewriteTableProcessor {
@@ -190,10 +189,8 @@ public class RecipientRewriteTableProcessor {
     }
 
     private ImmutableList<Mapping> sanitizeMappingsWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        Supplier<Domain> defaultDomainSupplier = Suppliers.memoize(
-            GuavaUtils.toGuava(
-            Throwing.supplier(() -> getDefaultDomain(domainList))
-                .sneakyThrow()));
+        Supplier<Domain> defaultDomainSupplier = MemoizedSupplier.of(
+            Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
 
         return mappings.asStream()
             .filter(mapping -> !mapping.hasDomain())
