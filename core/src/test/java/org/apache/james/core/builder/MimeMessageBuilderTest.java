@@ -50,4 +50,15 @@ public class MimeMessageBuilderTest {
             .hasSize(2);
     }
 
+    @Test
+    public void buildShouldPreserveDate() throws Exception {
+        String value = "Wed, 28 Mar 2018 17:02:25 +0200";
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader("Date", value)
+            .build();
+
+        assertThat(mimeMessage.getHeader("Date"))
+            .containsExactly(value);
+    }
+
 }
