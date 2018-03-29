@@ -155,4 +155,22 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
         }
     }
 
+    @Override
+    public void addForwardMapping(String user, String domain, String address) throws Exception {
+        try {
+            rrt.addForwardMapping(user, Domain.of(domain), address);
+        } catch (RecipientRewriteTableException e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeForwardMapping(String user, String domain, String address) throws Exception {
+        try {
+            rrt.removeForwardMapping(user, Domain.of(domain), address);
+        } catch (RecipientRewriteTableException e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
 }
