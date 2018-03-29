@@ -43,6 +43,7 @@ public class MimeMessageWrapper extends MimeMessage {
             ThrowingConsumer<Header> consumer = header -> result.addHeader(header.getName(), header.getValue());
             Collections.list(mimeMessage.getAllHeaders())
                 .forEach(Throwing.consumer(consumer).sneakyThrow());
+            result.setText(""); // Avoid future body reads to fail
             return result;
         }
     }
