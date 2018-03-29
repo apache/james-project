@@ -93,34 +93,40 @@ public class MessageAlteringUtils {
 
         String head = new MimeMessageUtils(originalMessage).getMessageHeaders();
         try {
-            // Create the message body
-            MimeMultipart multipart = new MimeMultipart("mixed");
+            MimeMultipart multipart = generateMultipartContent(originalMessage, head);
 
-            // Create the message
-            MimeMultipart mpContent = new MimeMultipart("alternative");
-            mpContent.addBodyPart(getBodyPart(originalMail, originalMessage, head));
-
-            MimeBodyPart contentPartRoot = new MimeBodyPart();
-            contentPartRoot.setContent(mpContent);
-
-            multipart.addBodyPart(contentPartRoot);
-
-            if (mailet.getInitParameters().isDebug()) {
-                LOGGER.debug("attachmentType:{}", mailet.getInitParameters().getAttachmentType());
-            }
-            if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
-                multipart.addBodyPart(getAttachmentPart(originalMessage, head));
-            }
-
-            if (mailet.getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
-                multipart.addBodyPart(getErrorPart(originalMail));
-            }
             newMessage.setContent(multipart);
             newMessage.setHeader(RFC2822Headers.CONTENT_TYPE, multipart.getContentType());
             return newMessage;
         } catch (Exception ioe) {
             throw new MessagingException("Unable to create multipart body", ioe);
         }
+    }
+
+    private MimeMultipart generateMultipartContent(MimeMessage originalMessage, String head) throws Exception {
+        // Create the message body
+        MimeMultipart multipart = new MimeMultipart("mixed");
+
+        // Create the message
+        MimeMultipart mpContent = new MimeMultipart("alternative");
+        mpContent.addBodyPart(getBodyPart(originalMail, originalMessage, head));
+
+        MimeBodyPart contentPartRoot = new MimeBodyPart();
+        contentPartRoot.setContent(mpContent);
+
+        multipart.addBodyPart(contentPartRoot);
+
+        if (mailet.getInitParameters().isDebug()) {
+            LOGGER.debug("attachmentType:{}", mailet.getInitParameters().getAttachmentType());
+        }
+        if (!mailet.getInitParameters().getAttachmentType().equals(TypeCode.NONE)) {
+            multipart.addBodyPart(getAttachmentPart(originalMessage, head));
+        }
+
+        if (mailet.getInitParameters().isAttachError() && originalMail.getErrorMessage() != null) {
+            multipart.addBodyPart(getErrorPart(originalMail));
+        }
+        return multipart;
     }
 
     private BodyPart getBodyPart(Mail originalMail, MimeMessage originalMessage, String head) throws MessagingException, Exception {
