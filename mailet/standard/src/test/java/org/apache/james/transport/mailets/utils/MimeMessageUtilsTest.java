@@ -171,6 +171,6 @@ public class MimeMessageUtilsTest {
                 .build())
                 .toHeaderList())
             .extracting("name")
-            .containsOnly("Message-Id", "MIME-Version", headerName, "Date");
+            .containsOnly("Message-Id", "MIME-Version", headerName, "Date", "Content-Type", "Content-Transfer-Encoding");
     }
 }
