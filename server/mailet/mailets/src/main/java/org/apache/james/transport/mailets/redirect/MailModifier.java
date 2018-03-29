@@ -139,7 +139,7 @@ public class MailModifier {
      * If the requested value is <code>SpecialAddress.NULL</code> will remove
      * the "Reply-To:" header. If the requested value is null does nothing.</p>
      */
-    public void setReplyTo(Optional<MailAddress> optionalReplyTo, Mail originalMail) throws MessagingException {
+    public void setReplyTo(Optional<MailAddress> optionalReplyTo) throws MessagingException {
         if (optionalReplyTo.isPresent()) {
             MailAddress replyTo = optionalReplyTo.get();
             if (replyTo.equals(SpecialAddress.NULL)) {
@@ -161,7 +161,7 @@ public class MailModifier {
      * requested value is <code>SpecialAddress.NULL</code> sets it to "<>". If
      * the requested value is null does nothing.
      */
-    public void setReversePath(Optional<MailAddress> maybeReversePath, Mail originalMail) {
+    public void setReversePath(Optional<MailAddress> maybeReversePath) {
         if (maybeReversePath.isPresent()) {
             MailAddress reversePath = maybeReversePath.get();
             if (reversePath.equals(SpecialAddress.NULL)) {
@@ -194,7 +194,7 @@ public class MailModifier {
         }
     }
 
-    public void setSender(Optional<MailAddress> sender, Mail originalMail) throws MessagingException {
+    public void setSender(Optional<MailAddress> sender) throws MessagingException {
         if (sender.isPresent()) {
             mail.getMessage().setFrom(sender.get().toInternetAddress());
 

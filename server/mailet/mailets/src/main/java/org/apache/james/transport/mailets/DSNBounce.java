@@ -264,10 +264,10 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
             mailModifier.setRecipients(getRecipients(originalMail));
             mailModifier.setTo(getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
-            mailModifier.setReplyTo(getReplyTo(originalMail), originalMail);
-            mailModifier.setReversePath(getReversePath(originalMail), originalMail);
+            mailModifier.setReplyTo(getReplyTo(originalMail));
+            mailModifier.setReversePath(getReversePath(originalMail));
             mailModifier.setIsReply(getInitParameters().isReply(), originalMail);
-            mailModifier.setSender(getSender(originalMail), originalMail);
+            mailModifier.setSender(getSender(originalMail));
        
             newMail.getMessage().setHeader(RFC2822Headers.DATE, getDateHeader(originalMail));
        

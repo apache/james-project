@@ -45,9 +45,9 @@ public class ProcessRedirectNotify {
 
         // duplicates the Mail object, to be able to modify the new mail keeping
         // the original untouched
+        String originalMessageId = originalMail.getMessage().getMessageID();
         MailImpl newMail = MailImpl.duplicate(originalMail);
         try {
-            String originalMessageId = originalMail.getMessage().getMessageID();
             MailModifier mailModifier = MailModifier.builder()
                     .mailet(mailet)
                     .mail(newMail)
@@ -74,10 +74,10 @@ public class ProcessRedirectNotify {
             mailModifier.setRecipients(mailet.getRecipients(originalMail));
             mailModifier.setTo(mailet.getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
-            mailModifier.setReplyTo(mailet.getReplyTo(originalMail), originalMail);
-            mailModifier.setReversePath(mailet.getReversePath(originalMail), originalMail);
+            mailModifier.setReplyTo(mailet.getReplyTo(originalMail));
+            mailModifier.setReversePath(mailet.getReversePath(originalMail));
             mailModifier.setIsReply(mailet.getInitParameters().isReply(), originalMail);
-            mailModifier.setSender(mailet.getSender(originalMail), originalMail);
+            mailModifier.setSender(mailet.getSender(originalMail));
             mailModifier.initializeDateIfNotPresent();
             if (keepMessageId) {
                 mailModifier.setMessageId(originalMessageId);
