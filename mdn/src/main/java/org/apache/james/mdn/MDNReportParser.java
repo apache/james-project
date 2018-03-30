@@ -19,8 +19,7 @@
 
 package org.apache.james.mdn;
 
-import java.util.Optional;
-
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
 
@@ -30,12 +29,8 @@ public class MDNReportParser {
     public MDNReportParser() {
     }
 
-    public Optional<MDNReport> parse(String mdnReport) {
-        return Optional.empty();
-    }
-
     @VisibleForTesting
-    static class Parser extends BaseParser<MDNReport> {
+    static class Parser extends BaseParser<Object> {
         //   CFWS            =   (1*([FWS] comment) [FWS]) / FWS
         Rule cfws() {
             return FirstOf(
@@ -298,6 +293,7 @@ public class MDNReportParser {
                      *( extension-field CRLF )    */
         Rule dispositionNotificationContent() {
             return Sequence(
+                push(MDNReport.builder()),
                 Optional(Sequence(reportingUaField(), crlf())),
                 Optional(Sequence(mdnGatewayField(), crlf())),
                 Optional(Sequence(originalRecipientField(), crlf())),
@@ -311,8 +307,42 @@ public class MDNReportParser {
         /*    reporting-ua-field = "Reporting-UA" ":" OWS ua-name OWS [
                                    ";" OWS ua-product OWS ]    */
         Rule reportingUaField() {
-            return Sequence("Reporting-UA", ":", ows(), uaName(), ows(),
-                Optional(Sequence(";", ows(), uaProduct(), ows())));
+            return Sequence(
+                push(ReportingUserAgent.builder()),
+                "Reporting-UA", ":", ows(), uaName(), ACTION(setUserAgentName()), ows(),
+                Optional(Sequence(";", ows(), uaProduct(), ACTION(setUserAgentProduct()), ows())),
+                ACTION(buildReportingUserAgent())
+                );
+        }
+
+        boolean buildReportingUserAgent() {
+            push(this.<ReportingUserAgent.Builder>popT().build());
+            return true;
+        }
+
+        boolean setUserAgentName() {
+            this.<ReportingUserAgent.Builder>peekT().userAgentName(match());
+            return true;
+        }
+
+        boolean setUserAgentProduct() {
+            this.<ReportingUserAgent.Builder>peekT().userAgentProduct(match());
+            return true;
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T popT() {
+            return (T) pop();
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T peekParent() {
+            return (T) peek(1);
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T peekT() {
+            return (T) peek();
         }
 
         //    ua-name = *text-no-semi

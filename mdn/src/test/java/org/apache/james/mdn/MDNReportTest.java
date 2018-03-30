@@ -61,9 +61,7 @@ public class MDNReportTest {
         expectedException.expect(IllegalStateException.class);
 
         MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                "UA_product"))
+            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .build();
@@ -82,9 +80,7 @@ public class MDNReportTest {
         expectedException.expect(IllegalStateException.class);
 
         MDNReport.builder()
-            .reportingUserAgentField(new ReportingUserAgent(
-                "UA_name",
-                "UA_product"))
+            .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -124,7 +120,7 @@ public class MDNReportTest {
         Gateway gateway = new Gateway(Text.fromRawText("address"));
         OriginalMessageId originalMessageIdField = new OriginalMessageId("msgId");
         OriginalRecipient originalRecipientField = new OriginalRecipient(Text.fromRawText("address"));
-        ReportingUserAgent reportingUserAgentField = new ReportingUserAgent("name");
+        ReportingUserAgent reportingUserAgentField = ReportingUserAgent.builder().userAgentName("name").build();
         Error errorField1 = new Error(Text.fromRawText("error 1"));
         Error errorField2 = new Error(Text.fromRawText("error 2"));
 

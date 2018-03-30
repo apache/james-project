@@ -32,6 +32,7 @@ import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.apache.james.mime4j.dom.Message;
@@ -297,7 +298,7 @@ public class MessageParserTest {
                     .type(DispositionType.Processed)
                     .build())
                 .originalMessageIdField("zeugzev@domain.tld")
-                .reportingUserAgentField("Thunderbird")
+                .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("Thunderbird").build())
                 .finalRecipientField("user@domain.tld")
                 .originalRecipientField("user@domain.tld")
                 .build())

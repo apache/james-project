@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mdn.MDNReportParser.Parser;
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.junit.Test;
 import org.parboiled.Parboiled;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -70,5 +71,25 @@ public class MDNReportParserTest {
         Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
         ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(duplicated);
         assertThat(result.matched).isFalse();
+    }
+
+    @Test
+    public void reportingUserAgentShouldParseWithoutProduct() {
+        String minimal = "Reporting-UA: UA_name";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.reportingUaField()).run(minimal);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(ReportingUserAgent.class);
+        assertThat((ReportingUserAgent)result.resultValue).isEqualTo(ReportingUserAgent.builder().userAgentName("UA_name").build());
+    }
+
+    @Test
+    public void reportingUserAgentShouldParseWithProduct() {
+        String minimal = "Reporting-UA: UA_name; UA_product";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.reportingUaField()).run(minimal);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(ReportingUserAgent.class);
+        assertThat((ReportingUserAgent)result.resultValue).isEqualTo(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build());
     }
 }

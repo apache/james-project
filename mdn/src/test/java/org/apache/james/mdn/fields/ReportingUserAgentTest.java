@@ -21,8 +21,6 @@ package org.apache.james.mdn.fields;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -45,22 +43,17 @@ public class ReportingUserAgentTest {
 
     @Test
     public void productShouldBeOptional() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME))
-            .isEqualTo(new ReportingUserAgent(USER_AGENT_NAME, Optional.empty()));
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build())
+            .isEqualTo(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build());
     }
 
-    @Test
-    public void productShouldBePresentWhenSpecified() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME, USER_AGENT_PRODUCT))
-            .isEqualTo(new ReportingUserAgent(USER_AGENT_NAME, Optional.of(USER_AGENT_PRODUCT)));
-    }
 
     @Test
     public void shouldThrowOnNullName() {
         expectedException.expect(NullPointerException.class);
 
         String userAgentName = null;
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
@@ -68,7 +61,7 @@ public class ReportingUserAgentTest {
         expectedException.expect(NullPointerException.class);
 
         String userAgentName = null;
-        new ReportingUserAgent(userAgentName, USER_AGENT_PRODUCT);
+        ReportingUserAgent.builder().userAgentName(userAgentName).userAgentProduct(USER_AGENT_PRODUCT).build();
     }
 
     @Test
@@ -76,82 +69,82 @@ public class ReportingUserAgentTest {
         expectedException.expect(NullPointerException.class);
 
         String userAgentProduct = null;
-        new ReportingUserAgent(USER_AGENT_NAME, userAgentProduct);
+        ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(userAgentProduct).build();
     }
 
     @Test
     public void shouldThrowOnEmptyName() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
         String userAgentName = "";
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
     public void shouldThrowOnFoldingWhiteSpaceName() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
         String userAgentName = "   ";
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
     public void shouldThrowOnNameWithLineBreak() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
         String userAgentName = "a\nb";
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
     public void shouldThrowOnNameWithLineBreakAtTheEnd() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
         String userAgentName = "a\n";
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
     public void shouldThrowOnNameWithLineBreakAtTheBeginning() {
-        expectedException.expect(IllegalArgumentException.class);
+        expectedException.expect(IllegalStateException.class);
 
         String userAgentName = "\nb";
-        new ReportingUserAgent(userAgentName);
+        ReportingUserAgent.builder().userAgentName(userAgentName).build();
     }
 
     @Test
     public void nameShouldBeTrimmed() {
-        assertThat(new ReportingUserAgent(" name ").getUserAgentName())
+        assertThat(ReportingUserAgent.builder().userAgentName(" name ").build().getUserAgentName())
             .isEqualTo(USER_AGENT_NAME);
     }
 
     @Test
     public void productShouldBeTrimmed() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME, " product ").getUserAgentProduct())
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(" product ").build().getUserAgentProduct())
             .contains(USER_AGENT_PRODUCT);
     }
 
     @Test
     public void formattedValueShouldDisplayNameWhenProductMissing() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME).formattedValue())
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).build().formattedValue())
             .isEqualTo("Reporting-UA: name; ");
     }
 
     @Test
     public void emptyProductShouldBeFilteredOut() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME, "").getUserAgentProduct())
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct("").build().getUserAgentProduct())
             .isEmpty();
     }
 
     @Test
     public void foldingWhiteSpaceProductShouldBeFilteredOut() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME, "  ").getUserAgentProduct())
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct("  ").build().getUserAgentProduct())
             .isEmpty();
     }
 
     @Test
     public void formattedValueShouldDisplayProduct() {
-        assertThat(new ReportingUserAgent(USER_AGENT_NAME, USER_AGENT_PRODUCT).formattedValue())
+        assertThat(ReportingUserAgent.builder().userAgentName(USER_AGENT_NAME).userAgentProduct(USER_AGENT_PRODUCT).build().formattedValue())
             .isEqualTo("Reporting-UA: name; product");
     }
 }

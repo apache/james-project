@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mdn.MDN;
 import org.apache.james.mdn.MDNReport;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.address.AddressList;
@@ -131,8 +132,8 @@ public class JmapMDN {
         return textBody;
     }
 
-    public String getReportingUA() {
-        return reportingUA;
+    public ReportingUserAgent getReportingUA() {
+        return ReportingUserAgent.builder().userAgentName(reportingUA).build();
     }
 
     public MDNDisposition getDisposition() {
