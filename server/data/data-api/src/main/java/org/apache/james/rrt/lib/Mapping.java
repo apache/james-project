@@ -20,6 +20,8 @@
 
 package org.apache.james.rrt.lib;
 
+import java.util.function.Supplier;
+
 import org.apache.james.core.Domain;
 
 import com.google.common.base.Preconditions;
@@ -75,7 +77,7 @@ public interface Mapping {
 
     boolean hasDomain();
 
-    Mapping appendDomain(Domain domain);
+    Mapping appendDomainIfNone(Supplier<Domain> domainSupplier);
 
     String getErrorMessage();
 

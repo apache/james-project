@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -102,8 +101,8 @@ public class RecipientRewriteTableProcessor {
     }
 
     private final RecipientRewriteTable virtualTableStore;
-    private final DomainList domainList;
     private final MailetContext mailetContext;
+    private final Supplier<Domain> defaultDomainSupplier;
 
     private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
         addressMapping -> {
@@ -116,8 +115,17 @@ public class RecipientRewriteTableProcessor {
 
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
         this.virtualTableStore = virtualTableStore;
-        this.domainList = domainList;
         this.mailetContext = mailetContext;
+        this.defaultDomainSupplier = MemoizedSupplier.of(
+            Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
+    }
+
+    private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
+        try {
+            return domainList.getDefaultDomain();
+        } catch (DomainListException e) {
+            throw new MessagingException("Unable to access DomainList", e);
+        }
     }
 
     public void processMail(Mail mail) throws MessagingException {
@@ -164,7 +172,8 @@ public class RecipientRewriteTableProcessor {
 
     @VisibleForTesting
     List<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
-        ImmutableList<MailAddress> mailAddresses = sanitizedMappings(mappings)
+        ImmutableList<MailAddress> mailAddresses = mappings.asStream()
+            .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
             .map(mailAddressFromMapping)
             .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
@@ -174,27 +183,9 @@ public class RecipientRewriteTableProcessor {
         return getLocalAddresses(mailAddresses);
     }
 
-    private Stream<Mapping> sanitizedMappings(Mappings mappings) throws MessagingException {
-        ImmutableList<Mapping> sanitizedMappings = sanitizeMappingsWithNoDomain(mappings, domainList);
-
-        return Stream.concat(
-            mappings.asStream().filter(Mapping::hasDomain),
-            sanitizedMappings.stream());
-    }
-
     private ImmutableList<MailAddress> getLocalAddresses(ImmutableList<MailAddress> mailAddresses) {
         return mailAddresses.stream()
             .filter(mailAddress -> mailetContext.isLocalServer(mailAddress.getDomain()))
-            .collect(Guavate.toImmutableList());
-    }
-
-    private ImmutableList<Mapping> sanitizeMappingsWithNoDomain(Mappings mappings, DomainList domainList) throws MessagingException {
-        Supplier<Domain> defaultDomainSupplier = MemoizedSupplier.of(
-            Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
-
-        return mappings.asStream()
-            .filter(mapping -> !mapping.hasDomain())
-            .map(mapping -> mapping.appendDomain(defaultDomainSupplier.get()))
             .collect(Guavate.toImmutableList());
     }
 
@@ -210,14 +201,6 @@ public class RecipientRewriteTableProcessor {
             } catch (MessagingException ex) {
                 LOGGER.warn("Error forwarding mail to {}", remoteAddresses);
             }
-        }
-    }
-
-    private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
-        try {
-            return domainList.getDefaultDomain();
-        } catch (DomainListException e) {
-            throw new MessagingException("Unable to access DomainList", e);
         }
     }
 

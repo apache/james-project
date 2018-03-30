@@ -52,7 +52,6 @@ public class RecipientRewriteTableProcessorTest {
     private static final String NONEDOMAIN = "nonedomain";
     private static final String INVALID_MAIL_ADDRESS = "server-dev@";
 
-
     private FakeMail mail;
     private MimeMessage message;
     private MappingsImpl mappings;
@@ -328,6 +327,7 @@ public class RecipientRewriteTableProcessorTest {
     @Test
     public void processShouldResetMailStateToGhostWhenCanNotBuildNewRecipient() throws Exception {
         when(virtualTableStore.getMappings(any(String.class), any(Domain.class))).thenReturn(mappings);
+        when(domainList.getDefaultDomain()).thenReturn(Domain.of(MailAddressFixture.JAMES_LOCAL));
 
         mail = FakeMail.builder()
             .mimeMessage(message)

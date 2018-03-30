@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import java.io.Serializable;
+import java.util.function.Supplier;
 
 import org.apache.james.core.Domain;
 
@@ -74,9 +75,12 @@ public class MappingImpl implements Mapping, Serializable {
     }
     
     @Override
-    public Mapping appendDomain(Domain domain) {
+    public Mapping appendDomainIfNone(Supplier<Domain> domain) {
         Preconditions.checkNotNull(domain);
-        return new MappingImpl(type, mapping + "@" + domain.asString());
+        if (hasDomain()) {
+            return this;
+        }
+        return new MappingImpl(type, mapping + "@" + domain.get().asString());
     }
     
     @Override
