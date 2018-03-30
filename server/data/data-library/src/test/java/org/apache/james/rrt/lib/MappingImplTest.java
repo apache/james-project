@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -148,27 +149,35 @@ public class MappingImplTest {
     }
 
     @Test
-    public void getAddressShouldReturnMappingValueForAddress() {
-        assertThat(MappingImpl.address("value").getAddress()).isEqualTo("value");
+    public void asMailAddressShouldReturnMappingValueForAddress() throws Exception {
+        assertThat(MappingImpl.address("value@domain").asMailAddress())
+            .contains(new MailAddress("value@domain"));
     }
 
     @Test
-    public void getAddressShouldThrowForError() {
-        assertThatThrownBy(() -> MappingImpl.error("value").getAddress()).isInstanceOf(IllegalStateException.class);
+    public void asMailAddressShouldReturnEmptyOnInvalidAddress() {
+        assertThat(MappingImpl.address("value").asMailAddress())
+            .isEmpty();
     }
 
     @Test
-    public void getAddressShouldThrowForRegex() {
-        assertThatThrownBy(() -> MappingImpl.regex("value").getAddress()).isInstanceOf(IllegalStateException.class);
+    public void asMailAddressShouldReturnEmptyForError() {
+        assertThat(MappingImpl.error("value").asMailAddress()).isEmpty();
     }
 
     @Test
-    public void getAddressShouldThrowForDomain() {
-        assertThatThrownBy(() -> MappingImpl.domain(Domain.of("value")).getAddress()).isInstanceOf(IllegalStateException.class);
+    public void asMailAddressShouldReturnEmptyForRegex() {
+        assertThat(MappingImpl.regex("value").asMailAddress()).isEmpty();
     }
 
     @Test
-    public void getAddressShouldThrowForForward() {
-        assertThatThrownBy(() -> MappingImpl.forward("value").getAddress()).isInstanceOf(IllegalStateException.class);
+    public void asMailAddressShouldReturnEmptyForDomain() {
+        assertThat(MappingImpl.domain(Domain.of("value")).asMailAddress()).isEmpty();
+    }
+
+    @Test
+    public void asMailAddressShouldReturnMappingValueForForward() throws Exception {
+        assertThat(MappingImpl.forward("value@domain").asMailAddress())
+            .contains(new MailAddress("value@domain"));
     }
 }

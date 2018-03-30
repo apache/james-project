@@ -20,9 +20,11 @@
 
 package org.apache.james.rrt.lib;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 
 import com.google.common.base.Preconditions;
 
@@ -44,7 +46,7 @@ public interface Mapping {
         return Type.Address;
     }
 
-    String getAddress();
+    Optional<MailAddress> asMailAddress();
 
     enum Type {
         Regex("regex:", 3),

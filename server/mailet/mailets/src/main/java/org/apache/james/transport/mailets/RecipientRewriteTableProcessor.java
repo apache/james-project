@@ -20,12 +20,10 @@
 package org.apache.james.transport.mailets;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Domain;
@@ -35,8 +33,6 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
@@ -105,27 +101,6 @@ public class RecipientRewriteTableProcessor {
     private final MailetContext mailetContext;
     private final Supplier<Domain> defaultDomainSupplier;
 
-    private static final Function<Mapping, Optional<MailAddress>> mailAddressFromMapping =
-        mapping -> {
-            Type type = mapping.getType();
-            switch (type) {
-                case Address:
-                    return parseMappingToMailAddress(mapping.asString());
-                case Forward:
-                    return parseMappingToMailAddress(type.withoutPrefix(mapping.asString()));
-                default:
-                    return Optional.empty();
-            }
-        };
-
-    private static Optional<MailAddress> parseMappingToMailAddress(String mapping) {
-        try {
-            return Optional.of(new MailAddress(mapping));
-        } catch (AddressException e) {
-            return Optional.empty();
-        }
-    }
-
     public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
         this.virtualTableStore = virtualTableStore;
         this.mailetContext = mailetContext;
@@ -187,7 +162,7 @@ public class RecipientRewriteTableProcessor {
     List<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
         ImmutableList<MailAddress> mailAddresses = mappings.asStream()
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
-            .map(mailAddressFromMapping)
+            .map(mapping -> mapping.asMailAddress())
             .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
 
