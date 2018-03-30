@@ -22,6 +22,7 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -123,5 +124,23 @@ public class MailboxPathTest {
             .sanitize('.'))
             .isEqualTo(
                 MailboxPath.forUser("user", "a..a"));
+    }
+
+    @Test
+    public void isInboxShouldReturnTrueWhenINBOX() {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", DefaultMailboxes.INBOX);
+        assertThat(mailboxPath.isInbox()).isTrue();
+    }
+
+    @Test
+    public void isInboxShouldReturnTrueWhenINBOXWithOtherCase() {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "InBoX");
+        assertThat(mailboxPath.isInbox()).isTrue();
+    }
+
+    @Test
+    public void isInboxShouldReturnFalseWhenOtherThanInbox() {
+        MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", DefaultMailboxes.ARCHIVE);
+        assertThat(mailboxPath.isInbox()).isFalse();
     }
 }

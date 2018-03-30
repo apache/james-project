@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 
 import com.google.common.collect.ImmutableList;
@@ -149,6 +150,10 @@ public class MailboxPath {
 
     public String asString() {
         return namespace + ":" + user + ":" + name;
+    }
+
+    public boolean isInbox() {
+        return DefaultMailboxes.INBOX.equalsIgnoreCase(name);
     }
 
     @Override
