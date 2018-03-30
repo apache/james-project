@@ -19,10 +19,13 @@
 package org.apache.james.rrt.hbase;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.domainlist.hbase.def.HDomainList;
 import org.apache.james.mailbox.hbase.HBaseClusterSingleton;
+import org.apache.james.rrt.hbase.def.HRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.system.hbase.TablePool;
+import org.apache.james.user.hbase.def.HUsersRepository;
 import org.junit.After;
 import org.junit.Before;
 
@@ -45,6 +48,9 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
     @Override
     @After
     public void tearDown() throws Exception {
+        cluster.clearTable(new String(HDomainList.TABLE_NAME));
+        cluster.clearTable(new String(HRecipientRewriteTable.TABLE_NAME));
+        cluster.clearTable(new String(HUsersRepository.TABLE_NAME));
         super.tearDown();
     }
     
