@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
