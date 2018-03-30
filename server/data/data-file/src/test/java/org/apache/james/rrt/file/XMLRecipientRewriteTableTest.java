@@ -31,7 +31,6 @@ import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.apache.james.rrt.lib.MappingsImpl.Builder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -59,7 +58,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
 
     @Override
-    protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
+    protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
         return new XMLRecipientRewriteTable();
     }
 
@@ -70,21 +69,32 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     @Override
-    protected void addMapping(String user, Domain domain, String mapping, Type type) throws
-            RecipientRewriteTableException {
+    protected void addMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+        Mappings mappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
+            .orElse(MappingsImpl.empty());
 
-        Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
+        Mappings updatedMappings = MappingsImpl.from(mappings)
+            .add(MappingImpl.of(type, mapping))
+            .build();
 
-        if (mappings != null) {
-            removeMappingsFromConfig(user, domain, mappings);
+        updateConfiguration(user, domain, mappings, updatedMappings);
+    }
+
+    @Override
+    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+        Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
+            .orElseThrow(() -> new RecipientRewriteTableException("Cannot remove from null mappings"));
+
+        Mappings updatedMappings = oldMappings.remove(MappingImpl.of(type, mapping));
+
+        updateConfiguration(user, domain, oldMappings, updatedMappings);
+    }
+
+    private void updateConfiguration(String user, Domain domain, Mappings oldMappings, Mappings updatedMappings) throws RecipientRewriteTableException {
+        if (oldMappings != null) {
+            removeMappingsFromConfig(user, domain, oldMappings);
         }
 
-        Builder builder = MappingsImpl.from(Optional.ofNullable(mappings).orElse(MappingsImpl.empty()));
-
-        builder.add(type.asPrefix() + mapping);
-
-        Mappings updatedMappings = builder.build();
-        
         if (!updatedMappings.isEmpty()) {
             defaultConfiguration.addProperty("mapping", user + "@" + domain.asString() + "=" + updatedMappings.serialize());
         }
@@ -93,44 +103,6 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
             virtualUserTable.configure(defaultConfiguration);
         } catch (Exception e) {
             if (updatedMappings.size() > 0) {
-                throw new RecipientRewriteTableException("Error update mapping", e);
-            }
-        }
-
-    }
-
-    @Override
-    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws
-            RecipientRewriteTableException {
-
-        Mappings mappings = virtualUserTable.getUserDomainMappings(user, domain);
-
-        if (mappings == null) {
-            throw new RecipientRewriteTableException("Cannot remove from null mappings");
-        }
-
-        removeMappingsFromConfig(user, domain, mappings);
-
-        if (type == Type.Error) {
-            mappings = mappings.remove(MappingImpl.error(mapping));
-        } else if (type == Type.Regex) {
-            mappings = mappings.remove(MappingImpl.regex(mapping));
-        } else if (type == Type.Address) {
-            mappings = mappings.remove(MappingImpl.address(mapping));
-        } else if (type == Type.Domain) {
-            mappings = mappings.remove(MappingImpl.domain(Domain.of(mapping)));
-        } else if (type == Type.Forward) {
-            mappings = mappings.remove(MappingImpl.forward(mapping));
-        }
-
-        if (mappings.size() > 0) {
-            defaultConfiguration.addProperty("mapping", user + "@" + domain.asString() + "=" + mappings.serialize());
-        }
-
-        try {
-            virtualUserTable.configure(defaultConfiguration);
-        } catch (Exception e) {
-            if (mappings.size() > 0) {
                 throw new RecipientRewriteTableException("Error update mapping", e);
             }
         }

@@ -37,6 +37,10 @@ public class MappingImpl implements Mapping, Serializable {
         Type type = Mapping.detectType(mapping);
         return new MappingImpl(type, type.withoutPrefix(mapping));
     }
+
+    public static MappingImpl of(Type type, String mapping) {
+        return new MappingImpl(type, mapping);
+    }
     
     public static MappingImpl address(String mapping) {
         return new MappingImpl(Type.Address, mapping);
