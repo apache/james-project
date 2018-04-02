@@ -47,6 +47,7 @@ public class MDN {
 
     public static final String DISPOSITION_CONTENT_TYPE = "message/disposition-notification";
     public static final String REPORT_SUB_TYPE = "report";
+    public static final String DISPOSITION_NOTIFICATION_REPORT_TYPE = "disposition-notification";
 
     public static class Builder {
         private String humanReadableText;
@@ -96,7 +97,7 @@ public class MDN {
     public MimeMultipart asMultipart() throws MessagingException {
         MimeMultipartReport multipart = new MimeMultipartReport();
         multipart.setSubType(REPORT_SUB_TYPE);
-        multipart.setReportType("disposition-notification");
+        multipart.setReportType(DISPOSITION_NOTIFICATION_REPORT_TYPE);
         multipart.addBodyPart(computeHumanReadablePart());
         multipart.addBodyPart(computeReportPart());
         // The optional third part, the original message is omitted.
