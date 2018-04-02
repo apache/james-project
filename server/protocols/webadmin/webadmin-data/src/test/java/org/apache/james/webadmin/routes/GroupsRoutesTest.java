@@ -81,8 +81,8 @@ class GroupsRoutesTest {
         webAdminServer.await();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-            .setBasePath(GroupsRoutes.ROOT_PATH)
-            .log(LogDetail.ALL)
+            .setBasePath("address/groups")
+            .log(LogDetail.METHOD)
             .build();
     }
 
@@ -120,7 +120,7 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void getGroupsShouldListExistingGroupsInOrder() {
+        void getGroupsShouldListExistingGroupsInAlphabeticOrder() {
             given()
                 .put(GROUP2 + SEPARATOR + USER_A);
 
@@ -141,7 +141,7 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void getUnregisteredGroupShouldReturnNotFound() {
+        void getNotRegisteredGroupShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
             .then()
@@ -318,7 +318,7 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void getGroupShouldReturnMembersInOrder() {
+        void getGroupShouldReturnMembersInAlphabeticOrder() {
             given()
                 .put(GROUP1 + SEPARATOR + USER_B);
 
