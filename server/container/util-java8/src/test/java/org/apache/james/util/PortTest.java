@@ -86,7 +86,7 @@ public class PortTest {
     @Test
     public void generateValidUnprivilegedPortShouldReturnAValidPort() {
         assertThat(Port.generateValidUnprivilegedPort())
-            .isStrictlyBetween(Port.PRIVILEGED_PORT_BOUND, Port.MAX_PORT_VALUE);
+            .isBetween(Port.PRIVILEGED_PORT_BOUND, Port.MAX_PORT_VALUE);
     }
 
 }
