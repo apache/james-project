@@ -126,8 +126,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         continue;
                     }
                     String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
-                    String buf = "Valid virtual user mapping " + user + "@" + domain.name() + " to " + maybeAddressWithMappingApplied;
-                    LOGGER.debug(buf);
+                    LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
 
                     if (recursive) {
 
