@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -29,6 +30,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -37,6 +39,9 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.store.event.EventFactory;
+import org.apache.james.mailbox.store.event.EventFactory.AddedImpl;
 import org.apache.james.mailbox.store.event.MessageMoveEvent;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -48,6 +53,7 @@ import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 public class SpamAssassinListenerTest {
 
@@ -56,6 +62,9 @@ public class SpamAssassinListenerTest {
     public static final int UID_VALIDITY = 43;
     private SpamAssassin spamAssassin;
     private SpamAssassinListener listener;
+    private SimpleMailbox inbox;
+    private MailboxId inboxId;
+    private SimpleMailbox mailbox1;
     private MailboxId mailboxId1;
     private MailboxId mailboxId2;
     private MailboxId spamMailboxId;
@@ -68,7 +77,10 @@ public class SpamAssassinListenerTest {
         spamAssassin = mock(SpamAssassin.class);
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
         mailboxMapper = mapperFactory.getMailboxMapper(MAILBOX_SESSION);
-        mailboxId1 = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "mailbox1"), UID_VALIDITY));
+        inbox = new SimpleMailbox(MailboxPath.forUser(USER, DefaultMailboxes.INBOX), UID_VALIDITY);
+        inboxId = mailboxMapper.save(inbox);
+        mailbox1 = new SimpleMailbox(MailboxPath.forUser(USER, "mailbox1"), UID_VALIDITY);
+        mailboxId1 = mailboxMapper.save(mailbox1);
         mailboxId2 = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "mailbox2"), UID_VALIDITY));
         spamMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
         spamCapitalMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
@@ -220,6 +232,36 @@ public class SpamAssassinListenerTest {
         listener.event(messageMoveEvent);
 
         verify(spamAssassin).learnHam(any(), any());
+    }
+
+    @Test
+    public void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() {
+        SimpleMailboxMessage message = createMessage(inboxId);
+        EventFactory eventFactory = new EventFactory();
+        AddedImpl addedEvent = eventFactory.new AddedImpl(
+                MAILBOX_SESSION,
+                inbox,
+                ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
+                ImmutableMap.of(MessageUid.of(45), message));
+
+        listener.event(addedEvent);
+
+        verify(spamAssassin).learnHam(any(), any());
+    }
+
+    @Test
+    public void eventShouldNotCallSpamAssassinHamLearningWhenTheMessageIsAddedInAMailboxOtherThanInbox() {
+        SimpleMailboxMessage message = createMessage(mailboxId1);
+        EventFactory eventFactory = new EventFactory();
+        AddedImpl addedEvent = eventFactory.new AddedImpl(
+                MAILBOX_SESSION,
+                mailbox1,
+                ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
+                ImmutableMap.of(MessageUid.of(45), message));
+
+        listener.event(addedEvent);
+
+        verifyNoMoreInteractions(spamAssassin);
     }
 
     private SimpleMailboxMessage createMessage(MailboxId mailboxId) {

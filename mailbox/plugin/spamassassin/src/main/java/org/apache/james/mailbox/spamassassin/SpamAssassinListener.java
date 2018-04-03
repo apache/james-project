@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.spamassassin;
 
 import java.io.InputStream;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -28,8 +29,10 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MessageMoveEvent;
 import org.apache.james.mailbox.store.event.SpamEventListener;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,6 +77,17 @@ public class SpamAssassinListener implements SpamEventListener {
             if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
                 ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
                 spamAssassin.learnHam(messages, messageMoveEvent.getSession().getUser().getUserName());
+            }
+        }
+        if (event instanceof EventFactory.AddedImpl) {
+            EventFactory.AddedImpl addedEvent = (EventFactory.AddedImpl) event;
+            if (addedEvent.getMailboxPath().isInbox()) {
+                List<InputStream> contents = addedEvent.getAvailableMessages()
+                    .values()
+                    .stream()
+                    .map(Throwing.function(MailboxMessage::getFullContent))
+                    .collect(Guavate.toImmutableList());
+                spamAssassin.learnHam(contents, addedEvent.getSession().getUser().getUserName());
             }
         }
     }
