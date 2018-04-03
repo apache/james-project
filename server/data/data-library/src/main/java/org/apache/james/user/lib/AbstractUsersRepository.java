@@ -144,4 +144,16 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     public boolean isReadOnly() {
         return false;
     }
+
+    @Override
+    public MailAddress getMailAddressFor(User user) throws UsersRepositoryException {
+        try {
+            if (supportVirtualHosting()) {
+                return new MailAddress(user.asString());
+            }
+            return new MailAddress(user.getLocalPart(), domainList.getDefaultDomain());
+        } catch (Exception e) {
+            throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
+        }
+    }
 }

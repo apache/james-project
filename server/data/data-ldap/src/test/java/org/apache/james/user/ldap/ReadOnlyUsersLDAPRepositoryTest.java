@@ -20,11 +20,14 @@
 package org.apache.james.user.ldap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.ConversionException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
+import org.apache.james.domainlist.api.DomainList;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -33,10 +36,16 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
+    private DomainList domainList;
+
+    @Before
+    public void setUp() {
+        domainList = mock(DomainList.class);
+    }
 
     @Test
     public void supportVirtualHostingShouldReturnFalseByDefault() throws Exception {
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
         usersLDAPRepository.configure(ldapRepositoryConfiguration());
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -47,7 +56,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "true");
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
         usersLDAPRepository.configure(configuration);
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isTrue();
@@ -58,7 +67,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "false");
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
         usersLDAPRepository.configure(configuration);
 
         assertThat(usersLDAPRepository.supportVirtualHosting()).isFalse();
@@ -69,7 +78,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
         configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "bad");
 
-        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository();
+        ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
 
         expectedException.expect(ConversionException.class);
 

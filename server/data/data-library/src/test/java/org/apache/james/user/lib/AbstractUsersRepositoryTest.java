@@ -39,7 +39,8 @@ public abstract class AbstractUsersRepositoryTest {
 
     private static final Domain DOMAIN = Domain.of("domain");
 
-    protected AbstractUsersRepository usersRepository; 
+    protected AbstractUsersRepository usersRepository;
+    private SimpleDomainList domainList;
 
     /**
      * Create the repository to be tested.
@@ -56,7 +57,7 @@ public abstract class AbstractUsersRepositoryTest {
     
     public void setUp() throws Exception { 
         this.usersRepository = getUsersRepository();
-        SimpleDomainList domainList = new SimpleDomainList();
+        domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
         usersRepository.setDomainList(domainList);
         user1 = login("username");
@@ -69,7 +70,7 @@ public abstract class AbstractUsersRepositoryTest {
         disposeUsersRepository();
     }
     
-    private String login(String login) throws UsersRepositoryException {
+    private String login(String login) {
         if (usersRepository.supportVirtualHosting()) {
             return login + '@' + DOMAIN.name();
         } else {
@@ -344,5 +345,30 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.setAdministratorId(Optional.of(admin));
 
         assertThat(usersRepository.isAdministrator(user1)).isFalse();
+    }
+
+    @Test
+    public void getMailAddressForShouldBeIdentityWhenVirtualHosting() throws Exception {
+        usersRepository.setEnableVirtualHosting(true);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeTrue(usersRepository.supportVirtualHosting());
+
+        String username = "user@domain";
+        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+            .isEqualTo(username);
+    }
+
+    @Test
+    public void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting() throws Exception {
+        usersRepository.setEnableVirtualHosting(false);
+        usersRepository.setDomainList(domainList);
+
+        // Some implementations do not support changing virtual hosting value
+        Assume.assumeFalse(usersRepository.supportVirtualHosting());
+
+        String username = "user";
+        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+            .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
     }
 }

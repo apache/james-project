@@ -35,12 +35,12 @@ public class SimpleDomainList implements DomainList {
     private final List<Domain> domains = new LinkedList<>();
 
     @Override
-    public boolean containsDomain(Domain domain) throws DomainListException {
+    public boolean containsDomain(Domain domain) {
         return domains.contains(domain);
     }
 
     @Override
-    public List<Domain> getDomains() throws DomainListException {
+    public List<Domain> getDomains() {
         return ImmutableList.copyOf(domains);
     }
 

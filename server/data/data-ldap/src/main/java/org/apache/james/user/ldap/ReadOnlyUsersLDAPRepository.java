@@ -30,6 +30,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -45,6 +46,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.MailAddress;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -338,12 +340,12 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     // retries.
     private int maxRetries = 0;
 
-    /**
-     * Creates a new instance of ReadOnlyUsersLDAPRepository.
-     *
-     */
-    public ReadOnlyUsersLDAPRepository() {
+    private final DomainList domainList;
+
+    @Inject
+    public ReadOnlyUsersLDAPRepository(DomainList domainList) {
         super();
+        this.domainList = domainList;
     }
 
     /**
@@ -783,5 +785,18 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     @Override
     public boolean isReadOnly() {
         return true;
+    }
+
+
+    @Override
+    public MailAddress getMailAddressFor(org.apache.james.core.User user) throws UsersRepositoryException {
+        try {
+            if (supportVirtualHosting()) {
+                return new MailAddress(user.asString());
+            }
+            return new MailAddress(user.getLocalPart(), domainList.getDefaultDomain());
+        } catch (Exception e) {
+            throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
+        }
     }
 }

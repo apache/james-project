@@ -19,11 +19,12 @@
 package org.apache.james.user.ldap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.core.MailAddress;
+import org.apache.james.domainlist.api.DomainList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,10 +44,12 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
     private LdapGenericContainer ldapContainer;
     private ReadOnlyUsersLDAPRepository ldapRepository;
+    private DomainList domainList;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         startLdapContainer();
+        domainList = mock(DomainList.class);
     }
 
     private void startLdapContainer() {
@@ -57,13 +60,13 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         ldapContainer.start();
     }
 
-    private void startUsersRepository(HierarchicalConfiguration ldapRepositoryConfiguration) throws ConfigurationException, Exception {
-        ldapRepository = new ReadOnlyUsersLDAPRepository();
+    private void startUsersRepository(HierarchicalConfiguration ldapRepositoryConfiguration) throws Exception {
+        ldapRepository = new ReadOnlyUsersLDAPRepository(domainList);
         ldapRepository.configure(ldapRepositoryConfiguration);
         ldapRepository.init();
     }
 
-    private HierarchicalConfiguration ldapRepositoryConfiguration() throws ConfigurationException {
+    private HierarchicalConfiguration ldapRepositoryConfiguration() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
         configuration.addProperty("[@principal]", "cn=admin\\,dc=james\\,dc=org");
@@ -78,7 +81,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         return configuration;
     }
 
-    private HierarchicalConfiguration ldapRepositoryConfigurationWithVirtualHosting() throws ConfigurationException {
+    private HierarchicalConfiguration ldapRepositoryConfigurationWithVirtualHosting() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", ldapContainer.getLdapHost());
         configuration.addProperty("[@principal]", "cn=admin\\,dc=james\\,dc=org");
