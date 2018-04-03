@@ -605,10 +605,7 @@ public abstract class AbstractSign extends GenericMailet {
 
     private String getUsername(MailAddress mailAddress) {
         try {
-            if (usersRepository.supportVirtualHosting()) {
-                return mailAddress.asString();
-            }
-            return mailAddress.getLocalPart();
+            return usersRepository.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
             throw Throwables.propagate(e);
         }

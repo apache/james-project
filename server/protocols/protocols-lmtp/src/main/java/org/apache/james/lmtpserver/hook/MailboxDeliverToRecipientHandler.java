@@ -69,16 +69,10 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
     
     @Override
     public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
-        String username;
         HookResult result;
 
         try {
-
-            if (users.supportVirtualHosting()) {
-                username = recipient.toString();
-            } else {
-                username = recipient.getLocalPart();
-            }
+            String username = users.getUser(recipient);
 
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MailboxPath inbox = MailboxPath.inbox(mailboxSession);

@@ -83,12 +83,12 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     }
 
     @Override
-    protected boolean useVirtualHosting() {
+    protected String getUser(MailAddress mailAddress) {
         try {
-            return users.supportVirtualHosting();
+            return users.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
             throw Throwables.propagate(e);
         }
     }
-    
+
 }

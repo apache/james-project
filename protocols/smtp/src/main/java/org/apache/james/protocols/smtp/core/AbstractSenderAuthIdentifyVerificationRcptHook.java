@@ -47,15 +47,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
             String authUser = (session.getUser()).toLowerCase(Locale.US);
             MailAddress senderAddress = (MailAddress) session.getAttachment(
                     SMTPSession.SENDER, ProtocolSession.State.Transaction);
-            String username = null;
-
-            if (senderAddress != null && !sender.isNullSender()) {
-                if (useVirtualHosting()) {
-                    username = senderAddress.asString();
-                } else {
-                    username = senderAddress.getLocalPart();
-                }
-            }
+            String username = retrieveSender(sender, senderAddress);
             
             // Check if the sender address is the same as the user which was used to authenticate.
             // Its important to ignore case here to fix JAMES-837. This is save todo because if the handler is called
@@ -68,8 +60,14 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
         }
         return HookResult.declined();
     }
-    
-    
+
+    public String retrieveSender(MailAddress sender, MailAddress senderAddress) {
+        if (senderAddress != null && !sender.isNullSender()) {
+            return getUser(senderAddress);
+        }
+        return null;
+    }
+
     /**
      * Return true if the given domain is a local domain for this server
      * 
@@ -79,11 +77,10 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
     protected abstract boolean isLocalDomain(Domain domain);
     
     /**
-     * Return true if virtualHosting should get used. If so the full email address will get used to 
-     * match against the supplied auth username
+     * Return the username corresponding to the given mail address.
      * 
-     * @return useVirtualHosting
+     * @return username corresponding to the mail address
      */
-    protected abstract boolean useVirtualHosting();
+    protected abstract String getUser(MailAddress mailAddress);
 
 }

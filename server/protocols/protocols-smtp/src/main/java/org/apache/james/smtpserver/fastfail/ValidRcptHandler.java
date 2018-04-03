@@ -94,15 +94,10 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
-
-        String username = recipient.toString();
-
         // check if the server use virtualhosting, if not use only the localpart
         // as username
         try {
-            if (!users.supportVirtualHosting()) {
-                username = recipient.getLocalPart();
-            }
+            String username = users.getUser(recipient);
 
             if (users.contains(username)) {
                 return true;
