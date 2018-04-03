@@ -21,9 +21,7 @@ package org.apache.james.mailbox;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import java.io.ByteArrayInputStream;
 import java.util.Collection;
-import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
@@ -31,8 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.mail.Flags;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -103,7 +99,8 @@ public abstract class MailboxManagerStressTest {
 
                     mailboxManager.startProcessingRequest(mailboxSession);
                     MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
-                    ComposedMessageId messageId = m.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), mailboxSession, false, new Flags());
+                    ComposedMessageId messageId = m.appendMessage(MessageManager.AppendCommand.builder()
+                        .build("Subject: test\r\n\r\ntestmail"), mailboxSession);
 
                     System.out.println("Append message with uid=" + messageId.getUid());
                     if (uids.put(messageId.getUid(), new Object()) != null) {

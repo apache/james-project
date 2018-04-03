@@ -19,9 +19,6 @@
 
 package org.apache.james.transport.mailets.delivery;
 
-import java.util.Date;
-
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -37,8 +34,6 @@ import org.apache.james.server.core.MimeMessageInputStream;
 import com.google.common.base.Strings;
 
 public class MailboxAppender {
-    private static final boolean IS_RECENT = true;
-    private static final Flags FLAGS = null;
 
     private final MailboxManager mailboxManager;
 
@@ -80,7 +75,10 @@ public class MailboxAppender {
         if (mailbox == null) {
             throw new MessagingException("Mailbox " + path + " for user " + session.getUser().getUserName() + " was not found on this server.");
         }
-        return mailbox.appendMessage(new MimeMessageInputStream(mail), new Date(), session, IS_RECENT, FLAGS);
+        return mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .recent()
+            .build(new MimeMessageInputStream(mail)),
+            session);
     }
 
     private void createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {

@@ -277,6 +277,16 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     @Override
+    public ComposedMessageId appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException {
+        return appendMessage(
+            appendCommand.getMsgIn(),
+            appendCommand.getInternalDate(),
+            session,
+            appendCommand.isRecent(),
+            appendCommand.getFlags());
+    }
+
+    @Override
     public ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
 
         File file = null;

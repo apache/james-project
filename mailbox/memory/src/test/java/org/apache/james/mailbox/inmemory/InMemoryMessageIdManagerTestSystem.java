@@ -18,9 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -81,8 +79,12 @@ public class InMemoryMessageIdManagerTestSystem extends MessageIdManagerTestSyst
     public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session) {
         try {
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
-            MessageId messageId = messageManager.appendMessage(new ByteArrayInputStream(CONTENT), new Date(), session, false, flags)
-                    .getMessageId();
+            MessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand
+                    .builder()
+                    .withFlags(flags)
+                    .build(CONTENT),
+                session)
+                .getMessageId();
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
         } catch (MailboxException e) {

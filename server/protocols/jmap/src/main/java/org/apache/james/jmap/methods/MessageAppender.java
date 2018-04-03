@@ -82,9 +82,14 @@ public class MessageAppender {
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
-        boolean notRecent = false;
         MessageManager mailbox = mailboxManager.getMailbox(targetMailboxes.get(0), session);
-        ComposedMessageId message = mailbox.appendMessage(content, internalDate, session, notRecent, getFlags(createdEntry.getValue()));
+        ComposedMessageId message = mailbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withInternalDate(internalDate)
+                .withFlags(getFlags(createdEntry.getValue()))
+                .notRecent()
+                .build(content),
+            session);
         if (targetMailboxes.size() > 1) {
             messageIdManager.setInMailboxes(message.getMessageId(), targetMailboxes, session);
         }
@@ -111,9 +116,10 @@ public class MessageAppender {
         byte[] messageContent = asBytes(message);
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = new Date();
-        boolean notRecent = false;
 
-        ComposedMessageId appendedMessage = messageManager.appendMessage(content, internalDate, session, notRecent, flags);
+        ComposedMessageId appendedMessage = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withFlags(flags)
+            .build(content), session);
 
         return MessageFactory.MetaDataWithContent.builder()
             .uid(appendedMessage.getUid())

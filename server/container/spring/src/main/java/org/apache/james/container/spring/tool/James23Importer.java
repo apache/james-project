@@ -19,7 +19,6 @@
 package org.apache.james.container.spring.tool;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Iterator;
 
 import javax.inject.Inject;
@@ -162,7 +161,8 @@ public class James23Importer {
             while (mailRepositoryIterator.hasNext()) {
                 Mail mail = mailRepository.retrieve(mailRepositoryIterator.next());
                 mailboxManager.startProcessingRequest(mailboxSession);
-                messageManager.appendMessage(new MimeMessageInputStream(mail.getMessage()), new Date(), mailboxSession, isRecent, flags);
+                messageManager.appendMessage(MessageManager.AppendCommand.builder()
+                    .build(new MimeMessageInputStream(mail.getMessage())), mailboxSession);
                 mailboxManager.endProcessingRequest(mailboxSession);
             }
 

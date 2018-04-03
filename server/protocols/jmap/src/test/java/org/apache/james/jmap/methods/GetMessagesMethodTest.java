@@ -24,9 +24,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -82,8 +79,6 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
-    public static final Flags FLAGS = null;
-    public static final boolean NOT_RECENT = false;
     private MessageIdManager messageIdManager;
 
     private static class User implements org.apache.james.mailbox.MailboxSession.User {
@@ -175,13 +170,21 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldFetchMessages() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, null);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, null);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
+        String message2Content = "Subject: message 2 subject\r\n\r\nmy message";
+        ComposedMessageId message2 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message2Content),
+            session);
+        String message3Content = "Great-Header: message 3 subject\r\n\r\nmy message";
+        ComposedMessageId message3 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message3Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId(),
@@ -206,12 +209,14 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldFetchHtmlMessage() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+        String messageContent ="Content-Type: text/html\r\n"
                 + "Subject: message 1 subject\r\n"
                 + "\r\n"
-                + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+                + "my <b>HTML</b> message";
+        ComposedMessageId message = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(messageContent),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message.getMessageId()))
@@ -231,9 +236,11 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -250,9 +257,11 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -267,9 +276,11 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -287,9 +298,11 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -308,12 +321,14 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnTextBodyWhenEmptyTextBodyAndNotEmptyHtmlBody() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+        String messageContent = "Content-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
-            + "my <b>HTML</b> message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+            + "my <b>HTML</b> message";
+        ComposedMessageId message = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(messageContent),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -333,11 +348,13 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Content-Type: text/html\r\n"
+        String messageContent = "Content-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
-            + "\r\n").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+            + "\r\n";
+        ComposedMessageId message = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(messageContent),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -357,8 +374,7 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldNotOverrideTextBodyWhenItIsThere() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
+        String messageContent = "Subject\n"
             + "MIME-Version: 1.0\n"
             + "Content-Type: multipart/alternative;\n"
             + "\tboundary=\"----=_Part_370449_1340169331.1489506420401\"\n"
@@ -372,9 +388,12 @@ public class GetMessagesMethodTest {
             + "Content-Type: text/html; charset=UTF-8\n"
             + "Content-Transfer-Encoding: 7bit\n"
             + "\n"
-            + "<a>The </a> <strong>HTML</strong> message"
-        ).getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message = inbox.appendMessage(messageContent, now, session, false, null);
+            + "<a>The </a> <strong>HTML</strong> message";
+
+        ComposedMessageId message = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(messageContent),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -394,12 +413,14 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnHeadersFieldWhenSpecificHeadersRequestedInPropertyList() throws MailboxException {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+        String message1Content = "From: user@domain.tld\r\n"
                 + "header1: Header1Content\r\n"
                 + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+                + "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -418,12 +439,13 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnPropertyFilterWhenFilteringHeadersRequested() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+        String message1Content = "From: user@domain.tld\r\n"
                 + "header1: Header1Content\r\n"
                 + "HEADer2: Header2Content\r\n"
-                + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+                + "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder().build(message1Content),
+            session);
         
         GetMessagesRequest request = GetMessagesRequest.builder()
                 .ids(ImmutableList.of(message1.getMessageId()))
@@ -446,12 +468,14 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnOneMessageWhenMessageInSeveralMailboxes() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+        String message1Content = "From: user@domain.tld\r\n"
             + "header1: Header1Content\r\n"
             + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, null);
+            + "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -478,13 +502,18 @@ public class GetMessagesMethodTest {
         MessageFactory messageFactory = mock(MessageFactory.class);
         testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream(("From: user@domain.tld\r\n"
+        String message1Content = "From: user@domain.tld\r\n"
             + "header1: Header1Content\r\n"
             + "HEADer2: Header2Content\r\n"
-            + "Subject: message 1 subject\r\n\r\nmy message").getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
-        ComposedMessageId message2 = inbox.appendMessage(message1Content, now, session, NOT_RECENT, FLAGS);
+            + "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
+        ComposedMessageId message2 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(message1Content),
+            session);
         when(messageFactory.fromMetaDataWithContent(any()))
             .thenReturn(mock(Message.class))
             .thenThrow(new RuntimeException());
@@ -509,13 +538,24 @@ public class GetMessagesMethodTest {
             .add(Flag.ANSWERED, Flag.DRAFT)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags)
+                .build(message1Content),
+            session);
+        String message2Content = "Subject: message 2 subject\r\n\r\nmy message";
+        ComposedMessageId message2 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags)
+                .build(message2Content),
+            session);
+        String message3Content = "Great-Header: message 3 subject\r\n\r\nmy message";
+        ComposedMessageId message3 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags)
+                .build(message3Content),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -558,13 +598,24 @@ public class GetMessagesMethodTest {
             .add(Flag.ANSWERED, Flag.DRAFT, Flag.RECENT)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags1);
-        ByteArrayInputStream message2Content = new ByteArrayInputStream("Subject: message 2 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message2 = inbox.appendMessage(message2Content, now, session, false, flags2);
-        ByteArrayInputStream message3Content = new ByteArrayInputStream("Great-Header: message 3 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message3 = inbox.appendMessage(message3Content, now, session, false, flags3);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags1)
+                .build(message1Content),
+            session);
+        String message2Content = "Subject: message 2 subject\r\n\r\nmy message";
+        ComposedMessageId message2 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags2)
+                .build(message2Content),
+            session);
+        String message3Content = "Great-Header: message 3 subject\r\n\r\nmy message";
+        ComposedMessageId message3 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags3)
+                .build(message3Content),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -601,9 +652,12 @@ public class GetMessagesMethodTest {
             .add(FORWARDED)
             .build();
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        Date now = new Date();
-        ByteArrayInputStream message1Content = new ByteArrayInputStream("Subject: message 1 subject\r\n\r\nmy message".getBytes(StandardCharsets.UTF_8));
-        ComposedMessageId message1 = inbox.appendMessage(message1Content, now, session, false, flags);
+        String message1Content = "Subject: message 1 subject\r\n\r\nmy message";
+        ComposedMessageId message1 = inbox.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .withFlags(flags)
+                .build(message1Content),
+            session);
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))

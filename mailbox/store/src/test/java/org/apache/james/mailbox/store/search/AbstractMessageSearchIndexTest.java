@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -335,12 +334,10 @@ public abstract class AbstractMessageSearchIndexTest {
 
         SearchQuery searchQuery = new SearchQuery();
 
-        myFolderMessageManager.appendMessage(
-                ClassLoader.getSystemResourceAsStream("eml/mail.eml"),
-                new Date(1406930400000L),
-                session,
-                true,
-                new Flags(Flags.Flag.SEEN));
+        myFolderMessageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withFlags(new Flags(Flags.Flag.SEEN))
+            .build(ClassLoader.getSystemResourceAsStream("eml/mail.eml")),
+            session);
 
         await();
 
@@ -408,11 +405,9 @@ public abstract class AbstractMessageSearchIndexTest {
     public void messageWithDotsInHeaderShouldBeIndexed() throws MailboxException {
 
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
-                ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml"),
-                new Date(1409608900000L),
-                session,
-                RECENT,
-                new Flags());
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
+            session);
         await();
         
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
@@ -426,11 +421,9 @@ public abstract class AbstractMessageSearchIndexTest {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
 
         ComposedMessageId m11 = inboxMessageManager.appendMessage(
-            ClassLoader.getSystemResourceAsStream("eml/mail5.eml"),
-            new Date(1396389600000L),
-            session,
-            RECENT,
-            new Flags(Flags.Flag.FLAGGED));
+            MessageManager.AppendCommand.builder()
+            .build(ClassLoader.getSystemResourceAsStream("eml/mail5.eml")),
+            session);
 
         String emailToSearch = "luc.duzan@james.apache.org";
 
@@ -1303,11 +1296,9 @@ public abstract class AbstractMessageSearchIndexTest {
     public void searchWithFullTextShouldReturnMailsWhenNotAPerfectMatch() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
-                ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"),
-                new Date(1404252000000L),
-                session,
-                RECENT,
-                new Flags());
+            MessageManager.AppendCommand.builder()
+            .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+            session);
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.mailContains("User message banana"));
@@ -1320,11 +1311,9 @@ public abstract class AbstractMessageSearchIndexTest {
     public void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
-                ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml"),
-                new Date(1404252000000L),
-                session,
-                RECENT,
-                new Flags());
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
+            session);
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
@@ -1350,11 +1339,9 @@ public abstract class AbstractMessageSearchIndexTest {
                 .setBody(multipart)
                 .build();
         ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager.appendMessage(
-                new ByteArrayInputStream(DefaultMessageWriter.asBytes(message)),
-                new Date(1404252000000L),
-                session,
-                RECENT,
-                new Flags());
+            MessageManager.AppendCommand.builder()
+                .build(DefaultMessageWriter.asBytes(message)),
+            session);
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
@@ -1384,14 +1371,19 @@ public abstract class AbstractMessageSearchIndexTest {
         storeMailboxManager.createMailbox(mailboxPath, session);
 
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-        boolean isRecent = false;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date1 = simpleDateFormat.parse("2017-08-24");
         Date date2 = simpleDateFormat.parse("2017-08-23");
         Date date3 = simpleDateFormat.parse("2017-08-25");
-        ComposedMessageId message1 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date1, session, isRecent, new Flags());
-        ComposedMessageId message2 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date2, session, isRecent, new Flags());
-        ComposedMessageId message3 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date3, session, isRecent, new Flags());
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date1)
+            .build("Subject: test\r\n\r\ntestmail"), session);
+        ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date2)
+            .build("Subject: test\r\n\r\ntestmail"), session);
+        ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date3)
+            .build("Subject: test\r\n\r\ntestmail"), session);
 
         await();
 
@@ -1410,14 +1402,19 @@ public abstract class AbstractMessageSearchIndexTest {
         storeMailboxManager.createMailbox(mailboxPath, session);
 
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
-        boolean isRecent = false;
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         Date date1 = simpleDateFormat.parse("2017-08-24");
         Date date2 = simpleDateFormat.parse("2017-08-26");
         Date date3 = simpleDateFormat.parse("2017-08-25");
-        ComposedMessageId message1 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date1, session, isRecent, new Flags());
-        ComposedMessageId message2 = messageManager.appendMessage(new ByteArrayInputStream("Date: Wed, 23 Aug 2017 00:00:00 +0200\r\nSubject: test\r\n\r\ntestmail".getBytes()), date2, session, isRecent, new Flags());
-        ComposedMessageId message3 = messageManager.appendMessage(new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), date3, session, isRecent, new Flags());
+        ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date1)
+            .build("Subject: test\r\n\r\ntestmail"), session);
+        ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date2)
+            .build("Date: Wed, 23 Aug 2017 00:00:00 +0200\r\nSubject: test\r\n\r\ntestmail"), session);
+        ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .withInternalDate(date3)
+            .build("Subject: test\r\n\r\ntestmail"), session);
 
         await();
 

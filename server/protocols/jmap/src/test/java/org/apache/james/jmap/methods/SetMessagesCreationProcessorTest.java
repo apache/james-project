@@ -28,13 +28,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
-import java.sql.Date;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import javax.mail.Flags;
 
 import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.model.CreationMessage;
@@ -164,7 +160,7 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getId()).thenReturn(OUTBOX_ID);
         when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
-        when(outbox.appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class)))
+        when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
             .thenReturn(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)));
 
         drafts = mock(MessageManager.class);
@@ -271,7 +267,7 @@ public class SetMessagesCreationProcessorTest {
         sut.process(createMessageInOutbox, session);
 
         // Then
-        verify(outbox).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), any(Boolean.class), any(Flags.class));
+        verify(outbox).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
     }
 
     @Test

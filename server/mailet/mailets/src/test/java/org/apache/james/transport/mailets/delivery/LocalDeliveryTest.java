@@ -27,10 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
 
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
@@ -100,7 +97,7 @@ public class LocalDeliveryTest {
         testee.service(mail);
 
         // Then
-        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+        verify(messageManager).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
     }
 
     @Test
@@ -121,7 +118,7 @@ public class LocalDeliveryTest {
         testee.service(mail);
 
         // Then
-        verify(messageManager).appendMessage(any(InputStream.class), any(Date.class), any(MailboxSession.class), eq(true), any(Flags.class));
+        verify(messageManager).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
     }
 
     private Mail createMail() throws MessagingException, IOException {

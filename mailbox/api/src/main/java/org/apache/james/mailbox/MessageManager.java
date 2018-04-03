@@ -19,11 +19,14 @@
 
 package org.apache.james.mailbox;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -141,6 +144,93 @@ public interface MessageManager {
      *             when message cannot be appended
      */
     ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
+
+    class AppendCommand {
+        public static class Builder {
+            private Optional<Date> internalDate;
+            private Optional<Boolean> isRecent;
+            private Optional<Flags> flags;
+
+            private Builder() {
+                this.internalDate = Optional.empty();
+                this.isRecent = Optional.empty();
+                this.flags = Optional.empty();
+            }
+
+            public Builder withFlags(Flags flags) {
+                this.flags = Optional.of(flags);
+                return this;
+            }
+
+            public Builder withInternalDate(Date date) {
+                this.internalDate = Optional.of(date);
+                return this;
+            }
+
+            public Builder isRecent(boolean recent) {
+                this.isRecent = Optional.of(recent);
+                return this;
+            }
+
+            public Builder recent() {
+                return isRecent(true);
+            }
+
+            public Builder notRecent() {
+                return isRecent(false);
+            }
+
+            public AppendCommand build(InputStream msgIn) {
+                return new AppendCommand(
+                    msgIn,
+                    internalDate.orElse(new Date()),
+                    isRecent.orElse(true),
+                    flags.orElse(new Flags()));
+            }
+
+            public AppendCommand build(String msgIn) {
+                return build(msgIn.getBytes(StandardCharsets.UTF_8));
+            }
+
+            public AppendCommand build(byte[] msgIn) {
+                return build(new ByteArrayInputStream(msgIn));
+            }
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        private final InputStream msgIn;
+        private final Date internalDate;
+        private final boolean isRecent;
+        private final Flags flags;
+
+        private AppendCommand(InputStream msgIn, Date internalDate, boolean isRecent, Flags flags) {
+            this.msgIn = msgIn;
+            this.internalDate = internalDate;
+            this.isRecent = isRecent;
+            this.flags = flags;
+        }
+
+        public InputStream getMsgIn() {
+            return msgIn;
+        }
+
+        public Date getInternalDate() {
+            return internalDate;
+        }
+
+        public boolean isRecent() {
+            return isRecent;
+        }
+
+        public Flags getFlags() {
+            return flags;
+        }
+    }
+
+    ComposedMessageId appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException;
 
     /**
      * Gets messages in the given range. The messages may get fetched under

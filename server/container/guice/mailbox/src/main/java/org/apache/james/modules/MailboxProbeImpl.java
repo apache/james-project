@@ -53,7 +53,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
     private final SubscriptionManager subscriptionManager;
-    public static final boolean RECENT = true;
 
     @Inject
     private MailboxProbeImpl(MailboxManager mailboxManager, MailboxMapperFactory mailboxMapperFactory,
@@ -152,7 +151,9 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
         MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, user, name), mailboxSession);
         InputStream emlFileAsStream = new FileInputStream(emlPath);
-        messageManager.appendMessage(emlFileAsStream, new Date(), mailboxSession, RECENT, new Flags());
+        messageManager.appendMessage(MessageManager.AppendCommand.builder()
+            .recent()
+            .build(emlFileAsStream), mailboxSession);
 
         mailboxManager.endProcessingRequest(mailboxSession);
         mailboxSession.close();

@@ -24,15 +24,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-
-import javax.mail.Flags;
 
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
@@ -394,9 +390,8 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
-                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()),
-                    new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
+                .build("Subject: test\r\n\r\n" + i), session);
         }
 
         pop3Client.login("foo2", "bar2");
@@ -445,8 +440,8 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(
-                    new ByteArrayInputStream(("Subject: test\r\n\r\n" + i).getBytes()), new Date(), session, true, new Flags());
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
+                .build(("Subject: test\r\n\r\n" + i)), session);
         }
 
         pop3Client.login("foo2", "bar2");
@@ -670,8 +665,8 @@ public class POP3ServerTest {
         out.write(bigMail);
         bigMail = null;
 
-        mailboxManager.getMailbox(mailboxPath, session).appendMessage(new ByteArrayInputStream(out.toByteArray()), new Date(),
-                session, false, new Flags());
+        mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
+                .build(out.toByteArray()), session);
         mailboxManager.startProcessingRequest(session);
 
         pop3Client.login("foo6", "bar6");
@@ -735,9 +730,11 @@ public class POP3ServerTest {
     }
 
     private void setupTestMails(MailboxSession session, MessageManager mailbox) throws MailboxException {
-        mailbox.appendMessage(new ByteArrayInputStream(content), new Date(), session, true, new Flags());
+        mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .build(content), session);
         byte[] content2 = ("EMPTY").getBytes();
-        mailbox.appendMessage(new ByteArrayInputStream(content2), new Date(), session, true, new Flags());
+        mailbox.appendMessage(MessageManager.AppendCommand.builder()
+            .build(content2), session);
     }
 
 }
