@@ -68,7 +68,7 @@ public class CassandraMessageIdManagerTestSystem extends MessageIdManagerTestSys
         CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
             (StoreCurrentQuotaManager) currentQuotaManager,
-            mailboxManager.getQuotaRootResolver());
+            mailboxManager.getQuotaRootResolver(), mailboxManager.getEventDispatcher(), quotaManager);
         mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, mailboxManager.createSystemSession("System"));
         return new CassandraMessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getEventDispatcher()),
             new CassandraMessageId.Factory(),

@@ -41,9 +41,14 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -904,5 +909,33 @@ public abstract class MailboxManagerTest {
         softly.assertThat(metaData)
             .extracting(MessageManager.MetaData::getPermanentFlags)
             .contains(new Flags());
+    }
+
+    @Test
+    public void addingMessageShouldFireQuotaUpdateEvent() throws Exception {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
+        session = mailboxManager.createSystemSession(USER_1);
+
+        EventCollector listener = new EventCollector();
+        mailboxManager.addGlobalListener(listener, session);
+
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+        mailboxManager.getMailbox(inbox, session)
+            .appendMessage(MessageManager.AppendCommand.builder()
+                .build(message), session);
+
+        assertThat(listener.getEvents())
+            .contains(new MailboxListener.QuotaUsageUpdatedEvent(
+                session,
+                QuotaRoot.quotaRoot("#private&" + USER_1, Optional.empty()),
+                Quota.<QuotaCount>builder()
+                    .used(QuotaCount.count(1))
+                    .computedLimit(QuotaCount.unlimited())
+                    .build(),
+                Quota.<QuotaSize>builder()
+                    .used(QuotaSize.size(85))
+                    .computedLimit(QuotaSize.unlimited())
+                    .build()));
     }
 }

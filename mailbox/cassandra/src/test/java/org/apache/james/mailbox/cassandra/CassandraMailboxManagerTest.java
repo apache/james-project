@@ -35,6 +35,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.junit.After;
@@ -63,7 +64,8 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest {
                 new CassandraAttachmentModule(),
                 new CassandraDeletedMessageModule(),
                 new CassandraAnnotationModule(),
-                new CassandraApplicableFlagsModule());
+                new CassandraApplicableFlagsModule(),
+                new CassandraQuotaModule());
         cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }

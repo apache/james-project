@@ -65,7 +65,8 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             MailboxCapabilities.UserFlag,
             MailboxCapabilities.Namespace,
             MailboxCapabilities.Annotation,
-            MailboxCapabilities.ACL);
+            MailboxCapabilities.ACL,
+            MailboxCapabilities.Quota);
     }
     
     @Override

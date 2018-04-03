@@ -32,7 +32,11 @@ import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -157,5 +161,9 @@ public class MailboxEventDispatcher {
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
         listener.event(eventFactory.moved(session, messageMoves, messages));
+    }
+
+    public void quota(MailboxSession session, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {
+        listener.event(new MailboxListener.QuotaUsageUpdatedEvent(session, quotaRoot, countQuota, sizeQuota));
     }
 }

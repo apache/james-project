@@ -53,6 +53,8 @@
     <bean id="eventQuotaUpdater" class="org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater" lazy-init="true">
         <constructor-arg index="0" ref="currentQuotaManager"/>
         <constructor-arg index="1" ref="quotaRootResolver"/>
+        <constructor-arg index="2" ref="dispatcher"/>
+        <constructor-arg index="3" ref="storeQuotaManager"/>
     </bean>
 
 </beans>

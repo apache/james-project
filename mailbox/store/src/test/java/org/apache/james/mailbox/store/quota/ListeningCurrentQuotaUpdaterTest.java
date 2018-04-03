@@ -33,8 +33,10 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +57,8 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void setUp() throws Exception {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedCurrentQuotaManager = mock(StoreCurrentQuotaManager.class);
-        testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver);
+        testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver,
+            mock(MailboxEventDispatcher.class), mock(QuotaManager.class));
     }
 
     @Test

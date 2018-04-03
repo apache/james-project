@@ -65,7 +65,9 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(MailboxCapabilities.UserFlag, MailboxCapabilities.Namespace, MailboxCapabilities.Annotation);
+        return EnumSet.of(MailboxCapabilities.UserFlag,
+            MailboxCapabilities.Namespace,
+            MailboxCapabilities.Annotation);
     }
 
     /**
