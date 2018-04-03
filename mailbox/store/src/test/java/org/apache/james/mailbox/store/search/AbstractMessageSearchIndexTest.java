@@ -1184,6 +1184,7 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m1.getUid());
     }
+
     @Test
     public void searchWithTextShouldReturnMailsWhenToIsNotAnExactMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));

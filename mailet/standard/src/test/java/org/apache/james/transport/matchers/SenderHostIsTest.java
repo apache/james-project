@@ -170,7 +170,7 @@ public class SenderHostIsTest {
             Domain.of("james2.apache.org"),
             Domain.of("james3.apache.org"),
             Domain.of("james4.apache.org"),
-            Domain.of( "james5.apache.org"));
+            Domain.of("james5.apache.org"));
     }
 
     @Test

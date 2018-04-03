@@ -39,7 +39,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.transport.mailets.redirect.SpecialAddress;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
