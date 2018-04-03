@@ -79,16 +79,6 @@ public class MDNReport {
             return this;
         }
 
-        public Builder gatewayField(String gatewayDns) {
-            this.gatewayField = Optional.of(new Gateway(Text.fromRawText(gatewayDns)));
-            return this;
-        }
-
-        public Builder gatewayField(Optional<Gateway> gatewayField) {
-            this.gatewayField = gatewayField;
-            return this;
-        }
-
         public Builder gatewayField(Gateway gatewayField) {
             this.gatewayField = Optional.of(gatewayField);
             return this;

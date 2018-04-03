@@ -43,43 +43,48 @@ public class GatewayTest {
     public void shouldThrowOnNullName() {
         expectedException.expect(NullPointerException.class);
 
-        Text name = null;
-        new Gateway(name);
+        Gateway.builder()
+            .name(null)
+            .build();
     }
 
     @Test
     public void shouldThrowOnNullNameWhenType() {
         expectedException.expect(NullPointerException.class);
 
-        Text name = null;
-        new Gateway(new AddressType("type"), name);
+        Gateway.builder()
+            .nameType(new AddressType("type"))
+            .name(null)
+            .build();
     }
 
     @Test
     public void shouldThrowOnNullType() {
         expectedException.expect(NullPointerException.class);
 
-        AddressType nameType = null;
-        new Gateway(nameType, Text.fromRawText("name"));
+        Gateway.builder()
+            .nameType(null)
+            .name(Text.fromRawText("name"))
+            .build();
     }
 
     @Test
-    public void addressTypeSHouldDefaultToDNS() {
+    public void addressTypeShouldDefaultToDNS() {
         Text address = Text.fromRawText("address");
-        assertThat(new Gateway(address))
-            .isEqualTo(new Gateway(AddressType.DNS, address));
+        assertThat(Gateway.builder().name(Text.fromRawText("address")).build())
+            .isEqualTo(Gateway.builder().nameType(AddressType.DNS).name(address).build());
     }
 
     @Test
     public void formattedValueShouldDisplayAddress() {
-        assertThat(new Gateway(Text.fromRawText("address"))
+        assertThat(Gateway.builder().name(Text.fromRawText("address")).build()
             .formattedValue())
             .isEqualTo("MDN-Gateway: dns;address");
     }
 
     @Test
     public void formattedValueShouldDisplayMultilineAddress() {
-        assertThat(new Gateway(Text.fromRawText("address\nmultiline"))
+        assertThat(Gateway.builder().name(Text.fromRawText("address\nmultiline")).build()
             .formattedValue())
             .isEqualTo("MDN-Gateway: dns;address\r\n" +
                 " multiline");
@@ -87,7 +92,7 @@ public class GatewayTest {
 
     @Test
     public void formattedValueShouldDisplayCustomAddress() {
-        assertThat(new Gateway(new AddressType("custom"), Text.fromRawText("address"))
+        assertThat(Gateway.builder().nameType(new AddressType("custom")).name(Text.fromRawText("address")).build()
             .formattedValue())
             .isEqualTo("MDN-Gateway: custom;address");
     }

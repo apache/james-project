@@ -20,6 +20,7 @@
 package org.apache.james.mdn.fields;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
@@ -29,19 +30,41 @@ import com.google.common.base.Preconditions;
 public class Gateway implements Field {
     public static final String FIELD_NAME = "MDN-Gateway";
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<AddressType> nameType;
+        private Text name;
+
+        private Builder() {
+            this.nameType = Optional.empty();
+        }
+
+        public Builder nameType(AddressType nameType) {
+            this.nameType = Optional.of(nameType);
+            return this;
+        }
+
+        public Builder name(Text name) {
+            this.name = name;
+            return this;
+        }
+
+        public Gateway build() {
+            Preconditions.checkNotNull(name);
+
+            return new Gateway(nameType.orElse(AddressType.DNS), name);
+        }
+    }
+
     private final AddressType nameType;
     private final Text name;
 
-    public Gateway(AddressType nameType, Text name) {
-        Preconditions.checkNotNull(nameType);
-        Preconditions.checkNotNull(name);
-
+    private Gateway(AddressType nameType, Text name) {
         this.nameType = nameType;
         this.name = name;
-    }
-
-    public Gateway(Text name) {
-        this(AddressType.DNS, name);
     }
 
     @Override

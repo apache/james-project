@@ -117,7 +117,7 @@ public class MDNReportTest {
         FinalRecipient finalRecipientField = new FinalRecipient(Text.fromRawText("any@domain.com"));
         ExtensionField extensionField1 = new ExtensionField("name1", "value1");
         ExtensionField extensionField2 = new ExtensionField("name2", "value2");
-        Gateway gateway = new Gateway(Text.fromRawText("address"));
+        Gateway gateway = Gateway.builder().name(Text.fromRawText("address")).build();
         OriginalMessageId originalMessageIdField = new OriginalMessageId("msgId");
         OriginalRecipient originalRecipientField = new OriginalRecipient(Text.fromRawText("address"));
         ReportingUserAgent reportingUserAgentField = ReportingUserAgent.builder().userAgentName("name").build();

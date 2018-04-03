@@ -367,7 +367,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .gatewayField(new Gateway(Text.fromRawText("host.com")))
+            .gatewayField(Gateway.builder().name(Text.fromRawText("host.com")).build())
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -396,7 +396,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .gatewayField(new Gateway(new AddressType("postal"), Text.fromRawText("5 rue Charles mercier")))
+            .gatewayField(Gateway.builder().nameType(new AddressType("postal")).name(Text.fromRawText("5 rue Charles mercier")).build())
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
             .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
@@ -452,7 +452,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .gatewayField(new Gateway(new AddressType("postal"), Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")))
+            .gatewayField(Gateway.builder().nameType(new AddressType("postal")).name(Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")).build())
             .finalRecipientField(new FinalRecipient(new AddressType("postal"), Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")))
             .originalRecipientField(new OriginalRecipient(new AddressType("postal"), Text.fromRawText("3 rue Mercier\n 36555 Saint Coincoin\n France")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
