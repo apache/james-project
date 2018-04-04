@@ -26,6 +26,7 @@ import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
+import org.apache.james.mdn.fields.ExtensionField;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -261,5 +262,15 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(Error.class);
         assertThat((Error)result.resultValue).isEqualTo(new Error(Text.fromRawText("Message1")));
+    }
+
+    @Test
+    public void extensionFieldShouldParse() {
+        String extension = "X-OPENPAAS-IP: 177.177.177.77";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.extentionField()).run(extension);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(ExtensionField.class);
+        assertThat((ExtensionField)result.resultValue).isEqualTo(ExtensionField.builder().fieldName("X-OPENPAAS-IP").rawValue(" 177.177.177.77").build());
     }
 }

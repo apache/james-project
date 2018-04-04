@@ -23,6 +23,7 @@ import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.Error;
+import org.apache.james.mdn.fields.ExtensionField;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -644,7 +645,27 @@ public class MDNReportParser {
 
         //    extension-field = extension-field-name ":" *([FWS] text)
         Rule extentionField() {
-            return Sequence(extensionFieldName(), ":", ZeroOrMore(Sequence(Optional(fws()), text())));
+            return Sequence(
+                push(ExtensionField.builder()),
+                extensionFieldName(), ACTION(setExtensionFieldName()),
+                ":",
+                ZeroOrMore(Sequence(Optional(fws()), text())), ACTION(setExtensionText()),
+                ACTION(buildExtension()));
+        }
+
+        boolean setExtensionFieldName() {
+            this.<ExtensionField.Builder>peekT().fieldName(match());
+            return true;
+        }
+
+        boolean setExtensionText() {
+            this.<ExtensionField.Builder>peekT().rawValue(match());
+            return true;
+        }
+
+        boolean buildExtension() {
+            push(this.<ExtensionField.Builder>popT().build());
+            return true;
         }
 
         //    extension-field-name = field-name
