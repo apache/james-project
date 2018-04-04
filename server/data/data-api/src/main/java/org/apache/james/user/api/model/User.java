@@ -49,4 +49,11 @@ public interface User {
      * @return true if newPass successfully added
      */
     boolean setPassword(String newPass);
+
+    default boolean hasUsername(String username) {
+        org.apache.james.core.User thisUser = org.apache.james.core.User.fromUsername(getUserName());
+        org.apache.james.core.User thatUser = org.apache.james.core.User.fromUsername(username);
+
+        return thisUser.equals(thatUser);
+    }
 }

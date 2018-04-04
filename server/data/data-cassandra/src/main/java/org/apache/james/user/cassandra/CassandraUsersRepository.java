@@ -123,7 +123,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
             .join();
         return Optional.ofNullable(result.one())
             .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
-            .filter(user -> user.getUserName().equals(name))
+            .filter(user -> user.hasUsername(name))
             .orElse(null);
     }
 

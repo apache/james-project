@@ -194,6 +194,20 @@ public abstract class AbstractUsersRepositoryTest {
     }
     
     @Test
+    public void testShouldReturnTrueWhenAUserHasACorrectPasswordAndOtherCaseInDomain() throws Exception { 
+        usersRepository.setEnableVirtualHosting(true);
+
+        domainList.addDomain(Domain.of("jAmEs.oRg"));
+        String username = "myuser";
+        String password = "password";
+        usersRepository.addUser(username + "@jAmEs.oRg", password);
+
+        boolean actual = usersRepository.test(username + "@james.org", password);
+
+        assertThat(actual).isTrue();
+    }
+
+    @Test
     public void testShouldReturnFalseWhenAUserHasAnIncorrectPassword() throws UsersRepositoryException { 
         //Given
         usersRepository.addUser(user1, "password");
