@@ -19,7 +19,10 @@
 
 package org.apache.james.mdn;
 
+import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
 
@@ -393,7 +396,31 @@ public class MDNReportParser {
         /*    mdn-gateway-field = "MDN-Gateway" ":" OWS mta-name-type OWS
                                   ";" OWS mta-name    */
         Rule mdnGatewayField() {
-            return Sequence("MDN-Gateway", ":", mtaNameType(), ows(), ";", ows(), mtaName());
+            return Sequence(
+                push(Gateway.builder()),
+                "MDN-Gateway", ":",
+                ows(),
+                mtaNameType(), ACTION(setMtaNameType()),
+                ows(),
+                ";",
+                ows(),
+                mtaName(), ACTION(setMtaName()),
+                ACTION(buildGateway()));
+        }
+
+        boolean setMtaNameType() {
+            this.<Gateway.Builder>peekT().nameType(new AddressType(match()));
+            return true;
+        }
+
+        boolean setMtaName() {
+            this.<Gateway.Builder>peekT().name(Text.fromRawText(match()));
+            return true;
+        }
+
+        boolean buildGateway() {
+            push(this.<Gateway.Builder>popT().build());
+            return true;
         }
 
         //    mta-name-type = Atom

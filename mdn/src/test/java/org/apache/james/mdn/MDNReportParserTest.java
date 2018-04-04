@@ -22,7 +22,10 @@ package org.apache.james.mdn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mdn.MDNReportParser.Parser;
+import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.ReportingUserAgent;
+import org.apache.james.mdn.fields.Text;
 import org.junit.Test;
 import org.parboiled.Parboiled;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -41,6 +44,7 @@ public class MDNReportParserTest {
     @Test
     public void dispositionNotificationContentShouldParseWhenMaximalSubset() {
         String maximal = "Reporting-UA: UA_name; UA_product\r\n" +
+            "MDN-Gateway: smtp; apache.org\r\n" +
             "Original-Recipient: rfc822; originalRecipient\r\n" +
             "Final-Recipient: rfc822; final_recipient\r\n" +
             "Original-Message-ID: <original@message.id>\r\n" +
@@ -91,5 +95,15 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(ReportingUserAgent.class);
         assertThat((ReportingUserAgent)result.resultValue).isEqualTo(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build());
+    }
+
+    @Test
+    public void mdnGatewayFieldShouldParse() {
+        String gateway = "MDN-Gateway: smtp; apache.org";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.mdnGatewayField()).run(gateway);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Gateway.class);
+        assertThat((Gateway)result.resultValue).isEqualTo(Gateway.builder().nameType(new AddressType("smtp")).name(Text.fromRawText("apache.org")).build());
     }
 }
