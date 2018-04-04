@@ -35,7 +35,6 @@ import org.apache.james.mdn.fields.Text;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
-import org.parboiled.BaseParser;
 import org.parboiled.Parboiled;
 import org.parboiled.Rule;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -401,21 +400,6 @@ public class MDNReportParser {
         boolean setUserAgentProduct() {
             this.<ReportingUserAgent.Builder>peekT().userAgentProduct(match());
             return true;
-        }
-
-        @SuppressWarnings("unchecked")
-        <T> T popT() {
-            return (T) pop();
-        }
-
-        @SuppressWarnings("unchecked")
-        <T> T peekParent() {
-            return (T) peek(1);
-        }
-
-        @SuppressWarnings("unchecked")
-        <T> T peekT() {
-            return (T) peek();
         }
 
         //    ua-name = *text-no-semi
