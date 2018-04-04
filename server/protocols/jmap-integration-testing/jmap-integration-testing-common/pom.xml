@@ -78,6 +78,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-guice-webadmin</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-testing</artifactId>
             <scope>test</scope>
         </dependency>
@@ -92,6 +97,11 @@
             <artifactId>james-server-util-java8</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-webadmin-core</artifactId>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

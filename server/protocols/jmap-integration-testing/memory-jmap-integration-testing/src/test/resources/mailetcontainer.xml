@@ -51,6 +51,7 @@
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="org.apache.james.jmap.mailet.TextCalendarBodyToAttachment"/>
+            <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="SpamAssassin">
