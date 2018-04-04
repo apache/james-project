@@ -44,49 +44,52 @@ public class OriginalRecipientTest {
     public void shouldThrowOnNullAddress() {
         expectedException.expect(NullPointerException.class);
 
-        Text originalRecipient = null;
-        new OriginalRecipient(originalRecipient);
+        OriginalRecipient.builder().originalRecipient(null).build();
     }
 
     @Test
     public void shouldThrowOnNullAddressWhenCustomType() {
         expectedException.expect(NullPointerException.class);
 
-        Text originalRecipient = null;
-        new OriginalRecipient(new AddressType("customType"), originalRecipient);
+        OriginalRecipient.builder()
+            .addressType(new AddressType("customType"))
+            .originalRecipient(null)
+            .build();
     }
 
     @Test
     public void shouldThrowOnNullAddressType() {
         expectedException.expect(NullPointerException.class);
 
-        AddressType addressType = null;
-        new OriginalRecipient(addressType, ADDRESS);
+        OriginalRecipient.builder()
+            .addressType(null)
+            .originalRecipient(ADDRESS)
+            .build();
     }
 
     @Test
     public void addressTypeShouldDefaultToRfc822() {
-        assertThat(new OriginalRecipient(ADDRESS))
-            .isEqualTo(new OriginalRecipient(AddressType.RFC_822, ADDRESS));
+        assertThat(OriginalRecipient.builder().originalRecipient(ADDRESS).build())
+            .isEqualTo(OriginalRecipient.builder().addressType(AddressType.RFC_822).originalRecipient(ADDRESS).build());
     }
 
     @Test
     public void formattedValueShouldDisplayAddress() {
-        assertThat(new OriginalRecipient(ADDRESS)
+        assertThat(OriginalRecipient.builder().originalRecipient(ADDRESS).build()
             .formattedValue())
             .isEqualTo("Original-Recipient: rfc822; address");
     }
 
     @Test
     public void formattedValueShouldDisplayCustomType() {
-        assertThat(new OriginalRecipient(new AddressType("custom"), ADDRESS)
+        assertThat(OriginalRecipient.builder().addressType(new AddressType("custom")).originalRecipient(ADDRESS).build()
             .formattedValue())
             .isEqualTo("Original-Recipient: custom; address");
     }
 
     @Test
     public void formattedValueShouldDisplayMultilineAddress() {
-        assertThat(new OriginalRecipient(Text.fromRawText("multiline\naddress"))
+        assertThat(OriginalRecipient.builder().originalRecipient(Text.fromRawText("multiline\naddress")).build()
             .formattedValue())
             .isEqualTo("Original-Recipient: rfc822; multiline\r\n" +
                 " address");

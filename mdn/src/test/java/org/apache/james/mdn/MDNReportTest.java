@@ -63,7 +63,7 @@ public class MDNReportTest {
         MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
+            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .build();
     }
 
@@ -81,7 +81,7 @@ public class MDNReportTest {
 
         MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .originalRecipientField(new OriginalRecipient(Text.fromRawText("originalRecipient")))
+            .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build();
@@ -119,7 +119,7 @@ public class MDNReportTest {
         ExtensionField extensionField2 = new ExtensionField("name2", "value2");
         Gateway gateway = Gateway.builder().name(Text.fromRawText("address")).build();
         OriginalMessageId originalMessageIdField = new OriginalMessageId("msgId");
-        OriginalRecipient originalRecipientField = new OriginalRecipient(Text.fromRawText("address"));
+        OriginalRecipient originalRecipientField = OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build();
         ReportingUserAgent reportingUserAgentField = ReportingUserAgent.builder().userAgentName("name").build();
         Error errorField1 = new Error(Text.fromRawText("error 1"));
         Error errorField2 = new Error(Text.fromRawText("error 2"));

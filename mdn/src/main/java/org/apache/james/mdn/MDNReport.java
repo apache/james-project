@@ -65,7 +65,7 @@ public class MDNReport {
         public Builder originalRecipientField(String originalRecipient) {
             this.originalRecipientField = Optional.ofNullable(originalRecipient)
                 .map(Text::fromRawText)
-                .map(OriginalRecipient::new);
+                .map(text -> OriginalRecipient.builder().originalRecipient(text).build());
             return this;
         }
 

@@ -20,6 +20,7 @@
 package org.apache.james.mdn.fields;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
@@ -35,19 +36,41 @@ public class OriginalRecipient implements Field {
         return new OriginalRecipient(AddressType.UNKNOWN, address);
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private Optional<AddressType> addressType;
+        private Text originalRecipient;
+
+        private Builder() {
+            addressType = Optional.empty();
+        }
+
+        public Builder addressType(AddressType addressType) {
+            this.addressType = Optional.of(addressType);
+            return this;
+        }
+
+        public Builder originalRecipient(Text originalRecipient) {
+            this.originalRecipient = originalRecipient;
+            return this;
+        }
+
+        public OriginalRecipient build() {
+            Preconditions.checkNotNull(originalRecipient);
+
+            return new OriginalRecipient(addressType.orElse(AddressType.RFC_822), originalRecipient);
+        }
+    }
+
     private final Text originalRecipient;
     private final AddressType addressType;
 
-    public OriginalRecipient(AddressType addressType, Text originalRecipient) {
-        Preconditions.checkNotNull(addressType);
-        Preconditions.checkNotNull(originalRecipient);
-
+    private OriginalRecipient(AddressType addressType, Text originalRecipient) {
         this.addressType = addressType;
         this.originalRecipient = originalRecipient;
-    }
-
-    public OriginalRecipient(Text originalRecipient) {
-        this(AddressType.RFC_822, originalRecipient);
     }
 
     public Text getOriginalRecipient() {
