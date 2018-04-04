@@ -21,6 +21,8 @@ package org.apache.james.mdn;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.apache.james.mdn.MDNReportParser.Parser;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
@@ -44,15 +46,14 @@ import org.parboiled.support.ParsingResult;
 public class MDNReportParserTest {
 
     @Test
-    public void dispositionNotificationContentShouldNotParseWhenMissingFinalRecipient() {
+    public void parseShouldReturnEmptyWhenMissingFinalRecipient() {
         String missing = "Disposition: automatic-action/MDN-sent-automatically;processed\r\n";
-        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
-        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(missing);
-        assertThat(result.matched).isFalse();
+        MDNReportParser testee = new MDNReportParser();
+        assertThat(testee.parse(missing)).isEmpty();
     }
 
     @Test
-    public void dispositionNotificationContentShouldParseWhenMaximalSubset() {
+    public void parseShouldReturnMdnReportWhenMaximalSubset() {
         String maximal = "Reporting-UA: UA_name; UA_product\r\n" +
             "MDN-Gateway: smtp; apache.org\r\n" +
             "Original-Recipient: rfc822; originalRecipient\r\n" +
@@ -63,28 +64,65 @@ public class MDNReportParserTest {
             "Error: Message2\r\n" +
             "X-OPENPAAS-IP: 177.177.177.77\r\n" +
             "X-OPENPAAS-PORT: 8000\r\n";
-        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
-        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(maximal);
-        assertThat(result.matched).isTrue();
+        Optional<MDNReport> expected = Optional.of(MDNReport.builder()
+            .reportingUserAgentField(ReportingUserAgent.builder()
+                .userAgentName("UA_name")
+                .userAgentProduct("UA_product")
+                .build())
+            .gatewayField(Gateway.builder()
+                .nameType(new AddressType("smtp"))
+                .name(Text.fromRawText("apache.org"))
+                .build())
+            .originalRecipientField("originalRecipient")
+            .finalRecipientField("final_recipient")
+            .originalMessageIdField("<original@message.id>")
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .addModifier(DispositionModifier.Error)
+                .addModifier(DispositionModifier.Failed)
+                .build())
+            .addErrorField("Message1")
+            .addErrorField("Message2")
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-IP")
+                .rawValue(" 177.177.177.77")
+                .build())
+            .withExtensionField(ExtensionField.builder()
+                .fieldName("X-OPENPAAS-PORT")
+                .rawValue(" 8000")
+                .build())
+            .build());
+        MDNReportParser testee = new MDNReportParser();
+        Optional<MDNReport> actual = testee.parse(maximal);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
-    public void dispositionNotificationContentShouldParseWhenMinimalSubset() {
+    public void parseShouldReturnMdnReportWhenMinimalSubset() {
         String minimal = "Final-Recipient: rfc822; final_recipient\r\n" +
             "Disposition: automatic-action/MDN-sent-automatically;processed\r\n";
-        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
-        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(minimal);
-        assertThat(result.matched).isTrue();
+        Optional<MDNReport> expected = Optional.of(MDNReport.builder()
+            .finalRecipientField("final_recipient")
+            .dispositionField(Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .build())
+            .build());
+        MDNReportParser testee = new MDNReportParser();
+        Optional<MDNReport> actual = testee.parse(minimal);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
-    public void dispositionNotificationContentShouldNotParseWhenDuplicatedFields() {
+    public void parseShouldReturnEmptyWhenDuplicatedFields() {
         String duplicated = "Final-Recipient: rfc822; final_recipient\r\n" +
             "Final-Recipient: rfc822; final_recipient\r\n" +
             "Disposition: automatic-action/MDN-sent-automatically;processed\r\n";
-        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
-        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(duplicated);
-        assertThat(result.matched).isFalse();
+        MDNReportParser testee = new MDNReportParser();
+        assertThat(testee.parse(duplicated)).isEmpty();
     }
 
     @Test

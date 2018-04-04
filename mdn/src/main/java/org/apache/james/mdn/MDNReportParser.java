@@ -19,6 +19,8 @@
 
 package org.apache.james.mdn;
 
+import java.util.Optional;
+
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
@@ -34,12 +36,24 @@ import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.parboiled.BaseParser;
+import org.parboiled.Parboiled;
 import org.parboiled.Rule;
+import org.parboiled.parserunners.ReportingParseRunner;
+import org.parboiled.support.ParsingResult;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class MDNReportParser {
     public MDNReportParser() {
+    }
+
+    public Optional<MDNReport> parse(String mdnReport) {
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionNotificationContent()).run(mdnReport);
+        if (result.matched) {
+            return Optional.of((MDNReport)result.resultValue);
+        }
+        return Optional.empty();
     }
 
     @VisibleForTesting
@@ -307,14 +321,60 @@ public class MDNReportParser {
         Rule dispositionNotificationContent() {
             return Sequence(
                 push(MDNReport.builder()),
-                Optional(Sequence(reportingUaField(), crlf())),
-                Optional(Sequence(mdnGatewayField(), crlf())),
-                Optional(Sequence(originalRecipientField(), crlf())),
-                Sequence(finalRecipientField(), crlf()),
-                Optional(Sequence(originalMessageIdField(), crlf())),
-                Sequence(dispositionField(), crlf()),
-                ZeroOrMore(Sequence(errorField(), crlf())),
-                ZeroOrMore(Sequence(extentionField(), crlf())));
+                Optional(Sequence(reportingUaField(), ACTION(setReportingUaField()), crlf())),
+                Optional(Sequence(mdnGatewayField(), ACTION(setMdnGatewayField()), crlf())),
+                Optional(Sequence(originalRecipientField(), ACTION(setOriginalRecipientField()), crlf())),
+                Sequence(finalRecipientField(), ACTION(setFinalRecipientField()), crlf()),
+                Optional(Sequence(originalMessageIdField(), ACTION(setOriginalMessageIdField()), crlf())),
+                Sequence(dispositionField(), ACTION(setDispositionField()), crlf()),
+                ZeroOrMore(Sequence(errorField(), ACTION(addErrorField()), crlf())),
+                ZeroOrMore(Sequence(extentionField(), ACTION(addExtensionField()), crlf())),
+                ACTION(buildMDNReport()));
+        }
+
+        boolean setReportingUaField() {
+            this.<MDNReport.Builder>peekParent().reportingUserAgentField(popT());
+            return true;
+        }
+
+        boolean setMdnGatewayField() {
+            this.<MDNReport.Builder>peekParent().gatewayField(popT());
+            return true;
+        }
+
+        boolean setOriginalRecipientField() {
+            this.<MDNReport.Builder>peekParent().originalRecipientField(this.<OriginalRecipient>popT());
+            return true;
+        }
+
+        boolean setFinalRecipientField() {
+            this.<MDNReport.Builder>peekParent().finalRecipientField(this.<FinalRecipient>popT());
+            return true;
+        }
+
+        boolean setOriginalMessageIdField() {
+            this.<MDNReport.Builder>peekParent().originalMessageIdField(this.<OriginalMessageId>popT());
+            return true;
+        }
+
+        boolean setDispositionField() {
+            this.<MDNReport.Builder>peekParent().dispositionField(popT());
+            return true;
+        }
+
+        boolean addErrorField() {
+            this.<MDNReport.Builder>peekParent().addErrorField(this.<Error>popT());
+            return true;
+        }
+
+        boolean addExtensionField() {
+            this.<MDNReport.Builder>peekParent().withExtensionField(this.<ExtensionField>popT());
+            return true;
+        }
+
+        boolean buildMDNReport() {
+            push(this.<MDNReport.Builder>popT().build());
+            return true;
         }
 
         /*    reporting-ua-field = "Reporting-UA" ":" OWS ua-name OWS [
