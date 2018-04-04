@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -636,7 +637,9 @@ public class MDNReportParser {
 
         //    error-field = "Error" ":" *([FWS] text)
         Rule errorField() {
-            return Sequence("Error", ":", ZeroOrMore(Sequence(Optional(fws()), text())));
+            return Sequence(
+                "Error", ":",
+                ZeroOrMore(Sequence(Optional(fws()), text())), push(new Error(Text.fromRawText(match()))));
         }
 
         //    extension-field = extension-field-name ":" *([FWS] text)

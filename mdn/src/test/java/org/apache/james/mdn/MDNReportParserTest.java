@@ -25,6 +25,7 @@ import org.apache.james.mdn.MDNReportParser.Parser;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
+import org.apache.james.mdn.fields.Error;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
@@ -250,5 +251,15 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(Disposition.class);
         assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void errorFieldShouldParse() {
+        String error = "Error: Message1";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.errorField()).run(error);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Error.class);
+        assertThat((Error)result.resultValue).isEqualTo(new Error(Text.fromRawText("Message1")));
     }
 }
