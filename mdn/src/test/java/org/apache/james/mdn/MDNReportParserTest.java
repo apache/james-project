@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mdn.MDNReportParser.Parser;
 import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
@@ -116,5 +117,15 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(OriginalRecipient.class);
         assertThat((OriginalRecipient)result.resultValue).isEqualTo(OriginalRecipient.builder().addressType(new AddressType("rfc822")).originalRecipient(Text.fromRawText("originalRecipient")).build());
+    }
+
+    @Test
+    public void finalRecipientFieldShouldParse() {
+        String finalRecipient = "Final-Recipient: rfc822; final_recipient";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.finalRecipientField()).run(finalRecipient);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(FinalRecipient.class);
+        assertThat((FinalRecipient)result.resultValue).isEqualTo(FinalRecipient.builder().addressType(new AddressType("rfc822")).finalRecipient(Text.fromRawText("final_recipient")).build());
     }
 }

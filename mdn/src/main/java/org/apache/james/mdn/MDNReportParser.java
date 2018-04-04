@@ -20,6 +20,7 @@
 package org.apache.james.mdn;
 
 import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
@@ -442,21 +443,21 @@ public class MDNReportParser {
                 push(OriginalRecipient.builder()),
                 "Original-Recipient", ":",
                 ows(),
-                addressType(), ACTION(setAddressType()),
+                addressType(), ACTION(setOriginalAddressType()),
                 ows(),
                 ";",
                 ows(),
-                genericAddress(), ACTION(setGenericAddress()),
+                genericAddress(), ACTION(setOriginalGenericAddress()),
                 ows(),
                 ACTION(buildOriginalRecipient()));
         }
 
-        boolean setAddressType() {
+        boolean setOriginalAddressType() {
             this.<OriginalRecipient.Builder>peekT().addressType(new AddressType(match()));
             return true;
         }
 
-        boolean setGenericAddress() {
+        boolean setOriginalGenericAddress() {
             this.<OriginalRecipient.Builder>peekT().originalRecipient(Text.fromRawText(match()));
             return true;
         }
@@ -480,8 +481,32 @@ public class MDNReportParser {
                      "Final-Recipient" ":" OWS address-type OWS
                      ";" OWS generic-address OWS    */
         Rule finalRecipientField() {
-            return Sequence("Final-Recipient", ":", ows(), addressType(), ows(),
-                ";", ows(), genericAddress(), ows());
+            return Sequence(
+                push(FinalRecipient.builder()),
+                "Final-Recipient", ":",
+                ows(),
+                addressType(), ACTION(setFinalAddressType()),
+                ows(),
+                ";",
+                ows(),
+                genericAddress(), ACTION(setFinalGenericAddress()),
+                ows(),
+                ACTION(buildFinalRecipient()));
+        }
+
+        boolean setFinalAddressType() {
+            this.<FinalRecipient.Builder>peekT().addressType(new AddressType(match()));
+            return true;
+        }
+
+        boolean setFinalGenericAddress() {
+            this.<FinalRecipient.Builder>peekT().finalRecipient(Text.fromRawText(match()));
+            return true;
+        }
+
+        boolean buildFinalRecipient() {
+            push(this.<FinalRecipient.Builder>popT().build());
+            return true;
         }
 
         //    original-message-id-field = "Original-Message-ID" ":" msg-id
