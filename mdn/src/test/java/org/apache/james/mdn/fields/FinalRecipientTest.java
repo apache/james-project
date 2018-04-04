@@ -43,48 +43,47 @@ public class FinalRecipientTest {
     public void shouldThrowOnNullAddress() {
         expectedException.expect(NullPointerException.class);
 
-        new FinalRecipient(null);
+        FinalRecipient.builder().finalRecipient(null).build();
     }
 
     @Test
     public void shouldThrowOnNullAddressWithType() {
         expectedException.expect(NullPointerException.class);
 
-        new FinalRecipient(new AddressType("customType"), null);
+        FinalRecipient.builder().addressType(new AddressType("customType")).finalRecipient(null).build();
     }
 
     @Test
     public void shouldThrowOnNullType() {
         expectedException.expect(NullPointerException.class);
 
-        AddressType addressType = null;
-        new FinalRecipient(addressType, Text.fromRawText("address"));
+        FinalRecipient.builder().addressType(null).finalRecipient(Text.fromRawText("address")).build();
     }
 
     @Test
     public void typeShouldDefaultToRfc822() {
         Text address = Text.fromRawText("address");
-        assertThat(new FinalRecipient(address))
-            .isEqualTo(new FinalRecipient(AddressType.RFC_822, address));
+        assertThat(FinalRecipient.builder().finalRecipient(address).build())
+            .isEqualTo(FinalRecipient.builder().addressType(AddressType.RFC_822).finalRecipient(address).build());
     }
 
     @Test
     public void formattedValueShouldDisplayAddress() {
-        assertThat(new FinalRecipient(Text.fromRawText("Plop"))
+        assertThat(FinalRecipient.builder().finalRecipient(Text.fromRawText("Plop")).build()
             .formattedValue())
             .isEqualTo("Final-Recipient: rfc822; Plop");
     }
 
     @Test
     public void formattedValueShouldDisplayCustomType() {
-        assertThat(new FinalRecipient(new AddressType("postal"), Text.fromRawText("Plop"))
+        assertThat(FinalRecipient.builder().addressType(new AddressType("postal")).finalRecipient(Text.fromRawText("Plop")).build()
             .formattedValue())
             .isEqualTo("Final-Recipient: postal; Plop");
     }
 
     @Test
     public void formattedValueShouldDisplayMultilineAddress() {
-        assertThat(new FinalRecipient(Text.fromRawText("Plop\nGlark"))
+        assertThat(FinalRecipient.builder().finalRecipient(Text.fromRawText("Plop\nGlark")).build()
             .formattedValue())
             .isEqualTo("Final-Recipient: rfc822; Plop\r\n" +
                 " Glark");

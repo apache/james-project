@@ -51,7 +51,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -78,7 +78,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -105,7 +105,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -132,7 +132,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -159,7 +159,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -186,7 +186,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -212,7 +212,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -238,7 +238,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -263,7 +263,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -290,7 +290,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -317,7 +317,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .build()
@@ -342,7 +342,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .dispositionField(disposition)
             .build()
@@ -368,7 +368,7 @@ public class MDNReportFormattingTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .gatewayField(Gateway.builder().name(Text.fromRawText("host.com")).build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -397,7 +397,7 @@ public class MDNReportFormattingTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .gatewayField(Gateway.builder().nameType(new AddressType("postal")).name(Text.fromRawText("5 rue Charles mercier")).build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -425,7 +425,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().addressType(new AddressType("roomNumber")).originalRecipient(Text.fromRawText("385")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -453,7 +453,7 @@ public class MDNReportFormattingTest {
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
             .gatewayField(Gateway.builder().nameType(new AddressType("postal")).name(Text.fromRawText("8 rue Charles mercier\n 36555 Saint Coincoin\n France")).build())
-            .finalRecipientField(new FinalRecipient(new AddressType("postal"), Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")))
+            .finalRecipientField(FinalRecipient.builder().addressType(new AddressType("postal")).finalRecipient(Text.fromRawText("5 rue Mercier\n 36555 Saint Coincoin\n France")).build())
             .originalRecipientField(OriginalRecipient.builder().addressType(new AddressType("postal")).originalRecipient(Text.fromRawText("3 rue Mercier\n 36555 Saint Coincoin\n France")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -487,7 +487,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.ofUnknown(Text.fromRawText("#$%*")))
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -514,7 +514,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(new AddressType("roomNumber"), Text.fromRawText("781")))
+            .finalRecipientField(FinalRecipient.builder().addressType(new AddressType("roomNumber")).finalRecipient(Text.fromRawText("781")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -541,7 +541,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -570,7 +570,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -602,7 +602,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -632,7 +632,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
@@ -662,7 +662,7 @@ public class MDNReportFormattingTest {
 
         String report = MDNReport.builder()
             .reportingUserAgentField(ReportingUserAgent.builder().userAgentName("UA_name").userAgentProduct("UA_product").build())
-            .finalRecipientField(new FinalRecipient(Text.fromRawText("final_recipient")))
+            .finalRecipientField(FinalRecipient.builder().finalRecipient(Text.fromRawText("final_recipient")).build())
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)

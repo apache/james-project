@@ -101,7 +101,7 @@ public class MDNReport {
         }
 
         public Builder finalRecipientField(String finalRecipientField) {
-            this.finalRecipientField = Optional.of(new FinalRecipient(Text.fromRawText(finalRecipientField)));
+            this.finalRecipientField = Optional.of(FinalRecipient.builder().finalRecipient(Text.fromRawText(finalRecipientField)).build());
             return this;
         }
 
