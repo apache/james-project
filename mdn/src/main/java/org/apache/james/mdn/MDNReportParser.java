@@ -22,6 +22,7 @@ package org.apache.james.mdn;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
+import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
@@ -511,7 +512,7 @@ public class MDNReportParser {
 
         //    original-message-id-field = "Original-Message-ID" ":" msg-id
         Rule originalMessageIdField() {
-            return Sequence("Original-Message-ID", ":", msgId());
+            return Sequence("Original-Message-ID", ":", msgId(), push(new OriginalMessageId(match())));
         }
 
         //    msg-id          =   [CFWS] "<" id-left "@" id-right ">" [CFWS]

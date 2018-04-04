@@ -25,6 +25,7 @@ import org.apache.james.mdn.MDNReportParser.Parser;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
+import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
@@ -127,5 +128,15 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(FinalRecipient.class);
         assertThat((FinalRecipient)result.resultValue).isEqualTo(FinalRecipient.builder().addressType(new AddressType("rfc822")).finalRecipient(Text.fromRawText("final_recipient")).build());
+    }
+
+    @Test
+    public void originalMessageIdShouldParse() {
+        String originalMessageId = "Original-Message-ID: <original@message.id>";
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.originalMessageIdField()).run(originalMessageId);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(OriginalMessageId.class);
+        assertThat((OriginalMessageId)result.resultValue).isEqualTo(new OriginalMessageId("<original@message.id>"));
     }
 }
