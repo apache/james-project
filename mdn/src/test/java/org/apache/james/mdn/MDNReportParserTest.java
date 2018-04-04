@@ -22,13 +22,18 @@ package org.apache.james.mdn;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mdn.MDNReportParser.Parser;
+import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
+import org.apache.james.mdn.modifier.DispositionModifier;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
 import org.junit.Test;
 import org.parboiled.Parboiled;
 import org.parboiled.parserunners.ReportingParseRunner;
@@ -138,5 +143,112 @@ public class MDNReportParserTest {
         assertThat(result.matched).isTrue();
         assertThat(result.resultValue).isInstanceOf(OriginalMessageId.class);
         assertThat((OriginalMessageId)result.resultValue).isEqualTo(new OriginalMessageId("<original@message.id>"));
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenMinimal() {
+        String minimal = "Disposition: automatic-action/MDN-sent-automatically;processed";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(minimal);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenMaximal() {
+        String maximal = "Disposition: automatic-action/MDN-sent-automatically;processed/error,failed";
+        Disposition expected = Disposition.builder()
+                .actionMode(DispositionActionMode.Automatic)
+                .sendingMode(DispositionSendingMode.Automatic)
+                .type(DispositionType.Processed)
+                .addModifier(DispositionModifier.Error)
+                .addModifier(DispositionModifier.Failed)
+                .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(maximal);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenManualAutomaticWithDisplayedType() {
+        String disposition = "Disposition: manual-action/MDN-sent-automatically;processed";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Manual)
+            .sendingMode(DispositionSendingMode.Automatic)
+            .type(DispositionType.Processed)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(disposition);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenAutomaticManualWithDisplayedType() {
+        String disposition = "Disposition: automatic-action/MDN-sent-manually;processed";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Processed)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(disposition);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenDeletedType() {
+        String disposition = "Disposition: automatic-action/MDN-sent-manually;deleted";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Deleted)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(disposition);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenDispatchedType() {
+        String disposition = "Disposition: automatic-action/MDN-sent-manually;dispatched";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Dispatched)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(disposition);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
+    }
+
+    @Test
+    public void dispositionFieldShouldParseWhenDisplayedType() {
+        String disposition = "Disposition: automatic-action/MDN-sent-manually;displayed";
+        Disposition expected = Disposition.builder()
+            .actionMode(DispositionActionMode.Automatic)
+            .sendingMode(DispositionSendingMode.Manual)
+            .type(DispositionType.Displayed)
+            .build();
+        Parser parser = Parboiled.createParser(MDNReportParser.Parser.class);
+        ParsingResult<Object> result = new ReportingParseRunner<>(parser.dispositionField()).run(disposition);
+        assertThat(result.matched).isTrue();
+        assertThat(result.resultValue).isInstanceOf(Disposition.class);
+        assertThat((Disposition)result.resultValue).isEqualTo(expected);
     }
 }

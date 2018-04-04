@@ -19,13 +19,18 @@
 
 package org.apache.james.mdn;
 
+import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
+import org.apache.james.mdn.fields.Disposition;
 import org.apache.james.mdn.fields.FinalRecipient;
 import org.apache.james.mdn.fields.Gateway;
 import org.apache.james.mdn.fields.OriginalMessageId;
 import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
+import org.apache.james.mdn.modifier.DispositionModifier;
+import org.apache.james.mdn.sending.mode.DispositionSendingMode;
+import org.apache.james.mdn.type.DispositionType;
 import org.parboiled.BaseParser;
 import org.parboiled.Rule;
 
@@ -542,10 +547,37 @@ public class MDNReportParser {
                      *( OWS "," OWS disposition-modifier ) ] OWS    */
         Rule dispositionField() {
             return Sequence(
-                "Disposition", ":", ows(), dispositionMode(), ows(), ";",
-                ows(), dispositionType(),
-                Optional(Sequence(ows(), "/", ows(), dispositionModifier(),
-                    ZeroOrMore(Sequence(ows(), ",", dispositionModifier())))), ows());
+                push(Disposition.builder()),
+                "Disposition", ":",
+                ows(),
+                dispositionMode(),
+                ows(),
+                ";",
+                ows(),
+                dispositionType(),
+                Optional(
+                    Sequence(
+                        ows(),
+                        "/",
+                        ows(),
+                        dispositionModifier(), ACTION(addDispositionModifier()),
+                        ZeroOrMore(
+                            Sequence(
+                                ows(),
+                                ",",
+                                dispositionModifier(), ACTION(addDispositionModifier()))))),
+                ows(),
+                ACTION(buildDispositionField()));
+        }
+
+        boolean addDispositionModifier() {
+            this.<Disposition.Builder>peekT().addModifier(new DispositionModifier(match()));
+            return true;
+        }
+
+        boolean buildDispositionField() {
+            push(this.<Disposition.Builder>popT().build());
+            return true;
         }
 
         //    disposition-mode = action-mode OWS "/" OWS sending-mode
@@ -555,18 +587,41 @@ public class MDNReportParser {
 
         //    action-mode = "manual-action" / "automatic-action"
         Rule actionMode() {
-            return FirstOf("manual-action", "automatic-action");
+            return FirstOf(
+                Sequence("manual-action", ACTION(setActionMode(DispositionActionMode.Manual))),
+                Sequence("automatic-action", ACTION(setActionMode(DispositionActionMode.Automatic))));
+        }
+
+        boolean setActionMode(DispositionActionMode actionMode) {
+            this.<Disposition.Builder>peekT().actionMode(actionMode);
+            return true;
         }
 
         //    sending-mode = "MDN-sent-manually" / "MDN-sent-automatically"
         Rule sendingMode() {
-            return FirstOf("MDN-sent-manually", "MDN-sent-automatically");
+            return FirstOf(
+                Sequence("MDN-sent-manually", ACTION(setSendingMode(DispositionSendingMode.Manual))),
+                Sequence("MDN-sent-automatically", ACTION(setSendingMode(DispositionSendingMode.Automatic))));
+        }
+
+        boolean setSendingMode(DispositionSendingMode sendingMode) {
+            this.<Disposition.Builder>peekT().sendingMode(sendingMode);
+            return true;
         }
 
         /*    disposition-type = "displayed" / "deleted" / "dispatched" /
                       "processed"    */
         Rule dispositionType() {
-            return FirstOf("displayed", "deleted", "dispatched", "processed");
+            return FirstOf(
+                Sequence("displayed", ACTION(setDispositionType(DispositionType.Displayed))),
+                Sequence("deleted", ACTION(setDispositionType(DispositionType.Deleted))),
+                Sequence("dispatched", ACTION(setDispositionType(DispositionType.Dispatched))),
+                Sequence("processed", ACTION(setDispositionType(DispositionType.Processed))));
+        }
+
+        boolean setDispositionType(DispositionType type) {
+            this.<Disposition.Builder>peekT().type(type);
+            return true;
         }
 
         //    disposition-modifier = "error" / disposition-modifier-extension
