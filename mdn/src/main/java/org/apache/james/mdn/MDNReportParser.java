@@ -21,6 +21,7 @@ package org.apache.james.mdn;
 
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Gateway;
+import org.apache.james.mdn.fields.OriginalRecipient;
 import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.fields.Text;
 import org.parboiled.BaseParser;
@@ -437,8 +438,32 @@ public class MDNReportParser {
                      "Original-Recipient" ":" OWS address-type OWS
                      ";" OWS generic-address OWS    */
         Rule originalRecipientField() {
-            return Sequence("Original-Recipient", ":", ows(), addressType(), ows(),
-                ";", ows(), genericAddress(), ows());
+            return Sequence(
+                push(OriginalRecipient.builder()),
+                "Original-Recipient", ":",
+                ows(),
+                addressType(), ACTION(setAddressType()),
+                ows(),
+                ";",
+                ows(),
+                genericAddress(), ACTION(setGenericAddress()),
+                ows(),
+                ACTION(buildOriginalRecipient()));
+        }
+
+        boolean setAddressType() {
+            this.<OriginalRecipient.Builder>peekT().addressType(new AddressType(match()));
+            return true;
+        }
+
+        boolean setGenericAddress() {
+            this.<OriginalRecipient.Builder>peekT().originalRecipient(Text.fromRawText(match()));
+            return true;
+        }
+
+        boolean buildOriginalRecipient() {
+            push(this.<OriginalRecipient.Builder>popT().build());
+            return true;
         }
 
         //    address-type = Atom
