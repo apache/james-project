@@ -115,8 +115,8 @@ public class MDNReportTest {
             .type(DispositionType.Processed)
             .build();
         FinalRecipient finalRecipientField = FinalRecipient.builder().finalRecipient(Text.fromRawText("any@domain.com")).build();
-        ExtensionField extensionField1 = new ExtensionField("name1", "value1");
-        ExtensionField extensionField2 = new ExtensionField("name2", "value2");
+        ExtensionField extensionField1 = ExtensionField.builder().fieldName("name1").rawValue("value1").build();
+        ExtensionField extensionField2 = ExtensionField.builder().fieldName("name2").rawValue("value2").build();;
         Gateway gateway = Gateway.builder().name(Text.fromRawText("address")).build();
         OriginalMessageId originalMessageIdField = new OriginalMessageId("msgId");
         OriginalRecipient originalRecipientField = OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build();

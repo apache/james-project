@@ -636,7 +636,7 @@ public class MDNReportFormattingTest {
             .originalRecipientField(OriginalRecipient.builder().originalRecipient(Text.fromRawText("originalRecipient")).build())
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
-         .withExtensionField(new ExtensionField("X-OPENPAAS-IP", "177.177.177.77"))
+         .withExtensionField(ExtensionField.builder().fieldName("X-OPENPAAS-IP").rawValue("177.177.177.77").build())
             .build()
             .formattedValue();
 
@@ -667,8 +667,8 @@ public class MDNReportFormattingTest {
             .originalMessageIdField(new OriginalMessageId("original_message_id"))
             .dispositionField(disposition)
             .withExtensionFields(
-                new ExtensionField("X-OPENPAAS-IP", "177.177.177.77"),
-                new ExtensionField("X-OPENPAAS-PORT", "8000"))
+                ExtensionField.builder().fieldName("X-OPENPAAS-IP").rawValue("177.177.177.77").build(),
+                ExtensionField.builder().fieldName("X-OPENPAAS-PORT").rawValue("8000").build())
             .build()
             .formattedValue();
 
