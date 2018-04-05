@@ -116,7 +116,7 @@ public class ForwardRoutes implements Routes {
         throw ErrorResponder.builder()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .type(ErrorType.INVALID_ARGUMENT)
-            .message("An destination address needs to be specified in the path")
+            .message("A destination address needs to be specified in the path")
             .haltError();
     }
 

@@ -466,7 +466,9 @@ class ForwardRoutesTest {
                 .put(ALICE)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body(is(""));
+                .body("statusCode", is(400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("A destination address needs to be specified in the path"));
         }
 
         @Test
@@ -513,7 +515,9 @@ class ForwardRoutesTest {
                 .delete(ALICE)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .body(is(""));
+                .body("statusCode", is(400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("A destination address needs to be specified in the path"));
         }
 
         @Test
