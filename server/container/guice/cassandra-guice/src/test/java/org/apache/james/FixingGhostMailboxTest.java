@@ -67,7 +67,6 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
@@ -127,10 +126,7 @@ public class FixingGhostMailboxTest {
     public void setup() throws Throwable {
         jmapServer = rule.jmapServer(cassandra.getModule(),
             binder -> binder.bind(WebAdminConfiguration.class)
-            .toInstance(WebAdminConfiguration.builder()
-                .port(new RandomPortSupplier())
-                .enabled()
-                .build()));
+            .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
         jmapServer.start();
         webAdminProbe = jmapServer.getProbe(WebAdminGuiceProbe.class);
         mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);

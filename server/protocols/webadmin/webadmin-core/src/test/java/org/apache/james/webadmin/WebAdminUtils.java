@@ -34,15 +34,8 @@ import com.jayway.restassured.http.ContentType;
 
 public class WebAdminUtils {
 
-    public static WebAdminConfiguration webAdminConfigurationForTesting() {
-        return WebAdminConfiguration.builder()
-            .enabled()
-            .port(new RandomPortSupplier())
-            .build();
-    }
-
     public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
-        return new WebAdminServer(webAdminConfigurationForTesting(),
+        return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             ImmutableSet.copyOf(routes),
             new NoAuthenticationFilter(),
             metricFactory);

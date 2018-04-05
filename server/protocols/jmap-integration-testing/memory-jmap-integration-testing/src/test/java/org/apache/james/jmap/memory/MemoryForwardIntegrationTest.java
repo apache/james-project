@@ -22,7 +22,6 @@ package org.apache.james.jmap.memory;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.ForwardIntegrationTest;
-import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;
 
@@ -35,12 +34,7 @@ public class MemoryForwardIntegrationTest extends ForwardIntegrationTest {
     protected GuiceJamesServer createJmapServer() {
         return memoryJmap
             .jmapServer(binder -> binder.bind(WebAdminConfiguration.class)
-                .toInstance(WebAdminConfiguration.builder()
-                    .enabled()
-                    .corsDisabled()
-                    .host("127.0.0.1")
-                    .port(new RandomPortSupplier())
-                    .build()));
+                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
     }
     
 }

@@ -24,7 +24,6 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.jmap.methods.integration.ForwardIntegrationTest;
-import org.apache.james.webadmin.RandomPortSupplier;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -47,12 +46,7 @@ public class CassandraForwardIntegrationTest extends ForwardIntegrationTest {
     protected GuiceJamesServer createJmapServer() {
         return rule.jmapServer(cassandra.getModule(),
             binder -> binder.bind(WebAdminConfiguration.class)
-                .toInstance(WebAdminConfiguration.builder()
-                    .enabled()
-                    .corsDisabled()
-                    .host("127.0.0.1")
-                    .port(new RandomPortSupplier())
-                    .build()));
+                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
     }
     
 }
