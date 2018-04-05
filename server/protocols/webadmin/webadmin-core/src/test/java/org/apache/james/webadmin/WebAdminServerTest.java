@@ -16,43 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.webadmin;
 
-package org.apache.james.util;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Random;
+import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.util.Port;
+import org.junit.Test;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Range;
+public class WebAdminServerTest {
 
-public class Port {
-    public static final int MAX_PORT_VALUE = 65535;
-    public static final int PRIVILEGED_PORT_BOUND = 1024;
-    private static final Range<Integer> VALID_PORT_RANGE = Range.closed(1, MAX_PORT_VALUE);
-
-    public static int generateValidUnprivilegedPort() {
-        return new Random().nextInt(Port.MAX_PORT_VALUE - PRIVILEGED_PORT_BOUND) + PRIVILEGED_PORT_BOUND;
+    @Test
+    public void getPortShouldThrowWhenNotConfigured() throws Exception {
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
+        assertThatThrownBy(() -> server.getPort())
+            .isInstanceOf(IllegalStateException.class);
     }
 
-    public static void assertValid(int port) {
-        Preconditions.checkArgument(isValid(port), "Port should be between 1 and 65535");
-    }
+    @Test
+    public void getPortShouldReturnPortWhenConfigured() throws Exception {
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory());
+        server.configure(WebAdminServer.NO_CONFIGURATION);
 
-    public static boolean isValid(int port) {
-        return VALID_PORT_RANGE.contains(port);
-    }
+        Port port = server.getPort();
 
-    private final int value;
-
-    public Port(int value) {
-        validate(value);
-        this.value = value;
-    }
-
-    protected void validate(int port) {
-        assertValid(port);
-    }
-
-    public int getValue() {
-        return value;
+        assertThat(port).isNotNull();
     }
 }

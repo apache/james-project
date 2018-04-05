@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.common.collect.ImmutableSet;
@@ -45,12 +46,12 @@ public class WebAdminUtils {
         return buildRequestSpecification(webAdminServer.getPort());
     }
 
-    public static RequestSpecBuilder buildRequestSpecification(PortSupplier portSupplier) {
+    public static RequestSpecBuilder buildRequestSpecification(Port port) {
         return new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(portSupplier.get().getValue());
+            .setPort(port.getValue());
     }
 
 }

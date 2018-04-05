@@ -81,7 +81,7 @@ public class MailQueueRoutesTest {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setBasePath(MailQueueRoutes.BASE_URL)
-            .setPort(server.getPort().get().getValue())
+            .setPort(server.getPort().getValue())
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
             .build();
     }

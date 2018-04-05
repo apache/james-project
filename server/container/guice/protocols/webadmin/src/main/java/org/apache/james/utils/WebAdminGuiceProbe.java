@@ -21,7 +21,7 @@ package org.apache.james.utils;
 
 import javax.inject.Inject;
 
-import org.apache.james.webadmin.PortSupplier;
+import org.apache.james.util.Port;
 import org.apache.james.webadmin.WebAdminServer;
 
 public class WebAdminGuiceProbe implements GuiceProbe {
@@ -32,7 +32,7 @@ public class WebAdminGuiceProbe implements GuiceProbe {
         this.webAdminServer = webAdminServer;
     }
 
-    public PortSupplier getWebAdminPort() {
+    public Port getWebAdminPort() {
         return webAdminServer.getPort();
     }
 

@@ -28,6 +28,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.mdc.LoggingRequestFilter;
 import org.apache.james.webadmin.mdc.LoggingResponseFilter;
@@ -38,6 +39,8 @@ import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
 
 import spark.Service;
 
@@ -52,6 +55,7 @@ public class WebAdminServer implements Configurable {
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
     private final MetricFactory metricFactory;
+    private Port port;
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
@@ -76,6 +80,7 @@ public class WebAdminServer implements Configurable {
             configureMDC();
             routesList.forEach(routes -> routes.define(service));
             service.awaitInitialization();
+            port = new Port(service.port());
             LOGGER.info("Web admin server started");
         }
     }
@@ -123,7 +128,8 @@ public class WebAdminServer implements Configurable {
         service.awaitInitialization();
     }
 
-    public PortSupplier getPort() {
-        return configuration.getPort();
+    public Port getPort() {
+        Preconditions.checkState(port != null, "WebAdminServer should be configured.");
+        return port;
     }
 }
