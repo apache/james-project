@@ -20,6 +20,8 @@
 package org.apache.james.jmap.methods.integration;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -44,9 +46,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -121,16 +121,7 @@ public abstract class GetMailboxesMethodTest {
         dataProbe.addDomain(domain);
         dataProbe.addUser(alice, alicePassword);
         dataProbe.addUser(bob, "bobSecret");
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, alicePassword);
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
+        accessToken = authenticateJamesUser(baseUri(jmapServer), alice, alicePassword);
     }
 
     @After

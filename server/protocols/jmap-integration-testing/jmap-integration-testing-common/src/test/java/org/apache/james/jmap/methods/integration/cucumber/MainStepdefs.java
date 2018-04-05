@@ -19,12 +19,10 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -35,7 +33,6 @@ import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 
 import com.github.steveash.guavate.Guavate;
@@ -62,16 +59,7 @@ public class MainStepdefs {
         aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
         messageIdProbe = jmapServer.getProbe(MessageIdProbe.class);
     }
-    
 
-    public URIBuilder baseUri() {
-        return new URIBuilder()
-                .setScheme("http")
-                .setHost("localhost")
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
-                .setCharset(StandardCharsets.UTF_8);
-    }
-    
     public void tearDown() {
         jmapServer.stop();
     }

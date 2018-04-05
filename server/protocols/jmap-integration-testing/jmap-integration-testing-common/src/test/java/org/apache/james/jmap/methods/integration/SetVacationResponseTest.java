@@ -20,17 +20,16 @@
 package org.apache.james.jmap.methods.integration;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
-import java.nio.charset.StandardCharsets;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -73,18 +72,9 @@ public abstract class SetVacationResponseTest {
 
         jmapServer.getProbe(DataProbeImpl.class).addDomain(USERS_DOMAIN);
         jmapServer.getProbe(DataProbeImpl.class).addUser(USER, PASSWORD);
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER, PASSWORD);
+        accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
 
         await();
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After

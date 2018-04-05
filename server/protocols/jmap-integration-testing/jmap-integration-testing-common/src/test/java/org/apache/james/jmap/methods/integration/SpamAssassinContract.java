@@ -23,6 +23,8 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -31,9 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.utils.DataProbeImpl;
@@ -81,16 +81,7 @@ public interface SpamAssassinContract {
     }
 
     default AccessToken accessTokenFor(GuiceJamesServer james, String user, String password) {
-        return HttpJmapAuthentication.authenticateJamesUser(baseUri(james), user, password);
-    }
-
-    default URIBuilder baseUri(GuiceJamesServer james) {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(james.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
+        return authenticateJamesUser(baseUri(james), user, password);
     }
 
     @Test

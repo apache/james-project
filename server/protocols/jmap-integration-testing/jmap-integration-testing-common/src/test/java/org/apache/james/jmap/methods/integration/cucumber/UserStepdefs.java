@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +32,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 
 import com.github.fge.lambdas.Throwing;
@@ -123,7 +125,7 @@ public class UserStepdefs {
             String password = passwordByUser.get(user);
             Preconditions.checkState(password != null, "unknown user " + user);
 
-            return HttpJmapAuthentication.authenticateJamesUser(mainStepdefs.baseUri(), user, password);
+            return authenticateJamesUser(baseUri(mainStepdefs.jmapServer), user, password);
         });
     }
 

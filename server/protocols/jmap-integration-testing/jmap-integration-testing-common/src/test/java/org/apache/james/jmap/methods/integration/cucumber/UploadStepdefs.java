@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedInputStream;
@@ -68,7 +69,7 @@ public class UploadStepdefs {
     private UploadStepdefs(UserStepdefs userStepdefs, MainStepdefs mainStepdefs) throws URISyntaxException {
         this.userStepdefs = userStepdefs;
         this.mainStepdefs = mainStepdefs;
-        uploadUri = mainStepdefs.baseUri().setPath("/upload").build();
+        uploadUri = baseUri(mainStepdefs.jmapServer).setPath("/upload").build();
     }
 
     @Given("^\"([^\"]*)\" is starting uploading a content$")
@@ -204,7 +205,7 @@ public class UploadStepdefs {
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")
     public void contentShouldBeRetrievable(String username) throws Exception {
         AccessToken accessToken = userStepdefs.authenticate(username);
-        Request request = Request.Get(mainStepdefs.baseUri().setPath("/download/" + _1M_ZEROED_FILE_BLOB_ID).build());
+        Request request = Request.Get(baseUri(mainStepdefs.jmapServer).setPath("/download/" + _1M_ZEROED_FILE_BLOB_ID).build());
         if (accessToken != null) {
             request.addHeader("Authorization", accessToken.serialize());
         }

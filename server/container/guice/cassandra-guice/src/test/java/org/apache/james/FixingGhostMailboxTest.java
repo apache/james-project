@@ -25,6 +25,8 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -41,10 +43,8 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
@@ -151,7 +151,7 @@ public class FixingGhostMailboxTest {
         dataProbe.addDomain(domain);
         dataProbe.addUser(alice, alicePassword);
         dataProbe.addUser(bob, "bobSecret");
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), alice, alicePassword);
+        accessToken = authenticateJamesUser(baseUri(jmapServer), alice, alicePassword);
 
         session = Cluster.builder()
             .addContactPoint(cassandra.getIp())
@@ -196,15 +196,6 @@ public class FixingGhostMailboxTest {
 
     private ByteArrayInputStream generateMessageContent() {
         return new ByteArrayInputStream("Subject: toto\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8));
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(Charsets.UTF_8);
     }
 
     @After

@@ -21,6 +21,8 @@ package org.apache.james.jmap.methods.integration;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.contains;
@@ -31,14 +33,11 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -95,8 +94,8 @@ public abstract class SendMDNMethodTest {
         dataProbe.addUser(HOMER, PASSWORD);
         dataProbe.addUser(BART, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
-        homerAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), HOMER, PASSWORD);
-        bartAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BART, BOB_PASSWORD);
+        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
+        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }
 
     private void bartSendMessageToHomer() {
@@ -162,15 +161,6 @@ public abstract class SendMDNMethodTest {
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.until(() -> !listMessageIdsForAccount(homerAccessToken).isEmpty());
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After

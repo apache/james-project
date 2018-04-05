@@ -22,6 +22,8 @@ import static com.jayway.awaitility.Awaitility.await;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
@@ -31,8 +33,6 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.utils.DataProbeImpl;
@@ -87,17 +87,9 @@ public class ESReporterTest {
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
+        accessToken = authenticateJamesUser(baseUri(server), USERNAME, PASSWORD);
 
         timer = new Timer();
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
     }
 
     @After

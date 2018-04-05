@@ -21,19 +21,18 @@ package org.apache.james.jmap.methods.integration;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.probe.DataProbe;
@@ -96,7 +95,7 @@ public abstract class ForwardIntegrationTest {
     public void messageShouldBeForwardedWhenDefinedInRESTAPI() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
 
-        AccessToken cedricAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), CEDRIC, CEDRIC_PASSWORD);
+        AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -123,7 +122,7 @@ public abstract class ForwardIntegrationTest {
             .body(requestBody)
         .post("/jmap");
 
-        AccessToken bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
+        AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.serialize())
@@ -142,8 +141,8 @@ public abstract class ForwardIntegrationTest {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, ALICE));
 
-        AccessToken cedricAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), CEDRIC, CEDRIC_PASSWORD);
-        AccessToken aliceAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), ALICE, ALICE_PASSWORD);
+        AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
+        AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -170,7 +169,7 @@ public abstract class ForwardIntegrationTest {
             .body(requestBody)
         .post("/jmap");
 
-        AccessToken bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
+        AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.serialize())
@@ -199,8 +198,8 @@ public abstract class ForwardIntegrationTest {
     public void baseRecipientShouldNotReceiveEmailOnDefaultForward() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
 
-        AccessToken cedricAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), CEDRIC, CEDRIC_PASSWORD);
-        AccessToken aliceAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), ALICE, ALICE_PASSWORD);
+        AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
+        AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
         String messageCreationId = "creationId1337";
         String requestBody = "[" +
             "  [" +
@@ -227,7 +226,7 @@ public abstract class ForwardIntegrationTest {
             .body(requestBody)
         .post("/jmap");
 
-        AccessToken bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
+        AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
 
         given()
@@ -240,15 +239,6 @@ public abstract class ForwardIntegrationTest {
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
             .body(ARGUMENTS + ".messageIds", hasSize(0));
-    }
-
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
     }
 
     private String getOutboxId(AccessToken accessToken) {

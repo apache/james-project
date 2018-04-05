@@ -21,18 +21,18 @@ package org.apache.james.jmap;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
+import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
@@ -93,15 +93,6 @@ public abstract class VacationIntegrationTest {
             .build();
     }
 
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(guiceJamesServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
-    }
-
     @After
     public void teardown() {
         guiceJamesServer.stop();
@@ -117,8 +108,8 @@ public abstract class VacationIntegrationTest {
         */
 
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         // User 1 benw@mydomain.tld sets a Vacation on its account
         setVacationResponse(user1AccessToken);
 
@@ -139,8 +130,8 @@ public abstract class VacationIntegrationTest {
     @Test
     public void jmapVacationShouldGenerateAReplyEvenWhenNoText() throws Exception {
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         jmapGuiceProbe.modifyVacation(
             AccountId.fromString(USER_1),
             VacationPatch.builder()
@@ -163,8 +154,8 @@ public abstract class VacationIntegrationTest {
     @Test
     public void jmapVacationShouldHaveSupportForHtmlMail() throws Exception {
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         setHtmlVacationResponse(user1AccessToken);
 
         // When
@@ -187,8 +178,8 @@ public abstract class VacationIntegrationTest {
         */
 
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
 
         // When
         // User 2 matthieu@mydomain.tld sends User 1 a mail
@@ -228,8 +219,8 @@ public abstract class VacationIntegrationTest {
         */
 
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         // User 1 benw@mydomain.tld sets a Vacation on its account
         setVacationResponse(user1AccessToken);
 
@@ -259,8 +250,8 @@ public abstract class VacationIntegrationTest {
         */
 
         // Given
-        AccessToken user1AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_1, PASSWORD);
-        AccessToken user2AccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USER_2, PASSWORD);
+        AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
+        AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         // User 1 benw@mydomain.tld sets a Vacation on its account
         setVacationResponse(user1AccessToken);
         // User 2 matthieu@mydomain.tld sends User 1 a mail
