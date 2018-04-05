@@ -22,6 +22,10 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
+import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
+import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
+import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsInMailbox;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
@@ -34,14 +38,12 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
@@ -488,54 +490,6 @@ public abstract class SendMDNMethodTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", is("invalidArguments"))
             .body(ARGUMENTS + ".description", containsString("Unrecognized MDN Disposition action mode invalid. Should be one of [manual-action, automatic-action]"));
-    }
-
-    private String getInboxId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.INBOX);
-    }
-
-    private String getOutboxId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.OUTBOX);
-    }
-
-    private String getMailboxId(AccessToken accessToken, Role role) {
-        return getAllMailboxesIds(accessToken).stream()
-            .filter(x -> x.get("role").equalsIgnoreCase(role.serialize()))
-            .map(x -> x.get("id"))
-            .findFirst().get();
-    }
-
-    private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
-        return with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
-            .post("/jmap")
-        .andReturn()
-            .body()
-            .jsonPath()
-            .getList(ARGUMENTS + ".list");
-    }
-
-    private List<String> listMessageIdsForAccount(AccessToken accessToken) {
-        return with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {}, \"#0\"]]")
-            .post("/jmap")
-        .then()
-            .extract()
-            .body()
-            .path(ARGUMENTS + ".messageIds");
-    }
-
-    private List<String> listMessageIdsInMailbox(AccessToken accessToken, String mailboxId) {
-        return with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
-            .post("/jmap")
-        .then()
-            .extract()
-            .body()
-            .path(ARGUMENTS + ".messageIds");
     }
 
 }
