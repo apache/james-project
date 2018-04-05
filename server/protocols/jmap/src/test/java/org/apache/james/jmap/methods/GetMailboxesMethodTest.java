@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,6 +52,7 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
+import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.groups.Tuple;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +84,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() throws Exception {
+    public void getMailboxesShouldReturnEmptyListWhenNoMailboxes() {
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 
@@ -129,10 +131,14 @@ public class GetMailboxesMethodTest {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        messageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"), mailboxSession);
-        messageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test2\r\n\r\ntestmail"), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -293,13 +299,19 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnCorrectTotalMessagesCount() throws MailboxException {
+    public void getMailboxesShouldReturnCorrectTotalMessagesCount() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
-        messageManager.appendMessage(MessageManager.AppendCommand.builder().build("Subject: test\r\n\r\ntestmail"), mailboxSession);
-        messageManager.appendMessage(MessageManager.AppendCommand.builder().build("Subject: test2\r\n\r\ntestmail"), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
+        messageManager.appendMessage(MessageManager.AppendCommand.from(
+            Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
@@ -317,7 +329,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
-    public void getMailboxesShouldReturnCorrectUnreadMessagesCount() throws MailboxException {
+    public void getMailboxesShouldReturnCorrectUnreadMessagesCount() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
@@ -327,13 +339,19 @@ public class GetMailboxesMethodTest {
         readMessageFlag.add(Flags.Flag.SEEN);
         messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(defaultUnseenFlag)
-            .build("Subject: test\r\n\r\ntestmail"), mailboxSession);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
         messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(defaultUnseenFlag)
-            .build("Subject: test2\r\n\r\ntestmail"), mailboxSession);
+            .build(Message.Builder.of()
+                .setSubject("test2")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
         messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withFlags(readMessageFlag)
-            .build("Subject: test3\r\n\r\ntestmail"), mailboxSession);
+            .build(Message.Builder.of()
+                .setSubject("test3")
+                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
         GetMailboxesRequest getMailboxesRequest = GetMailboxesRequest.builder()
                 .build();
 

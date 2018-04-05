@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.Reader;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.pop3server.netty.POP3Server;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.POP3BeforeSMTPHelper;
@@ -390,8 +392,11 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
-                .build("Subject: test\r\n\r\n" + i), session);
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setSubject("test")
+                    .setBody(String.valueOf(i), StandardCharsets.UTF_8)),
+                session);
         }
 
         pop3Client.login("foo2", "bar2");
@@ -440,8 +445,10 @@ public class POP3ServerTest {
 
         int msgCount = 100;
         for (int i = 0; i < msgCount; i++) {
-            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.builder()
-                .build(("Subject: test\r\n\r\n" + i)), session);
+            mailboxManager.getMailbox(mailboxPath, session).appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setSubject("test")
+                    .setBody(String.valueOf(i), StandardCharsets.UTF_8)), session);
         }
 
         pop3Client.login("foo2", "bar2");

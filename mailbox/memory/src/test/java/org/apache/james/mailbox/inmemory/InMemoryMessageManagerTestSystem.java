@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -37,6 +38,8 @@ import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.store.MessageManagerTestSystem;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 
 import com.google.common.base.Throwables;
 
@@ -45,15 +48,23 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
     private static final long ONE_HUNDRED = 100;
     private static final int UID_VALIDITY = 1024;
-    public static final byte[] CONTENT = "Subject: test\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8);
 
     private final MailboxManager mailboxManager;
     private Optional<MessageId> lastMessageIdUsed;
+    private final Message message;
 
     public InMemoryMessageManagerTestSystem(MailboxManager mailboxManager) throws MailboxException {
         super(mailboxManager);
         this.mailboxManager = mailboxManager;
         this.lastMessageIdUsed = Optional.empty();
+        try {
+            this.message = Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)
+                .build();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     @Override
@@ -69,11 +80,11 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, session);
             MessageId messageId = messageManager.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(flags)
-                .build(CONTENT), session)
+                .build(message), session)
                     .getMessageId();
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
-        } catch (MailboxException e) {
+        } catch (MailboxException | IOException e) {
             throw Throwables.propagate(e);
         }
     }
@@ -107,6 +118,10 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
     @Override
     public int getConstantMessageSize() {
-        return CONTENT.length;
+        try {
+            return DefaultMessageWriter.asBytes(message).length;
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 }

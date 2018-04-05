@@ -21,12 +21,14 @@ package org.apache.james.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxManager;
@@ -41,6 +43,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mime4j.dom.Message;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -86,11 +89,16 @@ public abstract class MailboxManagerTest {
 
     private MailboxManager mailboxManager;
     private MailboxSession session;
+    private Message.Builder message;
 
     protected abstract MailboxManager provideMailboxManager() throws MailboxException;
 
     public void setUp() throws Exception {
         this.mailboxManager = new MockMailboxManager(provideMailboxManager()).getMockMailboxManager();
+
+        this.message = Message.Builder.of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8);
     }
 
     public void tearDown() throws Exception {
@@ -233,15 +241,14 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws MailboxException {
+    public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws Exception {
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath nestedFolder = MailboxPath.forUser(USER_2, "INBOX.testfolder");
         mailboxManager.createMailbox(nestedFolder, session);
         
         assertThat(mailboxManager.mailboxExists(nestedFolder, session)).isTrue();
         mailboxManager.getMailbox(MailboxPath.inbox(session), session)
-            .appendMessage(MessageManager.AppendCommand.builder()
-                .build("Subject: test\r\n\r\ntestmail"), session);
+            .appendMessage(AppendCommand.from(message), session);
     }
 
     @Test
@@ -574,7 +581,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesAreSpecified() throws MailboxException {
+    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesAreSpecified() throws Exception {
         Assume.assumeTrue(mailboxManager
             .getSupportedMessageCapabilities()
             .contains(MailboxManager.MessageCapabilities.UniqueID));
@@ -584,18 +591,16 @@ public abstract class MailboxManagerTest {
         MailboxPath cacahueteFolder = MailboxPath.forUser(USER_1, "CACAHUETE");
         MailboxId cacahueteMailboxId = mailboxManager.createMailbox(cacahueteFolder, session).get();
         MessageManager cacahueteMessageManager = mailboxManager.getMailbox(cacahueteMailboxId, session);
-        MessageId cacahueteMessageId = cacahueteMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            session)
+        MessageId cacahueteMessageId = cacahueteMessageManager
+            .appendMessage(AppendCommand.from(message), session)
             .getMessageId();
 
         MailboxPath pirouetteFilder = MailboxPath.forUser(USER_1, "PIROUETTE");
         MailboxId pirouetteMailboxId = mailboxManager.createMailbox(pirouetteFilder, session).get();
         MessageManager pirouetteMessageManager = mailboxManager.getMailbox(pirouetteMailboxId, session);
 
-        MessageId pirouetteMessageId = pirouetteMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            session)
+        MessageId pirouetteMessageId = pirouetteMessageManager
+            .appendMessage(AppendCommand.from(message), session)
             .getMessageId();
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
@@ -608,7 +613,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws MailboxException {
+    public void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -617,9 +622,8 @@ public abstract class MailboxManagerTest {
         MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
         MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
 
-        MessageId messageId = delegatedMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            sessionFromDelegater)
+        MessageId messageId = delegatedMessageManager
+            .appendMessage(AppendCommand.from(message), sessionFromDelegater)
             .getMessageId();
 
         mailboxManager.setRights(delegatedMailboxPath,
@@ -638,7 +642,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws MailboxException {
+    public void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -647,9 +651,7 @@ public abstract class MailboxManagerTest {
         MailboxId delegatedMailboxId = mailboxManager.createMailbox(delegatedMailboxPath, sessionFromDelegater).get();
         MessageManager delegatedMessageManager = mailboxManager.getMailbox(delegatedMailboxId, sessionFromDelegater);
 
-        delegatedMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            sessionFromDelegater);
+        delegatedMessageManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
 
         mailboxManager.setRights(delegatedMailboxPath,
             MailboxACL.EMPTY.apply(MailboxACL.command()
@@ -667,7 +669,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldOnlySearchInMailboxICanRead() throws MailboxException {
+    public void searchForMessageShouldOnlySearchInMailboxICanRead() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -676,9 +678,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
         MessageManager otherMailboxManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
 
-        otherMailboxManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            sessionFromDelegater);
+        otherMailboxManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
             .from(new SearchQuery())
@@ -689,7 +689,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws MailboxException {
+    public void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -698,9 +698,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, sessionFromDelegater).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, sessionFromDelegater);
 
-        otherMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"),
-            sessionFromDelegater);
+        otherMessageManager.appendMessage(AppendCommand.from(message), sessionFromDelegater);
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
             .from(new SearchQuery())
@@ -712,7 +710,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldCorrectlyExcludeMailbox() throws MailboxException {
+    public void searchForMessageShouldCorrectlyExcludeMailbox() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -720,9 +718,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
 
-        otherMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build("Subject: test\r\n\r\ntestmail"),
-            session);
+        otherMessageManager.appendMessage(AppendCommand.from(message), session);
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
             .from(new SearchQuery())
@@ -734,7 +730,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldPriorizeExclusionFromInclusion() throws MailboxException {
+    public void searchForMessageShouldPriorizeExclusionFromInclusion() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -742,8 +738,7 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
 
-        otherMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"), session);
+        otherMessageManager.appendMessage(AppendCommand.from(message), session);
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
             .from(new SearchQuery())
@@ -756,7 +751,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldOnlySearchInGivenMailbox() throws MailboxException {
+    public void searchForMessageShouldOnlySearchInGivenMailbox() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -769,13 +764,10 @@ public abstract class MailboxManagerTest {
         MailboxId otherMailboxId = mailboxManager.createMailbox(otherMailboxPath, session).get();
         MessageManager otherMessageManager = mailboxManager.getMailbox(otherMailboxId, session);
 
-        otherMessageManager.appendMessage(
-            MessageManager.AppendCommand.builder()
-                .build("Subject: test\r\n\r\ntestmail"),
-            session);
+        otherMessageManager.appendMessage(AppendCommand.from(message), session);
 
-        MessageId messageId = searchedMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build("Subject: test\r\n\r\ntestmail"), session)
+        MessageId messageId = searchedMessageManager
+            .appendMessage(AppendCommand.from(message), session)
             .getMessageId();
 
         MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
@@ -817,7 +809,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws MailboxException {
+    public void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -829,10 +821,8 @@ public abstract class MailboxManagerTest {
                 .rights(MailboxACL.Right.Lookup)
                 .asAddition()),
             session1);
-        String message = "Subject: any\n\nbdy";
-        mailboxManager.getMailbox(inbox1, session1)
-            .appendMessage(MessageManager.AppendCommand.builder()
-                .build(message), session1);
+
+        mailboxManager.getMailbox(inbox1, session1).appendMessage(AppendCommand.from(message), session1);
 
         MailboxCounters mailboxCounters = mailboxManager.getMailbox(inbox1, session2)
             .getMailboxCounters(session2);
@@ -845,7 +835,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getMailboxCountersShouldReturnStoredValueWhenReadRight() throws MailboxException {
+    public void getMailboxCountersShouldReturnStoredValueWhenReadRight() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -857,9 +847,9 @@ public abstract class MailboxManagerTest {
                 .rights(MailboxACL.Right.Lookup, MailboxACL.Right.Read)
                 .asAddition()),
             session1);
-        String message = "Subject: any\n\nbdy";
+
         mailboxManager.getMailbox(inbox1, session1)
-            .appendMessage(MessageManager.AppendCommand.builder()
+            .appendMessage(AppendCommand.builder()
                 .recent()
                 .build(message), session1);
 
@@ -874,7 +864,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws MailboxException {
+    public void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -886,9 +876,9 @@ public abstract class MailboxManagerTest {
                 .rights(MailboxACL.Right.Lookup)
                 .asAddition()),
             session1);
-        String message ="Subject: any\n\nbdy";
+
         mailboxManager.getMailbox(inbox1, session1)
-            .appendMessage(MessageManager.AppendCommand.builder()
+            .appendMessage(AppendCommand.builder()
                 .recent()
                 .build(message), session1);
 

@@ -21,6 +21,7 @@ package org.apache.james.mailbox;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mime4j.dom.Message;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -99,8 +101,11 @@ public abstract class MailboxManagerStressTest {
 
                     mailboxManager.startProcessingRequest(mailboxSession);
                     MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
-                    ComposedMessageId messageId = m.appendMessage(MessageManager.AppendCommand.builder()
-                        .build("Subject: test\r\n\r\ntestmail"), mailboxSession);
+                    ComposedMessageId messageId = m.appendMessage(
+                        MessageManager.AppendCommand
+                            .from(Message.Builder.of()
+                                .setSubject("test")
+                                .setBody("testmail", StandardCharsets.UTF_8)), mailboxSession);
 
                     System.out.println("Append message with uid=" + messageId.getUid());
                     if (uids.put(messageId.getUid(), new Object()) != null) {

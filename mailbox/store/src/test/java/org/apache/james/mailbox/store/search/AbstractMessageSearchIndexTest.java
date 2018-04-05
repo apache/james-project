@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.mail.Flags;
 
@@ -50,7 +52,6 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
-import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.Assume;
@@ -1338,10 +1339,8 @@ public abstract class AbstractMessageSearchIndexTest {
         Message message = Message.Builder.of()
                 .setBody(multipart)
                 .build();
-        ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager.appendMessage(
-            MessageManager.AppendCommand.builder()
-                .build(DefaultMessageWriter.asBytes(message)),
-            session);
+        ComposedMessageId messageWithBeautifulBananaAsPDFAttachment = myFolderMessageManager
+            .appendMessage(MessageManager.AppendCommand.from(message), session);
         await();
 
         SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentContains("beautiful banana"));
@@ -1377,13 +1376,22 @@ public abstract class AbstractMessageSearchIndexTest {
         Date date3 = simpleDateFormat.parse("2017-08-25");
         ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date1)
-            .build("Subject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
         ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date2)
-            .build("Subject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
         ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date3)
-            .build("Subject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
 
         await();
 
@@ -1408,13 +1416,22 @@ public abstract class AbstractMessageSearchIndexTest {
         Date date3 = simpleDateFormat.parse("2017-08-25");
         ComposedMessageId message1 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date1)
-            .build("Subject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
         ComposedMessageId message2 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date2)
-            .build("Date: Wed, 23 Aug 2017 00:00:00 +0200\r\nSubject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setDate(new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                    .parse("2017/08/23 00:00:00 "), TimeZone.getTimeZone(ZoneId.of("+0200")))
+                .setBody("testmail", StandardCharsets.UTF_8)),
+            session);
         ComposedMessageId message3 = messageManager.appendMessage(MessageManager.AppendCommand.builder()
             .withInternalDate(date3)
-            .build("Subject: test\r\n\r\ntestmail"), session);
+            .build(Message.Builder.of()
+                .setSubject("test")
+                .setBody("testmail", StandardCharsets.UTF_8)), session);
 
         await();
 

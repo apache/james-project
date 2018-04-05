@@ -20,8 +20,8 @@
 package org.apache.james.mailbox;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -42,6 +42,8 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.message.DefaultMessageWriter;
 
 /**
  * Interface which represent a Mailbox
@@ -146,6 +148,15 @@ public interface MessageManager {
     ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
 
     class AppendCommand {
+
+        public static AppendCommand from(Message.Builder builder) throws IOException {
+            return builder().build(builder);
+        }
+
+        public static AppendCommand from(Message message) throws IOException {
+            return builder().build(message);
+        }
+
         public static class Builder {
             private Optional<Date> internalDate;
             private Optional<Boolean> isRecent;
@@ -188,12 +199,16 @@ public interface MessageManager {
                     flags.orElse(new Flags()));
             }
 
-            public AppendCommand build(String msgIn) {
-                return build(msgIn.getBytes(StandardCharsets.UTF_8));
-            }
-
             public AppendCommand build(byte[] msgIn) {
                 return build(new ByteArrayInputStream(msgIn));
+            }
+
+            public AppendCommand build(Message message) throws IOException {
+                return build(DefaultMessageWriter.asBytes(message));
+            }
+
+            public AppendCommand build(Message.Builder messageBuilder) throws IOException {
+                return build(messageBuilder.build());
             }
         }
 
