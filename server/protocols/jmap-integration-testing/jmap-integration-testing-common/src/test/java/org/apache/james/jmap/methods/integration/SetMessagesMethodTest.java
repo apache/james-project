@@ -23,10 +23,18 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.TestingConstants.ALICE;
+import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.BOB;
+import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
+import static org.apache.james.jmap.TestingConstants.IMAP_PORT;
+import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.SECOND_ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.SECOND_NAME;
+import static org.apache.james.jmap.TestingConstants.SMTP_PORT;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -118,16 +126,10 @@ import com.jayway.restassured.parsing.Parser;
 import com.jayway.restassured.specification.ResponseSpecification;
 
 public abstract class SetMessagesMethodTest {
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
-    private static final int IMAP_PORT = 1143;
     private static final String FORWARDED = "$Forwarded";
     private static final int _1MB = 1024 * 1024;
-    private static final String USERS_DOMAIN = "domain.tld";
-    private static final String USERNAME = "username@" + USERS_DOMAIN;
-    private static final String BOB = "bob@" + USERS_DOMAIN;
+    private static final String USERNAME = "username@" + DOMAIN;
     private static final String PASSWORD = "password";
-    private static final String BOB_PASSWORD = "bobPassword";
     private static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
 
@@ -164,7 +166,7 @@ public abstract class SetMessagesMethodTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         RestAssured.defaultParser = Parser.JSON;
 
-        dataProbe.addDomain(USERS_DOMAIN);
+        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME, PASSWORD);
         dataProbe.addUser(BOB, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
@@ -1218,11 +1220,10 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldReturnErrorWhenUserIsNotTheOwnerOfOneOfTheMailboxes() throws Exception {
-        String alice = "alice@" + USERS_DOMAIN;
-        dataProbe.addUser(alice, "alicepassword");
-        MailboxId aliceOutbox = mailboxProbe.createMailbox("#private", alice, DefaultMailboxes.OUTBOX);
+        dataProbe.addUser(ALICE, ALICE_PASSWORD);
+        MailboxId aliceOutbox = mailboxProbe.createMailbox("#private", ALICE, DefaultMailboxes.OUTBOX);
 
-        aclProbe.replaceRights(MailboxPath.forUser(alice, DefaultMailboxes.OUTBOX), USERNAME, MailboxACL.FULL_RIGHTS);
+        aclProbe.replaceRights(MailboxPath.forUser(ALICE, DefaultMailboxes.OUTBOX), USERNAME, MailboxACL.FULL_RIGHTS);
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
@@ -2712,7 +2713,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldDeliverMessageToRecipient() throws Exception {
         // Sender
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -2758,7 +2759,7 @@ public abstract class SetMessagesMethodTest {
 
         MessageAppender.fillMailbox(mailboxProbe, USERNAME, MailboxConstants.INBOX);
 
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -2803,7 +2804,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldStripBccFromDeliveredEmail() throws Exception {
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String bccRecipient = BOB;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
@@ -2860,7 +2861,7 @@ public abstract class SetMessagesMethodTest {
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -2875,7 +2876,7 @@ public abstract class SetMessagesMethodTest {
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
             "        \"from\": { \"email\": \"" + fromAddress + "\"}," +
             "        \"to\": [{ \"name\": \"recipient\", \"email\": \"" + recipientAddress + "\"}]," +
-            "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + USERS_DOMAIN + "\" }]," +
+            "        \"bcc\": [{ \"name\": \"BOB\", \"email\": \"bob@" + DOMAIN + "\" }]," +
             "        \"cc\": [{ \"name\": \"ALICE\"}]," +
             "        \"subject\": \"Thank you for joining example.com!\"," +
             "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
@@ -2914,7 +2915,7 @@ public abstract class SetMessagesMethodTest {
         // Sender
 
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -2988,7 +2989,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSendAReadableHtmlMessage() throws Exception {
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -3028,7 +3029,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesWhenSavingToDraftsShouldNotSendMessage() throws Exception {
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String recipientPassword = "password";
         dataProbe.addUser(recipientAddress, recipientPassword);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -3075,7 +3076,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesWhenSavingToRegularMailboxShouldNotSendMessage() throws Exception {
         String sender = USERNAME;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, sender, "regular");
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String recipientPassword = "password";
         dataProbe.addUser(recipientAddress, recipientPassword);
         await();
@@ -3135,7 +3136,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldSendAReadableTextPlusHtmlMessage() throws Exception {
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
@@ -4370,7 +4371,7 @@ public abstract class SetMessagesMethodTest {
     
     @Test
     public void setMessagesShouldVerifyHeaderOfMessageInInbox() throws Exception {
-        String toUsername = "username1@" + USERS_DOMAIN;
+        String toUsername = "username1@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(toUsername, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, DefaultMailboxes.INBOX);
@@ -4407,7 +4408,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldVerifyHeaderOfMessageInSent() throws Exception {
-        String toUsername = "username1@" + USERS_DOMAIN;
+        String toUsername = "username1@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(toUsername, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, DefaultMailboxes.INBOX);
@@ -4870,7 +4871,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldSetUserAddedHeadersInSent() throws Exception {
-        String toUsername = "username1@" + USERS_DOMAIN;
+        String toUsername = "username1@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(toUsername, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, toUsername, DefaultMailboxes.INBOX);
@@ -5387,7 +5388,7 @@ public abstract class SetMessagesMethodTest {
             .sender(fromAddress)
             .recipient(fromAddress)
             .build();
-        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, USERS_DOMAIN)) {
+        try (SMTPMessageSender messageSender = SMTPMessageSender.noAuthentication(LOCALHOST_IP, SMTP_PORT, DOMAIN)) {
             messageSender.sendMessage(mail);
             calmlyAwait.atMost(Duration.ONE_MINUTE).until(messageSender::messageHasBeenSent);
         }
@@ -5428,7 +5429,7 @@ public abstract class SetMessagesMethodTest {
         String sentMailboxId = getMailboxId(accessToken, Role.SENT);
 
         // Recipient
-        String recipientAddress = "recipient" + "@" + USERS_DOMAIN;
+        String recipientAddress = "recipient" + "@" + DOMAIN;
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);

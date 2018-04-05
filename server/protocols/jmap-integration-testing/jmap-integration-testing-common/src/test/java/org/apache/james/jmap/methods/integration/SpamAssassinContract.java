@@ -26,6 +26,8 @@ import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.IMAP_PORT;
+import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
@@ -60,8 +62,6 @@ public interface SpamAssassinContract {
     String ALICE_PASSWORD = "alicePassword";
     String PAUL = "paul@" + RECIPIENTS_DOMAIN;
     String PAUL_PASSWORD = "paulPassword";
-    String LOCALHOST = "127.0.0.1";
-    int IMAP_PORT = 1143;
 
     @BeforeEach
     default void setup(JamesWithSpamAssassin james) throws Throwable {
@@ -162,7 +162,7 @@ public interface SpamAssassinContract {
             .path(ARGUMENTS + ".messageIds");
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(ALICE, ALICE_PASSWORD)
                 .select(IMAPMessageReader.INBOX);
 
@@ -209,7 +209,7 @@ public interface SpamAssassinContract {
             .path(ARGUMENTS + ".messageIds");
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(ALICE, ALICE_PASSWORD)
                 .select(IMAPMessageReader.INBOX);
 
@@ -395,7 +395,7 @@ public interface SpamAssassinContract {
 
         // Alice is moving this message out of Spam -> forgetting in SpamAssassin
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(ALICE, ALICE_PASSWORD)
                 .select("Spam");
 
@@ -455,7 +455,7 @@ public interface SpamAssassinContract {
 
         // Alice is deleting this message
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
-            imapMessageReader.connect(LOCALHOST, IMAP_PORT)
+            imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
                 .login(ALICE, ALICE_PASSWORD)
                 .select("Spam");
 

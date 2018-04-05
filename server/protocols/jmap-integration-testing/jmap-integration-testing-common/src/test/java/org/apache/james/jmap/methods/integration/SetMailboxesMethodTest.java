@@ -24,6 +24,7 @@ import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.FIRST_MAILBOX;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
@@ -69,8 +70,6 @@ import com.jayway.restassured.RestAssured;
 
 public abstract class SetMailboxesMethodTest {
 
-    private static final String USERS_DOMAIN = "domain.tld";
-
     private static final String ADMINISTER = String.valueOf(Right.Administer.asCharacter());
     private static final String WRITE = String.valueOf(Right.Write.asCharacter());
     private static final String DELETE_MESSAGES = String.valueOf(Right.DeleteMessages.asCharacter());
@@ -99,9 +98,9 @@ public abstract class SetMailboxesMethodTest {
                 .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
-        username = "username@" + USERS_DOMAIN;
+        username = "username@" + DOMAIN;
         String password = "password";
-        dataProbe.addDomain(USERS_DOMAIN);
+        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(username, password);
         inboxId = mailboxProbe.createMailbox("#private", username, DefaultMailboxes.INBOX);
         accessToken = authenticateJamesUser(baseUri(jmapServer), username, password);
@@ -1177,7 +1176,7 @@ public abstract class SetMailboxesMethodTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + mailboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "          \"sharedWith\" : {\"user@" + DOMAIN + "\": [\"a\", \"w\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +
@@ -1286,7 +1285,7 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldApplyWhenSettingNewACL() {
         String myBox = "myBox";
-        String user = "user@" + USERS_DOMAIN;
+        String user = "user@" + DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
         String requestBody =
             "[" +
@@ -1322,7 +1321,7 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldModifyStoredDataWhenUpdatingACL() {
         String myBox = "myBox";
-        String user = "user@" + USERS_DOMAIN;
+        String user = "user@" + DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
 
         with()
@@ -1422,8 +1421,8 @@ public abstract class SetMailboxesMethodTest {
     @Test
     public void updateShouldModifyStoredDataWhenSwitchingACLUser() {
         String myBox = "myBox";
-        String user1 = "user1@" + USERS_DOMAIN;
-        String user2 = "user2@" + USERS_DOMAIN;
+        String user1 = "user1@" + DOMAIN;
+        String user2 = "user2@" + DOMAIN;
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, myBox);
 
         with()
@@ -2122,7 +2121,7 @@ public abstract class SetMailboxesMethodTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + inboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "          \"sharedWith\" : {\"user@" + DOMAIN + "\": [\"a\", \"w\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +
@@ -2150,7 +2149,7 @@ public abstract class SetMailboxesMethodTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + outboxId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "          \"sharedWith\" : {\"user@" + DOMAIN + "\": [\"a\", \"w\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +
@@ -2181,7 +2180,7 @@ public abstract class SetMailboxesMethodTest {
                 "    {" +
                 "      \"update\": {" +
                 "        \"" + draftId.serialize() + "\" : {" +
-                "          \"sharedWith\" : {\"user@" + USERS_DOMAIN + "\": [\"a\", \"w\"]}" +
+                "          \"sharedWith\" : {\"user@" + DOMAIN + "\": [\"a\", \"w\"]}" +
                 "        }" +
                 "      }" +
                 "    }," +

@@ -28,6 +28,7 @@ import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsInMailbox;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
@@ -66,9 +67,8 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.parsing.Parser;
 
 public abstract class SendMDNMethodTest {
-    private static final String USERS_DOMAIN = "domain.tld";
-    private static final String HOMER = "homer@" + USERS_DOMAIN;
-    private static final String BART = "bart@" + USERS_DOMAIN;
+    private static final String HOMER = "homer@" + DOMAIN;
+    private static final String BART = "bart@" + DOMAIN;
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
 
@@ -92,7 +92,7 @@ public abstract class SendMDNMethodTest {
                 .build();
         RestAssured.defaultParser = Parser.JSON;
 
-        dataProbe.addDomain(USERS_DOMAIN);
+        dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(HOMER, PASSWORD);
         dataProbe.addUser(BART, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);

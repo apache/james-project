@@ -25,7 +25,14 @@ import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.isAnyMessageFoundInRecipientsMailboxes;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ALICE;
+import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.BOB;
+import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
+import static org.apache.james.jmap.TestingConstants.CEDRIC;
+import static org.apache.james.jmap.TestingConstants.CEDRIC_PASSWORD;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
@@ -49,15 +56,6 @@ import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 
 public abstract class ForwardIntegrationTest {
-
-    private static final String DOMAIN = "domain";
-    private static final String BOB = "bob@" + DOMAIN;
-    private static final String BOB_PASSWORD = "123456";
-    private static final String ALICE = "alice@" + DOMAIN;
-    private static final String ALICE_PASSWORD = "789123";
-    private static final String CEDRIC = "cedric@" + DOMAIN;
-    private static final String CEDRIC_PASSWORD = "456789";
-
 
     protected abstract GuiceJamesServer createJmapServer();
 

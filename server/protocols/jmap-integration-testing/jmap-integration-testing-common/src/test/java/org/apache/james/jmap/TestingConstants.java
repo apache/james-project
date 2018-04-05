@@ -51,4 +51,18 @@ public interface TestingConstants {
     String SECOND_NAME = "[1][0]";
     String SECOND_ARGUMENTS = "[1][1]";
 
+    String DOMAIN = "domain.tld";
+    String BOB = "bob@" + DOMAIN;
+    String BOB_PASSWORD = "123456";
+    String ALICE = "alice@" + DOMAIN;
+    String ALICE_PASSWORD = "789123";
+    String CEDRIC = "cedric@" + DOMAIN;
+    String CEDRIC_PASSWORD = "456789";
+
+
+    String LOCALHOST_IP = "127.0.0.1";
+    int SMTP_PORT = 1025;
+    int IMAP_PORT = 1143;
+
+
 }

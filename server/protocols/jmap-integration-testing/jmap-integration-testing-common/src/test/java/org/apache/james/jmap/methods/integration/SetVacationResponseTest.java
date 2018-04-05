@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.given;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +49,7 @@ import com.jayway.restassured.http.ContentType;
 
 public abstract class SetVacationResponseTest {
 
-    private static final String USERS_DOMAIN = "domain.tld";
-    public static final String USER = "username@" + USERS_DOMAIN;
+    public static final String USER = "username@" + DOMAIN;
     public static final String PASSWORD = "password";
     public static final String SUBJECT = "subject";
     private JmapGuiceProbe jmapGuiceProbe;
@@ -70,7 +70,7 @@ public abstract class SetVacationResponseTest {
                 .setPort(jmapGuiceProbe.getJmapPort())
                 .build();
 
-        jmapServer.getProbe(DataProbeImpl.class).addDomain(USERS_DOMAIN);
+        jmapServer.getProbe(DataProbeImpl.class).addDomain(DOMAIN);
         jmapServer.getProbe(DataProbeImpl.class).addUser(USER, PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
 

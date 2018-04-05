@@ -20,6 +20,9 @@
 package org.apache.james.jmap;
 
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
+import static org.apache.james.jmap.TestingConstants.DOMAIN;
+import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
+import static org.apache.james.jmap.TestingConstants.SMTP_PORT;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 
@@ -45,14 +48,11 @@ import org.junit.Test;
 
 public abstract class VacationRelayIntegrationTest {
 
-    private static final String DOMAIN = "mydomain.tld";
     private static final String USER = "benwa";
     private static final String USER_WITH_DOMAIN = USER + '@' + DOMAIN;
     private static final String PASSWORD = "secret";
     private static final String REASON = "Message explaining my wonderful vacations";
 
-    private static final String LOCALHOST_IP = "127.0.0.1";
-    private static final int SMTP_PORT = 1025;
 
     @Rule
     public FakeSmtp fakeSmtp = new FakeSmtp();

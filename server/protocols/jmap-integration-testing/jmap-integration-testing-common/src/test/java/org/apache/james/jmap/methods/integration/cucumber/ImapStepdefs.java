@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.IMAP_PORT;
+import static org.apache.james.transport.mailets.remote.delivery.HeloNameProvider.LOCALHOST;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
@@ -37,10 +39,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class ImapStepdefs {
-
-    private static final int IMAP_PORT = 1143;
-    private static final String LOCALHOST = "127.0.0.1";
-
     private final UserStepdefs userStepdefs;
     private final MainStepdefs mainStepdefs;
     private final Map<String, IMAPMessageReader> imapConnections;
