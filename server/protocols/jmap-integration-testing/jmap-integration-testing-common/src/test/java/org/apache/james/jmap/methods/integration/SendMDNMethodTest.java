@@ -21,9 +21,8 @@ package org.apache.james.jmap.methods.integration;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
+import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -61,8 +60,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.parsing.Parser;
 
 public abstract class SendMDNMethodTest {
@@ -89,10 +86,7 @@ public abstract class SendMDNMethodTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-                .setContentType(ContentType.JSON)
-                .setAccept(ContentType.JSON)
-                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+        RestAssured.requestSpecification = jmapRequestSpecBuilder
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
         RestAssured.defaultParser = Parser.JSON;

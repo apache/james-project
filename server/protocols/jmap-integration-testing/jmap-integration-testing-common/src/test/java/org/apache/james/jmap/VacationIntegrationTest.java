@@ -21,9 +21,8 @@ package org.apache.james.jmap;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
+import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -50,8 +49,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
 
 public abstract class VacationIntegrationTest {
 
@@ -91,14 +88,8 @@ public abstract class VacationIntegrationTest {
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig()
-                .encoderConfig(
-                    encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(jmapGuiceProbe
-                .getJmapPort())
+        RestAssured.requestSpecification = jmapRequestSpecBuilder
+            .setPort(jmapGuiceProbe.getJmapPort())
             .build();
     }
 
