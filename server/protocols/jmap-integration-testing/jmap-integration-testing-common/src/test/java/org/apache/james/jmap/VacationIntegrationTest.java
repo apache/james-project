@@ -23,6 +23,9 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.SECOND_ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.SECOND_NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.empty;
@@ -52,9 +55,6 @@ import com.jayway.restassured.RestAssured;
 
 public abstract class VacationIntegrationTest {
 
-    private static final String ARGUMENTS = "[0][1]";
-    private static final String SECOND_NAME = "[1][0]";
-    private static final String SECOND_ARGUMENTS = "[1][1]";
     private static final String DOMAIN = "mydomain.tld";
     private static final String USER_1 = "benwa@" + DOMAIN;
     private static final String USER_2 = "matthieu@" + DOMAIN;

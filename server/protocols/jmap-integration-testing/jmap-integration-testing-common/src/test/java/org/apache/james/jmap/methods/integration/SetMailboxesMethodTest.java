@@ -23,6 +23,9 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.FIRST_MAILBOX;
+import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -66,9 +69,6 @@ import com.jayway.restassured.RestAssured;
 
 public abstract class SetMailboxesMethodTest {
 
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
-    private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
     private static final String USERS_DOMAIN = "domain.tld";
 
     private static final String ADMINISTER = String.valueOf(Right.Administer.asCharacter());

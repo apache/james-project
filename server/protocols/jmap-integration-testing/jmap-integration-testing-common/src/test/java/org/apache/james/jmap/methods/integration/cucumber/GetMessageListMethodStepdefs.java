@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -34,7 +35,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 @ScenarioScoped
 public class GetMessageListMethodStepdefs {
 
-    private static final String ARGUMENTS = "[0][1]";
     private final MainStepdefs mainStepdefs;
     private final HttpClient httpClient;
     private final MessageIdStepdefs messageIdStepdefs;

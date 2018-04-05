@@ -22,6 +22,10 @@ package org.apache.james.jmap.methods.integration;
 import static com.jayway.restassured.RestAssured.given;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.FIRST_MAILBOX;
+import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.jmap.TestingConstants.SECOND_MAILBOX;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -78,11 +82,6 @@ import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 
 public abstract class GetMailboxesMethodTest {
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
-    private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
-    private static final String SECOND_MAILBOX = ARGUMENTS + ".list[1]";
-
     public static final String READ = String.valueOf(Right.Read.asCharacter());
     public static final String LOOKUP = String.valueOf(Right.Lookup.asCharacter());
     public static final String ADMINISTER = String.valueOf(Right.Administer.asCharacter());

@@ -25,6 +25,8 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -50,8 +52,6 @@ import com.jayway.restassured.parsing.Parser;
 
 public interface SpamAssassinContract {
 
-    String NAME = "[0][0]";
-    String ARGUMENTS = "[0][1]";
     String BOBS_DOMAIN = "spamer.com";
     String BOB = "bob@" + BOBS_DOMAIN;
     String BOB_PASSWORD = "bobPassword";

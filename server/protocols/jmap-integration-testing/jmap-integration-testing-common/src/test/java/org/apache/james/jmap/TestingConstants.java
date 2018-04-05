@@ -44,4 +44,11 @@ public interface TestingConstants {
         .setAccept(ContentType.JSON)
         .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)));
 
+    String NAME = "[0][0]";
+    String ARGUMENTS = "[0][1]";
+    String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
+    String SECOND_MAILBOX = ARGUMENTS + ".list[1]";
+    String SECOND_NAME = "[1][0]";
+    String SECOND_ARGUMENTS = "[1][1]";
+
 }

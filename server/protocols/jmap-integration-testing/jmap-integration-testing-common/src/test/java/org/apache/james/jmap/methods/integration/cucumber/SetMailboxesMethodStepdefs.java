@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,9 +53,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class SetMailboxesMethodStepdefs {
-
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
 
     private final MainStepdefs mainStepdefs;
     private final UserStepdefs userStepdefs;

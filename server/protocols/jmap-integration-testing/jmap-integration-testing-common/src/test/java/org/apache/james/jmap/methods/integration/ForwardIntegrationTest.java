@@ -25,6 +25,8 @@ import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.isAnyMessageFoundInRecipientsMailboxes;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
@@ -56,8 +58,6 @@ public abstract class ForwardIntegrationTest {
     private static final String CEDRIC = "cedric@" + DOMAIN;
     private static final String CEDRIC_PASSWORD = "456789";
 
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
 
     protected abstract GuiceJamesServer createJmapServer();
 

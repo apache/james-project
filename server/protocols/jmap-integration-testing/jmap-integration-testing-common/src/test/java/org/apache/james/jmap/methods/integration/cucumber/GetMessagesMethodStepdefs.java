@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.methods.integration.cucumber;
 
+import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -63,8 +65,6 @@ import net.minidev.json.JSONArray;
 public class GetMessagesMethodStepdefs {
 
     private static final Optional<Map<String, String>> NO_HEADERS = Optional.empty();
-    private static final String NAME = "[0][0]";
-    private static final String ARGUMENTS = "[0][1]";
     private static final String FIRST_MESSAGE = ARGUMENTS + ".list[0]";
     private static final String ATTACHMENTS = FIRST_MESSAGE + ".attachments";
     private static final String FIRST_ATTACHMENT = ATTACHMENTS + "[0]";
