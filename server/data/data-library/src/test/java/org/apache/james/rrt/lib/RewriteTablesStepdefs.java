@@ -126,7 +126,7 @@ public class RewriteTablesStepdefs {
         assertThat(rewriteTable.getMappings(user, Domain.of(domain))).isNullOrEmpty();
     }
 
-    @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contains only \"([^\"]*)\"")
+    @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
     public void assertMappingsForUser(String user, String domain, List<String> mappings) throws Throwable {
         assertThat(rewriteTable.getMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
     }
