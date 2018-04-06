@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
 public class RecipientRewriteTableManagement extends StandardMBean implements RecipientRewriteTableManagementMBean {
 
     private final RecipientRewriteTable rrt;
-    
+
     @Inject
     protected RecipientRewriteTableManagement(RecipientRewriteTable rrt) throws NotCompliantMBeanException {
         super(RecipientRewriteTableManagementMBean.class);
@@ -45,129 +45,73 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     }
 
     @Override
-    public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        try {
-            rrt.addRegexMapping(user, Domain.of(domain), regex);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
+        rrt.addRegexMapping(user, Domain.of(domain), regex);
     }
 
     @Override
-    public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        try {
-            rrt.removeRegexMapping(user, Domain.of(domain), regex);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
+        rrt.removeRegexMapping(user, Domain.of(domain), regex);
     }
 
     @Override
-    public void addAddressMapping(String user, String domain, String address) throws Exception {
-        try {
-            rrt.addAddressMapping(user, Domain.of(domain), address);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+        rrt.addAddressMapping(user, Domain.of(domain), address);
     }
 
     @Override
-    public void removeAddressMapping(String user, String domain, String address) throws Exception {
-        try {
-            rrt.removeAddressMapping(user, Domain.of(domain), address);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+        rrt.removeAddressMapping(user, Domain.of(domain), address);
     }
 
     @Override
-    public void addErrorMapping(String user, String domain, String error) throws Exception {
-        try {
-            rrt.addErrorMapping(user, Domain.of(domain), error);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
+        rrt.addErrorMapping(user, Domain.of(domain), error);
     }
 
     @Override
-    public void removeErrorMapping(String user, String domain, String error) throws Exception {
-        try {
-            rrt.removeErrorMapping(user, Domain.of(domain), error);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
+        rrt.removeErrorMapping(user, Domain.of(domain), error);
     }
 
     @Override
-    public void addDomainMapping(String domain, String targetDomain) throws Exception {
-        try {
-            rrt.addAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addDomainMapping(String domain, String targetDomain) throws RecipientRewriteTableException {
+        rrt.addAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
     }
 
     @Override
-    public void removeDomainMapping(String domain, String targetDomain) throws Exception {
-        try {
-            rrt.removeAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeDomainMapping(String domain, String targetDomain) throws RecipientRewriteTableException {
+        rrt.removeAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, String domain) throws Exception {
-        try {
-            return rrt.getUserDomainMappings(user, Domain.of(domain));
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
+        return rrt.getUserDomainMappings(user, Domain.of(domain));
     }
 
     @Override
-    public void addMapping(String user, String domain, String mapping) throws Exception {
-        try {
-            rrt.addMapping(user, Domain.of(domain), MappingImpl.of(mapping));
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+        rrt.addMapping(user, Domain.of(domain), MappingImpl.of(mapping));
     }
 
     @Override
-    public void removeMapping(String user, String domain, String mapping) throws Exception {
-        try {
-            rrt.removeMapping(user, Domain.of(domain), MappingImpl.of(mapping));
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
+        rrt.removeMapping(user, Domain.of(domain), MappingImpl.of(mapping));
     }
 
     @Override
-    public Map<String, Mappings> getAllMappings() throws Exception {
-        try {
-            return ImmutableMap.copyOf(rrt.getAllMappings());
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
+        return ImmutableMap.copyOf(rrt.getAllMappings());
     }
 
     @Override
-    public void addForwardMapping(String user, String domain, String address) throws Exception {
-        try {
-            rrt.addForwardMapping(user, Domain.of(domain), address);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void addForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+        rrt.addForwardMapping(user, Domain.of(domain), address);
     }
 
     @Override
-    public void removeForwardMapping(String user, String domain, String address) throws Exception {
-        try {
-            rrt.removeForwardMapping(user, Domain.of(domain), address);
-        } catch (RecipientRewriteTableException e) {
-            throw new Exception(e.getMessage());
-        }
+    public void removeForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
+        rrt.removeForwardMapping(user, Domain.of(domain), address);
     }
 
 }
