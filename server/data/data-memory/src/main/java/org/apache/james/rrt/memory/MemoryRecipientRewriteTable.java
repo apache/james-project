@@ -93,12 +93,12 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void addMappingInternal(String user, Domain domain, Mapping mapping) {
+    public void addMapping(String user, Domain domain, Mapping mapping) {
         mappingEntries.add(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
     }
 
     @Override
-    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) {
+    public void removeMapping(String user, Domain domain, Mapping mapping) {
         mappingEntries.remove(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
     }
 

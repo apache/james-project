@@ -94,7 +94,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void addMappingInternal(String user, Domain domain, Mapping mapping) {
+    public void addMapping(String user, Domain domain, Mapping mapping) {
         executor.executeVoid(insertStatement.bind()
             .setString(USER, getFixedUser(user))
             .setString(DOMAIN, getFixedDomain(domain).asString())
@@ -103,7 +103,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) {
+    public void removeMapping(String user, Domain domain, Mapping mapping) {
         executor.executeVoid(deleteStatement.bind()
                 .setString(USER, getFixedUser(user))
                 .setString(DOMAIN, getFixedDomain(domain).asString())

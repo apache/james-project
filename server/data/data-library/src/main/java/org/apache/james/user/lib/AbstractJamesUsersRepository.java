@@ -28,6 +28,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
@@ -243,13 +244,13 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public void addMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
+    public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeMapping(String user, Domain domain, String mapping) throws RecipientRewriteTableException {
+    public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }

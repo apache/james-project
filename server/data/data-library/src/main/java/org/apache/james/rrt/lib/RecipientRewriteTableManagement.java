@@ -131,7 +131,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     @Override
     public void addMapping(String user, String domain, String mapping) throws Exception {
         try {
-            rrt.addMapping(user, Domain.of(domain), mapping);
+            rrt.addMapping(user, Domain.of(domain), MappingImpl.of(mapping));
         } catch (RecipientRewriteTableException e) {
             throw new Exception(e.getMessage());
         }
@@ -140,7 +140,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     @Override
     public void removeMapping(String user, String domain, String mapping) throws Exception {
         try {
-            rrt.removeMapping(user, Domain.of(domain), mapping);
+            rrt.removeMapping(user, Domain.of(domain), MappingImpl.of(mapping));
         } catch (RecipientRewriteTableException e) {
             throw new Exception(e.getMessage());
         }

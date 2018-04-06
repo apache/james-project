@@ -65,7 +65,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -171,7 +171,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);

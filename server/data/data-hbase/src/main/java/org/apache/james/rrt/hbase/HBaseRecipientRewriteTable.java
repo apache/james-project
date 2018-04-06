@@ -59,7 +59,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private static final String COLUMN_SEPARATOR = ";";
 
     @Override
-    protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
@@ -196,7 +196,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void removeMappingInternal(String user, Domain domain, Mapping mapping) throws
+    public void removeMapping(String user, Domain domain, Mapping mapping) throws
             RecipientRewriteTableException {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
