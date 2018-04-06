@@ -390,42 +390,11 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     protected abstract Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException;
 
     /**
-     * Override to map virtual recipients to real recipients, both local and
-     * non-local. Each key in the provided map corresponds to a potential
-     * virtual recipient, stored as a <code>MailAddress</code> object.
-     * 
-     * Translate virtual recipients to real recipients by mapping a string
-     * containing the address of the real recipient as a value to a key. Leave
-     * the value <code>null<code>
-     * if no mapping should be performed. Multiple recipients may be specified by delineating
-     * the mapped string with commas, semi-colons or colons.
-     * 
-     * @param user
-     *            the mapping of virtual to real recipients, as
-     *            <code>MailAddress</code>es to <code>String</code>s.
+     * This method must return stored Mappings for the given user.
+     * It must never return null but throw RecipientRewriteTableException on errors and return an empty Mappings
+     * object if no mapping is found.
      */
-    protected abstract String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException;
-
-    /**
-     * Get all mappings for the given user and domain. If a aliasdomain mapping
-     * was found get sure it is in the map as first mapping.
-     * 
-     * @param user
-     *            the username
-     * @param domain
-     *            the domain
-     * @return the mappings
-     */
-    private Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
-
-        String mappings = mapAddressInternal(user, domain);
-
-        if (mappings != null) {
-            return MappingsImpl.fromRawString(mappings);
-        } else {
-            return null;
-        }
-    }
+    protected abstract Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException;
 
     private void checkMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getUserDomainMappings(user, domain);

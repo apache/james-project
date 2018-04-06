@@ -76,15 +76,15 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
-        String mapping = getMapping(user, domain, "selectExactMappings");
+    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
+        Mappings mapping = getMapping(user, domain, "selectExactMappings");
         if (mapping != null) {
             return mapping;
         }
         return getMapping(user, domain, "selectMappings");
     }
 
-    private String getMapping(String user, Domain domain, String queryName) throws RecipientRewriteTableException {
+    private Mappings getMapping(String user, Domain domain, String queryName) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
@@ -97,7 +97,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
                 .getResultList();
             transaction.commit();
             if (virtualUsers.size() > 0) {
-                return virtualUsers.get(0).getTargetAddress();
+                return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
@@ -108,7 +108,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         } finally {
             entityManager.close();
         }
-        return null;
+        return MappingsImpl.empty();
     }
 
     @Override

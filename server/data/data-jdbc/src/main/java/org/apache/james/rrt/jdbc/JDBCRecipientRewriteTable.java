@@ -197,7 +197,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
+    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         try {
@@ -210,7 +210,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 mappingStmt.setString(2, domain.asString());
                 mappingRS = mappingStmt.executeQuery();
                 if (mappingRS.next()) {
-                    return mappingRS.getString(1);
+                    return MappingsImpl.fromRawString(mappingRS.getString(1));
                 }
             } finally {
                 theJDBCUtil.closeJDBCResultSet(mappingRS);
@@ -223,7 +223,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             theJDBCUtil.closeJDBCStatement(mappingStmt);
             theJDBCUtil.closeJDBCConnection(conn);
         }
-        return null;
+        return MappingsImpl.empty();
     }
 
     @Override

@@ -176,13 +176,11 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected String mapAddressInternal(String user, Domain domain) {
-        Mappings mappings = OptionalUtils.orSuppliers(
+    protected Mappings mapAddress(String user, Domain domain) {
+        return OptionalUtils.orSuppliers(
             () -> retrieveMappings(user, domain),
             () -> retrieveMappings(WILDCARD, domain))
                 .orElse(MappingsImpl.empty());
-
-        return !mappings.isEmpty() ? mappings.serialize() : null;
     }
 
 }

@@ -20,6 +20,7 @@ package org.apache.james.rrt.file;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -57,12 +58,11 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected String mapAddressInternal(String user, Domain domain) throws RecipientRewriteTableException {
-        if (mappings == null) {
-            return null;
-        } else {
-            return RecipientRewriteTableUtil.getTargetString(user, domain, mappings);
-        }
+    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
+        return Optional.ofNullable(mappings)
+            .map(mappings -> RecipientRewriteTableUtil.getTargetString(user, domain, mappings))
+            .map(MappingsImpl::fromRawString)
+            .orElse(MappingsImpl.empty());
     }
 
     @Override
