@@ -27,6 +27,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.Mappings;
@@ -36,9 +37,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * Test the XML Virtual User Table implementation.
- */
 public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     private final DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
@@ -56,10 +54,24 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         super.tearDown();
     }
 
-
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
-        return new XMLRecipientRewriteTable();
+        return new XMLRecipientRewriteTable() {
+            @Override
+            public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+                addMappingToConfiguration(user, domain, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
+            }
+
+            @Override
+            public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+                removeMappingFromConfiguration(user, domain, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
+            }
+
+            @Override
+            public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+                addMapping(user, domain, MappingImpl.address(address));
+            }
+        };
     }
 
     @Test
@@ -68,8 +80,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     public void addMappingShouldThrowWhenMappingAlreadyExists() {
     }
 
-    @Override
-    protected void addMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+    protected void addMappingToConfiguration(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
         Mappings mappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
             .orElse(MappingsImpl.empty());
 
@@ -80,8 +91,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         updateConfiguration(user, domain, mappings, updatedMappings);
     }
 
-    @Override
-    protected void removeMapping(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
+    protected void removeMappingFromConfiguration(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
         Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
             .orElseThrow(() -> new RecipientRewriteTableException("Cannot remove from null mappings"));
 
