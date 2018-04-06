@@ -67,7 +67,8 @@ public class Keyword {
 
     public Keyword(String flagName) {
         Preconditions.checkArgument(isValid(flagName),
-                "Flagname must not be null or empty, must have length form 1-255, must not contain charater with hex from '\u0000' to '\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ");
+                "Flagname must not be null or empty, must have length form 1-255, " +
+                    "must not contain charater with hex from '\\u0000' to '\\u00019' or {'(' ')' '{' ']' '%' '*' '\"' '\\'} ");
         this.flagName = flagName;
     }
 
