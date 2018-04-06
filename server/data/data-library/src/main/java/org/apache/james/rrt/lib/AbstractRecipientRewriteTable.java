@@ -193,9 +193,10 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new RecipientRewriteTableException("Invalid regex: " + regex, e);
         }
 
-        checkMapping(user, domain, MappingImpl.regex(regex));
+        MappingImpl mapping = MappingImpl.regex(regex);
+        checkMapping(user, domain, mapping);
         LOGGER.info("Add regex mapping => {} for user: {} domain: {}", regex, user, domain.name());
-        addMapping(user, domain, MappingImpl.regex(regex));
+        addMapping(user, domain, mapping);
 
     }
 
@@ -244,9 +245,11 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
-        checkMapping(user, domain, MappingImpl.error(error));
+        MappingImpl mapping = MappingImpl.error(error);
+
+        checkMapping(user, domain, mapping);
         LOGGER.info("Add error mapping => {} for user: {} domain: {}", error, user, domain.name());
-        addMapping(user, domain, MappingImpl.error(error));
+        addMapping(user, domain, mapping);
 
     }
 
