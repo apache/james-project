@@ -241,3 +241,25 @@ Feature: Rewrite Tables tests
     And store "test@james" forward mapping for user "test" at domain "localhost"
     When user "test" at domain "localhost" removes a forward mapping "test@james"
     Then mappings for user "test" at domain "localhost" should contain only "forward:test@localhost2"
+
+# Group mapping
+
+  Scenario: stored group mapping should be retrieved when one mapping is matching
+    Given store "test@localhost2" group mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "group:test@localhost2"
+
+  Scenario: stored group mapping should be retrieved when two mappings are matching
+    Given store "test@localhost2" group mapping for user "test" at domain "localhost"
+    And store "test@james" group mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "group:test@localhost2, group:test@james"
+
+  Scenario: stored group mapping should not be retrieved by another user
+    Given store "test@localhost2" group mapping for user "test" at domain "localhost"
+    And store "test@james" group mapping for user "test" at domain "localhost"
+    Then mappings for user "test2" at domain "localhost" should be empty
+
+  Scenario: removing a stored group mapping should work
+    Given store "test@localhost2" group mapping for user "test" at domain "localhost"
+    And store "test@james" group mapping for user "test" at domain "localhost"
+    When user "test" at domain "localhost" removes a group mapping "test@james"
+    Then mappings for user "test" at domain "localhost" should contain only "group:test@localhost2"

@@ -276,4 +276,14 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
+
+    @Override
+    public void addGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+    }
+
+    @Override
+    public void removeGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+    }
 }

@@ -308,6 +308,27 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         removeMapping(user, domain, mapping);
     }
 
+    @Override
+    public void addGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        Mapping mapping = MappingImpl.group(address)
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
+
+        checkHasValidAddress(mapping);
+        checkMapping(user, domain, mapping);
+
+        LOGGER.info("Add forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        addMapping(user, domain, mapping);
+    }
+
+    @Override
+    public void removeGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+        Mapping mapping = MappingImpl.group(address)
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
+
+        LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        removeMapping(user, domain, mapping);
+    }
+
     /**
      * Return a Map which holds all Mappings
      * 

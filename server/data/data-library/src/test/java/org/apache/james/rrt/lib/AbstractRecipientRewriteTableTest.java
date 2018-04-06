@@ -311,4 +311,34 @@ public abstract class AbstractRecipientRewriteTableTest {
         assertThat(virtualUserTable.getMappings(user, domain))
             .isEqualTo(MappingsImpl.empty());
     }
+
+    @Test
+    public void addGroupMappingShouldStore() throws ErrorMappingException, RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.LOCALHOST;
+        String address = "test@localhost2";
+        String address2 = "test@james";
+
+        virtualUserTable.addMapping(user, domain, MappingImpl.group(address));
+        virtualUserTable.addMapping(user, domain, MappingImpl.group(address2));
+
+        assertThat(virtualUserTable.getMappings(user, domain)).hasSize(2);
+    }
+
+    @Test
+    public void removeGroupMappingShouldDelete() throws ErrorMappingException, RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.LOCALHOST;
+        String address = "test@localhost2";
+        String address2 = "test@james";
+
+        virtualUserTable.addMapping(user, domain, MappingImpl.group(address));
+        virtualUserTable.addMapping(user, domain, MappingImpl.group(address2));
+
+        virtualUserTable.removeMapping(user, domain, MappingImpl.group(address));
+        virtualUserTable.removeMapping(user, domain, MappingImpl.group(address2));
+
+        assertThat(virtualUserTable.getMappings(user, domain))
+            .isEqualTo(MappingsImpl.empty());
+    }
 }
