@@ -89,6 +89,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
@@ -750,22 +751,25 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private SortedMap<MessageUid, MessageMetaData> move(MessageRange set, StoreMessageManager to, MailboxSession session) throws MailboxException {
         IteratorWrapper<MailboxMessage> originalRows = new IteratorWrapper<>(retrieveOriginalRows(set, session));
 
-        MoveResult moveResult = to.move(originalRows, session);
-        SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
+        if (originalRows.hasNext()) {
+            MoveResult moveResult = to.move(originalRows, session);
+            SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
 
-        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
-        for (MailboxMessage message: originalRows.getEntriesSeen()) {
-            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
-        }
-        dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
-        dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
-        dispatcher.moved(session,
+            ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+            for (MailboxMessage message : originalRows.getEntriesSeen()) {
+                messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+            }
+            dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
+            dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
+            dispatcher.moved(session,
                 MessageMoves.builder()
                     .previousMailboxIds(getMailboxEntity().getMailboxId())
                     .targetMailboxIds(to.getMailboxEntity().getMailboxId())
                     .build(),
                 messagesMap.build());
-        return moveUids;
+            return moveUids;
+        }
+        return ImmutableSortedMap.of();
     }
 
     private Iterator<MailboxMessage> retrieveOriginalRows(MessageRange set, MailboxSession session) throws MailboxException {
