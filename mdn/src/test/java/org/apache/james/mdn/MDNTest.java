@@ -33,7 +33,6 @@ import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -73,7 +72,7 @@ public class MDNTest {
 
         assertThat(new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8))
             .containsPattern(
-                Pattern.compile("Content-Type: multipart/report;.*report-type=disposition-notification", Pattern.DOTALL));
+                Pattern.compile("Content-Type: multipart/report;.*(\r\n.+)*report-type=disposition-notification.*\r\n\r\n"));
     }
 
     @Test
@@ -211,7 +210,6 @@ public class MDNTest {
     }
 
 
-    @Ignore("Content-Type Parameters are not supported by mime4j")
     @Test
     public void mime4JMessageExportShouldGenerateExpectedContentType() throws Exception {
         Message message = MDN.builder()
@@ -222,7 +220,7 @@ public class MDNTest {
             .build();
 
         assertThat(asString(message))
-            .containsPattern(Pattern.compile("Content-Type: multipart/report;.*report-type=disposition-notification", Pattern.DOTALL));
+            .containsPattern(Pattern.compile("Content-Type: multipart/report;.*(\r\n.+)*report-type=disposition-notification.*(\r\n.+)*\r\n\r\n"));
     }
 
     private String asString(Message message) throws Exception {

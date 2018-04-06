@@ -136,6 +136,7 @@ public class MDN {
 
     private Multipart asMime4JMultipart() throws IOException {
         MultipartBuilder builder = MultipartBuilder.create(REPORT_SUB_TYPE);
+        builder.addContentTypeParameter(new NameValuePair("report-type", DISPOSITION_NOTIFICATION_REPORT_TYPE));
         builder.addBodyPart(BodyPartBuilder.create()
             .use(new BasicBodyFactory())
             .setBody(humanReadableText, Charsets.UTF_8)
