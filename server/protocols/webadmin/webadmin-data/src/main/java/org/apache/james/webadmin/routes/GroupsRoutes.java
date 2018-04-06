@@ -127,7 +127,7 @@ public class GroupsRoutes implements Routes {
         return Optional.ofNullable(recipientRewriteTable.getAllMappings())
             .map(mappings ->
                 mappings.entrySet().stream()
-                    .filter(e -> e.getValue().contains(Mapping.Type.Address))
+                    .filter(e -> e.getValue().contains(Mapping.Type.Group))
                     .map(Map.Entry::getKey)
                     .collect(Guavate.toImmutableSortedSet()))
             .orElse(ImmutableSortedSet.of());
@@ -159,7 +159,7 @@ public class GroupsRoutes implements Routes {
         ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.addAddressMapping(groupAddress.getLocalPart(), domain, userAddress.asString());
+        recipientRewriteTable.addGroupMapping(groupAddress.getLocalPart(), domain, userAddress.asString());
         return halt(HttpStatus.CREATED_201);
     }
 
@@ -201,7 +201,7 @@ public class GroupsRoutes implements Routes {
     public HaltException removeFromGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.removeAddressMapping(
+        recipientRewriteTable.removeGroupMapping(
             groupAddress.getLocalPart(),
             groupAddress.getDomain(),
             userAddress.asString());
@@ -227,7 +227,7 @@ public class GroupsRoutes implements Routes {
 
         ensureNonEmptyMappings(mappings);
 
-        return mappings.select(Mapping.Type.Address)
+        return mappings.select(Mapping.Type.Group)
                 .asStream()
                 .map(Mapping::asMailAddress)
                 .flatMap(OptionalUtils::toStream)

@@ -211,4 +211,28 @@ public interface RecipientRewriteTableManagementMBean {
      * @throws Exception If an error occurred
      */
     void removeForwardMapping(String toUser, String toDomain, String fromAddress) throws Exception;
+
+    /***
+     * Add group mapping
+     *
+     * @param toUser
+     *            the username part of the mail address destination defined for this group.
+     * @param toDomain
+     *            the domain part of the mail address destination defined for this group.
+     * @param fromAddress The base address of the group. Mails for this address will be sent to the added group destination.
+     * @throws Exception If an error occurred
+     */
+    void addGroupMapping(String user, String domain, String address) throws Exception;
+
+    /**
+     * Remove group mapping
+     *
+     * @param toUser
+     *            the username part of the mail address destination defined for this group.
+     * @param toDomain
+     *            the domain part of the mail address destination defined for this group.
+     * @param fromAddress The base address of the forward. Mails for this address will no more sent to the removed group destination.
+     * @throws Exception If an error occurred
+     */
+    void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception;
 }

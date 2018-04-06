@@ -281,8 +281,8 @@ public class WebAdminServerIntegrationTest {
 
     @Test
     public void addressGroupsEndpointShouldHandleRequests() throws Exception {
-        dataProbe.addAddressMapping("group", "domain.com", "user1@domain.com");
-        dataProbe.addAddressMapping("group", "domain.com", "user2@domain.com");
+        dataProbe.addGroupMapping("group", "domain.com", "user1@domain.com");
+        dataProbe.addGroupMapping("group", "domain.com", "user2@domain.com");
 
         List<String> members = when()
             .get("/address/groups/group@domain.com")

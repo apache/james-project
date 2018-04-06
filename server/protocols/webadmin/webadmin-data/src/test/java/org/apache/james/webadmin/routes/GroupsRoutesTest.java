@@ -527,7 +527,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), any(), anyString());
+                .addGroupMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -540,7 +540,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), any(), anyString());
+                .addGroupMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -553,7 +553,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .addAddressMapping(anyString(), any(), anyString());
+                .addGroupMapping(anyString(), any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -605,7 +605,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), any(), anyString());
+                .removeGroupMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -618,7 +618,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), any(), anyString());
+                .removeGroupMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -631,7 +631,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeAddressMapping(anyString(), any(), anyString());
+                .removeGroupMapping(anyString(), any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)

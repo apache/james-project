@@ -143,4 +143,14 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     public void removeForwardMapping(String user, String domain, String address) throws Exception {
         recipientRewriteTable.removeForwardMapping(user, Domain.of(domain), address);
     }
+
+    @Override
+    public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
+        recipientRewriteTable.addGroupMapping(toUser, Domain.of(toDomain), fromAddress);
+    }
+
+    @Override
+    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
+        recipientRewriteTable.removeGroupMapping(toUser, Domain.of(toDomain), fromAddress);
+    }
 }

@@ -61,4 +61,8 @@ public interface DataProbe {
     void addForwardMapping(String toUser, String toDomain, String fromAddress) throws Exception;
 
     void removeForwardMapping(String toUser, String toDomain, String fromAddress) throws Exception;
+
+    void addGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception;
+
+    void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception;
 }
