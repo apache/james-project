@@ -44,17 +44,21 @@ public interface Mapping {
         if (input.startsWith(Type.Forward.asPrefix())) {
             return Type.Forward;
         }
+        if (input.startsWith(Type.Group.asPrefix())) {
+            return Type.Group;
+        }
         return Type.Address;
     }
 
     Optional<MailAddress> asMailAddress();
 
     enum Type {
-        Regex("regex:", 3),
+        Regex("regex:", 4),
         Domain("domain:", 1),
-        Error("error:", 3),
-        Forward("forward:", 2),
-        Address("", 3);
+        Error("error:", 4),
+        Forward("forward:", 3),
+        Group("group:", 2),
+        Address("", 4);
 
         private final String asPrefix;
         private final int order;
@@ -77,7 +81,8 @@ public interface Mapping {
             return mapping.startsWith(Regex.asPrefix())
                 || mapping.startsWith(Domain.asPrefix())
                 || mapping.startsWith(Error.asPrefix())
-                || mapping.startsWith(Forward.asPrefix());
+                || mapping.startsWith(Forward.asPrefix())
+                || mapping.startsWith(Group.asPrefix());
         }
 
         public int getOrder() {

@@ -33,7 +33,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-
 public class MappingImpl implements Mapping, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -65,6 +64,10 @@ public class MappingImpl implements Mapping, Serializable {
 
     public static MappingImpl forward(String mapping) {
         return new MappingImpl(Type.Forward, mapping);
+    }
+
+    public static MappingImpl group(String mapping) {
+        return new MappingImpl(Type.Group, mapping);
     }
     
     private final Type type;
@@ -122,7 +125,7 @@ public class MappingImpl implements Mapping, Serializable {
 
     @Override
     public Optional<MailAddress> asMailAddress() {
-        if (type != Type.Address && type != Type.Forward) {
+        if (type != Type.Address && type != Type.Forward && type != Type.Group) {
             return Optional.empty();
         }
         try {

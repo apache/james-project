@@ -339,4 +339,19 @@ public class MappingsImplTest {
                 .build();
         assertThat(mappingsImpl).containsExactly(domainMapping, forwardMapping, regexMapping);
     }
+
+    @Test
+    public void builderShouldPutGroupsBetweenDomainAndForward() {
+        MappingImpl regexMapping = MappingImpl.regex("regex");
+        MappingImpl forwardMapping = MappingImpl.forward("forward");
+        MappingImpl domainMapping = MappingImpl.domain(Domain.of("domain"));
+        MappingImpl groupMapping = MappingImpl.group("group");
+        MappingsImpl mappingsImpl = MappingsImpl.builder()
+                .add(regexMapping)
+                .add(forwardMapping)
+                .add(domainMapping)
+                .add(groupMapping)
+                .build();
+        assertThat(mappingsImpl).containsExactly(domainMapping, groupMapping, forwardMapping, regexMapping);
+    }
 }

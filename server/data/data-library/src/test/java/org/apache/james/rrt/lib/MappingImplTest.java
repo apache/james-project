@@ -67,6 +67,12 @@ public class MappingImplTest {
         assertThatThrownBy(() -> MappingImpl.forward(null))
             .isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    public void groupFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> MappingImpl.group(null))
+            .isInstanceOf(NullPointerException.class);
+    }
     
     @Test
     public void hasDomainShouldReturnTrueWhenMappingContainAtMark() {
@@ -159,6 +165,11 @@ public class MappingImplTest {
     public void getTypeShouldReturnForwardWhenForwardPrefix() {
         assertThat(MappingImpl.forward("abc").getType()).isEqualTo(Mapping.Type.Forward);
     }
+
+    @Test
+    public void getTypeShouldReturnGroupWhenGroupPrefix() {
+        assertThat(MappingImpl.group("abc").getType()).isEqualTo(Mapping.Type.Group);
+    }
     
     @Test(expected = IllegalStateException.class)
     public void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
@@ -169,7 +180,6 @@ public class MappingImplTest {
     public void getErrorMessageShouldReturnMessageWhenErrorWithMessage() {
         assertThat(MappingImpl.error("toto").getErrorMessage()).isEqualTo("toto");
     }
-    
 
     @Test
     public void getErrorMessageShouldReturnWhenErrorWithoutMessage() {
