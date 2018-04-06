@@ -263,9 +263,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         } else if (mappingType.equals(Type.Regex)) {
             addRegexMapping(user, domain, mappingSuffix);
         } else if (mappingType.equals(Type.Domain)) {
-            if (user != null) {
-                throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
-            }
             addAliasDomainMapping(domain, Domain.of(mappingSuffix));
         } else {
             addAddressMapping(user, domain, mappingSuffix);
@@ -286,9 +283,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 removeRegexMapping(user, domain, mappingSuffix);
                 break;
             case Domain:
-                if (user != null) {
-                    throw new RecipientRewriteTableException("User must be null for aliasDomain mappings");
-                }
                 removeAliasDomainMapping(domain, Domain.of(mappingSuffix));
                 break;
             case Address:
