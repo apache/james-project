@@ -36,14 +36,11 @@ import com.google.common.collect.ImmutableMap;
  */
 public class RecipientRewriteTableManagement extends StandardMBean implements RecipientRewriteTableManagementMBean {
 
-    private RecipientRewriteTable rrt;
-
-    protected RecipientRewriteTableManagement() throws NotCompliantMBeanException {
-        super(RecipientRewriteTableManagementMBean.class);
-    }
-
+    private final RecipientRewriteTable rrt;
+    
     @Inject
-    public void setManageableRecipientRewriteTable(RecipientRewriteTable rrt) {
+    protected RecipientRewriteTableManagement(RecipientRewriteTable rrt) throws NotCompliantMBeanException {
+        super(RecipientRewriteTableManagementMBean.class);
         this.rrt = rrt;
     }
 
