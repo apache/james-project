@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Optional;
 
@@ -194,5 +195,13 @@ public class KeywordTest {
         Keyword keyword = new Keyword(userFlag);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(userFlag));
+    }
+
+    @Test
+    public void hyphenMinusShouldBeAllowedInKeyword() {
+        String userFlag = "aa-bb";
+
+        assertThatCode(() -> new Keyword(userFlag))
+            .doesNotThrowAnyException();
     }
 }

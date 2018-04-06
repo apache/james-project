@@ -38,7 +38,8 @@ public class Keyword {
     private static final CharMatcher FLAG_NAME_PATTERN =
             CharMatcher.JAVA_LETTER_OR_DIGIT
                 .or(CharMatcher.is('$'))
-                .or(CharMatcher.is('_'));
+                .or(CharMatcher.is('_')
+                .or(CharMatcher.is('-')));
 
     public static final Keyword DRAFT = new Keyword("$Draft");
     public static final Keyword SEEN = new Keyword("$Seen");
