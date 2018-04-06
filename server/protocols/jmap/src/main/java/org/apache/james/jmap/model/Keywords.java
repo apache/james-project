@@ -124,7 +124,7 @@ public class Keywords {
             try {
                 return Stream.of(new Keyword(flagName));
             } catch (IllegalArgumentException e) {
-                LOGGER.warn("Fail to parse {} flag", flagName);
+                LOGGER.warn("Fail to parse {} flag", flagName, e);
                 return Stream.of();
             }
         }
