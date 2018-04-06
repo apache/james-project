@@ -177,7 +177,7 @@ public class DataCommandsIntegrationTest {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "removeaddressmapping", USER, DOMAIN, redirectionAddress});
 
         assertThat(dataProbe.listMappings())
-            .isNull();
+            .isEmpty();
     }
 
     @Test
@@ -202,7 +202,7 @@ public class DataCommandsIntegrationTest {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "removeregexmapping", USER, DOMAIN, regex});
 
         assertThat(dataProbe.listMappings())
-            .isNull();
+            .isEmpty();
     }
 
 }

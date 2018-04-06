@@ -39,6 +39,8 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
  * access.
@@ -165,7 +167,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         } finally {
             entityManager.close();
         }
-        return null;
+        return ImmutableMap.of();
     }
 
     @Override

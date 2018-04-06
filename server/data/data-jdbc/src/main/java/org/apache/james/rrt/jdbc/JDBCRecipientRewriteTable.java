@@ -47,6 +47,8 @@ import org.apache.james.util.sql.SqlResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * Class responsible to implement the Virtual User Table in database with JDBC
  * access.
@@ -285,7 +287,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             theJDBCUtil.closeJDBCStatement(mappingStmt);
             theJDBCUtil.closeJDBCConnection(conn);
         }
-        return null;
+        return ImmutableMap.of();
     }
 
     @Override

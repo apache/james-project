@@ -131,7 +131,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
 
     @Override
     protected Map<String, Mappings> getAllMappingsInternal() {
-        Map<String, Mappings> map = executor.execute(retrieveAllMappingsStatement.bind())
+        return executor.execute(retrieveAllMappingsStatement.bind())
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(row -> new UserMapping(row.getString(USER), Domain.of(row.getString(DOMAIN)), row.getString(MAPPING)))
                 .collect(Guavate.toImmutableMap(
@@ -139,7 +139,6 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
                     UserMapping::toMapping,
                     Mappings::union)))
             .join();
-        return map.isEmpty() ? null : map;
     }
 
     private static class UserMapping {

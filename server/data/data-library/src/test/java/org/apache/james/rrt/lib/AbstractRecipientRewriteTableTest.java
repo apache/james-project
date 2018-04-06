@@ -112,7 +112,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
-        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
+        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
     @Test
@@ -162,7 +162,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
-        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
+        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
     @Test
@@ -186,7 +186,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
-        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
+        assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
 
     @Test
@@ -226,7 +226,7 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         virtualUserTable.setRecursiveMapping(true);
 
-            assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
+            assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
 
             addMapping(user1, domain1, user2 + "@" + domain2.asString(), Type.Address);
             addMapping(user2, domain2, user3 + "@" + domain3.asString(), Type.Address);
@@ -250,7 +250,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         String user = "user";
         String user2 = "user2";
 
-        assertThat(virtualUserTable.getAllMappings()).describedAs("No mappings").isNull();
+        assertThat(virtualUserTable.getAllMappings()).describedAs("No mappings").isEmpty();
 
         addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, user2 + "@" + domain, Type.Address);
         addMapping(RecipientRewriteTable.WILDCARD, aliasDomain, domain, Type.Domain);

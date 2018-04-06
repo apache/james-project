@@ -304,11 +304,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
         Map<String, Mappings> mappings = getAllMappingsInternal();
 
-        int count = Optional.ofNullable(mappings)
-            .map(Map::size)
-            .orElse(0);
-
-        LOGGER.debug("Retrieve all mappings. Mapping count: {}", count);
+        LOGGER.debug("Retrieve all mappings. Mapping count: {}", mappings.size());
         return mappings;
     }
 

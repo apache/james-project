@@ -32,6 +32,7 @@ import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 /**
@@ -88,7 +89,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
             return mappingsNew;
         } else {
-            return null;
+            return ImmutableMap.of();
         }
     }
 
