@@ -33,6 +33,7 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
@@ -162,7 +163,7 @@ public class RecipientRewriteTableProcessor {
     List<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
         ImmutableList<MailAddress> mailAddresses = mappings.asStream()
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
-            .map(mapping -> mapping.asMailAddress())
+            .map(Mapping::asMailAddress)
             .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
 

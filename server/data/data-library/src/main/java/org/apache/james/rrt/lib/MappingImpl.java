@@ -28,6 +28,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -85,16 +86,29 @@ public class MappingImpl implements Mapping, Serializable {
     public boolean hasDomain() {
         return mapping.contains("@");
     }
-    
+
+    @Override
+    public Mapping appendDomainFromThrowingSupplierIfNone(ThrowingDomainSupplier supplier) throws RecipientRewriteTableException {
+        Preconditions.checkNotNull(supplier);
+        if (hasDomain()) {
+            return this;
+        }
+        return appendDomain(supplier.get());
+    }
+
     @Override
     public Mapping appendDomainIfNone(Supplier<Domain> domain) {
         Preconditions.checkNotNull(domain);
         if (hasDomain()) {
             return this;
         }
-        return new MappingImpl(type, mapping + "@" + domain.get().asString());
+        return appendDomain(domain.get());
     }
-    
+
+    private MappingImpl appendDomain(Domain domain) {
+        return new MappingImpl(type, mapping + "@" + domain.asString());
+    }
+
     @Override
     public Type getType() {
         return type;

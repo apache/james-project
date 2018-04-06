@@ -20,7 +20,6 @@ package org.apache.james.rrt.lib;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -40,7 +39,7 @@ import org.apache.james.rrt.lib.Mapping.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 
 public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractRecipientRewriteTable.class);
@@ -206,7 +205,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         Mapping mapping = MappingImpl.address(address)
-            .appendDomainIfNone(defaultDomainSupplier());
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
         checkMapping(user, domain, mapping);
@@ -215,14 +214,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         addMapping(user, domain, mapping);
     }
 
-    private Supplier<Domain> defaultDomainSupplier() throws RecipientRewriteTableException {
-        return Throwing.supplier(() -> {
-            try {
-                return domainList.getDefaultDomain();
-            } catch (DomainListException e) {
-                throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
-            }
-        }).sneakyThrow();
+    private Domain defaultDomain() throws RecipientRewriteTableException {
+        try {
+            return domainList.getDefaultDomain();
+        } catch (DomainListException e) {
+            throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
+        }
     }
 
     private void checkHasValidAddress(Mapping mapping) throws RecipientRewriteTableException {
@@ -234,7 +231,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         Mapping mapping = MappingImpl.address(address)
-            .appendDomainIfNone(defaultDomainSupplier());
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         LOGGER.info("Remove address mapping => {} for user: {} domain: {}", mapping, user, domain.name());
         removeMapping(user, domain, mapping);
@@ -279,7 +276,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         Mapping mapping = MappingImpl.forward(address)
-            .appendDomainIfNone(defaultDomainSupplier());
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
         checkMapping(user, domain, mapping);
@@ -291,7 +288,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
         Mapping mapping = MappingImpl.forward(address)
-            .appendDomainIfNone(defaultDomainSupplier());
+            .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
         removeMapping(user, domain, mapping);
@@ -326,15 +323,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      * @return fixedUser the fixed user String
      */
     protected String getFixedUser(String user) {
-        if (user != null) {
-            if (user.equals(WILDCARD) || !user.contains("@")) {
-                return user;
-            } else {
-                throw new IllegalArgumentException("Invalid user: " + user);
-            }
-        } else {
-            return WILDCARD;
-        }
+        String sanitizedUser = Optional.ofNullable(user).orElse(WILDCARD);
+        Preconditions.checkArgument(sanitizedUser.equals(WILDCARD) || !sanitizedUser.contains("@"));
+        return sanitizedUser;
     }
 
     /**

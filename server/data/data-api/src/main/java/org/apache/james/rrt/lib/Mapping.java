@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 
 import com.google.common.base.Preconditions;
 
@@ -89,6 +90,12 @@ public interface Mapping {
     String asString();
 
     boolean hasDomain();
+
+    interface ThrowingDomainSupplier {
+        Domain get() throws RecipientRewriteTableException;
+    }
+
+    Mapping appendDomainFromThrowingSupplierIfNone(ThrowingDomainSupplier supplier) throws RecipientRewriteTableException;
 
     Mapping appendDomainIfNone(Supplier<Domain> domainSupplier);
 

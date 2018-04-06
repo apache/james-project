@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -97,11 +98,38 @@ public class MappingImplTest {
         assertThat(MappingImpl.address("abc@d").appendDomainIfNone(() -> Domain.of("domain"))).isEqualTo(MappingImpl.address("abc@d"));
     }
     
-    @Test(expected = NullPointerException.class)
+    @Test
     public void appendDomainShouldThrowWhenNullDomain() {
-        MappingImpl.address("abc@d").appendDomainIfNone(null);
+        assertThatThrownBy(() -> MappingImpl.address("abc@d").appendDomainIfNone(null)).isInstanceOf(NullPointerException.class);
     }
-    
+
+    @Test
+    public void appendDomainFromThrowingSupplierIfNoneShouldWorkOnValidDomain() throws RecipientRewriteTableException {
+        assertThat(MappingImpl.address("abc").appendDomainFromThrowingSupplierIfNone(() -> Domain.of("domain")))
+            .isEqualTo(MappingImpl.address("abc@domain"));
+    }
+
+    @Test
+    public void appendDomainFromThrowingSupplierIfNoneShouldNotAddDomainWhenMappingAlreadyContainsDomains() throws RecipientRewriteTableException {
+        assertThat(MappingImpl.address("abc@d").appendDomainFromThrowingSupplierIfNone(() -> Domain.of("domain")))
+            .isEqualTo(MappingImpl.address("abc@d"));
+    }
+
+    @Test
+    public void appendDomainFromThrowingSupplierIfNoneShouldThrowWhenNullDomain() {
+        assertThatThrownBy(() -> MappingImpl.address("abc@d").appendDomainFromThrowingSupplierIfNone(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void appendDomainFromThrowingSupplierIfNoneShouldNotCatchRecipientRewriteTableException() {
+        Mapping.ThrowingDomainSupplier supplier = () -> {
+            throw new RecipientRewriteTableException("message");
+        };
+        assertThatThrownBy(() -> MappingImpl.address("abc").appendDomainFromThrowingSupplierIfNone(supplier))
+            .isInstanceOf(RecipientRewriteTableException.class);
+    }
+
     @Test
     public void getTypeShouldReturnAddressWhenNoPrefix() {
         assertThat(MappingImpl.address("abc").getType()).isEqualTo(Mapping.Type.Address);
