@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -39,6 +39,8 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * 
@@ -205,37 +207,39 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        String addressWithDomain = addDefaultDomainIfNone(address);
-        checkAddressIsValid(addressWithDomain);
-        checkMapping(user, domain, MappingImpl.address(addressWithDomain));
-        LOGGER.info("Add address mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
-        addMapping(user, domain, MappingImpl.address(addressWithDomain));
+        Mapping mapping = MappingImpl.address(address)
+            .appendDomainIfNone(defaultDomainSupplier());
+
+        checkHasValidAddress(mapping);
+        checkMapping(user, domain, mapping);
+
+        LOGGER.info("Add address mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        addMapping(user, domain, mapping);
     }
 
-    private String addDefaultDomainIfNone(String address) throws RecipientRewriteTableException {
-        if (address.indexOf('@') < 0) {
+    private Supplier<Domain> defaultDomainSupplier() throws RecipientRewriteTableException {
+        return Throwing.supplier(() -> {
             try {
-                return address + "@" + domainList.getDefaultDomain().asString();
+                return domainList.getDefaultDomain();
             } catch (DomainListException e) {
                 throw new RecipientRewriteTableException("Unable to retrieve default domain", e);
             }
-        }
-        return address;
+        }).sneakyThrow();
     }
 
-    private void checkAddressIsValid(String addressWithDomain) throws RecipientRewriteTableException {
-        try {
-            new MailAddress(addressWithDomain);
-        } catch (ParseException e) {
-            throw new RecipientRewriteTableException("Invalid emailAddress: " + addressWithDomain, e);
+    private void checkHasValidAddress(Mapping mapping) throws RecipientRewriteTableException {
+        if (!mapping.asMailAddress().isPresent()) {
+            throw new RecipientRewriteTableException("Invalid emailAddress: " + mapping);
         }
     }
 
     @Override
     public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        String addressWithDomain = addDefaultDomainIfNone(address);
-        LOGGER.info("Remove address mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
-        removeMapping(user, domain, MappingImpl.address(addressWithDomain));
+        Mapping mapping = MappingImpl.address(address)
+            .appendDomainIfNone(defaultDomainSupplier());
+
+        LOGGER.info("Remove address mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        removeMapping(user, domain, mapping);
     }
 
     @Override
@@ -274,18 +278,23 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        String addressWithDomain = addDefaultDomainIfNone(address);
-        checkAddressIsValid(addressWithDomain);
-        checkMapping(user, domain, MappingImpl.forward(addressWithDomain));
-        LOGGER.info("Add forward mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
-        addMapping(user, domain, MappingImpl.forward(addressWithDomain));
+        Mapping mapping = MappingImpl.forward(address)
+            .appendDomainIfNone(defaultDomainSupplier());
+
+        checkHasValidAddress(mapping);
+        checkMapping(user, domain, mapping);
+
+        LOGGER.info("Add forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        addMapping(user, domain, mapping);
     }
 
     @Override
     public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        String addressWithDomain = addDefaultDomainIfNone(address);
-        LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", addressWithDomain, user, domain.name());
-        removeMapping(user, domain, MappingImpl.forward(addressWithDomain));
+        Mapping mapping = MappingImpl.forward(address)
+            .appendDomainIfNone(defaultDomainSupplier());
+
+        LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
+        removeMapping(user, domain, mapping);
     }
 
     /**
