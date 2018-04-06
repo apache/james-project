@@ -63,6 +63,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Iterables;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.parsing.Parser;
 
@@ -100,7 +101,7 @@ public abstract class SendMDNMethodTest {
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }
 
-    private void bartSendMessageToHomer() {
+    private String bartSendMessageToHomer() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
         String requestBody = "[" +
@@ -121,7 +122,7 @@ public abstract class SendMDNMethodTest {
             "  ]" +
             "]";
 
-        with()
+        String id = with()
             .header("Authorization", bartAccessToken.serialize())
             .body(requestBody)
             .post("/jmap")
@@ -131,6 +132,7 @@ public abstract class SendMDNMethodTest {
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         calmlyAwait.until(() -> !listMessageIdsForAccount(homerAccessToken).isEmpty());
+        return id;
     }
 
     private void sendAWrongInitialMessage() {
@@ -276,9 +278,9 @@ public abstract class SendMDNMethodTest {
 
     @Test
     public void sendMDNShouldSendAMDNBackToTheOriginalMessageAuthor() {
-        bartSendMessageToHomer();
+        String bartSentJmapMessageId = bartSendMessageToHomer();
 
-        List<String> messageIds = listMessageIdsForAccount(homerAccessToken);
+        String homerReceivedMessageId = Iterables.getOnlyElement(listMessageIdsForAccount(homerAccessToken));
 
         // HOMER sends a MDN back to BART
         String creationId = "creation-1";
@@ -286,7 +288,7 @@ public abstract class SendMDNMethodTest {
             .header("Authorization", homerAccessToken.serialize())
             .body("[[\"setMessages\", {\"sendMDN\": {" +
                 "\"" + creationId + "\":{" +
-                "    \"messageId\":\"" + messageIds.get(0) + "\"," +
+                "    \"messageId\":\"" + homerReceivedMessageId + "\"," +
                 "    \"subject\":\"subject\"," +
                 "    \"textBody\":\"Read confirmation\"," +
                 "    \"reportingUA\":\"reportingUA\"," +
@@ -301,22 +303,24 @@ public abstract class SendMDNMethodTest {
 
         // BART should have received it
         calmlyAwait.until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
-        List<String> bobInboxMessageIds = listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken));
+        String bartInboxMessageIds = Iterables.getOnlyElement(listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)));
 
+        String firstMessage = ARGUMENTS + ".list[0]";
         given()
             .header("Authorization", bartAccessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"" + bobInboxMessageIds.get(0) + "\"]}, \"#0\"]]")
+            .body("[[\"getMessages\", {\"ids\": [\"" + bartInboxMessageIds + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(ARGUMENTS + ".list[0].from.email", is(HOMER))
-            .body(ARGUMENTS + ".list[0].to.email", contains(BART))
-            .body(ARGUMENTS + ".list[0].hasAttachment", is(true))
-            .body(ARGUMENTS + ".list[0].textBody", is("Read confirmation"))
-            .body(ARGUMENTS + ".list[0].subject", is("subject"))
-            .body(ARGUMENTS + ".list[0].headers.Content-Type", startsWith("multipart/report;"))
-            .body(ARGUMENTS + ".list[0].attachments[0].type", startsWith("message/disposition-notification"));
+            .body(firstMessage + ".from.email", is(HOMER))
+            .body(firstMessage + ".to.email", contains(BART))
+            .body(firstMessage + ".hasAttachment", is(true))
+            .body(firstMessage + ".textBody", is("Read confirmation"))
+            .body(firstMessage + ".subject", is("subject"))
+            .body(firstMessage + ".headers.Content-Type", startsWith("multipart/report;"))
+            .body(firstMessage + ".headers.X-JAMES-MDN-JMAP-MESSAGE-ID", equalTo(bartSentJmapMessageId))
+            .body(firstMessage + ".attachments[0].type", startsWith("message/disposition-notification"));
     }
 
     @Test

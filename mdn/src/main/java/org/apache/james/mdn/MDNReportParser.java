@@ -19,8 +19,11 @@
 
 package org.apache.james.mdn;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.fields.AddressType;
 import org.apache.james.mdn.fields.Disposition;
@@ -44,6 +47,10 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class MDNReportParser {
     public MDNReportParser() {
+    }
+
+    public Optional<MDNReport> parse(InputStream is, String charset) throws IOException {
+        return parse(IOUtils.toString(is, charset));
     }
 
     public Optional<MDNReport> parse(String mdnReport) {

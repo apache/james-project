@@ -30,6 +30,7 @@
     </spooler>
 
     <processors>
+
         <processor state="root" enableJmx="false">
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
@@ -43,6 +44,11 @@
         </processor>
 
         <processor state="transport" enableJmx="false">
+            <matcher name="mdn-matcher" match="org.apache.james.mailetcontainer.impl.matchers.And">
+                <matcher match="HasMimeType=multipart/report"/>
+                <matcher match="HasMimeTypeParameter=report-type=disposition-notification"/>
+            </matcher>
+
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
@@ -53,6 +59,7 @@
             <mailet match="All" class="org.apache.james.jmap.mailet.TextCalendarBodyToAttachment"/>
             <mailet match="All" class="RecipientRewriteTable" />
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
+            <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" />
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="SpamAssassin">
                 <onMailetException>ignore</onMailetException>
