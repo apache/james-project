@@ -66,7 +66,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException {
         if (mappings == null) {
             return null;
         } else {

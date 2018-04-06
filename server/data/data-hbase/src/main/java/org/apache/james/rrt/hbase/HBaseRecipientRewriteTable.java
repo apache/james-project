@@ -72,7 +72,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) throws
+    public Mappings getUserDomainMappings(String user, Domain domain) throws
             RecipientRewriteTableException {
         HTableInterface table = null;
         Mappings list = MappingsImpl.empty();

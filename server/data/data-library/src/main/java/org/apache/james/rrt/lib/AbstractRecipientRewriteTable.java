@@ -313,11 +313,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException {
-        return getUserDomainMappingsInternal(user, domain);
-    }
-
-    @Override
     public void addAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Add domain mapping: {} => {}", aliasDomain, realDomain);
         addMappingInternal(null, aliasDomain, MappingImpl.domain(realDomain));
@@ -370,17 +365,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
      * @throws RecipientRewriteTableException
      */
     protected abstract void removeMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException;
-
-    /**
-     * Return Collection of all mappings for the given username and domain
-     * 
-     * @param user
-     *            the user
-     * @param domain
-     *            the domain
-     * @return Collection which hold the mappings
-     */
-    protected abstract Mappings getUserDomainMappingsInternal(String user, Domain domain) throws RecipientRewriteTableException;
 
     /**
      * Return a Map which holds all Mappings

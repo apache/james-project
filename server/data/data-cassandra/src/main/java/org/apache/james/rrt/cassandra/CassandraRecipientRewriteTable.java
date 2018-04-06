@@ -112,7 +112,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) {
+    public Mappings getUserDomainMappings(String user, Domain domain) {
         return retrieveMappings(user, domain)
             .orElse(null);
     }

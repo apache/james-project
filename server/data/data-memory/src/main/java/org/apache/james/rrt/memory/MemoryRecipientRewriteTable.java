@@ -103,7 +103,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings getUserDomainMappingsInternal(String user, Domain domain) {
+    public Mappings getUserDomainMappings(String user, Domain domain) {
         return retrieveMappings(user, domain)
             .orElse(null);
     }
