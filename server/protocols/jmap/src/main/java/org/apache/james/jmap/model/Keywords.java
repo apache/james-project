@@ -74,7 +74,7 @@ public class Keywords {
         }
 
         public KeywordsFactory filterImapNonExposedKeywords() {
-            filter = Optional.of(keyword -> keyword.isExposedImapKeyword());
+            filter = Optional.of(Keyword::isExposedImapKeyword);
             return this;
         }
 
@@ -102,7 +102,7 @@ public class Keywords {
         Keywords fromMap(Map<String, Boolean> mapKeywords) {
             Preconditions.checkArgument(mapKeywords.values()
                 .stream()
-                .noneMatch(keywordValue -> keywordValue == false), "Keyword must be true");
+                .allMatch(keywordValue -> keywordValue), "Keyword must be true");
             Set<Keyword> setKeywords = mapKeywords.keySet()
                 .stream()
                 .map(Keyword::new)
