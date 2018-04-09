@@ -168,6 +168,14 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         return messageManager.appendMessage(message, internalDate, mailboxSession, isRecent, flags);
     }
 
+    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, MessageManager.AppendCommand appendCommand)
+            throws MailboxException {
+
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+        MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
+        return messageManager.appendMessage(appendCommand, mailboxSession);
+    }
+
     @Override
     public void copyMailbox(String srcBean, String dstBean) throws Exception {
         throw new NotImplementedException();

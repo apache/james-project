@@ -46,20 +46,17 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.mail.Flags;
-
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -70,8 +67,8 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.ACLProbe;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -96,9 +93,11 @@ public abstract class GetMailboxesMethodTest {
 
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;
-    private MailboxProbe mailboxProbe;
+    private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
     private QuotaProbe quotaProbe;
+
+    private Message message;
     
     @Before
     public void setup() throws Throwable {
@@ -118,6 +117,11 @@ public abstract class GetMailboxesMethodTest {
         dataProbe.addUser(ALICE, ALICE_PASSWORD);
         dataProbe.addUser(BOB, BOB_PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
+
+        message = Message.Builder.of()
+            .setSubject("test")
+            .setBody("testmail", StandardCharsets.UTF_8)
+            .build();
     }
 
     @After
@@ -379,8 +383,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxesWhenAvailable() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "name");
 
-        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "name"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "name"), AppendCommand.from(message));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -397,8 +400,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnMailboxPropertiesWhenAvailable() throws Exception {
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "name").serialize();
 
-        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "name"),
-                new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "name"), AppendCommand.from(message));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -865,10 +867,8 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldReturnUpdatedQuotasForInboxWhenMailReceived() throws Exception {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, DefaultMailboxes.INBOX).serialize();
-        String message = "Subject: hello\r\n\r\nContent";
-        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, DefaultMailboxes.INBOX),
-                new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8)),
-                new Date(), true, new Flags());
+
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, DefaultMailboxes.INBOX), AppendCommand.from(message));
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -879,7 +879,7 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("mailboxes"))
             .body(ARGUMENTS + ".list", hasSize(1))
-            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(message.length()))
+            .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['STORAGE'].used", equalTo(85))
             .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(1));
     }
 }

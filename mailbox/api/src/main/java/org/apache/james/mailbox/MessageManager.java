@@ -157,6 +157,10 @@ public interface MessageManager {
             return builder().build(message);
         }
 
+        public static AppendCommand from(InputStream message) {
+            return builder().build(message);
+        }
+
         public static class Builder {
             private Optional<Date> internalDate;
             private Optional<Boolean> isRecent;

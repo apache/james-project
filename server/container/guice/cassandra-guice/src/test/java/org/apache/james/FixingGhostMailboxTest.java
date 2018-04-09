@@ -37,15 +37,13 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
-
-import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -58,7 +56,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.ACLProbe;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
@@ -110,7 +108,7 @@ public class FixingGhostMailboxTest {
     private String bob;
     private String cedric;
     private GuiceJamesServer jmapServer;
-    private MailboxProbe mailboxProbe;
+    private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
     private Session session;
     private CassandraTypesProvider cassandraTypesProvider;
@@ -164,14 +162,13 @@ public class FixingGhostMailboxTest {
         simulateGhostMailboxBug();
     }
 
-    private void simulateGhostMailboxBug() throws MailboxException {
+    private void simulateGhostMailboxBug() throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
         aliceInboxPath = MailboxPath.forUser(alice, MailboxConstants.INBOX);
         aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
         aclProbe.addRights(aliceInboxPath, bob, MailboxACL.FULL_RIGHTS);
-        message1 = mailboxProbe.appendMessage(alice, aliceInboxPath,
-            generateMessageContent(), new Date(), !RECENT, new Flags());
+        message1 = mailboxProbe.appendMessage(alice, aliceInboxPath, AppendCommand.from(generateMessageContent()));
         rule.await();
 
         // Simulate ghost mailbox bug
@@ -189,13 +186,15 @@ public class FixingGhostMailboxTest {
             .statusCode(200);
 
         // Received a new message
-        message2 = mailboxProbe.appendMessage(alice, aliceInboxPath,
-            generateMessageContent(), new Date(), !RECENT, new Flags());
+        message2 = mailboxProbe.appendMessage(alice, aliceInboxPath, AppendCommand.from(generateMessageContent()));
         rule.await();
     }
 
-    private ByteArrayInputStream generateMessageContent() {
-        return new ByteArrayInputStream("Subject: toto\r\n\r\ncontent".getBytes(StandardCharsets.UTF_8));
+    private Message generateMessageContent() throws IOException {
+        return Message.Builder.of()
+            .setSubject("toto")
+            .setBody("content", StandardCharsets.UTF_8)
+            .build();
     }
 
     @After

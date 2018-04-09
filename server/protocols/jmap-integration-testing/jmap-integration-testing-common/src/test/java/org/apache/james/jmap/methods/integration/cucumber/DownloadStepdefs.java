@@ -26,13 +26,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -42,6 +40,7 @@ import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.AttachmentAccessToken;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -96,7 +95,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
+            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
     }
@@ -106,7 +105,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-                ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml"), new Date(), false, new Flags());
+            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
         attachmentsByMessageId.put(messageId, attachmentId);
@@ -118,7 +117,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-                ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml"), new Date(), false, new Flags());
+                AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml")));
         
         attachmentsByMessageId.put(messageId, attachmentId);
     }
@@ -128,7 +127,7 @@ public class DownloadStepdefs {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
         mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-            ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml"), new Date(), false, new Flags());
+            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml")));
 
         attachmentsByMessageId.put(messageName, attachmentId);
 

@@ -24,22 +24,21 @@ import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
-import java.util.Date;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mime4j.dom.Message;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Maps;
@@ -75,11 +74,12 @@ public class SetMailboxesMethodStepdefs {
         mainStepdefs.awaitMethod.run();
     }
 
-    private void appendMessage(MailboxPath mailboxPath, int i) throws MailboxException {
-        String content = "Subject: test" + i + "\r\n\r\n"
-                + "testBody" + i;
+    private void appendMessage(MailboxPath mailboxPath, int i) throws Exception {
         mainStepdefs.mailboxProbe.appendMessage(userStepdefs.getConnectedUser(), mailboxPath,
-                new ByteArrayInputStream(content.getBytes()), new Date(), false, new Flags());
+                MessageManager.AppendCommand.from(Message.Builder.of()
+                    .setSubject("test" + i)
+                    .setBody("testBody" + i, StandardCharsets.UTF_8)
+                    .build()));
     }
 
     @Given("^\"([^\"]*)\" has a mailbox \"([^\"]*)\"$")
