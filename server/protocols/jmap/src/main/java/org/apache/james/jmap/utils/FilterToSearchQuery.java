@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.mail.Flags.Flag;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
@@ -87,6 +88,9 @@ public class FilterToSearchQuery {
         filter.getNotKeyword().ifPresent(notKeyword -> {
             keywordQuery(notKeyword, false).ifPresent(notKeywordCriterion
                 -> searchQuery.andCriteria(notKeywordCriterion));
+        });
+        filter.getAttachmentFileName().ifPresent(attachmentFileName -> {
+            throw new NotImplementedException("`attachmentFileName` criterion is not yet handled by `mailbox-api`");
         });
 
         return searchQuery;

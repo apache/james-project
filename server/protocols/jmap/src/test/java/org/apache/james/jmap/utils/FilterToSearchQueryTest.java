@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import javax.mail.Flags.Flag;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
@@ -539,5 +540,13 @@ public class FilterToSearchQueryTest {
                 .build());
 
         assertThat(searchQuery).isEqualTo(expectedSearchQuery);
+    }
+
+    @Test
+    public void attachmentFileNameShouldNotBeImplemented() {
+        assertThatThrownBy(() -> new FilterToSearchQuery().convert(FilterCondition.builder()
+                .attachmentFileName(Optional.of("file.gz"))
+                .build()))
+            .isInstanceOf(NotImplementedException.class);
     }
 }
