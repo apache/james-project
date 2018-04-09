@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import javax.mail.Flags.Flag;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.FilterOperator;
@@ -81,17 +80,9 @@ public class FilterToSearchQuery {
         filter.getMaxSize().ifPresent(maxSize -> searchQuery.andCriteria(SearchQuery.sizeLessThan(maxSize.asLong())));
         filter.getMinSize().ifPresent(minSize -> searchQuery.andCriteria(SearchQuery.sizeGreaterThan(minSize.asLong())));
         filter.getHasAttachment().ifPresent(hasAttachment -> searchQuery.andCriteria(SearchQuery.hasAttachment(hasAttachment)));
-        filter.getHasKeyword().ifPresent(hasKeyword -> {
-            keywordQuery(hasKeyword, true).ifPresent(hasKeywordCriterion
-                -> searchQuery.andCriteria(hasKeywordCriterion));
-        });
-        filter.getNotKeyword().ifPresent(notKeyword -> {
-            keywordQuery(notKeyword, false).ifPresent(notKeywordCriterion
-                -> searchQuery.andCriteria(notKeywordCriterion));
-        });
-        filter.getAttachmentFileName().ifPresent(attachmentFileName -> {
-            throw new NotImplementedException("`attachmentFileName` criterion is not yet handled by `mailbox-api`");
-        });
+        filter.getHasKeyword().ifPresent(hasKeyword -> keywordQuery(hasKeyword, true).ifPresent(searchQuery::andCriteria));
+        filter.getNotKeyword().ifPresent(notKeyword -> keywordQuery(notKeyword, false).ifPresent(searchQuery::andCriteria));
+        filter.getAttachmentFileName().ifPresent(attachmentFileName -> searchQuery.andCriteria(SearchQuery.attachmentFileName(attachmentFileName)));
 
         return searchQuery;
     }

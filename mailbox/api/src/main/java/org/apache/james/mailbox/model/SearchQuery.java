@@ -670,6 +670,10 @@ public class SearchQuery implements Serializable {
         }
     }
 
+    public static Criterion attachmentFileName(String fileName) {
+        return new TextCriterion(fileName, Scope.ATTACHMENT_FILE_NAME);
+    }
+
     public static Criterion hasAttachment() {
         return hasAttachment(true);
     }
@@ -1105,7 +1109,11 @@ public class SearchQuery implements Serializable {
         /** Full message content including headers and attachments */
         FULL,
         /** Attachment content */
-        ATTACHMENTS
+        ATTACHMENTS,
+
+        /** Attachment file name, specified on Content-Disposition
+         * header of mime body parts */
+        ATTACHMENT_FILE_NAME
     }
 
     /**
