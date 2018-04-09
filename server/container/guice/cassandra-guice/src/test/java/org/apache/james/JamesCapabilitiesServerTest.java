@@ -129,6 +129,21 @@ public class JamesCapabilitiesServerTest {
 
         assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    public void startShouldFailWhenNoAttachmentFileNameSearchCapability() throws Exception {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
+        when(mailboxManager.getSupportedMailboxCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
+        when(mailboxManager.getSupportedMessageCapabilities())
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
+        when(mailboxManager.getSupportedSearchCapabilities())
+            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.SearchCapabilities.AttachmentFileName)));
+
+        server = createCassandraJamesServer(mailboxManager);
+
+        assertThatThrownBy(() -> server.start()).isInstanceOf(IllegalArgumentException.class);
+    }
     
     @Test
     public void startShouldFailWhenNoMultimailboxSearchCapability() throws Exception {

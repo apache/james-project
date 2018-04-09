@@ -159,6 +159,8 @@ public class JMAPModule extends AbstractModule {
                     "Multimailbox search in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(searchCapabilities.contains(MailboxManager.SearchCapabilities.Attachment),
                     "Attachment Search support in MailboxManager is required by JMAP Module");
+            Preconditions.checkArgument(searchCapabilities.contains(SearchCapabilities.AttachmentFileName),
+                    "Attachment file name Search support in MailboxManager is required by JMAP Module");
         }
 
         @Override
