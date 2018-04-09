@@ -51,18 +51,19 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
@@ -88,7 +89,7 @@ public abstract class GetMessageListMethodTest {
     private AccessToken aliceAccessToken;
     private AccessToken bobAccessToken;
     private GuiceJamesServer jmapServer;
-    private MailboxProbe mailboxProbe;
+    private MailboxProbeImpl mailboxProbe;
     private DataProbe dataProbe;
     
     @Before
@@ -1997,6 +1998,42 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
             .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize(), message1.getMessageId().serialize()));
+    }
+
+    @Test
+    public void getMessageListFileNameFilterShouldReturnOnlyMessagesWithMatchingAttachmentFileNames() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+
+        ComposedMessageId message1 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setSubject("test")
+                    .setBody("content", StandardCharsets.UTF_8)));
+        ComposedMessageId message2 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setBody(
+                        MultipartBuilder.create("alternative")
+                            .addBodyPart(BodyPartBuilder.create()
+                                .setContentDisposition("attachment", "matchme.txt")
+                                .setBody(SingleBodyBuilder.create()
+                                    .setText("this is the file content...")
+                                    .setCharset(StandardCharsets.UTF_8)
+                                    .build())
+                                .build())
+                            .build())));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"attachmentFileName\":\"matchme.txt\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize()));
     }
 
     private Date convertToDate(LocalDate localDate) {
