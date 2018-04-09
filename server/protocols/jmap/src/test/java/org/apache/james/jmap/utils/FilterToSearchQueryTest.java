@@ -184,7 +184,8 @@ public class FilterToSearchQueryTest {
                 SearchQuery.address(AddressType.Bcc, text),
                 SearchQuery.headerContains("Subject", text),
                 SearchQuery.bodyContains(text),
-                SearchQuery.attachmentContains(text))));
+                SearchQuery.attachmentContains(text),
+                SearchQuery.attachmentFileName(text))));
 
         SearchQuery searchQuery = new FilterToSearchQuery().convert(FilterCondition.builder()
                 .text(text)

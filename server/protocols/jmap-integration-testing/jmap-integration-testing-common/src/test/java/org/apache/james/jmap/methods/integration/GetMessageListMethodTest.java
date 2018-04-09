@@ -2036,6 +2036,73 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize()));
     }
 
+    @Test
+    public void getMessageListFileNameFilterShouldNotReturnMessagesWithOnlyAttachmentContentMatching() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setBody(
+                        MultipartBuilder.create("alternative")
+                            .addBodyPart(BodyPartBuilder.create()
+                                .setContentDisposition("attachment", "nomatch.md")
+                                .setBody(SingleBodyBuilder.create()
+                                    .setText("matchme.txt ...")
+                                    .setCharset(StandardCharsets.UTF_8)
+                                    .build())
+                                .build())
+                            .build())));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"attachmentFileName\":\"matchme.txt\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(0));
+    }
+
+    @Test
+    public void getMessageListTextFilterShouldReturnOnlyMessagesWithMatchingAttachmentFileNames() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+
+        ComposedMessageId message1 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setSubject("test")
+                    .setBody("content", StandardCharsets.UTF_8)));
+        ComposedMessageId message2 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+            MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setBody(
+                        MultipartBuilder.create("alternative")
+                            .addBodyPart(BodyPartBuilder.create()
+                                .setContentDisposition("attachment", "matchme.txt")
+                                .setBody(SingleBodyBuilder.create()
+                                    .setText("this is the file content...")
+                                    .setCharset(StandardCharsets.UTF_8)
+                                    .build())
+                                .build())
+                            .build())));
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"matchme.txt\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize()));
+    }
+
     private Date convertToDate(LocalDate localDate) {
         return Date.from(localDate.atStartOfDay(ZONE_ID).toInstant());
     }

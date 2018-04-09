@@ -60,7 +60,8 @@ public class FilterToSearchQuery {
                         SearchQuery.address(AddressType.Bcc, text),
                         SearchQuery.headerContains("Subject", text),
                         SearchQuery.attachmentContains(text),
-                        SearchQuery.bodyContains(text)))
+                        SearchQuery.bodyContains(text),
+                        SearchQuery.attachmentFileName(text)))
                 ));
         filter.getFrom().ifPresent(from -> searchQuery.andCriteria(SearchQuery.address(AddressType.From, from)));
         filter.getTo().ifPresent(to -> searchQuery.andCriteria(SearchQuery.address(AddressType.To, to)));
