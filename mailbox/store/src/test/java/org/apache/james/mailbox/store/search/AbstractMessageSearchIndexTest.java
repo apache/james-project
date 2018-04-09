@@ -52,6 +52,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
+import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.Assume;
 import org.junit.Before;
@@ -1449,5 +1450,33 @@ public abstract class AbstractMessageSearchIndexTest {
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m3.getUid());
+    }
+
+    @Test
+    public void searchShouldRetrieveMailByAttachmentFileName() throws Exception {
+        Assume.assumeTrue(messageSearchIndex.getSupportedCapabilities(storeMailboxManager.getSupportedMessageCapabilities())
+            .contains(MailboxManager.SearchCapabilities.AttachmentFileName));
+
+        String fileName = "matchme.txt";
+        ComposedMessageId mWithFileName = inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
+                .build(Message.Builder.of()
+                    .setBody(
+                        MultipartBuilder.create("alternative")
+                            .addBodyPart(BodyPartBuilder.create()
+                                .setContentDisposition("attachment", fileName)
+                                .setBody(SingleBodyBuilder.create()
+                                    .setText("this is the file content...")
+                                    .setCharset(StandardCharsets.UTF_8)
+                                    .build())
+                                .build())
+                            .build())),
+            session);
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.attachmentFileName(fileName));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .containsOnly(mWithFileName.getUid());
     }
 }

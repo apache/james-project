@@ -100,7 +100,8 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
          */
         Text,
         FullText,
-        Attachment
+        Attachment,
+        AttachmentFileName
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();

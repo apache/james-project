@@ -206,6 +206,8 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
                 return messageContains(value, message);
             case ATTACHMENTS:
                 return attachmentsContain(value, message);
+            case ATTACHMENT_FILE_NAME:
+                return hasFileName(value, message);
             }
             throw new UnsupportedSearchException();
         } catch (IOException | MimeException e) {
@@ -241,6 +243,13 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean attachmentsContain(String value, MailboxMessage message) throws IOException, MimeException {
         List<MessageAttachment> attachments = message.getAttachments();
         return isInAttachments(value, attachments);
+    }
+
+    private boolean hasFileName(String value, MailboxMessage message) throws IOException, MimeException {
+        return message.getAttachments()
+            .stream()
+            .map(MessageAttachment::getName)
+            .anyMatch(nameOptional -> nameOptional.map(value::equals).orElse(false));
     }
 
     private boolean isInAttachments(String value, List<MessageAttachment> attachments) {

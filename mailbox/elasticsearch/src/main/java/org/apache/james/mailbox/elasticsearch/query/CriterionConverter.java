@@ -168,6 +168,10 @@ public class CriterionConverter {
             return boolQuery()
                     .should(matchQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.TEXT_CONTENT,
                         textCriterion.getOperator().getValue()));
+        case ATTACHMENT_FILE_NAME:
+            return boolQuery()
+                .should(termQuery(JsonMessageConstants.ATTACHMENTS + "." + JsonMessageConstants.Attachment.FILENAME,
+                    textCriterion.getOperator().getValue()));
         }
         throw new RuntimeException("Unknown SCOPE for text criterion");
     }

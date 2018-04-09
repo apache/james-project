@@ -84,6 +84,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             SearchCapabilities.Text,
             SearchCapabilities.FullText,
             SearchCapabilities.Attachment,
+            SearchCapabilities.AttachmentFileName,
             SearchCapabilities.PartialEmailMatch);
     }
     
