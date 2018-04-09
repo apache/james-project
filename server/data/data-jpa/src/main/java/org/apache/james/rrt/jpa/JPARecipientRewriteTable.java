@@ -39,8 +39,6 @@ import org.apache.james.rrt.lib.MappingsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * Class responsible to implement the Virtual User Table in database with JPA
  * access.
@@ -69,7 +67,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
-        if (map != null && map.size() != 0) {
+        if (!map.isEmpty()) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
@@ -80,7 +78,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
         Mappings mapping = getMapping(user, domain, "selectExactMappings");
-        if (mapping != null) {
+        if (!mapping.isEmpty()) {
             return mapping;
         }
         return getMapping(user, domain, "selectMappings");
@@ -101,6 +99,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             if (virtualUsers.size() > 0) {
                 return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
+            return MappingsImpl.empty();
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to find mapping for  user={} and domain={}", user, domain, e);
             if (transaction.isActive()) {
@@ -110,7 +109,6 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         } finally {
             entityManager.close();
         }
-        return MappingsImpl.empty();
     }
 
     @Override
@@ -128,17 +126,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             if (virtualUsers.size() > 0) {
                 return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
+            return MappingsImpl.empty();
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get user domain mappings", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
-
         } finally {
             entityManager.close();
         }
-        return null;
     }
 
     @Override
@@ -154,20 +151,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             for (JPARecipientRewrite virtualUser : virtualUsers) {
                 mapping.put(virtualUser.getUser() + "@" + virtualUser.getDomain(), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
-            if (mapping.size() > 0) {
-                return mapping;
-            }
+            return mapping;
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get all mappings", e);
             if (transaction.isActive()) {
                 transaction.rollback();
             }
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
-
         } finally {
             entityManager.close();
         }
-        return ImmutableMap.of();
     }
 
     @Override
@@ -175,7 +168,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
         String fixedUser = getFixedUser(user);
         Domain fixedDomain = getFixedDomain(domain);
         Mappings map = getUserDomainMappings(fixedUser, fixedDomain);
-        if (map != null && map.size() > 1) {
+        if (map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(fixedUser, fixedDomain, updatedMappings.serialize());
         } else {
