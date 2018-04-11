@@ -80,6 +80,19 @@ public class RecipientRewriteTableIntegrationTest {
     }
 
     @Test
+    public void rrtServiceShouldNotImpactRecipientsNotMatchingAnyRRT() throws Exception {
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FROM, RECIPIENT)
+            .awaitSent(awaitAtMostOneMinute);
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).isNotNull();
+    }
+
+    @Test
     public void rrtServiceShouldDeliverEmailToMappingRecipients() throws Exception {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, ANY_AT_JAMES);
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
