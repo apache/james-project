@@ -148,7 +148,7 @@ public class RecipientRewriteTableProcessor {
         try {
             Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
-            if (mappings != null) {
+            if (mappings != null && !mappings.isEmpty()) {
                 List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
                 return RrtExecutionResult.success(newMailAddresses);
             }

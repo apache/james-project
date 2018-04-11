@@ -108,7 +108,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mappings targetMappings = mapAddress(user, domain);
 
         // Only non-null mappings are translated
-        if (targetMappings != null) {
+        if (!targetMappings.isEmpty()) {
             if (targetMappings.contains(Type.Error)) {
                 throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
             } else {
@@ -142,12 +142,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         // Check if the returned mapping is the same as the
                         // input. If so return null to avoid loops
                         if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
-                            return null;
+                            return MappingsImpl.empty();
                         }
 
                         Mappings childMappings = getMappings(userName, targetDomain, mappingLimit - 1);
 
-                        if (childMappings == null || childMappings.isEmpty()) {
+                        if (childMappings.isEmpty()) {
                             // add mapping
                             mappings.add(addressWithMappingApplied);
                         } else {
@@ -162,7 +162,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             }
         }
 
-        return null;
+        return MappingsImpl.empty();
     }
 
     private Optional<String> applyMapping(String user, Domain domain, String target, Type type) {
