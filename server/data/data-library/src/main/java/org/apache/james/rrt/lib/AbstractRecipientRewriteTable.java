@@ -142,6 +142,10 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                         // Check if the returned mapping is the same as the
                         // input. If so return null to avoid loops
                         if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
+                            if (type.equals(Type.Forward)) {
+                                mappings.add(toMapping(addressWithMappingApplied, type));
+                                continue;
+                            }
                             return MappingsImpl.empty();
                         }
 
