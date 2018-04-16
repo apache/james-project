@@ -46,16 +46,21 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 
 public abstract class ForwardIntegrationTest {
+
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(DOMAIN);
 
     protected abstract GuiceJamesServer createJmapServer();
 
@@ -179,6 +184,99 @@ public abstract class ForwardIntegrationTest {
             .body(NAME, equalTo("messageList"))
             .body(ARGUMENTS + ".messageIds", hasSize(1));
 
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1));
+    }
+
+    @Test
+    public void recursiveForwardShouldWork() {
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, CEDRIC));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", CEDRIC, BOB));
+
+        AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getOutboxId(cedricAccessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", cedricAccessToken.serialize())
+            .body(requestBody)
+        .post("/jmap");
+
+        AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        given()
+            .header("Authorization", bobAccessToken.serialize())
+            .body("[[\"getMessageList\", {}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", hasSize(1));
+    }
+
+    @Test
+    public void recursiveWithRecipientCopyForwardShouldWork() {
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, ALICE));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", BOB, CEDRIC));
+
+        AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
+        AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"isUnread\": true," +
+            "        \"isFlagged\": true," +
+            "        \"isAnswered\": true," +
+            "        \"isDraft\": true," +
+            "        \"isForwarded\": true," +
+            "        \"mailboxIds\": [\"" + getOutboxId(cedricAccessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", cedricAccessToken.serialize())
+            .body(requestBody)
+        .post("/jmap");
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(aliceAccessToken));
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
