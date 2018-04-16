@@ -41,6 +41,7 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
@@ -288,11 +289,11 @@ public class GroupMappingTest {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FakeMail.builder()
+            .sendEnvelope(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
                 .recipient(GROUP_ON_DOMAIN1))
-            .awaitSentFail(awaitAtMostOneMinute);
+            .awaitSentFail(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, awaitAtMostOneMinute);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)

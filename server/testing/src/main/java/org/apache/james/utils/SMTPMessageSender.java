@@ -149,6 +149,24 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         return this;
     }
 
+    public SMTPMessageSender sendEnvelope(Mail mail) throws MessagingException {
+        try {
+            String from = mail.getSender().asString();
+            smtpClient.helo(senderDomain);
+            smtpClient.setSender(from);
+            mail.getRecipients().stream()
+                .map(MailAddress::asString)
+                .forEach(Throwing.consumer(smtpClient::addRecipient));
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+        return this;
+    }
+
+    public SMTPMessageSender sendEnvelope(FakeMail.Builder mail) throws MessagingException {
+        return sendEnvelope(mail.build());
+    }
+
     public SMTPMessageSender sendMessage(FakeMail.Builder mail) throws MessagingException {
         return sendMessage(mail.build());
     }
@@ -173,9 +191,18 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         conditionFactory.until(this::messageSendingFailed);
     }
 
-    public boolean messageSendingFailed() throws IOException {
+    public void awaitSentFail(String code, ConditionFactory conditionFactory) {
+        conditionFactory.until(() -> messageSendingFailedWithCode(code));
+    }
+
+    public boolean messageSendingFailed() {
         String replyString = smtpClient.getReplyString().trim();
         return replyString.startsWith("4") || replyString.startsWith("5");
+    }
+
+    public boolean messageSendingFailedWithCode(String code) {
+        String replyString = smtpClient.getReplyString().trim();
+        return replyString.startsWith(code);
     }
 
     public boolean messageHaveNotBeenSent() throws IOException {
