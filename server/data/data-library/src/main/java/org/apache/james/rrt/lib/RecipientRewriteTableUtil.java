@@ -57,7 +57,7 @@ public class RecipientRewriteTableUtil {
      * formatted as regex:<regular-expression>:<parameterized-string>, e.g.,
      * regex:(.*)@(.*):${1}@tld
      */
-    public static String regexMap(MailAddress address, Mapping mapping) {
+    public static Optional<String> regexMap(MailAddress address, Mapping mapping) {
         Preconditions.checkArgument(mapping.getType() == Type.Regex);
 
         List<String> parts = Splitter.on(':').splitToList(mapping.asString());
@@ -70,9 +70,9 @@ public class RecipientRewriteTableUtil {
 
         if (match.matches()) {
             ImmutableList<String> parameters = listMatchingGroups(match);
-            return replaceParameters(parts.get(PARAMETERIZED_STRING), parameters);
+            return Optional.of(replaceParameters(parts.get(PARAMETERIZED_STRING), parameters));
         }
-        return null;
+        return Optional.empty();
     }
 
     private static ImmutableList<String> listMatchingGroups(Matcher match) {
