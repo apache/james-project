@@ -41,9 +41,11 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.system.hbase.TablePool;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Splitter;
 
 /**
@@ -152,17 +154,20 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
+        return getApplicableMappingRow(user, domain)
+            .map(MappingsImpl::fromRawString)
+            .orElse(MappingsImpl.empty());
+    }
+
+    private Optional<String> getApplicableMappingRow(String user, Domain domain) throws RecipientRewriteTableException {
         HTableInterface table = null;
-        String mappings;
         try {
             table = TablePool.getInstance().getRecipientRewriteTable();
-            mappings = getMapping(table, user, domain);
-            if (mappings == null) {
-                mappings = getMapping(table, WILDCARD, domain);
-            }
-            if (mappings == null) {
-                mappings = getMapping(table, user, Domains.WILDCARD);
-            }
+            HTableInterface tableCopy = table;
+            return OptionalUtils.orSuppliers(
+                Throwing.supplier(() -> Optional.ofNullable(getMapping(tableCopy, user, domain))).sneakyThrow(),
+                Throwing.supplier(() -> Optional.ofNullable(getMapping(tableCopy, WILDCARD, domain))).sneakyThrow(),
+                Throwing.supplier(() -> Optional.ofNullable(getMapping(tableCopy, user, Domains.WILDCARD))).sneakyThrow());
         } catch (IOException e) {
             log.error("Error while mapping address in HBase", e);
             throw new RecipientRewriteTableException("Error while mapping address in HBase", e);
@@ -175,7 +180,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 }
             }
         }
-        return MappingsImpl.fromRawString(Optional.ofNullable(mappings).orElse(""));
     }
 
     private String getMapping(HTableInterface table, String user, Domain domain) throws IOException {
