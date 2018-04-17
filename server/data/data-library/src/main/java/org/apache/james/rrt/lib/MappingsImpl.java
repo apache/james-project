@@ -113,6 +113,11 @@ public class MappingsImpl implements Mappings, Serializable {
             return this;
         }
         
+        public Builder addAll(Iterable<String> mappings) {
+            mappings.forEach(this::add);
+            return this;
+        }
+        
         public MappingsImpl build() {
             return new MappingsImpl(mappings.build()
                 .stream()

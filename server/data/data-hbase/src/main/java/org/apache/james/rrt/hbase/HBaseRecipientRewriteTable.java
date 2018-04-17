@@ -44,6 +44,8 @@ import org.apache.james.system.hbase.TablePool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Splitter;
+
 /**
  * Implementation of the RecipientRewriteTable for a HBase persistence.
  */
@@ -54,6 +56,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      */
     private static final Logger log = LoggerFactory.getLogger(HBaseRecipientRewriteTable.class.getName());
     private static final String ROW_SEPARATOR = "@";
+    private static final String COLUMN_SEPARATOR = ";";
 
     @Override
     protected void addMappingInternal(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
@@ -129,7 +132,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                                     Optional.ofNullable(
                                         map.get(email))
                                         .orElse(MappingsImpl.empty()))
-                                .add(Bytes.toString(keyValue.getRow()))
+                                .addAll(Splitter.on(COLUMN_SEPARATOR).split(Bytes.toString(keyValue.getValue())))
                                 .build();
                         map.put(email, mappings);
                     }

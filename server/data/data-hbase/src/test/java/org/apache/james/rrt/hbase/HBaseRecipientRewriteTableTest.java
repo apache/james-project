@@ -28,7 +28,6 @@ import org.apache.james.system.hbase.TablePool;
 import org.apache.james.user.hbase.def.HUsersRepository;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 
 /**
  * Tests for the HBase RecipientRewriteTable implementation.
@@ -60,11 +59,5 @@ public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTabl
         HBaseRecipientRewriteTable rrt = new HBaseRecipientRewriteTable();
         rrt.configure(new DefaultConfigurationBuilder());
         return rrt;
-    }
-
-    @Ignore("JAMES-2376 HBASE RRT getAllMappings is buggy")
-    @Override
-    public void getAllMappingsShouldListAllEntries() {
-
     }
 }
