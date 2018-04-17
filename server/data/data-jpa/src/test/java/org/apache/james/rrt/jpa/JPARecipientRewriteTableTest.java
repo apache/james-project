@@ -26,9 +26,6 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
 import org.junit.Before;
 
-/**
- * Test the JPA Virtual User Table implementation.
- */
 public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPARecipientRewrite.class);

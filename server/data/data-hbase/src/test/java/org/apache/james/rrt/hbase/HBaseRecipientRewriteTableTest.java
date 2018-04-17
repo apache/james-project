@@ -29,12 +29,6 @@ import org.apache.james.user.hbase.def.HUsersRepository;
 import org.junit.After;
 import org.junit.Before;
 
-/**
- * Tests for the HBase RecipientRewriteTable implementation.
- *
- * Simply create the needed HBaseRecipientRewriteTable instance, and let the
- * AbstractRecipientRewriteTableTest run the tests.
- */
 public class HBaseRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     private static final HBaseClusterSingleton cluster = HBaseClusterSingleton.build();

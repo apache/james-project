@@ -27,9 +27,6 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
 import org.junit.Before;
 
-/**
- * Test the JDBC Virtual User Table implementation.
- */
 public class JDBCRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     @Override
