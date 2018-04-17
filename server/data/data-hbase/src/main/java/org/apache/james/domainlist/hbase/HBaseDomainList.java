@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -70,13 +71,7 @@ public class HBaseDomainList extends AbstractDomainList {
             log.error("Error while counting domains from HBase", e);
             throw new DomainListException("Error while counting domains from HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
         return false;
     }
@@ -97,13 +92,7 @@ public class HBaseDomainList extends AbstractDomainList {
             log.error("Error while adding domain in HBase", e);
             throw new DomainListException("Error while adding domain in HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -119,13 +108,7 @@ public class HBaseDomainList extends AbstractDomainList {
             log.error("Error while deleting user from HBase", e);
             throw new DomainListException("Error while deleting domain from HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -148,16 +131,8 @@ public class HBaseDomainList extends AbstractDomainList {
             log.error("Error while counting domains from HBase", e);
             throw new DomainListException("Error while counting domains from HBase", e);
         } finally {
-            if (resultScanner != null) {
-                resultScanner.close();
-            }
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(resultScanner);
+            IOUtils.closeQuietly(table);
         }
         return list;
     }

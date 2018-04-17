@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -83,13 +84,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             log.error("Error while getting user domain mapping in HBase", e);
             throw new RecipientRewriteTableException("Error while getting user domain mapping in HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -141,13 +136,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             if (resultScanner != null) {
                 resultScanner.close();
             }
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
         return map;
     }
@@ -172,13 +161,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             log.error("Error while mapping address in HBase", e);
             throw new RecipientRewriteTableException("Error while mapping address in HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -239,13 +222,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             log.error("Error while removing mapping from HBase", e);
             throw new RecipientRewriteTableException("Error while removing mapping from HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -270,13 +247,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
             log.error("Error while adding mapping in HBase", e);
             throw new RecipientRewriteTableException("Error while adding mapping in HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 

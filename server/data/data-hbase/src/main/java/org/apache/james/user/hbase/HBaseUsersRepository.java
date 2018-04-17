@@ -26,6 +26,7 @@ import java.util.Locale;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -101,13 +102,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             log.error("Error while deleting user from HBase", e);
             throw new UsersRepositoryException("Error while deleting user from HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -147,16 +142,8 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             log.error("Error while counting users from HBase", e);
             throw new UsersRepositoryException("Error while counting users from HBase", e);
         } finally {
-            if (resultScanner != null) {
-                resultScanner.close();
-            }
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(resultScanner);
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -179,16 +166,8 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             log.error("Error while scanning users from HBase", e);
             throw new UsersRepositoryException("Error while scanning users from HBase", e);
         } finally {
-            if (resultScanner != null) {
-                resultScanner.close();
-            }
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(resultScanner);
+            IOUtils.closeQuietly(table);
         }
         return list.iterator();
     }
@@ -219,13 +198,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             log.error("Error while counting users from HBase", e);
             throw new UsersRepositoryException("Error while counting users from HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 
@@ -255,13 +228,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
             log.error("Error while adding user in HBase", e);
             throw new UsersRepositoryException("Error while adding user in HBase", e);
         } finally {
-            if (table != null) {
-                try {
-                    table.close();
-                } catch (IOException e) {
-                    // Do nothing, we can't get access to the HBaseSchema.
-                }
-            }
+            IOUtils.closeQuietly(table);
         }
     }
 }
