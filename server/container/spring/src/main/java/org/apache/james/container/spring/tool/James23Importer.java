@@ -23,7 +23,6 @@ import java.util.Iterator;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 
 import org.apache.james.domainlist.api.DomainList;
@@ -130,9 +129,6 @@ public class James23Importer {
      * @throws DomainListException
      */
     public void importMailsFromJames23(String james23MailRepositoryPath) throws MessagingException, MailRepositoryStoreException, UsersRepositoryException, MailboxException, DomainListException {
-
-        Flags flags = new Flags();
-        boolean isRecent = false;
 
         Iterator<String> james23userRepositoryIterator = james23UsersRepository.list();
 
