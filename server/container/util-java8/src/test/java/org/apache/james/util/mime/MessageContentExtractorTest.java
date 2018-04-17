@@ -68,29 +68,26 @@ public class MessageContentExtractorTest {
 
     private MessageContentExtractor testee;
 
-    private BodyPart htmlPart;
-    private BodyPart textPart;
-    private BodyPart textAttachment;
-    private BodyPart inlineText;
-    private BodyPart inlineImage;
+    private BodyPartBuilder htmlPart;
+    private BodyPartBuilder textPart;
+    private BodyPartBuilder textAttachment;
+    private BodyPartBuilder inlineText;
+    private BodyPartBuilder inlineImage;
 
     @Before
     public void setup() throws IOException {
         testee = new MessageContentExtractor();
-        textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", StandardCharsets.UTF_8).build();
-        htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8).build();
+        textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", StandardCharsets.UTF_8);
+        htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8);
         textAttachment = BodyPartBuilder.create()
                 .setBody(ATTACHMENT_CONTENT, "plain", StandardCharsets.UTF_8)
-                .setContentDisposition("attachment")
-                .build();
+                .setContentDisposition("attachment");
         inlineText = BodyPartBuilder.create()
                 .setBody(ATTACHMENT_CONTENT, "plain", StandardCharsets.UTF_8)
-                .setContentDisposition("inline")
-                .build();
+                .setContentDisposition("inline");
         inlineImage = BodyPartBuilder.create()
                 .setBody(new byte[0], "image/png")
-                .setContentDisposition("inline")
-                .build();
+                .setContentDisposition("inline");
     }
 
     @Test
@@ -184,12 +181,10 @@ public class MessageContentExtractorTest {
         Multipart multipart = MultipartBuilder.create("report")
             .addBodyPart(BodyPartBuilder.create()
                 .setBody(textBody, "plain", StandardCharsets.UTF_8)
-                .setContentDisposition("inline")
-                .build())
+                .setContentDisposition("inline"))
             .addBodyPart(BodyPartBuilder.create()
                 .setBody("body 2", "rfc822-headers", StandardCharsets.UTF_8)
-                .setContentDisposition("inline")
-                .build())
+                .setContentDisposition("inline"))
             .build();
         Message message = Message.Builder.of()
             .setBody(multipart)

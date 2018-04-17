@@ -374,11 +374,9 @@ public class GetMessagesMethodTest {
                     .setBody(MultipartBuilder.create()
                         .setSubType("alternative")
                         .addBodyPart(BodyPartBuilder.create()
-                            .setBody("My plain message", "plain", StandardCharsets.UTF_8)
-                            .build())
+                            .setBody("My plain message", "plain", StandardCharsets.UTF_8))
                         .addBodyPart(BodyPartBuilder.create()
-                            .setBody("<a>The </a> <strong>HTML</strong> message", "html", StandardCharsets.UTF_8)
-                            .build())
+                            .setBody("<a>The </a> <strong>HTML</strong> message", "html", StandardCharsets.UTF_8))
                         .build())),
             session);
 

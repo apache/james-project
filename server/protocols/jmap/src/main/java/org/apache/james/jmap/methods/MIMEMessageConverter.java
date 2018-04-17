@@ -224,7 +224,7 @@ public class MIMEMessageConverter {
     private void addBody(CreationMessage newMessage, MultipartBuilder builder) throws IOException {
         if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
             Multipart body = createMultipartAlternativeBody(newMessage);
-            builder.addBodyPart(BodyPartBuilder.create().setBody(body).build());
+            builder.addBodyPart(BodyPartBuilder.create().setBody(body));
         } else {
             addText(builder, newMessage.getTextBody());
             addHtml(builder, newMessage.getHtmlBody());
@@ -244,8 +244,7 @@ public class MIMEMessageConverter {
                 .use(bodyFactory)
                 .setBody(textBody.get(), Charsets.UTF_8)
                 .setContentType(PLAIN_TEXT_MEDIA_TYPE, UTF_8_CHARSET)
-                .setContentTransferEncoding(QUOTED_PRINTABLE)
-                .build());
+                .setContentTransferEncoding(QUOTED_PRINTABLE));
         }
     }
 
@@ -255,8 +254,7 @@ public class MIMEMessageConverter {
                 .use(bodyFactory)
                 .setBody(htmlBody.get(), Charsets.UTF_8)
                 .setContentType(HTML_MEDIA_TYPE, UTF_8_CHARSET)
-                .setContentTransferEncoding(QUOTED_PRINTABLE)
-                .build());
+                .setContentTransferEncoding(QUOTED_PRINTABLE));
         }
     }
 

@@ -50,7 +50,6 @@ import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
-import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.util.ClassLoaderUtils;
@@ -1327,14 +1326,12 @@ public abstract class AbstractMessageSearchIndexTest {
     public void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
-        BodyPart attachment = BodyPartBuilder.create()
-                .setBody(attachmentContent, "application/pdf")
-                .setContentDisposition("attachment")
-                .build();
-        BodyPart textPart = BodyPartBuilder.create().setBody("The message has a PDF attachment.", "plain", StandardCharsets.UTF_8).build();
         Multipart multipart = MultipartBuilder.create("mixed")
-                .addBodyPart(attachment)
-                .addBodyPart(textPart)
+                .addBodyPart(BodyPartBuilder.create()
+                    .setBody(attachmentContent, "application/pdf")
+                    .setContentDisposition("attachment"))
+                .addBodyPart(BodyPartBuilder.create()
+                    .setBody("The message has a PDF attachment.", "plain", StandardCharsets.UTF_8))
                 .build();
         Message message = Message.Builder.of()
                 .setBody(multipart)

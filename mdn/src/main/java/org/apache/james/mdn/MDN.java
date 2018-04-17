@@ -140,13 +140,11 @@ public class MDN {
         builder.addBodyPart(BodyPartBuilder.create()
             .use(new BasicBodyFactory())
             .setBody(humanReadableText, Charsets.UTF_8)
-            .setContentType("text/plain", UTF_8_CHARSET)
-            .build());
+            .setContentType("text/plain", UTF_8_CHARSET));
         builder.addBodyPart(BodyPartBuilder.create()
             .use(new BasicBodyFactory())
             .setBody(report.formattedValue(), Charsets.UTF_8)
-            .setContentType(DISPOSITION_CONTENT_TYPE, UTF_8_CHARSET)
-            .build());
+            .setContentType(DISPOSITION_CONTENT_TYPE, UTF_8_CHARSET));
 
         return builder.build();
     }
