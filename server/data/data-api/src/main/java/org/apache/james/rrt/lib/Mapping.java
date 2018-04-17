@@ -100,4 +100,6 @@ public interface Mapping {
 
     String getErrorMessage();
 
+    Optional<String> apply(MailAddress input);
+
 }

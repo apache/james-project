@@ -23,17 +23,22 @@ package org.apache.james.rrt.lib;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.PatternSyntaxException;
 
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class MappingImpl implements Mapping, Serializable {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -134,6 +139,31 @@ public class MappingImpl implements Mapping, Serializable {
             return Optional.empty();
         }
     }
+
+    @Override
+    public Optional<String> apply(MailAddress address) {
+        switch (getType()) {
+            case Regex:
+                try {
+                    return RecipientRewriteTableUtil.regexMap(address, this);
+                } catch (PatternSyntaxException e) {
+                    LOGGER.error("Exception during regexMap processing: ", e);
+                    return Optional.of(asString());
+                }
+            case Domain:
+                return Optional.of(address.getLocalPart() + "@" + mapping);
+            case Forward:
+                return Optional.of(mapping);
+            case Group:
+                return Optional.of(mapping);
+            case Address:
+                return Optional.of(mapping);
+            case Error:
+                return Optional.empty();
+        }
+        throw new IllegalArgumentException("unhandle enum type: " + getType());
+    }
+
 
     @Override
     public final boolean equals(Object other) {

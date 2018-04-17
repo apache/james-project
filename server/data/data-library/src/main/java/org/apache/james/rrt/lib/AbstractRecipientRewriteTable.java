@@ -22,9 +22,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.internet.ParseException;
+import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -39,6 +40,7 @@ import org.apache.james.rrt.lib.Mapping.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
 
 public abstract class AbstractRecipientRewriteTable implements RecipientRewriteTable, Configurable {
@@ -111,57 +113,62 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
         }
 
-        MappingsImpl.Builder mappings = MappingsImpl.builder();
-
-        for (String target : targetMappings.asStrings()) {
-            Type type = Mapping.detectType(target);
-            Optional<String> maybeAddressWithMappingApplied = applyMapping(user, domain, target, type);
-
-            if (!maybeAddressWithMappingApplied.isPresent()) {
-                continue;
-            }
-            String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
-            LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
-
-            if (recursive) {
-
-                String userName;
-                Domain targetDomain;
-                String[] args = addressWithMappingApplied.split("@");
-
-                if (args.length > 1) {
-                    userName = args[0];
-                    targetDomain = Domain.of(args[1]);
-                } else {
-                    // TODO Is that the right todo here?
-                    userName = addressWithMappingApplied;
-                    targetDomain = domain;
-                }
-
-                // Check if the returned mapping is the same as the
-                // input. If so return null to avoid loops
-                if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
-                    if (type.equals(Type.Forward)) {
-                        mappings.add(toMapping(addressWithMappingApplied, type));
-                        continue;
-                    }
-                    return MappingsImpl.empty();
-                }
-
-                Mappings childMappings = getMappings(userName, targetDomain, mappingLimit - 1);
-
-                if (childMappings.isEmpty()) {
-                    // add mapping
-                    mappings.add(toMapping(addressWithMappingApplied, type));
-                } else {
-                    mappings = mappings.addAll(childMappings);
-                }
-
-            } else {
-                mappings.add(toMapping(addressWithMappingApplied, type));
-            }
+        try {
+            return MappingsImpl.fromMappings(
+                targetMappings.asStream()
+                    .flatMap(Throwing.<Mapping, Stream<Mapping>>function(target -> convertAndRecurseMapping(target, user, domain, mappingLimit)).sneakyThrow()));
+        } catch (EmptyMappingException e) {
+            return MappingsImpl.empty();
         }
-        return mappings.build();
+    }
+
+    private static class EmptyMappingException extends RuntimeException {
+
+    }
+
+    private Stream<Mapping> convertAndRecurseMapping(Mapping target, String user, Domain domain, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException, EmptyMappingException, AddressException {
+        Optional<String> maybeAddressWithMappingApplied = target.apply(new MailAddress(user, domain));
+
+        if (!maybeAddressWithMappingApplied.isPresent()) {
+            return Stream.empty();
+        }
+        String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
+        LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
+
+        if (!recursive) {
+            return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+        }
+
+        String userName;
+        Domain targetDomain;
+        String[] args = addressWithMappingApplied.split("@");
+
+        if (args.length > 1) {
+            userName = args[0];
+            targetDomain = Domain.of(args[1]);
+        } else {
+            // TODO Is that the right todo here?
+            userName = addressWithMappingApplied;
+            targetDomain = domain;
+        }
+
+        // Check if the returned mapping is the same as the
+        // input. If so return null to avoid loops
+        if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
+            if (target.getType().equals(Type.Forward)) {
+                return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+            }
+            //throw exception ?
+            throw new EmptyMappingException();
+        }
+
+        Mappings childMappings = getMappings(userName, targetDomain, remainingLoops - 1);
+
+        if (childMappings.isEmpty()) {
+            return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+        } else {
+            return childMappings.asStream();
+        }
     }
 
     private Mapping toMapping(String mappedAddress, Type type) {
@@ -176,22 +183,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
                 return MappingImpl.address(mappedAddress);
         }
         throw new IllegalArgumentException("unhandled enum type");
-    }
-
-    private Optional<String> applyMapping(String user, Domain domain, String target, Type type) {
-        switch (type) {
-            case Regex:
-                try {
-                    return RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain.asString()), MappingImpl.of(target));
-                } catch (PatternSyntaxException | ParseException e) {
-                    LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.ofNullable(target);
-                }
-            case Domain:
-                return Optional.of(user + "@" + Type.Domain.withoutPrefix(target));
-            default:
-                return Optional.of(type.withoutPrefix(target));
-        }
     }
 
     @Override
