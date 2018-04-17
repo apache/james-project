@@ -107,66 +107,61 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         Mappings targetMappings = mapAddress(user, domain);
 
-        // Only non-null mappings are translated
-        if (!targetMappings.isEmpty()) {
-            if (targetMappings.contains(Type.Error)) {
-                throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
-            } else {
-                MappingsImpl.Builder mappings = MappingsImpl.builder();
+        if (targetMappings.contains(Type.Error)) {
+            throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
+        } else {
+            MappingsImpl.Builder mappings = MappingsImpl.builder();
 
-                for (String target : targetMappings.asStrings()) {
-                    Type type = Mapping.detectType(target);
-                    Optional<String> maybeAddressWithMappingApplied = applyMapping(user, domain, target, type);
+            for (String target : targetMappings.asStrings()) {
+                Type type = Mapping.detectType(target);
+                Optional<String> maybeAddressWithMappingApplied = applyMapping(user, domain, target, type);
 
-                    if (!maybeAddressWithMappingApplied.isPresent()) {
-                        continue;
-                    }
-                    String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
-                    LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
-
-                    if (recursive) {
-
-                        String userName;
-                        Domain targetDomain;
-                        String[] args = addressWithMappingApplied.split("@");
-
-                        if (args.length > 1) {
-                            userName = args[0];
-                            targetDomain = Domain.of(args[1]);
-                        } else {
-                            // TODO Is that the right todo here?
-                            userName = addressWithMappingApplied;
-                            targetDomain = domain;
-                        }
-
-                        // Check if the returned mapping is the same as the
-                        // input. If so return null to avoid loops
-                        if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
-                            if (type.equals(Type.Forward)) {
-                                mappings.add(toMapping(addressWithMappingApplied, type));
-                                continue;
-                            }
-                            return MappingsImpl.empty();
-                        }
-
-                        Mappings childMappings = getMappings(userName, targetDomain, mappingLimit - 1);
-
-                        if (childMappings.isEmpty()) {
-                            // add mapping
-                            mappings.add(toMapping(addressWithMappingApplied, type));
-                        } else {
-                            mappings = mappings.addAll(childMappings);
-                        }
-
-                    } else {
-                        mappings.add(toMapping(addressWithMappingApplied, type));
-                    }
+                if (!maybeAddressWithMappingApplied.isPresent()) {
+                    continue;
                 }
-                return mappings.build();
-            }
-        }
+                String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
+                LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
 
-        return MappingsImpl.empty();
+                if (recursive) {
+
+                    String userName;
+                    Domain targetDomain;
+                    String[] args = addressWithMappingApplied.split("@");
+
+                    if (args.length > 1) {
+                        userName = args[0];
+                        targetDomain = Domain.of(args[1]);
+                    } else {
+                        // TODO Is that the right todo here?
+                        userName = addressWithMappingApplied;
+                        targetDomain = domain;
+                    }
+
+                    // Check if the returned mapping is the same as the
+                    // input. If so return null to avoid loops
+                    if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
+                        if (type.equals(Type.Forward)) {
+                            mappings.add(toMapping(addressWithMappingApplied, type));
+                            continue;
+                        }
+                        return MappingsImpl.empty();
+                    }
+
+                    Mappings childMappings = getMappings(userName, targetDomain, mappingLimit - 1);
+
+                    if (childMappings.isEmpty()) {
+                        // add mapping
+                        mappings.add(toMapping(addressWithMappingApplied, type));
+                    } else {
+                        mappings = mappings.addAll(childMappings);
+                    }
+
+                } else {
+                    mappings.add(toMapping(addressWithMappingApplied, type));
+                }
+            }
+            return mappings.build();
+        }
     }
 
     private Mapping toMapping(String mappedAddress, Type type) {
