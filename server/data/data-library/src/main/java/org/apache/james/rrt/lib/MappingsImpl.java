@@ -44,9 +44,40 @@ public class MappingsImpl implements Mappings, Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final Comparator<Mapping> MAPPING_COMPARATOR = Comparator
-        .<Mapping, Integer>comparing(mapping -> mapping.getType().getOrder())
-        .thenComparing(Mapping::asString);
+    private static class DefaultMappingOrderingPolicy {
+
+        private static final Comparator<Mapping> MAPPING_COMPARATOR = Comparator
+            .<Mapping, Integer>comparing(DefaultMappingOrderingPolicy::typeOrder)
+            .thenComparing(Mapping::asString);
+
+        private static int typeOrder(Mapping mapping) {
+            return typeOrder(mapping.getType());
+        }
+
+        private static int typeOrder(Mapping.Type type) {
+            switch (type) {
+                case Domain:
+                    return 1;
+                case Group:
+                    return 2;
+                case Forward:
+                    return 3;
+                case Regex:
+                    return 4;
+                case Error:
+                    return 4;
+                case Address:
+                    return 4;
+            }
+            throw new IllegalArgumentException("missing enum handling");
+        }
+
+        public Comparator<Mapping> comparator() {
+            return MAPPING_COMPARATOR;
+        }
+    }
+
+
 
     public static MappingsImpl empty() {
         return builder().build();
@@ -121,7 +152,7 @@ public class MappingsImpl implements Mappings, Serializable {
         public MappingsImpl build() {
             return new MappingsImpl(mappings.build()
                 .stream()
-                .sorted(MAPPING_COMPARATOR)
+                .sorted(new DefaultMappingOrderingPolicy().comparator())
                 .collect(Guavate.toImmutableList()));
         }
 

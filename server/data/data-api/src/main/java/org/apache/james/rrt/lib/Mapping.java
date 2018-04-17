@@ -53,19 +53,17 @@ public interface Mapping {
     Optional<MailAddress> asMailAddress();
 
     enum Type {
-        Regex("regex:", 4),
-        Domain("domain:", 1),
-        Error("error:", 4),
-        Forward("forward:", 3),
-        Group("group:", 2),
-        Address("", 4);
+        Regex("regex:"),
+        Domain("domain:"),
+        Error("error:"),
+        Forward("forward:"),
+        Group("group:"),
+        Address("");
 
         private final String asPrefix;
-        private final int order;
 
-        Type(String asPrefix, Integer order) {
+        Type(String asPrefix) {
             this.asPrefix = asPrefix;
-            this.order = order;
         }
 
         public String asPrefix() {
@@ -83,10 +81,6 @@ public interface Mapping {
                 || mapping.startsWith(Error.asPrefix())
                 || mapping.startsWith(Forward.asPrefix())
                 || mapping.startsWith(Group.asPrefix());
-        }
-
-        public int getOrder() {
-            return order;
         }
     }
 
