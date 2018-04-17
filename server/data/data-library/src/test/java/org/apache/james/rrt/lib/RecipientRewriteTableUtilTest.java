@@ -19,6 +19,9 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.james.core.MailAddress;
 import org.junit.Test;
@@ -28,8 +31,54 @@ public class RecipientRewriteTableUtilTest {
     @Test
     public void regexMapShouldCorrectlyReplaceMatchingUsername() throws Exception {
         MailAddress mailAddress = new MailAddress("prefix_abc@test");
-        assertThat(RecipientRewriteTableUtil.regexMap(mailAddress, "regex:prefix_.*:admin@test"))
+        assertThat(RecipientRewriteTableUtil.regexMap(mailAddress, MappingImpl.regex("prefix_.*:admin@test")))
             .isEqualTo("admin@test");
+    }
+
+    @Test
+    public void regexMapShouldThrowOnNullAddress() throws Exception {
+        MailAddress address = null;
+        assertThatThrownBy(() -> RecipientRewriteTableUtil.regexMap(address, MappingImpl.regex("prefix_.*:admin@test")))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void regexMapShouldThrowOnNullRegexMapping() throws Exception {
+        Mapping regexMapping = null;
+        assertThatThrownBy(() -> RecipientRewriteTableUtil.regexMap(new MailAddress("abc@test"), regexMapping))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void regexMapShouldThrowOnNonRegexMapping() throws Exception {
+        assertThatThrownBy(() -> RecipientRewriteTableUtil.regexMap(new MailAddress("abc@test"), MappingImpl.error("mapping")))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void regexMapShouldThrowOnInvalidSyntax() throws Exception {
+        assertThatThrownBy(() -> RecipientRewriteTableUtil.regexMap(new MailAddress("abc@test"), MappingImpl.regex("singlepart")))
+            .isInstanceOf(PatternSyntaxException.class);
+    }
+
+    @Test
+    public void regexMapShouldReturnInputWhenRegexDoesntMatch() throws Exception {
+        assertThat(RecipientRewriteTableUtil.regexMap(new MailAddress("abc@test"), MappingImpl.regex("notmatching:notreplaced")))
+            .isNull();
+    }
+
+    @Test
+    public void regexMapShouldCorrectlyReplaceMatchingGroups() throws Exception {
+        MailAddress mailAddress = new MailAddress("prefix_abc@test");
+        assertThat(RecipientRewriteTableUtil.regexMap(mailAddress, MappingImpl.regex("prefix_(.*)@test:admin@${1}")))
+            .isEqualTo("admin@abc");
+    }
+
+    @Test
+    public void regexMapShouldCorrectlyReplaceSeveralMatchingGroups() throws Exception {
+        MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
+        assertThat(RecipientRewriteTableUtil.regexMap(mailAddress, MappingImpl.regex("prefix_(.*)_(.*)@test:admin@${1}.${2}")))
+            .isEqualTo("admin@abc.def");
     }
 
     @Test

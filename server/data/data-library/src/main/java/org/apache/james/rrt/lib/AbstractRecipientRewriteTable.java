@@ -182,7 +182,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         switch (type) {
             case Regex:
                 try {
-                    return Optional.ofNullable(RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain.asString()), target));
+                    return Optional.ofNullable(RecipientRewriteTableUtil.regexMap(new MailAddress(user, domain.asString()), MappingImpl.of(target)));
                 } catch (PatternSyntaxException | ParseException e) {
                     LOGGER.error("Exception during regexMap processing: ", e);
                     return Optional.ofNullable(target);

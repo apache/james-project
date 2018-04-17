@@ -36,6 +36,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.lib.MappingImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Experimental;
@@ -116,7 +117,7 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
 
                         if (targetAddress.startsWith("regex:")) {
                             try {
-                                targetAddress = RecipientRewriteTableUtil.regexMap(source, targetAddress);
+                                targetAddress = RecipientRewriteTableUtil.regexMap(source, MappingImpl.of(targetAddress));
                             } catch (PatternSyntaxException e) {
                                 LOGGER.error("Exception during regexMap processing: ", e);
                             }
