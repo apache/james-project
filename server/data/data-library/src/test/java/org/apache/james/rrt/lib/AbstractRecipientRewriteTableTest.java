@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -110,6 +111,30 @@ public abstract class AbstractRecipientRewriteTableTest {
 
         assertThat(virtualUserTable.getMappings(user, domain)).describedAs("No mapping").isNull();
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isNull();
+    }
+
+    @Test
+    public void getAllMappingsShouldListAllEntries() throws ErrorMappingException, RecipientRewriteTableException {
+        String user = "test";
+        String user2 = "test2";
+        String regex = "(.*)@localhost";
+        String regex2 = "(.+)@test";
+
+
+        addMapping(user, Domain.LOCALHOST, regex, Type.Regex);
+        addMapping(user, Domain.LOCALHOST, regex2, Type.Regex);
+        addMapping(user2, Domain.LOCALHOST, user + "@" + Domain.LOCALHOST.asString(), Type.Address);
+
+        assertThat(virtualUserTable.getAllMappings())
+            .describedAs("One mappingline")
+            .containsOnly(
+                Pair.of(user + "@" + Domain.LOCALHOST.asString(), MappingsImpl.builder()
+                    .add(MappingImpl.regex(regex))
+                    .add(MappingImpl.regex(regex2))
+                    .build()),
+                Pair.of(user2 + "@" + Domain.LOCALHOST.asString(), MappingsImpl.builder()
+                    .add(MappingImpl.address(user + "@" + Domain.LOCALHOST.asString()))
+                    .build()));
     }
 
     @Test

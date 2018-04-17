@@ -171,7 +171,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
         }
 
         public String asKey() {
-            return getUser() + "@" + getDomain();
+            return getUser() + "@" + getDomain().asString();
         }
     }
 

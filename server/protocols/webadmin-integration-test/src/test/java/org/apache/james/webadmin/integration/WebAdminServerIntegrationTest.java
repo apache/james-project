@@ -296,6 +296,22 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
+    public void addressForwardsEndpointShouldListForwardAddresses() throws Exception {
+        dataProbe.addForwardMapping("from1", "domain.com", "user1@domain.com");
+        dataProbe.addForwardMapping("from2", "domain.com", "user2@domain.com");
+
+        List<String> members = when()
+            .get("/address/forwards")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(JSON_CONTENT_TYPE)
+            .extract()
+            .jsonPath()
+            .getList(".");
+        assertThat(members).containsOnly("from1@domain.com", "from2@domain.com");
+    }
+
+    @Test
     public void getSwaggerShouldReturnJsonDataForSwagger() throws Exception {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
