@@ -117,7 +117,7 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Map<String, Mappings> getAllMappingsInternal() {
+    public Map<String, Mappings> getAllMappings() {
         return Multimaps.index(mappingEntries, InMemoryMappingEntry::asKey)
             .asMap()
             .entrySet()

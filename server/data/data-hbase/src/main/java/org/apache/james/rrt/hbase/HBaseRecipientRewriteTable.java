@@ -102,7 +102,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
+    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
         HTableInterface table = null;
         ResultScanner resultScanner = null;
         Map<String, Mappings> map = new HashMap<>();

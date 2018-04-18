@@ -257,7 +257,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Map<String, Mappings> getAllMappingsInternal() throws RecipientRewriteTableException {
+    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         Map<String, Mappings> mapping = new HashMap<>();
