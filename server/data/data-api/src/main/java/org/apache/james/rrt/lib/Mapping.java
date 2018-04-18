@@ -44,7 +44,8 @@ public interface Mapping {
     static Mapping of(Type type, String mapping) {
         UserRewritter.MappingUserRewriter rewriter = selectRewriter(type);
         IdentityMappingPolicy identityMappingPolicy = selectIdentityPolicy(type);
-        return new Impl(type, mapping, rewriter.generateUserRewriter(mapping), identityMappingPolicy);
+        MailAddressConversionPolicy mailAddressConversionPolicy = selectMailAddressConversionPolicy(type);
+        return new Impl(type, mapping, rewriter.generateUserRewriter(mapping), identityMappingPolicy, mailAddressConversionPolicy);
     }
 
     static UserRewritter.MappingUserRewriter selectRewriter(Type type) {
@@ -77,6 +78,40 @@ public interface Mapping {
         throw new IllegalStateException("unhandle enum type");
     }
 
+    enum MailAddressConversionPolicy {
+        ToEmpty {
+            @Override
+            Optional<MailAddress> convert(String mapping) {
+                return Optional.empty();
+            }
+        },
+        ToMailAddress {
+            @Override
+            Optional<MailAddress> convert(String mapping) {
+                try {
+                    return Optional.of(new MailAddress(mapping));
+                } catch (AddressException e) {
+                    return Optional.empty();
+                }
+            }
+        };
+
+        abstract Optional<MailAddress> convert(String mapping);
+    }
+
+    static MailAddressConversionPolicy selectMailAddressConversionPolicy(Type type) {
+        switch (type) {
+            case Regex:
+            case Domain:
+            case Error:
+                return MailAddressConversionPolicy.ToEmpty;
+            case Forward:
+            case Group:
+            case Address:
+                return MailAddressConversionPolicy.ToMailAddress;
+            }
+        throw new IllegalStateException("unhandle enum type");
+    }
 
     static Mapping address(String mapping) {
         return of(Type.Address, mapping);
@@ -181,14 +216,20 @@ public interface Mapping {
         private final String mapping;
         private final UserRewritter rewriter;
         private final IdentityMappingPolicy identityMappingPolicy;
+        private final MailAddressConversionPolicy mailAddressConversionPolicy;
 
-        private Impl(Type type, String mapping, UserRewritter rewriter, IdentityMappingPolicy identityMappingBehaviour) {
+        private Impl(Type type,
+                     String mapping,
+                     UserRewritter rewriter,
+                     IdentityMappingPolicy identityMappingBehaviour,
+                     MailAddressConversionPolicy mailAddressConversionPolicy) {
             Preconditions.checkNotNull(type);
             Preconditions.checkNotNull(mapping);
             this.type = type;
             this.mapping = mapping;
             this.rewriter = rewriter;
             this.identityMappingPolicy = identityMappingBehaviour;
+            this.mailAddressConversionPolicy = mailAddressConversionPolicy;
         }
 
         @Override
@@ -235,18 +276,6 @@ public interface Mapping {
         }
 
         @Override
-        public Optional<MailAddress> asMailAddress() {
-            if (type != Type.Address && type != Type.Forward && type != Type.Group) {
-                return Optional.empty();
-            }
-            try {
-                return Optional.of(new MailAddress(mapping));
-            } catch (AddressException e) {
-                return Optional.empty();
-            }
-        }
-
-        @Override
         public Optional<User> rewriteUser(User user) throws AddressException {
             return rewriter.rewrite(user);
         }
@@ -254,6 +283,11 @@ public interface Mapping {
         @Override
         public Stream<Mapping> handleIdentity(Stream<Mapping> nonRecursiveResult) {
             return identityMappingPolicy.handleIdentity(nonRecursiveResult);
+        }
+
+        @Override
+        public Optional<MailAddress> asMailAddress() {
+            return mailAddressConversionPolicy.convert(mapping);
         }
 
         @Override
