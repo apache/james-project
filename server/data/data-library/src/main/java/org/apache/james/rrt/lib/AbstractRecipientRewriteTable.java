@@ -20,6 +20,7 @@ package org.apache.james.rrt.lib;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Stream;
@@ -30,7 +31,6 @@ import javax.mail.internet.AddressException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
@@ -97,10 +97,10 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
-        return getMappings(user, domain, mappingLimit);
+        return getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
     }
 
-    public Mappings getMappings(String user, Domain domain, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
+    public Mappings getMappings(User user, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
 
         // We have to much mappings throw ErrorMappingException to avoid
         // infinity loop
@@ -108,7 +108,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new ErrorMappingException("554 Too many mappings to process");
         }
 
-        Mappings targetMappings = mapAddress(user, domain);
+        Mappings targetMappings = mapAddress(user.getLocalPart(), user.getDomainPart().get());
 
         if (targetMappings.contains(Type.Error)) {
             throw new ErrorMappingException(targetMappings.getError().getErrorMessage());
@@ -117,7 +117,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         try {
             return MappingsImpl.fromMappings(
                 targetMappings.asStream()
-                    .flatMap(Throwing.<Mapping, Stream<Mapping>>function(target -> convertAndRecurseMapping(target, user, domain, mappingLimit)).sneakyThrow()));
+                    .flatMap(Throwing.<Mapping, Stream<Mapping>>function(target -> convertAndRecurseMapping(user, target, mappingLimit)).sneakyThrow()));
         } catch (EmptyMappingException e) {
             return MappingsImpl.empty();
         }
@@ -127,39 +127,42 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     }
 
-    private Stream<Mapping> convertAndRecurseMapping(Mapping target, String user, Domain domain, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException, EmptyMappingException, AddressException {
-        Optional<String> maybeAddressWithMappingApplied = target.apply(new MailAddress(user, domain));
+    private Stream<Mapping> convertAndRecurseMapping(User user, Mapping associatedMapping, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException, EmptyMappingException, AddressException {
 
-        if (!maybeAddressWithMappingApplied.isPresent()) {
-            return Stream.empty();
-        }
-        String addressWithMappingApplied = maybeAddressWithMappingApplied.get();
-        LOGGER.debug("Valid virtual user mapping {}@{} to {}", user, domain.name(), addressWithMappingApplied);
+        Function<String, Stream<Mapping>> convertAndRecurseMapping =
+            Throwing
+                .function((String stringMapping) -> convertAndRecurseMapping(associatedMapping.getType(), user, remainingLoops, stringMapping))
+                .sneakyThrow();
 
+        return associatedMapping.apply(user.asMailAddress())
+            .map(convertAndRecurseMapping)
+            .orElse(Stream.empty());
+    }
+
+    private Stream<Mapping> convertAndRecurseMapping(Type mappingType, User originalUser, int remainingLoops, String addressWithMappingApplied) throws ErrorMappingException, RecipientRewriteTableException {
+        LOGGER.debug("Valid virtual user mapping {} to {}", originalUser, addressWithMappingApplied);
+
+        Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(addressWithMappingApplied, mappingType));
         if (!recursive) {
-            return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+            return nonRecursiveResult;
         }
 
-        User coreUser = User.fromUsername(addressWithMappingApplied)
-            .withDefaultDomain(domain);
-
-        String userName = coreUser.getLocalPart();
-        Domain targetDomain = coreUser.getDomainPart().get();
+        User targetUser = User.fromUsername(addressWithMappingApplied)
+            .withDefaultDomain(originalUser.getDomainPart().get());
 
         // Check if the returned mapping is the same as the
         // input. If so return null to avoid loops
-        if (userName.equalsIgnoreCase(user) && targetDomain.equals(domain)) {
-            if (target.getType().equals(Type.Forward)) {
-                return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+        if (originalUser.equals(targetUser)) {
+            if (mappingType.equals(Type.Forward)) {
+                return nonRecursiveResult;
             }
-            //throw exception ?
             throw new EmptyMappingException();
         }
 
-        Mappings childMappings = getMappings(userName, targetDomain, remainingLoops - 1);
+        Mappings childMappings = getMappings(targetUser, remainingLoops - 1);
 
         if (childMappings.isEmpty()) {
-            return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
+            return nonRecursiveResult;
         } else {
             return childMappings.asStream();
         }

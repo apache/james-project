@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import javax.mail.internet.AddressException;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -99,6 +101,11 @@ public class User {
     public String asString() {
         return domainPart.map(domain -> localPart + "@" + domain.asString())
             .orElse(localPart);
+    }
+
+    public MailAddress asMailAddress() throws AddressException {
+        Preconditions.checkState(hasDomainPart());
+        return new MailAddress(localPart, domainPart.get());
     }
 
     @Override
