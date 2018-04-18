@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -126,16 +125,7 @@ public class MimePart {
                 fileName,
                 fileExtension,
                 contentDisposition,
-                children,
-                parsedContent
-                    .map(x -> x.getMetadata()
-                        .entrySet()
-                        .stream()
-                        .reduce(ImmutableMultimap.<String, String>builder(),
-                            (builder, entry) -> builder.putAll(entry.getKey(), entry.getValue()),
-                            (builder1, builder2) -> builder1.putAll(builder2.build())).build())
-                    .orElse(ImmutableMultimap.of())
-            );
+                children);
         }
 
         private Optional<ParsedContent> parseContent(TextExtractor textExtractor) {
@@ -175,11 +165,10 @@ public class MimePart {
     private final Optional<String> fileExtension;
     private final Optional<String> contentDisposition;
     private final List<MimePart> attachments;
-    private final ImmutableMultimap<String, String> metadata;
 
     private MimePart(HeaderCollection headerCollection, Optional<String> bodyTextContent, Optional<String> mediaType,
                     Optional<String> subType, Optional<String> fileName, Optional<String> fileExtension,
-                    Optional<String> contentDisposition, List<MimePart> attachments, Multimap<String, String> metadata) {
+                    Optional<String> contentDisposition, List<MimePart> attachments) {
         this.headerCollection = headerCollection;
         this.mediaType = mediaType;
         this.subType = subType;
@@ -188,7 +177,6 @@ public class MimePart {
         this.contentDisposition = contentDisposition;
         this.attachments = attachments;
         this.bodyTextContent = bodyTextContent;
-        this.metadata = ImmutableMultimap.copyOf(metadata);
     }
 
     @JsonIgnore
@@ -234,11 +222,6 @@ public class MimePart {
     @JsonProperty(JsonMessageConstants.Attachment.TEXT_CONTENT)
     public Optional<String> getTextualBody() {
         return bodyTextContent;
-    }
-
-    @JsonProperty(JsonMessageConstants.Attachment.FILE_METADATA)
-    public ImmutableMultimap<String, String> getMetadata() {
-        return metadata;
     }
 
     @JsonIgnore

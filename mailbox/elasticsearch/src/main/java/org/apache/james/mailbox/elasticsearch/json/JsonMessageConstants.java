@@ -72,7 +72,6 @@ public interface JsonMessageConstants {
         String CONTENT_DISPOSITION = "contentDisposition";
         String FILENAME = "fileName";
         String FILE_EXTENSION = "fileExtension";
-        String FILE_METADATA = "fileMetadata";
     }
 
     interface Property {

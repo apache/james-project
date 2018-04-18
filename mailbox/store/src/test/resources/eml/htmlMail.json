@@ -124,7 +124,6 @@
       "subtype":"plain",
       "fileName":null,
       "fileExtension":null,
-      "fileMetadata":{},
       "contentDisposition":null,
       "headers":{
         "content-transfer-encoding":[
@@ -140,7 +139,6 @@
       "mediaType":"text",
       "subtype":"html",
       "fileName":null,
-      "fileMetadata":{},
       "fileExtension":null,
       "contentDisposition":null,
       "headers":{
