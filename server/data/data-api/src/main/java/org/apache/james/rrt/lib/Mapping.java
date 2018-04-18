@@ -58,12 +58,42 @@ public interface Mapping {
     Optional<MailAddress> asMailAddress();
 
     enum Type {
-        Regex("regex:", IdentityMappingBehaviour.Throw),
-        Domain("domain:", IdentityMappingBehaviour.Throw),
-        Error("error:", IdentityMappingBehaviour.Throw),
-        Forward("forward:", IdentityMappingBehaviour.ReturnIdentity),
-        Group("group:", IdentityMappingBehaviour.Throw),
-        Address("", IdentityMappingBehaviour.Throw);
+        Regex("regex:", IdentityMappingBehaviour.Throw) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.RegexRewriter().generateUserRewriter(mapping);
+            }
+        },
+        Domain("domain:", IdentityMappingBehaviour.Throw) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.DomainRewriter().generateUserRewriter(mapping);
+            }
+        },
+        Error("error:", IdentityMappingBehaviour.Throw) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.NoneRewriter().generateUserRewriter(mapping);
+            }
+        },
+        Forward("forward:", IdentityMappingBehaviour.ReturnIdentity) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.ReplaceRewriter().generateUserRewriter(mapping);
+            }
+        },
+        Group("group:", IdentityMappingBehaviour.Throw) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.ReplaceRewriter().generateUserRewriter(mapping);
+            }
+        },
+        Address("", IdentityMappingBehaviour.Throw) {
+            @Override
+            protected UserRewritter rewriter(String mapping) {
+                return new UserRewritter.ReplaceRewriter().generateUserRewriter(mapping);
+            }
+        };
 
         private final String asPrefix;
         private final IdentityMappingBehaviour identityMappingBehaviour;
@@ -93,6 +123,9 @@ public interface Mapping {
         public IdentityMappingBehaviour getIdentityMappingBehaviour() {
             return identityMappingBehaviour;
         }
+
+        protected abstract UserRewritter rewriter(String mapping);
+
     }
 
     enum IdentityMappingBehaviour {

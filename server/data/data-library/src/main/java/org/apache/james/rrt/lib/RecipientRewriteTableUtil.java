@@ -19,75 +19,21 @@
 package org.apache.james.rrt.lib;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-import java.util.stream.IntStream;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.util.OptionalUtils;
-
-import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 
 /**
  * This helper class contains methods for the RecipientRewriteTable implementations
  */
 public class RecipientRewriteTableUtil {
 
-    private static final int REGEX = 1;
-    private static final int PARAMETERIZED_STRING = 2;
-
     private RecipientRewriteTableUtil() {
-    }
-
-    /**
-     * Processes regex virtual user mapping
-     * 
-     * If a mapped target string begins with the prefix regex:, it must be
-     * formatted as regex:<regular-expression>:<parameterized-string>, e.g.,
-     * regex:(.*)@(.*):${1}@tld
-     */
-    public static Optional<String> regexMap(MailAddress address, Mapping mapping) {
-        Preconditions.checkArgument(mapping.getType() == Type.Regex);
-
-        List<String> parts = Splitter.on(':').splitToList(mapping.asString());
-        if (parts.size() != 3) {
-            throw new PatternSyntaxException("Regex should be formatted as regex:<regular-expression>:<parameterized-string>", mapping.asString(), 0);
-        }
-
-        Pattern pattern = Pattern.compile(parts.get(REGEX));
-        Matcher match = pattern.matcher(address.asString());
-
-        if (match.matches()) {
-            ImmutableList<String> parameters = listMatchingGroups(match);
-            return Optional.of(replaceParameters(parts.get(PARAMETERIZED_STRING), parameters));
-        }
-        return Optional.empty();
-    }
-
-    private static ImmutableList<String> listMatchingGroups(Matcher match) {
-        return IntStream
-            .rangeClosed(1, match.groupCount())
-            .mapToObj(match::group)
-            .collect(Guavate.toImmutableList());
-    }
-
-    private static String replaceParameters(String input, List<String> parameters) {
-        int i = 1;
-        for (String parameter: parameters) {
-            input = input.replace("${" + i++ + "}", parameter);
-        }
-        return input;
     }
 
     /**

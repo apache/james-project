@@ -34,11 +34,12 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
-import org.apache.james.rrt.lib.MappingImpl;
-import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
+import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.UserRewritter;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -118,7 +119,10 @@ public abstract class AbstractRecipientRewriteTable extends GenericMailet {
 
                         if (targetAddress.startsWith("regex:")) {
                             try {
-                                Optional<String> maybeTarget = RecipientRewriteTableUtil.regexMap(source, MappingImpl.of(targetAddress));
+                                Optional<String> maybeTarget = new UserRewritter.RegexRewriter()
+                                    .generateUserRewriter(Mapping.Type.Regex.withoutPrefix(targetAddress))
+                                    .rewrite(User.fromUsername(source.asString()))
+                                    .map(User::asString);
                                 if (!maybeTarget.isPresent()) {
                                     continue;
                                 }

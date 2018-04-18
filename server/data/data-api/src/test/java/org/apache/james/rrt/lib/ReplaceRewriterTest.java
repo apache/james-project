@@ -16,35 +16,42 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.apache.james.core.User;
+import org.junit.jupiter.api.Test;
 
-public class RecipientRewriteTableUtilTest {
-
+public class ReplaceRewriterTest {
     @Test
-    public void getSeparatorShouldReturnCommaWhenCommaIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost, regex:user@test");
-        assertThat(separator).isEqualTo(",");
+    public void rewriteShouldSubstituteAddress() throws Exception {
+        String newAddress = "newaddress@newdomain";
+        assertThat(
+            new UserRewritter.ReplaceRewriter()
+                .generateUserRewriter(newAddress)
+                .rewrite(User.fromUsername("old@passed")))
+            .contains(User.fromUsername(newAddress));
+    }
+    
+    @Test
+    public void rewriteShouldSubstituteAddressWhenNoDomainPart() throws Exception {
+        String newAddress = "newaddress@newdomain";
+        assertThat(
+            new UserRewritter.ReplaceRewriter()
+                .generateUserRewriter(newAddress)
+                .rewrite(User.fromUsername("old")))
+            .contains(User.fromUsername(newAddress));
     }
 
     @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresentInPrefix() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost");
-        assertThat(separator).isEqualTo("");
-    }
-
-    @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("(.*)@localhost: user@test");
-        assertThat(separator).isEqualTo(":");
-    }
-
-    @Test
-    public void getSeparatorShouldReturnColonWhenNoSeparator() {
-        String separator = RecipientRewriteTableUtil.getSeparator("user@test");
-        assertThat(separator).isEqualTo(":");
+    public void rewriteShouldSubstituteAddressWhenNoDomainPartInRewrittenAddress() throws Exception {
+        String newAddress = "newaddress";
+        assertThat(
+            new UserRewritter.ReplaceRewriter()
+                .generateUserRewriter(newAddress)
+                .rewrite(User.fromUsername("old@passed")))
+            .contains(User.fromUsername(newAddress));
     }
 }

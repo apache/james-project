@@ -23,7 +23,6 @@ package org.apache.james.rrt.lib;
 import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.regex.PatternSyntaxException;
 
 import javax.mail.internet.AddressException;
 
@@ -31,15 +30,11 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 public class MappingImpl implements Mapping, Serializable {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(MappingImpl.class);
 
     private static final long serialVersionUID = 1L;
 
@@ -143,32 +138,9 @@ public class MappingImpl implements Mapping, Serializable {
 
     @Override
     public Optional<User> rewriteUser(User user) throws AddressException {
-        switch (getType()) {
-            case Regex:
-                try {
-                    return RecipientRewriteTableUtil.regexMap(user.asMailAddress(), this)
-                        .map(User::fromUsername);
-                } catch (PatternSyntaxException e) {
-                    LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.of(User.fromUsername(asString()));
-                }
-            case Domain:
-                return Optional.of(
-                    User.fromLocalPartWithDomain(
-                        user.getLocalPart(),
-                        Domain.of(mapping)));
-            case Forward:
-                return Optional.of(User.fromUsername(mapping));
-            case Group:
-                return Optional.of(User.fromUsername(mapping));
-            case Address:
-                return Optional.of(User.fromUsername(mapping));
-            case Error:
-                return Optional.empty();
-        }
-        throw new IllegalArgumentException("unhandle enum type: " + getType());
+        return type.rewriter(mapping)
+            .rewrite(user);
     }
-
 
     @Override
     public final boolean equals(Object other) {

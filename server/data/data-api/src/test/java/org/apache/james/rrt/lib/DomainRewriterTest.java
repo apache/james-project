@@ -16,35 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.apache.james.core.User;
+import org.junit.jupiter.api.Test;
 
-public class RecipientRewriteTableUtilTest {
-
+public class DomainRewriterTest {
     @Test
-    public void getSeparatorShouldReturnCommaWhenCommaIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost, regex:user@test");
-        assertThat(separator).isEqualTo(",");
+    public void rewriteShouldReplaceDomain() throws Exception {
+        assertThat(
+            new UserRewritter.DomainRewriter()
+                .generateUserRewriter("newdomain.com")
+                .rewrite(User.fromUsername("toto@olddomain.com")))
+            .contains(User.fromUsername("toto@newdomain.com"));
     }
 
     @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresentInPrefix() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost");
-        assertThat(separator).isEqualTo("");
-    }
-
-    @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("(.*)@localhost: user@test");
-        assertThat(separator).isEqualTo(":");
-    }
-
-    @Test
-    public void getSeparatorShouldReturnColonWhenNoSeparator() {
-        String separator = RecipientRewriteTableUtil.getSeparator("user@test");
-        assertThat(separator).isEqualTo(":");
+    public void rewriteShouldAddDomainWhenNone() throws Exception {
+        assertThat(
+            new UserRewritter.DomainRewriter()
+                .generateUserRewriter("newdomain.com")
+                .rewrite(User.fromUsername("toto")))
+            .contains(User.fromUsername("toto@newdomain.com"));
     }
 }
