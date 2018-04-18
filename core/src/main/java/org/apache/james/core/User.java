@@ -47,8 +47,13 @@ public class User {
     public static User fromLocalPartWithDomain(String localPart, String domain) {
         Preconditions.checkNotNull(domain);
 
-        return from(localPart,
-            Optional.of(domain));
+        return fromLocalPartWithDomain(localPart, Domain.of(domain));
+    }
+
+    public static User fromLocalPartWithDomain(String localPart, Domain domain) {
+        Preconditions.checkNotNull(domain);
+
+        return new User(localPart, Optional.of(domain));
     }
 
     public static User fromLocalPartWithoutDomain(String localPart) {
@@ -57,19 +62,19 @@ public class User {
     }
 
     public static User from(String localPart, Optional<String> domain) {
-       return new User(localPart, domain);
+       return new User(localPart, domain.map(Domain::of));
     }
 
     private final String localPart;
     private final Optional<Domain> domainPart;
 
-    private User(String localPart, Optional<String> domainPart) {
+    private User(String localPart, Optional<Domain> domainPart) {
         Preconditions.checkNotNull(localPart);
         Preconditions.checkArgument(!localPart.isEmpty(), "username should not be empty");
         Preconditions.checkArgument(!localPart.contains("@"), "username can not contain domain delimiter");
 
         this.localPart = localPart;
-        this.domainPart = domainPart.map(Domain::of);
+        this.domainPart = domainPart;
     }
 
     public String getLocalPart() {
@@ -82,6 +87,13 @@ public class User {
 
     public boolean hasDomainPart() {
         return domainPart.isPresent();
+    }
+
+    public User withDefaultDomain(Domain defaultDomain) {
+        if (hasDomainPart()) {
+            return this;
+        }
+        return new User(localPart, Optional.of(defaultDomain));
     }
 
     public String asString() {

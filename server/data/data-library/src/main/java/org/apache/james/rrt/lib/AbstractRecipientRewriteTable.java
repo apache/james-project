@@ -31,6 +31,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
@@ -139,18 +140,11 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             return Stream.of(toMapping(addressWithMappingApplied, target.getType()));
         }
 
-        String userName;
-        Domain targetDomain;
-        String[] args = addressWithMappingApplied.split("@");
+        User coreUser = User.fromUsername(addressWithMappingApplied)
+            .withDefaultDomain(domain);
 
-        if (args.length > 1) {
-            userName = args[0];
-            targetDomain = Domain.of(args[1]);
-        } else {
-            // TODO Is that the right todo here?
-            userName = addressWithMappingApplied;
-            targetDomain = domain;
-        }
+        String userName = coreUser.getLocalPart();
+        Domain targetDomain = coreUser.getDomainPart().get();
 
         // Check if the returned mapping is the same as the
         // input. If so return null to avoid loops

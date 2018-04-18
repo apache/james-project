@@ -78,7 +78,8 @@ public class UserTest {
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnNullDomainPart() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("local", null))
+        String domain = null;
+        assertThatThrownBy(() -> User.fromLocalPartWithDomain("local", domain))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -178,4 +179,17 @@ public class UserTest {
             .isTrue();
     }
 
+    @Test
+    public void withDefaultDomainShouldAppendDefaultDomainWhenNone() {
+        assertThat(User.fromUsername("user")
+            .withDefaultDomain(Domain.LOCALHOST))
+            .isEqualTo(User.fromLocalPartWithDomain("user", Domain.LOCALHOST));
+    }
+
+    @Test
+    public void withDefaultDomainShouldNotAppendDefaultDomainWhenDomainIsPresent() {
+        assertThat(User.fromUsername("user@domain")
+            .withDefaultDomain(Domain.LOCALHOST))
+            .isEqualTo(User.fromUsername("user@domain"));
+    }
 }
