@@ -20,6 +20,7 @@
 
 package org.apache.james.rrt.lib;
 
+import java.io.Serializable;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -211,7 +212,7 @@ public interface Mapping {
 
     Stream<Mapping> handleIdentity(Stream<Mapping> nonRecursiveResult);
 
-    class Impl implements Mapping {
+    class Impl implements Mapping, Serializable {
 
         private final Type type;
         private final String mapping;

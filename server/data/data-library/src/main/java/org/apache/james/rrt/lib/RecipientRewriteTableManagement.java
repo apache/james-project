@@ -29,7 +29,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
 
-import com.google.common.collect.ImmutableMap;
+import com.github.steveash.guavate.Guavate;
 
 /**
  * Management for RecipientRewriteTables
@@ -46,89 +46,102 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
 
     @Override
     public void addRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
-        rrt.addRegexMapping(user, Domain.of(domain), regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.addRegexMapping(source, regex);
     }
 
     @Override
     public void removeRegexMapping(String user, String domain, String regex) throws RecipientRewriteTableException {
-        rrt.removeRegexMapping(user, Domain.of(domain), regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.removeRegexMapping(source, regex);
     }
 
     @Override
     public void addAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        rrt.addAddressMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.addAddressMapping(source, address);
     }
 
     @Override
     public void removeAddressMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        rrt.removeAddressMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.removeAddressMapping(source, address);
     }
 
     @Override
     public void addErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-        rrt.addErrorMapping(user, Domain.of(domain), error);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.addErrorMapping(source, error);
     }
 
     @Override
     public void removeErrorMapping(String user, String domain, String error) throws RecipientRewriteTableException {
-        rrt.removeErrorMapping(user, Domain.of(domain), error);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.removeErrorMapping(source, error);
     }
 
     @Override
     public void addDomainMapping(String domain, String targetDomain) throws RecipientRewriteTableException {
-        rrt.addAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
+        MappingSource source = MappingSource.fromDomain(Domain.of(domain));
+        rrt.addAliasDomainMapping(source, Domain.of(targetDomain));
     }
 
     @Override
     public void removeDomainMapping(String domain, String targetDomain) throws RecipientRewriteTableException {
-        rrt.removeAliasDomainMapping(Domain.of(domain), Domain.of(targetDomain));
+        MappingSource source = MappingSource.fromDomain(Domain.of(domain));
+        rrt.removeAliasDomainMapping(source, Domain.of(targetDomain));
     }
 
     @Override
     public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
-        return rrt.getUserDomainMappings(user, Domain.of(domain));
+        MappingSource source = MappingSource.fromUser(user, domain);
+        return rrt.getUserDomainMappings(source);
     }
 
     @Override
     public void addMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        rrt.addMapping(user, Domain.of(domain), Mapping.of(mapping));
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.addMapping(source, Mapping.of(mapping));
     }
 
     @Override
     public void removeMapping(String user, String domain, String mapping) throws RecipientRewriteTableException {
-        rrt.removeMapping(user, Domain.of(domain), Mapping.of(mapping));
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.removeMapping(source, Mapping.of(mapping));
     }
 
     @Override
     public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
-        return ImmutableMap.copyOf(rrt.getAllMappings());
+        return rrt.getAllMappings()
+            .entrySet()
+            .stream()
+            .collect(
+                Guavate.toImmutableMap(
+                    entry -> entry.getKey().asString(),
+                    entry -> entry.getValue()));
     }
 
     @Override
     public void addForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        rrt.addForwardMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.addForwardMapping(source, address);
     }
 
     @Override
     public void removeForwardMapping(String user, String domain, String address) throws RecipientRewriteTableException {
-        rrt.removeForwardMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rrt.removeForwardMapping(source, address);
     }
 
     @Override
-    public void addGroupMapping(String toUser, String toDomain, String fromAddress) {
-        try {
-            rrt.addGroupMapping(toUser, Domain.of(toDomain), fromAddress);
-        } catch (RecipientRewriteTableException e) {
-            throw new RuntimeException(e);
-        }
+    public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
+        MappingSource source = MappingSource.fromUser(toUser, toDomain);
+        rrt.addGroupMapping(source, fromAddress);
     }
 
     @Override
-    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) {
-        try {
-            rrt.removeForwardMapping(toUser, Domain.of(toDomain), fromAddress);
-        } catch (RecipientRewriteTableException e) {
-            throw new RuntimeException(e);
-        }
+    public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws RecipientRewriteTableException {
+        MappingSource source = MappingSource.fromUser(toUser, toDomain);
+        rrt.removeForwardMapping(source, fromAddress);
     }
 }

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import javax.management.MalformedObjectNameException;
 
-import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;

@@ -23,13 +23,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mapping.Type;
-import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.After;
@@ -58,18 +57,18 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() {
         return new XMLRecipientRewriteTable() {
             @Override
-            public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
-                addMappingToConfiguration(user, domain, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
+            public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
+                addMappingToConfiguration(source, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
             }
 
             @Override
-            public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
-                removeMappingFromConfiguration(user, domain, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
+            public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
+                removeMappingFromConfiguration(source, mapping.getType().withoutPrefix(mapping.asString()), mapping.getType());
             }
 
             @Override
-            public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-                addMapping(user, domain, Mapping.address(address));
+            public void addAddressMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+                addMapping(source, Mapping.address(address));
             }
         };
     }
@@ -80,33 +79,33 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     public void addMappingShouldThrowWhenMappingAlreadyExists() {
     }
 
-    protected void addMappingToConfiguration(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings mappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
+    protected void addMappingToConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
+        Mappings mappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(source))
             .orElse(MappingsImpl.empty());
 
         Mappings updatedMappings = MappingsImpl.from(mappings)
             .add(Mapping.of(type, mapping))
             .build();
 
-        updateConfiguration(user, domain, mappings, updatedMappings);
+        updateConfiguration(source, mappings, updatedMappings);
     }
 
-    protected void removeMappingFromConfiguration(String user, Domain domain, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
+    protected void removeMappingFromConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
+        Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(source))
             .orElseThrow(() -> new RecipientRewriteTableException("Cannot remove from null mappings"));
 
         Mappings updatedMappings = oldMappings.remove(Mapping.of(type, mapping));
 
-        updateConfiguration(user, domain, oldMappings, updatedMappings);
+        updateConfiguration(source, oldMappings, updatedMappings);
     }
 
-    private void updateConfiguration(String user, Domain domain, Mappings oldMappings, Mappings updatedMappings) throws RecipientRewriteTableException {
+    private void updateConfiguration(MappingSource source, Mappings oldMappings, Mappings updatedMappings) throws RecipientRewriteTableException {
         if (oldMappings != null) {
-            removeMappingsFromConfig(user, domain, oldMappings);
+            removeMappingsFromConfig(source, oldMappings);
         }
 
         if (!updatedMappings.isEmpty()) {
-            defaultConfiguration.addProperty("mapping", user + "@" + domain.asString() + "=" + updatedMappings.serialize());
+            defaultConfiguration.addProperty("mapping", source.getFixedUser() + "@" + source.getFixedDomain() + "=" + updatedMappings.serialize());
         }
 
         try {
@@ -118,10 +117,10 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         }
     }
 
-    private void removeMappingsFromConfig(String user, Domain domain, Mappings mappings) {
+    private void removeMappingsFromConfig(MappingSource source, Mappings mappings) {
         List<String> stored = new ArrayList<>();
         for (String c : defaultConfiguration.getStringArray("mapping")) {
-            String mapping = user + "@" + domain.asString() + "=" + mappings.serialize();
+            String mapping = source.getFixedUser() + "@" + source.getFixedDomain() + "=" + mappings.serialize();
             if (!c.equalsIgnoreCase(mapping)) {
                 stored.add(c);
             }

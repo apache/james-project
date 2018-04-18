@@ -40,11 +40,13 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -62,7 +64,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -129,6 +130,8 @@ public class GroupsRoutes implements Routes {
                 mappings.entrySet().stream()
                     .filter(e -> e.getValue().contains(Mapping.Type.Group))
                     .map(Map.Entry::getKey)
+                    .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
+                    .map(MailAddress::asString)
                     .collect(Guavate.toImmutableSortedSet()))
             .orElse(ImmutableSortedSet.of());
     }
@@ -159,7 +162,8 @@ public class GroupsRoutes implements Routes {
         ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.addGroupMapping(groupAddress.getLocalPart(), domain, userAddress.asString());
+        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
+        recipientRewriteTable.addGroupMapping(source, userAddress.asString());
         return halt(HttpStatus.CREATED_201);
     }
 
@@ -201,10 +205,10 @@ public class GroupsRoutes implements Routes {
     public HaltException removeFromGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
-        recipientRewriteTable.removeGroupMapping(
-            groupAddress.getLocalPart(),
-            groupAddress.getDomain(),
-            userAddress.asString());
+        MappingSource source = MappingSource
+            .fromUser(
+                User.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
+        recipientRewriteTable.removeGroupMapping(source, userAddress.asString());
         return halt(HttpStatus.OK_200);
     }
 

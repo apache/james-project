@@ -28,6 +28,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
 import org.apache.mailet.Experimental;
 
@@ -80,7 +81,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Holds the configured mappings
      */
-    private Map<String, String> mappings = new HashMap<>();
+    private Map<MappingSource, String> mappings = new HashMap<>();
 
     @Override
     public void init() throws MessagingException {
@@ -99,7 +100,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
      *            the mapping of virtual to real recipients
      */
     @Override
-    protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
+    protected void mapRecipients(Map<MailAddress, String> recipientsMap) {
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
         for (MailAddress source : recipients) {

@@ -19,6 +19,7 @@
 
 package org.apache.james.rrt.lib;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -40,7 +41,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 
 @FunctionalInterface
-public interface UserRewritter {
+public interface UserRewritter extends Serializable {
 
     Optional<User> rewrite(User user) throws AddressException, RecipientRewriteTable.ErrorMappingException;
 

@@ -29,6 +29,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 
@@ -100,7 +101,14 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public Map<String, Mappings> listMappings() throws Exception {
-        return recipientRewriteTable.getAllMappings();
+        return recipientRewriteTable.getAllMappings()
+            .entrySet()
+            .stream()
+            .collect(
+                Guavate.toImmutableMap(
+                    entry -> entry.getKey().asString(),
+                    entry -> entry.getValue()));
+
     }
 
     @Override
@@ -110,47 +118,55 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
-        recipientRewriteTable.addAddressMapping(user, Domain.of(domain), toAddress);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.addAddressMapping(source, toAddress);
     }
 
     @Override
     public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
-        recipientRewriteTable.removeAddressMapping(user, Domain.of(domain), fromAddress);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.removeAddressMapping(source, fromAddress);
     }
 
     @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.addRegexMapping(user, Domain.of(domain), regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.addRegexMapping(source, regex);
     }
 
 
     @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        recipientRewriteTable.removeRegexMapping(user, Domain.of(domain), regex);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.removeRegexMapping(source, regex);
     }
 
     @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
-        recipientRewriteTable.addAliasDomainMapping(Domain.of(aliasDomain), Domain.of(deliveryDomain));
+        recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(deliveryDomain));
     }
 
     @Override
     public void addForwardMapping(String user, String domain, String address) throws Exception {
-        recipientRewriteTable.addForwardMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.addForwardMapping(source, address);
     }
 
     @Override
     public void removeForwardMapping(String user, String domain, String address) throws Exception {
-        recipientRewriteTable.removeForwardMapping(user, Domain.of(domain), address);
+        MappingSource source = MappingSource.fromUser(user, domain);
+        recipientRewriteTable.removeForwardMapping(source, address);
     }
 
     @Override
     public void addGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
-        recipientRewriteTable.addGroupMapping(toUser, Domain.of(toDomain), fromAddress);
+        MappingSource source = MappingSource.fromUser(toUser, toDomain);
+        recipientRewriteTable.addGroupMapping(source, fromAddress);
     }
 
     @Override
     public void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception {
-        recipientRewriteTable.removeGroupMapping(toUser, Domain.of(toDomain), fromAddress);
+        MappingSource source = MappingSource.fromUser(toUser, toDomain);
+        recipientRewriteTable.removeGroupMapping(source, fromAddress);
     }
 }

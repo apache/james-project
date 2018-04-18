@@ -39,6 +39,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.OptionalUtils;
@@ -94,33 +95,33 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    public void addMapping(String user, Domain domain, Mapping mapping) {
+    public void addMapping(MappingSource source, Mapping mapping) {
         executor.executeVoid(insertStatement.bind()
-            .setString(USER, getFixedUser(user))
-            .setString(DOMAIN, getFixedDomain(domain).asString())
+            .setString(USER, source.getFixedUser())
+            .setString(DOMAIN, source.getFixedDomain())
             .setString(MAPPING, mapping.asString()))
             .join();
     }
 
     @Override
-    public void removeMapping(String user, Domain domain, Mapping mapping) {
+    public void removeMapping(MappingSource source, Mapping mapping) {
         executor.executeVoid(deleteStatement.bind()
-                .setString(USER, getFixedUser(user))
-                .setString(DOMAIN, getFixedDomain(domain).asString())
+                .setString(USER, source.getFixedUser())
+                .setString(DOMAIN, source.getFixedDomain())
                 .setString(MAPPING, mapping.asString()))
             .join();
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, Domain domain) {
-        return retrieveMappings(user, domain)
+    public Mappings getUserDomainMappings(MappingSource source) {
+        return retrieveMappings(source)
             .orElse(null);
     }
 
-    private Optional<Mappings> retrieveMappings(String user, Domain domain) {
+    private Optional<Mappings> retrieveMappings(MappingSource source) {
         List<String> mappings = executor.execute(retrieveMappingStatement.bind()
-            .setString(USER, getFixedUser(user))
-            .setString(DOMAIN, getFixedDomain(domain).asString()))
+            .setString(USER, source.getFixedUser())
+            .setString(DOMAIN, source.getFixedDomain()))
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(row -> row.getString(MAPPING))
                 .collect(Guavate.toImmutableList()))
@@ -130,12 +131,12 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    public Map<String, Mappings> getAllMappings() {
+    public Map<MappingSource, Mappings> getAllMappings() {
         return executor.execute(retrieveAllMappingsStatement.bind())
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> new UserMapping(row.getString(USER), Domain.of(row.getString(DOMAIN)), row.getString(MAPPING)))
+                .map(row -> new UserMapping(MappingSource.fromUser(row.getString(USER), row.getString(DOMAIN)), row.getString(MAPPING)))
                 .collect(Guavate.toImmutableMap(
-                    UserMapping::asKey,
+                    UserMapping::getSource,
                     UserMapping::toMapping,
                     Mappings::union)))
             .join();
@@ -143,22 +144,17 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
 
     private static class UserMapping {
 
-        private final String user;
-        private final Domain domain;
+        private final MappingSource source;
         private final String mapping;
 
-        public UserMapping(String user, Domain domain, String mapping) {
-            this.user = user;
-            this.domain = domain;
+        public UserMapping(MappingSource source, String mapping) {
+            this.source = source;
             this.mapping = mapping;
         }
 
-        public String getUser() {
-            return user;
-        }
 
-        public Domain getDomain() {
-            return domain;
+        public MappingSource getSource() {
+            return source;
         }
 
         public String getMapping() {
@@ -169,16 +165,13 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
             return MappingsImpl.fromRawString(getMapping());
         }
 
-        public String asKey() {
-            return getUser() + "@" + getDomain().asString();
-        }
     }
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) {
         return OptionalUtils.orSuppliers(
-            () -> retrieveMappings(user, domain),
-            () -> retrieveMappings(WILDCARD, domain))
+            () -> retrieveMappings(MappingSource.fromUser(user, domain)),
+            () -> retrieveMappings(MappingSource.fromDomain(domain)))
                 .orElse(MappingsImpl.empty());
     }
 

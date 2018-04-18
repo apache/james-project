@@ -38,6 +38,7 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
@@ -116,8 +117,8 @@ public class ValidRcptHandlerTest {
     private RecipientRewriteTable setUpRecipientRewriteTable(DomainList domainList) throws RecipientRewriteTableException {
         MemoryRecipientRewriteTable memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(domainList);
-        memoryRecipientRewriteTable.addAddressMapping(USER1, Domain.LOCALHOST, "address");
-        memoryRecipientRewriteTable.addErrorMapping(USER2, Domain.LOCALHOST, "554 BOUNCE");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
+        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER2, Domain.LOCALHOST), "554 BOUNCE");
         return memoryRecipientRewriteTable;
     }
 

@@ -41,6 +41,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -370,9 +371,9 @@ class GroupsRoutesTest {
         @BeforeEach
         void setup() throws Exception {
             super.setUp();
-            memoryRecipientRewriteTable.addErrorMapping("error", DOMAIN, "disabled");
-            memoryRecipientRewriteTable.addRegexMapping("regex", DOMAIN, ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(Domain.of("alias"), DOMAIN);
+            memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
+            memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
 
         }
 
@@ -527,7 +528,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .addGroupMapping(anyString(), any(), anyString());
+                .addGroupMapping(any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -540,7 +541,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .addGroupMapping(anyString(), any(), anyString());
+                .addGroupMapping(any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -553,7 +554,7 @@ class GroupsRoutesTest {
         void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .addGroupMapping(anyString(), any(), anyString());
+                .addGroupMapping(any(), anyString());
 
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
@@ -605,7 +606,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeGroupMapping(anyString(), any(), anyString());
+                .removeGroupMapping(any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -618,7 +619,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeGroupMapping(anyString(), any(), anyString());
+                .removeGroupMapping(any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
@@ -631,7 +632,7 @@ class GroupsRoutesTest {
         void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeGroupMapping(anyString(), any(), anyString());
+                .removeGroupMapping(any(), anyString());
 
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)

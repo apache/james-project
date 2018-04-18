@@ -22,15 +22,12 @@ package org.apache.james.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.util.AbstractMap;
-
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.rrt.lib.Mapping;
-import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
@@ -137,12 +134,12 @@ public class DataCommandsIntegrationTest {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addaddressmapping", USER, DOMAIN, redirectionAddress});
 
         assertThat(dataProbe.listMappings())
-            .containsOnly(
-                new AbstractMap.SimpleEntry<String, Mappings>(
-                    MAIL_ADDRESS,
-                    MappingsImpl.builder()
-                        .add(Mapping.address(redirectionAddress))
-                        .build()));
+            .hasSize(1)
+            .containsEntry(
+                MAIL_ADDRESS,
+                MappingsImpl.builder()
+                    .add(Mapping.address(redirectionAddress))
+                    .build());
     }
 
     @Test
@@ -186,12 +183,12 @@ public class DataCommandsIntegrationTest {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "addregexmapping", USER, DOMAIN, regex});
 
         assertThat(dataProbe.listMappings())
-            .containsOnly(
-                new AbstractMap.SimpleEntry<String, Mappings>(
-                    MAIL_ADDRESS,
-                    MappingsImpl.builder()
-                        .add(Mapping.regex(regex))
-                        .build()));
+            .hasSize(1)
+            .containsEntry(
+                MAIL_ADDRESS,
+                MappingsImpl.builder()
+                    .add(Mapping.regex(regex))
+                    .build());
     }
 
     @Test

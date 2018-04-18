@@ -39,13 +39,16 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForwardDestinationResponse;
@@ -134,6 +137,8 @@ public class ForwardRoutes implements Routes {
                 mappings.entrySet().stream()
                     .filter(e -> e.getValue().contains(Mapping.Type.Forward))
                     .map(Map.Entry::getKey)
+                    .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
+                    .map(MailAddress::asString)
                     .collect(Guavate.toImmutableSortedSet()))
             .orElse(ImmutableSortedSet.of());
     }
@@ -161,7 +166,8 @@ public class ForwardRoutes implements Routes {
         MailAddress forwardBaseAddress = parseMailAddress(request.params(FORWARD_BASE_ADDRESS));
         ensureUserExist(forwardBaseAddress);
         MailAddress destinationAddress = parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS));
-        recipientRewriteTable.addForwardMapping(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain(), destinationAddress.asString());
+        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain()));
+        recipientRewriteTable.addForwardMapping(source, destinationAddress.asString());
         return halt(HttpStatus.CREATED_201);
     }
 
@@ -193,10 +199,8 @@ public class ForwardRoutes implements Routes {
     public HaltException removeFromForwardDestination(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
         MailAddress baseAddress = parseMailAddress(request.params(FORWARD_BASE_ADDRESS));
         MailAddress destinationAddressToBeRemoved = parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS));
-        recipientRewriteTable.removeForwardMapping(
-            baseAddress.getLocalPart(),
-            baseAddress.getDomain(),
-            destinationAddressToBeRemoved.asString());
+        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(baseAddress.getLocalPart(), baseAddress.getDomain()));
+        recipientRewriteTable.removeForwardMapping(source, destinationAddressToBeRemoved.asString());
         return halt(HttpStatus.OK_200);
     }
 

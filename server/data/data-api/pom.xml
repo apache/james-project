@@ -34,6 +34,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-core</artifactId>
+        </dependency>
+        <dependency>
             <!-- only used by JamesUser (for MailAddress) -->
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>

@@ -29,6 +29,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.MappingsImpl.Builder;
@@ -172,8 +173,8 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
-        Map<String, Mappings> mappings = new HashMap<>();
+    public Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException {
+        Map<MappingSource, Mappings> mappings = new HashMap<>();
         if (enableAliases || enableForwarding) {
             try {
                 Iterator<String> users = list();
@@ -190,7 +191,8 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                         domain = Domain.LOCALHOST;
                     }
                     try {
-                        mappings.put(user, getMappings(username, domain));
+                        MappingSource source = MappingSource.fromUser(org.apache.james.core.User.fromUsername(user));
+                        mappings.put(source, getMappings(username, domain));
                     } catch (ErrorMappingException e) {
                         // shold never happen here
                     }
@@ -204,86 +206,86 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException {
         return MappingsImpl.empty();
     }
 
     @Override
-    public void addRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException {
+    public void addRegexMapping(MappingSource source, String regex) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 
     @Override
-    public void removeRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException {
-        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
-
-    }
-
-    @Override
-    public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void removeRegexMapping(MappingSource source, String regex) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void addAddressMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
+    public void removeAddressMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
+    public void addErrorMapping(MappingSource source, String error) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void removeErrorMapping(MappingSource source, String error) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
+    public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
+    public void addAliasDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
 
     }
 
     @Override
-    public void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void removeAliasDomainMapping(MappingSource source, Domain realDomain) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+
+    }
+
+    @Override
+    public void addForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 
     @Override
-    public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void removeForwardMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 
     @Override
-    public void addGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void addGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 
     @Override
-    public void removeGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
+    public void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
 }

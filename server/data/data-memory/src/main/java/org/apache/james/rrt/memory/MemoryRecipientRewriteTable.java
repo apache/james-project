@@ -28,8 +28,10 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
+import org.apache.james.core.User;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.util.OptionalUtils;
@@ -41,30 +43,20 @@ import com.google.common.collect.Multimaps;
 public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     private static class InMemoryMappingEntry {
-        private final String user;
-        private final Domain domain;
+        private final MappingSource source;
         private final Mapping mapping;
 
-        public InMemoryMappingEntry(String user, Domain domain, Mapping mapping) {
-            this.user = user;
-            this.domain = domain;
+        public InMemoryMappingEntry(MappingSource source, Mapping mapping) {
+            this.source = source;
             this.mapping = mapping;
         }
 
-        public String getUser() {
-            return user;
-        }
-
-        public Domain getDomain() {
-            return domain;
+        public MappingSource getSource() {
+            return source;
         }
 
         public Mapping getMapping() {
             return mapping;
-        }
-
-        public String asKey() {
-            return getUser() + "@" + getDomain().asString();
         }
 
         @Override
@@ -75,14 +67,13 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
             InMemoryMappingEntry that = (InMemoryMappingEntry) o;
 
-            return Objects.equal(this.user, that.user)
-                && Objects.equal(this.domain, that.domain)
+            return Objects.equal(this.source, that.source)
                 && Objects.equal(this.mapping, that.mapping);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(user, domain, mapping);
+            return Objects.hashCode(source, mapping);
         }
     }
 
@@ -93,32 +84,32 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public void addMapping(String user, Domain domain, Mapping mapping) {
-        mappingEntries.add(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
+    public void addMapping(MappingSource source, Mapping mapping) {
+        mappingEntries.add(new InMemoryMappingEntry(source, mapping));
     }
 
     @Override
-    public void removeMapping(String user, Domain domain, Mapping mapping) {
-        mappingEntries.remove(new InMemoryMappingEntry(getFixedUser(user), getFixedDomain(domain), mapping));
+    public void removeMapping(MappingSource source, Mapping mapping) {
+        mappingEntries.remove(new InMemoryMappingEntry(source, mapping));
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, Domain domain) {
-        return retrieveMappings(user, domain)
+    public Mappings getUserDomainMappings(MappingSource mappingSource) {
+        return retrieveMappings(mappingSource)
             .orElse(null);
     }
 
     @Override
     protected Mappings mapAddress(String user, Domain domain) {
         return OptionalUtils.orSuppliers(
-            () -> retrieveMappings(user, domain),
-            () -> retrieveMappings(WILDCARD, domain))
+            () -> retrieveMappings(MappingSource.fromUser(User.fromLocalPartWithDomain(user, domain))),
+            () -> retrieveMappings(MappingSource.fromDomain(domain)))
             .orElse(MappingsImpl.empty());
     }
 
     @Override
-    public Map<String, Mappings> getAllMappings() {
-        return Multimaps.index(mappingEntries, InMemoryMappingEntry::asKey)
+    public Map<MappingSource, Mappings> getAllMappings() {
+        return Multimaps.index(mappingEntries, InMemoryMappingEntry::getSource)
             .asMap()
             .entrySet()
             .stream()
@@ -132,9 +123,9 @@ public class MemoryRecipientRewriteTable extends AbstractRecipientRewriteTable {
             .map(InMemoryMappingEntry::getMapping));
     }
 
-    private Optional<Mappings> retrieveMappings(String user, Domain domain) {
+    private Optional<Mappings> retrieveMappings(MappingSource mappingSource) {
         Stream<Mapping> userEntries = mappingEntries.stream()
-            .filter(mappingEntry -> user.equals(mappingEntry.getUser()) && domain.equals(mappingEntry.getDomain()))
+            .filter(mappingEntry -> mappingEntry.source.equals(mappingSource))
             .map(InMemoryMappingEntry::getMapping);
         return MappingsImpl.fromMappings(userEntries).toOptional();
     }

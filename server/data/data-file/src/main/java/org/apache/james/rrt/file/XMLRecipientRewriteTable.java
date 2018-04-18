@@ -28,6 +28,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.lib.RecipientRewriteTableUtil;
@@ -43,7 +44,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     /**
      * Holds the configured mappings
      */
-    private Map<String, String> mappings;
+    private Map<MappingSource, String> mappings;
 
     @Override
     protected void doConfigure(HierarchicalConfiguration arg0) throws ConfigurationException {
@@ -59,7 +60,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException {
+    protected Mappings mapAddress(String user, Domain domain) {
         return Optional.ofNullable(mappings)
             .map(mappings -> RecipientRewriteTableUtil.getTargetString(user, domain, mappings))
             .map(MappingsImpl::fromRawString)
@@ -67,11 +68,11 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public Mappings getUserDomainMappings(String user, Domain domain) throws RecipientRewriteTableException {
+    public Mappings getUserDomainMappings(MappingSource source) {
         if (mappings == null) {
             return null;
         } else {
-            String maps = mappings.get(user + "@" + domain.asString());
+            String maps = mappings.get(source);
             if (maps != null) {
                 return MappingsImpl.fromRawString(maps);
             } else {
@@ -81,10 +82,10 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public Map<String, Mappings> getAllMappings() throws RecipientRewriteTableException {
+    public Map<MappingSource, Mappings> getAllMappings() {
         if (mappings != null && mappings.size() > 0) {
-            Map<String, Mappings> mappingsNew = new HashMap<>();
-            for (String key : mappings.keySet()) {
+            Map<MappingSource, Mappings> mappingsNew = new HashMap<>();
+            for (MappingSource key : mappings.keySet()) {
                 mappingsNew.put(key, MappingsImpl.fromRawString(mappings.get(key)));
             }
             return mappingsNew;
@@ -94,12 +95,12 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public void addMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 
     @Override
-    public void removeMapping(String user, Domain domain, Mapping mapping) throws RecipientRewriteTableException {
+    public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only implementation");
     }
 }

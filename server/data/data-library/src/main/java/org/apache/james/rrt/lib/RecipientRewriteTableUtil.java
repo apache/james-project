@@ -46,32 +46,11 @@ public class RecipientRewriteTableUtil {
      * @return the real recipient address, or <code>null</code> if no mapping
      *         exists
      */
-    public static String getTargetString(String user, Domain domain, Map<String, String> mappings) {
-        StringBuffer buf;
-        String target;
-
-        // Look for exact (user@domain) match
-        buf = new StringBuffer().append(user).append("@").append(domain.asString());
-        target = mappings.get(buf.toString());
-        if (target != null) {
-            return target;
-        }
-
-        // Look for user@* match
-        buf = new StringBuffer().append(user).append("@*");
-        target = mappings.get(buf.toString());
-        if (target != null) {
-            return target;
-        }
-
-        // Look for *@domain match
-        buf = new StringBuffer().append("*@").append(domain.asString());
-        target = mappings.get(buf.toString());
-        if (target != null) {
-            return target;
-        }
-
-        return null;
+    public static String getTargetString(String user, Domain domain, Map<MappingSource, String> mappings) {
+        return OptionalUtils.or(
+                Optional.ofNullable(mappings.get(MappingSource.fromUser(user, domain))),
+                Optional.ofNullable(mappings.get(MappingSource.fromDomain(domain))))
+            .orElse(null);
     }
 
     /**
@@ -116,15 +95,15 @@ public class RecipientRewriteTableUtil {
      *            A String which contains a list of mappings
      * @return Map which contains the mappings
      */
-    public static Map<String, String> getXMLMappings(String mapping) {
-        Map<String, String> mappings = new HashMap<>();
+    public static Map<MappingSource, String> getXMLMappings(String mapping) {
+        Map<MappingSource, String> mappings = new HashMap<>();
         StringTokenizer tokenizer = new StringTokenizer(mapping, ",");
         while (tokenizer.hasMoreTokens()) {
             String mappingItem = tokenizer.nextToken();
             int index = mappingItem.indexOf('=');
             String virtual = mappingItem.substring(0, index).trim().toLowerCase(Locale.US);
             String real = mappingItem.substring(index + 1).trim().toLowerCase(Locale.US);
-            mappings.put(virtual, real);
+            mappings.put(MappingSource.parse(virtual), real);
         }
         return mappings;
     }

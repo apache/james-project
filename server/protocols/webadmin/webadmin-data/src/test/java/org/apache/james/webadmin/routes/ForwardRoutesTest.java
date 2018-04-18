@@ -44,6 +44,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -363,9 +364,9 @@ class ForwardRoutesTest {
         @BeforeEach
         void setup() throws Exception {
             super.setUp();
-            memoryRecipientRewriteTable.addErrorMapping("error", DOMAIN, "disabled");
-            memoryRecipientRewriteTable.addRegexMapping("regex", DOMAIN, ".*@b\\.com");
-            memoryRecipientRewriteTable.addAliasDomainMapping(Domain.of("alias"), DOMAIN);
+            memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser("error", DOMAIN), "disabled");
+            memoryRecipientRewriteTable.addRegexMapping(MappingSource.fromUser("regex", DOMAIN), ".*@b\\.com");
+            memoryRecipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("alias")), DOMAIN);
         }
 
     }
@@ -524,7 +525,7 @@ class ForwardRoutesTest {
         void putShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .addForwardMapping(anyString(), any(), anyString());
+                .addForwardMapping(any(), anyString());
 
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
@@ -537,7 +538,7 @@ class ForwardRoutesTest {
         void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .addForwardMapping(anyString(), any(), anyString());
+                .addForwardMapping(any(), anyString());
 
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
@@ -550,7 +551,7 @@ class ForwardRoutesTest {
         void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .addForwardMapping(anyString(), any(), anyString());
+                .addForwardMapping(any(), anyString());
 
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
@@ -602,7 +603,7 @@ class ForwardRoutesTest {
         void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeForwardMapping(anyString(), any(), anyString());
+                .removeForwardMapping(any(), anyString());
 
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
@@ -615,7 +616,7 @@ class ForwardRoutesTest {
         void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeForwardMapping(anyString(), any(), anyString());
+                .removeForwardMapping(any(), anyString());
 
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
@@ -628,7 +629,7 @@ class ForwardRoutesTest {
         void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .removeForwardMapping(anyString(), any(), anyString());
+                .removeForwardMapping(any(), anyString());
 
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
