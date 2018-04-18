@@ -100,7 +100,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         return getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
     }
 
-    public Mappings getMappings(User user, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
+    private Mappings getMappings(User user, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
 
         // We have to much mappings throw ErrorMappingException to avoid
         // infinity loop
