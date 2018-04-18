@@ -91,11 +91,19 @@ public class User {
         return domainPart.isPresent();
     }
 
-    public User withDefaultDomain(Domain defaultDomain) {
+    public User withDefaultDomain(Optional<Domain> defaultDomain) {
         if (hasDomainPart()) {
             return this;
         }
-        return new User(localPart, Optional.of(defaultDomain));
+        return new User(localPart, defaultDomain);
+    }
+
+    public User withDefaultDomain(Domain defaultDomain) {
+        return withDefaultDomain(Optional.of(defaultDomain));
+    }
+
+    public User withDefaultDomainFromUser(User other) {
+        return withDefaultDomain(other.domainPart);
     }
 
     public String asString() {

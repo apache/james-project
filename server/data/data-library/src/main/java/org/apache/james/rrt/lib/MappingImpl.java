@@ -29,6 +29,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,23 +142,27 @@ public class MappingImpl implements Mapping, Serializable {
     }
 
     @Override
-    public Optional<String> apply(MailAddress address) {
+    public Optional<User> rewriteUser(User user) throws AddressException {
         switch (getType()) {
             case Regex:
                 try {
-                    return RecipientRewriteTableUtil.regexMap(address, this);
+                    return RecipientRewriteTableUtil.regexMap(user.asMailAddress(), this)
+                        .map(User::fromUsername);
                 } catch (PatternSyntaxException e) {
                     LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.of(asString());
+                    return Optional.of(User.fromUsername(asString()));
                 }
             case Domain:
-                return Optional.of(address.getLocalPart() + "@" + mapping);
+                return Optional.of(
+                    User.fromLocalPartWithDomain(
+                        user.getLocalPart(),
+                        Domain.of(mapping)));
             case Forward:
-                return Optional.of(mapping);
+                return Optional.of(User.fromUsername(mapping));
             case Group:
-                return Optional.of(mapping);
+                return Optional.of(User.fromUsername(mapping));
             case Address:
-                return Optional.of(mapping);
+                return Optional.of(User.fromUsername(mapping));
             case Error:
                 return Optional.empty();
         }
