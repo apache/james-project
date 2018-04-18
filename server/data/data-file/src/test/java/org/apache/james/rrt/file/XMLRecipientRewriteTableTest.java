@@ -29,7 +29,7 @@ import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mapping.Type;
-import org.apache.james.rrt.lib.MappingImpl;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.After;
@@ -69,7 +69,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
 
             @Override
             public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-                addMapping(user, domain, MappingImpl.address(address));
+                addMapping(user, domain, Mapping.address(address));
             }
         };
     }
@@ -85,7 +85,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
             .orElse(MappingsImpl.empty());
 
         Mappings updatedMappings = MappingsImpl.from(mappings)
-            .add(MappingImpl.of(type, mapping))
+            .add(Mapping.of(type, mapping))
             .build();
 
         updateConfiguration(user, domain, mappings, updatedMappings);
@@ -95,7 +95,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
         Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(user, domain))
             .orElseThrow(() -> new RecipientRewriteTableException("Cannot remove from null mappings"));
 
-        Mappings updatedMappings = oldMappings.remove(MappingImpl.of(type, mapping));
+        Mappings updatedMappings = oldMappings.remove(Mapping.of(type, mapping));
 
         updateConfiguration(user, domain, oldMappings, updatedMappings);
     }

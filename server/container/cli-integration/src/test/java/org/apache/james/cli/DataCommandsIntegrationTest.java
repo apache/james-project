@@ -29,7 +29,7 @@ import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.rrt.lib.MappingImpl;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.utils.DataProbeImpl;
@@ -141,7 +141,7 @@ public class DataCommandsIntegrationTest {
                 new AbstractMap.SimpleEntry<String, Mappings>(
                     MAIL_ADDRESS,
                     MappingsImpl.builder()
-                        .add(MappingImpl.address(redirectionAddress))
+                        .add(Mapping.address(redirectionAddress))
                         .build()));
     }
 
@@ -190,7 +190,7 @@ public class DataCommandsIntegrationTest {
                 new AbstractMap.SimpleEntry<String, Mappings>(
                     MAIL_ADDRESS,
                     MappingsImpl.builder()
-                        .add(MappingImpl.regex(regex))
+                        .add(Mapping.regex(regex))
                         .build()));
     }
 

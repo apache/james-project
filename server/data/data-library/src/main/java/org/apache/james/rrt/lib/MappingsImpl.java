@@ -99,7 +99,7 @@ public class MappingsImpl implements Mappings, Serializable {
     
     public static MappingsImpl fromCollection(Collection<String> mappings) {
         return fromMappings(mappings.stream()
-            .map(MappingImpl::of));
+            .map(Mapping::of));
     }
     
     public static MappingsImpl fromMappings(Stream<Mapping> mappings) {
@@ -131,7 +131,7 @@ public class MappingsImpl implements Mappings, Serializable {
         }
 
         public Builder add(String mapping) {
-            return add(MappingImpl.of(mapping));
+            return add(Mapping.of(mapping));
         }
 
         public Builder add(Mapping mapping) {

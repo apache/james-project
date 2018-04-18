@@ -127,7 +127,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         Function<User, Stream<Mapping>> convertAndRecurseMapping =
             Throwing
-                .function((User rewrittenUser) -> convertAndRecurseMapping(associatedMapping.getType(), originalUser, rewrittenUser, remainingLoops))
+                .function((User rewrittenUser) -> convertAndRecurseMapping(associatedMapping, originalUser, rewrittenUser, remainingLoops))
                 .sneakyThrow();
 
         return associatedMapping.rewriteUser(originalUser)
@@ -136,18 +136,17 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             .orElse(Stream.empty());
     }
 
-    private Stream<Mapping> convertAndRecurseMapping(Type mappingType, User originalUser, User rewrittenUser, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException {
+    private Stream<Mapping> convertAndRecurseMapping(Mapping mapping, User originalUser, User rewrittenUser, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException {
         LOGGER.debug("Valid virtual user mapping {} to {}", originalUser, rewrittenUser);
 
-        Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(rewrittenUser, mappingType));
+        Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(rewrittenUser, mapping.getType()));
         if (!recursive) {
             return nonRecursiveResult;
         }
 
         // Check if the returned mapping is the same as the input. If so we need to handle identity to avoid loops.
         if (originalUser.equals(rewrittenUser)) {
-            return mappingType.getIdentityMappingBehaviour()
-                .handleIdentity(nonRecursiveResult);
+            return mapping.handleIdentity(nonRecursiveResult);
         } else {
             return recurseMapping(nonRecursiveResult, rewrittenUser, remainingLoops);
         }
@@ -167,12 +166,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         switch (type) {
             case Forward:
             case Group:
-                return MappingImpl.of(type, rewrittenUser.asString());
+                return Mapping.of(type, rewrittenUser.asString());
             case Regex:
             case Domain:
             case Error:
             case Address:
-                return MappingImpl.address(rewrittenUser.asString());
+                return Mapping.address(rewrittenUser.asString());
         }
         throw new IllegalArgumentException("unhandled enum type");
     }
@@ -185,7 +184,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new RecipientRewriteTableException("Invalid regex: " + regex, e);
         }
 
-        MappingImpl mapping = MappingImpl.regex(regex);
+        Mapping mapping = Mapping.regex(regex);
         checkMapping(user, domain, mapping);
         LOGGER.info("Add regex mapping => {} for user: {} domain: {}", regex, user, domain.name());
         addMapping(user, domain, mapping);
@@ -195,12 +194,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void removeRegexMapping(String user, Domain domain, String regex) throws RecipientRewriteTableException {
         LOGGER.info("Remove regex mapping => {} for user: {} domain: {}", regex, user, domain.name());
-        removeMapping(user, domain, MappingImpl.regex(regex));
+        removeMapping(user, domain, Mapping.regex(regex));
     }
 
     @Override
     public void addAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.address(address)
+        Mapping mapping = Mapping.address(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
@@ -226,7 +225,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void removeAddressMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.address(address)
+        Mapping mapping = Mapping.address(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         LOGGER.info("Remove address mapping => {} for user: {} domain: {}", mapping, user, domain.name());
@@ -235,7 +234,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
-        MappingImpl mapping = MappingImpl.error(error);
+        Mapping mapping = Mapping.error(error);
 
         checkMapping(user, domain, mapping);
         LOGGER.info("Add error mapping => {} for user: {} domain: {}", error, user, domain.name());
@@ -246,7 +245,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void removeErrorMapping(String user, Domain domain, String error) throws RecipientRewriteTableException {
         LOGGER.info("Remove error mapping => {} for user: {} domain: {}", error, user, domain.name());
-        removeMapping(user, domain, MappingImpl.error(error));
+        removeMapping(user, domain, Mapping.error(error));
     }
 
     @Override
@@ -260,18 +259,18 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     @Override
     public void addAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Add domain mapping: {} => {}", aliasDomain, realDomain);
-        addMapping(null, aliasDomain, MappingImpl.domain(realDomain));
+        addMapping(null, aliasDomain, Mapping.domain(realDomain));
     }
 
     @Override
     public void removeAliasDomainMapping(Domain aliasDomain, Domain realDomain) throws RecipientRewriteTableException {
         LOGGER.info("Remove domain mapping: {} => {}", aliasDomain, realDomain);
-        removeMapping(null, aliasDomain, MappingImpl.domain(realDomain));
+        removeMapping(null, aliasDomain, Mapping.domain(realDomain));
     }
 
     @Override
     public void addForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.forward(address)
+        Mapping mapping = Mapping.forward(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
@@ -283,7 +282,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void removeForwardMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.forward(address)
+        Mapping mapping = Mapping.forward(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
@@ -292,7 +291,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void addGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.group(address)
+        Mapping mapping = Mapping.group(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         checkHasValidAddress(mapping);
@@ -304,7 +303,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public void removeGroupMapping(String user, Domain domain, String address) throws RecipientRewriteTableException {
-        Mapping mapping = MappingImpl.group(address)
+        Mapping mapping = Mapping.group(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
         LOGGER.info("Remove forward mapping => {} for user: {} domain: {}", mapping, user, domain.name());
