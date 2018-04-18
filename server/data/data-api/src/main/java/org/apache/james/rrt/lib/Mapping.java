@@ -29,6 +29,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 
 import com.google.common.base.Objects;
@@ -55,7 +56,7 @@ public interface Mapping {
             case Domain:
                 return new UserRewritter.DomainRewriter();
             case Error:
-                return new UserRewritter.NoneRewriter();
+                return new UserRewritter.ThrowingRewriter();
             case Forward:
             case Group:
             case Address:
@@ -276,7 +277,7 @@ public interface Mapping {
         }
 
         @Override
-        public Optional<User> rewriteUser(User user) throws AddressException {
+        public Optional<User> rewriteUser(User user) throws AddressException, RecipientRewriteTable.ErrorMappingException {
             return rewriter.rewrite(user);
         }
 
@@ -328,6 +329,6 @@ public interface Mapping {
 
     String getErrorMessage();
 
-    Optional<User> rewriteUser(User user) throws AddressException;
+    Optional<User> rewriteUser(User user) throws AddressException, RecipientRewriteTable.ErrorMappingException;
 
 }

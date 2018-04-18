@@ -31,6 +31,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ import com.google.common.collect.ImmutableList;
 @FunctionalInterface
 public interface UserRewritter {
 
-    Optional<User> rewrite(User user) throws AddressException;
+    Optional<User> rewrite(User user) throws AddressException, RecipientRewriteTable.ErrorMappingException;
 
     interface MappingUserRewriter {
         UserRewritter generateUserRewriter(String mapping);
@@ -65,10 +66,12 @@ public interface UserRewritter {
         }
     }
 
-    class NoneRewriter implements MappingUserRewriter {
+    class ThrowingRewriter implements MappingUserRewriter {
         @Override
         public UserRewritter generateUserRewriter(String mapping) {
-            return oldUser -> Optional.empty();
+            return user -> {
+                throw new RecipientRewriteTable.ErrorMappingException(mapping);
+            };
         }
     }
 

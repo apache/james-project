@@ -20,17 +20,19 @@
 package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.User;
+import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.junit.jupiter.api.Test;
 
-public class NoneRewiterTest {
+public class ThrowingRewriterTest {
     @Test
     public void rewriteShouldReturnEmpty() throws Exception {
-        assertThat(
-            new UserRewritter.NoneRewriter()
+        assertThatThrownBy(() ->
+            new UserRewritter.ThrowingRewriter()
                 .generateUserRewriter("any")
                 .rewrite(User.fromUsername("any")))
-            .isEmpty();
+            .isInstanceOf(RecipientRewriteTable.ErrorMappingException.class);
     }
 }
