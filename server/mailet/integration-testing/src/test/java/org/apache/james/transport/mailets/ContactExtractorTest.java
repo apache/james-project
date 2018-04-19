@@ -104,6 +104,11 @@ public class ContactExtractorTest {
         probe.addDomain(DEFAULT_DOMAIN);
         probe.addUser(SENDER, PASSWORD);
         probe.addUser(TO, PASSWORD);
+        probe.addUser(TO2, PASSWORD);
+        probe.addUser(CC, PASSWORD);
+        probe.addUser(CC2, PASSWORD);
+        probe.addUser(BCC, PASSWORD);
+        probe.addUser(BCC2, PASSWORD);
     }
 
     @After

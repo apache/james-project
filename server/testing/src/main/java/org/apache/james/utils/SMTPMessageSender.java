@@ -37,7 +37,6 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 
 public class SMTPMessageSender extends ExternalResource implements Closeable {
 
@@ -45,7 +44,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         try {
             return new AuthenticatingSMTPClient();
         } catch (NoSuchAlgorithmException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -89,62 +88,46 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         return this;
     }
 
-    public SMTPMessageSender sendMessage(String from, String recipient) {
-        try {
-            doHelo();
-            doSetSender(from);
-            doRCPT("<" + recipient + ">");
-            doData("FROM: " + from + "\r\n" +
-                "subject: test\r\n" +
-                "\r\n" +
-                "content\r\n" +
-                ".\r\n");
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+    public SMTPMessageSender sendMessage(String from, String recipient) throws IOException {
+        doHelo();
+        doSetSender(from);
+        doRCPT("<" + recipient + ">");
+        doData("FROM: " + from + "\r\n" +
+            "subject: test\r\n" +
+            "\r\n" +
+            "content\r\n" +
+            ".\r\n");
         return this;
     }
 
-    public SMTPMessageSender sendMessageNoBracket(String from, String recipient) {
-        try {
-            doHelo();
-            doSetSender(from);
-            doRCPT(recipient);
-            doData("FROM: " + from + "\r\n" +
-                "subject: test\r\n" +
-                "\r\n" +
-                "content\r\n" +
-                ".\r\n");
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+    public SMTPMessageSender sendMessageNoBracket(String from, String recipient) throws IOException {
+        doHelo();
+        doSetSender(from);
+        doRCPT(recipient);
+        doData("FROM: " + from + "\r\n" +
+            "subject: test\r\n" +
+            "\r\n" +
+            "content\r\n" +
+            ".\r\n");
         return this;
     }
 
-    public SMTPMessageSender sendMessageWithHeaders(String from, String recipient, String message) {
-        try {
-            doHelo();
-            doSetSender(from);
-            doRCPT("<" + recipient + ">");
-            doData(message);
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+    public SMTPMessageSender sendMessageWithHeaders(String from, String recipient, String message) throws IOException {
+        doHelo();
+        doSetSender(from);
+        doRCPT("<" + recipient + ">");
+        doData(message);
         return this;
     }
 
-    public SMTPMessageSender sendMessage(Mail mail) throws MessagingException {
-        try {
-            String from = mail.getSender().asString();
-            doHelo();
-            doSetSender(from);
-            mail.getRecipients().stream()
-                .map(MailAddress::asString)
-                .forEach(Throwing.consumer(this::doAddRcpt));
-            doData(asString(mail.getMessage()));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
+    public SMTPMessageSender sendMessage(Mail mail) throws MessagingException, IOException {
+        String from = mail.getSender().asString();
+        doHelo();
+        doSetSender(from);
+        mail.getRecipients().stream()
+            .map(MailAddress::asString)
+            .forEach(Throwing.consumer(this::doAddRcpt));
+        doData(asString(mail.getMessage()));
         return this;
     }
 
