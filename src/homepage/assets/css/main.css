@@ -3106,6 +3106,41 @@
 		margin: 0;
 	}
 
+	#wrapper .apache_ref_left {
+		position: absolute;
+		top: 0;
+		left: 5%;
+		margin:0;
+		padding: 5px 5px 0px 5px;
+		background-color: #ffffff;
+		border-radius: 0 0 10px 10px;
+	}
+
+	#wrapper .apache_ref_left_mobile {
+		display: none;
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		text-align: center;
+		background: url('images/overlay.png') rgba(0,0,0,0.2);
+	}
+
+	#wrapper .apache_ref_left_mobile a {
+		font-size: 9pt;
+		color: #DDD;
+	}
+
+	#wrapper .apache_ref_left  img {
+		width: 10em;
+	}
+
+	#wrapper .apache_ref_left a {
+		border: none;
+		padding: 0;
+		margin: 0;
+	}
+
 	#header {
 		padding: 3em 5em 1em 5em;
 		text-align: center;
@@ -3248,6 +3283,13 @@
 				display:none;
 			}
 			#wrapper .apache_ref_mobile {
+				display: block;
+			}
+
+			.apache_ref_left {
+				display:none;
+			}
+			#wrapper .apache_ref_left_mobile {
 				display: block;
 			}
 
