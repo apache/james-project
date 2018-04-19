@@ -105,6 +105,12 @@ You need to build the homepage by:
     $ docker build -t james/homepage dockerfiles/site/homepage
     $ docker run -v $PWD:/origin -v $PWD/site:/destination james/homepage master
 
+In order to test the homepage, you can use this command:
+
+    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.5 jekyll serve
+
+the site will be available at http://localhost:4000/
+
 Then you build the other pages by:
 
     $ docker build -t james/site dockerfiles/site/website
