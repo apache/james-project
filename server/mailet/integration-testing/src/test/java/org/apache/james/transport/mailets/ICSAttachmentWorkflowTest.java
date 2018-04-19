@@ -558,8 +558,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -575,8 +574,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -608,8 +606,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithoutICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -630,8 +627,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -651,8 +647,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -672,8 +667,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithICSBase64Attached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -698,8 +692,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(yahooInvitationMessage)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -725,8 +718,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -746,8 +738,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(messageWithThreeICSAttached)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -785,8 +776,7 @@ public class ICSAttachmentWorkflowTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(calendarMessage)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

@@ -67,15 +67,13 @@ public class SmtpNullSenderTest {
     @Test
     public void smtpLayerShouldAcceptEmptySenders() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessageWithHeaders("", USER,"Short message")
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessageWithHeaders("", USER,"Short message");
     }
 
     @Test
     public void mailProcessingShouldDeliverNullSender() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessageWithHeaders("", USER,"Short message")
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessageWithHeaders("", USER,"Short message");
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER, PASSWORD)

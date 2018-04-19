@@ -125,8 +125,7 @@ public class ContactExtractorTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipients(TO, TO2, CC, CC2, BCC, BCC2))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipients(TO, TO2, CC, CC2, BCC, BCC2));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(TO, PASSWORD)

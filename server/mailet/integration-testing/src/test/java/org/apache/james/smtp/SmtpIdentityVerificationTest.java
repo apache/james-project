@@ -23,13 +23,15 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.SmtpSendingStep;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -73,8 +75,7 @@ public class SmtpIdentityVerificationTest {
             .verifyIdentity());
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .authenticate(USER, PASSWORD).sendMessage(USER, USER)
-            .awaitSent(awaitAtMostOneMinute);
+            .authenticate(USER, PASSWORD).sendMessage(USER, USER);
     }
 
     @Test
@@ -85,8 +86,7 @@ public class SmtpIdentityVerificationTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(ATTACKER, ATTACKER_PASSWORD)
-            .sendMessage(USER, USER)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(USER, USER);
     }
 
     @Test
@@ -95,10 +95,11 @@ public class SmtpIdentityVerificationTest {
             .requireAuthentication()
             .verifyIdentity());
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .authenticate(ATTACKER, ATTACKER_PASSWORD)
-            .sendMessage(USER, USER)
-            .awaitSentFail(awaitAtMostOneMinute);
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+                .authenticate(ATTACKER, ATTACKER_PASSWORD)
+                .sendMessage(USER, USER))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "503 5.7.1 Incorrect Authentication for Specified Email Address\n"));
     }
 
 }

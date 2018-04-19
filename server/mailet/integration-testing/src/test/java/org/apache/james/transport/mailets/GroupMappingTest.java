@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.equalTo;
 
 import javax.mail.internet.MimeMessage;
@@ -41,13 +42,14 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
-import org.apache.james.protocols.smtp.SMTPRetCode;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.SmtpSendingStep;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.GroupsRoutes;
@@ -143,8 +145,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -161,8 +162,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
@@ -181,8 +181,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -204,8 +203,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
@@ -226,8 +224,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -243,8 +240,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -264,8 +260,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
@@ -288,12 +283,15 @@ public class GroupMappingTest {
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendEnvelope(FakeMail.builder()
-                .mimeMessage(message)
-                .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSentFail(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE, awaitAtMostOneMinute);
+
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+                .sendMessage(FakeMail.builder()
+                    .mimeMessage(message)
+                    .sender(SENDER)
+                    .recipient(GROUP_ON_DOMAIN1)))
+            .isInstanceOf(SMTPSendingException.class)
+            .matches(t -> SMTPSendingException.isForStep(t, SmtpSendingStep.RCPT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -316,8 +314,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
@@ -335,8 +332,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -354,8 +350,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient((GROUP_ON_DOMAIN1)))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient((GROUP_ON_DOMAIN1)));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN2, PASSWORD)
@@ -373,8 +368,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(groupWithSlash))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(groupWithSlash));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -393,8 +387,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(userWithSlash, PASSWORD)
@@ -412,8 +405,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(USER_DOMAIN1, PASSWORD)
@@ -430,8 +422,7 @@ public class GroupMappingTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(GROUP_ON_DOMAIN1));
 
         fakeSmtp.isReceived(response -> response
             .body("[0].from", equalTo(SENDER))

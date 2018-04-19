@@ -122,8 +122,7 @@ public class StripAttachmentTest {
             .sendMessage(FakeMail.builder()
                 .mimeMessage(message)
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

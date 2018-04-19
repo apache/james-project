@@ -82,8 +82,7 @@ public class RecipientRewriteTableIntegrationTest {
     @Test
     public void rrtServiceShouldNotImpactRecipientsNotMatchingAnyRRT() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -98,8 +97,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
@@ -119,8 +117,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -139,8 +136,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addAddressMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(localUser, PASSWORD)
@@ -160,8 +156,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, ANY_AT_JAMES);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_ANOTHER_DOMAIN, PASSWORD)
@@ -176,8 +171,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addUser(ANY_AT_ANOTHER_DOMAIN, PASSWORD);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, ANY_AT_JAMES)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, ANY_AT_JAMES);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
@@ -192,8 +186,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addForwardMapping(RECIPIENT_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(ANY_AT_JAMES, PASSWORD)
@@ -213,8 +206,7 @@ public class RecipientRewriteTableIntegrationTest {
         dataProbe.addForwardMapping(ANY_LOCAL_PART, DEFAULT_DOMAIN, OTHER_AT_JAMES);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, GROUP)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, GROUP);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(OTHER_AT_JAMES, PASSWORD)

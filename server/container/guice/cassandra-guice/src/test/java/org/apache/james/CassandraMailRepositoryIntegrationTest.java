@@ -69,8 +69,7 @@ public class CassandraMailRepositoryIntegrationTest {
         server.getProbe(DataProbeImpl.class).addUser("user@domain.com", "secret");
 
         smtpMessageSender.connect("127.0.0.1", 1025)
-            .sendMessage("denied@other.com", "user@domain.com")
-            .awaitSent(await);
+            .sendMessage("denied@other.com", "user@domain.com");
 
         MailRepositoryProbeImpl repositoryProbe = server.getProbe(MailRepositoryProbeImpl.class);
         await.until(() -> repositoryProbe.getRepositoryMailCount("cassandra://var/mail/sender-denied/") == 1);

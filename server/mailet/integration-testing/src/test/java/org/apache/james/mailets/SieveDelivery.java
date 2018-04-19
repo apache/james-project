@@ -78,8 +78,7 @@ public class SieveDelivery {
             "fileinto \"" + TARGETED_MAILBOX + "\";");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

@@ -25,6 +25,7 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -41,6 +42,8 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.SmtpSendingStep;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -63,7 +66,7 @@ public class SmtpAuthorizedAddressesTest {
     private TemporaryJamesServer jamesServer;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         fakeSmtp.awaitStarted(awaitAtMostOneMinute);
     }
 
@@ -101,8 +104,7 @@ public class SmtpAuthorizedAddressesTest {
             .withAutorizedAddresses("127.0.0.0/8"));
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, TO)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
@@ -116,9 +118,10 @@ public class SmtpAuthorizedAddressesTest {
             .requireAuthentication()
             .withAutorizedAddresses("172.0.0.0/8"));
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, TO)
-            .awaitSentFail(awaitAtMostOneMinute);
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+                .sendMessage(FROM, TO))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "530 5.7.1 Authentication Required\n"));
     }
 
     @Test
@@ -129,8 +132,7 @@ public class SmtpAuthorizedAddressesTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, TO)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
             .body("", hasSize(1))
@@ -145,8 +147,7 @@ public class SmtpAuthorizedAddressesTest {
             .withAutorizedAddresses("172.0.0.0/8"));
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(TO, FROM)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(TO, FROM);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)

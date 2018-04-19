@@ -23,13 +23,15 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPSendingException;
+import org.apache.james.utils.SmtpSendingStep;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,8 +71,7 @@ public class SmtpBracketEnforcementTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
-            .sendMessage(USER, USER)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(USER, USER);
     }
 
     @Test
@@ -80,8 +81,7 @@ public class SmtpBracketEnforcementTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
-            .sendMessageNoBracket(USER, USER)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessageNoBracket(USER, USER);
     }
 
     @Test
@@ -91,8 +91,7 @@ public class SmtpBracketEnforcementTest {
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(USER, PASSWORD)
-            .sendMessage(USER, USER)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(USER, USER);
     }
 
     @Test
@@ -100,9 +99,10 @@ public class SmtpBracketEnforcementTest {
         createJamesServer(SmtpConfiguration.builder()
             .requireBracketEnforcement());
 
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .authenticate(USER, PASSWORD)
-            .sendMessageNoBracket(USER, USER)
-            .awaitSentFail(awaitAtMostOneMinute);
+        assertThatThrownBy(() ->
+            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+                .authenticate(USER, PASSWORD)
+                .sendMessageNoBracket(USER, USER))
+            .isEqualTo(new SMTPSendingException(SmtpSendingStep.RCPT, "501 5.5.2 Syntax error in parameters or arguments\n"));
     }
 }

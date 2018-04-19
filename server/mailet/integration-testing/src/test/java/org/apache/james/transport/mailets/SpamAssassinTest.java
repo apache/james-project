@@ -101,8 +101,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content", RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -118,8 +117,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichDetectIsSpamWhenSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent(SPAM_CONTENT, RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(mailWithContent(SPAM_CONTENT, RECIPIENT));
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -134,8 +132,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderWhichNoWhenNonSpamMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content", RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(mailWithContent("This is the content", RECIPIENT));
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -150,8 +147,7 @@ public class SpamAssassinTest {
     @Test
     public void spamAssassinShouldAppendNewHeaderPerRecipientOnMessage() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(mailWithContent("This is the content", RECIPIENT, RECIPIENT2))
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(mailWithContent("This is the content", RECIPIENT, RECIPIENT2));
 
         messageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

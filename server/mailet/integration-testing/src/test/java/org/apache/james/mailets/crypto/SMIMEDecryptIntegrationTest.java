@@ -99,8 +99,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                ClassLoaderUtils.getSystemResourceAsString("eml/crypted.eml"))
-            .awaitSent(awaitAtMostOneMinute);
+                ClassLoaderUtils.getSystemResourceAsString("eml/crypted.eml"));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -114,8 +113,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                ClassLoaderUtils.getSystemResourceAsString("eml/crypted_with_attachment.eml"))
-            .awaitSent(awaitAtMostOneMinute);
+                ClassLoaderUtils.getSystemResourceAsString("eml/crypted_with_attachment.eml"));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -130,8 +128,7 @@ public class SMIMEDecryptIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
             .sendMessageWithHeaders(FROM, FROM,
-                ClassLoaderUtils.getSystemResourceAsString("eml/bad_crypted.eml"))
-            .awaitSent(awaitAtMostOneMinute);
+                ClassLoaderUtils.getSystemResourceAsString("eml/bad_crypted.eml"));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)

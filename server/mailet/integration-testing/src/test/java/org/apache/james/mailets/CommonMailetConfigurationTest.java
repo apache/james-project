@@ -69,8 +69,7 @@ public class CommonMailetConfigurationTest {
     @Test
     public void simpleMailShouldBeSent() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

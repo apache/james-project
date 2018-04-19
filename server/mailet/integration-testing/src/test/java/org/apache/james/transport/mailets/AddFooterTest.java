@@ -90,8 +90,7 @@ public class AddFooterTest {
                     .setText("Any content")
                     .setSubject("test"))
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -115,8 +114,7 @@ public class AddFooterTest {
                             .type("application/data"))
                     .setSubject("test"))
                 .sender(FROM)
-                .recipient(RECIPIENT))
-            .awaitSent(awaitAtMostOneMinute);
+                .recipient(RECIPIENT));
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

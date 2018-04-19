@@ -114,8 +114,7 @@ public class SMIMESignIntegrationTest {
     public void authenticatedMessagesShouldBeSigned() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -128,8 +127,7 @@ public class SMIMESignIntegrationTest {
     @Test
     public void nonAuthenticatedMessagesShouldNotBeSigned() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_SECURE_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)

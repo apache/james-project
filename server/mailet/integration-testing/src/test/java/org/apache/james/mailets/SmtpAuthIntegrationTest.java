@@ -103,8 +103,7 @@ public class SmtpAuthIntegrationTest {
     public void authenticatedSmtpSessionsShouldBeDelivered() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .authenticate(FROM, PASSWORD)
-            .sendMessage(FROM, FROM)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, FROM);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -115,8 +114,7 @@ public class SmtpAuthIntegrationTest {
     @Test
     public void nonAuthenticatedSmtpSessionsShouldNotBeDelivered() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, FROM)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, FROM);
 
         awaitAtMostOneMinute.until(() -> repositoryProbe.getRepositoryMailCount(DROPPED_MAILS) == 1);
         assertThat(

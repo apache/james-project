@@ -78,8 +78,7 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
 
         // ~ 12 KB email
         smtpMessageSender.connect(LOCALHOST, SMTP_PORT)
-            .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024))
-            .awaitSent(AWAIT);
+            .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024));
         AWAIT.until(() -> imapMessageReader.connect(LOCALHOST, IMAP_PORT)
             .login(USER, PASSWORD)
             .select(IMAPMessageReader.INBOX)

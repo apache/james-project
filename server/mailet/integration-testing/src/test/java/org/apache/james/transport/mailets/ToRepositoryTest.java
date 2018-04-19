@@ -99,9 +99,7 @@ public class ToRepositoryTest {
     public void incomingShouldBeStoredInProcessorByDefault() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute)
-            .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
     }
@@ -110,9 +108,7 @@ public class ToRepositoryTest {
     public void userShouldBeAbleToAccessReprocessedMails() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute)
-            .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
 
@@ -138,9 +134,7 @@ public class ToRepositoryTest {
     public void userShouldBeAbleToAccessReprocessedMail() throws Exception {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute)
-            .sendMessage(RECIPIENT, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
         String key = probe.listMailKeys(CUSTOM_REPOSITORY).get(0);

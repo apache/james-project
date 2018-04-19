@@ -38,7 +38,6 @@ import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Throwables;
-import com.jayway.awaitility.core.ConditionFactory;
 
 public class SMTPMessageSender extends ExternalResource implements Closeable {
 
@@ -85,17 +84,17 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
 
     public SMTPMessageSender authenticate(String username, String password) throws IOException, NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException {
         if (smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password) == false) {
-            throw new RuntimeException("auth failed");
+            throw new SMTPSendingException(SmtpSendingStep.Authentication, smtpClient.getReplyString());
         }
         return this;
     }
 
     public SMTPMessageSender sendMessage(String from, String recipient) {
         try {
-            smtpClient.helo(senderDomain);
-            smtpClient.setSender(from);
-            smtpClient.rcpt("<" + recipient + ">");
-            smtpClient.sendShortMessageData("FROM: " + from + "\r\n" +
+            doHelo();
+            doSetSender(from);
+            doRCPT("<" + recipient + ">");
+            doData("FROM: " + from + "\r\n" +
                 "subject: test\r\n" +
                 "\r\n" +
                 "content\r\n" +
@@ -108,10 +107,10 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
 
     public SMTPMessageSender sendMessageNoBracket(String from, String recipient) {
         try {
-            smtpClient.helo(senderDomain);
-            smtpClient.setSender(from);
-            smtpClient.rcpt(recipient);
-            smtpClient.sendShortMessageData("FROM: " + from + "\r\n" +
+            doHelo();
+            doSetSender(from);
+            doRCPT(recipient);
+            doData("FROM: " + from + "\r\n" +
                 "subject: test\r\n" +
                 "\r\n" +
                 "content\r\n" +
@@ -124,10 +123,10 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
 
     public SMTPMessageSender sendMessageWithHeaders(String from, String recipient, String message) {
         try {
-            smtpClient.helo(senderDomain);
-            smtpClient.setSender(from);
-            smtpClient.rcpt("<" + recipient + ">");
-            smtpClient.sendShortMessageData(message);
+            doHelo();
+            doSetSender(from);
+            doRCPT("<" + recipient + ">");
+            doData(message);
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
@@ -137,37 +136,19 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
     public SMTPMessageSender sendMessage(Mail mail) throws MessagingException {
         try {
             String from = mail.getSender().asString();
-            smtpClient.helo(senderDomain);
-            smtpClient.setSender(from);
+            doHelo();
+            doSetSender(from);
             mail.getRecipients().stream()
                 .map(MailAddress::asString)
-                .forEach(Throwing.consumer(smtpClient::addRecipient));
-            smtpClient.sendShortMessageData(asString(mail.getMessage()));
+                .forEach(Throwing.consumer(this::doAddRcpt));
+            doData(asString(mail.getMessage()));
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
         return this;
     }
 
-    public SMTPMessageSender sendEnvelope(Mail mail) throws MessagingException {
-        try {
-            String from = mail.getSender().asString();
-            smtpClient.helo(senderDomain);
-            smtpClient.setSender(from);
-            mail.getRecipients().stream()
-                .map(MailAddress::asString)
-                .forEach(Throwing.consumer(smtpClient::addRecipient));
-        } catch (IOException e) {
-            throw Throwables.propagate(e);
-        }
-        return this;
-    }
-
-    public SMTPMessageSender sendEnvelope(FakeMail.Builder mail) throws MessagingException {
-        return sendEnvelope(mail.build());
-    }
-
-    public SMTPMessageSender sendMessage(FakeMail.Builder mail) throws MessagingException {
+    public SMTPMessageSender sendMessage(FakeMail.Builder mail) throws MessagingException, IOException {
         return sendMessage(mail.build());
     }
 
@@ -177,40 +158,43 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
     }
 
-    public boolean messageHasBeenSent() throws IOException {
-        return smtpClient.getReplyString()
-            .contains("250 2.6.0 Message received");
-    }
-
-    public SMTPMessageSender awaitSent(ConditionFactory conditionFactory) {
-        conditionFactory.until(this::messageHasBeenSent);
-        return this;
-    }
-
-    public void awaitSentFail(ConditionFactory conditionFactory) {
-        conditionFactory.until(this::messageSendingFailed);
-    }
-
-    public void awaitSentFail(String code, ConditionFactory conditionFactory) {
-        conditionFactory.until(() -> messageSendingFailedWithCode(code));
-    }
-
-    public boolean messageSendingFailed() {
-        String replyString = smtpClient.getReplyString().trim();
-        return replyString.startsWith("4") || replyString.startsWith("5");
-    }
-
-    public boolean messageSendingFailedWithCode(String code) {
-        String replyString = smtpClient.getReplyString().trim();
-        return replyString.startsWith(code);
-    }
-
-    public boolean messageHaveNotBeenSent() throws IOException {
-        return !messageHasBeenSent();
-    }
-
     @Override
     public void close() throws IOException {
         smtpClient.disconnect();
+    }
+
+    private void doSetSender(String from) throws IOException {
+        boolean success = smtpClient.setSender(from);
+        if (!success) {
+            throw new SMTPSendingException(SmtpSendingStep.Sender, smtpClient.getReplyString());
+        }
+    }
+
+    private void doHelo() throws IOException {
+        int code = smtpClient.helo(senderDomain);
+        if (code != 250) {
+            throw new SMTPSendingException(SmtpSendingStep.Helo, smtpClient.getReplyString());
+        }
+    }
+
+    private void doRCPT(String recipient) throws IOException {
+        int code = smtpClient.rcpt(recipient);
+        if (code != 250) {
+            throw new SMTPSendingException(SmtpSendingStep.RCPT, smtpClient.getReplyString());
+        }
+    }
+
+    private void doData(String message) throws IOException {
+        boolean success = smtpClient.sendShortMessageData(message);
+        if (!success) {
+            throw new SMTPSendingException(SmtpSendingStep.Data, smtpClient.getReplyString());
+        }
+    }
+
+    private void doAddRcpt(String rcpt) throws IOException {
+        boolean success = smtpClient.addRecipient(rcpt);
+        if (!success) {
+            throw new SMTPSendingException(SmtpSendingStep.RCPT, smtpClient.getReplyString());
+        }
     }
 }

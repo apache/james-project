@@ -116,8 +116,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/users/" + RECIPIENT + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -135,8 +134,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -154,8 +152,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/users/" + RECIPIENT + "/size");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
@@ -170,8 +167,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/users/" + RECIPIENT + "/count");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -189,8 +185,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/domains/" + DEFAULT_DOMAIN + "/count");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         IMAPMessageReader messageReader = imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(FROM, PASSWORD)
@@ -208,8 +203,7 @@ public class IsOverQuotaMatcherTest {
             .put("/quota/users/" + RECIPIENT + "/count");
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT)
-            .awaitSent(awaitAtMostOneMinute);
+            .sendMessage(FROM, RECIPIENT);
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
