@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets;
 
 import static com.jayway.restassured.RestAssured.given;
+import static org.apache.james.mailets.configuration.CommonProcessors.ERROR_REPOSITORY;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -27,7 +28,6 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.equalTo;
 
 import javax.mail.internet.MimeMessage;
@@ -47,9 +47,8 @@ import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.utils.SMTPSendingException;
-import org.apache.james.utils.SmtpSendingStep;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.GroupsRoutes;
@@ -274,7 +273,7 @@ public class GroupMappingTest {
     }
 
     @Test
-    public void messageShouldNotBeSentWhenGroupLoopMapping() throws Exception {
+    public void messageShouldBeStoredInRepositoryWhenGroupLoopMapping() throws Exception {
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + USER_DOMAIN1);
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + USER_DOMAIN2);
@@ -283,25 +282,15 @@ public class GroupMappingTest {
 
         webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
 
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipient(GROUP_ON_DOMAIN1));
 
-        assertThatThrownBy(() ->
-            messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-                .sendMessage(FakeMail.builder()
-                    .mimeMessage(message)
-                    .sender(SENDER)
-                    .recipient(GROUP_ON_DOMAIN1)))
-            .isInstanceOf(SMTPSendingException.class)
-            .matches(t -> SMTPSendingException.isForStep(t, SmtpSendingStep.RCPT));
-
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-            .login(USER_DOMAIN1, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
-            .awaitNoMessage(awaitAtMostOneMinute);
-
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-            .login(USER_DOMAIN1, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
-            .awaitNoMessage(awaitAtMostOneMinute);
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(ERROR_REPOSITORY) == 1);
     }
 
     @Test

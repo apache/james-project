@@ -114,11 +114,11 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         try {
             Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
-            if (targetString != null && !targetString.isEmpty()) {
+            if (!targetString.isEmpty()) {
                 return true;
             }
         } catch (ErrorMappingException e) {
-            return false;
+            return true;
         } catch (RecipientRewriteTableException e) {
             LOGGER.info("Unable to access RecipientRewriteTable", e);
             return false;

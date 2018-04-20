@@ -37,7 +37,6 @@ import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ValidRcptHandlerTest {
@@ -179,7 +178,6 @@ public class ValidRcptHandlerTest {
         assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
-    @Ignore
     @Test
     public void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@localhost");
@@ -192,7 +190,6 @@ public class ValidRcptHandlerTest {
         assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
-    @Ignore
     @Test
     public void doRcptShouldDeclineWhenHasErrorMapping() throws Exception {
         memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
