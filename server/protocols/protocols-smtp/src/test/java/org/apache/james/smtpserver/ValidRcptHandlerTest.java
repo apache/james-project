@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -26,48 +27,55 @@ import java.util.HashMap;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
-import org.apache.james.rrt.api.RecipientRewriteTable;
-import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.smtpserver.fastfail.ValidRcptHandler;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ValidRcptHandlerTest {
-
     private static final String VALID_USER = "postmaster";
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
     private static final String USER2 = "user2";
-    UsersRepository users;
-    ValidRcptHandler handler;
+    private static final String PASSWORD = "xxx";
+    private static final boolean RELAYING_ALLOWED = true;
+
+    private ValidRcptHandler handler;
+    private MemoryRecipientRewriteTable memoryRecipientRewriteTable;
+    private MailAddress validUserEmail;
+    private MailAddress user1mail;
+    private MailAddress invalidUserEmail;
 
     @Before
     public void setUp() throws Exception {
-
-        users = MemoryUsersRepository.withoutVirtualHosting();
-        users.addUser(VALID_USER, "xxx");
+        UsersRepository users = MemoryUsersRepository.withoutVirtualHosting();
+        users.addUser(VALID_USER, PASSWORD);
 
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.setDefaultDomain(Domain.LOCALHOST);
 
+        memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
+        memoryRecipientRewriteTable.setDomainList(memoryDomainList);
+
         handler = new ValidRcptHandler();
         handler.setUsersRepository(users);
-        handler.setRecipientRewriteTable(setUpRecipientRewriteTable(memoryDomainList));
+        handler.setRecipientRewriteTable(memoryRecipientRewriteTable);
         handler.setDomainList(memoryDomainList);
+
+        validUserEmail = new MailAddress(VALID_USER + "@localhost");
+        user1mail = new MailAddress(USER1 + "@localhost");
+        invalidUserEmail = new MailAddress(INVALID_USER + "@localhost");
     }
 
-    private SMTPSession setupMockedSMTPSession(final boolean relayingAllowed) {
-
+    private SMTPSession setupMockedSMTPSession(boolean relayingAllowed) {
         return new BaseFakeSMTPSession() {
 
             @Override
@@ -104,63 +112,96 @@ public class ValidRcptHandlerTest {
         };
     }
 
-    private RecipientRewriteTable setUpRecipientRewriteTable(DomainList domainList) throws RecipientRewriteTableException {
-        MemoryRecipientRewriteTable memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
-        memoryRecipientRewriteTable.setDomainList(domainList);
+    @Test
+    public void doRcptShouldRejectNotExistingLocalUsersWhenNoRelay() {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
+    }
+
+    @Test
+    public void doRcptShouldDenyNotExistingLocalUsersWhenRelay() {
+        SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
+    }
+
+    @Test
+    public void doRcptShouldDeclineNonLocalUsersWhenRelay() throws Exception {
+        MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
+        SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+    }
+
+    @Test
+    public void doRcptShouldDeclineNonLocalUsersWhenNoRelay() throws Exception {
+        MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+    }
+
+    @Test
+    public void doRcptShouldDeclineValidUsersWhenNoRelay() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+    }
+
+    @Test
+    public void doRcptShouldDeclineValidUsersWhenRelay() throws Exception {
+        SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+    }
+
+    @Test
+    public void doRcptShouldDeclineWhenHasAddressMapping() throws Exception {
         memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "address");
-        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER2, Domain.LOCALHOST), "554 BOUNCE");
-        return memoryRecipientRewriteTable;
-    }
 
-    @Test
-    public void testRejectInvalidUser() throws Exception {
-        MailAddress mailAddress = new MailAddress(INVALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(false);
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
-
-        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
-    }
-
-    @Test
-    public void testRejectInvalidUserRelay() throws Exception {
-        MailAddress mailAddress = new MailAddress(INVALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(true);
-
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
-
-        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
-    }
-
-    @Test
-    public void testNotRejectValidUser() throws Exception {
-        MailAddress mailAddress = new MailAddress(VALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(false);
-
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
+        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
+    @Ignore
     @Test
-    public void testHasAddressMapping() throws Exception {
-        MailAddress mailAddress = new MailAddress(USER1 + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(false);
+    public void doRcptShouldDenyWhenHasMappingLoop() throws Exception {
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), USER2 + "@localhost");
+        memoryRecipientRewriteTable.addAddressMapping(MappingSource.fromUser(USER2, Domain.LOCALHOST), USER1 + "@localhost");
 
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
+
+        int rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
 
         assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
+    @Ignore
     @Test
-    public void testHasErrorMapping() throws Exception {
-        MailAddress mailAddress = new MailAddress(USER2 + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(false);
+    public void doRcptShouldDeclineWhenHasErrorMapping() throws Exception {
+        memoryRecipientRewriteTable.addErrorMapping(MappingSource.fromUser(USER1, Domain.LOCALHOST), "554 BOUNCE");
 
-        int rCode = handler.doRcpt(session, null, mailAddress).getResult();
+        SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        assertThat(session.getAttachment("VALID_USER", State.Transaction)).isNull();
-        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
+        int rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
+
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
     
 }
