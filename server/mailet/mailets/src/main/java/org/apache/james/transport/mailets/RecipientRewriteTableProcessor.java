@@ -154,7 +154,7 @@ public class RecipientRewriteTableProcessor {
             }
             return RrtExecutionResult.success(recipient);
         } catch (ErrorMappingException | RecipientRewriteTableException | MessagingException e) {
-            LOGGER.info("Error while process mail.", e);
+            LOGGER.warn("Could not rewrite recipient {}", recipient, e);
             return RrtExecutionResult.error(recipient);
         }
     }
