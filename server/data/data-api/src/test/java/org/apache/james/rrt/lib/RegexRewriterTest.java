@@ -74,4 +74,19 @@ public class RegexRewriterTest {
         assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${2}"))
             .contains("admin@abc.def");
     }
+
+    @Test
+    public void regexMapShouldCorrectlyReplaceSeveralOutOfOrderMatchingGroups() throws Exception {
+        MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
+        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${2}.${1}"))
+            .contains("admin@def.abc");
+    }
+
+
+    @Test
+    public void regexMapShouldCorrectlyReplaceRepeatingMatchingGroups() throws Exception {
+        MailAddress mailAddress = new MailAddress("prefix_abc_def@test");
+        assertThat(new UserRewritter.RegexRewriter().regexMap(mailAddress, "prefix_(.*)_(.*)@test:admin@${1}.${1}"))
+            .contains("admin@abc.abc");
+    }
 }
