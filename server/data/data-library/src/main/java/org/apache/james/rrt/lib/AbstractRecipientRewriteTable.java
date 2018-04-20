@@ -103,7 +103,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         // We have to much mappings throw ErrorMappingException to avoid
         // infinity loop
         if (mappingLimit == 0) {
-            throw new ErrorMappingException("554 Too many mappings to process");
+            throw new TooManyMappingException("554 Too many mappings to process");
         }
 
         Mappings targetMappings = mapAddress(user.getLocalPart(), user.getDomainPart().get());

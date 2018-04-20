@@ -115,4 +115,12 @@ public interface RecipientRewriteTable {
         }
 
     }
+
+    class TooManyMappingException extends ErrorMappingException {
+        
+        public TooManyMappingException(String string) {
+            super(string);
+        }
+
+    }
 }
