@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
@@ -127,7 +126,7 @@ public class ValidRcptHandlerTest {
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertEquals("Rejected", rCode, HookReturnCode.DENY);
+        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
     }
 
     @Test
@@ -137,7 +136,7 @@ public class ValidRcptHandlerTest {
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertEquals("Rejected", rCode, HookReturnCode.DENY);
+        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
     }
 
     @Test
@@ -147,7 +146,7 @@ public class ValidRcptHandlerTest {
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertEquals("Not rejected", rCode, HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
     @Test
@@ -157,7 +156,7 @@ public class ValidRcptHandlerTest {
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertEquals("Not rejected", rCode, HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
     }
 
     @Test
@@ -167,8 +166,8 @@ public class ValidRcptHandlerTest {
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertNull("Valid Error mapping", session.getAttachment("VALID_USER", State.Transaction));
-        assertEquals("Error mapping", rCode, HookReturnCode.DENY);
+        assertThat(session.getAttachment("VALID_USER", State.Transaction)).isNull();
+        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
     }
     
 }
