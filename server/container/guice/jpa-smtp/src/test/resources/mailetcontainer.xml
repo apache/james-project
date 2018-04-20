@@ -67,7 +67,9 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
-            <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="All" class="RecipientRewriteTable">
+                <errorProcessor>rrt-error</errorProcessor>
+            </mailet>
             <!-- <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
@@ -115,6 +117,17 @@
         <processor state="bounces" enableJmx="true">
             <mailet match="All" class="DSNBounce">
                 <passThrough>false</passThrough>
+            </mailet>
+        </processor>
+
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="IsSenderInRRTLoop" class="Null"/>
+            <mailet match="All" class="Bounce">
+                <notice>We were unable to deliver the attached message to the following recipients due to an address rewriting issue.</notice>
             </mailet>
         </processor>
     </processors>

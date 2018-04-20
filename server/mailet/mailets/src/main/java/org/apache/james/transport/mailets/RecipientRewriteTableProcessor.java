@@ -101,12 +101,18 @@ public class RecipientRewriteTableProcessor {
     private final RecipientRewriteTable virtualTableStore;
     private final MailetContext mailetContext;
     private final Supplier<Domain> defaultDomainSupplier;
+    private final String errorProcessor;
 
-    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
+    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext, String errorProcessor) {
         this.virtualTableStore = virtualTableStore;
         this.mailetContext = mailetContext;
         this.defaultDomainSupplier = MemoizedSupplier.of(
             Throwing.supplier(() -> getDefaultDomain(domainList)).sneakyThrow());
+        this.errorProcessor = errorProcessor;
+    }
+
+    public RecipientRewriteTableProcessor(RecipientRewriteTable virtualTableStore, DomainList domainList, MailetContext mailetContext) {
+        this(virtualTableStore, domainList, mailetContext, Mail.ERROR);
     }
 
     private Domain getDefaultDomain(DomainList domainList) throws MessagingException {
@@ -121,7 +127,7 @@ public class RecipientRewriteTableProcessor {
         RrtExecutionResult executionResults = executeRrtFor(mail);
 
         if (!executionResults.recipientWithError.isEmpty()) {
-            mailetContext.sendMail(mail.getSender(), executionResults.recipientWithError, mail.getMessage(), Mail.ERROR);
+            mailetContext.sendMail(mail.getSender(), executionResults.recipientWithError, mail.getMessage(), errorProcessor);
         }
 
         if (executionResults.newRecipients.isEmpty()) {

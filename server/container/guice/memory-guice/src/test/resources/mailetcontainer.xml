@@ -54,7 +54,9 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
-            <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="All" class="RecipientRewriteTable">
+                <errorProcessor>rrt-error</errorProcessor>
+            </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="RecipientIsLocal" class="SpamAssassin">
                 <spamdHost>localhost</spamdHost>
@@ -123,6 +125,15 @@
             <mailet match="All" class="DSNBounce">
                 <passThrough>false</passThrough>
             </mailet>
+        </processor>
+
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>file://var/mail/rrt-error/</repositoryPath>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="IsSenderInRRTLoop" class="Null"/>
+            <mailet match="All" class="Bounce"/>
         </processor>
 
     </processors>

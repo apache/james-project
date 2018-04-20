@@ -56,7 +56,9 @@
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="org.apache.james.jmap.mailet.TextCalendarBodyToAttachment"/>
-            <mailet match="All" class="RecipientRewriteTable" />
+            <mailet match="All" class="RecipientRewriteTable">
+                <errorProcessor>rrt-error</errorProcessor>
+            </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" />
             <mailet match="RecipientIsLocal" class="Sieve"/>
@@ -121,6 +123,15 @@
             <mailet match="All" class="DSNBounce">
                 <passThrough>false</passThrough>
             </mailet>
+        </processor>
+
+        <processor state="rrt-error" enableJmx="false">
+            <mailet match="All" class="ToRepository">
+                <repositoryPath>cassandra://var/mail/rrt-error/</repositoryPath>
+                <passThrough>true</passThrough>
+            </mailet>
+            <mailet match="IsSenderInRRTLoop" class="Null"/>
+            <mailet match="All" class="Bounce"/>
         </processor>
 
     </processors>
