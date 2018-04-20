@@ -94,39 +94,36 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
-        // check if the server use virtualhosting, if not use only the localpart
-        // as username
         try {
             String username = users.getUser(recipient);
 
             if (users.contains(username)) {
                 return true;
             } else {
-
-                if (useVut) {
-                    LOGGER.debug("Unknown user {} check if it's an alias", username);
-
-                    try {
-                        Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
-
-                        if (targetString != null && !targetString.isEmpty()) {
-                            return true;
-                        }
-                    } catch (ErrorMappingException e) {
-                        return false;
-                    } catch (RecipientRewriteTableException e) {
-                        LOGGER.info("Unable to access RecipientRewriteTable", e);
-                        return false;
-                    }
-                }
-
-                return false;
+                return useVut && isRedirected(recipient, username);
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
             return false;
-
         }
+    }
+
+    private boolean isRedirected(MailAddress recipient, String username) {
+        LOGGER.debug("Unknown user {} check if it's an alias", username);
+
+        try {
+            Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+
+            if (targetString != null && !targetString.isEmpty()) {
+                return true;
+            }
+        } catch (ErrorMappingException e) {
+            return false;
+        } catch (RecipientRewriteTableException e) {
+            LOGGER.info("Unable to access RecipientRewriteTable", e);
+            return false;
+        }
+        return false;
     }
 
     @Override
