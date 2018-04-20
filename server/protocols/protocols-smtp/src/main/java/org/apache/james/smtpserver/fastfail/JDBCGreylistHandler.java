@@ -360,7 +360,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         } else {
             LOGGER.info("IpAddress {} is whitelisted. Skip greylisting.", session.getRemoteAddress().getAddress().getHostAddress());
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override

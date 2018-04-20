@@ -62,20 +62,20 @@ public class SpamTrapHandlerTest {
     
         handler.setBlockTime(blockTime);
         handler.setSpamTrapRecipients(rcpts);
+
+        HookReturnCode result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(SPAM_TRAP_RECIP1)).getResult();
     
-        int result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(SPAM_TRAP_RECIP1)).getResult();
-    
-        assertEquals("Blocked on first connect",HookReturnCode.DENY,result);
+        assertEquals("Blocked on first connect",HookReturnCode.deny(),result);
     
 
         result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(RECIP1)).getResult();
     
-        assertEquals("Blocked on second connect", HookReturnCode.DENY,result);
+        assertEquals("Blocked on second connect", HookReturnCode.deny(),result);
     
         
         result = handler.doRcpt(setUpSMTPSession(ip2),null,new MailAddress(RECIP1)).getResult();
     
-        assertEquals("Not Blocked", HookReturnCode.DECLINED,result);
+        assertEquals("Not Blocked", HookReturnCode.declined(),result);
     
         try {
             // Wait for the blockTime to exceed
@@ -86,6 +86,6 @@ public class SpamTrapHandlerTest {
     
         result = handler.doRcpt(setUpSMTPSession(ip),null,new MailAddress(RECIP1)).getResult();
     
-        assertEquals("Not blocked. BlockTime exceeded", HookReturnCode.DECLINED,result); 
+        assertEquals("Not blocked. BlockTime exceeded", HookReturnCode.declined(),result);
     }
 }

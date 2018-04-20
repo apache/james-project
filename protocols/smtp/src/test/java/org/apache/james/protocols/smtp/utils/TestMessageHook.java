@@ -36,7 +36,7 @@ public class TestMessageHook implements MessageHook {
     @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         queued.add(mail);
-        return new HookResult(HookReturnCode.OK);
+        return new HookResult(HookReturnCode.ok());
     }
  
     public List<MailEnvelope> getQueued() {

@@ -98,7 +98,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
             try {
                 mx = dnsService.findMXRecords(domain.name()).iterator();
             } catch (TemporaryResolutionException e1) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return new HookResult(HookReturnCode.denySoft());
             }
 
             if (mx != null && mx.hasNext()) {
@@ -110,7 +110,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
                         // Check for invalid MX
                         if (bNetwork.matchInetNetwork(ip)) {
-                            return new HookResult(HookReturnCode.DENY, SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain + ". Reject email");
+                            return new HookResult(HookReturnCode.deny(), SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain + ". Reject email");
                         }
                     } catch (UnknownHostException e) {
                         // Ignore this
@@ -118,7 +118,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
                 }
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override

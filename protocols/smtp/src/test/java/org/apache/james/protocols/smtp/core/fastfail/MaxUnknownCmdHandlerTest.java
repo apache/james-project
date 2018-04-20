@@ -70,13 +70,13 @@ public class MaxUnknownCmdHandlerTest {
         
         MaxUnknownCmdHandler handler = new MaxUnknownCmdHandler();
         handler.setMaxUnknownCmdCount(2);
-        int resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DECLINED, resp);
+        HookReturnCode resp = handler.doUnknown(session, "what").getResult();
+        assertEquals(HookReturnCode.declined(), resp);
 
         resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DECLINED, resp);
+        assertEquals(HookReturnCode.declined(), resp);
         
         resp = handler.doUnknown(session, "what").getResult();
-        assertEquals(HookReturnCode.DENY | HookReturnCode.DISCONNECT, resp);
+        assertEquals(new HookReturnCode(HookReturnCode.Action.DENY, HookReturnCode.ConnectionStatus.Disconnected), resp);
     }
 }

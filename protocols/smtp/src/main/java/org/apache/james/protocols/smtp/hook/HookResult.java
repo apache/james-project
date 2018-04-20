@@ -22,18 +22,16 @@ package org.apache.james.protocols.smtp.hook;
 import java.util.Objects;
 import java.util.Optional;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Result which get used for hooks
  */
 public final class HookResult {
 
-    private static final HookResult DECLINED = new HookResult(HookReturnCode.DECLINED);
-    private static final HookResult OK = new HookResult(HookReturnCode.OK);
-    private static final HookResult DENY = new HookResult(HookReturnCode.DENY);
-    private static final HookResult DENYSOFT = new HookResult(HookReturnCode.DENYSOFT);
-    private static final HookResult DISCONNECT = new HookResult(HookReturnCode.DISCONNECT);
+    private static final HookResult DECLINED = new HookResult(HookReturnCode.declined());
+    private static final HookResult OK = new HookResult(HookReturnCode.ok());
+    private static final HookResult DENY = new HookResult(HookReturnCode.deny());
+    private static final HookResult DENYSOFT = new HookResult(HookReturnCode.denySoft());
+    private static final HookResult DISCONNECT = new HookResult(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected));
 
     public static HookResult declined() {
         return DECLINED;
@@ -55,37 +53,11 @@ public final class HookResult {
         return DISCONNECT;
     }
 
-    private final int result;
+    private final HookReturnCode result;
     private final String smtpRetCode;
     private final String smtpDescription;
 
-    public HookResult(int result, String smtpRetCode, CharSequence smtpDescription) {
-        boolean match = false;
-
-        if ((result & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.OK) == HookReturnCode.OK) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
-        if ((result & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            if (match == true) {
-                throw new IllegalArgumentException();
-            }
-            match = true;
-        }
+    public HookResult(HookReturnCode result, String smtpRetCode, CharSequence smtpDescription) {
         this.result = result;
         this.smtpRetCode = smtpRetCode;
         this.smtpDescription = Optional.ofNullable(smtpDescription)
@@ -93,15 +65,15 @@ public final class HookResult {
             .orElse(null);
     }
 
-    public HookResult(int result, String smtpDescription) {
+    public HookResult(HookReturnCode result, String smtpDescription) {
         this(result, null, smtpDescription);
     }
 
-    public HookResult(int result) {
+    public HookResult(HookReturnCode result) {
         this(result, null, null);
     }
 
-    public int getResult() {
+    public HookReturnCode getResult() {
         return result;
     }
     

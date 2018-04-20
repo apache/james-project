@@ -115,18 +115,18 @@ public class ValidRcptHandlerTest {
     public void doRcptShouldRejectNotExistingLocalUsersWhenNoRelay() {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
     }
 
     @Test
     public void doRcptShouldDenyNotExistingLocalUsersWhenRelay() {
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, invalidUserEmail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DENY);
+        assertThat(rCode).isEqualTo(HookReturnCode.deny());
     }
 
     @Test
@@ -134,9 +134,9 @@ public class ValidRcptHandlerTest {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
@@ -144,27 +144,27 @@ public class ValidRcptHandlerTest {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@otherdomain");
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, mailAddress).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
     public void doRcptShouldDeclineValidUsersWhenNoRelay() throws Exception {
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
     public void doRcptShouldDeclineValidUsersWhenRelay() throws Exception {
         SMTPSession session = setupMockedSMTPSession(RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
@@ -173,9 +173,9 @@ public class ValidRcptHandlerTest {
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, validUserEmail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
@@ -185,9 +185,9 @@ public class ValidRcptHandlerTest {
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
 
     @Test
@@ -196,9 +196,9 @@ public class ValidRcptHandlerTest {
 
         SMTPSession session = setupMockedSMTPSession(!RELAYING_ALLOWED);
 
-        int rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
+        HookReturnCode rCode = handler.doRcpt(session, SENDER, user1mail).getResult();
 
-        assertThat(rCode).isEqualTo(HookReturnCode.DECLINED);
+        assertThat(rCode).isEqualTo(HookReturnCode.declined());
     }
     
 }

@@ -19,15 +19,86 @@
 
 package org.apache.james.protocols.smtp.hook;
 
-import com.google.common.collect.ImmutableList;
+import java.util.Objects;
+
+import com.google.common.base.MoreObjects;
 
 public class HookReturnCode {
-    public static final int OK = 0x1;
-    public static final int DENY = 0x1 << 1;
-    public static final int DENYSOFT = 0x1 << 2;
-    public static final int DECLINED = 0x1 << 3;
-    public static final int DISCONNECT = 0x1 << 4;
 
-    public static final ImmutableList<Integer> VALID_RETURN_CODE = ImmutableList.of(
-        DECLINED, OK, DENY, DENYSOFT, DISCONNECT);
+    public enum Action {
+        OK,
+        DENY,
+        DENYSOFT,
+        DECLINED,
+        NONE
+    }
+
+    public enum ConnectionStatus {
+        Disconnected,
+        Connected
+    }
+
+    public static HookReturnCode denySoft() {
+        return connected(Action.DENYSOFT);
+    }
+
+    public static HookReturnCode deny() {
+        return connected(Action.DENY);
+    }
+
+    public static HookReturnCode ok() {
+        return connected(Action.OK);
+    }
+
+    public static HookReturnCode declined() {
+        return connected(Action.DECLINED);
+    }
+
+    public static HookReturnCode connected(Action action) {
+        return new HookReturnCode(action, ConnectionStatus.Connected);
+    }
+
+    private final Action action;
+    private final ConnectionStatus connectionStatus;
+
+    public HookReturnCode(Action action, ConnectionStatus connectionStatus) {
+        this.action = action;
+        this.connectionStatus = connectionStatus;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public ConnectionStatus getConnectionStatus() {
+        return connectionStatus;
+    }
+
+    public boolean isDisconnected() {
+        return connectionStatus == ConnectionStatus.Disconnected;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof HookReturnCode) {
+            HookReturnCode that = (HookReturnCode) o;
+
+            return Objects.equals(this.action, that.action)
+                && Objects.equals(this.connectionStatus, that.connectionStatus);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(action, connectionStatus);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("action", action)
+            .add("disconnection", connectionStatus)
+            .toString();
+    }
 }

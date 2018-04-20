@@ -60,9 +60,9 @@ public class MaxRcptHandlerTest {
         MaxRcptHandler handler = new MaxRcptHandler();
         
         handler.setMaxRcpt(2);
-        int resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
+        HookReturnCode resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
     
-        assertEquals("Rejected.. To many recipients", resp, HookReturnCode.DENY);
+        assertEquals("Rejected.. To many recipients", resp, HookReturnCode.deny());
     }
   
   
@@ -72,9 +72,9 @@ public class MaxRcptHandlerTest {
         MaxRcptHandler handler = new MaxRcptHandler();    
 
         handler.setMaxRcpt(4);
-        int resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
+        HookReturnCode resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
         
-        assertEquals("Not Rejected..", resp, HookReturnCode.DECLINED);
+        assertEquals("Not Rejected..", resp, HookReturnCode.declined());
     }
 
 }

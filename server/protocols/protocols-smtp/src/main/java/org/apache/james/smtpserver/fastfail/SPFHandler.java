@@ -152,18 +152,18 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
         if (!session.isRelayingAllowed()) {
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.DENY, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction));
+                return new HookResult(HookReturnCode.deny(), DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction));
             } else if (session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.DENYSOFT, SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
+                return new HookResult(HookReturnCode.denySoft(), SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override
     public HookResult doMail(SMTPSession session, MailAddress sender) {
         doSPFCheck(session, sender);
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     /**

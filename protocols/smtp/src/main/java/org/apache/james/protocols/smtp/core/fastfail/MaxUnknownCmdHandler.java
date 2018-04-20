@@ -30,8 +30,6 @@ import org.apache.james.protocols.smtp.hook.UnknownHook;
 
 /**
  * {@link UnknownHook} implementation which disconnect the client after a issue to many unknown commands
- * 
- *
  */
 public class MaxUnknownCmdHandler implements UnknownHook {
 
@@ -64,7 +62,11 @@ public class MaxUnknownCmdHandler implements UnknownHook {
         }
         session.setAttachment(UNKOWN_COMMAND_COUNT, count, State.Transaction);
         if (count > maxUnknown) {
-            return new HookResult(HookReturnCode.DENY | HookReturnCode.DISCONNECT, "521", "Closing connection as too many unknown commands received");
+            return new HookResult(new HookReturnCode(
+                HookReturnCode.Action.DENY,
+                HookReturnCode.ConnectionStatus.Disconnected),
+                "521",
+                "Closing connection as too many unknown commands received");
 
         } else {
             

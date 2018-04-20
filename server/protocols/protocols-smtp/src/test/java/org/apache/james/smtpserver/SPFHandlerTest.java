@@ -176,8 +176,8 @@ public class SPFHandlerTest {
 
         spf.setDNSService(mockedDnsService);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test
@@ -189,8 +189,8 @@ public class SPFHandlerTest {
 
         spf.setDNSService(mockedDnsService);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("fail", HookReturnCode.DENY, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("fail", HookReturnCode.deny(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test
@@ -202,8 +202,8 @@ public class SPFHandlerTest {
 
         spf.setDNSService(mockedDnsService);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("softfail declined", HookReturnCode.DECLINED,
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("softfail declined", HookReturnCode.declined(),
                 spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
@@ -219,8 +219,8 @@ public class SPFHandlerTest {
 
         spf.setBlockSoftFail(true);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("softfail reject", HookReturnCode.DENY, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("softfail reject", HookReturnCode.deny(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test
@@ -235,8 +235,8 @@ public class SPFHandlerTest {
 
         spf.setBlockSoftFail(true);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("permerror reject", HookReturnCode.DENY, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("permerror reject", HookReturnCode.deny(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test
@@ -250,8 +250,8 @@ public class SPFHandlerTest {
 
         spf.setDNSService(mockedDnsService);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("temperror denysoft", HookReturnCode.DENYSOFT, 
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("temperror denysoft", HookReturnCode.denySoft(),
                 spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
@@ -265,8 +265,8 @@ public class SPFHandlerTest {
 
         spf.setDNSService(mockedDnsService);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 
     @Test
@@ -280,7 +280,7 @@ public class SPFHandlerTest {
 
         spf.setBlockPermError(false);
 
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doMail(mockedSMTPSession, sender).getResult());
-        assertEquals("declined", HookReturnCode.DECLINED, spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doMail(mockedSMTPSession, sender).getResult());
+        assertEquals("declined", HookReturnCode.declined(), spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult());
     }
 }

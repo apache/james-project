@@ -56,20 +56,21 @@ public class HookStats extends StandardMBean implements HookStatsMBean, Disposab
         mbeanserver.registerMBean(this, baseObjectName);
     }
 
-    public void increment(int code) {
-        if ((code & HookReturnCode.OK) == HookReturnCode.OK) {
-            ok.incrementAndGet();
+    public void increment(HookReturnCode code) {
+        switch (code.getAction()) {
+            case DECLINED:
+                declined.incrementAndGet();
+                break;
+            case DENY:
+                deny.incrementAndGet();
+                break;
+            case DENYSOFT:
+                denysoft.incrementAndGet();
+                break;
+            case OK:
+                ok.incrementAndGet();
+                break;
         }
-        if ((code & HookReturnCode.DECLINED) == HookReturnCode.DECLINED) {
-            declined.incrementAndGet();
-        }
-        if ((code & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
-            denysoft.incrementAndGet();
-        }
-        if ((code & HookReturnCode.DENY) == HookReturnCode.DENY) {
-            deny.incrementAndGet();
-        }
-
         all.incrementAndGet();
     }
 

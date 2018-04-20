@@ -64,7 +64,7 @@ public class SupressDuplicateRcptHandler implements RcptHook {
                           .append(rcpt.toString())
                           .append("> OK");
             LOGGER.debug("Duplicate recipient not add to recipient list: {}", rcpt);
-            return new HookResult(HookReturnCode.OK,SMTPRetCode.MAIL_OK, responseBuffer.toString());
+            return new HookResult(HookReturnCode.ok(), SMTPRetCode.MAIL_OK, responseBuffer.toString());
         }
         return HookResult.declined();
     }

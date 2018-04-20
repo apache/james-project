@@ -69,7 +69,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         if (nSession.verifyIdentity()) {
             return super.doRcpt(session, sender, rcpt);
         } else {
-            return new HookResult(HookReturnCode.DECLINED);
+            return new HookResult(HookReturnCode.declined());
         }
     }
 

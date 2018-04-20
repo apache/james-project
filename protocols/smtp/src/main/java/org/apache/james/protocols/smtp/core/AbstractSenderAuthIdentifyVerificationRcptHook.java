@@ -34,7 +34,7 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  * Handler which check if the authenticated user is the same as the one used as MAIL FROM
  */
 public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements RcptHook {  
-    private static final HookResult INVALID_AUTH =  new HookResult(HookReturnCode.DENY, 
+    private static final HookResult INVALID_AUTH =  new HookResult(HookReturnCode.deny(),
             SMTPRetCode.BAD_SEQUENCE,
             DSNStatus.getStatus(DSNStatus.PERMANENT,
                     DSNStatus.SECURITY_AUTH)

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 public class MaxRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxRcptHandler.class);
 
-    private static final HookResult MAX_RCPT = new HookResult(HookReturnCode.DENY, SMTPRetCode.SYSTEM_STORAGE_ERROR, DSNStatus.getStatus(DSNStatus.NETWORK, DSNStatus.DELIVERY_TOO_MANY_REC)
+    private static final HookResult MAX_RCPT = new HookResult(HookReturnCode.deny(), SMTPRetCode.SYSTEM_STORAGE_ERROR, DSNStatus.getStatus(DSNStatus.NETWORK, DSNStatus.DELIVERY_TOO_MANY_REC)
             + " Requested action not taken: max recipients reached");
     private int maxRcpt = 0;
 

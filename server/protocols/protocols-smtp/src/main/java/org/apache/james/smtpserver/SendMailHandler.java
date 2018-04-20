@@ -72,10 +72,10 @@ public class SendMailHandler implements JamesMessageHook {
             LOGGER.info("Successfully spooled mail {} from {} on {} for {}", mail.getName(), mail.getSender(), session.getRemoteAddress().getAddress(), mail.getRecipients());
         } catch (MessagingException me) {
             LOGGER.error("Unknown error occurred while processing DATA.", me);
-            return new HookResult(HookReturnCode.DENYSOFT, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.");
+            return new HookResult(HookReturnCode.denySoft(), DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.UNDEFINED_STATUS) + " Error processing message.");
         }
         
-        return new HookResult(HookReturnCode.OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
+        return new HookResult(HookReturnCode.ok(), DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
     
     }
 

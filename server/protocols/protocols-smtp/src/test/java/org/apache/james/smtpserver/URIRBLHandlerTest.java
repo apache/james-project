@@ -170,7 +170,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.DECLINED);
+        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
     }
 
     @Test
@@ -188,7 +188,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.DENY);
+        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
     }
 
     @Test
@@ -206,7 +206,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.DENY);
+        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
     }
 
     /*

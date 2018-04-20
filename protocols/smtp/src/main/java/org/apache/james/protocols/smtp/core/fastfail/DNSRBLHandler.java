@@ -186,11 +186,11 @@ public class DNSRBLHandler implements RcptHook {
     
             if (blocklisted != null) { // was found in the RBL
                 if (blocklistedDetail == null) {
-                    return new HookResult(HookReturnCode.DENY,DSNStatus.getStatus(DSNStatus.PERMANENT,
+                    return new HookResult(HookReturnCode.deny(),DSNStatus.getStatus(DSNStatus.PERMANENT,
                             DSNStatus.SECURITY_AUTH)  + " Rejected: unauthenticated e-mail from " + session.getRemoteAddress().getAddress() 
                             + " is restricted.  Contact the postmaster for details.");
                 } else {
-                    return new HookResult(HookReturnCode.DENY,DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail);
+                    return new HookResult(HookReturnCode.deny(),DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.SECURITY_AUTH) + " " + blocklistedDetail);
                 }
                
             }

@@ -32,13 +32,13 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  */
 public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
 
-    private static final HookResult AUTH_REQUIRED = new HookResult(HookReturnCode.DENY,
+    private static final HookResult AUTH_REQUIRED = new HookResult(HookReturnCode.deny(),
             SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(
                     DSNStatus.PERMANENT,
                     DSNStatus.SECURITY_AUTH)
                     + " Authentication Required");
     private static final HookResult RELAYING_DENIED = new HookResult(
-            HookReturnCode.DENY,
+            HookReturnCode.deny(),
             // sendmail returns 554 (SMTPRetCode.TRANSACTION_FAILED).
             // it is not clear in RFC wether it is better to use 550 or 554.
             SMTPRetCode.MAILBOX_PERM_UNAVAILABLE,

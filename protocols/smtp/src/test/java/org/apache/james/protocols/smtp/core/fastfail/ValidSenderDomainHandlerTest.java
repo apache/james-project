@@ -106,17 +106,17 @@ public class ValidSenderDomainHandlerTest {
     @Test
     public void testNullSenderNotReject() {
         ValidSenderDomainHandler handler = createHandler();
-        int response = handler.doMail(setupMockedSession(null),null).getResult();
+        HookReturnCode response = handler.doMail(setupMockedSession(null),null).getResult();
         
-        assertEquals("Not blocked cause its a nullsender",response,HookReturnCode.DECLINED);
+        assertEquals("Not blocked cause its a nullsender", response, HookReturnCode.declined());
     }
 
     @Test
     public void testInvalidSenderDomainReject() throws Exception {
         ValidSenderDomainHandler handler = createHandler();
         SMTPSession session = setupMockedSession(new MailAddress("invalid@invalid"));
-        int response = handler.doMail(session,(MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).getResult();
+        HookReturnCode response = handler.doMail(session,(MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction)).getResult();
         
-        assertEquals("Blocked cause we use reject action", response,HookReturnCode.DENY);
+        assertEquals("Blocked cause we use reject action", response, HookReturnCode.deny());
     }
 }

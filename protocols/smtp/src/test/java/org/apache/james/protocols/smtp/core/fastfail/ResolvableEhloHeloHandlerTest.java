@@ -126,9 +126,9 @@ public class ResolvableEhloHeloHandlerTest {
         
         handler.doHelo(session, INVALID_HOST);
         assertNotNull("Invalid HELO",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
-        
-        int result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.DENY);
+
+        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        assertEquals("Reject", result,HookReturnCode.deny());
     }
     
     @Test
@@ -141,8 +141,8 @@ public class ResolvableEhloHeloHandlerTest {
         handler.doHelo(session, VALID_HOST);
         assertNull("Valid HELO",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
 
-        int result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Not reject", result,HookReturnCode.DECLINED);
+        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        assertEquals("Not reject", result,HookReturnCode.declined());
     }
    
     @Test
@@ -154,10 +154,10 @@ public class ResolvableEhloHeloHandlerTest {
 
         handler.doHelo(session, INVALID_HOST);
         assertNotNull("Value stored",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
-        
-        
-        int result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.DENY);
+
+
+        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        assertEquals("Reject", result,HookReturnCode.deny());
     }
     
    
@@ -170,10 +170,10 @@ public class ResolvableEhloHeloHandlerTest {
 
         handler.doHelo(session, INVALID_HOST);
         assertNotNull("Value stored",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
-        
-        
-        int result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.DENY);
+
+
+        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        assertEquals("Reject", result,HookReturnCode.deny());
     }
 }
     

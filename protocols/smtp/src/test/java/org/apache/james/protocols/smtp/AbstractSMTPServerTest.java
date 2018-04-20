@@ -501,7 +501,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult doHelo(SMTPSession session, String helo) {
-                return new HookResult(HookReturnCode.DENY);
+                return new HookResult(HookReturnCode.deny());
             }
         };
         
@@ -549,7 +549,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult doHelo(SMTPSession session, String helo) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return new HookResult(HookReturnCode.denySoft());
             }
         };
         
@@ -596,7 +596,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult doMail(SMTPSession session, MailAddress sender) {
-                return new HookResult(HookReturnCode.DENY);
+                return new HookResult(HookReturnCode.deny());
             }
         };
         
@@ -646,7 +646,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult doMail(SMTPSession session, MailAddress sender) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return new HookResult(HookReturnCode.denySoft());
             }
         };
         
@@ -698,9 +698,9 @@ public abstract class AbstractSMTPServerTest {
             @Override
             public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
-                    return new HookResult(HookReturnCode.DENY);
+                    return new HookResult(HookReturnCode.deny());
                 } else {
-                    return new HookResult(HookReturnCode.DECLINED);
+                    return new HookResult(HookReturnCode.declined());
                 }
             }
 
@@ -762,9 +762,9 @@ public abstract class AbstractSMTPServerTest {
             @Override
             public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
-                    return new HookResult(HookReturnCode.DENYSOFT);
+                    return new HookResult(HookReturnCode.denySoft());
                 } else {
-                    return new HookResult(HookReturnCode.DECLINED);
+                    return new HookResult(HookReturnCode.declined());
                 }
             }
 
@@ -860,7 +860,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return new HookResult(HookReturnCode.DENY);
+                return new HookResult(HookReturnCode.deny());
             }
 
 
@@ -924,7 +924,7 @@ public abstract class AbstractSMTPServerTest {
 
             @Override
             public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return new HookResult(HookReturnCode.DENYSOFT);
+                return new HookResult(HookReturnCode.denySoft());
             }
 
 

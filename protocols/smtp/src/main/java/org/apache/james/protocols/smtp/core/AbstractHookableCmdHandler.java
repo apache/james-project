@@ -124,9 +124,9 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 }
 
                 // call the core cmd if we receive a ok return code of the hook so no other hooks are executed
-                if ((hRes.getResult() & HookReturnCode.OK) == HookReturnCode.OK) {
+                if (hRes.getResult().getAction() == HookReturnCode.Action.OK) {
                     final Response response = doCoreCmd(session, command, parameters);
-                    if ((hRes.getResult() & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+                    if (hRes.getResult().isDisconnected()) {
                         return new Response() {
 
                             @Override
@@ -176,11 +176,11 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
      */
     public static SMTPResponse calcDefaultSMTPResponse(HookResult result) {
         if (result != null) {
-            int rCode = result.getResult();
+            HookReturnCode rCode = result.getResult();
             String smtpRetCode = result.getSmtpRetCode();
             String smtpDesc = result.getSmtpDescription();
     
-            if ((rCode & HookReturnCode.DENY) == HookReturnCode.DENY) {
+            if (rCode.getAction() == HookReturnCode.Action.DENY) {
                 if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
                 }
@@ -189,11 +189,11 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 }
     
                 SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+                if (rCode.isDisconnected()) {
                     response.setEndSession(true);
                 }
                 return response;
-            } else if ((rCode & HookReturnCode.DENYSOFT) == HookReturnCode.DENYSOFT) {
+            } else if (rCode.getAction() == HookReturnCode.Action.DENYSOFT) {
                 if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.LOCAL_ERROR;
                 }
@@ -202,11 +202,11 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+                if (rCode.isDisconnected()) {
                     response.setEndSession(true);
                 }
                 return response;
-            } else if ((rCode & HookReturnCode.OK) == HookReturnCode.OK) {
+            } else if (rCode.getAction() == HookReturnCode.Action.OK) {
                 if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.MAIL_OK;
                 }
@@ -215,11 +215,11 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 }
     
                 SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
-                if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+                if (rCode.isDisconnected()) {
                     response.setEndSession(true);
                 }
                 return response;
-            } else if ((rCode & HookReturnCode.DISCONNECT) == HookReturnCode.DISCONNECT) {
+            } else if (rCode.isDisconnected()) {
                 if (smtpRetCode == null) {
                     smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
                 }

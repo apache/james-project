@@ -81,7 +81,7 @@ public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
             LOGGER.error(me.getMessage());
         }
 
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override

@@ -61,7 +61,7 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
                 mail.setAttribute(SMTP_AUTH_NETWORK_NAME, "true");
             }
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
 }

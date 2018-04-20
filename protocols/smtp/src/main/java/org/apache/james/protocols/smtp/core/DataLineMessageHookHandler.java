@@ -153,7 +153,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             }
 
             // Not queue the message!
-            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(new HookResult(HookReturnCode.DENY));
+            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(new HookResult(HookReturnCode.deny()));
         }
         
         return null;

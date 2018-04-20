@@ -19,14 +19,12 @@
 
 package org.apache.james.protocols.smtp.hook;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class HookResultTest {
+
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(HookResult.class)
@@ -34,39 +32,4 @@ public class HookResultTest {
             .verify();
     }
 
-    @Test
-    public void shouldThrowOnInvalidReturnCode() {
-        assertThatThrownBy(() -> new HookResult(HookReturnCode.DENY + HookReturnCode.DECLINED))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void shouldNotThrowOnOK() {
-        assertThatCode(() -> new HookResult(HookReturnCode.OK))
-            .doesNotThrowAnyException();
-    }
-
-    @Test
-    public void shouldNotThrowOnDeny() {
-        assertThatCode(() -> new HookResult(HookReturnCode.DENY))
-            .doesNotThrowAnyException();
-    }
-
-    @Test
-    public void shouldNotThrowOnDenySoft() {
-        assertThatCode(() -> new HookResult(HookReturnCode.DENYSOFT))
-            .doesNotThrowAnyException();
-    }
-
-    @Test
-    public void shouldNotThrowOnDeclined() {
-        assertThatCode(() -> new HookResult(HookReturnCode.DECLINED))
-            .doesNotThrowAnyException();
-    }
-
-    @Test
-    public void shouldNotThrowOnDisconnect() {
-        assertThatCode(() -> new HookResult(HookReturnCode.DISCONNECT))
-            .doesNotThrowAnyException();
-    }
 }

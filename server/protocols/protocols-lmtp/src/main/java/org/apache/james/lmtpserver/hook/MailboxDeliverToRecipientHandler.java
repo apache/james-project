@@ -90,10 +90,10 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                     .build(envelope.getMessageInputStream()),
                     mailboxSession);
             mailboxManager.endProcessingRequest(mailboxSession);
-            result = new HookResult(HookReturnCode.OK, SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
+            result = new HookResult(HookReturnCode.ok(), SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
         } catch (IOException | MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.DENYSOFT, " Temporary error deliver message to " + recipient);
+            result = new HookResult(HookReturnCode.denySoft(), " Temporary error deliver message to " + recipient);
         }
         return result;
     }

@@ -65,12 +65,12 @@ public class UsersRepositoryAuthHook implements AuthHook {
             if (users.test(username, password)) {
                 session.setUser(username);
                 session.setRelayingAllowed(true);
-                return new HookResult(HookReturnCode.OK, "Authentication Successful");
+                return new HookResult(HookReturnCode.ok(), "Authentication Successful");
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override

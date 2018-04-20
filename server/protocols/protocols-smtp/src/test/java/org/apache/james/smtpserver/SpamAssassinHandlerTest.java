@@ -119,7 +119,7 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.DECLINED);
+        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
         assertEquals("email was not spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "NO");
         assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
 
@@ -136,7 +136,7 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(2000.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.DECLINED);
+        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
         assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
         assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
     }
@@ -152,7 +152,7 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.DENY);
+        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
         assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
         assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
     }

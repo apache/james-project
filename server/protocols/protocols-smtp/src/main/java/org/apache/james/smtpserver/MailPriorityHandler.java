@@ -74,7 +74,7 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
         if (p != null) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, p);
         }
-        return new HookResult(HookReturnCode.DECLINED);
+        return new HookResult(HookReturnCode.declined());
     }
 
     @Override
