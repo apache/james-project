@@ -294,6 +294,24 @@ public class GroupMappingTest {
     }
 
     @Test
+    public void messageShouldBeWellDeliveredToRecipientNotPartOfTheLoop() throws Exception {
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + GROUP_ON_DOMAIN2);
+
+        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN2 + "/" + GROUP_ON_DOMAIN1);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(FakeMail.builder()
+                .mimeMessage(message)
+                .sender(SENDER)
+                .recipients(GROUP_ON_DOMAIN1, USER_DOMAIN2));
+
+        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
+            .login(USER_DOMAIN2, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Test
     public void messageShouldRedirectToUserWhenDomainMapping() throws Exception {
         dataProbe.addDomainAliasMapping(DOMAIN1, DOMAIN2);
 
