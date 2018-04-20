@@ -20,8 +20,6 @@
 package org.apache.james.mailetcontainer.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -116,11 +114,8 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(eq("defaultDomain"), any(String.class)))
-            .thenReturn(DOMAIN_COM.name());
+        domainList.setDefaultDomain(DOMAIN_COM);
 
-        domainList.configure(configuration);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
         assertThat(testee.isLocalUser(USERNAME)).isTrue();
@@ -128,11 +123,8 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(eq("defaultDomain"), any(String.class)))
-            .thenReturn("any");
+        domainList.setDefaultDomain(Domain.of("any"));
 
-        domainList.configure(configuration);
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 

@@ -21,10 +21,8 @@ package org.apache.james.smtpserver;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -46,7 +44,6 @@ import org.junit.Test;
 
 public class ValidRcptHandlerTest {
 
-    private static final Domain VALID_DOMAIN = Domain.of("localhost");
     private static final String VALID_USER = "postmaster";
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
@@ -61,11 +58,7 @@ public class ValidRcptHandlerTest {
         users.addUser(VALID_USER, "xxx");
 
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
-        memoryDomainList.addDomain(VALID_DOMAIN);
-        DefaultConfigurationBuilder config = new DefaultConfigurationBuilder();
-        String configString = "<domainlist><defaultDomain>localhost</defaultDomain></domainlist>";
-        config.load(new ByteArrayInputStream(configString.getBytes()));
-        memoryDomainList.configure(config);
+        memoryDomainList.setDefaultDomain(Domain.LOCALHOST);
 
         handler = new ValidRcptHandler();
         handler.setUsersRepository(users);
