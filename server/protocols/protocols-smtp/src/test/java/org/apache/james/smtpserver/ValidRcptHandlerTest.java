@@ -32,7 +32,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.api.ProtocolSession.State;
-import org.apache.james.protocols.smtp.SMTPConfiguration;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -75,8 +74,7 @@ public class ValidRcptHandlerTest {
         handler.setDomainList(memoryDomainList);
     }
 
-    private SMTPSession setupMockedSMTPSession(SMTPConfiguration conf, MailAddress rcpt,
-                                               final boolean relayingAllowed) {
+    private SMTPSession setupMockedSMTPSession(final boolean relayingAllowed) {
 
         return new BaseFakeSMTPSession() {
 
@@ -122,56 +120,10 @@ public class ValidRcptHandlerTest {
         return memoryRecipientRewriteTable;
     }
 
-    private SMTPConfiguration setupMockedSMTPConfiguration() {
-
-        return new SMTPConfiguration() {
-
-            @Override
-            public String getHelloName() {
-                throw new UnsupportedOperationException("Unimplemented Stub Method");
-            }
-
-            @Override
-            public long getMaxMessageSize() {
-                throw new UnsupportedOperationException("Unimplemented Stub Method");
-            }
-
-            @Override
-            public boolean isRelayingAllowed(String remoteIP) {
-                throw new UnsupportedOperationException("Unimplemented Stub Method");
-            }
-
-            @Override
-            public boolean useHeloEhloEnforcement() {
-                throw new UnsupportedOperationException("Unimplemented Stub Method");
-            }
-
-            @Override
-            public boolean useAddressBracketsEnforcement() {
-                return true;
-            }
-
-            @Override
-            public boolean isAuthRequired(String remoteIP) {
-                throw new UnsupportedOperationException("Unimplemented Stub Method");
-            }
-
-            @Override
-            public String getGreeting() {
-                return null;
-            }
-
-            @Override
-            public String getSoftwareName() {
-                return null;
-            }
-        };
-    }
-
     @Test
     public void testRejectInvalidUser() throws Exception {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(setupMockedSMTPConfiguration(), mailAddress, false);
+        SMTPSession session = setupMockedSMTPSession(false);
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
@@ -181,7 +133,7 @@ public class ValidRcptHandlerTest {
     @Test
     public void testRejectInvalidUserRelay() throws Exception {
         MailAddress mailAddress = new MailAddress(INVALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(setupMockedSMTPConfiguration(), mailAddress, true);
+        SMTPSession session = setupMockedSMTPSession(true);
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
@@ -191,7 +143,7 @@ public class ValidRcptHandlerTest {
     @Test
     public void testNotRejectValidUser() throws Exception {
         MailAddress mailAddress = new MailAddress(VALID_USER + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(setupMockedSMTPConfiguration(), mailAddress, false);
+        SMTPSession session = setupMockedSMTPSession(false);
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
@@ -201,7 +153,7 @@ public class ValidRcptHandlerTest {
     @Test
     public void testHasAddressMapping() throws Exception {
         MailAddress mailAddress = new MailAddress(USER1 + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(setupMockedSMTPConfiguration(), mailAddress, false);
+        SMTPSession session = setupMockedSMTPSession(false);
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
@@ -211,7 +163,7 @@ public class ValidRcptHandlerTest {
     @Test
     public void testHasErrorMapping() throws Exception {
         MailAddress mailAddress = new MailAddress(USER2 + "@localhost");
-        SMTPSession session = setupMockedSMTPSession(setupMockedSMTPConfiguration(), mailAddress, false);
+        SMTPSession session = setupMockedSMTPSession(false);
 
         int rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
