@@ -29,12 +29,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -70,10 +69,10 @@ public class JamesMailetContextTest {
     @SuppressWarnings("unchecked")
     public void setUp() throws Exception {
         domainList = new MemoryDomainList(DNS_SERVICE);
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
-        domainList.configure(configuration);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .build());
 
         usersRepository = MemoryUsersRepository.withVirtualHosting();
         usersRepository.setDomainList(domainList);
@@ -114,7 +113,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnTrueWhenUsedWithLocalPartAndUserExistOnDefaultDomain() throws Exception {
-        domainList.setDefaultDomain(DOMAIN_COM);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(DOMAIN_COM)
+            .build());
 
         usersRepository.addUser(USERMAIL, PASSWORD);
 
@@ -123,7 +126,11 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldReturnFalseWhenUsedWithLocalPartAndUserDoNotExistOnDefaultDomain() throws Exception {
-        domainList.setDefaultDomain(Domain.of("any"));
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.of("any"))
+            .build());
 
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);

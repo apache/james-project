@@ -73,8 +73,4 @@ public class MemoryDomainList extends AbstractDomainList {
             throw new DomainListException(domain.name() + " was not found");
         }
     }
-
-    public void setDefaultDomain(Domain defaultDomain) throws DomainListException {
-        super.setDefaultDomain(defaultDomain);
-    }
 }

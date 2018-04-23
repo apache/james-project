@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -84,87 +85,68 @@ public class AbstractDomainListPrivateMethodsTest {
 
     @Test
     public void setDefaultDomainShouldSetFromConfigurationWhenDifferentFromLocalhost() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
         String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(expectedDefaultDomain);
 
-        domainList.configureDefaultDomain(configuration);
+        domainList.configureDefaultDomain(Domain.of(expectedDefaultDomain));
 
         assertThat(domainList.getDefaultDomain()).isEqualTo(Domain.of(expectedDefaultDomain));
     }
 
     @Test
     public void setDefaultDomainShouldSetFromHostnameWhenEqualsToLocalhost() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(Domain.LOCALHOST.asString());
-
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
-        domainList.configureDefaultDomain(configuration);
+        domainList.configureDefaultDomain(Domain.LOCALHOST);
 
         assertThat(domainList.getDefaultDomain()).isEqualTo(expectedDefaultDomain);
     }
 
     @Test
     public void setDefaultDomainShouldCreateFromHostnameWhenEqualsToLocalhost() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(Domain.LOCALHOST.asString());
-
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
-        domainList.configureDefaultDomain(configuration);
+        domainList.configureDefaultDomain(expectedDefaultDomain);
 
         assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
     }
 
     @Test
     public void setDefaultDomainShouldNotCreateTwiceWhenCallingTwoTimes() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(Domain.LOCALHOST.asString());
-
         Domain expectedDefaultDomain = Domain.of(InetAddress.getLocalHost().getHostName());
-        domainList.configureDefaultDomain(configuration);
-        domainList.configureDefaultDomain(configuration);
+        domainList.configureDefaultDomain(expectedDefaultDomain);
+        domainList.configureDefaultDomain(expectedDefaultDomain);
 
         assertThat(domainList.getDomainListInternal()).containsOnlyOnce(expectedDefaultDomain);
     }
 
     @Test
     public void setDefaultDomainShouldAddDomainWhenNotContained() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(expectedDefaultDomain);
+        Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
-        domainList.configureDefaultDomain(configuration);
+        domainList.configureDefaultDomain(expectedDefaultDomain);
 
-        assertThat(domainList.getDomainListInternal()).contains(Domain.of(expectedDefaultDomain));
+        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
     }
 
     @Test
     public void setDefaultDomainShouldNotFailWhenDomainContained() throws Exception {
-        HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        String expectedDefaultDomain = "myDomain.org";
-        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-            .thenReturn(expectedDefaultDomain);
+        Domain expectedDefaultDomain = Domain.of("myDomain.org");
 
-        domainList.addDomain(Domain.of(expectedDefaultDomain));
-        domainList.configureDefaultDomain(configuration);
+        domainList.addDomain(expectedDefaultDomain);
+        domainList.configureDefaultDomain(expectedDefaultDomain);
 
-        assertThat(domainList.getDomainListInternal()).contains(Domain.of(expectedDefaultDomain));
+        assertThat(domainList.getDomainListInternal()).contains(expectedDefaultDomain);
     }
 
     @Test
     public void getDomainsShouldNotDetectDomainsWhenDisabled() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(false);
+        String domain = "domain.tld";
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, null)).thenReturn(domain);
         domainList.configure(configuration);
 
-        assertThat(domainList.getDomains()).isEmpty();
+        assertThat(domainList.getDomains()).containsOnly(Domain.of(domain));
     }
 
     @Test
@@ -183,22 +165,22 @@ public class AbstractDomainListPrivateMethodsTest {
     public void getDomainsShouldContainDetectedDomains() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(false);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
-        assertThat(domainList.getDomains()).containsOnly(Domain.of(detected));
+        assertThat(domainList.getDomains()).contains(Domain.of(detected));
     }
 
     @Test
     public void getDomainsShouldContainDetectedDomainsAndIps() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(true);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
@@ -208,15 +190,15 @@ public class AbstractDomainListPrivateMethodsTest {
         when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
         when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress));
 
-        assertThat(domainList.getDomains()).containsOnly(Domain.of(detected), Domain.of(detectedIp));
+        assertThat(domainList.getDomains()).contains(Domain.of(detected), Domain.of(detectedIp));
     }
 
     @Test
     public void getDomainsShouldContainDetectedDomainsAndIpsOfAddedDomains() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(true);
         domainList.configure(configuration);
 
         String added = "added.tld";
@@ -234,20 +216,22 @@ public class AbstractDomainListPrivateMethodsTest {
 
         assertThat(domainList.getDomains())
             .extracting(Domain::name)
-            .containsOnly(detected, detectedIp1, added, detectedIp2);
+            .contains(detected, detectedIp1, added, detectedIp2);
     }
 
     @Test
     public void getDomainsShouldListAddedDomain() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(false);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        Domain defaultDomain = Domain.of("default.tld");
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(false);
+        when(configuration.getString(AbstractDomainList.CONFIGURE_DEFAULT_DOMAIN, null)).thenReturn(defaultDomain.asString());
         Domain domain = Domain.of("added.tld");
         domainList.addDomain(domain);
         domainList.configure(configuration);
 
-        assertThat(domainList.getDomains()).containsOnly(domain);
+        assertThat(domainList.getDomains()).containsOnly(domain, defaultDomain);
     }
 
     @Test
@@ -303,8 +287,8 @@ public class AbstractDomainListPrivateMethodsTest {
     public void containsDomainShouldReturnDetectedDomains() throws Exception {
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
 
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(false);
         domainList.configure(configuration);
 
         String detected = "detected.tld";
@@ -328,16 +312,20 @@ public class AbstractDomainListPrivateMethodsTest {
 
     @Test
     public void configuredDomainShouldBeAddedUponConfiguration() throws Exception {
-        String[] configuredDomain = new String[] {"conf1.tld", "conf2.tld"};
+        String domain1 = "conf1.tld";
+        String domain2 = "conf2.tld";
+        String[] configuredDomain = new String[] {domain1, domain2};
 
         HierarchicalConfiguration configuration = mock(HierarchicalConfiguration.class);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, true)).thenReturn(true);
-        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, true)).thenReturn(false);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT, null)).thenReturn(true);
+        when(configuration.getBoolean(AbstractDomainList.CONFIGURE_AUTODETECT_IP, null)).thenReturn(false);
         when(configuration.getStringArray(AbstractDomainList.CONFIGURE_DOMAIN_NAMES)).thenReturn(configuredDomain);
         domainList.configure(configuration);
 
         assertThat(domainList.getDomains())
-            .containsOnlyElementsOf(Arrays.stream(configuredDomain).map(Domain::of).collect(Collectors.toList()));
+            .contains(
+                Domain.of(domain1),
+                Domain.of(domain2));
     }
 
 }

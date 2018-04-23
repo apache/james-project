@@ -27,6 +27,7 @@ import java.util.HashMap;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
@@ -59,7 +60,9 @@ public class ValidRcptHandlerTest {
         users.addUser(VALID_USER, PASSWORD);
 
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
-        memoryDomainList.setDefaultDomain(Domain.LOCALHOST);
+        memoryDomainList.configure(DomainListConfiguration.builder()
+            .defaultDomain(Domain.LOCALHOST)
+            .build());
 
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(memoryDomainList);

@@ -32,7 +32,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.util.StreamUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,25 +74,25 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        setAutoDetect(config.getBoolean(CONFIGURE_AUTODETECT, true));
-        setAutoDetectIP(config.getBoolean(CONFIGURE_AUTODETECT_IP, true));
+        DomainListConfiguration domainListConfiguration = DomainListConfiguration.from(config);
 
-        configureDefaultDomain(config);
-
-        addEnvDomain();
-        addConfiguredDomains(config);
+        configure(domainListConfiguration);
     }
 
-    protected void addConfiguredDomains(HierarchicalConfiguration config) {
-        StreamUtils.ofNullable(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
-            .filter(s -> !s.isEmpty())
-            .map(Domain::of)
-            .forEach(
-                Throwing.consumer((Domain domain) -> {
-                    if (!containsDomainInternal(domain)) {
-                        addDomain(domain);
-                    }
-                }).sneakyThrow());
+    public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
+        setAutoDetect(domainListConfiguration.isAutoDetect());
+        setAutoDetectIP(domainListConfiguration.isAutoDetectIp());
+
+        configureDefaultDomain(domainListConfiguration.getDefaultDomain());
+
+        addEnvDomain();
+        addConfiguredDomains(domainListConfiguration.getConfiguredDomains());
+    }
+
+    protected void addConfiguredDomains(List<Domain> domains) {
+        domains.stream()
+            .filter(Throwing.predicate((Domain domain) -> !containsDomainInternal(domain)).sneakyThrow())
+            .forEach(Throwing.consumer(this::addDomain).sneakyThrow());
     }
 
 
@@ -109,12 +108,9 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         }
     }
 
-    @VisibleForTesting void configureDefaultDomain(HierarchicalConfiguration config) throws ConfigurationException {
+    @VisibleForTesting void configureDefaultDomain(Domain defaultDomain) throws ConfigurationException {
         try {
-            Optional.ofNullable(
-                config.getString(CONFIGURE_DEFAULT_DOMAIN, Domain.LOCALHOST.asString()))
-                .map(Domain::of)
-                .ifPresent(Throwing.consumer(this::setDefaultDomain).sneakyThrow());
+            setDefaultDomain(defaultDomain);
 
             String hostName = InetAddress.getLocalHost().getHostName();
             if (mayChangeDefaultDomain()) {
@@ -131,7 +127,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         return Domain.LOCALHOST.equals(defaultDomain);
     }
 
-    protected void setDefaultDomain(Domain defaultDomain) throws DomainListException {
+    private void setDefaultDomain(Domain defaultDomain) throws DomainListException {
         if (defaultDomain != null && !containsDomain(defaultDomain)) {
             addDomain(defaultDomain);
         }
