@@ -951,4 +951,15 @@ public abstract class MailboxManagerTest {
         assertThatCode(() -> mailboxManager.moveMessages(MessageRange.all(), inbox, inbox, session))
             .doesNotThrowAnyException();
     }
+
+    @Test
+    public void copyMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
+        session = mailboxManager.createSystemSession(USER_1);
+
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+
+        assertThatCode(() -> mailboxManager.copyMessages(MessageRange.all(), inbox, inbox, session))
+            .doesNotThrowAnyException();
+    }
 }

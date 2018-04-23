@@ -56,15 +56,33 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void builderShouldThrowWhenMessagesIsEmpty() {
-        assertThatThrownBy(() -> MessageMoveEvent.builder()
+    public void builderShouldReturnNoopWhenMessagesIsEmpty() {
+        assertThat(MessageMoveEvent.builder()
                 .session(new MockMailboxSession("user@james.org"))
                 .messageMoves(MessageMoves.builder()
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
                     .build())
-                .build())
-            .isInstanceOf(IllegalArgumentException.class);
+                .build()
+            .isNoop()).isTrue();
+    }
+
+    @Test
+    public void builderShouldNotBeNoopWhenFieldsAreGiven() {
+        MockMailboxSession session = new MockMailboxSession("user@james.org");
+        MessageMoves messageMoves = MessageMoves.builder()
+            .targetMailboxIds(TestId.of(2))
+            .previousMailboxIds(TestId.of(1))
+            .build();
+        Map<MessageUid, MailboxMessage> messages = ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class));
+
+        MessageMoveEvent event = MessageMoveEvent.builder()
+            .session(session)
+            .messageMoves(messageMoves)
+            .messages(messages)
+            .build();
+
+        assertThat(event.isNoop()).isFalse();
     }
 
     @Test

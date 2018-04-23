@@ -67,7 +67,6 @@ public class MessageMoveEvent implements Event {
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
             ImmutableMap<MessageUid, MailboxMessage> messages = messagesBuilder.build();
-            Preconditions.checkArgument(!messages.isEmpty(), "'messages' should not be empty");
 
             return new MessageMoveEvent(session, messageMoves, messages);
         }
@@ -82,6 +81,10 @@ public class MessageMoveEvent implements Event {
         this.session = session;
         this.messageMoves = messageMoves;
         this.messages = messages;
+    }
+
+    public boolean isNoop() {
+        return messages.isEmpty();
     }
 
     @Override
