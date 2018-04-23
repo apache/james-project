@@ -87,6 +87,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     }
 
     private void setJmapMessageIdAsHeader(MimeMessage mimeMessage, MessageId messageId) {
+        LOGGER.debug("Adding header {}:{}", X_JAMES_MDN_JMAP_MESSAGE_ID, messageId.serialize());
         try {
             mimeMessage.addHeader(X_JAMES_MDN_JMAP_MESSAGE_ID, messageId.serialize());
         } catch (MessagingException e) {
@@ -95,6 +96,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     }
 
     private Optional<MessageId> findMessageIdForRFC822MessageId(String messageId, MailAddress recipient) {
+        LOGGER.debug("Searching message {} for recipient {}", messageId, recipient.asPrettyString());
         try {
             MailboxSession session = mailboxManager.createSystemSession(recipient.asString());
             int limit = 1;
@@ -109,6 +111,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     }
 
     private Optional<MDNReport> parseReport(Entity report) {
+        LOGGER.debug("Parsing report");
         try {
             return new MDNReportParser().parse(((SingleBody)report.getBody()).getInputStream(), report.getCharset());
         } catch (IOException e) {
@@ -122,6 +125,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     }
 
     @VisibleForTesting Optional<Entity> extractReport(Message message) {
+        LOGGER.debug("Extracting report");
         if (!message.isMultipart()) {
             LOGGER.debug("MDN Message must be multipart");
             return Optional.empty();
@@ -146,6 +150,7 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     }
 
     private Optional<Message> parseMessage(MimeMessage mimeMessage) {
+        LOGGER.debug("Parsing message");
         try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             mimeMessage.writeTo(os);
