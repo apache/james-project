@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handler which want to do an recipient check should extend this
+ * Handler which want to do a recipient check should extend this
  */
 public abstract class AbstractValidRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractValidRcptHandler.class);
