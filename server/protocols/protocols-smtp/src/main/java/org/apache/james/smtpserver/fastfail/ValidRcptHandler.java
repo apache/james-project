@@ -45,20 +45,20 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptHandler.class);
 
     private final UsersRepository users;
-    private final RecipientRewriteTable vut;
+    private final RecipientRewriteTable recipientRewriteTable;
     private final DomainList domains;
 
-    private boolean useVut = true;
+    private boolean supportsRecipientRewriteTable = true;
 
     @Inject
-    public ValidRcptHandler(UsersRepository users, RecipientRewriteTable vut, DomainList domains) {
+    public ValidRcptHandler(UsersRepository users, RecipientRewriteTable recipientRewriteTable, DomainList domains) {
         this.users = users;
-        this.vut = vut;
+        this.recipientRewriteTable = recipientRewriteTable;
         this.domains = domains;
     }
 
-    public void setRecipientRewriteTableSupport(boolean useVut) {
-        this.useVut = useVut;
+    public void setSupportsRecipientRewriteTable(boolean supportsRecipientRewriteTable) {
+        this.supportsRecipientRewriteTable = supportsRecipientRewriteTable;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
             if (users.contains(username)) {
                 return true;
             } else {
-                return useVut && isRedirected(recipient, username);
+                return supportsRecipientRewriteTable && isRedirected(recipient, username);
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
@@ -81,7 +81,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
         LOGGER.debug("Unknown user {} check if it's an alias", username);
 
         try {
-            Mappings targetString = vut.getMappings(recipient.getLocalPart(), recipient.getDomain());
+            Mappings targetString = recipientRewriteTable.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (!targetString.isEmpty()) {
                 return true;
@@ -107,8 +107,7 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
-        setRecipientRewriteTableSupport(config.getBoolean("enableRecipientRewriteTable", true));
-        
+        setSupportsRecipientRewriteTable(config.getBoolean("enableRecipientRewriteTable", true));
     }
 
     @Override
