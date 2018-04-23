@@ -39,9 +39,13 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Entity(name = "MailboxMessage")
 @Table(name = "JAMES_MAIL")
 public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
+
+    private static final byte[] EMPTY_BODY = new byte[] {};
 
     /** The value for the body field. Lazy loaded */
     /** We use a max length to represent 1gb data. Thats prolly overkill, but who knows */
@@ -59,6 +63,12 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     public JPAMailboxMessage() {
         
+    }
+
+    @VisibleForTesting
+    protected JPAMailboxMessage(byte[] header, byte[] body) {
+        this.header = header;
+        this.body = body;
     }
 
     public JPAMailboxMessage(JPAMailbox mailbox, Date internalDate, int size, Flags flags, SharedInputStream content, int bodyStartOctet, PropertyBuilder propertyBuilder) throws MailboxException {
@@ -91,6 +101,9 @@ public class JPAMailboxMessage extends AbstractJPAMailboxMessage {
 
     @Override
     public InputStream getBodyContent() throws IOException {
+        if (body == null) {
+            return new ByteArrayInputStream(EMPTY_BODY);
+        }
         return new ByteArrayInputStream(body);
     }
 
