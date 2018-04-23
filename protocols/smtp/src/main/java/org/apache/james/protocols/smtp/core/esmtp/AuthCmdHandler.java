@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.StringTokenizer;
 
 import org.apache.commons.codec.binary.Base64;
@@ -48,6 +49,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailParametersHook;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -429,64 +431,57 @@ public class AuthCmdHandler
      */
     protected Response calcDefaultSMTPResponse(HookResult result) {
         if (result != null) {
-            HookReturnCode rCode = result.getResult();
-            String smtpRetCode = result.getSmtpRetCode();
-            String smtpDesc = result.getSmtpDescription();
-    
-            if (rCode.getAction() == HookReturnCode.Action.DENY) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.AUTH_FAILED;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Authentication Failed";
-                }
-    
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
+            HookReturnCode returnCode = result.getResult();
 
-                if (rCode.isDisconnected()) {
+            String smtpReturnCode = OptionalUtils.or(
+                Optional.ofNullable(result.getSmtpRetCode()),
+                retrieveDefaultSmtpReturnCode(returnCode))
+                .orElse(null);
+
+            String smtpDescription = OptionalUtils.or(
+                Optional.ofNullable(result.getSmtpDescription()),
+                retrieveDefaultSmtpDescription(returnCode))
+                .orElse(null);
+    
+            if (HookReturnCode.Action.ACTIVE_ACTIONS.contains(returnCode.getAction())) {
+                SMTPResponse response =  new SMTPResponse(smtpReturnCode, smtpDescription);
+
+                if (returnCode.isDisconnected()) {
                     response.setEndSession(true);
                 }
                 return response;
-            } else if (rCode.getAction() == HookReturnCode.Action.DENYSOFT) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Temporary problem. Please try again later";
-                }
-    
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-
-                if (rCode.isDisconnected()) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if (rCode.getAction() == HookReturnCode.Action.OK) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.AUTH_OK;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Authentication Succesfull";
-                }
-                
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-
-                if (rCode.isDisconnected()) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if (rCode.isDisconnected()) {
+            } else if (returnCode.isDisconnected()) {
                 SMTPResponse response =  new SMTPResponse("");
                 response.setEndSession(true);
-            
                 return response;
-            } else {
-                // Return null as default
-                return null;
             }
-        } else {
-            return null;
         }
+        return null;
+
+    }
+
+    private Optional<String> retrieveDefaultSmtpDescription(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of("Authentication Failed");
+            case DENYSOFT:
+                return Optional.of("Temporary problem. Please try again later");
+            case OK:
+                return Optional.of("Authentication Succesfull");
+        }
+        return Optional.empty();
+    }
+
+    private Optional<String> retrieveDefaultSmtpReturnCode(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of(SMTPRetCode.AUTH_FAILED);
+            case DENYSOFT:
+                return Optional.of(SMTPRetCode.LOCAL_ERROR);
+            case OK:
+                return Optional.of(SMTPRetCode.AUTH_OK);
+        }
+        return Optional.empty();
     }
 
     /**

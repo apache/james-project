@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -40,6 +41,7 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.util.MDCBuilder;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,67 +178,63 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
      */
     public static SMTPResponse calcDefaultSMTPResponse(HookResult result) {
         if (result != null) {
-            HookReturnCode rCode = result.getResult();
-            String smtpRetCode = result.getSmtpRetCode();
-            String smtpDesc = result.getSmtpDescription();
-    
-            if (rCode.getAction() == HookReturnCode.Action.DENY) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Email rejected";
-                }
-    
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-                if (rCode.isDisconnected()) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if (rCode.getAction() == HookReturnCode.Action.DENYSOFT) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.LOCAL_ERROR;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Temporary problem. Please try again later";
-                }
-    
-                SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
-                if (rCode.isDisconnected()) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if (rCode.getAction() == HookReturnCode.Action.OK) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.MAIL_OK;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Command accepted";
-                }
-    
-                SMTPResponse response = new SMTPResponse(smtpRetCode, smtpDesc);
-                if (rCode.isDisconnected()) {
-                    response.setEndSession(true);
-                }
-                return response;
-            } else if (rCode.isDisconnected()) {
-                if (smtpRetCode == null) {
-                    smtpRetCode = SMTPRetCode.TRANSACTION_FAILED;
-                }
-                if (smtpDesc == null) {
-                    smtpDesc = "Server disconnected";
-                }
+            HookReturnCode returnCode = result.getResult();
 
-                SMTPResponse response =  new SMTPResponse(smtpRetCode, smtpDesc);
-                response.setEndSession(true);
+            String smtpReturnCode = OptionalUtils.or(
+                    Optional.ofNullable(result.getSmtpRetCode()),
+                    retrieveDefaultSmtpReturnCode(returnCode))
+                .orElse(null);
+
+            String smtpDescription = OptionalUtils.or(
+                    Optional.ofNullable(result.getSmtpDescription()),
+                    retrieveDefaultSmtpDescription(returnCode))
+                .orElse(null);
+
+            if (canBeConvertedToSmtpAnswer(returnCode)) {
+
+                SMTPResponse response = new SMTPResponse(smtpReturnCode, smtpDescription);
+                if (returnCode.isDisconnected()) {
+                    response.setEndSession(true);
+                }
                 return response;
-            } else {
-                // Return null as default
-                return null;
             }
-        } else {
-            return null;
         }
+        return null;
+    }
+
+    public static boolean canBeConvertedToSmtpAnswer(HookReturnCode returnCode) {
+        return HookReturnCode.Action.ACTIVE_ACTIONS
+            .contains(returnCode.getAction()) || returnCode.isDisconnected();
+    }
+
+    private static Optional<String> retrieveDefaultSmtpDescription(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of("Email rejected");
+            case DENYSOFT:
+                return Optional.of("Temporary problem. Please try again later");
+            case OK:
+                return Optional.of("Command accepted");
+        }
+        if (returnCode.isDisconnected()) {
+            return Optional.of("Server disconnected");
+        }
+        return Optional.empty();
+    }
+
+    private static Optional<String> retrieveDefaultSmtpReturnCode(HookReturnCode returnCode) {
+        switch (returnCode.getAction()) {
+            case DENY:
+                return Optional.of(SMTPRetCode.TRANSACTION_FAILED);
+            case DENYSOFT:
+                return Optional.of(SMTPRetCode.LOCAL_ERROR);
+            case OK:
+                return Optional.of(SMTPRetCode.MAIL_OK);
+        }
+        if (returnCode.isDisconnected()) {
+            return Optional.of(SMTPRetCode.TRANSACTION_FAILED);
+        }
+        return Optional.empty();
     }
 
     /**

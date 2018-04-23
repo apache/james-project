@@ -19,18 +19,25 @@
 
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.List;
 import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 
 public class HookReturnCode {
+
 
     public enum Action {
         OK,
         DENY,
         DENYSOFT,
         DECLINED,
-        NONE
+        NONE;
+
+        public static List<Action> ACTIVE_ACTIONS =
+            ImmutableList.of(HookReturnCode.Action.DENY, HookReturnCode.Action.DENYSOFT, HookReturnCode.Action.OK);
+
     }
 
     public enum ConnectionStatus {
