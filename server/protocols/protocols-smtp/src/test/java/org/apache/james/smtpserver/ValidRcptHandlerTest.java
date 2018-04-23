@@ -64,10 +64,7 @@ public class ValidRcptHandlerTest {
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(memoryDomainList);
 
-        handler = new ValidRcptHandler();
-        handler.setUsersRepository(users);
-        handler.setRecipientRewriteTable(memoryRecipientRewriteTable);
-        handler.setDomainList(memoryDomainList);
+        handler = new ValidRcptHandler(users, memoryRecipientRewriteTable, memoryDomainList);
 
         validUserEmail = new MailAddress(VALID_USER + "@localhost");
         user1mail = new MailAddress(USER1 + "@localhost");

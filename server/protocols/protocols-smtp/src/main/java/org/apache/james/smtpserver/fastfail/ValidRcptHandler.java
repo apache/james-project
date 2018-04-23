@@ -44,50 +44,19 @@ import org.slf4j.LoggerFactory;
 public class ValidRcptHandler extends AbstractValidRcptHandler implements ProtocolHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ValidRcptHandler.class);
 
-    private UsersRepository users;
-
-    private RecipientRewriteTable vut;
+    private final UsersRepository users;
+    private final RecipientRewriteTable vut;
+    private final DomainList domains;
 
     private boolean useVut = true;
 
-    private DomainList domains;
-
-    /**
-     * Gets the users repository.
-     * 
-     * @return the users
-     */
-    public final UsersRepository getUsers() {
-        return users;
-    }
-
-    /**
-     * Sets the users repository.
-     * 
-     * @param users
-     *            the users to set
-     */
     @Inject
-    public final void setUsersRepository(UsersRepository users) {
+    public ValidRcptHandler(UsersRepository users, RecipientRewriteTable vut, DomainList domains) {
         this.users = users;
-    }
-
-    /**
-     * Sets the virtual user table store.
-     * 
-     * @param vut
-     *            the tableStore to set
-     */
-    @Inject
-    public final void setRecipientRewriteTable(RecipientRewriteTable vut) {
         this.vut = vut;
-    }
-
-    @Inject
-    public void setDomainList(DomainList domains) {
         this.domains = domains;
     }
-    
+
     public void setRecipientRewriteTableSupport(boolean useVut) {
         this.useVut = useVut;
     }
