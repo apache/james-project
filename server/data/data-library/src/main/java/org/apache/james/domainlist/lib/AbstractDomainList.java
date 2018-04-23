@@ -22,7 +22,6 @@ package org.apache.james.domainlist.lib;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -182,7 +181,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         if (autoDetect) {
             String hostName;
             try {
-                hostName = getDNSServer().getHostName(getDNSServer().getLocalHost());
+                hostName = dns.getHostName(dns.getLocalHost());
             } catch (UnknownHostException ue) {
                 hostName = "localhost";
             }
@@ -242,15 +241,6 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     public synchronized void setAutoDetectIP(boolean autoDetectIP) {
         LOGGER.info("Set autodetectIP to: {}", autoDetectIP);
         this.autoDetectIP = autoDetectIP;
-    }
-
-    /**
-     * Return dnsServer
-     * 
-     * @return dns
-     */
-    protected DNSService getDNSServer() {
-        return dns;
     }
 
     /**
