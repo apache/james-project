@@ -95,9 +95,12 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
     @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (check(session,rcpt)) {
-            return new HookResult(HookReturnCode.deny(),
-                SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
-                    + " Provided EHLO/HELO " + session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection) + " can not resolved.");
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.deny())
+                .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
+                    + " Provided EHLO/HELO " + session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection) + " can not resolved.")
+                .build();
         } else {
             return HookResult.DECLINED;
         }

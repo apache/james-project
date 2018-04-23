@@ -152,9 +152,17 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
         if (!session.isRelayingAllowed()) {
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.deny(), DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction));
+
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.deny())
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " " + session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction))
+                    .build();
             } else if (session.getAttachment(SPF_TEMPBLOCKLISTED, State.Transaction) != null) {
-                return new HookResult(HookReturnCode.denySoft(), SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
+                return HookResult.builder()
+                    .hookReturnCode(HookReturnCode.denySoft())
+                    .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+                    .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " Temporarily rejected: Problem on SPF lookup")
+                    .build();
             }
         }
         return HookResult.DECLINED;

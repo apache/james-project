@@ -110,7 +110,12 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
 
                         // Check for invalid MX
                         if (bNetwork.matchInetNetwork(ip)) {
-                            return new HookResult(HookReturnCode.deny(), SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH) + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain + ". Reject email");
+                            return HookResult.builder()
+                                .hookReturnCode(HookReturnCode.deny())
+                                .smtpReturnCode(SMTPRetCode.AUTH_REQUIRED)
+                                .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+                                    + " Invalid MX " + session.getRemoteAddress().getAddress().toString() + " for domain " + domain.asString() + ". Reject email")
+                                .build();
                         }
                     } catch (UnknownHostException e) {
                         // Ignore this

@@ -69,8 +69,6 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
     
     @Override
     public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
-        HookResult result;
-
         try {
             String username = users.getUser(recipient);
 
@@ -90,12 +88,18 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                     .build(envelope.getMessageInputStream()),
                     mailboxSession);
             mailboxManager.endProcessingRequest(mailboxSession);
-            result = new HookResult(HookReturnCode.ok(), SMTPRetCode.MAIL_OK, DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received");
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.ok())
+                .smtpReturnCode(SMTPRetCode.MAIL_OK)
+                .smtpDescription(DSNStatus.getStatus(DSNStatus.SUCCESS, DSNStatus.CONTENT_OTHER) + " Message received")
+                .build();
         } catch (IOException | MailboxException | UsersRepositoryException e) {
             LOGGER.error("Unexpected error handling DATA stream", e);
-            result = new HookResult(HookReturnCode.denySoft(), " Temporary error deliver message to " + recipient);
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.denySoft())
+                .smtpDescription(" Temporary error deliver message to " + recipient)
+                .build();
         }
-        return result;
     }
 
     @Override

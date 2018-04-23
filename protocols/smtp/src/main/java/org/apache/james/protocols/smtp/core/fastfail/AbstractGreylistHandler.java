@@ -50,10 +50,18 @@ public abstract class AbstractGreylistHandler implements RcptHook {
     private long unseenLifeTime = 14400000;
 
 
-    private static final HookResult TO_FAST = new HookResult(HookReturnCode.denySoft(), SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER)
-            + " Temporary rejected: Reconnect to fast. Please try again later");
-    private static final HookResult TEMPORARY_REJECT = new HookResult(HookReturnCode.denySoft(), SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER)
-            + " Temporary rejected: Please try again later");
+    private static final HookResult TO_FAST = HookResult.builder()
+        .hookReturnCode(HookReturnCode.denySoft())
+        .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER)
+            + " Temporary rejected: Reconnect to fast. Please try again later")
+        .build();
+    private static final HookResult TEMPORARY_REJECT = HookResult.builder()
+        .hookReturnCode(HookReturnCode.denySoft())
+        .smtpReturnCode(SMTPRetCode.LOCAL_ERROR)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER)
+            + " Temporary rejected: Please try again later")
+        .build();
 
     public void setUnseenLifeTime(long unseenLifeTime) {
         this.unseenLifeTime = unseenLifeTime;

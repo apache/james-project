@@ -65,6 +65,10 @@ public class HookReturnCode {
         return new HookReturnCode(action, ConnectionStatus.Connected);
     }
 
+    public static HookReturnCode disconnected(Action action) {
+        return new HookReturnCode(action, ConnectionStatus.Disconnected);
+    }
+
     private final Action action;
     private final ConnectionStatus connectionStatus;
 

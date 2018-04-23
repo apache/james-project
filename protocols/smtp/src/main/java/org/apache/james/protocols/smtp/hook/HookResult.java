@@ -22,35 +22,77 @@ package org.apache.james.protocols.smtp.hook;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Result which get used for hooks
  */
 public final class HookResult {
 
-    public static final HookResult DECLINED = new HookResult(HookReturnCode.declined());
-    public static final HookResult OK = new HookResult(HookReturnCode.ok());
-    public static final HookResult DENY = new HookResult(HookReturnCode.deny());
-    public static final HookResult DENYSOFT = new HookResult(HookReturnCode.denySoft());
-    public static final HookResult DISCONNECT = new HookResult(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected));
+    public static class Builder {
+        private HookReturnCode result;
+        private Optional<String> smtpReturnCode;
+        private Optional<String> smtpDescription;
 
+        public Builder() {
+            smtpDescription = Optional.empty();
+            smtpReturnCode = Optional.empty();
+        }
+
+        public Builder hookReturnCode(HookReturnCode hookReturnCode) {
+            this.result = hookReturnCode;
+            return this;
+        }
+
+        public Builder smtpReturnCode(String smtpReturnCode) {
+            this.smtpReturnCode = Optional.of(smtpReturnCode);
+            return this;
+        }
+
+        public Builder smtpDescription(String smtpDescription) {
+            this.smtpDescription = Optional.of(smtpDescription);
+            return this;
+        }
+
+        public HookResult build() {
+            Preconditions.checkNotNull(result);
+
+            return new HookResult(result,
+                smtpReturnCode.orElse(null),
+                smtpDescription.orElse(null));
+        }
+    }
+
+    public static final HookResult DECLINED = builder()
+        .hookReturnCode(HookReturnCode.declined())
+        .build();
+    public static final HookResult OK =  builder()
+        .hookReturnCode(HookReturnCode.ok())
+        .build();
+    public static final HookResult DENY =  builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .build();
+    public static final HookResult DENYSOFT =  builder()
+        .hookReturnCode(HookReturnCode.denySoft())
+        .build();
+    public static final HookResult DISCONNECT =  builder()
+        .hookReturnCode(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected))
+        .build();
+
+    public static Builder builder() {
+        return new Builder();
+    }
+    
     private final HookReturnCode result;
     private final String smtpRetCode;
     private final String smtpDescription;
 
-    public HookResult(HookReturnCode result, String smtpRetCode, CharSequence smtpDescription) {
+    private HookResult(HookReturnCode result, String smtpRetCode, CharSequence smtpDescription) {
         this.result = result;
         this.smtpRetCode = smtpRetCode;
         this.smtpDescription = Optional.ofNullable(smtpDescription)
             .map(CharSequence::toString)
             .orElse(null);
-    }
-
-    public HookResult(HookReturnCode result, String smtpDescription) {
-        this(result, null, smtpDescription);
-    }
-
-    private HookResult(HookReturnCode result) {
-        this(result, null, null);
     }
 
     public HookReturnCode getResult() {

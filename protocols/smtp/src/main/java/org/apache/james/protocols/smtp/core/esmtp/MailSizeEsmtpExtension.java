@@ -53,8 +53,16 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     private static final String MESG_FAILED = "MESG_FAILED";   // Message failed flag
     private static final String[] MAIL_PARAMS = { "SIZE" };
     
-    private static final HookResult SYNTAX_ERROR = new HookResult(HookReturnCode.deny(), SMTPRetCode.SYNTAX_ERROR_ARGUMENTS, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntactically incorrect value for SIZE parameter");
-    private static final HookResult QUOTA_EXCEEDED = new HookResult(HookReturnCode.deny(), SMTPRetCode.QUOTA_EXCEEDED, DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SYSTEM_MSG_TOO_BIG) + " Message size exceeds fixed maximum message size");
+    private static final HookResult SYNTAX_ERROR = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG) + " Syntactically incorrect value for SIZE parameter")
+        .build();
+    private static final HookResult QUOTA_EXCEEDED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.QUOTA_EXCEEDED)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SYSTEM_MSG_TOO_BIG) + " Message size exceeds fixed maximum message size")
+        .build();
     public static final int SINGLE_CHARACTER_LINE = 3;
     public static final int DOT_BYTE = 46;
 

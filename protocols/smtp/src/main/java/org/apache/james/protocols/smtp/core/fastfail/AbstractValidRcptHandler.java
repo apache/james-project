@@ -49,9 +49,11 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
 
     public HookResult reject(MailAddress rcpt) {
         LOGGER.info("Rejected message. Unknown user: {}", rcpt);
-        return new HookResult(HookReturnCode.deny(),
-            SMTPRetCode.MAILBOX_PERM_UNAVAILABLE,
-            DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.toString());
+        return HookResult.builder()
+            .hookReturnCode(HookReturnCode.deny())
+            .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
+            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT,DSNStatus.ADDRESS_MAILBOX) + " Unknown user: " + rcpt.asString())
+            .build();
     }
 
     /**

@@ -32,19 +32,20 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
  */
 public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
 
-    private static final HookResult AUTH_REQUIRED = new HookResult(HookReturnCode.deny(),
-            SMTPRetCode.AUTH_REQUIRED, DSNStatus.getStatus(
-                    DSNStatus.PERMANENT,
-                    DSNStatus.SECURITY_AUTH)
-                    + " Authentication Required");
-    private static final HookResult RELAYING_DENIED = new HookResult(
-            HookReturnCode.deny(),
-            // sendmail returns 554 (SMTPRetCode.TRANSACTION_FAILED).
-            // it is not clear in RFC wether it is better to use 550 or 554.
-            SMTPRetCode.MAILBOX_PERM_UNAVAILABLE,
-            DSNStatus.getStatus(DSNStatus.PERMANENT,
-                    DSNStatus.SECURITY_AUTH)
-                    + " Requested action not taken: relaying denied");
+    private static final HookResult AUTH_REQUIRED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.AUTH_REQUIRED)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+            + " Authentication Required")
+        .build();
+    // sendmail returns 554 (SMTPRetCode.TRANSACTION_FAILED).
+    // it is not clear in RFC wether it is better to use 550 or 554.
+    private static final HookResult RELAYING_DENIED = HookResult.builder()
+        .hookReturnCode(HookReturnCode.deny())
+        .smtpReturnCode(SMTPRetCode.MAILBOX_PERM_UNAVAILABLE)
+        .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_AUTH)
+            + " Requested action not taken: relaying denied")
+        .build();
     
     @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender,

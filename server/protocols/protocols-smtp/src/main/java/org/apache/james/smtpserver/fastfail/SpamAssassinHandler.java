@@ -143,7 +143,11 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
                         LOGGER.info(buffer);
 
                         // Message reject .. abort it!
-                        return new HookResult(HookReturnCode.deny(), DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER) + " This message reach the spam hits treshold. Please contact the Postmaster if the email is not SPAM. Message rejected");
+                        return HookResult.builder()
+                            .hookReturnCode(HookReturnCode.deny())
+                            .smtpDescription(DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.SECURITY_OTHER)
+                                + " This message reach the spam hits treshold. Please contact the Postmaster if the email is not SPAM. Message rejected")
+                            .build();
                     }
                 } catch (NumberFormatException e) {
                     // hits unknown

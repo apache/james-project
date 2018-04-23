@@ -62,14 +62,12 @@ public class MaxUnknownCmdHandler implements UnknownHook {
         }
         session.setAttachment(UNKOWN_COMMAND_COUNT, count, State.Transaction);
         if (count > maxUnknown) {
-            return new HookResult(new HookReturnCode(
-                HookReturnCode.Action.DENY,
-                HookReturnCode.ConnectionStatus.Disconnected),
-                "521",
-                "Closing connection as too many unknown commands received");
-
+            return HookResult.builder()
+                .hookReturnCode(HookReturnCode.disconnected(HookReturnCode.Action.DENY))
+                .smtpReturnCode("521")
+                .smtpDescription("Closing connection as too many unknown commands received")
+                .build();
         } else {
-            
             return HookResult.DECLINED;
         }
     }
