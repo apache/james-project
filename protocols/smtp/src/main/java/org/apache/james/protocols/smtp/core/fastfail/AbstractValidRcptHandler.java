@@ -39,21 +39,10 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
     @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (!isLocalDomain(session, rcpt.getDomain())) {
-            return handleRemoteDomain(session, rcpt);
+            return HookResult.declined();
         }
-        return handleLocalDomain(session, rcpt);
-    }
-
-    public HookResult handleLocalDomain(SMTPSession session, MailAddress rcpt) {
         if (!isValidRecipient(session, rcpt)) {
             return reject(rcpt);
-        }
-        return HookResult.declined();
-    }
-
-    public HookResult handleRemoteDomain(SMTPSession session, MailAddress rcpt) {
-        if (!session.isRelayingAllowed()) {
-            LOGGER.debug("Unknown domain {} so reject it", rcpt.getDomain());
         }
         return HookResult.declined();
     }
