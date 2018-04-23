@@ -45,7 +45,6 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.fastfail.AbstractGreylistHandler;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.util.TimeConverter;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
@@ -360,7 +359,7 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
         } else {
             LOGGER.info("IpAddress {} is whitelisted. Skip greylisting.", session.getRemoteAddress().getAddress().getHostAddress());
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

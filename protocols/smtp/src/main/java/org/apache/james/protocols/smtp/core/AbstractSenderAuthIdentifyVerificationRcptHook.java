@@ -58,7 +58,7 @@ public abstract class AbstractSenderAuthIdentifyVerificationRcptHook implements 
                 return INVALID_AUTH;
             }
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     public String retrieveSender(MailAddress sender, MailAddress senderAddress) {

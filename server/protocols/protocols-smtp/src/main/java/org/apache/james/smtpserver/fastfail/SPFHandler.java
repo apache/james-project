@@ -157,13 +157,13 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
                 return new HookResult(HookReturnCode.denySoft(), SMTPRetCode.LOCAL_ERROR, DSNStatus.getStatus(DSNStatus.TRANSIENT, DSNStatus.NETWORK_DIR_SERVER) + " " + "Temporarily rejected: Problem on SPF lookup");
             }
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override
     public HookResult doMail(SMTPSession session, MailAddress sender) {
         doSPFCheck(session, sender);
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     /**

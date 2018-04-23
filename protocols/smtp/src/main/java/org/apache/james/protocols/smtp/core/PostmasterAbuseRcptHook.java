@@ -37,9 +37,9 @@ public class PostmasterAbuseRcptHook implements RcptHook {
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (rcpt.getLocalPart().equalsIgnoreCase("postmaster") || rcpt.getLocalPart().equalsIgnoreCase("abuse")) {
             LOGGER.debug("Sender allowed");
-            return HookResult.ok();
+            return HookResult.OK;
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
 

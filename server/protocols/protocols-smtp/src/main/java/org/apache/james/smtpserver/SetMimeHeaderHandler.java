@@ -26,7 +26,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,7 +80,7 @@ public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
             LOGGER.error(me.getMessage());
         }
 
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

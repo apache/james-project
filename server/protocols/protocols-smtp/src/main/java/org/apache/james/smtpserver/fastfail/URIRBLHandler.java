@@ -131,7 +131,7 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
             }
 
         } else {
-            return new HookResult(HookReturnCode.declined());
+            return HookResult.DECLINED;
         }
     }
 

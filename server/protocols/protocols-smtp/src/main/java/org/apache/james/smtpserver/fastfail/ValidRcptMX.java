@@ -98,7 +98,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
             try {
                 mx = dnsService.findMXRecords(domain.name()).iterator();
             } catch (TemporaryResolutionException e1) {
-                return new HookResult(HookReturnCode.denySoft());
+                return HookResult.DENYSOFT;
             }
 
             if (mx != null && mx.hasNext()) {
@@ -118,7 +118,7 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
                 }
             }
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

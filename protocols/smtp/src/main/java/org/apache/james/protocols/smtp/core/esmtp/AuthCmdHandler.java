@@ -549,7 +549,7 @@ public class AuthCmdHandler
     public HookResult doMailParameter(SMTPSession session, String paramName, String paramValue) {
         // Ignore the AUTH command.
         // TODO we should at least check for correct syntax and put the result in session
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     @Override

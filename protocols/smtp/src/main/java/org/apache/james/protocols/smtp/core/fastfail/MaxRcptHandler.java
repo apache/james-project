@@ -58,7 +58,7 @@ public class MaxRcptHandler implements RcptHook {
             
             return MAX_RCPT;
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
 

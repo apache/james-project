@@ -344,10 +344,10 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
         @Override
         public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
             if (RCPT1.equals(recipient.toString())) {
-                return new HookResult(HookReturnCode.deny());
+                return HookResult.DENY;
             } else {
                 delivered.add(envelope);
-                return new HookResult(HookReturnCode.ok());
+                return HookResult.OK;
             }
         }
         

@@ -27,31 +27,11 @@ import java.util.Optional;
  */
 public final class HookResult {
 
-    private static final HookResult DECLINED = new HookResult(HookReturnCode.declined());
-    private static final HookResult OK = new HookResult(HookReturnCode.ok());
-    private static final HookResult DENY = new HookResult(HookReturnCode.deny());
-    private static final HookResult DENYSOFT = new HookResult(HookReturnCode.denySoft());
-    private static final HookResult DISCONNECT = new HookResult(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected));
-
-    public static HookResult declined() {
-        return DECLINED;
-    }
-
-    public static HookResult ok() {
-        return OK;
-    }
-
-    public static HookResult deny() {
-        return DENY;
-    }
-
-    public static HookResult denysoft() {
-        return DENYSOFT;
-    }
-
-    public static HookResult disconnect() {
-        return DISCONNECT;
-    }
+    public static final HookResult DECLINED = new HookResult(HookReturnCode.declined());
+    public static final HookResult OK = new HookResult(HookReturnCode.ok());
+    public static final HookResult DENY = new HookResult(HookReturnCode.deny());
+    public static final HookResult DENYSOFT = new HookResult(HookReturnCode.denySoft());
+    public static final HookResult DISCONNECT = new HookResult(new HookReturnCode(HookReturnCode.Action.NONE, HookReturnCode.ConnectionStatus.Disconnected));
 
     private final HookReturnCode result;
     private final String smtpRetCode;
@@ -69,7 +49,7 @@ public final class HookResult {
         this(result, null, smtpDescription);
     }
 
-    public HookResult(HookReturnCode result) {
+    private HookResult(HookReturnCode result) {
         this(result, null, null);
     }
 

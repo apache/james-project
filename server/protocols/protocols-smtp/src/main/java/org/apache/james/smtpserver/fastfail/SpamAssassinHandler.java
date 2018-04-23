@@ -152,7 +152,7 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
         } catch (MessagingException e) {
             LOGGER.error(e.getMessage());
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

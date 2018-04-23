@@ -41,7 +41,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.protocols.smtp.hook.HookResultHook;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,7 +152,7 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
             }
 
             // Not queue the message!
-            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(new HookResult(HookReturnCode.deny()));
+            return AbstractHookableCmdHandler.calcDefaultSMTPResponse(HookResult.DECLINED);
         }
         
         return null;

@@ -70,7 +70,7 @@ public class UsersRepositoryAuthHook implements AuthHook {
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

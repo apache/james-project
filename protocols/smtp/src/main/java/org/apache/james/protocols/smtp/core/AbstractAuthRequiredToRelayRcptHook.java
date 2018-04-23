@@ -60,7 +60,7 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
             }
 
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     

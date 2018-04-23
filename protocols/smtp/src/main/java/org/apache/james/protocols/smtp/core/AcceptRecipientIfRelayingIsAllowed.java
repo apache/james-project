@@ -34,9 +34,9 @@ public class AcceptRecipientIfRelayingIsAllowed implements RcptHook {
     public HookResult doRcpt(SMTPSession session, MailAddress sender,
                              MailAddress rcpt) {
         if (session.isRelayingAllowed()) {
-            return HookResult.ok();
+            return HookResult.OK;
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     @Override

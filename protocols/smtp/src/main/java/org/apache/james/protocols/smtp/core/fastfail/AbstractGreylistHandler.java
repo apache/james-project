@@ -135,7 +135,7 @@ public abstract class AbstractGreylistHandler implements RcptHook {
             // just log the exception
             LOGGER.error("Error on greylist method: {}", e.getMessage());
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     /**
@@ -217,6 +217,6 @@ public abstract class AbstractGreylistHandler implements RcptHook {
         } else {
             LOGGER.info("IpAddress {} is allowed to send. Skip greylisting.", session.getRemoteAddress().getAddress().getHostAddress());
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 }

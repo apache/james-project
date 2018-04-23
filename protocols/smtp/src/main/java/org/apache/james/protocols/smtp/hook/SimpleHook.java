@@ -49,7 +49,7 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
      */
     @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-        return new HookResult(HookReturnCode.ok());
+        return HookResult.OK;
     }
 
     /**
@@ -57,7 +57,7 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
      */
     @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
 
     }
 
@@ -66,7 +66,7 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
      */
     @Override
     public HookResult doMail(SMTPSession session, MailAddress sender) {
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
 
     }
 
@@ -75,7 +75,7 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
      */
     @Override
     public HookResult doHelo(SMTPSession session, String helo) {
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
 }

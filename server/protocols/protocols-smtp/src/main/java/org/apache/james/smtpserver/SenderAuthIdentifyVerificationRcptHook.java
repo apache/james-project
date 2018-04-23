@@ -29,7 +29,6 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
@@ -69,7 +68,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         if (nSession.verifyIdentity()) {
             return super.doRcpt(session, sender, rcpt);
         } else {
-            return new HookResult(HookReturnCode.declined());
+            return HookResult.DECLINED;
         }
     }
 

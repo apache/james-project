@@ -99,14 +99,14 @@ public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
                 SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,DSNStatus.getStatus(DSNStatus.PERMANENT, DSNStatus.DELIVERY_INVALID_ARG)
                     + " Provided EHLO/HELO " + session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Connection) + " can not resolved.");
         } else {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
     }
 
     @Override
     public HookResult doHelo(SMTPSession session, String helo) {
         checkEhloHelo(session, helo);
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
 }

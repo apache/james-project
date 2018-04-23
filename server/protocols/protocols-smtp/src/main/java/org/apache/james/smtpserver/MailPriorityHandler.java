@@ -32,7 +32,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
 
@@ -74,7 +73,7 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
         if (p != null) {
             mail.setAttribute(MailPrioritySupport.MAIL_PRIORITY, p);
         }
-        return new HookResult(HookReturnCode.declined());
+        return HookResult.DECLINED;
     }
 
     @Override

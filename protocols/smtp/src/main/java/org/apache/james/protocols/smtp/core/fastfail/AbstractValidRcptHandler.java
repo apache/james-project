@@ -39,12 +39,12 @@ public abstract class AbstractValidRcptHandler implements RcptHook {
     @Override
     public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
         if (!isLocalDomain(session, rcpt.getDomain())) {
-            return HookResult.declined();
+            return HookResult.DECLINED;
         }
         if (!isValidRecipient(session, rcpt)) {
             return reject(rcpt);
         }
-        return HookResult.declined();
+        return HookResult.DECLINED;
     }
 
     public HookResult reject(MailAddress rcpt) {
