@@ -161,11 +161,11 @@ A mapping is a recipient rewritting rule. There is several kind of rewritting ru
  - address mapping: rewrite a given mail address into an other one.
  - regex mapping.
 
-You can manage address mapping like (redirects email from user@domain.tld to redirected@domain.new, then deletes the mapping):
+You can manage address mapping like (redirects email from fromUser@fromDomain.tld to redirected@domain.new, then deletes the mapping):
 
 ```
-{cli} AddAddressMapping redirected domain.new user@domain.tld
-{cli} RemoveAddressMapping redirected domain.new user@domain.tld
+{cli} AddAddressMapping fromUser fromDomain.tld redirected@domain.new
+{cli} RemoveAddressMapping fromUser fromDomain.tld redirected@domain.new
 ```
 
 You can manage regex mapping like this:
