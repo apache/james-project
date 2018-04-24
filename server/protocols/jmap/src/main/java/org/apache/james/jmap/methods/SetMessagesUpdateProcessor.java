@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
-import javax.mail.Flags;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -39,11 +38,14 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.exceptions.InvalidOutboxMoveException;
+import org.apache.james.jmap.model.Keyword;
+import org.apache.james.jmap.model.Keywords;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.jmap.model.UpdateMessagePatch;
+import org.apache.james.jmap.utils.KeywordsCombiner;
 import org.apache.james.jmap.utils.SystemMailboxesProvider;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -201,15 +203,18 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableList());
         List<MailboxId> targetMailboxes = getTargetedMailboxes(previousMailboxes, updateMessagePatch);
 
-        boolean allMessagesWereDrafts = messagesToBeUpdated.stream()
+        boolean isDraft = messagesToBeUpdated.stream()
             .map(MessageResult::getFlags)
-            .allMatch(flags -> flags.contains(Flags.Flag.DRAFT));
+            .map(Keywords.factory().filterImapNonExposedKeywords()::fromFlags)
+            .reduce(new KeywordsCombiner())
+            .orElse(Keywords.DEFAULT_VALUE)
+            .contains(Keyword.DRAFT);
 
         boolean targetContainsOutbox = targetMailboxes.stream().anyMatch(outboxMailboxes::contains);
         boolean targetIsOnlyOutbox = targetMailboxes.stream().allMatch(outboxMailboxes::contains);
 
         assertOutboxMoveTargetsOnlyOutBox(targetContainsOutbox, targetIsOnlyOutbox);
-        assertOutboxMoveOriginallyHasDraftKeywordSet(targetContainsOutbox, allMessagesWereDrafts);
+        assertOutboxMoveOriginallyHasDraftKeywordSet(targetContainsOutbox, isDraft);
     }
 
     private void assertOutboxMoveTargetsOnlyOutBox(boolean targetContainsOutbox, boolean targetIsOnlyOutbox) {
@@ -218,8 +223,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertOutboxMoveOriginallyHasDraftKeywordSet(boolean targetIsOutbox, boolean allMessagesWereDrafts) {
-        if (targetIsOutbox && !allMessagesWereDrafts) {
+    private void assertOutboxMoveOriginallyHasDraftKeywordSet(boolean targetIsOutbox, boolean isDraft) {
+        if (targetIsOutbox && !isDraft) {
             throw new InvalidOutboxMoveException("Only message with `$Draft` keyword can be moved to Outbox");
         }
     }
