@@ -178,7 +178,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
 
         MutablePropertyValues newprops = new MutablePropertyValues(pvs);
         for (PropertyDescriptor pd : pds) {
-            A s = hasAnnotatedProperty(pd);
+            A s = findAnnotatedProperty(pd);
             if (s != null && !pvs.contains(pd.getName())) {
                 try {
                     logger.debug("Processing annotation [{}] for [{}.{}]", s, beanName, pd.getName());
@@ -267,7 +267,7 @@ public abstract class AbstractOSGIAnnotationBeanPostProcessor<A extends Annotati
     }
 
 
-    private A hasAnnotatedProperty(PropertyDescriptor propertyDescriptor) {
+    private A findAnnotatedProperty(PropertyDescriptor propertyDescriptor) {
         Method setter = propertyDescriptor.getWriteMethod();
         return setter != null ? AnnotationUtils.getAnnotation(setter, getAnnotation()) : null;
     }
