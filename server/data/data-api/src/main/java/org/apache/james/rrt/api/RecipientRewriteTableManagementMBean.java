@@ -57,31 +57,28 @@ public interface RecipientRewriteTableManagementMBean {
     void removeRegexMapping(String user, String domain, String regex) throws Exception;
 
     /***
-     * Add address mapping
+     * Add address mapping that, for a user from@fromDomain would redirect
+     * mails to toAddress
      * 
-     * @param user
+     * @param fromUser
      *            the username. Null if no username should be used
-     * @param domain
+     * @param fromDomain
      *            the domain. Null if no domain should be used
-     * @param address
+     * @param toAddress
      *            the address.
-     * @throws Exception
-     *            If an error occurred
      */
-    void addAddressMapping(String user, String domain, String address) throws Exception;
+    void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
 
     /**
-     * Remove address mapping
-     * 
-     * @param user
+     * Remove address mapping. The API takes the same arguments as addAddressMapping
+     *
+     * @param fromUser
      *            the username. Null if no username should be used
-     * @param domain
+     * @param fromDomain
      *            the domain. Null if no domain should be used
-     * @param address
-     * @throws Exception
-     *            If an error occurred
+     * @param toAddress
      */
-    void removeAddressMapping(String user, String domain, String address) throws Exception;
+    void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
 
     /**
      * Add error mapping

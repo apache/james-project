@@ -117,15 +117,15 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     }
 
     @Override
-    public void addAddressMapping(String user, String domain, String toAddress) throws Exception {
-        MappingSource source = MappingSource.fromUser(user, domain);
+    public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
         recipientRewriteTable.addAddressMapping(source, toAddress);
     }
 
     @Override
-    public void removeAddressMapping(String user, String domain, String fromAddress) throws Exception {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        recipientRewriteTable.removeAddressMapping(source, fromAddress);
+    public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
+        recipientRewriteTable.removeAddressMapping(source, toAddress);
     }
 
     @Override
