@@ -19,9 +19,13 @@
 
 package org.apache.james.protocols.smtp.hook;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import com.google.common.base.Preconditions;
+
 /**
  * Result which get used for hooks
- * 
  */
 public final class HookResult {
 
@@ -31,17 +35,30 @@ public final class HookResult {
     private static final HookResult DENYSOFT = new HookResult(HookReturnCode.DENYSOFT);
     private static final HookResult DISCONNECT = new HookResult(HookReturnCode.DISCONNECT);
 
+    public static HookResult declined() {
+        return DECLINED;
+    }
+
+    public static HookResult ok() {
+        return OK;
+    }
+
+    public static HookResult deny() {
+        return DENY;
+    }
+
+    public static HookResult denysoft() {
+        return DENYSOFT;
+    }
+
+    public static HookResult disconnect() {
+        return DISCONNECT;
+    }
+
     private final int result;
     private final String smtpRetCode;
     private final String smtpDescription;
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result 
-     * @param smtpRetCode 
-     * @param smtpDescription
-     */
+
     public HookResult(int result, String smtpRetCode, CharSequence smtpDescription) {
         boolean match = false;
 
@@ -71,42 +88,25 @@ public final class HookResult {
         }
         this.result = result;
         this.smtpRetCode = smtpRetCode;
-        this.smtpDescription = (smtpDescription == null) ? null : smtpDescription.toString();
+        this.smtpDescription = Optional.ofNullable(smtpDescription)
+            .map(CharSequence::toString)
+            .orElse(null);
     }
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result
-     * @param smtpDescription
-     */
+
     public HookResult(int result, String smtpDescription) {
-        this(result,null,smtpDescription);
+        this(result, null, smtpDescription);
     }
-    
-    /**
-     * Construct new HookResult
-     * 
-     * @param result
-     */
+
     public HookResult(int result) {
-        this(result,null,null);
+        this(result, null, null);
     }
-    
-   
-    /**
-     * Return the result
-     * 
-     * @return result
-     */
+
     public int getResult() {
         return result;
     }
     
     /**
-     * Return the SMTPRetCode which should used. If not set return null. 
-     * 
-     * @return smtpRetCode
+     * Return the SMTPRetCode which should used. If not set return null.
      */
     public String getSmtpRetCode() {
         return smtpRetCode;
@@ -114,30 +114,25 @@ public final class HookResult {
     
     /**
      * Return the SMTPDescription which should used. If not set return null
-     *  
-     * @return smtpDescription
      */
     public String getSmtpDescription() {
         return smtpDescription;
     }
-    
-    public static HookResult declined() {
-        return DECLINED;
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof HookResult) {
+            HookResult that = (HookResult) o;
+
+            return Objects.equals(this.result, that.result)
+                && Objects.equals(this.smtpRetCode, that.smtpRetCode)
+                && Objects.equals(this.smtpDescription, that.smtpDescription);
+        }
+        return false;
     }
-    
-    public static HookResult ok() {
-        return OK;
-    }
-    
-    public static HookResult deny() {
-        return DENY;
-    }
-    
-    public static HookResult denysoft() {
-        return DENYSOFT;
-    }
-    
-    public static HookResult disconnect() {
-        return DISCONNECT;
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(result, smtpRetCode, smtpDescription);
     }
 }

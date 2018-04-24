@@ -17,10 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
-
 package org.apache.james.protocols.smtp.hook;
+
+import com.google.common.collect.ImmutableList;
 
 public class HookReturnCode {
     public static final int OK = 0x1;
@@ -28,4 +27,7 @@ public class HookReturnCode {
     public static final int DENYSOFT = 0x1 << 2;
     public static final int DECLINED = 0x1 << 3;
     public static final int DISCONNECT = 0x1 << 4;
+
+    public static final ImmutableList<Integer> VALID_RETURN_CODE = ImmutableList.of(
+        DECLINED, OK, DENY, DENYSOFT, DISCONNECT);
 }
