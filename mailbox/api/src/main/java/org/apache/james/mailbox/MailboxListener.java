@@ -20,6 +20,7 @@
 package org.apache.james.mailbox;
 
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -71,12 +72,14 @@ public interface MailboxListener {
         private final QuotaRoot quotaRoot;
         private final Quota<QuotaCount> countQuota;
         private final Quota<QuotaSize> sizeQuota;
+        private final Instant instant;
 
-        public QuotaUsageUpdatedEvent(MailboxSession session, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {
+        public QuotaUsageUpdatedEvent(MailboxSession session, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
             this.session = session;
             this.quotaRoot = quotaRoot;
             this.countQuota = countQuota;
             this.sizeQuota = sizeQuota;
+            this.instant = instant;
         }
 
         @Override
@@ -97,6 +100,10 @@ public interface MailboxListener {
             return quotaRoot;
         }
 
+        public Instant getInstant() {
+            return instant;
+        }
+
         @Override
         public final boolean equals(Object o) {
             if (o instanceof QuotaUsageUpdatedEvent) {
@@ -105,14 +112,15 @@ public interface MailboxListener {
                 return Objects.equals(this.session, that.session)
                     && Objects.equals(this.quotaRoot, that.quotaRoot)
                     && Objects.equals(this.countQuota, that.countQuota)
-                    && Objects.equals(this.sizeQuota, that.sizeQuota);
+                    && Objects.equals(this.sizeQuota, that.sizeQuota)
+                    && Objects.equals(this.instant, that.instant);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(session, quotaRoot, countQuota, sizeQuota);
+            return Objects.hash(session, quotaRoot, countQuota, sizeQuota, instant);
         }
 
     }

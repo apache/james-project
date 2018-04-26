@@ -20,7 +20,6 @@
 package org.apache.mailet.base.test;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.mail.MessagingException;
@@ -365,15 +365,15 @@ public class FakeMailContext implements MailetContext {
     }
 
     private final HashMap<String, Object> attributes;
-    private final List<SentMail> sentMails;
-    private final List<BouncedMail> bouncedMails;
+    private final Collection<SentMail> sentMails;
+    private final Collection<BouncedMail> bouncedMails;
     private final Optional<Logger> logger;
     private final MailAddress postmaster;
 
     private FakeMailContext(Optional<Logger> logger, MailAddress postmaster) {
         attributes = new HashMap<>();
-        sentMails = new ArrayList<>();
-        bouncedMails = new ArrayList<>();
+        sentMails = new ConcurrentLinkedQueue<>();
+        bouncedMails = new ConcurrentLinkedQueue<>();
         this.logger = logger;
         this.postmaster = postmaster;
     }
@@ -590,11 +590,15 @@ public class FakeMailContext implements MailetContext {
     }
 
     public List<SentMail> getSentMails() {
-        return sentMails;
+        return ImmutableList.copyOf(sentMails);
+    }
+
+    public void resetSentMails() {
+        sentMails.clear();
     }
 
     public List<BouncedMail> getBouncedMails() {
-        return bouncedMails;
+        return ImmutableList.copyOf(bouncedMails);
     }
 
     @Override

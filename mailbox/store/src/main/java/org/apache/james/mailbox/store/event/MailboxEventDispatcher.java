@@ -19,12 +19,14 @@
 
 package org.apache.james.mailbox.store.event;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -167,6 +169,10 @@ public class MailboxEventDispatcher {
     }
 
     public void quota(MailboxSession session, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {
-        listener.event(new MailboxListener.QuotaUsageUpdatedEvent(session, quotaRoot, countQuota, sizeQuota));
+        listener.event(new MailboxListener.QuotaUsageUpdatedEvent(session, quotaRoot, countQuota, sizeQuota, Instant.now()));
+    }
+
+    public void event(Event event) {
+        listener.event(event);
     }
 }

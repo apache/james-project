@@ -38,6 +38,7 @@ public class MailAddressFixture {
     public static final MailAddress ANY_AT_LOCAL = createMailAddress("any@" + JAMES_LOCAL);
     public static final MailAddress OTHER_AT_LOCAL = createMailAddress("other@" + JAMES_LOCAL);
     public static final MailAddress ANY_AT_JAMES = createMailAddress("any@" + JAMES_APACHE_ORG);
+    public static final MailAddress POSTMASTER_AT_JAMES = createMailAddress("postmaster@" + JAMES_APACHE_ORG);
     public static final MailAddress OTHER_AT_JAMES = createMailAddress("other@" + JAMES_APACHE_ORG);
     public static final MailAddress ANY_AT_JAMES2 = createMailAddress("any@" + JAMES2_APACHE_ORG);
     public static final MailAddress OTHER_AT_JAMES2 = createMailAddress("other@" + JAMES2_APACHE_ORG);
