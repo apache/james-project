@@ -74,9 +74,6 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
      */
     private boolean closed = false;
 
-    // ----------------------------------------------------------- Constructors
-
-
     /**
      * Constructs an instance of this class which will trigger an event at the
      * specified threshold, and save data to a file beyond that point.
