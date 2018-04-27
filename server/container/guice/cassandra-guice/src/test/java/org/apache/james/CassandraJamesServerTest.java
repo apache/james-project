@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+
 import org.junit.ClassRule;
 import org.junit.Rule;
 
@@ -31,7 +33,7 @@ public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
     public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() throws IOException {
         return cassandraJmap.jmapServer(cassandra.getModule());
     }
 

@@ -19,16 +19,12 @@
 
 package org.apache.james.modules;
 
-import java.io.File;
-import java.util.function.Supplier;
-
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.junit.rules.TemporaryFolder;
 
 import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
@@ -38,27 +34,19 @@ import com.google.inject.name.Names;
 public class CassandraJmapServerModule extends AbstractModule {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
-    private final Supplier<File> fileSupplier;
     private final EmbeddedElasticSearch embeddedElasticSearch;
     private final String cassandraHost;
     private final int cassandraPort;
 
-    public CassandraJmapServerModule(Supplier<File> fileSupplier, EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
-        this.fileSupplier = fileSupplier;
+    public CassandraJmapServerModule(EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
         this.embeddedElasticSearch = embeddedElasticSearch;
         this.cassandraHost = cassandraHost;
         this.cassandraPort = cassandraPort;
     }
 
-    public CassandraJmapServerModule(TemporaryFolder temporaryFolder, EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
-        this(temporaryFolder::getRoot, embeddedElasticSearch, cassandraHost, cassandraPort);
-    }
-
-
     @Override
     protected void configure() {
         install(new TestElasticSearchModule(embeddedElasticSearch));
-        install(new TestFilesystemModule(fileSupplier));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
         install(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class));
         install(binder -> binder.bindConstant().annotatedWith(Names.named("cassandraHost")).to(cassandraHost));

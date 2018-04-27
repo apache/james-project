@@ -18,10 +18,15 @@
  ****************************************************************/
 
 package org.apache.james;
+
+import java.io.IOException;
+
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.server.core.configuration.Configuration;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -32,22 +37,30 @@ import com.google.inject.Module;
 public class CassandraJmapTestRule implements TestRule {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
+    private final TemporaryFolder temporaryFolder;
 
     public static CassandraJmapTestRule defaultTestRule() {
         return new CassandraJmapTestRule(new EmbeddedElasticSearchRule());
     }
 
-    private GuiceModuleTestRule guiceModuleTestRule;
+    private final GuiceModuleTestRule guiceModuleTestRule;
 
     public CassandraJmapTestRule(GuiceModuleTestRule... guiceModuleTestRule) {
+        TempFilesystemTestRule tempFilesystemTestRule = new TempFilesystemTestRule();
+        this.temporaryFolder = tempFilesystemTestRule.getTemporaryFolder();
         this.guiceModuleTestRule =
                 AggregateGuiceModuleTestRule
                     .of(guiceModuleTestRule)
-                    .aggregate(new TempFilesystemTestRule());
+                    .aggregate(tempFilesystemTestRule);
     }
 
-    public GuiceJamesServer jmapServer(Module... additionals) {
-        return new GuiceJamesServer()
+    public GuiceJamesServer jmapServer(Module... additionals) throws IOException {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return new GuiceJamesServer(configuration)
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

@@ -17,21 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.server.core.configuration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.XMLConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.modules.CommonServicesModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,10 +53,9 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private final FileSystem fileSystem;
     private final String configurationPrefix;
 
-    @Inject
-    public FileConfigurationProvider(FileSystem fileSystem, @Named(CommonServicesModule.CONFIGURATION_PATH) String configurationPrefix) {
+    public FileConfigurationProvider(FileSystem fileSystem, Configuration configuration) {
         this.fileSystem = fileSystem;
-        this.configurationPrefix = configurationPrefix;
+        this.configurationPrefix = configuration.configurationPath();
     }
     
     @Override

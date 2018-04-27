@@ -48,7 +48,7 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
     public RuleChain ruleChain = RuleChain.outerRule(ldapContainer).around(cassandraLdapJmap);
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() throws IOException {
         ldapContainer.start();
         return cassandraLdapJmap.jmapServer(ldapContainer.getLdapHost());
     }

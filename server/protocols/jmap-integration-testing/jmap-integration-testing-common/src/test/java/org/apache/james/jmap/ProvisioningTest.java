@@ -29,6 +29,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
@@ -50,7 +51,7 @@ public abstract class ProvisioningTest {
     private static final String USER = "myuser@" + DOMAIN;
     private static final String PASSWORD = "secret";
     
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     private GuiceJamesServer jmapServer;
 

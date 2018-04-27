@@ -2,6 +2,7 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.lifecycle.api.Configurable;
@@ -40,7 +41,7 @@ public class GuiceJamesServerTest {
 
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         guiceJamesServer = memoryJmapTestRule.jmapServer();
     }
 

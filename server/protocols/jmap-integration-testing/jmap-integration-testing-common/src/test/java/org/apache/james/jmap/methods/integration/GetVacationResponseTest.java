@@ -32,6 +32,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsNull.nullValue;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 
 import org.apache.james.GuiceJamesServer;
@@ -57,7 +58,7 @@ public abstract class GetVacationResponseTest {
     public static final ZonedDateTime DATE_2016 = ZonedDateTime.parse("2016-04-15T11:56:32.224+07:00[Asia/Vientiane]");
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider);
+    protected abstract GuiceJamesServer createJmapServer(ZonedDateTimeProvider zonedDateTimeProvider) throws IOException;
 
     protected abstract void await();
 

@@ -21,10 +21,11 @@ package org.apache.james;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.modules.TestFilesystemModule;
+import org.apache.james.server.core.configuration.Configuration;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,13 +47,16 @@ public class JamesCapabilitiesServerTest {
         server.stop();
     }
     
-    private GuiceJamesServer createJPAJamesServer(final MailboxManager mailboxManager) {
+    private GuiceJamesServer createJPAJamesServer(final MailboxManager mailboxManager) throws IOException {
         Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
-        
-        return new GuiceJamesServer()
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return new GuiceJamesServer(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE)
             .overrideWith(
-                new TestFilesystemModule(temporaryFolder),
                 new TestJPAConfigurationModule(),
                 mockMailboxManager);
     }

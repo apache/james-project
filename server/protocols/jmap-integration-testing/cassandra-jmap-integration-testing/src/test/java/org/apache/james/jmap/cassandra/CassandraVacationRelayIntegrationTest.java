@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra;
 
+import java.io.IOException;
+
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
@@ -46,7 +48,7 @@ public class CassandraVacationRelayIntegrationTest extends VacationRelayIntegrat
     public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
 
     @Override
-    protected GuiceJamesServer getJmapServer() {
+    protected GuiceJamesServer getJmapServer() throws IOException {
         return rule.jmapServer(
                 cassandra.getModule(),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));

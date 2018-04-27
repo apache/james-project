@@ -23,10 +23,10 @@ import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

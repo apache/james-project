@@ -26,6 +26,7 @@ import static org.apache.james.jmap.TestingConstants.SMTP_PORT;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.hamcrest.Matchers.equalTo;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.net.smtp.SMTPClient;
@@ -62,7 +63,7 @@ public abstract class VacationRelayIntegrationTest {
 
     protected abstract void await();
 
-    protected abstract GuiceJamesServer getJmapServer();
+    protected abstract GuiceJamesServer getJmapServer() throws IOException;
 
     protected abstract InMemoryDNSService getInMemoryDns();
 

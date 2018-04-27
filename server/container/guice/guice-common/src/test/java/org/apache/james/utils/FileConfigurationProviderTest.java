@@ -22,8 +22,8 @@ package org.apache.james.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,8 +45,12 @@ public class FileConfigurationProviderTest {
 
     @Before
     public void setUp() {
-        FileSystemImpl fileSystem = new FileSystemImpl(new JamesServerResourceLoader("../"));
-        configurationProvider = new FileConfigurationProvider(fileSystem, FileSystem.CLASSPATH_PROTOCOL);
+        Configuration configuration = Configuration.builder()
+            .workingDirectory("../")
+            .configurationFromClasspath()
+            .build();
+        FileSystemImpl fileSystem = new FileSystemImpl(configuration.directories());
+        configurationProvider = new FileConfigurationProvider(fileSystem, configuration);
     }
 
     @Test(expected = IllegalArgumentException.class)

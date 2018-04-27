@@ -32,6 +32,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
 import org.apache.james.mpt.smtp.SmtpHostSystem;
+import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
@@ -101,10 +102,15 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         return inMemoryDNSService;
     }
 
-    protected GuiceJamesServer createJamesServer() {
-        return new GuiceJamesServer()
+    protected GuiceJamesServer createJamesServer() throws Exception {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(folder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return new GuiceJamesServer(configuration)
             .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS, new ProtocolHandlerModule())
-            .overrideWith(new CassandraJmapServerModule(folder::getRoot, embeddedElasticSearch, cassandraHost, cassandraPort),
+            .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraHost, cassandraPort),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 }

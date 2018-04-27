@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -82,7 +83,7 @@ public abstract class GetMessageListMethodTest {
     private static final ZoneId ZONE_ID = ZoneId.of("Europe/Paris");
     private ACLProbeImpl aclProbe;
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     protected abstract void await();
 

@@ -46,6 +46,7 @@ import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
@@ -89,7 +90,7 @@ public abstract class GetMailboxesMethodTest {
     public static final String LOOKUP = String.valueOf(Right.Lookup.asCharacter());
     public static final String ADMINISTER = String.valueOf(Right.Administer.asCharacter());
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     private AccessToken accessToken;
     private GuiceJamesServer jmapServer;

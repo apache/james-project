@@ -20,10 +20,12 @@
 package org.apache.james.mailets;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -39,10 +41,12 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.SmtpConfiguration;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.rules.TemporaryFolder;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
@@ -125,6 +129,18 @@ public class TemporaryJamesServer {
     private static final String MAILETCONTAINER_CONFIGURATION_FILENAME = "mailetcontainer.xml";
     private static final String SMTP_CONFIGURATION_FILENAME = "smtpserver.xml";
 
+    private static final List<String> CONFIGURATION_FILE_NAMES = ImmutableList.of("dnsservice.xml",
+        "domainlist.xml",
+        "imapserver.xml",
+        "keystore",
+        "lmtpserver.xml",
+        "mailrepositorystore.xml",
+        "managesieveserver.xml",
+        "pop3server.xml",
+        "recipientrewritetable.xml",
+        "usersrepository.xml",
+        "smime.p12");
+
     private static final int LIMIT_TO_3_MESSAGES = 3;
 
     private final GuiceJamesServer jamesServer;
@@ -134,15 +150,32 @@ public class TemporaryJamesServer {
         appendMailetConfigurations(temporaryFolder, mailetContainer);
         appendSmtpConfigurations(temporaryFolder, smtpConfiguration);
 
-        jamesServer = new GuiceJamesServer()
+        String workingDir = temporaryFolder.getRoot().getAbsolutePath();
+        Configuration configuration = Configuration.builder().workingDirectory(workingDir).build();
+        copyResources(Paths.get(workingDir, "conf"));
+
+        jamesServer = new GuiceJamesServer(configuration)
             .combineWith(serverBaseModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
-            .overrideWith(new TemporaryFilesystemModule(temporaryFolder))
             .overrideWith((binder) -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
 
         jamesServer.start();
+    }
+
+
+    private void copyResources(Path resourcesFolder) throws FileNotFoundException, IOException {
+        CONFIGURATION_FILE_NAMES
+            .forEach(resourceName -> copyResource(resourcesFolder, resourceName));
+    }
+
+    private void copyResource(Path resourcesFolder, String resourceName) {
+        try (OutputStream outputStream = new FileOutputStream(resourcesFolder.resolve(resourceName).toFile())) {
+            IOUtils.copy(ClassLoader.getSystemClassLoader().getResource(resourceName).openStream(), outputStream);
+        } catch (IOException e) {
+            Throwables.propagate(e);
+        }
     }
 
     private void appendMailetConfigurations(TemporaryFolder temporaryFolder, MailetContainer mailetContainer) throws ConfigurationException, IOException {

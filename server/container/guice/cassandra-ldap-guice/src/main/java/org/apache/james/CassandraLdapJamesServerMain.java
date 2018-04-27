@@ -21,6 +21,7 @@ package org.apache.james;
 
 import org.apache.james.data.LdapUsersRepositoryModule;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -31,7 +32,8 @@ public class CassandraLdapJamesServerMain {
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
+        Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
+        GuiceJamesServer server = new GuiceJamesServer(configuration)
             .combineWith(cassandraLdapServerModule, new JMXServerModule());
 
         server.start();

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.server.core;
 
 public class MissingArgumentException extends RuntimeException {
 

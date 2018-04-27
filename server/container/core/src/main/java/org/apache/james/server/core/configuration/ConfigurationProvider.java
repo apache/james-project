@@ -17,27 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.servers;
+package org.apache.james.server.core.configuration;
 
-import org.apache.james.modules.TestFilesystemModule;
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.rules.TemporaryFolder;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 
-import com.google.inject.AbstractModule;
+public interface ConfigurationProvider {
 
-public class MemoryJmapServerModule extends AbstractModule {
-
-    private static final int LIMIT_TO_3_MESSAGES = 3;
-    private TemporaryFolder temporaryFolder;
-
-    public MemoryJmapServerModule(TemporaryFolder temporaryFolder) {
-        this.temporaryFolder = temporaryFolder;
-    }
-    
-    @Override
-    protected void configure() {
-        install(new TestFilesystemModule(temporaryFolder));
-        install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));    
-    }
+    HierarchicalConfiguration getConfiguration(String component)
+            throws ConfigurationException;
 
 }

@@ -19,12 +19,16 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.http.jetty.ConfigurationException;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.utils.ConfigurationProvider;
-import org.apache.james.utils.FileConfigurationProvider;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -42,17 +46,25 @@ public class CassandraLdapJmapTestRule implements TestRule {
             AggregateGuiceModuleTestRule.of(new EmbeddedElasticSearchRule(), new DockerCassandraRule()));
     }
 
-    private GuiceModuleTestRule guiceModuleTestRule;
+    private final TemporaryFolder temporaryFolder;
+    private final GuiceModuleTestRule guiceModuleTestRule;
 
     public CassandraLdapJmapTestRule(GuiceModuleTestRule... guiceModuleTestRule) {
+        TempFilesystemTestRule tempFilesystemTestRule = new TempFilesystemTestRule();
+        temporaryFolder = tempFilesystemTestRule.getTemporaryFolder();
         this.guiceModuleTestRule =
             AggregateGuiceModuleTestRule
                 .of(guiceModuleTestRule)
-                .aggregate(new TempFilesystemTestRule());
+                .aggregate(tempFilesystemTestRule);
     }
 
-    public GuiceJamesServer jmapServer(String ldapIp, Module... additionals) {
-        return new GuiceJamesServer()
+    public GuiceJamesServer jmapServer(String ldapIp, Module... additionals) throws IOException {
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        return new GuiceJamesServer(configuration)
             .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule,
                 binder -> binder.bind(String.class).annotatedWith(Names.named("ldapIp")).toInstance(ldapIp))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))

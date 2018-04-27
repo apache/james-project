@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.TestFilesystemModule;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -34,6 +33,10 @@ public class TempFilesystemTestRule implements GuiceModuleTestRule {
         this.temporaryFolder = new TemporaryFolder();
     }
 
+    public TemporaryFolder getTemporaryFolder() {
+        return temporaryFolder;
+    }
+
     @Override
     public Statement apply(Statement base, Description description) {
         return temporaryFolder.apply(base, description);
@@ -41,7 +44,7 @@ public class TempFilesystemTestRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        return new TestFilesystemModule(temporaryFolder::getRoot);
+        return binder -> { };
     }
 
     @Override

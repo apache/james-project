@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+
 import org.junit.Rule;
 
 public class CassandraWithTikaTest extends AbstractJmapJamesServerTest {
@@ -33,7 +35,7 @@ public class CassandraWithTikaTest extends AbstractJmapJamesServerTest {
             guiceTikaRule));
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() throws IOException {
         return cassandraJmap.jmapServer(binder -> guiceTikaRule.getModule());
     }
 

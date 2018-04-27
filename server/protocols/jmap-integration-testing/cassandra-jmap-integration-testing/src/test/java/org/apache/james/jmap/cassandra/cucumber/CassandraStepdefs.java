@@ -34,6 +34,7 @@ import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.modules.CassandraJmapServerModule;
+import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
@@ -62,9 +63,14 @@ public class CassandraStepdefs {
         temporaryFolder.create();
         embeddedElasticSearch.before();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
-        mainStepdefs.jmapServer = new GuiceJamesServer()
+        Configuration configuration = Configuration.builder()
+            .workingDirectory(temporaryFolder.newFolder())
+            .configurationFromClasspath()
+            .build();
+
+        mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
                 .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
-                .overrideWith(new CassandraJmapServerModule(temporaryFolder, embeddedElasticSearch, cassandraServer.getIp(), cassandraServer.getBindingPort()))
+                .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraServer.getIp(), cassandraServer.getBindingPort()))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
         mainStepdefs.init();

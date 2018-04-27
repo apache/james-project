@@ -39,6 +39,7 @@ import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
@@ -62,7 +63,7 @@ public abstract class ForwardIntegrationTest {
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DOMAIN);
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     private GuiceJamesServer jmapServer;
     private RequestSpecification webAdminApi;

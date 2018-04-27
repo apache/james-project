@@ -134,7 +134,7 @@ public abstract class SetMessagesMethodTest {
 
     private AccessToken bobAccessToken;
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     protected abstract MessageId randomMessageId();
 

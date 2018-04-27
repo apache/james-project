@@ -68,7 +68,7 @@ public abstract class AbstractJmapJamesServerTest {
             .build();
     }
 
-    protected abstract GuiceJamesServer createJamesServer();
+    protected abstract GuiceJamesServer createJamesServer() throws IOException;
 
     protected abstract void clean();
 

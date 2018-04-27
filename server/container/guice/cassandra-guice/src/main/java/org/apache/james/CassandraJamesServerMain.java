@@ -49,6 +49,7 @@ import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -92,7 +93,8 @@ public class CassandraJamesServerMain {
         new SpamAssassinListenerModule());
 
     public static void main(String[] args) throws Exception {
-        GuiceJamesServer server = new GuiceJamesServer()
+        Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
+        GuiceJamesServer server = new GuiceJamesServer(configuration)
                     .combineWith(CASSANDRA_SERVER_MODULE, PROTOCOLS, new JMXServerModule());
         server.start();
     }

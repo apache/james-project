@@ -29,6 +29,7 @@ import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.util.Optional;
 
@@ -54,7 +55,7 @@ public abstract class SetVacationResponseTest {
     public static final String SUBJECT = "subject";
     private JmapGuiceProbe jmapGuiceProbe;
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     protected abstract void await();
 

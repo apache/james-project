@@ -20,7 +20,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.utils.FileConfigurationProvider;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 
 import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;

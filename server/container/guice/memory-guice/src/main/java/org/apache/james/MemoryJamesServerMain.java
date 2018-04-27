@@ -42,6 +42,7 @@ import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
+import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -95,7 +96,8 @@ public class MemoryJamesServerMain {
         WEBADMIN);
 
     public static void main(String[] args) throws Exception {
-        new GuiceJamesServer()
+        Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
+        new GuiceJamesServer(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new JMXServerModule())
             .start();
     }

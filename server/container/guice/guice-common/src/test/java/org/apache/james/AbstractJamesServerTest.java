@@ -50,7 +50,7 @@ public abstract class AbstractJamesServerTest {
         server.start();
     }
 
-    protected abstract GuiceJamesServer createJamesServer();
+    protected abstract GuiceJamesServer createJamesServer() throws IOException;
 
     protected abstract void clean();
 

@@ -23,8 +23,8 @@ import java.util.List;
 
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.apache.james.utils.ConfigurationProvider;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

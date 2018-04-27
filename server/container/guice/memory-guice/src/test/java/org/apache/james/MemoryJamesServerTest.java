@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+
 import org.junit.Rule;
 
 public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
@@ -27,7 +29,7 @@ public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
     @Override
-    protected GuiceJamesServer createJamesServer() {
+    protected GuiceJamesServer createJamesServer() throws IOException {
         return memoryJmap.jmapServer();
     }
 

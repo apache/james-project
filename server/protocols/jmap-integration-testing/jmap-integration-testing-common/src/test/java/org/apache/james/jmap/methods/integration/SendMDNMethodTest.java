@@ -40,6 +40,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,7 +74,7 @@ public abstract class SendMDNMethodTest {
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
 
-    protected abstract GuiceJamesServer createJmapServer();
+    protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
     protected abstract MessageId randomMessageId();
 

@@ -21,8 +21,10 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.james.utils.ConfigurationProvider;
+import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.FailingPropertiesProvider;
 import org.apache.james.utils.PropertiesProvider;
 import org.junit.After;
@@ -42,7 +44,7 @@ public class DefaultCassandraJamesServerTest {
     private GuiceJamesServer guiceJamesServer;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         guiceJamesServer = cassandraJmap.jmapServer(cassandra.getModule())
             .overrideWith(binder -> binder.bind(PropertiesProvider.class).to(FailingPropertiesProvider.class))
             .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance(s -> new HierarchicalConfiguration()));
