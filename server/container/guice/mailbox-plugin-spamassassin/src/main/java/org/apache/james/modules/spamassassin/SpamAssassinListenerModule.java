@@ -25,7 +25,6 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinListener;
 import org.apache.james.utils.PropertiesProvider;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 
 public class SpamAssassinListenerModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListenerModule.class);
@@ -45,8 +43,6 @@ public class SpamAssassinListenerModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(SpamAssassinListener.class).in(Scopes.SINGLETON);
-
-        Multibinder.newSetBinder(binder(), MailboxListener.class).addBinding().to(SpamAssassinListener.class);
     }
 
     @Provides
