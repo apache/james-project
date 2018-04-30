@@ -48,7 +48,6 @@ import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.smtp.hook.HeloHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
-import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 import org.apache.james.protocols.smtp.hook.MessageHook;
 import org.apache.james.protocols.smtp.hook.RcptHook;

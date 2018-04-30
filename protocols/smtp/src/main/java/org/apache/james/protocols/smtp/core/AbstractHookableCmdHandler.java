@@ -215,6 +215,9 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 return Optional.of("Temporary problem. Please try again later");
             case OK:
                 return Optional.of("Command accepted");
+            case DECLINED:
+            case NONE:
+                break;
         }
         if (returnCode.isDisconnected()) {
             return Optional.of("Server disconnected");
@@ -230,6 +233,9 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 return Optional.of(SMTPRetCode.LOCAL_ERROR);
             case OK:
                 return Optional.of(SMTPRetCode.MAIL_OK);
+            case DECLINED:
+            case NONE:
+                break;
         }
         if (returnCode.isDisconnected()) {
             return Optional.of(SMTPRetCode.TRANSACTION_FAILED);

@@ -2004,7 +2004,7 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListFileNameFilterShouldReturnOnlyMessagesWithMatchingAttachmentFileNames() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
 
-        ComposedMessageId message1 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
             MessageManager.AppendCommand.builder()
                 .build(Message.Builder.of()
                     .setSubject("test")
@@ -2071,7 +2071,7 @@ public abstract class GetMessageListMethodTest {
     public void getMessageListTextFilterShouldReturnOnlyMessagesWithMatchingAttachmentFileNames() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
 
-        ComposedMessageId message1 = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+        mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
             MessageManager.AppendCommand.builder()
                 .build(Message.Builder.of()
                     .setSubject("test")

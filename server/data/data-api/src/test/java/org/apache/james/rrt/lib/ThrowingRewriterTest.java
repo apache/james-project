@@ -19,7 +19,6 @@
 
 package org.apache.james.rrt.lib;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.User;

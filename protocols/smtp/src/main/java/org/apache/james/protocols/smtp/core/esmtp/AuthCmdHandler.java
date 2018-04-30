@@ -468,6 +468,9 @@ public class AuthCmdHandler
                 return Optional.of("Temporary problem. Please try again later");
             case OK:
                 return Optional.of("Authentication Succesfull");
+            case DECLINED:
+            case NONE:
+                break;
         }
         return Optional.empty();
     }
@@ -480,6 +483,9 @@ public class AuthCmdHandler
                 return Optional.of(SMTPRetCode.LOCAL_ERROR);
             case OK:
                 return Optional.of(SMTPRetCode.AUTH_OK);
+            case DECLINED:
+            case NONE:
+                break;
         }
         return Optional.empty();
     }

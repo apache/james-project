@@ -116,7 +116,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                 List<KeyValue> keyValues = result.list();
                 if (keyValues != null) {
                     for (KeyValue keyValue : keyValues) {
-                        String email = Bytes.toString(keyValue.getRow());
+                        MappingSource email = MappingSource.parse(Bytes.toString(keyValue.getRow()));
                         Mappings mappings = 
                                 MappingsImpl.from(
                                     Optional.ofNullable(
@@ -124,7 +124,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
                                         .orElse(MappingsImpl.empty()))
                                 .addAll(Splitter.on(COLUMN_SEPARATOR).split(Bytes.toString(keyValue.getValue())))
                                 .build();
-                        map.put(MappingSource.parse(email), mappings);
+                        map.put(email, mappings);
                     }
                 }
             }
