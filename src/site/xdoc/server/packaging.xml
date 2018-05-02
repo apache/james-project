@@ -194,6 +194,14 @@
                         <td>No</td>
                     </tr>
                     <tr>
+                        <td>User defined mailbox listener registration</td>
+                        <td>No</td>
+                        <td>Yes (master)</td>
+                        <td>Yes (master)</td>
+                        <td>Yes (master)</td>
+                        <td>No</td>
+                    </tr>
+                    <tr>
                         <td>Installation instructions</td>
                         <td><a href="install.html">Here</a></td>
                         <td><a href="install/guice-cassandra.html">Here</a></td>

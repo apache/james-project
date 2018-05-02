@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.    
+-->
+<document>
+
+    <properties>
+        <title>Apache James Server 3 - Listeners Configuration</title>
+    </properties>
+
+    <body>
+
+        <section name="Mailbox listeners Configuration">
+
+            <p>
+              Note: This feature requires Guice wiring. This is not implemented using Spring wiring.<br/>
+              Additionally, wiring not providing a mailbox support, like <code>jpa-smtp</code>, do not have support for
+              mailbox listeners configuration.
+            </p>
+
+            <p>Consult <a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/listeners.xml">listeners.xml</a>
+                to get some examples and hints.</p>
+
+            <p>James Guice wiring allow the user to register potentially user defined additional mailbox listeners.</p>
+
+            <p>To do so, just register the class that needs to be instantiated and added to global listeners. These JAR can be
+               part of James source code, or provided as an extension and thus should be located in the<code>extensions-jars</code> folder.</p>
+
+            <ul>
+                Already provided listeners includes:
+
+                 <li><code>org.apache.james.mailbox.spamassassin.SpamAssassinListener</code>:
+                     Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
+                     For now it is only available on top of Cassandra-Guice wiring.</li>
+                 <li><code>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</code>:
+                     For Cassandra guice wiring. Provides more insights on mailbox operations</li>
+            </ul>
+        </section>
+
+    </body>
+
+</document>

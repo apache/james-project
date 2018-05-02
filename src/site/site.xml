@@ -134,6 +134,7 @@
                         <item name="Spring JPA Postgres" href="/server/config-spring-jpa-postgres.html" />
                         <item name="Quota" href="/server/config-quota.html" />
                         <item name="Events" href="/server/config-events.html" />
+                        <item name="Additional mailbox listeners" href="/server/config-listeners.html" />
                     </item>
                     <item name="5. Manage" href="/server/manage.html" collapse="true" >
                         <item name="WebAdmin" href="/server/manage-webadmin.html" />
