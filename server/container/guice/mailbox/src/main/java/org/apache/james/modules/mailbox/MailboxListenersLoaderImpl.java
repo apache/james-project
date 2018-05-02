@@ -29,13 +29,12 @@ import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public class MailboxListenersLoader implements Configurable {
+public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxListenersLoader.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxListenersLoaderImpl.class);
 
     private final Injector injector;
     private final MailboxListenerRegistry registry;
@@ -43,7 +42,7 @@ public class MailboxListenersLoader implements Configurable {
     private final Set<MailboxListener> guiceDefinedListeners;
 
     @Inject
-    public MailboxListenersLoader(Injector injector, MailboxListenerRegistry registry,
+    public MailboxListenersLoaderImpl(Injector injector, MailboxListenerRegistry registry,
                                   ExtendedClassLoader classLoader, Set<MailboxListener> guiceDefinedListeners) {
         this.injector = injector;
         this.registry = registry;
@@ -58,28 +57,31 @@ public class MailboxListenersLoader implements Configurable {
         ListenersConfiguration listenersConfiguration = ListenersConfiguration.from(configuration);
 
         guiceDefinedListeners.forEach(this::register);
-        listenersConfiguration.getListenersConfiguration()
-            .forEach(this::configureListener);
+        listenersConfiguration.getListenersConfiguration().stream()
+            .map(this::createListener)
+            .forEach(this::register);
     }
 
-    @VisibleForTesting void configureListener(ListenerConfiguration configuration) {
+    @Override
+    public void register(MailboxListener listener) {
+        try {
+            registry.addGlobalListener(listener);
+        } catch (MailboxException e) {
+            LOGGER.error("Error while registering global listener {}", listener, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public MailboxListener createListener(ListenerConfiguration configuration) {
         String listenerClass = configuration.getClazz();
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
             MailboxListener listener = injector.getInstance(clazz);
-            register(listener);
+            return listener;
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void register(MailboxListener listener) {
-        try {
-            registry.addGlobalListener(listener);
-        } catch (MailboxException e) {
-            LOGGER.error("Error while registering global listener {}", listener, e);
             throw new RuntimeException(e);
         }
     }

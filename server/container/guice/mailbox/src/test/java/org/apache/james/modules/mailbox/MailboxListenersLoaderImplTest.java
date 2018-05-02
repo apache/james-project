@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.junit.Before;
@@ -39,10 +40,10 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 
-public class MailboxListenersLoaderTest {
+public class MailboxListenersLoaderImplTest {
 
     private MailboxListenerRegistry registry;
-    private MailboxListenersLoader testee;
+    private MailboxListenersLoaderImpl testee;
 
     @Before
     public void setup() throws Exception {
@@ -51,41 +52,41 @@ public class MailboxListenersLoaderTest {
             .thenThrow(new FileNotFoundException());
 
         registry = new MailboxListenerRegistry();
-        testee = new MailboxListenersLoader(Guice.createInjector(), registry,
+        testee = new MailboxListenersLoaderImpl(Guice.createInjector(), registry,
             new ExtendedClassLoader(fileSystem), ImmutableSet.of());
     }
 
     @Test
-    public void configureListenerShouldThrowWhenClassCantBeLoaded() {
+    public void createListenerShouldThrowWhenClassCantBeLoaded() {
         ListenerConfiguration configuration = new ListenerConfiguration("MyUnknownClass");
 
-        assertThatThrownBy(() -> testee.configureListener(configuration))
+        assertThatThrownBy(() -> testee.createListener(configuration))
             .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void configureListenerShouldThrowWhenClassCantBeCastToMailboxListener() {
+    public void createListenerShouldThrowWhenClassCantBeCastToMailboxListener() {
         ListenerConfiguration configuration = new ListenerConfiguration("java.lang.String");
 
-        assertThatThrownBy(() -> testee.configureListener(configuration))
+        assertThatThrownBy(() -> testee.createListener(configuration))
             .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void configureListenerShouldThrowWhenNotFullClassName() {
+    public void createListenerShouldThrowWhenNotFullClassName() {
         ListenerConfiguration configuration = new ListenerConfiguration("NoopMailboxListener");
 
-        assertThatThrownBy(() -> testee.configureListener(configuration))
+        assertThatThrownBy(() -> testee.createListener(configuration))
             .isInstanceOf(RuntimeException.class);
     }
 
     @Test
-    public void configureListenerShouldAddMailboxListenerWhenConfigurationIsGood() {
+    public void createListenerShouldReturnMailboxListenerWhenConfigurationIsGood() {
         ListenerConfiguration configuration = new ListenerConfiguration("org.apache.james.modules.mailbox.NoopMailboxListener");
 
-        testee.configureListener(configuration);
+        MailboxListener listener = testee.createListener(configuration);
 
-        assertThat(registry.getGlobalListeners()).hasSize(1);
+        assertThat(listener).isInstanceOf(NoopMailboxListener.class);
     }
 
     @Test
