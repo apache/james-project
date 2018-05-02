@@ -39,6 +39,7 @@
         <module>custom-mailets</module>
         <module>es-metric-reporter</module>
         <module>guice-common</module>
+        <module>guice-utils</module>
         <module>jmx</module>
         <module>jpa-common-guice</module>
         <module>jpa-guice</module>

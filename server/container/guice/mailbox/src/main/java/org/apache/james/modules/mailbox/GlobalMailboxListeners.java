@@ -20,12 +20,12 @@ package org.apache.james.modules.mailbox;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,19 +42,22 @@ public class GlobalMailboxListeners implements Configurable {
 
     private final Injector injector;
     private final MailboxListenerRegistry registry;
+    private final ExtendedClassLoader classLoader;
 
     @Inject
-    public GlobalMailboxListeners(Injector injector, MailboxListenerRegistry registry) {
+    public GlobalMailboxListeners(Injector injector, MailboxListenerRegistry registry, ExtendedClassLoader classLoader) {
         this.injector = injector;
         this.registry = registry;
+        this.classLoader = classLoader;
     }
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration configuration) {
         LOGGER.info("Loading mailbox listeners");
+
         List<HierarchicalConfiguration> listenersConfiguration = configuration.configurationsAt("listener");
-        listenersConfiguration.stream()
-            .forEach(listenerConfiguration -> configureListener(listenerConfiguration));
+
+        listenersConfiguration.forEach(this::configureListener);
     }
 
     @VisibleForTesting void configureListener(HierarchicalConfiguration configuration) {
@@ -62,16 +65,12 @@ public class GlobalMailboxListeners implements Configurable {
         Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
         try {
             LOGGER.info("Loading mailbox listener {}", listenerClass);
-            registry.addGlobalListener(injector.getInstance(loadMailboxListener(listenerClass)));
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | MailboxException e) {
+            Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
+            MailboxListener listener = injector.getInstance(clazz);
+            registry.addGlobalListener(listener);
+        } catch (ClassNotFoundException | MailboxException e) {
             LOGGER.error("Error while loading global listener {}", listenerClass, e);
             Throwables.propagate(e);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<MailboxListener> loadMailboxListener(String listenerClass) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
-        Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(listenerClass);
-        return (Class<MailboxListener>) clazz;
     }
 }

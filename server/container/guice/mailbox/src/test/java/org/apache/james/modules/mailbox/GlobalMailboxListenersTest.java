@@ -20,13 +20,19 @@ package org.apache.james.modules.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.utils.ExtendedClassLoader;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,9 +44,14 @@ public class GlobalMailboxListenersTest {
     private GlobalMailboxListeners testee;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        FileSystem fileSystem = mock(FileSystem.class);
+        when(fileSystem.getFile(anyString()))
+            .thenThrow(new FileNotFoundException());
+
         registry = new MailboxListenerRegistry();
-        testee = new GlobalMailboxListeners(Guice.createInjector(), registry);
+        testee = new GlobalMailboxListeners(Guice.createInjector(), registry,
+            new ExtendedClassLoader(fileSystem));
     }
 
     @Test
