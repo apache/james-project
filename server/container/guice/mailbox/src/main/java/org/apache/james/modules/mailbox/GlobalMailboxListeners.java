@@ -53,7 +53,7 @@ public class GlobalMailboxListeners implements Configurable {
 
     @Override
     public void configure(HierarchicalConfiguration configuration) {
-        LOGGER.info("Loading mailbox listeners");
+        LOGGER.info("Loading user registered mailbox listeners");
 
         List<HierarchicalConfiguration> listenersConfiguration = configuration.configurationsAt("listener");
 
@@ -64,7 +64,7 @@ public class GlobalMailboxListeners implements Configurable {
         String listenerClass = configuration.getString("class");
         Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
         try {
-            LOGGER.info("Loading mailbox listener {}", listenerClass);
+            LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
             MailboxListener listener = injector.getInstance(clazz);
             registry.addGlobalListener(listener);
