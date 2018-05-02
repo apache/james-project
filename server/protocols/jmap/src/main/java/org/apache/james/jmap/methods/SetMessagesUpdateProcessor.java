@@ -113,7 +113,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 if (patch.isValid()) {
                     update(id, patch, mailboxSession, responseBuilder);
                 } else {
-                    handleInvalidRequest(responseBuilder, id, patch.getValidationErrors());
+                    handleInvalidRequest(responseBuilder, id, patch.getValidationErrors(), patch);
                 }
             }
         );
@@ -150,7 +150,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                 .message(e.getMessage())
                 .build();
 
-            handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyMailboxIds));
+            handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyMailboxIds), updateMessagePatch);
         } catch (OverQuotaException e) {
             builder.notUpdated(messageId,
                 SetError.builder()
@@ -165,7 +165,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
                     .message(e.getMessage())
                     .build();
 
-            handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyKeywords));
+            handleInvalidRequest(builder, messageId, ImmutableList.of(invalidPropertyKeywords), updateMessagePatch);
         }
     }
 
@@ -324,8 +324,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void handleInvalidRequest(SetMessagesResponse.Builder responseBuilder, MessageId messageId,
-                                      ImmutableList<ValidationResult> validationErrors) {
-        LOGGER.warn("Invalid update request for message #{}: {}", messageId, validationErrors);
+                                      ImmutableList<ValidationResult> validationErrors, UpdateMessagePatch patch) {
+        LOGGER.warn("Invalid update request with patch {} for message #{}: {}", patch, messageId, validationErrors);
 
         String formattedValidationErrorMessage = validationErrors.stream()
                 .map(err -> err.getProperty() + ": " + err.getErrorMessage())
