@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
@@ -30,47 +30,57 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-public class GlobalMailboxListeners implements Configurable {
+public class MailboxListenersLoader implements Configurable {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalMailboxListeners.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxListenersLoader.class);
 
     private final Injector injector;
     private final MailboxListenerRegistry registry;
     private final ExtendedClassLoader classLoader;
+    private final Set<MailboxListener> guiceDefinedListeners;
 
     @Inject
-    public GlobalMailboxListeners(Injector injector, MailboxListenerRegistry registry, ExtendedClassLoader classLoader) {
+    public MailboxListenersLoader(Injector injector, MailboxListenerRegistry registry,
+                                  ExtendedClassLoader classLoader, Set<MailboxListener> guiceDefinedListeners) {
         this.injector = injector;
         this.registry = registry;
         this.classLoader = classLoader;
+        this.guiceDefinedListeners = guiceDefinedListeners;
     }
 
     @Override
     public void configure(HierarchicalConfiguration configuration) {
         LOGGER.info("Loading user registered mailbox listeners");
 
-        List<HierarchicalConfiguration> listenersConfiguration = configuration.configurationsAt("listener");
+        ListenersConfiguration listenersConfiguration = ListenersConfiguration.from(configuration);
 
-        listenersConfiguration.forEach(this::configureListener);
+        guiceDefinedListeners.forEach(this::register);
+        listenersConfiguration.getListenersConfiguration()
+            .forEach(this::configureListener);
     }
 
-    @VisibleForTesting void configureListener(HierarchicalConfiguration configuration) {
-        String listenerClass = configuration.getString("class");
-        Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
+    @VisibleForTesting void configureListener(ListenerConfiguration configuration) {
+        String listenerClass = configuration.getClazz();
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
             MailboxListener listener = injector.getInstance(clazz);
+            register(listener);
+        } catch (ClassNotFoundException e) {
+            LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void register(MailboxListener listener) {
+        try {
             registry.addGlobalListener(listener);
-        } catch (ClassNotFoundException | MailboxException e) {
-            LOGGER.error("Error while loading global listener {}", listenerClass, e);
-            Throwables.propagate(e);
+        } catch (MailboxException e) {
+            LOGGER.error("Error while registering global listener {}", listener, e);
+            throw new RuntimeException(e);
         }
     }
 }

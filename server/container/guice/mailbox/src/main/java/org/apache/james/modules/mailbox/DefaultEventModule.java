@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventDelivery;
@@ -56,16 +57,17 @@ public class DefaultEventModule extends AbstractModule {
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(MailboxAnnotationListener.class).in(Scopes.SINGLETON);
 
-        bind(GlobalMailboxListeners.class).in(Scopes.SINGLETON);
+        bind(MailboxListenersLoader.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), MailboxListener.class);
     }
 
     @Singleton
     public static class ListenerRegistrationPerformer implements ConfigurationPerformer {
         private final ConfigurationProvider configurationProvider;
-        private final GlobalMailboxListeners listeners;
+        private final MailboxListenersLoader listeners;
 
         @Inject
-        public ListenerRegistrationPerformer(ConfigurationProvider configurationProvider, GlobalMailboxListeners listeners) {
+        public ListenerRegistrationPerformer(ConfigurationProvider configurationProvider, MailboxListenersLoader listeners) {
             this.configurationProvider = configurationProvider;
             this.listeners = listeners;
         }

@@ -18,22 +18,27 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
+import org.apache.commons.configuration.HierarchicalConfiguration;
 
-public class NoopMailboxListener implements MailboxListener {
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
-    @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
+public class ListenerConfiguration {
+
+    public static ListenerConfiguration from(HierarchicalConfiguration configuration) {
+        String listenerClass = configuration.getString("class");
+        Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
+        return new ListenerConfiguration(listenerClass);
     }
 
-    @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
+    private final String clazz;
+
+    @VisibleForTesting ListenerConfiguration(String clazz) {
+        this.clazz = clazz;
     }
 
-    @Override
-    public void event(Event event) {
+    public String getClazz() {
+        return clazz;
     }
 }
