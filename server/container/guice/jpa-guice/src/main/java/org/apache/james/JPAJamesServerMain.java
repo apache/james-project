@@ -43,6 +43,7 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
+import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -76,7 +77,8 @@ public class JPAJamesServerMain {
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
         new SieveFileRepositoryModule(),
-        new DefaultEventModule());
+        new DefaultEventModule(),
+        new SpamAssassinListenerModule());
 
     public static void main(String[] args) throws Exception {
         GuiceJamesServer server = new GuiceJamesServer()

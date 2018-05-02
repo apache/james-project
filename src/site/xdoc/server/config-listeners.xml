@@ -42,11 +42,11 @@
                part of James source code, or provided as an extension and thus should be located in the<code>extensions-jars</code> folder.</p>
 
             <ul>
-                Already provided listeners includes:
+                Already provided additional listeners includes:
 
                  <li><code>org.apache.james.mailbox.spamassassin.SpamAssassinListener</code>:
                      Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
-                     For now it is only available on top of Cassandra-Guice wiring.</li>
+                     Please note that a <code>spamassassin.properties</code> file is needed.</li>
                  <li><code>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</code>:
                      For Cassandra guice wiring. Provides more insights on mailbox operations</li>
             </ul>
