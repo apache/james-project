@@ -51,12 +51,13 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     public DefaultDelegatingMailboxListener() {
-        this(new SynchronousEventDelivery());
+        this(new SynchronousEventDelivery(),
+            new MailboxListenerRegistry());
     }
 
     @Inject
-    public DefaultDelegatingMailboxListener(EventDelivery eventDelivery) {
-        this.registry = new MailboxListenerRegistry();
+    public DefaultDelegatingMailboxListener(EventDelivery eventDelivery, MailboxListenerRegistry registry) {
+        this.registry = registry;
         this.eventDelivery = eventDelivery;
     }
 

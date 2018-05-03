@@ -30,6 +30,7 @@
 
     <bean id="default-delegating-listener" class="org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
+        <constructor-arg index="1" ref="event-registry"/>
     </bean>
 
     <bean id="broadcast-delegating-listener" class="org.apache.james.mailbox.store.event.distributed.BroadcastDelegatingMailboxListener" lazy-init="true">
@@ -72,6 +73,7 @@
 
     <bean id="synchronous-event-delivery" class="org.apache.james.mailbox.store.event.SynchronousEventDelivery" lazy-init="true"/>
 
+    <bean id="event-registry" class="org.apache.james.mailbox.store.event.MailboxListenerRegistry"/>
 
     <bean id="asynchronous-event-delivery" class="org.apache.james.mailbox.store.event.AsynchronousEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="${event.delivery.thread.count}"/>
