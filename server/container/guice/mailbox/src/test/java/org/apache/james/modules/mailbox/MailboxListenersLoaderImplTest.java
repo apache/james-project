@@ -52,7 +52,7 @@ public class MailboxListenersLoaderImplTest {
             .thenThrow(new FileNotFoundException());
 
         registry = new MailboxListenerRegistry();
-        testee = new MailboxListenersLoaderImpl(Guice.createInjector(), registry,
+        testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(Guice.createInjector()), registry,
             new ExtendedClassLoader(fileSystem), ImmutableSet.of());
     }
 

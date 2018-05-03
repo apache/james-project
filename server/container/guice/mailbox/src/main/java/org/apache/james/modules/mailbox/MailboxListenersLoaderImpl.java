@@ -30,21 +30,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxListenersLoaderImpl.class);
 
-    private final Injector injector;
+    private final MailboxListenerFactory mailboxListenerFactory;
     private final MailboxListenerRegistry registry;
     private final ExtendedClassLoader classLoader;
     private final Set<MailboxListener> guiceDefinedListeners;
 
     @Inject
-    public MailboxListenersLoaderImpl(Injector injector, MailboxListenerRegistry registry,
+    public MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, MailboxListenerRegistry registry,
                                   ExtendedClassLoader classLoader, Set<MailboxListener> guiceDefinedListeners) {
-        this.injector = injector;
+        this.mailboxListenerFactory = mailboxListenerFactory;
         this.registry = registry;
         this.classLoader = classLoader;
         this.guiceDefinedListeners = guiceDefinedListeners;
@@ -78,7 +77,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
-            MailboxListener listener = injector.getInstance(clazz);
+            MailboxListener listener = mailboxListenerFactory.createInstance(clazz);
             return listener;
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);

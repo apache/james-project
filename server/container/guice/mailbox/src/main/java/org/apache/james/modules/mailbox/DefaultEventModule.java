@@ -58,6 +58,7 @@ public class DefaultEventModule extends AbstractModule {
         bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
         bind(MailboxAnnotationListener.class).in(Scopes.SINGLETON);
 
+        bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(MailboxListenerRegistry.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
