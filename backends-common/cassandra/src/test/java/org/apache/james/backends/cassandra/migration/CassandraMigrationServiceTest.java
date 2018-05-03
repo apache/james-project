@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -63,6 +64,8 @@ public class CassandraMigrationServiceTest {
     @Before
     public void setUp() throws Exception {
         schemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
+        when(schemaVersionDAO.updateVersion(any())).thenReturn(CompletableFuture.completedFuture(null));
+
         successfulMigration = mock(Migration.class);
         when(successfulMigration.run()).thenReturn(Migration.Result.COMPLETED);
         Map<SchemaVersion, Migration> allMigrationClazz = ImmutableMap.<SchemaVersion, Migration>builder()

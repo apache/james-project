@@ -92,7 +92,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token);
+        accessTokenRepository.addToken("user@domain.tld", token).join();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);
@@ -106,7 +106,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token);
+        accessTokenRepository.addToken("user@domain.tld", token).join();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(false), new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);

@@ -91,7 +91,7 @@ public class CassandraMigrationService {
 
             logger.info("Migrating to version {} ", newVersion);
             return allMigrationClazz.get(version).run()
-                .onComplete(() -> schemaVersionDAO.updateVersion(newVersion),
+                .onComplete(() -> schemaVersionDAO.updateVersion(newVersion).join(),
                     () -> logger.info("Migrating to version {} done", newVersion))
                 .onFailure(() -> logger.warn(failureMessage(newVersion)),
                     () -> throwMigrationException(newVersion));
