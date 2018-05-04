@@ -23,6 +23,12 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.with;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
+import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
+import static org.apache.james.jmap.JmapCommonRequests.getMailboxId;
+import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
+import static org.apache.james.jmap.JmapCommonRequests.getSetMessagesUpdateOKResponseAssertions;
+import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ALICE;
 import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
@@ -68,7 +74,6 @@ import javax.mail.Flags.Flag;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.MessageAppender;
@@ -119,10 +124,8 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.builder.ResponseSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.parsing.Parser;
-import com.jayway.restassured.specification.ResponseSpecification;
 
 public abstract class SetMessagesMethodTest {
     private static final String FORWARDED = "$Forwarded";
@@ -169,8 +172,8 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(USERNAME, PASSWORD);
         dataProbe.addUser(BOB, BOB_PASSWORD);
         mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), USERNAME, PASSWORD);
-        bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), BOB, BOB_PASSWORD);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
+        bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.OUTBOX);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH);
@@ -179,48 +182,9 @@ public abstract class SetMessagesMethodTest {
         await();
     }
 
-    private URIBuilder baseUri() {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
-    }
-
     @After
     public void teardown() {
         jmapServer.stop();
-    }
-
-    private String getOutboxId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.OUTBOX);
-    }
-
-    private String getInboxId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.INBOX);
-    }
-
-    private String getDraftId(AccessToken accessToken) {
-        return getMailboxId(accessToken, Role.DRAFTS);
-    }
-
-    private String getMailboxId(AccessToken accessToken, Role role) {
-        return getAllMailboxesIds(accessToken).stream()
-            .filter(x -> x.get("role").equalsIgnoreCase(role.serialize()))
-            .map(x -> x.get("id"))
-            .findFirst().get();
-    }
-
-    private List<Map<String, String>> getAllMailboxesIds(AccessToken accessToken) {
-        return with()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"properties\": [\"role\", \"id\"]}, \"#0\"]]")
-        .post("/jmap")
-            .andReturn()
-            .body()
-            .jsonPath()
-            .getList(ARGUMENTS + ".list");
     }
 
     @Test
@@ -714,17 +678,6 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].keywords.$Answered", equalTo(true))
             .body(ARGUMENTS + ".list[0].keywords.$Flagged", equalTo(true));
-    }
-
-    private ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
-        ResponseSpecBuilder builder = new ResponseSpecBuilder()
-            .expectStatusCode(200)
-            .expectBody(NAME, equalTo("messagesSet"))
-            .expectBody(ARGUMENTS + ".updated", hasSize(1))
-            .expectBody(ARGUMENTS + ".updated", contains(messageId))
-            .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
-            .expectBody(NOT_UPDATED, not(hasKey(messageId)));
-        return builder.build();
     }
 
     @Test
@@ -2716,7 +2669,7 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, password);
         await();
 
         String messageCreationId = "creationId1337";
@@ -2762,7 +2715,7 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, password);
         await();
 
         String messageCreationId = "creationId1337";
@@ -2809,7 +2762,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         await();
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, password);
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
@@ -2993,7 +2946,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
         await();
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, password);
 
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
@@ -3032,7 +2985,7 @@ public abstract class SetMessagesMethodTest {
         String recipientPassword = "password";
         dataProbe.addUser(recipientAddress, recipientPassword);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, recipientPassword);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, recipientPassword);
         await();
 
         String senderDraftsMailboxId = getMailboxId(accessToken, Role.DRAFTS);
@@ -3139,7 +3092,7 @@ public abstract class SetMessagesMethodTest {
         String password = "password";
         dataProbe.addUser(recipientAddress, password);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, recipientAddress, DefaultMailboxes.INBOX);
-        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), recipientAddress, password);
+        AccessToken recipientToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), recipientAddress, password);
         await();
 
         String messageCreationId = "creationId1337";
@@ -4398,7 +4351,7 @@ public abstract class SetMessagesMethodTest {
             .body(requestBody)
         .post("/jmap");
 
-        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(), toUsername, password);
+        accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), toUsername, password);
         String inboxMailboxId = getMailboxId(accessToken, Role.INBOX);
 
         calmlyAwait.atMost(60, TimeUnit.SECONDS).until(() -> messageInMailboxHasHeaders(inboxMailboxId, buildExpectedHeaders()));

@@ -20,8 +20,12 @@
 package org.apache.james.jmap;
 
 import static com.jayway.restassured.RestAssured.with;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.isEmptyOrNullString;
+import static org.hamcrest.Matchers.not;
 
 import java.util.List;
 import java.util.Map;
@@ -29,12 +33,19 @@ import java.util.Map;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 
+import com.jayway.restassured.builder.ResponseSpecBuilder;
+import com.jayway.restassured.specification.ResponseSpecification;
+
 public class JmapCommonRequests {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
+    private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
 
     public static String getOutboxId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.OUTBOX);
+    }
+    public static String getDraftId(AccessToken accessToken) {
+        return getMailboxId(accessToken, Role.DRAFTS);
     }
 
     public static String getMailboxId(AccessToken accessToken, Role role) {
@@ -97,5 +108,16 @@ public class JmapCommonRequests {
                 .extract()
                 .body()
                 .path(ARGUMENTS + ".messageIds");
+    }
+
+    public static ResponseSpecification getSetMessagesUpdateOKResponseAssertions(String messageId) {
+        ResponseSpecBuilder builder = new ResponseSpecBuilder()
+            .expectStatusCode(200)
+            .expectBody(NAME, equalTo("messagesSet"))
+            .expectBody(ARGUMENTS + ".updated", hasSize(1))
+            .expectBody(ARGUMENTS + ".updated", contains(messageId))
+            .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
+            .expectBody(NOT_UPDATED, not(hasKey(messageId)));
+        return builder.build();
     }
 }
