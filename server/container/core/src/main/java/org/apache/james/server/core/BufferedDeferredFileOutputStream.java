@@ -30,6 +30,18 @@ import org.apache.commons.io.output.ThresholdingOutputStream;
 
 /**
  * An almost copy of {@link DeferredFileOutputStream} with buffered file stream.
+ * <p>
+ * This copy is done because 1. the original class is not written in the way that
+ * we can decorate file output stream. 2. when switched to FileOutputStream the
+ * original class does not buffer file output stream which could cause up to 50%
+ * performance loss compare to buffered stream (see JIRA JAMES-2343 for simple
+ * benchmark).
+ * <p>
+ * The only difference is in the {@link #thresholdReached()} where when updating
+ * {@link #currentOutputStream}, instead of directly assign FileOutputStream to
+ * it, here we wrap the file output stream with BufferedOutputStream.
+ *
+ * @link https://issues.apache.org/jira/browse/JAMES-2343
  */
 public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
 
