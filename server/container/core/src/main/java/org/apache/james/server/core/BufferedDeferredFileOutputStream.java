@@ -94,8 +94,6 @@ public class BufferedDeferredFileOutputStream extends ThresholdingOutputStream {
      * @param prefix Prefix to use for the temporary file.
      * @param suffix Suffix to use for the temporary file.
      * @param directory Temporary file directory.
-     *
-     * @since 1.4
      */
     public BufferedDeferredFileOutputStream(final int threshold, final String prefix, final String suffix, final File directory) {
         this(threshold, null, prefix, suffix, directory);
