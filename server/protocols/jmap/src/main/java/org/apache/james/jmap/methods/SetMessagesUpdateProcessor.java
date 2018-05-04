@@ -59,6 +59,7 @@ import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -210,7 +211,12 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             .orElse(Keywords.DEFAULT_VALUE)
             .contains(Keyword.DRAFT);
 
-        boolean targetContainsOutbox = targetMailboxes.stream().anyMatch(outboxMailboxes::contains);
+        MessageMoves messageMoves = MessageMoves.builder()
+            .previousMailboxIds(previousMailboxes)
+            .targetMailboxIds(targetMailboxes)
+            .build();
+
+        boolean targetContainsOutbox = messageMoves.addedMailboxIds().stream().anyMatch(outboxMailboxes::contains);
         boolean targetIsOnlyOutbox = targetMailboxes.stream().allMatch(outboxMailboxes::contains);
 
         assertOutboxMoveTargetsOnlyOutBox(targetContainsOutbox, targetIsOnlyOutbox);
