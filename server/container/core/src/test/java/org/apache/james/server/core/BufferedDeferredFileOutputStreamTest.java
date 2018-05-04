@@ -32,6 +32,9 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+/**
+ * Copied from DeferredFileOutputStreamTest of commons-io
+ */
 public class BufferedDeferredFileOutputStreamTest {
     /**
      * The test data as a string (which is the simplest form).
