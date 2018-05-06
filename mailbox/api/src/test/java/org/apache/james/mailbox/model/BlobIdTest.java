@@ -22,6 +22,8 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.nio.charset.StandardCharsets;
+
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -51,5 +53,19 @@ public class BlobIdTest {
     public void asStringShouldReturnUnderlyingId() {
         assertThat(BlobId.fromString("abc").asString())
             .isEqualTo("abc");
+    }
+
+    @Test
+    public void fromBytesShouldProduceASHA256() {
+        assertThat(BlobId.fromBytes("abc".getBytes(StandardCharsets.UTF_8)).asString())
+            .isEqualTo("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    }
+
+    @Test
+    public void fromBytesShouldCalculateSameSha256() {
+        byte[] bytes = "abc".getBytes(StandardCharsets.UTF_8);
+
+        assertThat(BlobId.fromBytes(bytes))
+            .isEqualTo(BlobId.fromBytes(bytes));
     }
 }

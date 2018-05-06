@@ -41,6 +41,8 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -107,31 +109,37 @@ public class DownloadStepdefs {
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
 
-        inputToMessageId.put(messageId, composedMessageId.getMessageId());
-        attachmentsByMessageId.put(messageId, attachmentId);
-        blobIdByAttachmentId.put(attachmentId, ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID);
+        retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
     }
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an inlined attachment \"([^\"]*)\"$")
     public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
-        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
-                AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml")));
-        
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
+            AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml")));
+
+        retrieveAndSaveAttachmentDetails(user, messageId, attachmentId, composedMessageId);
+    }
+
+    public void retrieveAndSaveAttachmentDetails(String user, String messageId, String attachmentId, ComposedMessageId composedMessageId) throws MailboxException {
+        AttachmentId mailboxAttachmentId = mainStepdefs.messageIdProbe
+            .retrieveAttachmentIds(composedMessageId.getMessageId(), user)
+            .get(0);
+
+        inputToMessageId.put(messageId, composedMessageId.getMessageId());
         attachmentsByMessageId.put(messageId, attachmentId);
+        blobIdByAttachmentId.put(attachmentId, mailboxAttachmentId.getId());
     }
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with multiple same inlined attachments \"([^\"]*)\"$")
     public void appendMessageWithSameInlinedAttachmentsToMailbox(String user, String mailbox, String messageName, String attachmentId) throws Throwable {
         MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
 
-        mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml")));
 
-        attachmentsByMessageId.put(messageName, attachmentId);
-
-        blobIdByAttachmentId.put(attachmentId, ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID);
+        retrieveAndSaveAttachmentDetails(user, messageName, attachmentId, composedMessageId);
     }
 
     @When("^\"([^\"]*)\" checks for the availability of the attachment endpoint$")

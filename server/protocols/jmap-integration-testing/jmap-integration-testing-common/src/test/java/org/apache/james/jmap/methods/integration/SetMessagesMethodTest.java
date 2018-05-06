@@ -1910,7 +1910,7 @@ public abstract class SetMessagesMethodTest {
             .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
+        String uploadedBlobId = uploadAttachment(attachment);
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
@@ -1921,7 +1921,7 @@ public abstract class SetMessagesMethodTest {
             "        \"subject\": \"subject\"," +
             "        \"keywords\": {\"$Draft\": true}," +
             "        \"attachments\": [" +
-            "                {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "                {\"blobId\" : \"" + uploadedBlobId + "\", " +
             "                 \"type\" : \"" + attachment.getType() + "\"," +
             "                 \"size\" : " + attachment.getSize() + "}" +
             "             ]," +
@@ -1949,11 +1949,6 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldNotAllowDraftCreationInSomeoneElseMailbox() throws Exception {
         String messageCreationId = "creationId1337";
-        Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
-            .type("application/octet-stream")
-            .build();
-        uploadAttachment(attachment);
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
@@ -1987,11 +1982,6 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldNotAllowDraftCreationInADelegatedMailbox() throws Exception {
         String messageCreationId = "creationId1337";
-        Attachment attachment = Attachment.builder()
-            .bytes("attachment".getBytes(StandardCharsets.UTF_8))
-            .type("application/octet-stream")
-            .build();
-        uploadAttachment(attachment);
 
         jmapServer.getProbe(ACLProbeImpl.class)
             .addRights(
@@ -3664,12 +3654,12 @@ public abstract class SetMessagesMethodTest {
             .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
+        String uploadedAttachment1 = uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
             .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment2);
+        String uploadedAttachment2 = uploadAttachment(attachment2);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -3685,10 +3675,10 @@ public abstract class SetMessagesMethodTest {
             "        \"textBody\": \"Test body\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment1 + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + "}," +
-            "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment2 + "\", " +
             "               \"type\" : \"" + attachment2.getType() + "\", " +
             "               \"size\" : " + attachment2.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
@@ -3715,12 +3705,12 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(createdPath + ".attachments", hasSize(2))
-            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".blobId", equalTo(uploadedAttachment1))
             .body(firstAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
             .body(firstAttachment + ".cid", nullValue())
             .body(firstAttachment + ".isInline", equalTo(false))
-            .body(secondAttachment + ".blobId", equalTo(attachment2.getAttachmentId().getId()))
+            .body(secondAttachment + ".blobId", equalTo(uploadedAttachment2))
             .body(secondAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
             .body(secondAttachment + ".size", equalTo((int) attachment2.getSize()))
             .body(secondAttachment + ".cid", equalTo("123456789"))
@@ -3733,17 +3723,17 @@ public abstract class SetMessagesMethodTest {
             .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
+        String uploadedAttachment1 = uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
             .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment2);
+        String uploadedAttachment2 = uploadAttachment(attachment2);
         Attachment attachment3 = Attachment.builder()
             .bytes("attachment3".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment3);
+        String uploadedAttachment3 = uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -3764,21 +3754,21 @@ public abstract class SetMessagesMethodTest {
             "          \"attachments\":" +
             "          [" +
             "            {" +
-            "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment1 + "\", " +
             "              \"type\" : \"" + attachment.getType() + "\", " +
             "              \"size\" : " + attachment.getSize() + "," +
             "              \"name\" : \"ديناصور.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
-            "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment2 + "\", " +
             "              \"type\" : \"" + attachment2.getType() + "\", " +
             "              \"size\" : " + attachment2.getSize() + "," +
             "              \"name\" : \"эволюционировать.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
-            "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment3 + "\", " +
             "              \"type\" : \"" + attachment3.getType() + "\", " +
             "              \"size\" : " + attachment3.getSize() + "," +
             "              \"name\" : \"进化还是不.png\"," +
@@ -3819,19 +3809,19 @@ public abstract class SetMessagesMethodTest {
             .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
+        String uploadedAttachment1 = uploadAttachment(attachment);
 
         Attachment attachment2 = Attachment.builder()
             .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment2);
+        String uploadedAttachment2 = uploadAttachment(attachment2);
 
         Attachment attachment3 = Attachment.builder()
             .bytes("attachment3".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment3);
+        String uploadedAttachment3 = uploadAttachment(attachment3);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -3852,21 +3842,21 @@ public abstract class SetMessagesMethodTest {
             "          \"attachments\":" +
             "          [" +
             "            {" +
-            "              \"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment1 + "\", " +
             "              \"type\" : \"" + attachment.getType() + "\", " +
             "              \"size\" : " + attachment.getSize() + "," +
             "              \"name\" : \"ديناصور.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
-            "              \"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment2 + "\", " +
             "              \"type\" : \"" + attachment2.getType() + "\", " +
             "              \"size\" : " + attachment2.getSize() + "," +
             "              \"name\" : \"эволюционировать.png\", " +
             "              \"isInline\" : false" +
             "            }," +
             "            {" +
-            "              \"blobId\" : \"" + attachment3.getAttachmentId().getId() + "\", " +
+            "              \"blobId\" : \"" + uploadedAttachment3 + "\", " +
             "              \"type\" : \"" + attachment3.getType() + "\", " +
             "              \"size\" : " + attachment3.getSize() + "," +
             "              \"name\" : \"进化还是不.png\"," +
@@ -3919,20 +3909,30 @@ public abstract class SetMessagesMethodTest {
             .body(thirdAttachment + ".name", equalTo("进化还是不.png"));
     }
 
-    private void uploadAttachment(Attachment attachment) throws IOException {
-        with()
+    private String uploadAttachment(Attachment attachment) throws IOException {
+        return with()
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
             .content(attachment.getStream())
-            .post("/upload");
+            .post("/upload")
+        .then()
+            .extract()
+            .body()
+            .jsonPath()
+            .getString("blobId");
     }
 
-    private void uploadTextAttachment(Attachment attachment) throws IOException {
-        with()
+    private String uploadTextAttachment(Attachment attachment) throws IOException {
+        return with()
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
             .content(new String(IOUtils.toByteArray(attachment.getStream()), StandardCharsets.UTF_8))
-            .post("/upload");
+            .post("/upload")
+        .then()
+            .extract()
+            .body()
+            .jsonPath()
+            .getString("blobId");
     }
 
     @Test
@@ -3948,8 +3948,7 @@ public abstract class SetMessagesMethodTest {
             .bytes(rawBytes)
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
-        String expectedBlobId = attachment.getAttachmentId().getId();
+        String uploadedAttachment = uploadAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -3965,7 +3964,7 @@ public abstract class SetMessagesMethodTest {
             "        \"textBody\": \"Test body\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
@@ -3996,7 +3995,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
-        given()
+        String blobId = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -4006,21 +4005,25 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".blobId", equalTo(expectedBlobId))
             .body(firstAttachment + ".type", equalTo("application/octet-stream"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
             .body(firstAttachment + ".cid", equalTo("123456789"))
-            .body(firstAttachment + ".isInline", equalTo(true));
+            .body(firstAttachment + ".isInline", equalTo(true))
+            .extract()
+            .jsonPath()
+            .getString(firstAttachment + ".blobId");
+
+        checkBlobContent(blobId, rawBytes);
     }
 
     @Test
     public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
+        byte[] rawBytes = ByteStreams.toByteArray(new ZeroedInputStream(_1MB));
         Attachment attachment = Attachment.builder()
-            .bytes(ByteStreams.toByteArray(new ZeroedInputStream(_1MB)))
+            .bytes(rawBytes)
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
-        String expectedBlobId = attachment.getAttachmentId().getId();
+        String uploadedAttachment = uploadAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -4036,7 +4039,7 @@ public abstract class SetMessagesMethodTest {
             "        \"textBody\": \"Test body\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + ", " +
             "               \"cid\" : \"123456789\", " +
@@ -4068,7 +4071,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
-        given()
+        String blobId = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -4078,11 +4081,15 @@ public abstract class SetMessagesMethodTest {
             .body(NAME, equalTo("messages"))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".blobId", equalTo(expectedBlobId))
             .body(firstAttachment + ".type", equalTo("application/octet-stream"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
             .body(firstAttachment + ".cid", equalTo("123456789"))
-            .body(firstAttachment + ".isInline", equalTo(true));
+            .body(firstAttachment + ".isInline", equalTo(true))
+            .extract()
+            .jsonPath()
+            .getString(firstAttachment + ".blobId");
+
+        checkBlobContent(blobId, rawBytes);
     }
 
     private boolean isAnyMessageFoundInInbox(AccessToken recipientToken) {
@@ -4106,13 +4113,14 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void attachmentsAndBodysShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithMixedTextAndHtmlBodyAndHtmlAttachment() throws Exception {
+        byte[] rawBytes = ("<html>\n" +
+            "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
+            "</html>").getBytes(StandardCharsets.UTF_8);
         Attachment attachment = Attachment.builder()
-            .bytes(("<html>\n" +
-                    "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                    "</html>").getBytes(StandardCharsets.UTF_8))
+            .bytes(rawBytes)
             .type("text/html; charset=UTF-8")
             .build();
-        uploadTextAttachment(attachment);
+        String uploadedBlobId = uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -4129,7 +4137,7 @@ public abstract class SetMessagesMethodTest {
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + ", " +
             "               \"isInline\" : false }" +
@@ -4160,7 +4168,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
-        given()
+        String blobId = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -4173,20 +4181,25 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
             .body(firstMessage + ".htmlBody", equalTo("Test <b>body</b>, HTML version"))
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
             .body(firstAttachment + ".type", equalTo("text/html"))
-            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .extract()
+            .jsonPath()
+            .getString(firstAttachment + ".blobId");
+
+        checkBlobContent(blobId, rawBytes);
     }
 
     @Test
     public void attachmentsAndBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextBodyAndHtmlAttachment() throws Exception {
+        byte[] rawBytes = ("<html>\n" +
+            "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
+            "</html>").getBytes(StandardCharsets.UTF_8);
         Attachment attachment = Attachment.builder()
-            .bytes(("<html>\n" +
-                    "  <body>attachment</body>\n" + // needed indentation, else restassured is adding some
-                    "</html>").getBytes(StandardCharsets.UTF_8))
+            .bytes(rawBytes)
             .type("text/html; charset=UTF-8")
             .build();
-        uploadTextAttachment(attachment);
+        String uploadedBlobId = uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -4202,7 +4215,7 @@ public abstract class SetMessagesMethodTest {
             "        \"textBody\": \"Test body, plain text version\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + ", " +
             "               \"isInline\" : false }" +
@@ -4233,7 +4246,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
-        given()
+        String blobId = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -4246,18 +4259,35 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", equalTo("Test body, plain text version"))
             .body(firstMessage + ".htmlBody", isEmptyOrNullString())
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
             .body(firstAttachment + ".type", equalTo("text/html"))
-            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .extract()
+            .jsonPath()
+            .getString(firstAttachment + ".blobId");
+
+        checkBlobContent(blobId, rawBytes);
     }
-    
+
+    public void checkBlobContent(String blobId, byte[] rawBytes) {
+        byte[] attachmentBytes = with()
+            .header("Authorization", accessToken.serialize())
+            .get("/download/" + blobId)
+        .then()
+            .extract()
+            .body()
+            .asByteArray();
+
+        assertThat(attachmentBytes).containsExactly(rawBytes);
+    }
+
     @Test
     public void attachmentAndEmptyBodyShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesWithTextAttachmentWithoutMailBody() throws Exception {
+        byte[] rawBytes = ("some text").getBytes(StandardCharsets.UTF_8);
         Attachment attachment = Attachment.builder()
-            .bytes(("some text").getBytes(StandardCharsets.UTF_8))
+            .bytes(rawBytes)
             .type("text/plain; charset=UTF-8")
             .build();
-        uploadTextAttachment(attachment);
+        String uploadedBlobId = uploadTextAttachment(attachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -4272,7 +4302,7 @@ public abstract class SetMessagesMethodTest {
             "        \"subject\": \"Message with an attachment\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + ", " +
             "               \"isInline\" : false }" +
@@ -4303,7 +4333,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
-        given()
+        String blobId = given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
@@ -4316,9 +4346,13 @@ public abstract class SetMessagesMethodTest {
             .body(firstMessage + ".textBody", isEmptyOrNullString())
             .body(firstMessage + ".htmlBody", isEmptyOrNullString())
             .body(firstMessage + ".attachments", hasSize(1))
-            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
             .body(firstAttachment + ".type", equalTo("text/plain"))
-            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()));
+            .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
+            .extract()
+            .jsonPath()
+            .getString(firstAttachment + ".blobId");
+
+        checkBlobContent(blobId, rawBytes);
     }
     
     @Test
@@ -5013,7 +5047,7 @@ public abstract class SetMessagesMethodTest {
                 .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
-        uploadTextAttachment(nonIndexableAttachment);
+        String uploadedBlobId = uploadTextAttachment(nonIndexableAttachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -5029,7 +5063,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"textBody\": \"Test body\"," +
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + nonIndexableAttachment.getAttachmentId().getId() + "\", " +
+                "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
                 "               \"type\" : \"" + nonIndexableAttachment.getType() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + nonIndexableAttachment.getSize() + "}" +
@@ -5054,7 +5088,7 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(createdPath + ".attachments", hasSize(1))
-            .body(singleAttachment + ".blobId", equalTo(nonIndexableAttachment.getAttachmentId().getId()))
+            .body(singleAttachment + ".blobId", equalTo(uploadedBlobId))
             .body(singleAttachment + ".type", equalTo("text/html; charset=UTF-8"))
             .body(singleAttachment + ".size", equalTo((int) nonIndexableAttachment.getSize()));
     }
@@ -5065,7 +5099,7 @@ public abstract class SetMessagesMethodTest {
                 .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
-        uploadTextAttachment(nonIndexableAttachment);
+        String uploadedBlobId = uploadTextAttachment(nonIndexableAttachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -5081,7 +5115,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"textBody\": \"Test body\"," +
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + nonIndexableAttachment.getAttachmentId().getId() + "\", " +
+                "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
                 "               \"type\" : \"" + nonIndexableAttachment.getType() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + nonIndexableAttachment.getSize() + "}" +
@@ -5125,7 +5159,7 @@ public abstract class SetMessagesMethodTest {
                 .bytes(ClassLoaderUtils.getSystemResourceAsByteArray("attachment/nonIndexableAttachment.html"))
                 .type("text/html")
                 .build();
-        uploadTextAttachment(nonIndexableAttachment);
+        String uploadedBlobId = uploadTextAttachment(nonIndexableAttachment);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -5142,7 +5176,7 @@ public abstract class SetMessagesMethodTest {
                 "        \"textBody\": \"Test body\"," +
                 "        \"mailboxIds\": [\"" + outboxId + "\"], " +
                 "        \"attachments\": [" +
-                "               {\"blobId\" : \"" + nonIndexableAttachment.getAttachmentId().getId() + "\", " +
+                "               {\"blobId\" : \"" + uploadedBlobId + "\", " +
                 "               \"type\" : \"" + nonIndexableAttachment.getType() + "\", " +
                 "               \"name\" : \"nonIndexableAttachment.html\", " +
                 "               \"size\" : " + nonIndexableAttachment.getSize() + "}" +
@@ -5181,12 +5215,12 @@ public abstract class SetMessagesMethodTest {
             .bytes("attachment".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment);
+        String uploadedAttachment1 = uploadAttachment(attachment);
         Attachment attachment2 = Attachment.builder()
             .bytes("attachment2".getBytes(StandardCharsets.UTF_8))
             .type("application/octet-stream")
             .build();
-        uploadAttachment(attachment2);
+        String uploadedAttachment2 = uploadAttachment(attachment2);
 
         String messageCreationId = "creationId";
         String fromAddress = USERNAME;
@@ -5202,10 +5236,10 @@ public abstract class SetMessagesMethodTest {
             "        \"textBody\": \"Test body\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"], " +
             "        \"attachments\": [" +
-            "               {\"blobId\" : \"" + attachment.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment1 + "\", " +
             "               \"type\" : \"" + attachment.getType() + "\", " +
             "               \"size\" : " + attachment.getSize() + "}," +
-            "               {\"blobId\" : \"" + attachment2.getAttachmentId().getId() + "\", " +
+            "               {\"blobId\" : \"" + uploadedAttachment2 + "\", " +
             "               \"type\" : \"" + attachment2.getType() + "\", " +
             "               \"size\" : " + attachment2.getSize() + ", " +
             "               \"isInline\" : true }" +
@@ -5231,12 +5265,12 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
             .body(ARGUMENTS + ".created", aMapWithSize(1))
             .body(createdPath + ".attachments", hasSize(2))
-            .body(firstAttachment + ".blobId", equalTo(attachment.getAttachmentId().getId()))
+            .body(firstAttachment + ".blobId", equalTo(uploadedAttachment1))
             .body(firstAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
             .body(firstAttachment + ".size", equalTo((int) attachment.getSize()))
             .body(firstAttachment + ".cid", nullValue())
             .body(firstAttachment + ".isInline", equalTo(false))
-            .body(secondAttachment + ".blobId", equalTo(attachment2.getAttachmentId().getId()))
+            .body(secondAttachment + ".blobId", equalTo(uploadedAttachment2))
             .body(secondAttachment + ".type", equalTo("application/octet-stream; charset=UTF-8"))
             .body(secondAttachment + ".size", equalTo((int) attachment2.getSize()))
             .body(secondAttachment + ".cid", nullValue())

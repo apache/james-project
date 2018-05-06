@@ -54,7 +54,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class UploadStepdefs {
-    private static final String _1M_ZEROED_FILE_BLOB_ID = "35d87cc65060b896a0541713e7868f5cb5f8be3f563ccf82b72e61c2fee67404";
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;
 
@@ -193,7 +192,7 @@ public class UploadStepdefs {
             .containsExactly(
                 normalizeContentType(org.apache.http.entity.ContentType.APPLICATION_JSON.toString()));
         DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
-        assertThat(jsonPath.<String>read("blobId")).isEqualTo(_1M_ZEROED_FILE_BLOB_ID);
+        jsonPath.<String>read("blobId");
         assertThat(jsonPath.<String>read("type")).isEqualTo("application/octet-stream");
         assertThat(jsonPath.<Integer>read("size")).isEqualTo(_1M);
     }
@@ -205,7 +204,8 @@ public class UploadStepdefs {
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")
     public void contentShouldBeRetrievable(String username) throws Exception {
         AccessToken accessToken = userStepdefs.authenticate(username);
-        Request request = Request.Get(baseUri(mainStepdefs.jmapServer).setPath("/download/" + _1M_ZEROED_FILE_BLOB_ID).build());
+        DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
+        Request request = Request.Get(baseUri(mainStepdefs.jmapServer).setPath("/download/" + jsonPath.<String>read("blobId")).build());
         if (accessToken != null) {
             request.addHeader("Authorization", accessToken.serialize());
         }

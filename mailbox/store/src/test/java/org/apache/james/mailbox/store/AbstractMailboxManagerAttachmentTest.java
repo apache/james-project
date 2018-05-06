@@ -181,34 +181,5 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(0);
     }
-
-    @Test
-    public void appendMessageShouldStoreOnceWhenDuplicateAttachment() throws Exception {
-        InputStream mailInputStream = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
-        InputStream mailInputStream2 = ClassLoader.getSystemResourceAsStream("eml/oneAttachmentAndSomeTextInlined.eml");
-        String user2 = "user2@domain.tld";
-        MailboxSession user2MailboxSession = new MockMailboxSession(user2);
-        MessageMapper user2MessageMapper = getMailboxSessionMapperFactory().getMessageMapper(user2MailboxSession);
-        MailboxMapper user2MailboxMapper = getMailboxSessionMapperFactory().getMailboxMapper(user2MailboxSession);
-        MailboxPath user2InboxPath = MailboxPath.forUser(user2, "INBOX");
-        mailboxManager.createMailbox(user2InboxPath, user2MailboxSession);
-        Mailbox user2Inbox = user2MailboxMapper.findMailboxByPath(user2InboxPath);
-        MessageManager user2InboxMessageManager = mailboxManager.getMailbox(user2InboxPath, user2MailboxSession);
-
-        inboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .build(mailInputStream),
-            mailboxSession);
-        user2InboxMessageManager.appendMessage(MessageManager.AppendCommand.builder()
-                .build(mailInputStream2),
-            user2MailboxSession);
-        Iterator<MailboxMessage> messages = messageMapper.findInMailbox(inbox, MessageRange.all(), FetchType.Full, 1);
-        Iterator<MailboxMessage> user2Messages = user2MessageMapper.findInMailbox(user2Inbox, MessageRange.all(), FetchType.Full, 1);
-        assertThat(messages.hasNext()).isTrue();
-        List<MessageAttachment> attachments = messages.next().getAttachments();
-        assertThat(attachments).hasSize(1);
-        assertThat(user2Messages.hasNext()).isTrue();
-        List<MessageAttachment> user2Attachments = user2Messages.next().getAttachments();
-        assertThat(attachments.equals(user2Attachments)).isTrue();
-    }
 }
 

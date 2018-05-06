@@ -164,14 +164,12 @@ Feature: GetMessages method
     And the list of attachments of the message contains 2 attachments
     And the first attachment is:
       |key      | value                                                             |
-      |blobId   |"81dad497ef270bd4537f5b43906aa88ad2e7168744c572be9a7414707727bf58" |
       |type     |"image/jpeg"                                                       |
       |size     |846                                                                |
       |cid      |null                                                               |
       |isInline |false                                                              |
     And the second attachment is:
       |key      | value                                                             |
-      |blobId   |"632b5341bbe044d26e0916b82a689282cc0891b806884b4d5a2339ea90b28e85" |
       |type     |"image/jpeg"                                                       |
       |size     |597                                                                |
       |cid      |"part1.37A15C92.A7C3488D@linagora.com"                             |

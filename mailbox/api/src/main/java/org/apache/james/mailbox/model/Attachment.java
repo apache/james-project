@@ -71,7 +71,7 @@ public class Attachment {
             if (attachmentId != null) {
                 return attachmentId;
             }
-            return AttachmentId.forPayloadAndType(bytes, type);
+            return AttachmentId.random();
         }
 
         private long size() {
@@ -118,7 +118,7 @@ public class Attachment {
 
     public Blob toBlob() {
         return Blob.builder()
-            .id(BlobId.fromString(attachmentId.getId()))
+            .id(BlobId.fromBytes(bytes))
             .payload(bytes)
             .contentType(type)
             .build();

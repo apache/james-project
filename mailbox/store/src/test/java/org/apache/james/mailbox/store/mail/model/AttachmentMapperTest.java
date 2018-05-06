@@ -39,7 +39,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
-    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.forPayloadAndType("unknown".getBytes(StandardCharsets.UTF_8), "type");
+    private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
     public static final Username OWNER = Username.fromRawValue("owner");
     public static final Username ADDITIONAL_OWNER = Username.fromRawValue("additionalOwner");
 
@@ -108,13 +108,13 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getAttachmentsShouldThrowWhenNullAttachmentId() throws Exception {
+    public void getAttachmentsShouldThrowWhenNullAttachmentId() {
         expected.expect(IllegalArgumentException.class);
         attachmentMapper.getAttachments(null);
     }
 
     @Test
-    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() throws Exception {
+    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() {
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(UNKNOWN_ATTACHMENT_ID));
 
         assertThat(attachments).isEmpty();
