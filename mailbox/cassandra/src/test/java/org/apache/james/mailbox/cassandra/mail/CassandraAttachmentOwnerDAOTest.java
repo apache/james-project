@@ -21,6 +21,8 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.IntStream;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -72,5 +74,16 @@ public class CassandraAttachmentOwnerDAOTest {
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
             .containsOnly(OWNER_1, OWNER_2);
+    }
+
+    @Test
+    public void retrieveOwnersShouldNotThrowWhenMoreReferencesThanPaging() {
+        int referenceCountExceedingPaging = 5050;
+        IntStream.range(0, referenceCountExceedingPaging)
+            .boxed()
+            .forEach(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)).join());
+
+        assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
+            .hasSize(referenceCountExceedingPaging);
     }
 }

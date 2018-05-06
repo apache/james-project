@@ -148,7 +148,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public Collection<Username> getOwners(AttachmentId attachmentId) throws MailboxException {
-        return ownerDAO.retrieveOwners(attachmentId).join();
+        return ownerDAO.retrieveOwners(attachmentId).join().collect(Guavate.toImmutableList());
     }
 
     public CompletableFuture<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {
