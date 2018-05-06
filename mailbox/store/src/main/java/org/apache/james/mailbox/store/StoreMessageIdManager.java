@@ -131,9 +131,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     public Set<MessageId> accessibleMessages(Collection<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Metadata);
+
+        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList, Right.Read);
+
         return messageList.stream()
-            .filter(hasRightsOn(mailboxSession, Right.Read))
-            .map(message -> message.getComposedMessageIdWithMetaData().getComposedMessageId().getMessageId())
+            .filter(message -> allowedMailboxIds.contains(message.getMailboxId()))
+            .map(MailboxMessage::getMessageId)
             .collect(Guavate.toImmutableSet());
     }
 
@@ -142,16 +145,20 @@ public class StoreMessageIdManager implements MessageIdManager {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         List<MailboxMessage> messageList = messageIdMapper.find(messageIds, MessageMapper.FetchType.Full);
 
-        ImmutableSet<MailboxId> allowedMailboxIds = messageList.stream()
-            .map(MailboxMessage::getMailboxId)
-            .distinct()
-            .filter(hasRightsOnMailbox(mailboxSession, Right.Read))
-            .collect(Guavate.toImmutableSet());
+        ImmutableSet<MailboxId> allowedMailboxIds = getAllowedMailboxIds(mailboxSession, messageList, Right.Read);
 
         return messageList.stream()
             .filter(inMailboxes(allowedMailboxIds))
             .map(Throwing.function(messageResultConverter(fetchGroup)).sneakyThrow())
             .collect(Guavate.toImmutableList());
+    }
+
+    private ImmutableSet<MailboxId> getAllowedMailboxIds(MailboxSession mailboxSession, List<MailboxMessage> messageList, Right... rights) {
+        return messageList.stream()
+                .map(MailboxMessage::getMailboxId)
+                .distinct()
+                .filter(hasRightsOnMailbox(mailboxSession, rights))
+                .collect(Guavate.toImmutableSet());
     }
 
     @Override
@@ -212,6 +219,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private List<MailboxMessage> findRelatedMailboxMessages(MessageId messageId, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
+
         return messageIdMapper.find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
             .stream()
             .filter(hasRightsOn(mailboxSession, Right.Read))
@@ -337,6 +345,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private Predicate<MailboxMessage> hasRightsOn(MailboxSession session, Right... rights) {
         return message -> hasRightsOnMailbox(session, rights).test(message.getMailboxId());
     }
+
 
     private Predicate<MailboxId> hasRightsOnMailbox(MailboxSession session, Right... rights) {
         return Throwing.predicate((MailboxId mailboxId) -> mailboxManager.myRights(mailboxId, session).contains(rights))
