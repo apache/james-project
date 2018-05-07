@@ -17,27 +17,40 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.eventsourcing.cassandra.dto;
 
-import java.util.List;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.TestEvent;
+import org.testcontainers.shaded.com.google.common.base.Preconditions;
 
-public interface Event extends Comparable<Event> {
+public class TestEventDTOModule implements EventDTOModule {
 
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
-    }
-
-    EventId eventId();
-
-    AggregateId getAggregateId();
+    public static final String TEST_TYPE = "TestType";
 
     @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
+    public String getType() {
+        return TEST_TYPE;
     }
 
+    @Override
+    public Class<? extends EventDTO> getDTOClass() {
+        return TestEventDTO.class;
+    }
+
+    @Override
+    public Class<? extends Event> getEventClass() {
+        return TestEvent.class;
+    }
+
+    @Override
+    public EventDTO toDTO(Event event) {
+        Preconditions.checkArgument(event instanceof TestEvent);
+
+        TestEvent testEvent = (TestEvent) event;
+        return new TestEventDTO(
+            TEST_TYPE,
+            testEvent.getData(),
+            testEvent.eventId().serialize(),
+            testEvent.getAggregateId().getId());
+    }
 }

@@ -54,19 +54,12 @@ public class InMemoryEventStore implements EventStore {
 
     private AggregateId getAggregateId(List<? extends Event> events) {
         Preconditions.checkArgument(!events.isEmpty());
-        Preconditions.checkArgument(belongsToSameAggregate(events));
+        Preconditions.checkArgument(Event.belongsToSameAggregate(events));
+
         return events.stream()
             .map(Event::getAggregateId)
             .findFirst()
             .get();
-    }
-
-    private boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() <= 1;
     }
 
     private void appendToEmptyHistory(AggregateId aggregateId, List<Event> events) {

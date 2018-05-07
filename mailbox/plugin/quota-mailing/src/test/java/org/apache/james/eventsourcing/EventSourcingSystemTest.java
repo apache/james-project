@@ -36,8 +36,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-
-interface EventSourcingSystemTest {
+public interface EventSourcingSystemTest {
 
     String PAYLOAD_1 = "payload1";
     String PAYLOAD_2 = "payload2";

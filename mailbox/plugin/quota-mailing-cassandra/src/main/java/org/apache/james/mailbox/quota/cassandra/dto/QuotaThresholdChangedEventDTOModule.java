@@ -17,27 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.mailbox.quota.cassandra.dto;
 
-import java.util.List;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.cassandra.dto.EventDTOModule;
+import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
-public interface Event extends Comparable<Event> {
+import com.google.common.base.Preconditions;
 
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
-    }
-
-    EventId eventId();
-
-    AggregateId getAggregateId();
+public class QuotaThresholdChangedEventDTOModule implements EventDTOModule {
+    private static final String QUOTA_THRESHOLD_CHANGE = "quota-threshold-change";
 
     @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
+    public String getType() {
+        return QUOTA_THRESHOLD_CHANGE;
     }
 
+    @Override
+    public Class<? extends EventDTO> getDTOClass() {
+        return QuotaThresholdChangedEventDTO.class;
+    }
+
+    @Override
+    public Class<? extends Event> getEventClass() {
+        return QuotaThresholdChangedEvent.class;
+    }
+
+    @Override
+    public EventDTO toDTO(Event event) {
+        Preconditions.checkArgument(event instanceof QuotaThresholdChangedEvent);
+        return QuotaThresholdChangedEventDTO.from(
+            (QuotaThresholdChangedEvent) event,
+            QUOTA_THRESHOLD_CHANGE);
+    }
 }

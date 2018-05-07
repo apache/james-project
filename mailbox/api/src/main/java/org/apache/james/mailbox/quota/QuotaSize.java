@@ -32,7 +32,11 @@ public class QuotaSize implements QuotaValue<QuotaSize> {
     }
 
     public static QuotaSize size(long value) {
-        return new QuotaSize(Optional.of(value));
+        return size(Optional.of(value));
+    }
+
+    public static QuotaSize size(Optional<Long> value) {
+        return new QuotaSize(value);
     }
 
     private final Optional<Long> value;

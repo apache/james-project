@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-interface EventStoreTest {
+public interface EventStoreTest {
 
     TestAggregateId AGGREGATE_1 = testId(1);
     TestAggregateId AGGREGATE_2 = testId(2);

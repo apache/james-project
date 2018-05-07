@@ -30,7 +30,11 @@ public class QuotaCount implements QuotaValue<QuotaCount> {
     }
 
     public static QuotaCount count(long value) {
-        return new QuotaCount(Optional.of(value));
+        return count(Optional.of(value));
+    }
+
+    public static QuotaCount count(Optional<Long> value) {
+        return new QuotaCount(value);
     }
 
     private final Optional<Long> value;

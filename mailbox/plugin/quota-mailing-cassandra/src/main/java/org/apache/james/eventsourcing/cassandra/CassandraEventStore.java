@@ -17,27 +17,46 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.eventsourcing.cassandra;
 
 import java.util.List;
 
-public interface Event extends Comparable<Event> {
+import javax.inject.Inject;
 
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
+import org.apache.james.eventsourcing.AggregateId;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventStore;
+
+import com.google.common.base.Preconditions;
+
+public class CassandraEventStore implements EventStore {
+
+    private final EventStoreDao eventStoreDao;
+
+    @Inject
+    public CassandraEventStore(EventStoreDao eventStoreDao) {
+        this.eventStoreDao = eventStoreDao;
     }
-
-    EventId eventId();
-
-    AggregateId getAggregateId();
 
     @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
+    public void appendAll(List<Event> events) {
+        if (events.isEmpty()) {
+            return;
+        }
+        doAppendAll(events);
     }
 
+    public void doAppendAll(List<Event> events) {
+        Preconditions.checkArgument(Event.belongsToSameAggregate(events));
+
+        boolean success = eventStoreDao.appendAll(events).join();
+        if (!success) {
+            throw new EventStoreFailedException();
+        }
+    }
+
+    @Override
+    public History getEventsOfAggregate(AggregateId aggregateId) {
+        return eventStoreDao.getEventsOfAggregate(aggregateId);
+    }
 }

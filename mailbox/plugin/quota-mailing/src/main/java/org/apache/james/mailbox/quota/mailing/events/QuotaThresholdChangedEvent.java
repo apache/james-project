@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.quota.mailing.events;
 
+import java.util.Objects;
+
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.model.Quota;
@@ -71,5 +73,23 @@ public class QuotaThresholdChangedEvent implements Event {
         return aggregateId;
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof QuotaThresholdChangedEvent) {
+            QuotaThresholdChangedEvent that = (QuotaThresholdChangedEvent) o;
 
+            return Objects.equals(this.eventId, that.eventId)
+                && Objects.equals(this.sizeHistoryEvolution, that.sizeHistoryEvolution)
+                && Objects.equals(this.countHistoryEvolution, that.countHistoryEvolution)
+                && Objects.equals(this.sizeQuota, that.sizeQuota)
+                && Objects.equals(this.countQuota, that.countQuota)
+                && Objects.equals(this.aggregateId, that.aggregateId);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(eventId, sizeHistoryEvolution, countHistoryEvolution, sizeQuota, countQuota, aggregateId);
+    }
 }

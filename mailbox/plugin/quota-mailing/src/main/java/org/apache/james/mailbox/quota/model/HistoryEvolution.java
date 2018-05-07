@@ -22,13 +22,14 @@ package org.apache.james.mailbox.quota.model;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.MoreObjects;
+
 public class HistoryEvolution {
 
     public static HistoryEvolution noChanges() {
         return new HistoryEvolution(HistoryChangeType.NoChange,
             Optional.empty(),
-            Optional.empty()
-            );
+            Optional.empty());
     }
 
     public static HistoryEvolution lowerThresholdReached(QuotaThresholdChange currentThreshold) {
@@ -58,7 +59,7 @@ public class HistoryEvolution {
     private final Optional<HighestThresholdRecentness> recentness;
     private final Optional<QuotaThresholdChange> thresholdChange;
 
-    private HistoryEvolution(HistoryChangeType thresholdHistoryChange, Optional<HighestThresholdRecentness> recentness, Optional<QuotaThresholdChange> thresholdChange) {
+    public HistoryEvolution(HistoryChangeType thresholdHistoryChange, Optional<HighestThresholdRecentness> recentness, Optional<QuotaThresholdChange> thresholdChange) {
         this.thresholdHistoryChange = thresholdHistoryChange;
         this.recentness = recentness;
         this.thresholdChange = thresholdChange;
@@ -82,6 +83,10 @@ public class HistoryEvolution {
         return thresholdHistoryChange;
     }
 
+    public Optional<HighestThresholdRecentness> getRecentness() {
+        return recentness;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof HistoryEvolution) {
@@ -99,13 +104,12 @@ public class HistoryEvolution {
         return Objects.hash(thresholdHistoryChange, recentness, thresholdChange);
     }
 
-
     @Override
     public String toString() {
-        return "HistoryEvolution{" +
-            "thresholdHistoryChange=" + thresholdHistoryChange +
-            ", recentness=" + recentness +
-            ", thresholdChange=" + thresholdChange +
-            '}';
+        return MoreObjects.toStringHelper(this)
+            .add("thresholdHistoryChange", thresholdHistoryChange)
+            .add("recentness", recentness)
+            .add("thresholdChange", thresholdChange)
+            .toString();
     }
 }

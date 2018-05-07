@@ -17,27 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.eventsourcing.cassandra;
 
-import java.util.List;
+import org.apache.james.eventsourcing.EventSourcingSystemTest;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public interface Event extends Comparable<Event> {
-
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
-    }
-
-    EventId eventId();
-
-    AggregateId getAggregateId();
-
-    @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
-    }
+@ExtendWith(CassandraEventStoreExtension.class)
+public class CassandraEventSourcingSystemTest implements EventSourcingSystemTest {
 
 }

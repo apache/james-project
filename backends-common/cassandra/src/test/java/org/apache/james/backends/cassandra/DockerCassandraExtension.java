@@ -56,6 +56,10 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return dockerCassandra;
     }
+
+    public DockerCassandra getDockerCassandra() {
+        return dockerCassandra;
+    }
     
     public static class DockerCassandra {
         

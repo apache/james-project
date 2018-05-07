@@ -17,27 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.eventsourcing.cassandra.dto;
 
-import java.util.List;
+import org.apache.james.eventsourcing.Event;
 
-public interface Event extends Comparable<Event> {
+public interface EventDTOModule {
+    String getType();
 
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
-    }
+    Class<? extends EventDTO> getDTOClass();
 
-    EventId eventId();
+    Class<? extends Event> getEventClass();
 
-    AggregateId getAggregateId();
-
-    @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
-    }
-
+    EventDTO toDTO(Event event);
 }

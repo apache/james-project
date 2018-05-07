@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -105,5 +106,12 @@ public class QuotaThresholdHistory {
     @Override
     public final int hashCode() {
         return Objects.hash(changes);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("changes", changes)
+            .toString();
     }
 }
