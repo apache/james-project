@@ -238,7 +238,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mime4J">
   
-    <p>Apache Mime4J 0.8.1 is the latest stable version.</p>
+    <p>Apache Mime4J 0.8.2 is the latest stable version.</p>
 
     <p>You can directly use the core library with maven:</p>
 
@@ -247,16 +247,16 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j-core&lt;/artifactId&gt;
-    &lt;version&gt;0.8.1&lt;/version&gt;
+    &lt;version&gt;0.8.2&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar">(Jar)</a>
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.md5">MD5</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-core-0.8.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-core-0.8.2.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-core-0.8.2.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-core-0.8.2.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-core-0.8.2.jar.asc">PGP</a>]
       </p>
 
     <p>In order to use Mime-4j DOM:</p>
@@ -266,16 +266,16 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j-dom&lt;/artifactId&gt;
-    &lt;version&gt;0.8.1&lt;/version&gt;
+    &lt;version&gt;0.8.2&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar">(Jar)</a>
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.md5">MD5</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-dom-0.8.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-dom-0.8.2.jar">(Jar)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-dom-0.8.2.jar.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-dom-0.8.2.jar.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-dom-0.8.2.jar.asc">PGP</a>]
     </p>
 
     <p>An aggregator project is also available:</p>
@@ -285,23 +285,23 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mime4j&lt;/artifactId&gt;
-    &lt;version&gt;0.8.1&lt;/version&gt;
+    &lt;version&gt;0.8.2&lt;/version&gt;
   &lt;/dependency&gt;
      </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip">(Zip)</a>
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.md5">MD5</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/apache-mime4j-0.8.1-bin.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-0.8.2-bin.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-0.8.2-bin.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-0.8.2-bin.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/apache-mime4j-0.8.2-bin.zip.asc">PGP</a>]
     </p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip">(Zip)</a>
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.md5">MD5</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.sha1">SHA-1</a>]
-      [<a href="https://www.apache.org/dist/james/mime4j/0.8.1/james-mime4j-sources-0.8.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dist/james/mime4j/0.8.2/james-mime4j-sources-0.8.2.zip">(Zip)</a>
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/james-mime4j-sources-0.8.2.zip.md5">MD5</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/james-mime4j-sources-0.8.2.zip.sha1">SHA-1</a>]
+      [<a href="https://www.apache.org/dist/james/mime4j/0.8.2/james-mime4j-sources-0.8.2.zip.asc">PGP</a>]
     </p>
   
   </section>
