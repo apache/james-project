@@ -580,7 +580,7 @@
         <deployTechnicalSiteDirectory />
 
         <activemq.version>5.15.2</activemq.version>
-        <apache-mime4j.version>0.8.2-SNAPSHOT</apache-mime4j.version>
+        <apache-mime4j.version>0.8.2</apache-mime4j.version>
         <camel.version>2.19.4</camel.version>
         <derby.version>10.9.1.0</derby.version>
         <hadoop.version>1.1.1</hadoop.version>
