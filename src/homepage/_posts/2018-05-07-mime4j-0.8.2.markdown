@@ -1,0 +1,34 @@
+---
+layout: post
+title:  "Apache James Mime4J 0.8.2"
+date:   2018-05-07 11:30:00 +0700
+categories: james update
+---
+
+James Mime4J 0.8.2 has been released.
+
+This release solves the following bugs:
+
+ - MIME4J-267 MIME4J DOM parsing errors on specific formats
+ - MIME4J-273 Correcting encoder splitting point
+
+The following feature were added:
+
+ - MIME4J-269 Introduce a safe to use, PERMISSIVE configuration
+ - MIME4J-268 DefaultMessageWriter: expose a convenient *asBytes* method
+ - MIME4J-271 Make possible to define a Content-Type parameter
+ - MIME4J-272 Implicit DOM builder call
+
+The library is available as a maven artifact, for instance for mime4j core:
+
+```
+<dependency>
+    <groupId>org.apache.james</groupId>
+    <artifactId>apache-mime4j-core</artifactId>
+    <version>0.8.2</version>
+</dependency>
+```
+
+You can also download the release artifacts [here].
+
+[here]: https://www.apache.org/dist/james/mime4j/0.8.2/
