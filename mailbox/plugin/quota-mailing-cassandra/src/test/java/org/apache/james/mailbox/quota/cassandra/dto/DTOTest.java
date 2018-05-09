@@ -20,7 +20,11 @@
 package org.apache.james.mailbox.quota.cassandra.dto;
 
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._75;
+import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Instant;
 
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.EventId;
@@ -31,6 +35,8 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
+import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
+import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,6 +48,7 @@ class DTOTest {
 
     public static final Quota<QuotaSize> SIZE_QUOTA = Quota.<QuotaSize>builder().used(QuotaSize.size(23)).computedLimit(QuotaSize.size(33)).build();
     public static final Quota<QuotaCount> COUNT_QUOTA = Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.count(45)).build();
+    public static final Instant INSTANT = Instant.ofEpochMilli(45554);
     public static final QuotaThresholdChangedEvent EVENT = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.noChanges(),
@@ -49,32 +56,34 @@ class DTOTest {
         SIZE_QUOTA,
         COUNT_QUOTA,
         UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
+    public static final QuotaThresholdChangedEvent EVENT_2 = new QuotaThresholdChangedEvent(
+        EventId.first(),
+        HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
+        HistoryEvolution.noChanges(),
+        SIZE_QUOTA,
+        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
+    public static final QuotaThresholdChangedEvent EVENT_3 = new QuotaThresholdChangedEvent(
+        EventId.first(),
+        HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
+        HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
+            HistoryEvolution.HighestThresholdRecentness.NotAlreadyReachedDuringGracePeriod),
+        SIZE_QUOTA,
+        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
+    public static final QuotaThresholdChangedEvent EVENT_4 = new QuotaThresholdChangedEvent(
+        EventId.first(),
+        HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
+        HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
+            HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod),
+        SIZE_QUOTA,
+        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
 
-    public static final String EVENT_JSON = "{" +
-        " \"type\": \"quota-threshold-change\"," +
-        " \"eventId\": 0," +
-        " \"user\": \"foo@bar.com\"," +
-        " \"sizeQuota\": {" +
-        "   \"used\": 23," +
-        "   \"limit\": 33" +
-        " }," +
-        " \"countQuota\": {" +
-        "   \"used\": 12," +
-        "   \"limit\": 45" +
-        " }," +
-        " \"sizeEvolution\": {" +
-        "   \"change\": \"NoChange\"," +
-        "   \"threshold\": null," +
-        "   \"instant\": null," +
-        "   \"recentness\": null" +
-        " }," +
-        " \"countEvolution\": {" +
-        "   \"change\": \"NoChange\"," +
-        "   \"threshold\": null," +
-        "   \"instant\": null," +
-        "   \"recentness\": null" +
-        " }" +
-        "}";
+    public static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
+    public static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event2.json");
+    public static final String EVENT_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/event3.json");
+    public static final String EVENT_JSON_4 = ClassLoaderUtils.getSystemResourceAsString("json/event4.json");
 
     public static final String COUNT_QUOTA_JSON = "{" +
         "   \"used\": 12," +
@@ -129,9 +138,6 @@ class DTOTest {
 
     @Test
     void shouldDeserializeQuotaThresholdChangedEventDTO() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new Jdk8Module());
-
         assertThat(objectMapper.readValue(EVENT_JSON, QuotaThresholdChangedEventDTO.class)
             .toEvent())
             .isEqualTo(EVENT);
@@ -142,6 +148,55 @@ class DTOTest {
         assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
             .serialize(EVENT))
             .isEqualTo(EVENT_JSON);
+    }
+
+    @Test
+    void shouldDeserializeQuotaThresholdChangedEvent() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .deserialize(EVENT_JSON))
+            .isEqualTo(EVENT);
+    }
+
+    @Test
+    void shouldSerializeEvent2() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .serialize(EVENT_2))
+            .isEqualTo(EVENT_JSON_2);
+    }
+
+    @Test
+    void shouldDeserializeEvent2() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .deserialize(EVENT_JSON_2))
+            .isEqualTo(EVENT_2);
+    }
+
+    @Test
+    void shouldSerializeEvent3() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .serialize(EVENT_3))
+            .isEqualTo(EVENT_JSON_3);
+    }
+
+    @Test
+    void shouldDeserializeEvent3() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .deserialize(EVENT_JSON_3))
+            .isEqualTo(EVENT_3);
+    }
+
+    @Test
+    void shouldSerializeEvent4() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .serialize(EVENT_4))
+            .isEqualTo(EVENT_JSON_4);
+    }
+
+    @Test
+    void shouldDeserializeEvent4() throws Exception {
+        assertThatJson(new JsonEventSerializer(new QuotaThresholdChangedEventDTOModule())
+            .deserialize(EVENT_JSON_4))
+            .isEqualTo(EVENT_4);
     }
 
 }

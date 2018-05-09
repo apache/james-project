@@ -1,0 +1,20 @@
+{
+  "type":"quota-threshold-change",
+  "eventId":0,
+  "user":"foo@bar.com",
+  "sizeQuota":{
+    "used":23,
+    "limit":33
+  },
+  "countQuota":{
+    "used":12
+  },
+  "sizeEvolution":{
+    "threshold":0.75,
+    "instant":45554,
+    "change":"LowerThresholdReached"
+  },
+  "countEvolution":{
+    "change":"NoChange"
+  }
+}

@@ -25,11 +25,19 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 
 public class ClassLoaderUtils {
-    public static String getSystemResourceAsString(String filename) throws IOException {
-        return IOUtils.toString(ClassLoader.getSystemResourceAsStream(filename), StandardCharsets.US_ASCII);
+    public static String getSystemResourceAsString(String filename) {
+        try {
+            return IOUtils.toString(ClassLoader.getSystemResourceAsStream(filename), StandardCharsets.US_ASCII);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public static byte[] getSystemResourceAsByteArray(String filename) throws IOException {
-        return IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream(filename));
+    public static byte[] getSystemResourceAsByteArray(String filename) {
+        try {
+            return IOUtils.toByteArray(ClassLoader.getSystemResourceAsStream(filename));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
