@@ -26,15 +26,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;
+import org.apache.james.eventsourcing.cassandra.dto.OtherEvent;
+import org.apache.james.eventsourcing.cassandra.dto.OtherTestEventDTOModule;
 import org.apache.james.eventsourcing.cassandra.dto.TestEventDTOModule;
 import org.junit.jupiter.api.Test;
 
 class JsonEventSerializerTest {
+    public static final EventId EVENT_ID = EventId.fromSerialized(0);
+    public static final TestAggregateId AGGREGATE_ID = TestAggregateId.testId(1);
+
+    public static final OtherEvent OTHER_EVENT = new OtherEvent(EVENT_ID, AGGREGATE_ID, 1);
+    public static final TestEvent TEST_EVENT = new TestEvent(EVENT_ID, AGGREGATE_ID, "first");
+
     public static final String TEST_EVENT_JSON = "{\"type\":\"TestType\",\"data\":\"first\",\"eventId\":0,\"aggregate\":1}";
-    public static final TestEvent TEST_EVENT = new TestEvent(
-        EventId.fromSerialized(0),
-        TestAggregateId.testId(1),
-        "first");
+    public static final String OTHER_EVENT_JSON = "{\"type\":\"other-type\",\"data\":1,\"eventId\":0,\"aggregate\":1}";
 
     @Test
     void shouldDeserializeKnownEvent() throws Exception {
@@ -48,6 +53,36 @@ class JsonEventSerializerTest {
         assertThatThrownBy(() -> new JsonEventSerializer()
             .deserialize(TEST_EVENT_JSON))
             .isInstanceOf(JsonEventSerializer.UnknownEventException.class);
+    }
+
+    @Test
+    void serializeShouldHandleAllKnownEvents() throws Exception {
+        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(
+            new TestEventDTOModule(),
+            new OtherTestEventDTOModule());
+
+        assertThatJson(
+            jsonEventSerializer.serialize(OTHER_EVENT))
+            .isEqualTo(OTHER_EVENT_JSON);
+
+        assertThatJson(
+            jsonEventSerializer.serialize(TEST_EVENT))
+            .isEqualTo(TEST_EVENT_JSON);
+    }
+
+    @Test
+    void deserializeShouldHandleAllKnownEvents() throws Exception {
+        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(
+            new TestEventDTOModule(),
+            new OtherTestEventDTOModule());
+
+        assertThatJson(
+            jsonEventSerializer.deserialize(OTHER_EVENT_JSON))
+            .isEqualTo(OTHER_EVENT);
+
+        assertThatJson(
+            jsonEventSerializer.deserialize(TEST_EVENT_JSON))
+            .isEqualTo(TEST_EVENT);
     }
 
     @Test
