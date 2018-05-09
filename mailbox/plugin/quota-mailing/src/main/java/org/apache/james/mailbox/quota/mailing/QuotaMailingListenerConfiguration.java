@@ -61,17 +61,17 @@ public class QuotaMailingListenerConfiguration {
             return this;
         }
 
-        public Builder withGracePeriod(Duration duration) {
+        public Builder gracePeriod(Duration duration) {
             this.gradePeriod = Optional.of(duration);
             return this;
         }
         
-        public Builder withBodyTemplate(String bodyTemplate) {
+        public Builder bodyTemplate(String bodyTemplate) {
             this.bodyTemplate = Optional.of(bodyTemplate);
             return this;
         }
 
-        public Builder withSubjectTemplate(String subjectTemplate) {
+        public Builder subjectTemplate(String subjectTemplate) {
             this.subjectTemplate = Optional.of(subjectTemplate);
             return this;
         }

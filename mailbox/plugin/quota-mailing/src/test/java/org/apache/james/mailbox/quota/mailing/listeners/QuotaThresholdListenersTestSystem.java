@@ -21,6 +21,7 @@ package org.apache.james.mailbox.quota.mailing.listeners;
 
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.EventStore;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -28,6 +29,8 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHandler;
 import org.apache.james.mailbox.quota.mailing.subscribers.QuotaThresholdMailer;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.server.core.JamesServerResourceLoader;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailetContext;
 
@@ -40,9 +43,11 @@ public class QuotaThresholdListenersTestSystem {
     public QuotaThresholdListenersTestSystem(MailetContext mailetContext, EventStore eventStore, QuotaMailingListenerConfiguration configuration) throws MailboxException {
         delegatingListener = new DefaultDelegatingMailboxListener();
 
+        FileSystem fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
+
         EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
             ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, configuration)),
-            ImmutableSet.of(new QuotaThresholdMailer(mailetContext, MemoryUsersRepository.withVirtualHosting())),
+            ImmutableSet.of(new QuotaThresholdMailer(mailetContext, MemoryUsersRepository.withVirtualHosting(), fileSystem, configuration)),
             eventStore);
 
         QuotaThresholdCrossingListener thresholdCrossingListener =

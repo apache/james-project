@@ -54,9 +54,14 @@
             <artifactId>apache-mailet-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -67,6 +72,14 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-memory</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-filesystem-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.spullara.mustache.java</groupId>
+            <artifactId>compiler</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

@@ -129,7 +129,7 @@ public interface QuotaThresholdFixture {
         Duration GRACE_PERIOD = Duration.ofDays(1);
         QuotaMailingListenerConfiguration DEFAULT_CONFIGURATION = QuotaMailingListenerConfiguration.builder()
             .addThresholds(_50)
-            .withGracePeriod(GRACE_PERIOD)
+            .gracePeriod(GRACE_PERIOD)
             .build();
         String BOB = "bob@domain";
         MockMailboxSession BOB_SESSION = new MockMailboxSession(BOB);

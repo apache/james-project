@@ -192,7 +192,7 @@ public interface QuotaThresholdMailingIntegrationTest {
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
             QuotaMailingListenerConfiguration.builder()
                 .addThresholds(_50, _80)
-                .withGracePeriod(GRACE_PERIOD)
+                .gracePeriod(GRACE_PERIOD)
                 .build());
 
         testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, NOW));
@@ -208,7 +208,7 @@ public interface QuotaThresholdMailingIntegrationTest {
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
             QuotaMailingListenerConfiguration.builder()
                 .addThresholds(_50, _80)
-                .withGracePeriod(GRACE_PERIOD)
+                .gracePeriod(GRACE_PERIOD)
                 .build());
 
         new ConcurrentTestRunner(10, 1, (threadNb, step) ->

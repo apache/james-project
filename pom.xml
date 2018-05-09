@@ -1548,6 +1548,11 @@
                 <version>3.1.5</version>
             </dependency>
             <dependency>
+                <groupId>com.github.spullara.mustache.java</groupId>
+                <artifactId>compiler</artifactId>
+                <version>0.9.5</version>
+            </dependency>
+            <dependency>
                 <groupId>com.github.steveash.guavate</groupId>
                 <artifactId>guavate</artifactId>
                 <version>${guavate.version}</version>

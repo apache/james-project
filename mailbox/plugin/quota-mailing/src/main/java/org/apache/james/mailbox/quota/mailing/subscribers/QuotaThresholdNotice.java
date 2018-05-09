@@ -19,17 +19,32 @@
 
 package org.apache.james.mailbox.quota.mailing.subscribers;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -40,6 +55,7 @@ public class QuotaThresholdNotice {
         private Optional<QuotaThreshold> sizeThreshold;
         private Quota<QuotaSize> sizeQuota;
         private Quota<QuotaCount> countQuota;
+        private QuotaMailingListenerConfiguration configuration;
 
         public Builder() {
             countThreshold = Optional.empty();
@@ -72,82 +88,26 @@ public class QuotaThresholdNotice {
             return this;
         }
 
+        public Builder withConfiguration(QuotaMailingListenerConfiguration configuration) {
+            this.configuration = configuration;
+            return this;
+        }
+
         boolean needsNotification(HistoryEvolution evolution) {
             return evolution.getThresholdHistoryChange() == HistoryEvolution.HistoryChangeType.HigherThresholdReached
                 && evolution.currentThresholdNotRecentlyReached();
         }
 
         public Optional<QuotaThresholdNotice> build() {
+            Preconditions.checkNotNull(configuration);
             Preconditions.checkNotNull(sizeQuota);
-            Preconditions.checkNotNull(countQuota);
+            Preconditions.checkNotNull(configuration);
 
             if (sizeThreshold.isPresent() || countThreshold.isPresent()) {
                 return Optional.of(
-                    new QuotaThresholdNotice(countThreshold, sizeThreshold, sizeQuota, countQuota));
+                    new QuotaThresholdNotice(countThreshold, sizeThreshold, sizeQuota, countQuota, configuration));
             }
             return Optional.empty();
-        }
-    }
-
-    public static class MessageBuilder {
-        public static final String PREAMBLE = "You receive this email because you recently exceeded a threshold related " +
-            "to the quotas of your email account.\n\n";
-        public static final String CONCLUSION = "You need to be aware that actions leading to exceeded quotas will be denied. " +
-            "This will result in a degraded service.\n" +
-            "To mitigate this issue you might reach your administrator in order to increase your configured quota. " +
-            "You might also delete some non important emails.";
-
-        private final StringBuilder stringBuilder;
-
-
-        public MessageBuilder() {
-            this.stringBuilder = new StringBuilder();
-        }
-
-        public MessageBuilder appendSizeReport(QuotaThreshold threshold, Quota<QuotaSize> sizeQuota) {
-            stringBuilder.append(String.format("You currently occupy more than %d %% of the total size allocated to you.\n" +
-                    "You currently occupy %s on a total of %s allocated to you.\n\n",
-                threshold.getQuotaOccupationRatioAsPercent(),
-                FileUtils.byteCountToDisplaySize(sizeQuota.getUsed().asLong()),
-                FileUtils.byteCountToDisplaySize(sizeQuota.getLimit().asLong())));
-            return this;
-        }
-
-        public MessageBuilder appendCountReport(QuotaThreshold threshold, Quota<QuotaCount> countQuota) {
-            stringBuilder.append(String.format("You currently occupy more than %d %% of the total message count allocated to you.\n" +
-                    "You currently have %d messages on a total of %d allowed for you.\n\n",
-                threshold.getQuotaOccupationRatioAsPercent(),
-                countQuota.getUsed().asLong(),
-                countQuota.getLimit().asLong()));
-            return this;
-        }
-
-        public MessageBuilder appendSizeReport(Optional<QuotaThreshold> threshold, Quota<QuotaSize> sizeQuota) {
-            if (threshold.isPresent()) {
-                return appendSizeReport(threshold.get(), sizeQuota);
-            }
-            return this;
-        }
-
-        public MessageBuilder appendCountReport(Optional<QuotaThreshold> threshold, Quota<QuotaCount> countQuota) {
-            if (threshold.isPresent()) {
-                return appendCountReport(threshold.get(), countQuota);
-            }
-            return this;
-        }
-
-        public MessageBuilder appendPreamble() {
-            stringBuilder.append(PREAMBLE);
-            return this;
-        }
-
-        public MessageBuilder appendConclusion() {
-            stringBuilder.append(CONCLUSION);
-            return this;
-        }
-
-        public String build() {
-            return stringBuilder.toString();
         }
     }
 
@@ -159,23 +119,77 @@ public class QuotaThresholdNotice {
     private final Optional<QuotaThreshold> sizeThreshold;
     private final Quota<QuotaSize> sizeQuota;
     private final Quota<QuotaCount> countQuota;
+    private final QuotaMailingListenerConfiguration configuration;
 
     @VisibleForTesting
     QuotaThresholdNotice(Optional<QuotaThreshold> countThreshold, Optional<QuotaThreshold> sizeThreshold,
-                         Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota) {
+                         Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota, QuotaMailingListenerConfiguration configuration) {
         this.countThreshold = countThreshold;
         this.sizeThreshold = sizeThreshold;
         this.sizeQuota = sizeQuota;
         this.countQuota = countQuota;
+        this.configuration = configuration;
     }
 
-    public String generateReport() {
-        return new MessageBuilder()
-            .appendPreamble()
-            .appendSizeReport(sizeThreshold, sizeQuota)
-            .appendCountReport(countThreshold, countQuota)
-            .appendConclusion()
-            .build();
+    public MimeMessageBuilder generateMimeMessage(FileSystem fileSystem) throws IOException {
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject(generateSubject(fileSystem))
+            .setText(generateReport(fileSystem));
+    }
+
+    @VisibleForTesting
+    String generateSubject(FileSystem fileSystem) throws IOException {
+        return renderTemplate(fileSystem, configuration.getSubjectTemplate());
+    }
+
+    @VisibleForTesting
+    String generateReport(FileSystem fileSystem) throws IOException {
+        return renderTemplate(fileSystem, configuration.getBodyTemplate());
+    }
+
+    private String renderTemplate(FileSystem fileSystem, String template) throws IOException {
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+             Writer writer = new OutputStreamWriter(byteArrayOutputStream)) {
+
+            MustacheFactory mf = new DefaultMustacheFactory();
+            Mustache mustache = mf.compile(getPatternReader(fileSystem, template), "example");
+            mustache.execute(writer, computeScopes());
+            writer.flush();
+            return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private StringReader getPatternReader(FileSystem fileSystem, String path) throws IOException {
+        try (InputStream patternStream = fileSystem.getResource(path);
+             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+
+            IOUtils.copy(patternStream, byteArrayOutputStream);
+            String pattern = new String(byteArrayOutputStream.toByteArray(), StandardCharsets.UTF_8);
+            return new StringReader(pattern);
+        }
+    }
+
+    private HashMap<String, Object> computeScopes() {
+        HashMap<String, Object> scopes = new HashMap<>();
+
+        scopes.put("hasExceededSizeThreshold", sizeThreshold.isPresent());
+        scopes.put("hasExceededCountThreshold", countThreshold.isPresent());
+        sizeThreshold.ifPresent(value -> scopes.put("sizeThreshold", value.getQuotaOccupationRatioAsPercent()));
+        countThreshold.ifPresent(value -> scopes.put("countThreshold", value.getQuotaOccupationRatioAsPercent()));
+
+        scopes.put("usedSize", FileUtils.byteCountToDisplaySize(sizeQuota.getUsed().asLong()));
+        scopes.put("hasSizeLimit", sizeQuota.getLimit().isLimited());
+        if (sizeQuota.getLimit().isLimited()) {
+            scopes.put("limitSize", FileUtils.byteCountToDisplaySize(sizeQuota.getLimit().asLong()));
+        }
+
+        scopes.put("usedCount", countQuota.getUsed().asLong());
+        scopes.put("hasCountLimit", countQuota.getLimit().isLimited());
+        if (countQuota.getLimit().isLimited()) {
+            scopes.put("limitCount", sizeQuota.getLimit().asLong());
+        }
+
+        return scopes;
     }
 
     @Override
@@ -186,14 +200,15 @@ public class QuotaThresholdNotice {
             return Objects.equals(this.countThreshold, that.countThreshold)
                 && Objects.equals(this.sizeThreshold, that.sizeThreshold)
                 && Objects.equals(this.sizeQuota, that.sizeQuota)
-                && Objects.equals(this.countQuota, that.countQuota);
+                && Objects.equals(this.countQuota, that.countQuota)
+                && Objects.equals(this.configuration, that.configuration);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(countThreshold, sizeThreshold, sizeQuota, countQuota);
+        return Objects.hash(countThreshold, sizeThreshold, sizeQuota, countQuota, configuration);
     }
 
 }
