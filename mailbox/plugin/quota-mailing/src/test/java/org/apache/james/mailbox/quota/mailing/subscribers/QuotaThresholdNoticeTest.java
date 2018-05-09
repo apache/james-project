@@ -242,4 +242,19 @@ class QuotaThresholdNoticeTest {
                 "You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.\n" +
                 "To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.");
     }
+
+    @Test
+    void generateSubjectShouldRenderMustacheTemplate() throws Exception {
+        QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(QuotaThresholdNotice.builder()
+            .withConfiguration(DEFAULT_CONFIGURATION)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._UNLIMITED)
+            .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateSubject(fileSystem))
+            .isEqualTo("Warning: Your email usage just exceeded a configured threshold");
+    }
 }
