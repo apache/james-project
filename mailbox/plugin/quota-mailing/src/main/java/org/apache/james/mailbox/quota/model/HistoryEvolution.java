@@ -51,7 +51,7 @@ public class HistoryEvolution {
     }
 
     public enum HighestThresholdRecentness {
-        AlreadyReachedDuringGracePriod,
+        AlreadyReachedDuringGracePeriod,
         NotAlreadyReachedDuringGracePeriod
     }
 

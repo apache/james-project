@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.model;
 
-import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePriod;
+import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod;
 import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.NotAlreadyReachedDuringGracePeriod;
 
 import java.time.Duration;
@@ -70,7 +70,7 @@ public class QuotaThresholdHistory {
             return HistoryEvolution.noChanges();
         }
         return recentlyExceededQuotaThreshold(thresholdChange, gracePeriod)
-                .map(any -> HistoryEvolution.higherThresholdReached(thresholdChange, AlreadyReachedDuringGracePriod))
+                .map(any -> HistoryEvolution.higherThresholdReached(thresholdChange, AlreadyReachedDuringGracePeriod))
                 .orElse(HistoryEvolution.higherThresholdReached(thresholdChange, NotAlreadyReachedDuringGracePeriod));
     }
 

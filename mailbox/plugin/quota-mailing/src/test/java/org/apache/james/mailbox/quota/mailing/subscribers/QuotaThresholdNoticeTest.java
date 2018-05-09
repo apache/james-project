@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.mailing.subscribers;
 
-import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePriod;
+import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod;
 import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThresholdRecentness.NotAlreadyReachedDuringGracePeriod;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.NOW;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
@@ -81,7 +81,7 @@ class QuotaThresholdNoticeTest {
         assertThat(QuotaThresholdNotice.builder()
             .sizeQuota(Sizes._82_PERCENT)
             .countQuota(Counts._82_PERCENT)
-            .sizeThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), AlreadyReachedDuringGracePriod))
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), AlreadyReachedDuringGracePeriod))
             .build())
             .isEmpty();
     }

@@ -57,7 +57,7 @@ class HistoryEvolutionTest {
     @Test
     void isModifiedShouldReturnTrueWhenHigherThresholdAlreadyReachedWithinGracePeriod() {
         assertThat(
-            HistoryEvolution.higherThresholdReached(SAMPLE_THRESHOLD, HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePriod)
+            HistoryEvolution.higherThresholdReached(SAMPLE_THRESHOLD, HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod)
                 .isChange())
             .isTrue();
     }
@@ -89,7 +89,7 @@ class HistoryEvolutionTest {
     @Test
     void currentThresholdNotRecentlyReachedShouldReturnFalseWhenHigherThresholdReachedAlreadyReachedWithinGracePeriod() {
         assertThat(
-            HistoryEvolution.higherThresholdReached(SAMPLE_THRESHOLD, HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePriod)
+            HistoryEvolution.higherThresholdReached(SAMPLE_THRESHOLD, HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod)
                 .currentThresholdNotRecentlyReached())
             .isFalse();
     }
