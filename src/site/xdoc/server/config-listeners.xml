@@ -49,6 +49,8 @@
                      Please note that a <code>spamassassin.properties</code> file is needed.</li>
                  <li><code>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</code>:
                      For Cassandra guice wiring. Provides more insights on mailbox operations</li>
+                 <li><code>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</code>:
+                     For Cassandra guice wiring. Sends emails to users exceeding 80% and 99% of their quota to warn them</li>
             </ul>
         </section>
 
