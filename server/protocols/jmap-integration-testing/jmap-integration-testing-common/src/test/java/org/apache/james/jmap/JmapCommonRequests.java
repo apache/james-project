@@ -99,6 +99,17 @@ public class JmapCommonRequests {
                 .path(ARGUMENTS + ".messageIds");
     }
 
+    public static String getLastMessageId(AccessToken accessToken) {
+        return with()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessageList\", {\"sort\":[\"date desc\"]}, \"#0\"]]")
+                .post("/jmap")
+            .then()
+                .extract()
+                .body()
+                .path(ARGUMENTS + ".messageIds[0]");
+    }
+
     public static List<String> listMessageIdsInMailbox(AccessToken accessToken, String mailboxId) {
         return with()
                 .header("Authorization", accessToken.serialize())

@@ -25,4 +25,7 @@
   <listener>
     <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
   </listener>
+  <listener>
+    <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+  </listener>
 </listeners>

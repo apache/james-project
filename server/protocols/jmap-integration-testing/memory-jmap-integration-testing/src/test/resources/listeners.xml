@@ -22,4 +22,7 @@
   <listener>
     <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
   </listener>
+  <listener>
+    <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+  </listener>
 </listeners>
