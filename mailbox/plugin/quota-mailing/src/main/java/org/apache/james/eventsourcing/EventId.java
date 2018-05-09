@@ -27,13 +27,17 @@ import com.google.common.base.Preconditions;
 
 public class EventId implements Comparable<EventId> {
 
+    public static EventId fromSerialized(int value) {
+        return new EventId(value);
+    }
+
     public static EventId first() {
         return new EventId(0);
     }
 
-    private final long value;
+    private final int value;
 
-    private EventId(long value) {
+    private EventId(int value) {
         Preconditions.checkArgument(value >= 0, "EventId can not be negative");
         this.value = value;
     }
@@ -74,5 +78,9 @@ public class EventId implements Comparable<EventId> {
         return MoreObjects.toStringHelper(this)
             .add("value", value)
             .toString();
+    }
+
+    public int serialize() {
+        return value;
     }
 }
