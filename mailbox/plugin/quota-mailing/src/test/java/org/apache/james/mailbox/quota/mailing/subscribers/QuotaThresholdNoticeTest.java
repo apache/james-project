@@ -34,6 +34,7 @@ import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Counts;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Sizes;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -187,6 +188,27 @@ class QuotaThresholdNoticeTest {
         assertThat(QuotaThresholdNotice.builder()
             .sizeQuota(Sizes._82_PERCENT)
             .countQuota(Counts._92_PERCENT)
+            .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateReport())
+            .isEqualTo("You receive this email because you recently exceeded a threshold related to the quotas of your email account.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total message count allocated to you.\n" +
+                "You currently have 92 messages on a total of 100 allowed for you.\n" +
+                "\n" +
+                "You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.\n" +
+                "To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.");
+    }
+
+    @Disabled
+    @Test
+    void generateReportShouldNotFailWhenUnlimitedQuotaExceedsAThreshold() {
+        QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(QuotaThresholdNotice.builder()
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._UNLIMITED)
             .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
             .build()
             .get()

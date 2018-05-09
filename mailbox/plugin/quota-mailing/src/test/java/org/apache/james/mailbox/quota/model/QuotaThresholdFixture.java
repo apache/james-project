@@ -77,6 +77,11 @@ public interface QuotaThresholdFixture {
                 .used(QuotaCount.count(92))
                 .computedLimit(QuotaCount.count(100))
                 .build();
+
+            Quota<QuotaCount> _UNLIMITED = Quota.<QuotaCount>builder()
+                .used(QuotaCount.count(92))
+                .computedLimit(QuotaCount.unlimited())
+                .build();
         }
         interface Sizes {
             Quota<QuotaSize> _30_PERCENT = Quota.<QuotaSize>builder()
