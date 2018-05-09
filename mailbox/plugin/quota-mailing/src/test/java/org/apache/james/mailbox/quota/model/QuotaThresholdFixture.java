@@ -32,8 +32,6 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMailContext;
 
-import com.google.common.collect.ImmutableList;
-
 public interface QuotaThresholdFixture {
     QuotaThreshold _50 = new QuotaThreshold(0.50);
     QuotaThreshold _75 = new QuotaThreshold(0.75);
@@ -124,8 +122,10 @@ public interface QuotaThresholdFixture {
 
     interface TestConstants {
         Duration GRACE_PERIOD = Duration.ofDays(1);
-        QuotaThresholds SINGLE_THRESHOLD = new QuotaThresholds(ImmutableList.of(_50));
-        QuotaMailingListenerConfiguration DEFAULT_CONFIGURATION = new QuotaMailingListenerConfiguration(SINGLE_THRESHOLD, GRACE_PERIOD);
+        QuotaMailingListenerConfiguration DEFAULT_CONFIGURATION = QuotaMailingListenerConfiguration.builder()
+            .addThresholds(_50)
+            .withGracePeriod(GRACE_PERIOD)
+            .build();
         String BOB = "bob@domain";
         MockMailboxSession BOB_SESSION = new MockMailboxSession(BOB);
         Instant NOW = Instant.now();

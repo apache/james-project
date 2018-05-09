@@ -42,7 +42,6 @@ import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Counts;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Sizes;
-import org.apache.james.mailbox.quota.model.QuotaThresholds;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.Test;
@@ -191,7 +190,10 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldSendOneNoticePerThreshold(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
-            new QuotaMailingListenerConfiguration(new QuotaThresholds(_50, _80), GRACE_PERIOD));
+            QuotaMailingListenerConfiguration.builder()
+                .addThresholds(_50, _80)
+                .withGracePeriod(GRACE_PERIOD)
+                .build());
 
         testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, NOW));
         testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._85_PERCENT, Sizes._42_PERCENT, NOW));
@@ -203,7 +205,11 @@ public interface QuotaThresholdMailingIntegrationTest {
     @Test
     default void shouldSendOneMailUponConcurrentEvents(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
-        QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, new QuotaMailingListenerConfiguration(new QuotaThresholds(_50, _80), GRACE_PERIOD));
+        QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
+            QuotaMailingListenerConfiguration.builder()
+                .addThresholds(_50, _80)
+                .withGracePeriod(GRACE_PERIOD)
+                .build());
 
         new ConcurrentTestRunner(10, 1, (threadNb, step) ->
             testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
