@@ -20,8 +20,8 @@
 package org.apache.james.mailbox.quota.cassandra.dto;
 
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.cassandra.dto.EventDTO;
-import org.apache.james.eventsourcing.cassandra.dto.EventDTOModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
 import com.google.common.base.Preconditions;

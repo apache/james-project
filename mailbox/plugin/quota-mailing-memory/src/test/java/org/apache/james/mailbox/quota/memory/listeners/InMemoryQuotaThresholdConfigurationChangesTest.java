@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.memory.listeners;
 
-import org.apache.james.eventsourcing.InMemoryEventStoreExtension;
+import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStoreExtension;
 import org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdConfigurationChangesTest;
 import org.junit.jupiter.api.extension.ExtendWith;
 

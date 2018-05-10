@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.eventsourcing.EventStore;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Counts;

@@ -23,12 +23,12 @@ import java.time.Instant;
 import java.util.Objects;
 
 import org.apache.james.core.User;
-import org.apache.james.eventsourcing.CommandDispatcher;
+import org.apache.james.eventsourcing.Command;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 
-public class DetectThresholdCrossing implements CommandDispatcher.Command {
+public class DetectThresholdCrossing implements Command {
 
     private final User user;
     private final Quota<QuotaCount> countQuota;

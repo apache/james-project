@@ -28,7 +28,7 @@ import java.time.Instant;
 
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.cassandra.JsonEventSerializer;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
@@ -46,24 +46,24 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 class DTOTest {
 
-    public static final Quota<QuotaSize> SIZE_QUOTA = Quota.<QuotaSize>builder().used(QuotaSize.size(23)).computedLimit(QuotaSize.size(33)).build();
-    public static final Quota<QuotaCount> COUNT_QUOTA = Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.count(45)).build();
-    public static final Instant INSTANT = Instant.ofEpochMilli(45554);
-    public static final QuotaThresholdChangedEvent EVENT = new QuotaThresholdChangedEvent(
+    static final Quota<QuotaSize> SIZE_QUOTA = Quota.<QuotaSize>builder().used(QuotaSize.size(23)).computedLimit(QuotaSize.size(33)).build();
+    static final Quota<QuotaCount> COUNT_QUOTA = Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.count(45)).build();
+    static final Instant INSTANT = Instant.ofEpochMilli(45554);
+    static final QuotaThresholdChangedEvent EVENT = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.noChanges(),
         HistoryEvolution.noChanges(),
         SIZE_QUOTA,
         COUNT_QUOTA,
         UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
-    public static final QuotaThresholdChangedEvent EVENT_2 = new QuotaThresholdChangedEvent(
+    static final QuotaThresholdChangedEvent EVENT_2 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
         HistoryEvolution.noChanges(),
         SIZE_QUOTA,
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
         UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
-    public static final QuotaThresholdChangedEvent EVENT_3 = new QuotaThresholdChangedEvent(
+    static final QuotaThresholdChangedEvent EVENT_3 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
         HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
@@ -71,7 +71,7 @@ class DTOTest {
         SIZE_QUOTA,
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
         UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
-    public static final QuotaThresholdChangedEvent EVENT_4 = new QuotaThresholdChangedEvent(
+    static final QuotaThresholdChangedEvent EVENT_4 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
         HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
@@ -80,24 +80,24 @@ class DTOTest {
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
         UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com")));
 
-    public static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
-    public static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event2.json");
-    public static final String EVENT_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/event3.json");
-    public static final String EVENT_JSON_4 = ClassLoaderUtils.getSystemResourceAsString("json/event4.json");
+    static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
+    static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event2.json");
+    static final String EVENT_JSON_3 = ClassLoaderUtils.getSystemResourceAsString("json/event3.json");
+    static final String EVENT_JSON_4 = ClassLoaderUtils.getSystemResourceAsString("json/event4.json");
 
-    public static final String COUNT_QUOTA_JSON = "{" +
+    static final String COUNT_QUOTA_JSON = "{" +
         "   \"used\": 12," +
         "   \"limit\": 45" +
         " }";
 
-    public static final String NO_CHANGES_JSON = "{" +
+    static final String NO_CHANGES_JSON = "{" +
         "  \"change\":\"NoChange\"" +
         "}";
 
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);

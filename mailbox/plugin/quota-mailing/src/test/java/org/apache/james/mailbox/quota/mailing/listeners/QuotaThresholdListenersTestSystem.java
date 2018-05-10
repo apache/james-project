@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.quota.mailing.listeners;
 
 import org.apache.james.eventsourcing.EventSourcingSystem;
-import org.apache.james.eventsourcing.EventStore;
+import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.exception.MailboxException;

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.AggregateId;
-import org.apache.james.eventsourcing.EventStore;
+import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
@@ -82,15 +82,15 @@ public class UserQuotaThresholds {
         }
     }
 
-    public static UserQuotaThresholds fromEvents(Id aggregateId, EventStore.History history) {
+    public static UserQuotaThresholds fromEvents(Id aggregateId, History history) {
         return new UserQuotaThresholds(aggregateId, history);
     }
 
     private final Id aggregateId;
-    private final EventStore.History history;
+    private final History history;
     private final List<QuotaThresholdChangedEvent> events;
 
-    private UserQuotaThresholds(Id aggregateId, EventStore.History history) {
+    private UserQuotaThresholds(Id aggregateId, History history) {
         this.aggregateId = aggregateId;
         this.history = history;
         this.events = history.getEvents().stream()

@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.quota.cassandra.listeners;
 
-import org.apache.james.eventsourcing.cassandra.CassandraEventStoreExtension;
 import org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdMailingIntegrationTest;
 import org.junit.jupiter.api.extension.ExtendWith;
 
