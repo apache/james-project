@@ -123,6 +123,7 @@
                         <item name="SMTP LMTP" href="/server/config-smtp-lmtp.html" />
                         <item name="POP3" href="/server/config-pop3.html" />
                         <item name="IMAP4" href="/server/config-imap4.html" />
+                        <item name="JMAP" href="/server/config-jmap.html" />
                         <item name="Mailet Container" href="/server/config-mailetcontainer.html" />
                         <item name="FetchMail" href="/server/config-fetchmail.html" />
                         <item name="SSL/TLS" href="/server/config-ssl-tls.html" />

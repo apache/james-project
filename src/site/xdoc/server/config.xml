@@ -38,7 +38,7 @@
     <p>Please note that the configuration is dependent of the wiring you have chosen. Some configuration files are specific to
     some back-ends, to some protocols. Please also note that some configuration files are not required for Guice. In this
     case, it will be specified.</p>
-       
+
     <p>In every configuration files, you can use the following notation to use an environment variable: <code>${env:MY_VAR}</code>.
     If <code>MY_VAR</code> exists, it will be replaced by the matching environment variable.
     If it does not, <code>${env:MY_VAR}</code> will be kept as is.</p>
@@ -121,6 +121,11 @@
       <tr>
         <td><a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/fetchmail.xml">fetchmail.xml</a></td>
         <td><a href="config-fetchmail.html">FetchMail Configuration (Spring only)</a></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td><a href="https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra/destination/conf/jmap.properties">jmap.properties</a></td>
+        <td><a href="config-jmap.html">JMAP Configuration (Guice only)</a></td>
         <td></td>
       </tr>
 
