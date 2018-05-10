@@ -202,6 +202,30 @@ class QuotaThresholdNoticeTest {
     }
 
     @Test
+    void generateReportShouldFormatSizeUnits() throws Exception {
+        QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
+
+        assertThat(QuotaThresholdNotice.builder()
+            .withConfiguration(DEFAULT_CONFIGURATION)
+            .sizeQuota(Quota.<QuotaSize>builder()
+                .used(QuotaSize.size(801 * 1024 * 1024))
+                .computedLimit(QuotaSize.size(1024 * 1024 * 1024))
+                .build())
+            .countQuota(Counts._72_PERCENT)
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get()
+            .generateReport(fileSystem))
+            .isEqualTo("You receive this email because you recently exceeded a threshold related to the quotas of your email account.\n" +
+                "\n" +
+                "You currently occupy more than 80 % of the total size allocated to you.\n" +
+                "You currently occupy 801 MB on a total of 1 GB allocated to you.\n" +
+                "\n" +
+                "You need to be aware that actions leading to exceeded quotas will be denied. This will result in a degraded service.\n" +
+                "To mitigate this issue you might reach your administrator in order to increase your configured quota. You might also delete some non important emails.");
+    }
+
+    @Test
     void generateReportShouldOmitSizePartWhenNone() throws Exception {
         QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
 
