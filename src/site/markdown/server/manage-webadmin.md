@@ -26,6 +26,7 @@ In case of any error, the system will return an error message which is json form
  - [Administrating user mailboxes](#Administrating_user_mailboxes)
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
+ - [Administrating global quotas](#Administrating_global_quotas)
  - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
@@ -636,6 +637,175 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+## Administrating global quotas
+
+ - [Getting the global quota](#Getting_the_global_quota)
+ - [Updating global quota](#Updating_global_quota)
+ - [Getting the global quota count](#Getting_the_global_quota_count)
+ - [Updating the global quota count](#Updating_the_global_quota_count)
+ - [Deleting the global quota count](#Deleting_the_global_quota_count)
+ - [Getting the global quota size](#Getting_the_global_quota_size)
+ - [Updating the global quota size](#Updating_the_global_quota_size)
+ - [Deleting the global quota size](#Deleting_the_global_quota_size)
+
+### Getting the global quota
+
+```
+curl -XGET http://ip:port/quota/
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The answer is the details of the quota of that user.
+
+```
+{
+  "count":252,
+  "size":242
+}
+```
+
+Note that `quota` object can contain a fixed value, an empty value (null) or an unlimited value (-1):
+
+```
+{"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
+```
+
+Response codes:
+
+ - 200: The quota was successfully retrieved
+ - 500: Internal error while accessing quota
+
+### Updating global quota
+
+```
+curl -XPUT http://ip:port/quota
+```
+
+The body can contain a fixed value, an empty value (null) or an unlimited value (-1):
+
+```
+{"count":52,"size":42}
+
+{"count":null,"size":null}
+
+{"count":52,"size":-1}
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 500: Internal server error - Something went bad on the server side.
+
+### Getting the global quota count
+
+```
+curl -XGET http://ip:port/quota/count
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The quota was successfully retrieved
+ - 500: Internal error while accessing the quota
+
+### Updating the global quota count
+
+```
+curl -XPUT http://ip:port/quota/count
+```
+
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the global quota count
+
+```
+curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/count
+```
+
+Resource name usernameToBeUsed should be an existing user
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 404: The user does not exist
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Getting the global quota size
+
+```
+curl -XGET http://ip:port/quota/size
+```
+
+
+The answer looks like:
+
+```
+52
+```
+
+Response codes:
+
+ - 200: The quota was successfully retrieved
+ - 500: Internal error while accessing the quota
+
+### Updating the global quota size
+
+```
+curl -XPUT http://ip:port/quota/size
+```
+
+The body can contain a fixed value or an unlimited value (-1):
+
+```
+52
+```
+
+Response codes:
+
+ - 204: The quota has been updated
+ - 400: The body is not a positive integer neither an unlimited value (-1).
+ - 409: The requested restriction can’t be enforced right now.
+ - 500: Internal server error - Something went bad on the server side.
+
+### Deleting the global quota size
+
+```
+curl -XDELETE http://ip:port/quota/size
+```
+
+Response codes:
+
+ - 204: The quota has been updated to unlimited value.
+ - 400: The body is not a positive integer neither an unlimited value (-1).
  - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
