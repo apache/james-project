@@ -19,6 +19,18 @@ The following document will explain you which are the available options for **CO
 
 Note: the command line before **COMMAND** will be documente as *{cli}*.
 
+## Navigation menu
+
+ - [Manage Domains](#Manage_Domains)
+ - [Managing users](#Managing_users)
+ - [Managing mailboxes](#Managing_mailboxes)
+ - [Adding a message in a mailbox](#Adding_a_message_in_a_mailbox)
+ - [Managing mappings](#Managing_mappings)
+ - [Manage quotas](#Manage_quotas)
+ - [Re-indexing](#Re-indexing)
+ - [Sieve scripts quota](#Sieve_scripts_quota)
+ - [Switching of mailbox implementation](#Switching_of_mailbox_implementation)
+
 ## Manage Domains
 
 Domains represent the domain names handled by your server.
