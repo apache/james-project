@@ -19,7 +19,27 @@ In case of any error, the system will return an error message which is json form
 }
 ```
 
+## Navigation menu
+
+ - [Administrating domains](#Administrating_domains)
+ - [Administrating users](#Administrating_users)
+ - [Administrating user mailboxes](#Administrating_user_mailboxes)
+ - [Administrating quotas by users](#Administrating_quotas_by_users)
+ - [Administrating quotas by domains](#Administrating_quotas_by_domains)
+ - [Cassandra Schema upgrades](#Cassandra_Schema_upgrades)
+ - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
+ - [Creating address group](#Creating_address_group)
+ - [Creating address forwards](#Creating_address_forwards)
+ - [Administrating mail repositories](#Administrating_mail_repositories)
+ - [Administrating mail queues](#Administrating_mail_queues)
+ - [Task management](#Task_management)
+
 ## Administrating domains
+
+   - [Create a domain](#Create_a_domain)
+   - [Delete a domain](#Delete_a_domain)
+   - [Test if a domain exists](#Test_if_a_domain_exists)
+   - [Get the list of domains](#Get_the_list_of_domains)
 
 ### Create a domain
 
@@ -82,6 +102,11 @@ Response codes:
 
 ## Administrating users
 
+   - [Create a user](#Create_a_user)
+   - [Updating a user password](#Updating_a_user_password)
+   - [Deleting a domain](#Deleting_a_user)
+   - [Retrieving the user list](#Retrieving_the_user_list)
+
 ### Create a user
 
 ```
@@ -138,6 +163,12 @@ Response codes:
  - 500: Internal error while retrieving the users
 
 ## Administrating user mailboxes
+
+ - [Creating a mailbox](#Creating_a_mailbox)
+ - [Deleting a mailbox and its children](#Deleting_a_mailbox_and_its_children)
+ - [Testing existence of a mailbox](#Testing_existence_of_a_mailbox)
+ - [Listing user mailboxes](#Listing_user_mailboxes)
+ - [Deleting_user_mailboxes](#Deleting_user_mailboxes)
 
 ### Creating a mailbox
 
@@ -228,6 +259,15 @@ Response codes:
  - 500: Internal error
 
 ## Administrating quotas by users
+
+ - [Getting the quota for a user](#Getting_the_quota_for_a_user)
+ - [Updating the quota for a user](#Updating_the_quota_for_a_user)
+ - [Getting the quota count for a user](#Getting_the_quota_count_for_a_user)
+ - [Updating the quota count for a user](#Updating_the_quota_count_for_a_user)
+ - [Deleting the quota count for a user](#Deleting_the_quota_count_for_a_user)
+ - [Getting the quota size for a user](#Getting_the_quota_size_for_a_user)
+ - [Updating the quota size for a user](#Updating_the_quota_size_for_a_user)
+ - [Deleting the quota size for a user](#Deleting_the_quota_size_for_a_user)
 
 ### Getting the quota for a user
 
@@ -412,6 +452,15 @@ Response codes:
  - 500: Internal server error - Something went bad on the server side.
 
 ## Administrating quotas by domains
+
+ - [Getting the quota for a domain](#Getting_the_quota_for_a_domain)
+ - [Updating the quota for a domain](#Updating_the_quota_for_a_domain)
+ - [Getting the quota count for a domain](#Getting_the_quota_count_for_a_domain)
+ - [Updating the quota count for a domain](#Updating_the_quota_count_for_a_domain)
+ - [Deleting the quota count for a domain](#Deleting_the_quota_count_for_a_domain)
+ - [Getting the quota size for a domain](#Getting_the_quota_size_for_a_domain)
+ - [Updating the quota size for a domain](#Updating_the_quota_size_for_a_domain)
+ - [Deleting the quota size for a domain](#Deleting_the_quota_size_for_a_domain)
 
 ### Getting the quota for a domain
 
@@ -606,6 +655,11 @@ These schema updates can be triggered by webadmin using the Cassandra backend.
 
 Note that currently the progress can be tracked by logs.
 
+ - [Retrieving current Cassandra schema version](#Retrieving_current_Cassandra_schema_version)
+ - [Retrieving latest available Cassandra schema version](#Retrieving_latest_available_Cassandra_schema_version)
+ - [Upgrading to a specific version](#Upgrading_to_a_specific_version)
+ - [Upgrading to the latest version](#Upgrading_to_the_latest_version)
+
 ### Retrieving current Cassandra schema version
 
 ```
@@ -773,6 +827,11 @@ to be configured.
 
 Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
 
+ - [Listing groups](#Listing_groups)
+ - [Listing members of a group](#Listing_members_of_a_group)
+ - [Adding a group member](#Adding_a_group_member)
+ - [Removing a group member](#Removing_a_group_member)
+
 ### Listing groups
 
 ```
@@ -856,6 +915,11 @@ to be configured.
 
 Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
 
+ - [Listing Forwards](#Listing_Forwards)
+ - [Listing destinations in a forward](#Listing_destinations_in_a_forward)
+ - [Adding a new destination to a forward](#Adding_a_new_destination_to_a_forward)
+ - [Removing a destination of a forward](#Removing_a_destination_of_a_forward)
+
 ### Listing Forwards
 
 ```
@@ -926,6 +990,15 @@ Response codes:
  - 500: Internal error
 
 ## Administrating mail repositories
+
+ - [Listing mail repositories](#Listing_mail_repositories)
+ - [Getting additional information for a mail repository](#Getting_additional_information_for_a_mail_repository)
+ - [Listing mails contained in a mail repository](#Listing_mails_contained_in_a_mail_repository)
+ - [Reading a mail details](#Reading_a_mail_details)
+ - [Removing a mail from a mail repository](#Removing_a_mail_from_a_mail_repository)
+ - [Removing all mails from a mail repository](#Removing_all_mails_from_a_mail_repository)
+ - [Reprocessing mails from a mail repository](#Reprocessing_mails_from_a_mail_repository)
+ - [Reprocessing a specific mail from a mail repository](#Reprocessing_a_specific_mail_from_a_mail_repository)
 
 ### Listing mail repositories
 
@@ -1250,6 +1323,12 @@ The scheduled task will have the following type `reprocessingOneTask` and the fo
 
 ## Administrating mail queues
 
+ - [Listing mail queues](#Listing_mail_queues)
+ - [Getting a mail queue details](#Getting_a_mail_queue_details)
+ - [Listing the mails of a mail queue](#Listing_the_mails_of_a_mail_queue)
+ - [Deleting mails from a mail queue](#Deleting_mails_from_a_mail_queue)
+ - [Flushing mails from a mail queue](#Flushing_mails_from_a_mail_queue)
+
 ### Listing mail queues
 
 ```
@@ -1364,6 +1443,11 @@ Response codes:
 Some webadmin features schedules tasks. The task management API allow to monitor and manage the execution of the following tasks.
 
 Note that the `taskId` used in the following APIs is returned by other WebAdmin APIs scheduling tasks.
+
+ - [Getting a task details](#Getting_a_task_details)
+ - [Awaiting a task](#Awaiting_a_task)
+ - [Cancelling a task](#Cancelling_a_task)
+ - [Listing tasks](#Listing_tasks)
 
 ### Getting a task details
 
