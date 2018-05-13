@@ -124,7 +124,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         if (supportVirtualHosting()) {
             return mailAddress.asString();
         } else {
-            return mailAddress.getLocalPart();
+            return mailAddress.getLocalPart().toLowerCase();
         }
     }
 
