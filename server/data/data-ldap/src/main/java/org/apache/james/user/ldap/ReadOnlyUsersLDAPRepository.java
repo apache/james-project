@@ -770,7 +770,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         if (supportVirtualHosting()) {
             return mailAddress.asString();
         } else {
-            return mailAddress.getLocalPart();
+            return mailAddress.getLocalPart().toLowerCase();
         }
     }
 
