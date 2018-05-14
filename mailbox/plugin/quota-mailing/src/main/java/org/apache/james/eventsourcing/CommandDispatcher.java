@@ -78,10 +78,11 @@ public class CommandDispatcher {
     }
 
     private final EventBus eventBus;
+    @SuppressWarnings("rawtypes")
     private final Map<Class, CommandHandler> handlers;
 
     @Inject
-    public CommandDispatcher(EventBus eventBus, Collection<CommandHandler> handlers) {
+    public CommandDispatcher(EventBus eventBus, Collection<CommandHandler<?>> handlers) {
         this.eventBus = eventBus;
         this.handlers = handlers.stream()
             .collect(Guavate.toImmutableMap(CommandHandler::handledClass, handler -> handler));
@@ -99,6 +100,7 @@ public class CommandDispatcher {
             .findFirst();
     }
 
+    @SuppressWarnings("unchecked")
     private boolean tryDispatch(Command c) {
         try {
             List<Event> events =

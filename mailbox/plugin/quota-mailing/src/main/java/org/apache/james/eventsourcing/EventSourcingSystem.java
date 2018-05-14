@@ -25,7 +25,7 @@ public class EventSourcingSystem {
     private final EventBus eventBus;
     private final CommandDispatcher commandDispatcher;
 
-    public EventSourcingSystem(Set<CommandDispatcher.CommandHandler> handlers, Set<Subscriber> subscribers, EventStore eventStore) {
+    public EventSourcingSystem(Set<CommandDispatcher.CommandHandler<?>> handlers, Set<Subscriber> subscribers, EventStore eventStore) {
         this.eventBus = new EventBus(eventStore, subscribers);
         this.commandDispatcher = new CommandDispatcher(eventBus, handlers);
     }
