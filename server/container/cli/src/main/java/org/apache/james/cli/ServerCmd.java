@@ -33,7 +33,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.JamesCliException;
@@ -57,6 +56,7 @@ import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.Port;
+import org.apache.james.util.SizeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -393,7 +393,7 @@ public class ServerCmd {
         if (value == SerializableQuota.UNLIMITED) {
             return ValueWithUnit.UNLIMITED;
         }
-        return FileUtils.byteCountToDisplaySize(value);
+        return SizeFormat.format(value);
     }
 
     private String formatStorageValue(SerializableQuotaValue<QuotaSize> value) {
@@ -403,7 +403,7 @@ public class ServerCmd {
             if (size.isUnlimited()) {
                 return ValueWithUnit.UNLIMITED;
             }
-            return FileUtils.byteCountToDisplaySize(size.asLong());
+            return SizeFormat.format(size.asLong());
         }).orElse(ValueWithUnit.UNKNOWN);
     }
 

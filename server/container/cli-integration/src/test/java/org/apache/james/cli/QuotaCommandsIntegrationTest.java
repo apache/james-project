@@ -75,7 +75,7 @@ public class QuotaCommandsIntegrationTest {
             outputCapture.getPrintStream());
 
         assertThat(outputCapture.getContent())
-            .containsOnlyOnce("Global Maximum Storage Quota: 36 MB");
+            .containsOnlyOnce("Global Maximum Storage Quota: 36 MiB");
     }
 
     @Test
@@ -111,7 +111,7 @@ public class QuotaCommandsIntegrationTest {
             outputCapture.getPrintStream());
 
         assertThat(outputCapture.getContent())
-            .containsOnlyOnce("Storage space allowed for Quota Root #private&user: 1 GB");
+            .containsOnlyOnce("Storage space allowed for Quota Root #private&user: 1 GiB");
     }
 
     @Test

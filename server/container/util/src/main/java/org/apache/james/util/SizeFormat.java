@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.mailing.subscribers;
+package org.apache.james.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
