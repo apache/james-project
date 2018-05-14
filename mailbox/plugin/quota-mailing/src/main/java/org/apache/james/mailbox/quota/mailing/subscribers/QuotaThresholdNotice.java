@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.filesystem.api.FileSystem;
@@ -177,10 +176,10 @@ public class QuotaThresholdNotice {
         sizeThreshold.ifPresent(value -> scopes.put("sizeThreshold", value.getQuotaOccupationRatioAsPercent()));
         countThreshold.ifPresent(value -> scopes.put("countThreshold", value.getQuotaOccupationRatioAsPercent()));
 
-        scopes.put("usedSize", FileUtils.byteCountToDisplaySize(sizeQuota.getUsed().asLong()));
+        scopes.put("usedSize", SizeFormat.format(sizeQuota.getUsed().asLong()));
         scopes.put("hasSizeLimit", sizeQuota.getLimit().isLimited());
         if (sizeQuota.getLimit().isLimited()) {
-            scopes.put("limitSize", FileUtils.byteCountToDisplaySize(sizeQuota.getLimit().asLong()));
+            scopes.put("limitSize", SizeFormat.format(sizeQuota.getLimit().asLong()));
         }
 
         scopes.put("usedCount", countQuota.getUsed().asLong());
