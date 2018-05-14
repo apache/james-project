@@ -47,7 +47,7 @@ public class CassandraMailboxMapperTest {
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     private CassandraCluster cassandra;
-    private CassandraMailboxPathDAO mailboxPathDAO;
+    private CassandraMailboxPathDAOImpl mailboxPathDAO;
     private CassandraMailboxMapper testee;
 
     @Before
@@ -55,7 +55,7 @@ public class CassandraMailboxMapperTest {
         CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
         cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        mailboxPathDAO = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        mailboxPathDAO = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         testee = new CassandraMailboxMapper(
             mailboxDAO,

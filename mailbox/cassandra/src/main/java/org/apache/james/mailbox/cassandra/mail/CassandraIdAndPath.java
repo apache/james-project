@@ -16,26 +16,43 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.cassandra.mail;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public interface CassandraMailboxPathDAO {
+import com.google.common.base.Objects;
 
-    CompletableFuture<Optional<CassandraIdAndPath>> retrieveId(MailboxPath mailboxPath);
+public class CassandraIdAndPath {
+    private final CassandraId cassandraId;
+    private final MailboxPath mailboxPath;
 
-    CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user);
+    public CassandraIdAndPath(CassandraId cassandraId, MailboxPath mailboxPath) {
+        this.cassandraId = cassandraId;
+        this.mailboxPath = mailboxPath;
+    }
 
-    Optional<CassandraIdAndPath> logGhostMailbox(MailboxPath mailboxPath, Optional<CassandraIdAndPath> value);
+    public CassandraId getCassandraId() {
+        return cassandraId;
+    }
 
-    CompletableFuture<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId);
+    public MailboxPath getMailboxPath() {
+        return mailboxPath;
+    }
 
-    CompletableFuture<Void> delete(MailboxPath mailboxPath);
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof CassandraIdAndPath) {
+            CassandraIdAndPath that = (CassandraIdAndPath) o;
 
+            return Objects.equal(this.cassandraId, that.cassandraId)
+                && Objects.equal(this.mailboxPath, that.mailboxPath);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(cassandraId, mailboxPath);
+    }
 }

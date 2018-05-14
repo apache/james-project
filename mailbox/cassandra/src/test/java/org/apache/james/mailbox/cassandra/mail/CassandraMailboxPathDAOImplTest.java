@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -19,23 +19,10 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
+public class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.model.MailboxPath;
-
-public interface CassandraMailboxPathDAO {
-
-    CompletableFuture<Optional<CassandraIdAndPath>> retrieveId(MailboxPath mailboxPath);
-
-    CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user);
-
-    Optional<CassandraIdAndPath> logGhostMailbox(MailboxPath mailboxPath, Optional<CassandraIdAndPath> value);
-
-    CompletableFuture<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId);
-
-    CompletableFuture<Void> delete(MailboxPath mailboxPath);
-
+    @Override
+    CassandraMailboxPathDAO testee() {
+        return new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
+    }
 }

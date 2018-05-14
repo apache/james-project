@@ -65,13 +65,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
-    private final CassandraMailboxPathDAO mailboxPathDAO;
+    private final CassandraMailboxPathDAOImpl mailboxPathDAO;
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraACLMapper cassandraACLMapper;
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
 
     @Inject
-    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAO mailboxPathDAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper, CassandraConfiguration cassandraConfiguration) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.userMailboxRightsDAO = userMailboxRightsDAO;
@@ -92,7 +92,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             return mailboxPathDAO.retrieveId(path)
                 .thenCompose(cassandraIdOptional ->
                     cassandraIdOptional
-                        .map(CassandraMailboxPathDAO.CassandraIdAndPath::getCassandraId)
+                        .map(CassandraIdAndPath::getCassandraId)
                         .map(this::retrieveMailbox)
                         .orElse(CompletableFuture.completedFuture(Optional.empty())))
                 .join()
@@ -145,7 +145,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
             .collect(Guavate.toImmutableList());
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraMailboxPathDAO.CassandraIdAndPath idAndPath) {
+    private CompletableFuture<Optional<SimpleMailbox>> retrieveMailbox(CassandraIdAndPath idAndPath) {
         return retrieveMailbox(idAndPath.getCassandraId())
             .thenApply(optional -> OptionalUtils.executeIfEmpty(optional,
                 () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));

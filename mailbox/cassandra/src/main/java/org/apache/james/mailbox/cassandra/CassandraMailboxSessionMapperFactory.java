@@ -39,7 +39,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraIndexTableHandler;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxMapper;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
@@ -79,7 +79,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
     private final CassandraMailboxRecentsDAO mailboxRecentsDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final CassandraMailboxDAO mailboxDAO;
-    private final CassandraMailboxPathDAO mailboxPathDAO;
+    private final CassandraMailboxPathDAOImpl mailboxPathDAO;
     private final CassandraFirstUnseenDAO firstUnseenDAO;
     private final CassandraApplicableFlagDAO applicableFlagDAO;
     private final CassandraAttachmentDAO attachmentDAO;
@@ -98,7 +98,7 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
                                                 CassandraMessageDAO messageDAO,
                                                 CassandraMessageIdDAO messageIdDAO, CassandraMessageIdToImapUidDAO imapUidDAO,
                                                 CassandraMailboxCounterDAO mailboxCounterDAO, CassandraMailboxRecentsDAO mailboxRecentsDAO, CassandraMailboxDAO mailboxDAO,
-                                                CassandraMailboxPathDAO mailboxPathDAO, CassandraFirstUnseenDAO firstUnseenDAO, CassandraApplicableFlagDAO applicableFlagDAO,
+                                                CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraFirstUnseenDAO firstUnseenDAO, CassandraApplicableFlagDAO applicableFlagDAO,
                                                 CassandraAttachmentDAO attachmentDAO, CassandraAttachmentDAOV2 attachmentDAOV2, CassandraDeletedMessageDAO deletedMessageDAO,
                                                 ObjectStore objectStore, CassandraAttachmentMessageIdDAO attachmentMessageIdDAO,
                                                 CassandraAttachmentOwnerDAO ownerDAO, CassandraACLMapper aclMapper,

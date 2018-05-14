@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAO.CassandraIdAndPath;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.After;
@@ -38,7 +37,7 @@ import com.github.steveash.guavate.Guavate;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraMailboxPathDAOTest {
+public abstract class CassandraMailboxPathDAOTest {
     private static final String USER = "user";
     private static final String OTHER_USER = "other";
     private static final CassandraId INBOX_ID = CassandraId.timeBased();
@@ -52,14 +51,15 @@ public class CassandraMailboxPathDAOTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    protected CassandraCluster cassandra;
 
     private CassandraMailboxPathDAO testee;
+    abstract CassandraMailboxPathDAO testee();
 
     @Before
     public void setUp() throws Exception {
         cassandra = CassandraCluster.create(new CassandraMailboxModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-        testee = new CassandraMailboxPathDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        testee = testee();
 
     }
 
@@ -70,7 +70,7 @@ public class CassandraMailboxPathDAOTest {
 
     @Test
     public void cassandraIdAndPathShouldRespectBeanContract() {
-        EqualsVerifier.forClass(CassandraMailboxPathDAO.CassandraIdAndPath.class).verify();
+        EqualsVerifier.forClass(CassandraIdAndPath.class).verify();
     }
 
     @Test
