@@ -26,7 +26,7 @@ import org.jboss.netty.channel.Channel;
 
 public abstract class AbstractNettyImapRequestLineReader extends ImapRequestLineReader {
     private final Channel channel;
-    // Some clients dont recognise the continuation, unless it is followed by text
+    // Some clients dont recognise the continuation, unless it is followed by text - PROTOCOLS-118
     private final ChannelBuffer cRequest = ChannelBuffers.wrappedBuffer("+ Ok\r\n".getBytes());
     private final boolean retry;
 

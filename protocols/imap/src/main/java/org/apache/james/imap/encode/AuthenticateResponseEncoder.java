@@ -38,7 +38,7 @@ public class AuthenticateResponseEncoder  extends AbstractChainedImapEncoder {
 
     @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        // Some clients dont recognise the continuation, unless it is followed by text
+        // Some clients dont recognise the continuation, unless it is followed by text - PROTOCOLS-118
         composer.continuationResponse("Ok");
     }
 
