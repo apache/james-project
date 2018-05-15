@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.Before;
@@ -38,9 +39,10 @@ public class MailQueueRoutesUnitTest {
     MailQueueRoutes testee;
 
     @Before
-    public void setup() { 
+    public void setup() {
+        MemoryTaskManager taskManager = new MemoryTaskManager();
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = null;
-        testee = new MailQueueRoutes(mailQueueFactory, new JsonTransformer());
+        testee = new MailQueueRoutes(mailQueueFactory, new JsonTransformer(), taskManager);
     }
 
     @Test

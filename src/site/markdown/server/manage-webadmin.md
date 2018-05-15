@@ -1596,6 +1596,7 @@ curl -XDELETE http://ip:port/mailQueues/mailQueueName/mails?sender=senderMailAdd
 ```
 
 This request should have exactly one query parameter from the following list:
+
 * sender: which is a mail address (i.e. sender@james.org)
 * name: which is a string
 * recipient: which is a mail address (i.e. recipient@james.org)
@@ -1605,10 +1606,23 @@ The mails from the given mail queue matching the query parameter will be deleted
 
 Response codes:
 
- - 204: Success (No content)
+ - 201: Success. Corresponding task id is returned.
  - 400: Invalid request
  - 404: The mail queue does not exist
  - 500: Internal error
+
+The scheduled task will have the following type `deleteMailsFromMailQueue` and the following `additionalInformation`:
+
+```
+{
+  "mailQueueName":"outgoing",
+  "initialCount":10,
+  "remainingCount": 5,
+  "sender": "sender@james.org",
+  "name": "Java Developer",
+  "recipient: "recipient@james.org"
+}
+```
 
 ### Flushing mails from a mail queue
 

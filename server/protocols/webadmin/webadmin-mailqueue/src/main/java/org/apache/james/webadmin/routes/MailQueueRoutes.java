@@ -35,14 +35,17 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.queue.api.ManageableMailQueue.Type;
+import org.apache.james.task.Task;
+import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
-import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForceDelivery;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
+import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -87,13 +90,16 @@ public class MailQueueRoutes implements Routes {
     private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<ForceDelivery> jsonExtractor;
+    private final TaskManager taskManager;
 
     @Inject
     @SuppressWarnings("unchecked")
-    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer) {
+    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer,
+                                       TaskManager taskManager) {
         this.mailQueueFactory = (MailQueueFactory<ManageableMailQueue>) mailQueueFactory;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(ForceDelivery.class);
+        this.taskManager = taskManager;
     }
 
     @Override
@@ -292,20 +298,21 @@ public class MailQueueRoutes implements Routes {
         value = "Delete mails from the MailQueue"
     )
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK, the request is being processed"),
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "OK, the task for deleting mails is created"),
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The MailQueue does not exist."),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid request for deleting mails from the mail queue."),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void deleteMails(Service service) {
         service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
-                (request, response) -> deleteMails(request, response));
+                (request, response) -> deleteMails(request, response),
+                jsonTransformer);
     }
 
     private Object deleteMails(Request request, Response response) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
-        Object bodyResponse = mailQueueFactory.getQueue(mailQueueName)
-            .map(name -> deleteMails(name, 
+        Task task = mailQueueFactory.getQueue(mailQueueName)
+            .map(name -> deleteMailsTask(name,
                     sender(request.queryParams(SENDER_QUERY_PARAM)),
                     name(request.queryParams(NAME_QUERY_PARAM)),
                     recipient(request.queryParams(RECIPIENT_QUERY_PARAM))))
@@ -315,8 +322,9 @@ public class MailQueueRoutes implements Routes {
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
-        response.status(HttpStatus.NO_CONTENT_204);
-        return bodyResponse;
+
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
     }
 
     private Optional<MailAddress> sender(String senderAsString) throws HaltException {
@@ -424,7 +432,7 @@ public class MailQueueRoutes implements Routes {
         }
     }
 
-    private Object deleteMails(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
+    private Task deleteMailsTask(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
         if (Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) != 1) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -433,10 +441,7 @@ public class MailQueueRoutes implements Routes {
                 .haltError();
         }
         
-        maybeSender.ifPresent(Throwing.consumer((MailAddress sender) -> queue.remove(Type.Sender, sender.asString())).sneakyThrow());
-        maybeName.ifPresent(Throwing.consumer((String name) -> queue.remove(Type.Name, name)).sneakyThrow());
-        maybeRecipient.ifPresent(Throwing.consumer((MailAddress recipient) -> queue.remove(Type.Recipient, recipient.asString())).sneakyThrow());
-        return Constants.EMPTY_BODY;
+        return new DeleteMailsFromMailQueueTask(queue, maybeSender, maybeName, maybeRecipient);
     }
 
     private void assertDelayedParamIsTrue(Request request) {
