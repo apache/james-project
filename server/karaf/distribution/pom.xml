@@ -16,7 +16,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.apache.james</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-karaf-features</artifactId>
             <type>pom</type>
         </dependency>
