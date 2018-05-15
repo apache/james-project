@@ -44,6 +44,7 @@ public class JmapCommonRequests {
     public static String getOutboxId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.OUTBOX);
     }
+
     public static String getDraftId(AccessToken accessToken) {
         return getMailboxId(accessToken, Role.DRAFTS);
     }

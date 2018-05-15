@@ -119,7 +119,7 @@ public abstract class QuotaMailingTest {
     private void bartSendMessageToHomer() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
-        String _80_KB_body = Strings.repeat("123456789\n", 80 * 100);
+        String eightyKBBody = Strings.repeat("123456789\n", 80 * 100);
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
@@ -129,7 +129,7 @@ public abstract class QuotaMailingTest {
             "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
             "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
             "        \"subject\": \"Message without an attachment\"," +
-            "        \"textBody\": \"" + _80_KB_body + "\"," +
+            "        \"textBody\": \"" + eightyKBBody + "\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"] " +
             "      }}" +
