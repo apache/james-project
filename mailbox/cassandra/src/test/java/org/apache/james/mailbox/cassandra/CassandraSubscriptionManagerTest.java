@@ -38,6 +38,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraFirstUnseenDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
+import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxRecentsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageIdDAO;
@@ -89,6 +90,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraMailboxRecentsDAO mailboxRecentsDAO = null;
         CassandraMailboxDAO mailboxDAO = null;
         CassandraMailboxPathDAOImpl mailboxPathDAO = null;
+        CassandraMailboxPathV2DAO mailboxPathV2DAO = null;
         CassandraFirstUnseenDAO firstUnseenDAO = null;
         CassandraApplicableFlagDAO applicableFlagDAO = null;
         CassandraAttachmentDAO attachmentDAO = null;
@@ -111,6 +113,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 mailboxRecentsDAO,
                 mailboxDAO,
                 mailboxPathDAO,
+                mailboxPathV2DAO,
                 firstUnseenDAO,
                 applicableFlagDAO,
                 attachmentDAO,
