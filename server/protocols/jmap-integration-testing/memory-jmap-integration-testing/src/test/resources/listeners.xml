@@ -24,5 +24,10 @@
   </listener>
   <listener>
     <class>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</class>
+    <configuration>
+      <thresholds>
+        <threshold>0.1</threshold>
+      </thresholds>
+    </configuration>
   </listener>
 </listeners>

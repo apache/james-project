@@ -20,6 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
@@ -56,6 +57,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
         ListenersConfiguration listenersConfiguration = ListenersConfiguration.from(configuration);
 
         guiceDefinedListeners.forEach(this::register);
+
         listenersConfiguration.getListenersConfiguration().stream()
             .map(this::createListener)
             .forEach(this::register);
@@ -78,8 +80,11 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
             MailboxListener listener = mailboxListenerFactory.createInstance(clazz);
+            if (listener instanceof Configurable && configuration.getConfiguration().isPresent()) {
+                ((Configurable)listener).configure(configuration.getConfiguration().get());
+            }
             return listener;
-        } catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException | ConfigurationException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
             throw new RuntimeException(e);
         }

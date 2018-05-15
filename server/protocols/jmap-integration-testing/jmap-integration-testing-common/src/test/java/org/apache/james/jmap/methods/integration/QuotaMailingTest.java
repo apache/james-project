@@ -29,6 +29,7 @@ import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 
 import java.io.IOException;
@@ -94,8 +95,7 @@ public abstract class QuotaMailingTest {
                 new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
 
         bartSendMessageToHomer();
-        // Homer receives a 83.995 Bytes mail, triggering the 0.80 threshold mailing
-
+        // Homer receives a mail big enough to trigger a configured threshold
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
 
@@ -116,10 +116,39 @@ public abstract class QuotaMailingTest {
                 hasItem("Warning: Your email usage just exceeded a configured threshold"));
     }
 
+    @Test
+    public void configurationShouldBeWellLoaded() throws Exception {
+        jmapServer.getProbe(QuotaProbesImpl.class)
+            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER,
+                new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
+
+        bartSendMessageToHomer();
+        // Home receives a mail big enough to trigger a configured threshold
+
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
+            .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+
+        List<String> ids = listMessageIdsForAccount(homerAccessToken);
+        String idString = ids.stream()
+            .map(id -> "\"" + id + "\"")
+            .collect(Collectors.joining(","));
+
+        given()
+            .header("Authorization", homerAccessToken.serialize())
+            .body("[[\"getMessages\", {\"ids\": [" + idString + "]}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .log().ifValidationFails()
+            .body(ARGUMENTS + ".list.textBody",
+                hasItem(containsString("You currently occupy more than 10 % of the total size allocated to you")));
+    }
+
     private void bartSendMessageToHomer() {
         String messageCreationId = "creationId";
         String outboxId = getOutboxId(bartAccessToken);
-        String eightyKBBody = Strings.repeat("123456789\n", 80 * 100);
+        String bigEnoughBody = Strings.repeat("123456789\n", 12 * 100);
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +
@@ -129,7 +158,7 @@ public abstract class QuotaMailingTest {
             "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
             "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
             "        \"subject\": \"Message without an attachment\"," +
-            "        \"textBody\": \"" + eightyKBBody + "\"," +
+            "        \"textBody\": \"" + bigEnoughBody + "\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"] " +
             "      }}" +

@@ -24,14 +24,58 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
+import org.apache.james.util.TimeConverter;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class QuotaMailingListenerConfiguration {
+
+    interface XmlKeys {
+        String SUBJECT_TEMPLATE = "subjectTemplate";
+        String BODY_TEMPLATE = "bodyTemplate";
+        String GRACE_PERIOD = "gracePeriod";
+        String THRESHOLDS = "thresholds.threshold";
+        String ROOT_KEY = "";
+    }
+
+    public static QuotaMailingListenerConfiguration from(HierarchicalConfiguration config) {
+        return builder()
+            .addThresholds(readThresholds(config))
+            .subjectTemplate(readSubjectTemplate(config))
+            .bodyTemplate(readBodyTemplate(config))
+            .gracePeriod(readGracePeriod(config))
+            .build();
+    }
+
+    private static Optional<String> readSubjectTemplate(HierarchicalConfiguration config) {
+        return Optional.ofNullable(config.getString(XmlKeys.SUBJECT_TEMPLATE, null));
+    }
+
+    private static Optional<String> readBodyTemplate(HierarchicalConfiguration config) {
+        return Optional.ofNullable(config.getString(XmlKeys.BODY_TEMPLATE, null));
+    }
+
+    private static Optional<Duration> readGracePeriod(HierarchicalConfiguration config) {
+        return Optional.ofNullable(config.getString(XmlKeys.GRACE_PERIOD, null))
+            .map(string -> TimeConverter.getMilliSeconds(string, TimeConverter.Unit.DAYS))
+            .map(Duration::ofMillis);
+    }
+
+    private static ImmutableList<QuotaThreshold> readThresholds(HierarchicalConfiguration config) {
+        return config.configurationsAt(XmlKeys.THRESHOLDS)
+            .stream()
+            .map(node -> node.getDouble(XmlKeys.ROOT_KEY))
+            .map(QuotaThreshold::new)
+            .collect(Guavate.toImmutableList());
+    }
 
     public static class Builder {
         private ImmutableList.Builder<QuotaThreshold> thresholds;
@@ -67,11 +111,13 @@ public class QuotaMailingListenerConfiguration {
         }
         
         public Builder bodyTemplate(String bodyTemplate) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(bodyTemplate), "Pass a non null/empty bodyTemplate");
             this.bodyTemplate = Optional.of(bodyTemplate);
             return this;
         }
 
         public Builder subjectTemplate(String subjectTemplate) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(subjectTemplate), "Pass a non null/empty subjectTemplate");
             this.subjectTemplate = Optional.of(subjectTemplate);
             return this;
         }

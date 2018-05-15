@@ -32,7 +32,16 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class QuotaThresholdsTest {
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(QuotaThresholds.class)
+            .allFieldsShouldBeUsed()
+            .verify();
+    }
 
     @Test
     public void highestExceededThresholdShouldReturnZeroWhenBelowAllThresholds() {
