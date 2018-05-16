@@ -19,7 +19,6 @@
 package org.apache.james.backends.es;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -30,60 +29,15 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class ElasticSearchIndexer {
     private static int DEBUG_MAX_LENGTH_CONTENT = 1000;
-
-    public static class UpdatedRepresentation {
-        private final String id;
-        private final String updatedDocumentPart;
-
-        public UpdatedRepresentation(String id, String updatedDocumentPart) {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(id), "Updated id must be specified " + id);
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(updatedDocumentPart), "Updated document must be specified");
-            this.id = id;
-            this.updatedDocumentPart = updatedDocumentPart;
-        }
-
-        public String getId() {
-            return id;
-        }
-
-        public String getUpdatedDocumentPart() {
-            return updatedDocumentPart;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof UpdatedRepresentation) {
-                UpdatedRepresentation other = (UpdatedRepresentation) o;
-                return Objects.equals(id, other.id)
-                    && Objects.equals(updatedDocumentPart, other.updatedDocumentPart);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(id, updatedDocumentPart);
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("id", id)
-                .add("updatedDocumentPart", updatedDocumentPart)
-                .toString();
-        }
-    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchIndexer.class);
     

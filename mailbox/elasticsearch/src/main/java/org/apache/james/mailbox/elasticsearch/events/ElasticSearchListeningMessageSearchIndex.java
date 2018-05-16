@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
@@ -181,9 +182,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         }
     }
 
-    private ElasticSearchIndexer.UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) {
+    private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) {
         try {
-            return new ElasticSearchIndexer.UpdatedRepresentation(
+            return new UpdatedRepresentation(
                 indexIdFor(mailbox, updatedFlags.getUid()),
                     messageToElasticSearchJson.getUpdatedJsonMessagePart(
                         updatedFlags.getNewFlags(),

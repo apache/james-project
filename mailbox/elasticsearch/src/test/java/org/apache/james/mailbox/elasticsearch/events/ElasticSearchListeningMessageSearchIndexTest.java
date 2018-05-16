@@ -33,7 +33,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.ElasticSearchIndexer.UpdatedRepresentation;
+import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;

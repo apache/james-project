@@ -105,7 +105,7 @@ public class ElasticSearchIndexerTest {
         testee.indexMessage(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -127,22 +127,22 @@ public class ElasticSearchIndexerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("1", null)));
+        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("1", null)));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenIdIsNull() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenJsonIsEmpty() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("1", "")));
+        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("1", "")));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenIdIsEmpty() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new ElasticSearchIndexer.UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
     }
 
     @Test
