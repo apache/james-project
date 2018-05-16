@@ -194,12 +194,14 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(Multimap<MessageId, MailboxId> ids) {
-        FluentFutureStream.of(
-            ids.asMap()
-                .entrySet()
-                .stream()
-                .map(entry -> deleteAsFuture(entry.getKey(), entry.getValue())))
-            .join();
+        ids.asMap()
+            .entrySet()
+            .stream()
+            .collect(JamesCollectors.chunker(cassandraConfiguration.getExpungeChunkSize()))
+            .forEach(chunk ->
+                FluentFutureStream.of(chunk.stream()
+                    .map(entry -> deleteAsFuture(entry.getKey(), entry.getValue())))
+                    .join());
     }
 
     private CompletableFuture<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
