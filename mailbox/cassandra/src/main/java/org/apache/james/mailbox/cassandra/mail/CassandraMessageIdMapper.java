@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.streams.JamesCollectors;
 import org.apache.james.util.streams.Limit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,7 +91,9 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
-        return findAsStream(messageIds, fetchType)
+        return messageIds.stream()
+            .collect(JamesCollectors.chunker(cassandraConfiguration.getMessageReadChunkSize()))
+            .flatMap(chuckedIds -> findAsStream(messageIds, fetchType))
             .collect(Guavate.toImmutableList());
     }
 
