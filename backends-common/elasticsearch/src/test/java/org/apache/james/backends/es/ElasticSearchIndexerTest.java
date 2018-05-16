@@ -72,7 +72,7 @@ public class ElasticSearchIndexerTest {
                 doDeleteByQuery(queryBuilder);
             }
         };
-        testee = new ElasticSearchIndexer(clientProvider.get(), deleteByQueryPerformer, ALIAS_NAME, TYPE_NAME);
+        testee = new ElasticSearchMailboxIndexer(clientProvider.get(), deleteByQueryPerformer, ALIAS_NAME, TYPE_NAME);
     }
     
     @Test

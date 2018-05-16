@@ -28,7 +28,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+import org.apache.james.backends.es.ElasticSearchConstants;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
@@ -65,8 +67,9 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private final MessageToElasticSearchJson messageToElasticSearchJson;
 
     @Inject
-    public ElasticSearchListeningMessageSearchIndex(MessageMapperFactory factory, ElasticSearchIndexer indexer,
-        ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson) {
+    public ElasticSearchListeningMessageSearchIndex(MessageMapperFactory factory,
+            @Named(ElasticSearchConstants.MAILBOX_INDEX) ElasticSearchIndexer indexer,
+            ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson) {
         super(factory);
         this.indexer = indexer;
         this.messageToElasticSearchJson = messageToElasticSearchJson;

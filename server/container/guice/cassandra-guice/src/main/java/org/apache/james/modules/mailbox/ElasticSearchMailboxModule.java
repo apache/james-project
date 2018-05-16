@@ -31,6 +31,8 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConstants;
+import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.ElasticSearchMailboxIndexer;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
@@ -51,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.name.Names;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
@@ -64,6 +67,11 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
+        bind(ElasticSearchMailboxIndexer.class).in(Scopes.SINGLETON);
+        bind(ElasticSearchIndexer.class)
+            .annotatedWith(Names.named(ElasticSearchConstants.MAILBOX_INDEX))
+            .to(ElasticSearchMailboxIndexer.class);
+;
     }
 
     @Provides

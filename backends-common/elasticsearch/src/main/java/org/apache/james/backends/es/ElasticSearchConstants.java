@@ -22,4 +22,6 @@ package org.apache.james.backends.es;
 public interface ElasticSearchConstants {
     String WRITE_ALIAS = "injectWriteAlias";
     String READ_ALIAS = "injectReadAlias";
+
+    String MAILBOX_INDEX = "mailboxIndex";
 }
