@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backends.es;
+package org.apache.james.mailbox.elasticsearch;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +25,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.DeleteByQueryPerformer;
+import org.apache.james.backends.es.ElasticSearchConstants;
+import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.TypeName;
+import org.apache.james.backends.es.UpdatedRepresentation;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;

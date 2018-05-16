@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es;
+package org.apache.james.mailbox.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -25,7 +25,16 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 
+import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.DeleteByQueryPerformer;
+import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.backends.es.IndexCreationFactory;
+import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.TypeName;
+import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxIndexer;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -39,7 +48,7 @@ import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.Lists;
 
-public class ElasticSearchIndexerTest {
+public class ElasticSearchMailboxIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");

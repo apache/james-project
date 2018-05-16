@@ -26,7 +26,6 @@ import java.time.ZoneId;
 import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.DeleteByQueryPerformer;
-import org.apache.james.backends.es.ElasticSearchMailboxIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.NodeMappingFactory;
