@@ -19,21 +19,38 @@
 
 package org.apache.james.mailbox.quota.mailing.listeners;
 
+import javax.inject.Inject;
+
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.EventSourcingSystem;
+import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossing;
+import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHandler;
+import org.apache.james.mailbox.quota.mailing.subscribers.QuotaThresholdMailer;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 public class QuotaThresholdCrossingListener implements MailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotaThresholdCrossingListener.class);
 
     private final EventSourcingSystem eventSourcingSystem;
 
-    public QuotaThresholdCrossingListener(EventSourcingSystem eventSourcingSystem) {
-        this.eventSourcingSystem = eventSourcingSystem;
+    @Inject
+    public QuotaThresholdCrossingListener(MailetContext mailetContext, UsersRepository usersRepository,
+                                          FileSystem fileSystem, EventStore eventStore, QuotaMailingListenerConfiguration configuration) {
+        this.eventSourcingSystem = new EventSourcingSystem(
+            ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, configuration)),
+            ImmutableSet.of(new QuotaThresholdMailer(mailetContext, usersRepository, fileSystem, configuration)),
+            eventStore
+        );
     }
 
     @Override

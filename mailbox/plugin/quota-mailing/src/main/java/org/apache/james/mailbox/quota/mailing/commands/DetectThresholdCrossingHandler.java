@@ -21,8 +21,6 @@ package org.apache.james.mailbox.quota.mailing.commands;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
@@ -35,7 +33,6 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
     private final EventStore eventStore;
     private final QuotaMailingListenerConfiguration quotaMailingListenerConfiguration;
 
-    @Inject
     public DetectThresholdCrossingHandler(EventStore eventStore, QuotaMailingListenerConfiguration quotaMailingListenerConfiguration) {
         this.eventStore = eventStore;
         this.quotaMailingListenerConfiguration = quotaMailingListenerConfiguration;
