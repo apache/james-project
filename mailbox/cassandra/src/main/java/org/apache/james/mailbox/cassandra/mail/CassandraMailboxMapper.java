@@ -33,14 +33,13 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
+import org.apache.james.mailbox.cassandra.mail.utils.DriverExceptionHelper;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
@@ -54,7 +53,6 @@ import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.datastax.driver.core.exceptions.InvalidQueryException;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -63,8 +61,6 @@ import com.google.common.collect.ImmutableList;
 public class CassandraMailboxMapper implements MailboxMapper {
 
     public static final String WILDCARD = "%";
-    public static final String VALUES_MAY_NOT_BE_LARGER_THAN_64_K = "Index expression values may not be larger than 64K";
-    public static final String CLUSTERING_COLUMNS_IS_TOO_LONG = "The sum of all clustering columns is too long";
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
     private final CassandraMailboxDAO mailboxDAO;
@@ -102,15 +98,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 .join()
                 .orElseThrow(() -> new MailboxNotFoundException(path));
         } catch (CompletionException e) {
-            if (e.getCause() instanceof InvalidQueryException) {
-                String errorMessage = e.getCause().getMessage();
-                if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K) 
-                        || StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
-                    throw new TooLongMailboxNameException("too long mailbox name");
-                }
-                throw new MailboxException("It has error with cassandra storage", e.getCause());
-            }
-            throw e;
+            throw DriverExceptionHelper.handleStorageException(e);
         }
     }
 
@@ -123,15 +111,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                         .map(this::retrieveMailbox)
                         .orElse(CompletableFuture.completedFuture(Optional.empty())));
         } catch (CompletionException e) {
-            if (e.getCause() instanceof InvalidQueryException) {
-                String errorMessage = e.getCause().getMessage();
-                if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K) 
-                        || StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
-                    throw new TooLongMailboxNameException("too long mailbox name");
-                }
-                throw new MailboxException("It has error with cassandra storage", e.getCause());
-            }
-            throw e;
+            throw DriverExceptionHelper.handleStorageException(e);
         }
     }
 
@@ -197,7 +177,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
                 throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
             }
         } catch (CompletionException e) {
-            manageException(e);
+            throw DriverExceptionHelper.handleStorageException(e);
         }
         return cassandraId;
     }
@@ -211,18 +191,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
                                 .map(storedMailbox -> mailboxPathV2DAO.delete(storedMailbox.generateAssociatedPath()))
                                 .orElse(CompletableFuture.completedFuture(null)),
                             mailboxDAO.save(cassandraMailbox)))));
-    }
-
-    private void manageException(CompletionException e) throws MailboxException {
-        if (e.getCause() instanceof InvalidQueryException) {
-            String errorMessage = e.getCause().getMessage();
-            if (StringUtils.containsIgnoreCase(errorMessage, VALUES_MAY_NOT_BE_LARGER_THAN_64_K) ||
-                    StringUtils.containsIgnoreCase(errorMessage, CLUSTERING_COLUMNS_IS_TOO_LONG)) {
-                throw new TooLongMailboxNameException("too long mailbox name");
-            }
-            throw new MailboxException("It has error with cassandra storage", e.getCause());
-        }
-        throw e;
     }
 
     private CassandraId retrieveId(SimpleMailbox cassandraMailbox) {
