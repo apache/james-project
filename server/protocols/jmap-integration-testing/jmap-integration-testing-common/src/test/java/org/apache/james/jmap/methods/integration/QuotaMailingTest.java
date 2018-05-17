@@ -49,6 +49,7 @@ import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -88,6 +89,11 @@ public abstract class QuotaMailingTest {
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }
 
+    @After
+    public void tearDown() {
+        jmapServer.stop();
+    }
+
     @Test
     public void shouldSendANoticeWhenThresholdExceeded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)
@@ -96,6 +102,7 @@ public abstract class QuotaMailingTest {
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a configured threshold
+
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
 
@@ -123,10 +130,14 @@ public abstract class QuotaMailingTest {
                 new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
 
         bartSendMessageToHomer();
-        // Home receives a mail big enough to trigger a configured threshold
-
+        // Homer receives a mail big enough to trigger a 10% configured threshold
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
             .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 2);
+
+        bartSendMessageToHomer();
+        // Homer receives a mail big enough to trigger a 20% configured threshold
+        calmlyAwait.atMost(30, TimeUnit.SECONDS)
+            .until(() -> listMessageIdsForAccount(homerAccessToken).size() == 4);
 
         List<String> ids = listMessageIdsForAccount(homerAccessToken);
         String idString = ids.stream()
@@ -142,7 +153,9 @@ public abstract class QuotaMailingTest {
             .statusCode(200)
             .log().ifValidationFails()
             .body(ARGUMENTS + ".list.textBody",
-                hasItem(containsString("You currently occupy more than 10 % of the total size allocated to you")));
+                hasItem(containsString("You currently occupy more than 10 % of the total size allocated to you")))
+            .body(ARGUMENTS + ".list.textBody",
+                hasItem(containsString("You currently occupy more than 20 % of the total size allocated to you")));
     }
 
     private void bartSendMessageToHomer() {

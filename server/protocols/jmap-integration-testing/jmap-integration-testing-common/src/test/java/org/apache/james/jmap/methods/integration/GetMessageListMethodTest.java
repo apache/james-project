@@ -79,6 +79,7 @@ import org.junit.Test;
 import com.jayway.restassured.RestAssured;
 
 public abstract class GetMessageListMethodTest {
+    public static final int LIMIT_TO_3_MESSAGES = 3;
     private static final String FORWARDED = "$Forwarded";
     private static final ZoneId ZONE_ID = ZoneId.of("Europe/Paris");
     private ACLProbeImpl aclProbe;

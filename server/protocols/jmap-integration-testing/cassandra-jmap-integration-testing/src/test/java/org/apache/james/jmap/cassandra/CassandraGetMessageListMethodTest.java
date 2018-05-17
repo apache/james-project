@@ -26,6 +26,7 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
@@ -45,7 +46,8 @@ public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest 
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule());
+        return rule.jmapServer(cassandra.getModule(),
+            new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
     }
 
     @Override

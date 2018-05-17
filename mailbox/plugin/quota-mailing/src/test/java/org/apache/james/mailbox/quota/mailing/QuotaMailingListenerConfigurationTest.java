@@ -57,6 +57,7 @@ public class QuotaMailingListenerConfigurationTest {
                 "  <gracePeriod>3 days</gracePeriod>\n" +
                 "  <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
                 "  <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "  <name>listener-name</name>\n" +
                 "</configuration>"));
 
         QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
@@ -68,6 +69,7 @@ public class QuotaMailingListenerConfigurationTest {
                 .gracePeriod(Duration.ofDays(3))
                 .subjectTemplate(SUBJECT_TEMPLATE)
                 .bodyTemplate(BODY_TEMPLATE)
+                .name("listener-name")
                 .build());
     }
 
@@ -103,6 +105,13 @@ public class QuotaMailingListenerConfigurationTest {
         assertThat(result)
             .isEqualTo(QuotaMailingListenerConfiguration.builder()
                 .build());
+    }
+
+    @Test
+    public void defaultConfigurationShouldUseDefaultAsListenerName() throws Exception {
+        QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.defaultConfiguration();
+
+        assertThat(result.getName()).isEqualTo("default");
     }
 
     @Test

@@ -33,10 +33,9 @@ import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
-
 public class CassandraJmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     private final TemporaryFolder temporaryFolder;
 
     public static CassandraJmapTestRule defaultTestRule() {
@@ -65,7 +64,7 @@ public class CassandraJmapTestRule implements TestRule {
                 CassandraJamesServerMain.PROTOCOLS,
                 CassandraJamesServerMain.PLUGINS)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith(additionals);

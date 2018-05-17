@@ -38,7 +38,7 @@ import com.google.inject.Module;
 
 public class MemoryJmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
@@ -49,11 +49,11 @@ public class MemoryJmapTestRule implements TestRule {
             .build();
         return new GuiceJamesServer(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(modules)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class));
+            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class))
+            .overrideWith(modules);
     }
 
     @Override
