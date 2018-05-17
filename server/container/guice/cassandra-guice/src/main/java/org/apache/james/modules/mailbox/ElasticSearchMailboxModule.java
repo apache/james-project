@@ -31,14 +31,14 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchConstants;
-import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.IndexerSupplier;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.TypeName;
-import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxIndexer;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxIndexerSupplier;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -67,11 +67,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
-        bind(ElasticSearchMailboxIndexer.class).in(Scopes.SINGLETON);
-        bind(ElasticSearchIndexer.class)
+        bind(MailboxIndexerSupplier.class).in(Scopes.SINGLETON);
+        bind(IndexerSupplier.class)
             .annotatedWith(Names.named(ElasticSearchConstants.MAILBOX_INDEX))
-            .to(ElasticSearchMailboxIndexer.class);
-;
+            .to(MailboxIndexerSupplier.class);
     }
 
     @Provides

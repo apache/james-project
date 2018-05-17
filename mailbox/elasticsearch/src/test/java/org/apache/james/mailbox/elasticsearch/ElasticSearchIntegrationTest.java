@@ -109,7 +109,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
         ElasticSearchListeningMessageSearchIndex elasticSearchListeningMessageSearchIndex = new ElasticSearchListeningMessageSearchIndex(
             storeMailboxManager.getMapperFactory(),
-            new ElasticSearchMailboxIndexer(client,
+            new MailboxIndexerSupplier(client,
                 new DeleteByQueryPerformer(client,
                     Executors.newSingleThreadExecutor(),
                     BATCH_SIZE,

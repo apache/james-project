@@ -16,21 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.backends.es;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.index.query.QueryBuilder;
-
-public interface ElasticSearchIndexer {
-    IndexResponse indexMessage(String id, String content);
-
-    Optional<BulkResponse> updateMessages(List<UpdatedRepresentation> updatedDocumentParts);
-
-    Optional<BulkResponse> deleteMessages(List<String> ids);
-    
-    void deleteAllMatchingQuery(QueryBuilder queryBuilder);
+public interface IndexerSupplier {
+    Indexer getIndexer();
 }

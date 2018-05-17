@@ -32,7 +32,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.Indexer;
 import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSession.User;
@@ -67,7 +67,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     public static final String EXPECTED_JSON_CONTENT = "json content";
     public static final String USERNAME = "username";
 
-    private ElasticSearchIndexer indexer;
+    private Indexer indexer;
     private MessageToElasticSearchJson messageToElasticSearchJson;
     private ElasticSearchListeningMessageSearchIndex testee;
     private MailboxSession session;
@@ -80,7 +80,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         messageToElasticSearchJson = mock(MessageToElasticSearchJson.class);
         ElasticSearchSearcher elasticSearchSearcher = mock(ElasticSearchSearcher.class);
 
-        indexer = mock(ElasticSearchIndexer.class);
+        indexer = mock(Indexer.class);
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, indexer, elasticSearchSearcher, messageToElasticSearchJson);
         session = new MockMailboxSession(USERNAME);

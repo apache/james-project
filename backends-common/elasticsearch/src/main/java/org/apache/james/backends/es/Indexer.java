@@ -16,21 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.elasticsearch;
+package org.apache.james.backends.es;
 
 import java.util.List;
 import java.util.Optional;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.backends.es.AliasName;
-import org.apache.james.backends.es.DeleteByQueryPerformer;
-import org.apache.james.backends.es.ElasticSearchConstants;
-import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.TypeName;
-import org.apache.james.backends.es.UpdatedRepresentation;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexResponse;
@@ -42,27 +33,25 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-public class ElasticSearchMailboxIndexer implements ElasticSearchIndexer {
+public class Indexer {
     private static int DEBUG_MAX_LENGTH_CONTENT = 1000;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxIndexer.class);
-    
+    private static final Logger LOGGER = LoggerFactory.getLogger(Indexer.class);
+
     private final Client client;
     private final DeleteByQueryPerformer deleteByQueryPerformer;
     private final AliasName aliasName;
     private final TypeName typeName;
 
-    @Inject
-    public ElasticSearchMailboxIndexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer,
-                                @Named(ElasticSearchConstants.WRITE_ALIAS) AliasName aliasName,
-                                TypeName typeName) {
+    public Indexer(Client client, DeleteByQueryPerformer deleteByQueryPerformer,
+                   AliasName aliasName,
+                   TypeName typeName) {
         this.client = client;
         this.deleteByQueryPerformer = deleteByQueryPerformer;
         this.aliasName = aliasName;
         this.typeName = typeName;
     }
-    
-    @Override
+
     public IndexResponse indexMessage(String id, String content) {
         checkArgument(content);
         if (LOGGER.isDebugEnabled()) {
@@ -73,7 +62,6 @@ public class ElasticSearchMailboxIndexer implements ElasticSearchIndexer {
             .get();
     }
 
-    @Override
     public Optional<BulkResponse> updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
         try {
             Preconditions.checkNotNull(updatedDocumentParts);
@@ -83,7 +71,7 @@ public class ElasticSearchMailboxIndexer implements ElasticSearchIndexer {
                     aliasName.getValue(),
                     typeName.getValue(),
                     updatedDocumentPart.getId())
-                .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
+                    .setDoc(updatedDocumentPart.getUpdatedDocumentPart())));
             return Optional.of(bulkRequestBuilder.get());
         } catch (ValidationException e) {
             LOGGER.warn("Error while updating index", e);
@@ -91,7 +79,6 @@ public class ElasticSearchMailboxIndexer implements ElasticSearchIndexer {
         }
     }
 
-    @Override
     public Optional<BulkResponse> deleteMessages(List<String> ids) {
         try {
             BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
@@ -107,7 +94,6 @@ public class ElasticSearchMailboxIndexer implements ElasticSearchIndexer {
         }
     }
 
-    @Override
     public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
         deleteByQueryPerformer.perform(queryBuilder);
     }
