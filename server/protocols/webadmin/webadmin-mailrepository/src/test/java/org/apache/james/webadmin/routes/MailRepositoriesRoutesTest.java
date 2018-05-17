@@ -240,7 +240,7 @@ public class MailRepositoriesRoutesTest {
             .body("statusCode", is(500))
             .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
             .body("message", is("Error while listing keys"))
-            .body("cause", containsString("message"));
+            .body("details", containsString("message"));
     }
 
     @Test

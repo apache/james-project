@@ -24,7 +24,6 @@ import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
@@ -402,7 +401,7 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -421,7 +420,7 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -429,8 +428,7 @@ class ForwardRoutesTest {
             when()
                 .put(ALICE_WITH_SLASH + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -438,8 +436,7 @@ class ForwardRoutesTest {
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + ALICE_WITH_SLASH)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -458,7 +455,7 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -488,7 +485,7 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -507,7 +504,7 @@ class ForwardRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The forward is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -530,8 +527,7 @@ class ForwardRoutesTest {
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -543,8 +539,7 @@ class ForwardRoutesTest {
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -556,8 +551,7 @@ class ForwardRoutesTest {
             when()
                 .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -569,8 +563,7 @@ class ForwardRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -582,8 +575,7 @@ class ForwardRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -595,8 +587,7 @@ class ForwardRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -608,8 +599,7 @@ class ForwardRoutesTest {
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -621,8 +611,7 @@ class ForwardRoutesTest {
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -634,8 +623,7 @@ class ForwardRoutesTest {
             when()
                 .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -647,8 +635,7 @@ class ForwardRoutesTest {
             when()
                 .get(ALICE)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -660,8 +647,7 @@ class ForwardRoutesTest {
             when()
                 .get(ALICE)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -673,8 +659,7 @@ class ForwardRoutesTest {
             when()
                 .get(ALICE)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
     }
 

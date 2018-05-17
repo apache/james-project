@@ -169,7 +169,7 @@ public class CassandraMigrationRoutesTest {
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
             .containsEntry("message", "Invalid request for version upgrade")
-            .containsEntry("cause", "For input string: \"NonInt\"");
+            .containsEntry("details", "For input string: \"NonInt\"");
 
         verifyNoMoreInteractions(schemaVersionDAO);
     }

@@ -191,7 +191,7 @@ class UserQuotaRoutesTest {
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
             .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1")
-            .containsEntry("cause", "For input string: \"invalid\"");
+            .containsEntry("details", "For input string: \"invalid\"");
     }
 
     @Test
@@ -320,7 +320,7 @@ class UserQuotaRoutesTest {
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
             .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1")
-            .containsEntry("cause", "For input string: \"invalid\"");
+            .containsEntry("details", "For input string: \"invalid\"");
     }
 
     @Test

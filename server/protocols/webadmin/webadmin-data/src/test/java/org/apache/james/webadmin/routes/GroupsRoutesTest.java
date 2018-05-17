@@ -24,7 +24,6 @@ import static com.jayway.restassured.RestAssured.when;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -409,7 +408,7 @@ class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -428,7 +427,7 @@ class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -436,8 +435,7 @@ class GroupsRoutesTest {
             when()
                 .put(GROUP_WITH_SLASH + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -445,8 +443,7 @@ class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_SLASH)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString("404 Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -465,7 +462,7 @@ class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -493,7 +490,7 @@ class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -512,7 +509,7 @@ class GroupsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "The group is not an email address")
-                .containsEntry("cause", "Out of data at position 1 in 'not-an-address'");
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
         @Test
@@ -533,8 +530,7 @@ class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -546,8 +542,7 @@ class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -559,8 +554,7 @@ class GroupsRoutesTest {
             when()
                 .put(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -572,8 +566,7 @@ class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -585,8 +578,7 @@ class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -598,8 +590,7 @@ class GroupsRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -611,8 +602,7 @@ class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -624,8 +614,7 @@ class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -637,8 +626,7 @@ class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + GROUP2)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -650,8 +638,7 @@ class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -663,8 +650,7 @@ class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -676,8 +662,7 @@ class GroupsRoutesTest {
             when()
                 .get(GROUP1)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
     }
 

@@ -17,11 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.utils;
+package org.apache.james.webadmin.routes;
 
-public class JsonExtractException extends Exception {
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.utils.JsonExtractor;
 
-    public JsonExtractException(Throwable throwable) {
-        super(throwable.getMessage(), throwable);
+import spark.Service;
+
+public class ErrorRoutes implements Routes {
+
+    public static final String BASE_URL = "/errors/";
+    public static final String INTERNAL_SERVER_ERROR = "internalServerError";
+    public static final String JSON_EXTRACT_EXCEPTION = "jsonExtractException";
+
+    @Override
+    public void define(Service service) {
+        defineInternalError(service);
+        defineJsonExtractException(service);
+    }
+
+    private void defineInternalError(Service service) {
+        service.get(BASE_URL + INTERNAL_SERVER_ERROR,
+            (req, res) -> {
+                throw new RuntimeException();
+            });
+    }
+
+    private void defineJsonExtractException(Service service) {
+        service.get(BASE_URL + JSON_EXTRACT_EXCEPTION,
+            (req, res) -> new JsonExtractor<>(Long.class).parse("a non valid JSON"));
     }
 }

@@ -19,6 +19,13 @@
 
 package org.apache.james.webadmin;
 
+import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.INVALID_ARGUMENT;
+import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.NOT_FOUND;
+import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.SERVER_ERROR;
+import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
+import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
+import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
+
 import java.util.Set;
 
 import javax.annotation.PreDestroy;
@@ -37,6 +44,8 @@ import org.apache.james.webadmin.mdc.MDCFilter;
 import org.apache.james.webadmin.metric.MetricPostFilter;
 import org.apache.james.webadmin.metric.MetricPreFilter;
 import org.apache.james.webadmin.routes.CORSRoute;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonExtractException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +81,7 @@ public class WebAdminServer implements Configurable {
     public void configure(HierarchicalConfiguration config) throws ConfigurationException {
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().get().getValue());
+            configureExceptionHanding();
             configureHTTPS();
             configureCORS();
             configureMetrics();
@@ -114,6 +124,30 @@ public class WebAdminServer implements Configurable {
             new CORSRoute().define(service);
             LOGGER.info("Web admin set up to enable CORS from {}", configuration.getUrlCORSOrigin());
         }
+    }
+
+    private void configureExceptionHanding() {
+        service.notFound((req, res) -> ErrorResponder.builder()
+            .statusCode(NOT_FOUND_404)
+            .type(NOT_FOUND)
+            .message(String.format("%s %s can not be found", req.requestMethod(), req.pathInfo()))
+            .asString());
+
+        service.internalServerError((req, res) -> ErrorResponder.builder()
+            .statusCode(INTERNAL_SERVER_ERROR_500)
+            .type(SERVER_ERROR)
+            .message("WebAdmin encountered an unexpected internal error")
+            .asString());
+
+        service.exception(JsonExtractException.class, (ex, req, res) -> {
+            res.status(BAD_REQUEST_400);
+            res.body(ErrorResponder.builder()
+                .statusCode(BAD_REQUEST_400)
+                .type(INVALID_ARGUMENT)
+                .message("JSON payload of the request is not valid")
+                .cause(ex)
+                .asString());
+        });
     }
 
     @PreDestroy

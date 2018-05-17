@@ -25,7 +25,6 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.UserMailboxesRoutes.USERS_BASE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -462,8 +461,7 @@ class UserMailboxesRoutesTest {
             when()
                 .put()
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString(HttpStatus.NOT_FOUND_404 + " Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -471,8 +469,7 @@ class UserMailboxesRoutesTest {
             when()
                 .put(SEPARATOR)
             .then()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .body(containsString(HttpStatus.NOT_FOUND_404 + " Not found"));
+                .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
@@ -747,8 +744,7 @@ class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -758,8 +754,7 @@ class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -785,8 +780,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -796,8 +790,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -812,8 +805,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -823,8 +815,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -844,8 +835,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -854,9 +844,8 @@ class UserMailboxesRoutesTest {
 
             when()
                 .delete()
-                .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
 
@@ -872,8 +861,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -901,8 +889,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -912,8 +899,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -923,8 +909,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -934,8 +919,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -945,8 +929,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -956,8 +939,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -967,8 +949,7 @@ class UserMailboxesRoutesTest {
             when()
                 .get(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -978,8 +959,7 @@ class UserMailboxesRoutesTest {
             when()
                 .put(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -989,8 +969,7 @@ class UserMailboxesRoutesTest {
             when()
                 .delete(MAILBOX_NAME)
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
         @Test
@@ -999,9 +978,8 @@ class UserMailboxesRoutesTest {
 
             when()
                 .delete()
-                .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                .body(containsString("500 Internal Server Error"));
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
     }
