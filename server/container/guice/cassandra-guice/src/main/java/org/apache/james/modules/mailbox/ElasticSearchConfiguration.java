@@ -31,6 +31,7 @@ import org.apache.james.backends.es.IndexName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
+import org.apache.james.util.OptionalUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
@@ -41,10 +42,13 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     public static final String ELASTICSEARCH_INDEX_NAME = "elasticsearch.index.name";
+    public static final String ELASTICSEARCH_INDEX_MAILBOX_NAME = "elasticsearch.index.mailbox.name";
     public static final String ELASTICSEARCH_NB_REPLICA = "elasticsearch.nb.replica";
     public static final String ELASTICSEARCH_NB_SHARDS = "elasticsearch.nb.shards";
     public static final String ELASTICSEARCH_ALIAS_READ_NAME = "elasticsearch.alias.read.name";
     public static final String ELASTICSEARCH_ALIAS_WRITE_NAME = "elasticsearch.alias.write.name";
+    public static final String ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME = "elasticsearch.alias.read.mailbox.name";
+    public static final String ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME = "elasticsearch.alias.write.mailbox.name";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY = "elasticsearch.retryConnection.minDelay";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES = "elasticsearch.retryConnection.maxRetries";
     public static final String ELASTICSEARCH_INDEX_ATTACHMENTS = "elasticsearch.indexAttachments";
@@ -76,16 +80,9 @@ public class ElasticSearchConfiguration {
         int minDelay = configuration.getInt(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, DEFAULT_CONNECTION_MIN_DELAY);
         IndexAttachments indexAttachments = provideIndexAttachments(configuration);
         ImmutableList<Host> hosts = getHosts(configuration);
-
-        AliasName readAlias = Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
-            .map(AliasName::new)
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
-        AliasName writeAlias = Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
-            .map(AliasName::new)
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
-        IndexName indexName = Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
-            .map(IndexName::new)
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+        AliasName readAlias = computeMailboxReadAlias(configuration);
+        AliasName writeAlias = computeMailboxWriteAlias(configuration);
+        IndexName indexName = computeMailboxIndexName(configuration);
 
         return new ElasticSearchConfiguration(
             hosts,
@@ -97,6 +94,33 @@ public class ElasticSearchConfiguration {
             minDelay,
             maxRetries,
             indexAttachments);
+    }
+
+    public static IndexName computeMailboxIndexName(PropertiesConfiguration configuration) {
+        return OptionalUtils.or(
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
+                .map(IndexName::new),
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
+                .map(IndexName::new))
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+    }
+
+    public static AliasName computeMailboxWriteAlias(PropertiesConfiguration configuration) {
+        return OptionalUtils.or(
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
+                .map(AliasName::new),
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
+                .map(AliasName::new))
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
+    }
+
+    public static AliasName computeMailboxReadAlias(PropertiesConfiguration configuration) {
+        return OptionalUtils.or(
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
+                .map(AliasName::new),
+            Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
+                .map(AliasName::new))
+            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
     }
 
     private static IndexAttachments provideIndexAttachments(PropertiesConfiguration configuration) {
@@ -142,22 +166,22 @@ public class ElasticSearchConfiguration {
     }
 
     private final ImmutableList<Host> hosts;
-    private final IndexName indexName;
-    private final AliasName readAliasName;
-    private final AliasName writeAliasName;
+    private final IndexName indexMailboxName;
+    private final AliasName readAliasMailboxName;
+    private final AliasName writeAliasMailboxName;
     private final int nbShards;
     private final int nbReplica;
     private final int minDelay;
     private final int maxRetries;
     private final IndexAttachments indexAttachment;
 
-    public ElasticSearchConfiguration(ImmutableList<Host> hosts, IndexName indexName, AliasName readAliasName,
-                                      AliasName writeAliasName, int nbShards, int nbReplica, int minDelay,
+    public ElasticSearchConfiguration(ImmutableList<Host> hosts, IndexName indexMailboxName, AliasName readAliasMailboxName,
+                                      AliasName writeAliasMailboxName, int nbShards, int nbReplica, int minDelay,
                                       int maxRetries, IndexAttachments indexAttachment) {
         this.hosts = hosts;
-        this.indexName = indexName;
-        this.readAliasName = readAliasName;
-        this.writeAliasName = writeAliasName;
+        this.indexMailboxName = indexMailboxName;
+        this.readAliasMailboxName = readAliasMailboxName;
+        this.writeAliasMailboxName = writeAliasMailboxName;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
         this.minDelay = minDelay;
@@ -169,16 +193,16 @@ public class ElasticSearchConfiguration {
         return hosts;
     }
 
-    public IndexName getIndexName() {
-        return indexName;
+    public IndexName getIndexMailboxName() {
+        return indexMailboxName;
     }
 
-    public AliasName getReadAliasName() {
-        return readAliasName;
+    public AliasName getReadAliasMailboxName() {
+        return readAliasMailboxName;
     }
 
-    public AliasName getWriteAliasName() {
-        return writeAliasName;
+    public AliasName getWriteAliasMailboxName() {
+        return writeAliasMailboxName;
     }
 
     public int getNbShards() {
@@ -212,16 +236,16 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.maxRetries, that.maxRetries)
                 && Objects.equals(this.indexAttachment, that.indexAttachment)
                 && Objects.equals(this.hosts, that.hosts)
-                && Objects.equals(this.indexName, that.indexName)
-                && Objects.equals(this.readAliasName, that.readAliasName)
-                && Objects.equals(this.writeAliasName, that.writeAliasName);
+                && Objects.equals(this.indexMailboxName, that.indexMailboxName)
+                && Objects.equals(this.readAliasMailboxName, that.readAliasMailboxName)
+                && Objects.equals(this.writeAliasMailboxName, that.writeAliasMailboxName);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, indexName, readAliasName, writeAliasName, nbShards,
+        return Objects.hash(hosts, indexMailboxName, readAliasMailboxName, writeAliasMailboxName, nbShards,
             nbReplica, minDelay, maxRetries, indexAttachment);
     }
 }

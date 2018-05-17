@@ -56,13 +56,24 @@
           <dd>Number of shards for index provisionned by James</dd>
           <dt><strong>elasticsearch.nb.replica</strong></dt>
           <dd>Number of replica for index provisionned by James</dd>
+          <dt><strong>elasticsearch.index.mailbox.name</strong></dt>
+          <dd>Name of the mailbox index backed by the alias. It will be created if missing.</dd>
           <dt><strong>elasticsearch.index.name</strong></dt>
-          <dd>Name of the index backed by the alias. It will be created if missing.</dd>
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.index.mailbox.name</strong> instead. <br/>
+              Name of the mailbox index backed by the alias. It will be created if missing.</dd>
+          <dt><strong>elasticsearch.alias.read.mailbox.name</strong></dt>
+          <dd>Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+              The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.alias.read.name</strong></dt>
-          <dd>Name of the alias to use by Apache James for reads. It will be created if missing.
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.read.mailbox.name</strong> instead. <br/>
+              Name of the alias to use by Apache James for mailbox reads. It will be created if missing.
+              The target of the alias is the index name configured above.</dd>
+          <dt><strong>elasticsearch.alias.write.mailbox.name</strong></dt>
+          <dd>Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.alias.write.name</strong></dt>
-          <dd>Name of the alias to use by Apache James for writes. It will be created if missing.
+          <dd><strong>Deprecated</strong> Use <strong>elasticsearch.alias.write.mailbox.name</strong> instead. <br/>
+              Name of the alias to use by Apache James for mailbox writes. It will be created if missing.
               The target of the alias is the index name configured above.</dd>
           <dt><strong>elasticsearch.retryConnection.maxRetries</strong></dt>
           <dd>Number of retries when connecting the cluster</dd>

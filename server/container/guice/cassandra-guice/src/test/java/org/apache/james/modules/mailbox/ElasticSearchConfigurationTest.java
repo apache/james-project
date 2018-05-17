@@ -134,7 +134,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getIndexNameShouldReturnConfiguredValue() throws ConfigurationException {
+    public void getIndexMailboxNameShouldReturnOldConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.index.name", name);
@@ -142,23 +142,50 @@ public class ElasticSearchConfigurationTest {
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexName())
+        assertThat(elasticSearchConfiguration.getIndexMailboxName())
             .isEqualTo(new IndexName(name));
     }
 
     @Test
-    public void getIndexNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    public void getIndexMailboxNameShouldReturnNewConfiguredValueWhenBoth() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.index.name", "other");
+        configuration.addProperty("elasticsearch.index.mailbox.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+            .isEqualTo(new IndexName(name));
+    }
+
+    @Test
+    public void getIndexMailboxNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.index.mailbox.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getIndexMailboxName())
+            .isEqualTo(new IndexName(name));
+    }
+
+    @Test
+    public void getIndexMailboxNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getIndexName())
+        assertThat(elasticSearchConfiguration.getIndexMailboxName())
             .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
     }
 
     @Test
-    public void getReadAliasNameShouldReturnConfiguredValue() throws ConfigurationException {
+    public void getReadAliasMailboxNameShouldReturnOldConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.read.name", name);
@@ -166,24 +193,50 @@ public class ElasticSearchConfigurationTest {
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasName())
+        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(new AliasName(name));
     }
 
     @Test
-    public void getReadAliasNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    public void getReadAliasMailboxNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+            .isEqualTo(new AliasName(name));
+    }
+
+    @Test
+    public void getReadAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
+        configuration.addProperty("elasticsearch.alias.read.name", "other");
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
+            .isEqualTo(new AliasName(name));
+    }
+
+    @Test
+    public void getReadAliasMailboxNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getReadAliasName())
+        assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
             .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
     }
 
-
     @Test
-    public void getWriteAliasNameNameShouldReturnConfiguredValue() throws ConfigurationException {
+    public void getWriteAliasMailboxNameShouldReturnOldConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.write.name", name);
@@ -191,18 +244,45 @@ public class ElasticSearchConfigurationTest {
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasName())
+        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(new AliasName(name));
     }
 
     @Test
-    public void getWriteAliasNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    public void getWriteAliasMailboxNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+            .isEqualTo(new AliasName(name));
+    }
+
+    @Test
+    public void getWriteAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
+        configuration.addProperty("elasticsearch.alias.write.name", "other");
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
+            .isEqualTo(new AliasName(name));
+    }
+
+    @Test
+    public void getWriteAliasMailboxNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
-        assertThat(elasticSearchConfiguration.getWriteAliasName())
+        assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
             .isEqualTo(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
     }
 

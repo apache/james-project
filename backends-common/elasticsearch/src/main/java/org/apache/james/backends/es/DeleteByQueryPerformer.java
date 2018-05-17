@@ -21,9 +21,6 @@ package org.apache.james.backends.es;
 
 import java.util.concurrent.ExecutorService;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -46,13 +43,13 @@ public class DeleteByQueryPerformer {
     private final AliasName aliasName;
     private final TypeName typeName;
 
-    @Inject
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, @Named(ElasticSearchConstants.WRITE_ALIAS) AliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, ExecutorService executor,
+                                  AliasName aliasName, TypeName typeName) {
         this(client, executor, DEFAULT_BATCH_SIZE, aliasName, typeName);
     }
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, @Named("AsyncExecutor") ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;

@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.backends.es.DeleteByQueryPerformer;
+import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.NodeMappingFactory;
@@ -39,7 +39,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.MailboxIndexerSupplier;
 import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
@@ -105,12 +104,14 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
             factory,
-            new MailboxIndexerSupplier(client,
-                new DeleteByQueryPerformer(client, Executors.newSingleThreadExecutor(), MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
+            new ElasticSearchIndexer(client,
+                Executors.newSingleThreadExecutor(),
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
                 MailboxElasticSearchConstants.MESSAGE_TYPE),
             new ElasticSearchSearcher(client,
-                new QueryConverter(new CriterionConverter()), new InMemoryId.Factory(), messageIdFactory,
+                new QueryConverter(new CriterionConverter()),
+                ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
+                new InMemoryId.Factory(), messageIdFactory,
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES));
 
