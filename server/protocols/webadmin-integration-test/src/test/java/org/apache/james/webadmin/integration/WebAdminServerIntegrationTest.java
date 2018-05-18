@@ -321,8 +321,13 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"info\":{\"description\":\"All the web administration API for JAMES\",\"version\":\"V1.0\",\"title\":\"JAMES Web Admin API\"}"))
             .body(containsString("\"tags\":[\"User's Mailbox\"]"))
             .body(containsString("\"tags\":[\"GlobalQuota\"]"))
+            .body(containsString("\"tags\":[\"DomainQuota\"]"))
+            .body(containsString("\"tags\":[\"UserQuota\"]"))
             .body(containsString("\"tags\":[\"Domains\"]"))
             .body(containsString("\"tags\":[\"Users\"]"))
+            .body(containsString("\"tags\":[\"MailRepositories\"]"))
+            .body(containsString("\"tags\":[\"MailQueues\"]"))
+            .body(containsString("\"tags\":[\"Address Forwards\"]"))
             .body(containsString("\"tags\":[\"Address Groups\"]"));
     }
 
