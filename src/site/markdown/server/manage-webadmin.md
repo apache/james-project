@@ -282,10 +282,31 @@ The answer is the details of the quota of that user.
 
 ```
 {
-  "global": {"count":252,"size":242},
-  "domain": {"count":152,"size":142},
-  "user": {"count":52,"size":42},
-  "computed": {"count":52,"size":42}
+  "global": {
+    "count":252,
+    "size":242
+  },
+  "domain": {
+    "count":152,
+    "size":142
+  },
+  "user": {
+    "count":52,
+    "size":42
+  },
+  "computed": {
+    "count":52,
+    "size":42
+  },
+  "occupation": {
+    "size":1000,
+    "count":10000,
+    "ratio": {
+      "size":0.8,
+      "count":0.6,
+      "max":0.8
+    }
+  }
 }
 ```
 
@@ -293,6 +314,7 @@ The answer is the details of the quota of that user.
  - The `domain` entry represent the quota limit allowed for the user of that domain.
  - The `user` entry represent the quota limit allowed for this specific user.
  - The `computed` entry represent the quota limit applied for this user, resolved from the upper values.
+ - The `occupation` entry represent the occupation of the quota for this user. This includes used count and size as well as occupation ratio (used / limit).
 
 Note that `quota` object can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
