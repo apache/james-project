@@ -16,16 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.quota.search;
 
-import java.util.List;
+package org.apache.james.core;
 
-import org.apache.james.core.User;
+import static org.apache.james.core.CoreFixture.Domains.ALPHABET_TLD;
+import static org.apache.james.core.CoreFixture.Domains.SIMPSON_COM;
+import static org.apache.james.core.CoreFixture.Domains.DOMAIN_TLD;
 
-public interface QuotaSearcher {
-    List<User> search(QuotaQuery query);
+public interface CoreFixture {
+    interface Domains {
+        Domain DOMAIN_TLD = Domain.of("domain.tld");
+        Domain ALPHABET_TLD = Domain.of("alphabet.tld");
+        Domain SIMPSON_COM = Domain.of("simpson.com");
+    }
 
-    default List<User> search(QuotaQuery.Builder query) {
-        return search(query.build());
+    interface Users {
+        interface Simpson {
+            User BART = User.fromLocalPartWithDomain("bart", SIMPSON_COM);
+            User HOMER = User.fromLocalPartWithDomain("homer", SIMPSON_COM);
+            User LISA = User.fromLocalPartWithDomain("foo3", SIMPSON_COM);
+        }
+
+        interface Alphabet {
+            User AAA = User.fromLocalPartWithDomain("aaa", ALPHABET_TLD);
+            User ABA = User.fromLocalPartWithDomain("aba", ALPHABET_TLD);
+            User ABB = User.fromLocalPartWithDomain("abb", ALPHABET_TLD);
+            User ACB = User.fromLocalPartWithDomain("acb", ALPHABET_TLD);
+        }
+
+        User BENOIT_AT_DOMAIN_TLD = User.fromLocalPartWithDomain("benoit", DOMAIN_TLD);
     }
 }
