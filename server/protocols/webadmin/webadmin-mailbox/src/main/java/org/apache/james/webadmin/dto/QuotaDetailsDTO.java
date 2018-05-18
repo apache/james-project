@@ -23,6 +23,10 @@ package org.apache.james.webadmin.dto;
 import java.util.Optional;
 
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
+
+import com.google.common.base.Preconditions;
 
 public class QuotaDetailsDTO {
 
@@ -35,6 +39,7 @@ public class QuotaDetailsDTO {
         private Optional<QuotaDTO> domain;
         private Optional<QuotaDTO> user;
         private Optional<QuotaDTO> computed;
+        private OccupationDTO occupation;
 
         private Builder() {
             global = Optional.empty();
@@ -62,6 +67,11 @@ public class QuotaDetailsDTO {
             return this;
         }
 
+        public Builder occupation(Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota) {
+            this.occupation = OccupationDTO.from(sizeQuota, countQuota);
+            return this;
+        }
+
         public Builder valueForScope(Quota.Scope scope, QuotaDTO value) {
             switch (scope) {
                 case Global:
@@ -75,7 +85,8 @@ public class QuotaDetailsDTO {
         }
 
         public QuotaDetailsDTO build() {
-            return new QuotaDetailsDTO(global, domain, user, computed);
+            Preconditions.checkNotNull(occupation);
+            return new QuotaDetailsDTO(global, domain, user, computed, occupation);
         }
     }
 
@@ -83,12 +94,14 @@ public class QuotaDetailsDTO {
     private final Optional<QuotaDTO> domain;
     private final Optional<QuotaDTO> user;
     private final Optional<QuotaDTO> computed;
+    private final OccupationDTO occupation;
 
-    private QuotaDetailsDTO(Optional<QuotaDTO> global, Optional<QuotaDTO> domain, Optional<QuotaDTO> user, Optional<QuotaDTO> computed) {
+    private QuotaDetailsDTO(Optional<QuotaDTO> global, Optional<QuotaDTO> domain, Optional<QuotaDTO> user, Optional<QuotaDTO> computed, OccupationDTO occupation) {
         this.global = global;
         this.domain = domain;
         this.user = user;
         this.computed = computed;
+        this.occupation = occupation;
     }
 
     public Optional<QuotaDTO> getGlobal() {
@@ -105,5 +118,9 @@ public class QuotaDetailsDTO {
 
     public Optional<QuotaDTO> getComputed() {
         return computed;
+    }
+
+    public OccupationDTO getOccupation() {
+        return occupation;
     }
 }

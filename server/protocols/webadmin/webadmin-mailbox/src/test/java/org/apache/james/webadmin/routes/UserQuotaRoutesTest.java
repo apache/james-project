@@ -23,6 +23,8 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 
 import java.util.Map;
 
@@ -31,10 +33,13 @@ import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -48,6 +53,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
@@ -67,6 +73,7 @@ class UserQuotaRoutesTest {
     private WebAdminServer webAdminServer;
     private InMemoryPerUserMaxQuotaManager maxQuotaManager;
     private DefaultUserQuotaRootResolver userQuotaRootResolver;
+    private CurrentQuotaManager currentQuotaManager;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -79,7 +86,13 @@ class UserQuotaRoutesTest {
         usersRepository.addUser(BOB.asString(), PASSWORD);
         MailboxSessionMapperFactory factory = null;
         userQuotaRootResolver = new DefaultUserQuotaRootResolver(factory);
-        UserQuotaService userQuotaService = new UserQuotaService(maxQuotaManager, userQuotaRootResolver);
+
+        currentQuotaManager = mock(CurrentQuotaManager.class);
+        Mockito.when(currentQuotaManager.getCurrentMessageCount(any())).thenReturn(QuotaCount.count(0));
+        Mockito.when(currentQuotaManager.getCurrentStorage(any())).thenReturn(QuotaSize.size(0));
+
+        QuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        UserQuotaService userQuotaService = new UserQuotaService(maxQuotaManager, quotaManager, userQuotaRootResolver);
         QuotaModule quotaModule = new QuotaModule();
         UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(usersRepository, userQuotaService, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
         webAdminServer = WebAdminUtils.createWebAdminServer(
@@ -419,6 +432,54 @@ class UserQuotaRoutesTest {
         softly.assertThat(jsonPath.getLong("domain." + COUNT)).isEqualTo(23);
         softly.assertThat(jsonPath.getLong("global." + SIZE)).isEqualTo(1111);
         softly.assertThat(jsonPath.getLong("global." + COUNT)).isEqualTo(22);
+    }
+
+    @Test
+    public void getQuotaShouldReturnOccupation() throws Exception {
+        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(80));
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(100));
+        Mockito.when(currentQuotaManager.getCurrentStorage(any())).thenReturn(QuotaSize.size(40));
+        Mockito.when(currentQuotaManager.getCurrentMessageCount(any())).thenReturn(QuotaCount.count(20));
+
+        JsonPath jsonPath =
+            given()
+                .get(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(jsonPath.getLong("occupation.count")).isEqualTo(20);
+        softly.assertThat(jsonPath.getLong("occupation.size")).isEqualTo(40);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.count")).isEqualTo(0.2);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.size")).isEqualTo(0.5);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.max")).isEqualTo(0.5);
+    }
+
+    @Test
+    public void getQuotaShouldReturnOccupationWhenUnlimited() throws Exception {
+        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.unlimited());
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.unlimited());
+        Mockito.when(currentQuotaManager.getCurrentStorage(any())).thenReturn(QuotaSize.size(40));
+        Mockito.when(currentQuotaManager.getCurrentMessageCount(any())).thenReturn(QuotaCount.count(20));
+
+        JsonPath jsonPath =
+            given()
+                .get(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .jsonPath();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(jsonPath.getLong("occupation.count")).isEqualTo(20);
+        softly.assertThat(jsonPath.getLong("occupation.size")).isEqualTo(40);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.count")).isEqualTo(0);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.size")).isEqualTo(0);
+        softly.assertThat(jsonPath.getDouble("occupation.ratio.max")).isEqualTo(0);
     }
 
     @Test

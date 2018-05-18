@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.Test;
 
 public class QuotaTest {
@@ -91,6 +92,28 @@ public class QuotaTest {
             .computedLimit(QuotaCount.count(2))
             .build();
         assertThat(actual).isNotNull();
+    }
+
+    @Test
+    public void getRatioShouldReturnUsedDividedByLimit() {
+        assertThat(
+            Quota.<QuotaSize>builder()
+                .used(QuotaSize.size(15))
+                .computedLimit(QuotaSize.size(60))
+                .build()
+                .getRatio())
+            .isEqualTo(0.25);
+    }
+
+    @Test
+    public void getRatioShouldReturnZeroWhenUnlimited() {
+        assertThat(
+            Quota.<QuotaSize>builder()
+                .used(QuotaSize.size(15))
+                .computedLimit(QuotaSize.unlimited())
+                .build()
+                .getRatio())
+            .isEqualTo(0);
     }
 
 }

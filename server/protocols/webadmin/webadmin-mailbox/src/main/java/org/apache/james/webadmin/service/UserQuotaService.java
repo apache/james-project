@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
+import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.webadmin.dto.QuotaDTO;
@@ -42,11 +43,13 @@ import com.google.common.collect.Sets;
 public class UserQuotaService {
 
     private final MaxQuotaManager maxQuotaManager;
+    private final QuotaManager quotaManager;
     private final UserQuotaRootResolver userQuotaRootResolver;
 
     @Inject
-    public UserQuotaService(MaxQuotaManager maxQuotaManager, UserQuotaRootResolver userQuotaRootResolver) {
+    public UserQuotaService(MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, UserQuotaRootResolver userQuotaRootResolver) {
         this.maxQuotaManager = maxQuotaManager;
+        this.quotaManager = quotaManager;
         this.userQuotaRootResolver = userQuotaRootResolver;
     }
 
@@ -60,7 +63,9 @@ public class UserQuotaService {
 
     public QuotaDetailsDTO getQuota(User user) throws MailboxException {
         QuotaRoot quotaRoot = userQuotaRootResolver.forUser(user);
-        QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder();
+        QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder()
+            .occupation(quotaManager.getStorageQuota(quotaRoot),
+                quotaManager.getMessageQuota(quotaRoot));
 
         mergeMaps(
                 maxQuotaManager.listMaxMessagesDetails(quotaRoot),

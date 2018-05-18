@@ -94,6 +94,13 @@ public class Quota<T extends QuotaValue<T>> {
         return used;
     }
 
+    public double getRatio() {
+        if (limit.isUnlimited()) {
+            return 0;
+        }
+        return Double.valueOf(used.asLong()) / Double.valueOf(limit.asLong());
+    }
+
     public ImmutableMap<Scope, T> getLimitByScope() {
         return limitByScope;
     }
