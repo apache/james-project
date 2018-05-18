@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 

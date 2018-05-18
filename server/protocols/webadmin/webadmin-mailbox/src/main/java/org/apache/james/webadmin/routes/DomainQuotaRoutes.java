@@ -39,6 +39,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
+import org.apache.james.webadmin.service.DomainQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
