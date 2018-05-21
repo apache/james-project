@@ -74,9 +74,10 @@ public class PropagateLookupRightListenerTest {
     @Before
     public void setup() throws Exception {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
-        storeMailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(groupMembershipResolver);
-        storeRightManager = storeMailboxManager.getStoreRightManager();
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources()
+            .createResources(groupMembershipResolver);
+        storeMailboxManager = resources.getMailboxManager();
+        storeRightManager = resources.getStoreRightManager();
         mailboxMapper = storeMailboxManager.getMapperFactory();
 
         testee = new PropagateLookupRightListener(storeRightManager);

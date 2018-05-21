@@ -30,8 +30,9 @@ public class MemoryMailboxManagerProvider {
 
     public static MailboxManager provideMailboxManager() throws MailboxException {
         return new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver(),
-                LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
+            .createResources(new SimpleGroupMembershipResolver(),
+                LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE)
+            .getMailboxManager();
     }
 
 }

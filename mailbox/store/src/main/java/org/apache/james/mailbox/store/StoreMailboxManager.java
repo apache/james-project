@@ -301,7 +301,7 @@ public class StoreMailboxManager implements MailboxManager {
         return locker;
     }
 
-    public StoreRightManager getStoreRightManager() {
+    protected StoreRightManager getStoreRightManager() {
         return storeRightManager;
     }
 

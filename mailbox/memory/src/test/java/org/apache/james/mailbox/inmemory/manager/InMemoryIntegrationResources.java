@@ -33,6 +33,7 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -58,12 +59,59 @@ import com.google.common.base.Throwables;
 
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
 
+    public static class Resources {
+        private final InMemoryMailboxManager mailboxManager;
+        private final MaxQuotaManager maxQuotaManager;
+        private final QuotaManager quotaManager;
+        private final CurrentQuotaManager currentQuotaManager;
+        private final DefaultUserQuotaRootResolver quotaRootResolver;
+        private final StoreRightManager storeRightManager;
+
+        public Resources(InMemoryMailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver quotaRootResolver, StoreRightManager storeRightManager) {
+            this.mailboxManager = mailboxManager;
+            this.maxQuotaManager = maxQuotaManager;
+            this.quotaManager = quotaManager;
+            this.currentQuotaManager = currentQuotaManager;
+            this.quotaRootResolver = quotaRootResolver;
+            this.storeRightManager = storeRightManager;
+        }
+
+        public InMemoryMailboxManager getMailboxManager() {
+            return mailboxManager;
+        }
+
+        public MaxQuotaManager getMaxQuotaManager() {
+            return maxQuotaManager;
+        }
+
+        public QuotaManager getQuotaManager() {
+            return quotaManager;
+        }
+
+        public DefaultUserQuotaRootResolver getQuotaRootResolver() {
+            return quotaRootResolver;
+        }
+
+        public CurrentQuotaManager getCurrentQuotaManager() {
+            return currentQuotaManager;
+        }
+
+        public StoreRightManager getStoreRightManager() {
+            return storeRightManager;
+        }
+    }
+
     private SimpleGroupMembershipResolver groupMembershipResolver;
     private DefaultUserQuotaRootResolver quotaRootResolver;
     private InMemoryCurrentQuotaManager currentQuotaManager;
 
     @Override
     public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
+        return createResources(groupMembershipResolver)
+            .mailboxManager;
+    }
+
+    public Resources createResources(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
         return createMailboxManager(groupMembershipResolver,
             ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
                 new StoreMailboxAnnotationManager(
@@ -71,8 +119,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                     storeRightManager)));
     }
 
-    public InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
-                                                    int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
+    public Resources createResources(GroupMembershipResolver groupMembershipResolver,
+                                     int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
         return createMailboxManager(groupMembershipResolver,
             ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
              new StoreMailboxAnnotationManager(
@@ -82,7 +130,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                  limitAnnotationSize)));
     }
 
-    private InMemoryMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
+    private Resources createMailboxManager(GroupMembershipResolver groupMembershipResolver,
                                                     BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
@@ -107,12 +155,19 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             annotationManager,
             storeRightManager);
         manager.init();
+        MaxQuotaManager maxQuotaManager = createMaxQuotaManager();
         try {
-            createQuotaManager(createMaxQuotaManager(), manager);
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-        return manager;
+            QuotaManager quotaManager = createQuotaManager(maxQuotaManager, manager);
+        return new Resources(
+            manager,
+            maxQuotaManager,
+            quotaManager,
+            currentQuotaManager,
+            quotaRootResolver,
+            storeRightManager);
+    } catch (Exception e) {
+        throw Throwables.propagate(e);
+    }
     }
 
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
