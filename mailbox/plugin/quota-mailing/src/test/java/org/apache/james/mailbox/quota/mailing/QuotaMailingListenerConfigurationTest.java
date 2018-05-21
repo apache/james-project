@@ -26,8 +26,10 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Optional;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration.RenderingInformation;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +39,10 @@ public class QuotaMailingListenerConfigurationTest {
 
     private static final String SUBJECT_TEMPLATE = "sbj.mustache";
     private static final String BODY_TEMPLATE = "body.mustache";
+    private static final String OTHER_SUBJECT_TEMPLATE = "other_sbj.mustache";
+    private static final String OTHER_BODY_TEMPLATE = "other_body.mustache";
+    private static final String YET_ANOTHER_SUBJECT_TEMPLATE = "yet_another_sbj.mustache";
+    private static final String YET_ANOTHER_BODY_TEMPLATE = "yet_another_body.mustache";
 
     @Test
     public void shouldMatchBeanContract() {
@@ -51,12 +57,20 @@ public class QuotaMailingListenerConfigurationTest {
         xmlConfiguration.load(toStream(
             "<configuration>\n" +
                 "  <thresholds>\n" +
-                "    <threshold>0.85</threshold>\n" +
-                "    <threshold>0.98</threshold>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
+                "      <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "    </threshold>\n" +
+                "    <threshold>\n" +
+                "      <value>0.98</value>\n" +
+                "      <subjectTemplate>" + OTHER_SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
+                "      <bodyTemplate>" + OTHER_BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "    </threshold>\n" +
                 "  </thresholds>\n" +
+                "  <subjectTemplate>" + YET_ANOTHER_SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
+                "  <bodyTemplate>" + YET_ANOTHER_BODY_TEMPLATE + "</bodyTemplate>\n" +
                 "  <gracePeriod>3 days</gracePeriod>\n" +
-                "  <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
-                "  <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
                 "  <name>listener-name</name>\n" +
                 "</configuration>"));
 
@@ -64,11 +78,50 @@ public class QuotaMailingListenerConfigurationTest {
 
         assertThat(result)
             .isEqualTo(QuotaMailingListenerConfiguration.builder()
-                .addThresholds(new QuotaThreshold(0.85),
-                    new QuotaThreshold(0.98))
+                .addThreshold(new QuotaThreshold(0.85),
+                    RenderingInformation.from(BODY_TEMPLATE, SUBJECT_TEMPLATE))
+                .addThreshold(new QuotaThreshold(0.98),
+                    RenderingInformation.from(OTHER_BODY_TEMPLATE, OTHER_SUBJECT_TEMPLATE))
                 .gracePeriod(Duration.ofDays(3))
-                .subjectTemplate(SUBJECT_TEMPLATE)
-                .bodyTemplate(BODY_TEMPLATE)
+                .subjectTemplate(YET_ANOTHER_SUBJECT_TEMPLATE)
+                .bodyTemplate(YET_ANOTHER_BODY_TEMPLATE)
+                .name("listener-name")
+                .build());
+    }
+
+    @Test
+    public void fromShouldReadXMLConfigurationWhenRenderingInformationPartiallyOmited() throws Exception {
+        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
+        xmlConfiguration.load(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "    </threshold>\n" +
+                "    <threshold>\n" +
+                "      <value>0.98</value>\n" +
+                "      <subjectTemplate>" + OTHER_SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
+                "    </threshold>\n" +
+                "    <threshold>\n" +
+                "      <value>0.99</value>\n" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
+                "  <gracePeriod>3 days</gracePeriod>\n" +
+                "  <name>listener-name</name>\n" +
+                "</configuration>"));
+
+        QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
+
+        assertThat(result)
+            .isEqualTo(QuotaMailingListenerConfiguration.builder()
+                .addThreshold(new QuotaThreshold(0.85),
+                    RenderingInformation.from(Optional.of(BODY_TEMPLATE), Optional.empty()))
+                .addThreshold(new QuotaThreshold(0.98),
+                    RenderingInformation.from(Optional.empty(), Optional.of(OTHER_SUBJECT_TEMPLATE)))
+                .addThreshold(new QuotaThreshold(0.99),
+                    RenderingInformation.from(Optional.empty(), Optional.empty()))
+                .gracePeriod(Duration.ofDays(3))
                 .name("listener-name")
                 .build());
     }
@@ -80,8 +133,6 @@ public class QuotaMailingListenerConfigurationTest {
             "<configuration>\n" +
                 "  <thresholds></thresholds>\n" +
                 "  <gracePeriod>3 days</gracePeriod>\n" +
-                "  <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
-                "  <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
                 "</configuration>"));
 
         QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
@@ -89,8 +140,6 @@ public class QuotaMailingListenerConfigurationTest {
         assertThat(result)
             .isEqualTo(QuotaMailingListenerConfiguration.builder()
                 .gracePeriod(Duration.ofDays(3))
-                .subjectTemplate(SUBJECT_TEMPLATE)
-                .bodyTemplate(BODY_TEMPLATE)
                 .build());
     }
 
@@ -156,9 +205,18 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnEmptySubjectTemplate() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
-            "<configuration><subjectTemplate></subjectTemplate></configuration>"));
+        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();xmlConfiguration.load(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <subjectTemplate></subjectTemplate>\n" +
+                "      <bodyTemplate>" + BODY_TEMPLATE + "</bodyTemplate>\n" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
+                "  <gracePeriod>3 days</gracePeriod>\n" +
+                "  <name>listener-name</name>\n" +
+                "</configuration>"));
 
         assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
             .isInstanceOf(IllegalArgumentException.class);
@@ -166,9 +224,17 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnEmptyBodyTemplate() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
-            "<configuration><bodyTemplate></bodyTemplate></configuration>"));
+        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();xmlConfiguration.load(toStream(
+            "<configuration>\n" +
+                "  <thresholds>\n" +
+                "    <threshold>" +
+                "      <value>0.85</value>" +
+                "      <subjectTemplate>" + SUBJECT_TEMPLATE + "</subjectTemplate>\n" +
+                "      <bodyTemplate></bodyTemplate>\n" +
+                "    </threshold>\n" +
+                "  </thresholds>\n" +
+                "  <name>listener-name</name>\n" +
+                "</configuration>"));
 
         assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
             .isInstanceOf(IllegalArgumentException.class);

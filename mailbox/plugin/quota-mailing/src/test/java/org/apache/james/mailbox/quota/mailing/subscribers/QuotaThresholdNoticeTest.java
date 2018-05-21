@@ -24,6 +24,7 @@ import static org.apache.james.mailbox.quota.model.HistoryEvolution.HighestThres
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.DEFAULT_CONFIGURATION;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.NOW;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
+import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._95;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
@@ -32,12 +33,15 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
+import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration.RenderingInformation;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Counts;
 import org.apache.james.mailbox.quota.model.QuotaThresholdFixture.Quotas.Sizes;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -280,17 +284,134 @@ class QuotaThresholdNoticeTest {
     }
 
     @Test
-    void generateSubjectShouldRenderMustacheTemplate() throws Exception {
-        QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
+    void renderingShouldUsePerThresholdTemplate() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                "classpath://templates/body1.mustache",
+                "classpath://templates/subject1.mustache"))
+            .addThreshold(_95, RenderingInformation.from(
+                "classpath://templates/body2.mustache",
+                "classpath://templates/subject2.mustache"))
+            .build();
 
-        assertThat(QuotaThresholdNotice.builder()
-            .withConfiguration(DEFAULT_CONFIGURATION)
+        QuotaThresholdNotice quotaThresholdNotice1 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
             .sizeQuota(Sizes._82_PERCENT)
             .countQuota(Counts._UNLIMITED)
-            .countThreshold(HistoryEvolution.higherThresholdReached(countThresholdChange, NotAlreadyReachedDuringGracePeriod))
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
             .build()
-            .get()
-            .generateSubject(fileSystem))
+            .get();
+
+        QuotaThresholdNotice quotaThresholdNotice2 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._992_PERTHOUSAND)
+            .countQuota(Counts._UNLIMITED)
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_95, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(quotaThresholdNotice1.generateSubject(fileSystem))
+            .isEqualTo("[SUBJECT_1]");
+        softly.assertThat(quotaThresholdNotice1.generateReport(fileSystem))
+            .isEqualTo("[BODY_1]");
+        softly.assertThat(quotaThresholdNotice2.generateSubject(fileSystem))
+            .isEqualTo("[SUBJECT_2]");
+        softly.assertThat(quotaThresholdNotice2.generateReport(fileSystem))
+            .isEqualTo("[BODY_2]");
+        softly.assertAll();
+    }
+
+    @Test
+    void renderingShouldUseMostSignificantThreshold() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                "classpath://templates/body1.mustache",
+                "classpath://templates/subject1.mustache"))
+            .addThreshold(_95, RenderingInformation.from(
+                "classpath://templates/body2.mustache",
+                "classpath://templates/subject2.mustache"))
+            .build();
+
+        QuotaThresholdNotice quotaThresholdNotice1 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .countQuota(Counts._85_PERCENT)
+            .sizeQuota(Sizes._992_PERTHOUSAND)
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
+            .sizeThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_95, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(quotaThresholdNotice1.generateSubject(fileSystem))
+            .isEqualTo("[SUBJECT_2]");
+        softly.assertThat(quotaThresholdNotice1.generateReport(fileSystem))
+            .isEqualTo("[BODY_2]");
+        softly.assertAll();
+    }
+
+    @Test
+    void renderingShouldDefaultToGlobalValueWhenSpecificThresholdValueIsOmmited() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                Optional.empty(),
+                Optional.of("classpath://templates/subject1.mustache")))
+            .addThreshold(_95, RenderingInformation.from(
+                Optional.of("classpath://templates/body1.mustache"),
+                Optional.empty()))
+            .subjectTemplate("classpath://templates/subject2.mustache")
+            .bodyTemplate("classpath://templates/body2.mustache")
+            .build();
+
+        QuotaThresholdNotice quotaThresholdNotice1 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._UNLIMITED)
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
+
+        QuotaThresholdNotice quotaThresholdNotice2 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._992_PERTHOUSAND)
+            .countQuota(Counts._UNLIMITED)
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_95, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(quotaThresholdNotice1.generateSubject(fileSystem))
+            .isEqualTo("[SUBJECT_1]");
+        softly.assertThat(quotaThresholdNotice1.generateReport(fileSystem))
+            .isEqualTo("[BODY_2]");
+        softly.assertThat(quotaThresholdNotice2.generateSubject(fileSystem))
+            .isEqualTo("[SUBJECT_2]");
+        softly.assertThat(quotaThresholdNotice2.generateReport(fileSystem))
+            .isEqualTo("[BODY_1]");
+        softly.assertAll();
+    }
+
+    @Test
+    void renderingShouldDefaultToDefaultValueWhenSpecificThresholdAndGlobalValueIsOmited() throws Exception {
+        QuotaMailingListenerConfiguration configuration = QuotaMailingListenerConfiguration.builder()
+            .addThreshold(_80, RenderingInformation.from(
+                Optional.of("classpath://templates/body2.mustache"),
+                Optional.empty()))
+            .build();
+
+        QuotaThresholdNotice quotaThresholdNotice1 = QuotaThresholdNotice.builder()
+            .withConfiguration(configuration)
+            .sizeQuota(Sizes._82_PERCENT)
+            .countQuota(Counts._UNLIMITED)
+            .countThreshold(HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, NOW), NotAlreadyReachedDuringGracePeriod))
+            .build()
+            .get();
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(quotaThresholdNotice1.generateSubject(fileSystem))
             .isEqualTo("Warning: Your email usage just exceeded a configured threshold");
+        softly.assertThat(quotaThresholdNotice1.generateReport(fileSystem))
+            .isEqualTo("[BODY_2]");
+        softly.assertAll();
     }
 }

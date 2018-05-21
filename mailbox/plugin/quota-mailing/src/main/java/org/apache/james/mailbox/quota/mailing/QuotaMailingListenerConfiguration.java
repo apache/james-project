@@ -20,14 +20,17 @@
 package org.apache.james.mailbox.quota.mailing;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholds;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.TimeConverter;
 
 import com.github.steveash.guavate.Guavate;
@@ -35,6 +38,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class QuotaMailingListenerConfiguration {
 
@@ -43,7 +47,7 @@ public class QuotaMailingListenerConfiguration {
         String BODY_TEMPLATE = "bodyTemplate";
         String GRACE_PERIOD = "gracePeriod";
         String THRESHOLDS = "thresholds.threshold";
-        String ROOT_KEY = "";
+        String THRESHOLD_VALUE = "value";
         String NAME = "name";
     }
 
@@ -75,16 +79,76 @@ public class QuotaMailingListenerConfiguration {
             .map(Duration::ofMillis);
     }
 
-    private static ImmutableList<QuotaThreshold> readThresholds(HierarchicalConfiguration config) {
+    private static ImmutableMap<QuotaThreshold, RenderingInformation> readThresholds(HierarchicalConfiguration config) {
         return config.configurationsAt(XmlKeys.THRESHOLDS)
             .stream()
-            .map(node -> node.getDouble(XmlKeys.ROOT_KEY))
-            .map(QuotaThreshold::new)
-            .collect(Guavate.toImmutableList());
+            .map(node -> Pair.of(
+                node.getDouble(XmlKeys.THRESHOLD_VALUE),
+                RenderingInformation.from(
+                    Optional.ofNullable(node.getString(XmlKeys.BODY_TEMPLATE)),
+                    Optional.ofNullable(node.getString(XmlKeys.SUBJECT_TEMPLATE)))))
+            .collect(Guavate.toImmutableMap(
+                pair -> new QuotaThreshold(pair.getLeft()),
+                Pair::getRight));
+    }
+
+    public static class RenderingInformation {
+        private final Optional<String> bodyTemplate;
+        private final Optional<String> subjectTemplate;
+
+        public static RenderingInformation from(Optional<String> bodyTemplate, Optional<String> subjectTemplate) {
+            return new RenderingInformation(
+                bodyTemplate,
+                subjectTemplate);
+        }
+
+        public static RenderingInformation from(String bodyTemplate, String subjectTemplate) {
+            return from(Optional.of(bodyTemplate), Optional.of(subjectTemplate));
+        }
+
+        private RenderingInformation(Optional<String> bodyTemplate, Optional<String> subjectTemplate) {
+            Preconditions.checkArgument(!bodyTemplate.equals(Optional.of("")), "Pass a non empty bodyTemplate");
+            Preconditions.checkArgument(!subjectTemplate.equals(Optional.of("")), "Pass a non empty subjectTemplate");
+            this.bodyTemplate = bodyTemplate;
+            this.subjectTemplate = subjectTemplate;
+        }
+
+        public Optional<String> getBodyTemplate() {
+            return bodyTemplate;
+        }
+
+        public Optional<String> getSubjectTemplate() {
+            return subjectTemplate;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof RenderingInformation) {
+                RenderingInformation that = (RenderingInformation) o;
+
+                return Objects.equals(this.bodyTemplate, that.bodyTemplate)
+                    && Objects.equals(this.subjectTemplate, that.subjectTemplate);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(bodyTemplate, subjectTemplate);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("bodyTemplate", bodyTemplate)
+                .add("subjectTemplate", subjectTemplate)
+                .toString();
+        }
     }
 
     public static class Builder {
         private ImmutableList.Builder<QuotaThreshold> thresholds;
+        private ImmutableMap.Builder<QuotaThreshold, RenderingInformation> toRenderingInformation;
         private Optional<Duration> gradePeriod;
         private Optional<String> bodyTemplate;
         private Optional<String> subjectTemplate;
@@ -92,10 +156,17 @@ public class QuotaMailingListenerConfiguration {
 
         private Builder() {
             thresholds = ImmutableList.builder();
+            toRenderingInformation = ImmutableMap.builder();
             gradePeriod = Optional.empty();
             bodyTemplate = Optional.empty();
             subjectTemplate = Optional.empty();
             name = Optional.empty();
+        }
+
+        public Builder addThreshold(QuotaThreshold quotaThreshold, RenderingInformation renderingInformation) {
+            thresholds.add(quotaThreshold);
+            toRenderingInformation.put(quotaThreshold, renderingInformation);
+            return this;
         }
 
         public Builder addThreshold(QuotaThreshold quotaThreshold) {
@@ -104,12 +175,18 @@ public class QuotaMailingListenerConfiguration {
         }
 
         public Builder addThresholds(QuotaThreshold... quotaThresholds) {
-            thresholds.add(quotaThresholds);
+            Arrays.stream(quotaThresholds)
+                .forEach(this::addThreshold);
             return this;
         }
 
         public Builder addThresholds(Collection<QuotaThreshold> quotaThresholds) {
-            thresholds.addAll(quotaThresholds);
+            quotaThresholds.forEach(this::addThreshold);
+            return this;
+        }
+
+        public Builder addThresholds(ImmutableMap<QuotaThreshold, RenderingInformation> quotaThresholds) {
+            quotaThresholds.forEach(this::addThreshold);
             return this;
         }
 
@@ -130,11 +207,6 @@ public class QuotaMailingListenerConfiguration {
             return this;
         }
 
-        public Builder gracePeriod(Optional<Duration> duration) {
-            duration.ifPresent(this::gracePeriod);
-            return this;
-        }
-
         public Builder bodyTemplate(Optional<String> bodyTemplate) {
             bodyTemplate.ifPresent(this::bodyTemplate);
             return this;
@@ -142,6 +214,11 @@ public class QuotaMailingListenerConfiguration {
 
         public Builder subjectTemplate(Optional<String> subjectTemplate) {
             subjectTemplate.ifPresent(this::subjectTemplate);
+            return this;
+        }
+
+        public Builder gracePeriod(Optional<Duration> duration) {
+            duration.ifPresent(this::gracePeriod);
             return this;
         }
 
@@ -158,16 +235,18 @@ public class QuotaMailingListenerConfiguration {
 
         public QuotaMailingListenerConfiguration build() {
             return new QuotaMailingListenerConfiguration(
+                toRenderingInformation.build(),
                 new QuotaThresholds(thresholds.build()),
                 gradePeriod.orElse(DEFAULT_GRACE_PERIOD),
-                bodyTemplate.orElse(DEFAULT_BODY_TEMPLATE),
-                subjectTemplate.orElse(DEFAULT_SUBJECT_TEMPLATE),
+                bodyTemplate,
+                subjectTemplate,
                 name.orElse(DEFAULT_NAME));
         }
     }
 
     public static final String DEFAULT_BODY_TEMPLATE = FileSystem.CLASSPATH_PROTOCOL + "//templates/QuotaThresholdMailBody.mustache";
     public static final String DEFAULT_SUBJECT_TEMPLATE = FileSystem.CLASSPATH_PROTOCOL + "//templates/QuotaThresholdMailSubject.mustache";
+    public static final RenderingInformation DEFAULT_RENDERING_INFORMATION = RenderingInformation.from(Optional.empty(), Optional.empty());
     public static final Duration DEFAULT_GRACE_PERIOD = Duration.ofDays(1);
     private static final String DEFAULT_NAME = "default";
 
@@ -179,13 +258,17 @@ public class QuotaMailingListenerConfiguration {
         return builder().build();
     }
 
+
+    private final ImmutableMap<QuotaThreshold, RenderingInformation> toRenderingInformation;
     private final QuotaThresholds thresholds;
     private final Duration gracePeriod;
-    private final String bodyTemplate;
-    private final String subjectTemplate;
+    private final Optional<String> bodyTemplate;
+    private final Optional<String> subjectTemplate;
     private final String name;
 
-    private QuotaMailingListenerConfiguration(QuotaThresholds thresholds, Duration gracePeriod, String bodyTemplate, String subjectTemplate, String name) {
+    private QuotaMailingListenerConfiguration(ImmutableMap<QuotaThreshold, RenderingInformation> toRenderingInformation,
+                                              QuotaThresholds thresholds, Duration gracePeriod, Optional<String> bodyTemplate, Optional<String> subjectTemplate, String name) {
+        this.toRenderingInformation = toRenderingInformation;
         this.thresholds = thresholds;
         this.gracePeriod = gracePeriod;
         this.bodyTemplate = bodyTemplate;
@@ -201,12 +284,22 @@ public class QuotaMailingListenerConfiguration {
         return gracePeriod;
     }
 
-    public String getBodyTemplate() {
-        return bodyTemplate;
+    public String getBodyTemplate(QuotaThreshold quotaThreshold) {
+        return OptionalUtils.or(
+            Optional.ofNullable(
+                toRenderingInformation.get(quotaThreshold))
+                    .flatMap(RenderingInformation::getBodyTemplate),
+                bodyTemplate)
+            .orElse(DEFAULT_BODY_TEMPLATE);
     }
 
-    public String getSubjectTemplate() {
-        return subjectTemplate;
+    public String getSubjectTemplate(QuotaThreshold quotaThreshold) {
+        return OptionalUtils.or(
+            Optional.ofNullable(
+                toRenderingInformation.get(quotaThreshold))
+                    .flatMap(RenderingInformation::getSubjectTemplate),
+                subjectTemplate)
+            .orElse(DEFAULT_SUBJECT_TEMPLATE);
     }
 
     public String getName() {
@@ -218,27 +311,29 @@ public class QuotaMailingListenerConfiguration {
         if (o instanceof QuotaMailingListenerConfiguration) {
             QuotaMailingListenerConfiguration that = (QuotaMailingListenerConfiguration) o;
 
-            return Objects.equals(this.thresholds, that.thresholds)
+            return Objects.equals(this.toRenderingInformation, that.toRenderingInformation)
+                && Objects.equals(this.thresholds, that.thresholds)
                 && Objects.equals(this.gracePeriod, that.gracePeriod)
+                && Objects.equals(this.subjectTemplate, that.subjectTemplate)
                 && Objects.equals(this.bodyTemplate, that.bodyTemplate)
-                && Objects.equals(this.name, that.name)
-                && Objects.equals(this.subjectTemplate, that.subjectTemplate);
+                && Objects.equals(this.name, that.name);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(thresholds, gracePeriod, bodyTemplate, subjectTemplate, name);
+        return Objects.hash(toRenderingInformation, thresholds, subjectTemplate, bodyTemplate, gracePeriod, name);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+            .add("toRenderingInformation", toRenderingInformation)
             .add("thresholds", thresholds)
-            .add("gracePeriod", gracePeriod)
             .add("bodyTemplate", bodyTemplate)
             .add("subjectTemplate", subjectTemplate)
+            .add("gracePeriod", gracePeriod)
             .add("name", name)
             .toString();
     }

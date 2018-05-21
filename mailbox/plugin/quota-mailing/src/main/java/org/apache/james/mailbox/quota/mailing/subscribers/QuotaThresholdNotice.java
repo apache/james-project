@@ -26,9 +26,11 @@ import java.io.OutputStreamWriter;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -40,6 +42,7 @@ import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
 import org.apache.james.mailbox.quota.model.QuotaThresholdChange;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.SizeFormat;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -139,12 +142,21 @@ public class QuotaThresholdNotice {
 
     @VisibleForTesting
     String generateSubject(FileSystem fileSystem) throws IOException {
-        return renderTemplate(fileSystem, configuration.getSubjectTemplate());
+        return renderTemplate(fileSystem,
+            configuration.getSubjectTemplate(mostSignificantThreshold()));
     }
 
     @VisibleForTesting
     String generateReport(FileSystem fileSystem) throws IOException {
-        return renderTemplate(fileSystem, configuration.getBodyTemplate());
+        return renderTemplate(fileSystem,
+            configuration.getBodyTemplate(mostSignificantThreshold()));
+    }
+
+    private QuotaThreshold mostSignificantThreshold() {
+        return Stream.of(countThreshold, sizeThreshold)
+            .flatMap(OptionalUtils::toStream)
+            .min(Comparator.reverseOrder())
+            .get();
     }
 
     private String renderTemplate(FileSystem fileSystem, String template) throws IOException {
