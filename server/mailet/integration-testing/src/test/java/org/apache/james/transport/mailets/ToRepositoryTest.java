@@ -43,6 +43,7 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
+import org.apache.james.webadmin.routes.TasksRoutes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -112,21 +113,25 @@ public class ToRepositoryTest {
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
 
-        with()
+        String taskId = with()
             .spec(webAdminAPI)
             .queryParam("processor", ProcessorConfiguration.STATE_TRANSPORT)
             .queryParam("action", "reprocess")
-            .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
+        .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
                 + "/" + URLEncoder.encode(CUSTOM_REPOSITORY, StandardCharsets.UTF_8.displayName())
                 + "/mails")
             .jsonPath()
-            .get("taskId");
+            .getString("taskId");
+
+        with()
+            .spec(webAdminAPI)
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
 
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitAtMostOneMinute)
-            .hasMessageCount(2);
+            .awaitMessageCount(awaitAtMostOneMinute, 2);
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 0);
     }
 
@@ -152,8 +157,7 @@ public class ToRepositoryTest {
         imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
             .login(RECIPIENT, PASSWORD)
             .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitAtMostOneMinute)
-            .hasMessageCount(1);
+            .awaitMessageCount(awaitAtMostOneMinute, 1);
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 1);
     }
 }

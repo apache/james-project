@@ -66,11 +66,6 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         return this;
     }
 
-    public boolean hasMessageCount(int numberOfMessages) throws IOException {
-        return imapClient.getReplyString()
-            .contains(numberOfMessages + " EXISTS");
-    }
-
     public boolean hasAMessage() throws IOException {
         imapClient.fetch("1:1", "ALL");
         return imapClient.getReplyString()
@@ -80,6 +75,27 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
     public IMAPMessageReader awaitMessage(ConditionFactory conditionFactory) throws IOException {
         conditionFactory.until(this::hasAMessage);
         return this;
+    }
+
+    public IMAPMessageReader awaitMessageCount(ConditionFactory conditionFactory, int messageCount) {
+        conditionFactory.until(() -> {
+            try {
+                imapClient.fetch("1:*", "ALL");
+                return  countFetchedEntries() == messageCount;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return this;
+    }
+
+    private long countFetchedEntries() {
+        return Splitter.on("\n")
+            .trimResults()
+            .splitToList(imapClient.getReplyString())
+            .stream()
+            .filter(s -> s.startsWith("*"))
+            .count();
     }
 
     public IMAPMessageReader awaitNoMessage(ConditionFactory conditionFactory) throws IOException {
