@@ -118,4 +118,13 @@ public class QuotaClauseTest implements QuotaClause {
         assertThat(andQuery.getClauses())
             .containsExactly(first, second);
     }
+
+    @Test
+    public void nestedAndClausesAreNotSupported() {
+        QuotaClause.MoreThan first = QuotaClause.moreThan(_50);
+        QuotaClause.MoreThan second = QuotaClause.moreThan(_75);
+
+        assertThatThrownBy(() -> QuotaClause.and(first, QuotaClause.and(second)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }

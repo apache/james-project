@@ -143,7 +143,13 @@ public interface QuotaClause {
 
         private And(List<QuotaClause> clauses) {
             Preconditions.checkNotNull(clauses, "'clauses' is mandatory");
+            Preconditions.checkArgument(doesNotContainAnd(clauses), "Nested And clauses are not supported");
             this.clauses = ImmutableList.copyOf(clauses);
+        }
+
+        private boolean doesNotContainAnd(List<QuotaClause> clauses) {
+            return clauses.stream()
+                .noneMatch(clause -> clause instanceof And);
         }
 
         public List<QuotaClause> getClauses() {
