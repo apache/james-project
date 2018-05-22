@@ -602,7 +602,7 @@ public class MailQueueRoutesTest {
         class HttpBodies {
 
             @Test
-            public void deleteMailsTasksShouldCompleteWhenSenderIsValid() throws Exception{
+            public void deleteMailsTasksShouldCompleteWhenSenderIsValid() throws Exception {
                 mailQueueFactory.createQueue(FIRST_QUEUE);
 
                 String taskId = with()
