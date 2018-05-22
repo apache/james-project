@@ -63,7 +63,7 @@ public class ElasticSearchIndexer {
         this.typeName = typeName;
     }
 
-    public IndexResponse indexMessage(String id, String content) {
+    public IndexResponse index(String id, String content) {
         checkArgument(content);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Indexing {}: {}", id, StringUtils.left(content, DEBUG_MAX_LENGTH_CONTENT));
@@ -73,7 +73,7 @@ public class ElasticSearchIndexer {
             .get();
     }
 
-    public Optional<BulkResponse> updateMessages(List<UpdatedRepresentation> updatedDocumentParts) {
+    public Optional<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts) {
         try {
             Preconditions.checkNotNull(updatedDocumentParts);
             BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
@@ -90,7 +90,7 @@ public class ElasticSearchIndexer {
         }
     }
 
-    public Optional<BulkResponse> deleteMessages(List<String> ids) {
+    public Optional<BulkResponse> delete(List<String> ids) {
         try {
             BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
             ids.forEach(id -> bulkRequestBuilder.add(

@@ -68,7 +68,7 @@ public class ElasticSearchIndexerTest {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
@@ -82,7 +82,7 @@ public class ElasticSearchIndexerTest {
     
     @Test(expected = IllegalArgumentException.class)
     public void indexMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        testee.indexMessage("1", null);
+        testee.index("1", null);
     }
     
     @Test
@@ -90,10 +90,10 @@ public class ElasticSearchIndexerTest {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.update(Lists.newArrayList(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -115,22 +115,22 @@ public class ElasticSearchIndexerTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("1", null)));
+        testee.update(Lists.newArrayList(new UpdatedRepresentation("1", null)));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenIdIsNull() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.update(Lists.newArrayList(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenJsonIsEmpty() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("1", "")));
+        testee.update(Lists.newArrayList(new UpdatedRepresentation("1", "")));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void updateMessageShouldThrowWhenIdIsEmpty() throws InterruptedException {
-        testee.updateMessages(Lists.newArrayList(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.update(Lists.newArrayList(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
     }
 
     @Test
@@ -138,7 +138,7 @@ public class ElasticSearchIndexerTest {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
 
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
         
         testee.deleteAllMatchingQuery(termQuery("property", "1"));
@@ -158,17 +158,17 @@ public class ElasticSearchIndexerTest {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
         
         String messageId2 = "1:2";
         String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"property\":\"1\"}";
         
-        testee.indexMessage(messageId2, content2);
+        testee.index(messageId2, content2);
         
         String messageId3 = "2:3";
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
-        testee.indexMessage(messageId3, content3);
+        testee.index(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
 
         testee.deleteAllMatchingQuery(termQuery("property", "1"));
@@ -188,10 +188,10 @@ public class ElasticSearchIndexerTest {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.deleteMessages(Lists.newArrayList(messageId));
+        testee.delete(Lists.newArrayList(messageId));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
@@ -208,20 +208,20 @@ public class ElasticSearchIndexerTest {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
 
-        testee.indexMessage(messageId, content);
+        testee.index(messageId, content);
 
         String messageId2 = "1:2";
         String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"mailboxId\":\"1\"}";
 
-        testee.indexMessage(messageId2, content2);
+        testee.index(messageId2, content2);
 
         String messageId3 = "2:3";
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
 
-        testee.indexMessage(messageId3, content3);
+        testee.index(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.deleteMessages(Lists.newArrayList(messageId, messageId3));
+        testee.delete(Lists.newArrayList(messageId, messageId3));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -235,11 +235,11 @@ public class ElasticSearchIndexerTest {
     
     @Test
     public void updateMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.updateMessages(Lists.newArrayList());
+        testee.update(Lists.newArrayList());
     }
     
     @Test
     public void deleteMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.deleteMessages(Lists.newArrayList());
+        testee.delete(Lists.newArrayList());
     }
 }

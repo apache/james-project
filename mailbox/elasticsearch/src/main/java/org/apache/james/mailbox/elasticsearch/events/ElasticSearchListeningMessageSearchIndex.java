@@ -128,7 +128,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                     mailbox.getMailboxId(),
                     session.getUser().getUserName(),
                     message.getUid());
-            elasticSearchIndexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
+            elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJson(message, ImmutableList.of(session.getUser())));
         } catch (Exception e) {
             try {
                 LOGGER.warn("Indexing mailbox {}-{} of user {} on message {} without attachments ",
@@ -137,7 +137,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                         session.getUser().getUserName(),
                         message.getUid(),
                         e);
-                elasticSearchIndexer.indexMessage(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
+                elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(session.getUser())));
             } catch (JsonProcessingException e1) {
                 LOGGER.error("Error when indexing mailbox {}-{} of user {} on message {} without its attachment",
                         mailbox.getName(),
@@ -152,7 +152,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException {
         try {
-            elasticSearchIndexer.deleteMessages(expungedUids.stream()
+            elasticSearchIndexer.delete(expungedUids.stream()
                 .map(uid ->  indexIdFor(mailbox, uid))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     @Override
     public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws MailboxException {
         try {
-            elasticSearchIndexer.updateMessages(updatedFlagsList.stream()
+            elasticSearchIndexer.update(updatedFlagsList.stream()
                 .map(updatedFlags -> createUpdatedDocumentPartFromUpdatedFlags(mailbox, updatedFlags))
                 .collect(Collectors.toList()));
         } catch (Exception e) {
