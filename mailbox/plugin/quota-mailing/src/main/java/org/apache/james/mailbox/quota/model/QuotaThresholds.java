@@ -22,6 +22,7 @@ package org.apache.james.mailbox.quota.model;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.james.mailbox.model.Quota;
 
@@ -47,6 +48,21 @@ public class QuotaThresholds {
             .filter(quotaLevel -> quotaLevel.isExceeded(quota))
             .findFirst()
             .orElse(QuotaThreshold.ZERO);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof QuotaThresholds) {
+            QuotaThresholds that = (QuotaThresholds) o;
+
+            return Objects.equals(this.quotaThresholds, that.quotaThresholds);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(quotaThresholds);
     }
 
     @Override

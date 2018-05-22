@@ -18,39 +18,42 @@
  ****************************************************************/
 package org.apache.james.util;
 
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class TimeConverter {
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
-    private static final HashMap<String, Integer> multipliers = new HashMap<>(10);
+public class TimeConverter {
 
     private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
 
-    private static Pattern PATTERN = null;
+    private static Pattern PATTERN = Pattern.compile(PATTERN_STRING);
 
-    static {
-        // add allowed units and their respective multiplier
-        multipliers.put("", 1);
-        multipliers.put("ms", 1);
-        multipliers.put("msec", 1);
-        multipliers.put("msecs", 1);
-        multipliers.put("s", 1000);
-        multipliers.put("sec", 1000);
-        multipliers.put("secs", 1000);
-        multipliers.put("m", 1000 * 60);
-        multipliers.put("minute", 1000 * 60);
-        multipliers.put("minutes", 1000 * 60);
-        multipliers.put("h", 1000 * 60 * 60);
-        multipliers.put("hour", 1000 * 60 * 60);
-        multipliers.put("hours", 1000 * 60 * 60);
-        multipliers.put("d", 1000 * 60 * 60 * 24);
-        multipliers.put("day", 1000 * 60 * 60 * 24);
-        multipliers.put("days", 1000 * 60 * 60 * 24);
+    public enum Unit {
+        MILLI_SECONDS(ImmutableList.of("ms", "msec", "msecs"), 1),
+        SECONDS(ImmutableList.of("s", "sec", "secs"), 1000),
+        MINUTES(ImmutableList.of("m", "min", "mins", "minute", "minutes"), 1000 * 60),
+        HOURS(ImmutableList.of("h", "hour", "hours"), 1000 * 60 * 60),
+        DAYS(ImmutableList.of("d", "day", "days"), 1000 * 60 * 60 * 24);
 
-        PATTERN = Pattern.compile(PATTERN_STRING);
+        public static Unit parse(String string) {
+            return Arrays.stream(values())
+                .filter(value -> value.validPatterns.contains(string.toLowerCase(Locale.US)))
+                .findFirst()
+                .orElseThrow(() -> new NumberFormatException("Unknown unit: " + string));
+        }
+
+        private final List<String> validPatterns;
+        private final int multiplier;
+
+        Unit(List<String> validPatterns, int multiplier) {
+            this.validPatterns = validPatterns;
+            this.multiplier = multiplier;
+        }
 
     }
 
@@ -70,11 +73,11 @@ public class TimeConverter {
      *             Get thrown if an illegal unit was used
      */
     public static long getMilliSeconds(long amount, String unit) throws NumberFormatException {
-        Object multiplierObject = multipliers.get(unit.toLowerCase(Locale.US));
-        if (multiplierObject == null) {
-            throw new NumberFormatException("Unknown unit: " + unit);
-        }
-        int multiplier = (Integer) multiplierObject;
+        return getMilliSeconds(amount, Unit.parse(unit));
+    }
+
+    public static long getMilliSeconds(long amount, Unit unit) throws NumberFormatException {
+        int multiplier = unit.multiplier;
         return (amount * multiplier);
     }
 
@@ -89,16 +92,21 @@ public class TimeConverter {
      *             Get thrown if an illegal rawString was used
      */
     public static long getMilliSeconds(String rawString) throws NumberFormatException {
-        PATTERN = Pattern.compile(PATTERN_STRING);
+        return getMilliSeconds(rawString, Unit.MILLI_SECONDS);
+    }
+
+    public static long getMilliSeconds(String rawString, Unit defaultUnit) throws NumberFormatException {
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
 
             if (res.group(1) != null && res.group(2) != null) {
                 long time = Integer.parseInt(res.group(1).trim());
                 String unit = res.group(2);
-                return getMilliSeconds(time, unit);
+                if (Strings.isNullOrEmpty(unit)) {
+                    return getMilliSeconds(time, defaultUnit);
+                }
+                return getMilliSeconds(time, Unit.parse(unit));
             } else {
-
                 // This should never Happen anyway throw an exception
                 throw new NumberFormatException("The supplied String is not a supported format " + rawString);
             }

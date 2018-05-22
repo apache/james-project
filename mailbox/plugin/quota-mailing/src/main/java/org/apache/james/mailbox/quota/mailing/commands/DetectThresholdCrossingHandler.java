@@ -32,10 +32,12 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
 
     private final EventStore eventStore;
     private final QuotaMailingListenerConfiguration quotaMailingListenerConfiguration;
+    private final String listenerName;
 
     public DetectThresholdCrossingHandler(EventStore eventStore, QuotaMailingListenerConfiguration quotaMailingListenerConfiguration) {
         this.eventStore = eventStore;
         this.quotaMailingListenerConfiguration = quotaMailingListenerConfiguration;
+        this.listenerName = quotaMailingListenerConfiguration.getName();
     }
 
     @Override
@@ -45,7 +47,7 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
     }
 
     private UserQuotaThresholds loadAggregate(DetectThresholdCrossing command) {
-        UserQuotaThresholds.Id aggregateId = UserQuotaThresholds.Id.from(command.getUser());
+        UserQuotaThresholds.Id aggregateId = UserQuotaThresholds.Id.from(command.getUser(), listenerName);
         History history = eventStore.getEventsOfAggregate(aggregateId);
         return UserQuotaThresholds.fromEvents(aggregateId, history);
     }

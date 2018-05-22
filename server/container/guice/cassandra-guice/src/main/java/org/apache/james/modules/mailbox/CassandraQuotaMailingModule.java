@@ -28,8 +28,6 @@ import com.google.inject.multibindings.Multibinder;
 public class CassandraQuotaMailingModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new QuotaMailingModule());
-
         Multibinder.newSetBinder(binder(), EventDTOModule.class)
             .addBinding()
             .to(QuotaThresholdChangedEventDTOModule.class);

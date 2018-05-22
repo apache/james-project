@@ -1,7 +1,7 @@
 {
  "type": "quota-threshold-change",
  "eventId": 0,
- "user": "foo@bar.com",
+ "aggregateId":"QuotaThreasholdEvents/default/foo@bar.com",
  "sizeQuota": {
    "used": 23,
    "limit": 33

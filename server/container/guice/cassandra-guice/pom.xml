@@ -146,10 +146,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>james-server-guice-mailbox-plugin-quota-mailing</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-guice-mailbox-plugin-spamassassin</artifactId>
         </dependency>
         <dependency>
