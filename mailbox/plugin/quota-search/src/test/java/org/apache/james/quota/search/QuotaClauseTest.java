@@ -79,7 +79,7 @@ public class QuotaClauseTest implements QuotaClause {
     }
 
     @Test
-    public void andClauseShouldThrowWhenDomainIsNull() {
+    public void andClauseShouldThrowWhenClauseIsNull() {
         List<QuotaClause> clauses = null;
         assertThatThrownBy(() -> QuotaClause.and(clauses))
             .isInstanceOf(NullPointerException.class);
