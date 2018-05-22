@@ -47,15 +47,24 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import com.datastax.driver.core.Session;
 
 public class TestCassandraMailboxSessionMapperFactory {
+
     public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
                                                                 CassandraMessageId.Factory factory) {
+        return forTests(session, typesProvider, factory, CassandraConfiguration.DEFAULT_CONFIGURATION);
+    }
+
+    public static CassandraMailboxSessionMapperFactory forTests(Session session, CassandraTypesProvider typesProvider,
+                                                                CassandraMessageId.Factory factory, CassandraConfiguration cassandraConfiguration) {
+
+        CassandraUtils utils = new CassandraUtils(cassandraConfiguration);
         CassandraBlobsDAO cassandraBlobsDAO = new CassandraBlobsDAO(session);
         CassandraBlobId.Factory blobIdFactory = new CassandraBlobId.Factory();
+
         return new CassandraMailboxSessionMapperFactory(
             new CassandraUidProvider(session),
             new CassandraModSeqProvider(session),
             session,
-            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO, blobIdFactory, CassandraUtils.WITH_DEFAULT_CONFIGURATION, factory),
+            new CassandraMessageDAO(session, typesProvider, cassandraBlobsDAO, blobIdFactory, utils, factory),
             new CassandraMessageIdDAO(session, factory),
             new CassandraMessageIdToImapUidDAO(session, factory),
             new CassandraMailboxCounterDAO(session),
@@ -64,17 +73,17 @@ public class TestCassandraMailboxSessionMapperFactory {
             new CassandraMailboxPathDAO(session, typesProvider),
             new CassandraFirstUnseenDAO(session),
             new CassandraApplicableFlagDAO(session),
-            new CassandraAttachmentDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION, CassandraConfiguration.DEFAULT_CONFIGURATION),
+            new CassandraAttachmentDAO(session, utils, cassandraConfiguration),
             new CassandraAttachmentDAOV2(blobIdFactory, session),
             new CassandraDeletedMessageDAO(session),
-            cassandraBlobsDAO, new CassandraAttachmentMessageIdDAO(session, factory, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            new CassandraAttachmentOwnerDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
+            cassandraBlobsDAO, new CassandraAttachmentMessageIdDAO(session, factory, utils),
+            new CassandraAttachmentOwnerDAO(session, utils),
             new CassandraACLMapper(session,
-                new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                CassandraConfiguration.DEFAULT_CONFIGURATION),
-            new CassandraUserMailboxRightsDAO(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-            CassandraUtils.WITH_DEFAULT_CONFIGURATION,
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+                new CassandraUserMailboxRightsDAO(session, utils),
+                cassandraConfiguration),
+            new CassandraUserMailboxRightsDAO(session, utils),
+            utils,
+            cassandraConfiguration);
     }
 
 }

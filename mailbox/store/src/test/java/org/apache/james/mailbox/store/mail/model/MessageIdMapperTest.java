@@ -61,19 +61,19 @@ public abstract class MessageIdMapperTest {
 
     private static final char DELIMITER = '.';
     private static final int BODY_START = 16;
-    private static final long UID_VALIDITY = 42;
+    protected static final long UID_VALIDITY = 42;
 
     private MessageMapper messageMapper;
     private MailboxMapper mailboxMapper;
     private MessageIdMapper sut;
 
-    private SimpleMailbox benwaInboxMailbox;
-    private SimpleMailbox benwaWorkMailbox;
+    protected SimpleMailbox benwaInboxMailbox;
+    protected SimpleMailbox benwaWorkMailbox;
     
-    private SimpleMailboxMessage message1;
-    private SimpleMailboxMessage message2;
-    private SimpleMailboxMessage message3;
-    private SimpleMailboxMessage message4;
+    protected SimpleMailboxMessage message1;
+    protected SimpleMailboxMessage message2;
+    protected SimpleMailboxMessage message3;
+    protected SimpleMailboxMessage message4;
 
     @Rule
     public ExpectedException expected = ExpectedException.none();
@@ -887,7 +887,7 @@ public abstract class MessageIdMapperTest {
         return mailbox;
     }
     
-    private void saveMessages() throws MailboxException {
+    protected void saveMessages() throws MailboxException {
         addMessageAndSetModSeq(benwaInboxMailbox, message1);
         addMessageAndSetModSeq(benwaInboxMailbox, message2);
         addMessageAndSetModSeq(benwaInboxMailbox, message3);
