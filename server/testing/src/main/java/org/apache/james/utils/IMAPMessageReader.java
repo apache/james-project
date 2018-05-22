@@ -81,7 +81,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
         conditionFactory.until(() -> {
             try {
                 imapClient.fetch("1:*", "ALL");
-                return  countFetchedEntries() == messageCount;
+                return countFetchedEntries() == messageCount;
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
