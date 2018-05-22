@@ -28,6 +28,7 @@ public class NodeMappingFactory {
     public static final String BOOLEAN = "boolean";
     public static final String TYPE = "type";
     public static final String LONG = "long";
+    public static final String DOUBLE = "double";
     public static final String INDEX = "index";
     public static final String NOT_ANALYZED = "not_analyzed";
     public static final String STRING = "string";
