@@ -19,10 +19,18 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
+import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
+import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -36,13 +44,20 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.store.mail.MessageMapper;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Test;
+
+import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
-    
+
+    public static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("benwa");
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     private CassandraCluster cassandra;
@@ -76,5 +91,28 @@ public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
     @Override
     protected CassandraMapperProvider provideMapper() {
         return new CassandraMapperProvider(cassandra);
+    }
+
+    @Test
+    public void findShouldReturnCorrectElementsWhenChunking() throws Exception {
+        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+        CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
+            cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory,
+            CassandraConfiguration.builder()
+                .messageReadChunkSize(3)
+                .build());
+
+        saveMessages();
+
+        List<MailboxMessage> messages = mapperFactory.getMessageIdMapper(MAILBOX_SESSION)
+            .find(
+                ImmutableList.of(message1.getMessageId(),
+                    message2.getMessageId(),
+                    message3.getMessageId(),
+                    message4.getMessageId()),
+                MessageMapper.FetchType.Metadata);
+
+        assertThat(messages)
+            .containsOnly(message1, message2, message3, message4);
     }
 }
