@@ -59,6 +59,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -78,6 +79,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -98,6 +100,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.HOMER, withSize(51));
         appendMessage(testSystem, Simpson.LISA, withSize(60));
         appendMessage(testSystem, BENOIT_AT_DOMAIN_TLD, withSize(80));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -119,6 +122,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
         appendMessage(testSystem, BENOIT_AT_DOMAIN_TLD, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -139,6 +143,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
         appendMessage(testSystem, BENOIT_AT_DOMAIN_TLD, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -161,6 +166,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
         appendMessage(testSystem, Alphabet.ACB, withSize(51));
         appendMessage(testSystem, Alphabet.ABB, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -181,6 +187,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
         appendMessage(testSystem, Alphabet.ACB, withSize(51));
         appendMessage(testSystem, Alphabet.ABB, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -202,6 +209,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
         appendMessage(testSystem, Alphabet.ACB, withSize(51));
         appendMessage(testSystem, Alphabet.ABB, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -224,6 +232,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
         appendMessage(testSystem, BENOIT_AT_DOMAIN_TLD, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()
@@ -245,6 +254,7 @@ public interface QuotaSearcherContract {
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
         appendMessage(testSystem, Alphabet.ACB, withSize(51));
         appendMessage(testSystem, Alphabet.ABB, withSize(50));
+        testSystem.await();
 
         assertThat(
             testSystem.getQuotaSearcher()

@@ -17,24 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.scanning;
+package org.apache.james.quota.search.elasticsearch;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.concurrent.Executors;
+
+import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.backends.es.IndexCreationFactory;
+import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
+import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.elasticsearch.client.Client;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.rules.TemporaryFolder;
 
-public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
+public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
-    private static final Runnable NO_AWAIT = () -> {};
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
@@ -44,6 +59,16 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
+            Client client = NodeMappingFactory.applyMapping(
+                new IndexCreationFactory()
+                    .useIndex(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX)
+                    .addAlias(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS)
+                    .addAlias(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS)
+                    .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
+                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
+                QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE,
+                QuotaRatioMappingFactory.getMappingContent());
+
             InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
 
             MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
@@ -52,14 +77,36 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
             usersRepository.setDomainList(domainList);
 
+            ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
+                new ElasticSearchIndexer(client, Executors.newSingleThreadExecutor(),
+                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
+                    QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
+                new QuotaRatioToElasticSearchJson());
+
+            resources.getMailboxManager()
+                .addGlobalListener(listener, new MockMailboxSession("ANY"));
+
             return new QuotaSearchTestSystem(
                 resources.getMaxQuotaManager(),
                 resources.getMailboxManager(),
-                new ScanningQuotaSearcher(usersRepository,
-                    new ClauseConverter(resources.getQuotaRootResolver(), resources.getQuotaManager())),
-                usersRepository, domainList, NO_AWAIT);
+                new ElasticSearchQuotaSearcher(client,
+                    QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
+                usersRepository, domainList,
+                () -> embeddedElasticSearch.awaitForElasticSearch());
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        temporaryFolder.create();
+        embeddedElasticSearch.before();
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        embeddedElasticSearch.after();
+        temporaryFolder.delete();
     }
 }

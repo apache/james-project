@@ -30,13 +30,15 @@ public class QuotaSearchTestSystem {
     private final QuotaSearcher quotaSearcher;
     private final UsersRepository usersRepository;
     private final DomainList domainList;
+    private final Runnable await;
 
-    public QuotaSearchTestSystem(MaxQuotaManager maxQuotaManager, MailboxManager mailboxManager, QuotaSearcher quotaSearcher, UsersRepository usersRepository, DomainList domainList) {
+    public QuotaSearchTestSystem(MaxQuotaManager maxQuotaManager, MailboxManager mailboxManager, QuotaSearcher quotaSearcher, UsersRepository usersRepository, DomainList domainList, Runnable await) {
         this.maxQuotaManager = maxQuotaManager;
         this.mailboxManager = mailboxManager;
         this.quotaSearcher = quotaSearcher;
         this.usersRepository = usersRepository;
         this.domainList = domainList;
+        this.await = await;
     }
 
     public MaxQuotaManager getMaxQuotaManager() {
@@ -57,5 +59,9 @@ public class QuotaSearchTestSystem {
 
     public DomainList getDomainList() {
         return domainList;
+    }
+
+    public void await() {
+        await.run();
     }
 }
