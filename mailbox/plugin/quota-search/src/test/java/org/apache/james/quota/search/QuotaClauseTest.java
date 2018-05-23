@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaClauseTest implements QuotaClause {
+public class QuotaClauseTest {
     
     @Test
     public void lessThanShouldMatchBeanContract() {
