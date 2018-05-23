@@ -20,17 +20,24 @@
 package org.apache.james.util;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 
 public class ClassLoaderUtils {
-    public static String getSystemResourceAsString(String filename) {
+    public static String getSystemResourceAsString(String filename, Charset charset) {
         try {
-            return IOUtils.toString(ClassLoader.getSystemResourceAsStream(filename), StandardCharsets.US_ASCII);
+            return IOUtils.toString(ClassLoader.getSystemResourceAsStream(filename), charset);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String getSystemResourceAsString(String filename) {
+        return getSystemResourceAsString(filename, StandardCharsets.US_ASCII);
     }
 
     public static byte[] getSystemResourceAsByteArray(String filename) {
@@ -39,5 +46,9 @@ public class ClassLoaderUtils {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static SharedByteArrayInputStream getSystemResourceAsSharedStream(String filename) {
+        return new SharedByteArrayInputStream(getSystemResourceAsByteArray(filename));
     }
 }

@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -470,8 +471,12 @@ public class IndexableMessageTest {
                 .build();
 
         // Then
-        assertThat(indexableMessage.getText()).contains("first attachment content");
-        assertThat(indexableMessage.getText()).contains("third attachment content");
+        assertThat(indexableMessage.getAttachments())
+            .extracting(MimePart::getTextualBody)
+            .contains(Optional.of("first attachment content"));
+        assertThat(indexableMessage.getAttachments())
+            .extracting(MimePart::getTextualBody)
+            .contains(Optional.of("third attachment content"));
     }
 
     @Test
