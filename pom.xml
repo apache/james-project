@@ -847,6 +847,12 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>apache-james-mailbox-quota-mailing</artifactId>
+                <type>test-jar</type>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>apache-james-mailbox-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -30,7 +30,7 @@
     </parent>
 
     <artifactId>apache-james-mailbox-quota-search-elasticsearch</artifactId>
-    <name>Apache James :: Mailbox :: Plugin :: Quota Search :: ElasticSearcj</name>
+    <name>Apache James :: Mailbox :: Plugin :: Quota Search :: ElasticSearch</name>
     <description>Apache James Mailbox ElasticSearch implementation for quota search</description>
 
     <dependencies>
@@ -40,11 +40,23 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-backends-es</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-mailbox-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-quota-search</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
