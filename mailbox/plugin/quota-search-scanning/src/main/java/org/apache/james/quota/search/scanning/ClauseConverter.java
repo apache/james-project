@@ -62,34 +62,34 @@ public class ClauseConverter {
             .orElse(user -> true);
     }
 
-    public Predicate<User> toPredicate(QuotaClause clause) {
+    private Predicate<User> toPredicate(QuotaClause clause) {
         return toPredicates.get(clause.getClass())
             .apply(clause);
     }
 
-    public Predicate<User> moreThanToPredicate(QuotaClause clause) {
+    private Predicate<User> moreThanToPredicate(QuotaClause clause) {
         QuotaClause.MoreThan moreThan = (QuotaClause.MoreThan) clause;
         return user -> retrieveUserRatio(user) >= moreThan.getQuotaBoundary().getRatio();
     }
 
-    public Predicate<User> lessThanToPredicate(QuotaClause clause) {
+    private Predicate<User> lessThanToPredicate(QuotaClause clause) {
         QuotaClause.LessThan lessThan = (QuotaClause.LessThan) clause;
         return user -> retrieveUserRatio(user) <= lessThan.getQuotaBoundary().getRatio();
     }
 
-    public Predicate<User> hasDomainToPredicate(QuotaClause clause) {
+    private Predicate<User> hasDomainToPredicate(QuotaClause clause) {
         QuotaClause.HasDomain hasDomain = (QuotaClause.HasDomain) clause;
         return user -> user.getDomainPart()
             .map(hasDomain.getDomain()::equals)
             .orElse(false);
     }
 
-    public Predicate<User> andToPredicate(QuotaClause clause) {
+    private Predicate<User> andToPredicate(QuotaClause clause) {
         QuotaClause.And and = (QuotaClause.And) clause;
         return andToPredicate(and);
     }
 
-    public double retrieveUserRatio(User user) {
+    private double retrieveUserRatio(User user) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.forUser(user);
             Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);

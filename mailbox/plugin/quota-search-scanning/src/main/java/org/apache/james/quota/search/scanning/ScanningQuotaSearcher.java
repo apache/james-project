@@ -58,13 +58,13 @@ public class ScanningQuotaSearcher implements QuotaSearcher {
             .collect(Guavate.toImmutableList());
     }
 
-    public Stream<User> limit(Stream<User> results, Limit limit) {
+    private Stream<User> limit(Stream<User> results, Limit limit) {
         return limit.getValue()
             .map(results::limit)
             .orElse(results);
     }
 
-    public Iterator<String> listUsers() {
+    private Iterator<String> listUsers() {
         try {
             return usersRepository.list();
         } catch (UsersRepositoryException e) {
