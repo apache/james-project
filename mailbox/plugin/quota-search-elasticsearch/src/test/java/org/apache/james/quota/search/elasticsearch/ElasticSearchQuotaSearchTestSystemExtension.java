@@ -25,8 +25,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.IndexCreationFactory;
-import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -59,15 +57,8 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
-            Client client = NodeMappingFactory.applyMapping(
-                new IndexCreationFactory()
-                    .useIndex(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX)
-                    .addAlias(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS)
-                    .addAlias(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS)
-                    .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
-                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
-                QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE,
-                QuotaRatioMappingFactory.getMappingContent());
+            Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
+                new TestingClientProvider(embeddedElasticSearch.getNode()).get());
 
             InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
 

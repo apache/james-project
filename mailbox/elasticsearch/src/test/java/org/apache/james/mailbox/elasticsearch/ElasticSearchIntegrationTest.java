@@ -27,8 +27,6 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.IndexCreationFactory;
-import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -93,15 +91,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
     @Override
     protected void initializeMailboxManager() throws Exception {
-        Client client = NodeMappingFactory.applyMapping(
-            new IndexCreationFactory()
-                .useIndex(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX)
-                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS)
-                .addAlias(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS)
-                .createIndexAndAliases(new TestingClientProvider(embeddedElasticSearch.getNode()).get()),
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
-            MailboxElasticSearchConstants.MESSAGE_TYPE,
-            MailboxMappingFactory.getMappingContent());
+        Client client = MailboxIndexCreationUtil.prepareDefaultClient(
+            new TestingClientProvider(embeddedElasticSearch.getNode()).get());
 
         storeMailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver());

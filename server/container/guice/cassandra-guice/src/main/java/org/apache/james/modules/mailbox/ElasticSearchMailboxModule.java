@@ -33,11 +33,9 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchIndexer;
-import org.apache.james.backends.es.IndexCreationFactory;
-import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.mailbox.elasticsearch.MailboxMappingFactory;
+import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
@@ -126,23 +124,12 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
         Client client = ClientProviderImpl.fromHosts(configuration.getHosts()).get();
 
-        createMailboxIndexCreationFactory(configuration).createIndexAndAliases(client);
-
-        NodeMappingFactory.applyMapping(client,
-            configuration.getIndexMailboxName(),
-            MailboxElasticSearchConstants.MESSAGE_TYPE,
-            MailboxMappingFactory.getMappingContent());
+        MailboxIndexCreationUtil.prepareClient(client,
+            configuration.getReadAliasMailboxName(),
+            configuration.getWriteAliasMailboxName(),
+            configuration.getIndexMailboxName());
 
         return client;
-    }
-
-    protected IndexCreationFactory createMailboxIndexCreationFactory(ElasticSearchConfiguration configuration) {
-        return new IndexCreationFactory()
-            .useIndex(configuration.getIndexMailboxName())
-            .addAlias(configuration.getReadAliasMailboxName())
-            .addAlias(configuration.getWriteAliasMailboxName())
-            .nbShards(configuration.getNbShards())
-            .nbReplica(configuration.getNbReplica());
     }
 
     @Provides

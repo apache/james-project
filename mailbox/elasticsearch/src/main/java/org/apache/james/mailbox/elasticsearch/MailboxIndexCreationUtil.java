@@ -17,35 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.mailbox.elasticsearch;
 
-import javax.inject.Singleton;
-
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.backends.es.utils.TestingClientProvider;
-import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
+import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.IndexCreationFactory;
+import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.NodeMappingFactory;
 import org.elasticsearch.client.Client;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+public class MailboxIndexCreationUtil {
 
-public class TestElasticSearchModule extends AbstractModule {
+    public static Client prepareClient(Client client,
+                                       AliasName readAlias,
+                                       AliasName writeAlias,
+                                       IndexName indexName) {
 
-    private final EmbeddedElasticSearch embeddedElasticSearch;
-
-    public TestElasticSearchModule(EmbeddedElasticSearch embeddedElasticSearch) {
-        this.embeddedElasticSearch = embeddedElasticSearch;
+        return NodeMappingFactory.applyMapping(
+            new IndexCreationFactory()
+                .useIndex(indexName)
+                .addAlias(readAlias)
+                .addAlias(writeAlias)
+                .createIndexAndAliases(client),
+            indexName,
+            MailboxElasticSearchConstants.MESSAGE_TYPE,
+            MailboxMappingFactory.getMappingContent());
     }
 
-    @Override
-    protected void configure() {
-
-    }
-
-    @Provides
-    @Singleton
-    protected Client provideClientProvider() {
-        Client client = new TestingClientProvider(embeddedElasticSearch.getNode()).get();
-        return MailboxIndexCreationUtil.prepareDefaultClient(client);
+    public static Client prepareDefaultClient(Client client) {
+        return prepareClient(client,
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
     }
 }
