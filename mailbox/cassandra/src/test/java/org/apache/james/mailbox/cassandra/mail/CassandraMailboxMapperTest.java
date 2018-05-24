@@ -76,8 +76,7 @@ public class CassandraMailboxMapperTest {
             userMailboxRightsDAO,
             new CassandraACLMapper(cassandra.getConf(),
                 new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION),
-                CassandraConfiguration.DEFAULT_CONFIGURATION),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+                CassandraConfiguration.DEFAULT_CONFIGURATION));
     }
 
     @After
@@ -104,7 +103,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void deleteShouldDeleteMailboxAndMailboxPathFromV1Table() throws Exception {
+    public void deleteShouldDeleteMailboxAndMailboxPathFromV1Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -117,7 +116,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void deleteShouldDeleteMailboxAndMailboxPathFromV2Table() throws Exception {
+    public void deleteShouldDeleteMailboxAndMailboxPathFromV2Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -218,7 +217,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV1Table() throws Exception {
+    public void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV1Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -244,7 +243,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV2Table() throws Exception {
+    public void findMailboxWithPathLikeShouldReturnMailboxesWhenExistsInV2Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -256,7 +255,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void hasChildrenShouldReturnChildWhenExistsInV1Table() throws Exception {
+    public void hasChildrenShouldReturnChildWhenExistsInV1Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
@@ -296,7 +295,7 @@ public class CassandraMailboxMapperTest {
     }
 
     @Test
-    public void hasChildrenShouldReturnChildWhenExistsInV2Table() throws Exception {
+    public void hasChildrenShouldReturnChildWhenExistsInV2Table() {
         mailboxDAO.save(MAILBOX)
             .join();
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)

@@ -67,8 +67,7 @@ public class CassandraMailboxMapperConcurrencyTest {
             userMailboxRightsDAO,
             new CassandraACLMapper(cassandra.getConf(),
                 userMailboxRightsDAO,
-                CassandraConfiguration.DEFAULT_CONFIGURATION),
-            CassandraConfiguration.DEFAULT_CONFIGURATION);
+                CassandraConfiguration.DEFAULT_CONFIGURATION));
     }
 
     @After

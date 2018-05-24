@@ -439,6 +439,7 @@ public class IndexableMessageTest {
         assertThat(indexableMessage.getAttachments()).isNotEmpty();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
         //Given

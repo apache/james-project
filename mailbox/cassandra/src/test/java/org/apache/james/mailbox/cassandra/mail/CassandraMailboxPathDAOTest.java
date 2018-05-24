@@ -54,6 +54,7 @@ public abstract class CassandraMailboxPathDAOTest {
     protected CassandraCluster cassandra;
 
     private CassandraMailboxPathDAO testee;
+
     abstract CassandraMailboxPathDAO testee();
 
     @Before
@@ -64,7 +65,7 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         cassandra.close();
     }
 
@@ -74,7 +75,7 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void saveShouldInsertNewEntry() throws Exception {
+    public void saveShouldInsertNewEntry() {
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isTrue();
 
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
@@ -82,20 +83,20 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void saveOnSecondShouldBeFalse() throws Exception {
+    public void saveOnSecondShouldBeFalse() {
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isTrue();
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isFalse();
     }
 
     @Test
-    public void retrieveIdShouldReturnEmptyWhenEmptyData() throws Exception {
+    public void retrieveIdShouldReturnEmptyWhenEmptyData() {
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join()
             .isPresent())
             .isFalse();
     }
 
     @Test
-    public void retrieveIdShouldReturnStoredData() throws Exception {
+    public void retrieveIdShouldReturnStoredData() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
 
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
@@ -103,7 +104,7 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void getUserMailboxesShouldReturnAllMailboxesOfUser() throws Exception {
+    public void getUserMailboxesShouldReturnAllMailboxesOfUser() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
         testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
         testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
@@ -119,12 +120,12 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void deleteShouldNotThrowWhenEmpty() throws Exception {
+    public void deleteShouldNotThrowWhenEmpty() {
         testee.delete(USER_INBOX_MAILBOXPATH).join();
     }
 
     @Test
-    public void deleteShouldDeleteTheExistingMailboxId() throws Exception {
+    public void deleteShouldDeleteTheExistingMailboxId() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
 
         testee.delete(USER_INBOX_MAILBOXPATH).join();

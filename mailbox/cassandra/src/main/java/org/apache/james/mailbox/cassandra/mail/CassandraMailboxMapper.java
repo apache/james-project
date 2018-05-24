@@ -33,7 +33,6 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.DriverExceptionHelper;
@@ -70,7 +69,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private final CassandraUserMailboxRightsDAO userMailboxRightsDAO;
 
     @Inject
-    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper, CassandraConfiguration cassandraConfiguration) {
+    public CassandraMailboxMapper(CassandraMailboxDAO mailboxDAO, CassandraMailboxPathDAOImpl mailboxPathDAO, CassandraMailboxPathV2DAO mailboxPathV2DAO, CassandraUserMailboxRightsDAO userMailboxRightsDAO, CassandraACLMapper aclMapper) {
         this.mailboxDAO = mailboxDAO;
         this.mailboxPathDAO = mailboxPathDAO;
         this.mailboxPathV2DAO = mailboxPathV2DAO;
@@ -79,7 +78,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public void delete(Mailbox mailbox) throws MailboxException {
+    public void delete(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         FluentFutureStream.ofFutures(mailboxPathDAO.delete(mailbox.generateAssociatedPath()), mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
             .thenComposeOnAll(any -> mailboxDAO.delete(mailboxId))
@@ -140,7 +139,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) {
         List<Mailbox> mailboxes = toMailboxes(path, mailboxPathV2DAO.listUserMailboxes(path.getNamespace(), path.getUser()));
         if (mailboxes.isEmpty()) {
             return toMailboxes(path, mailboxPathDAO.listUserMailboxes(path.getNamespace(), path.getUser()));
@@ -211,7 +210,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> list() throws MailboxException {
+    public List<Mailbox> list() {
         return mailboxDAO.retrieveAllMailboxes()
             .thenComposeOnAll(this::toMailboxWithAclFuture)
             .join()
@@ -266,7 +265,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) {
         return FluentFutureStream.of(userMailboxRightsDAO.listRightsForUser(userName)
             .thenApply(map -> toAuthorizedMailboxIds(map, right)))
             .thenFlatComposeOnOptional(this::retrieveMailbox)

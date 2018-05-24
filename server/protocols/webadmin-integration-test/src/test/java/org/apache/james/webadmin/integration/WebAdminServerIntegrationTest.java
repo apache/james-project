@@ -76,7 +76,6 @@ public class WebAdminServerIntegrationTest {
 
     private GuiceJamesServer guiceJamesServer;
     private DataProbe dataProbe;
-    private WebAdminGuiceProbe webAdminGuiceProbe;
 
     @Before
     public void setUp() throws Exception {
@@ -84,7 +83,7 @@ public class WebAdminServerIntegrationTest {
                 .overrideWith(new WebAdminConfigurationModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
-        webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
+        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
@@ -106,7 +105,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void mailQueueRoutesShouldBeExposed() throws Exception {
+    public void mailQueueRoutesShouldBeExposed() {
         when()
             .get(MailQueueRoutes.BASE_URL)
         .then()
@@ -114,7 +113,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void mailRepositoriesRoutesShouldBeExposed() throws Exception {
+    public void mailRepositoriesRoutesShouldBeExposed() {
         when()
             .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
         .then()
@@ -127,7 +126,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void gettingANonExistingMailRepositoryShouldNotCreateIt() throws Exception {
+    public void gettingANonExistingMailRepositoryShouldNotCreateIt() {
         given()
             .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "file%3A%2F%2Fvar%2Fmail%2Fcustom%2F");
 
@@ -224,7 +223,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() throws Exception {
+    public void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() {
         when()
             .get(VERSION)
         .then()
@@ -234,7 +233,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void getLatestVersionShouldReturnTheConfiguredLatestVersion() throws Exception {
+    public void getLatestVersionShouldReturnTheConfiguredLatestVersion() {
         when()
             .get(VERSION_LATEST)
         .then()
@@ -244,7 +243,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void postShouldDoMigrationAndUpdateCurrentVersion() throws Exception {
+    public void postShouldDoMigrationAndUpdateCurrentVersion() {
         String taskId = with()
             .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
         .post(UPGRADE_VERSION)
@@ -263,7 +262,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void postShouldDoMigrationAndUpdateToTheLatestVersion() throws Exception {
+    public void postShouldDoMigrationAndUpdateToTheLatestVersion() {
         String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
             .jsonPath()
             .get("taskId");
@@ -312,7 +311,7 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
-    public void getSwaggerShouldReturnJsonDataForSwagger() throws Exception {
+    public void getSwaggerShouldReturnJsonDataForSwagger() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
         .then()
