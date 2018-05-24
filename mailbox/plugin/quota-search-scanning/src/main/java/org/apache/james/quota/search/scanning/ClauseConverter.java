@@ -28,6 +28,7 @@ import javax.inject.Inject;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRatio;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -95,7 +96,7 @@ public class ClauseConverter {
             Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
             Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
 
-            return Math.max(storageQuota.getRatio(), messageQuota.getRatio());
+            return QuotaRatio.from(storageQuota, messageQuota).max();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }

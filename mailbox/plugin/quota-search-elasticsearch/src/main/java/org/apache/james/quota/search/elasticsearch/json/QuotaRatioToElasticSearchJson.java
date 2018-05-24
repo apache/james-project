@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
+import org.apache.james.mailbox.model.QuotaRatio;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,9 +43,7 @@ public class QuotaRatioToElasticSearchJson {
         return mapper.writeValueAsString(QuotaRatioAsJson.builder()
                 .user(user)
                 .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
-                .quotaRatio(Math.max(
-                    event.getCountQuota().getRatio(),
-                    event.getSizeQuota().getRatio()))
+                .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
                 .build());
     }
 }

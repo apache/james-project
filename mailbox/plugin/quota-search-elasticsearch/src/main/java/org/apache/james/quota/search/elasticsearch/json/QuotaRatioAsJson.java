@@ -21,6 +21,8 @@ package org.apache.james.quota.search.elasticsearch.json;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.QuotaRatio;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -36,7 +38,7 @@ public class QuotaRatioAsJson {
 
         private String user;
         private Optional<String> domain;
-        private Double quotaRatio;
+        private QuotaRatio quotaRatio;
 
         private Builder() {
             domain = Optional.empty();
@@ -52,7 +54,7 @@ public class QuotaRatioAsJson {
             return this;
         }
 
-        public Builder quotaRatio(double quotaRatio) {
+        public Builder quotaRatio(QuotaRatio quotaRatio) {
             this.quotaRatio = quotaRatio;
             return this;
         }
@@ -67,9 +69,9 @@ public class QuotaRatioAsJson {
 
     private final String user;
     private final Optional<String> domain;
-    private final double quotaRatio;
+    private final QuotaRatio quotaRatio;
 
-    private QuotaRatioAsJson(String user, Optional<String> domain, double quotaRatio) {
+    private QuotaRatioAsJson(String user, Optional<String> domain, QuotaRatio quotaRatio) {
         this.user = user;
         this.domain = domain;
         this.quotaRatio = quotaRatio;
@@ -86,8 +88,8 @@ public class QuotaRatioAsJson {
     }
 
     @JsonProperty(JsonMessageConstants.QUOTA_RATIO)
-    public double getQuotaRatio() {
-        return quotaRatio;
+    public double getMaxQuotaRatio() {
+        return quotaRatio.max();
     }
 
     @Override
