@@ -19,9 +19,10 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
-import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.TypeName;
+import org.apache.james.backends.es.WriteAliasName;
 
 public interface MailboxElasticSearchConstants {
 
@@ -29,8 +30,8 @@ public interface MailboxElasticSearchConstants {
         String MAILBOX = "mailbox";
     }
 
-    AliasName DEFAULT_MAILBOX_WRITE_ALIAS = new AliasName("mailboxWriteAlias");
-    AliasName DEFAULT_MAILBOX_READ_ALIAS = new AliasName("mailboxReadAlias");
+    WriteAliasName DEFAULT_MAILBOX_WRITE_ALIAS = new WriteAliasName("mailboxWriteAlias");
+    ReadAliasName DEFAULT_MAILBOX_READ_ALIAS = new ReadAliasName("mailboxReadAlias");
     IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox_v1");
     TypeName MESSAGE_TYPE = new TypeName("message");
 }

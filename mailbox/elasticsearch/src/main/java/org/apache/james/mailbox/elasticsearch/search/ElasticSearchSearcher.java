@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.mailbox.MessageUid;
@@ -62,7 +63,7 @@ public class ElasticSearchSearcher {
 
     public ElasticSearchSearcher(Client client, QueryConverter queryConverter, int size,
                                  MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
-                                 AliasName aliasName, TypeName typeName) {
+                                 ReadAliasName aliasName, TypeName typeName) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;

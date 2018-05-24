@@ -19,17 +19,18 @@
 
 package org.apache.james.mailbox.elasticsearch;
 
-import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.ReadAliasName;
+import org.apache.james.backends.es.WriteAliasName;
 import org.elasticsearch.client.Client;
 
 public class MailboxIndexCreationUtil {
 
     public static Client prepareClient(Client client,
-                                       AliasName readAlias,
-                                       AliasName writeAlias,
+                                       ReadAliasName readAlias,
+                                       WriteAliasName writeAlias,
                                        IndexName indexName) {
 
         return NodeMappingFactory.applyMapping(

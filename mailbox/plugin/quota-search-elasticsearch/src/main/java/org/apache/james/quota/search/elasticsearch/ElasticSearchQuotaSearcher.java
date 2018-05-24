@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.es.AliasName;
+import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.apache.james.core.User;
 import org.apache.james.quota.search.QuotaQuery;
@@ -46,7 +47,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     private final AliasName readAlias;
     private final QuotaQueryConverter quotaQueryConverter;
 
-    public ElasticSearchQuotaSearcher(Client client, AliasName readAlias) {
+    public ElasticSearchQuotaSearcher(Client client, ReadAliasName readAlias) {
         this.client = client;
         this.readAlias = readAlias;
         this.quotaQueryConverter = new QuotaQueryConverter();

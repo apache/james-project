@@ -47,7 +47,7 @@ public class ElasticSearchIndexer {
     private final TypeName typeName;
 
     public ElasticSearchIndexer(Client client, ExecutorService executor,
-                                AliasName aliasName,
+                                WriteAliasName aliasName,
                                 TypeName typeName) {
         this(client, executor, aliasName, typeName, DEFAULT_BATCH_SIZE);
     }

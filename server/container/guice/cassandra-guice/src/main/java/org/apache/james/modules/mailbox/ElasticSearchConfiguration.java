@@ -26,8 +26,9 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.ReadAliasName;
+import org.apache.james.backends.es.WriteAliasName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.util.Host;
@@ -80,8 +81,8 @@ public class ElasticSearchConfiguration {
         int minDelay = configuration.getInt(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, DEFAULT_CONNECTION_MIN_DELAY);
         IndexAttachments indexAttachments = provideIndexAttachments(configuration);
         ImmutableList<Host> hosts = getHosts(configuration);
-        AliasName readAlias = computeMailboxReadAlias(configuration);
-        AliasName writeAlias = computeMailboxWriteAlias(configuration);
+        ReadAliasName readAlias = computeMailboxReadAlias(configuration);
+        WriteAliasName writeAlias = computeMailboxWriteAlias(configuration);
         IndexName indexName = computeMailboxIndexName(configuration);
 
         return new ElasticSearchConfiguration(
@@ -105,21 +106,21 @@ public class ElasticSearchConfiguration {
             .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
     }
 
-    public static AliasName computeMailboxWriteAlias(PropertiesConfiguration configuration) {
+    public static WriteAliasName computeMailboxWriteAlias(PropertiesConfiguration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
-                .map(AliasName::new),
+                .map(WriteAliasName::new),
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
-                .map(AliasName::new))
+                .map(WriteAliasName::new))
             .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
     }
 
-    public static AliasName computeMailboxReadAlias(PropertiesConfiguration configuration) {
+    public static ReadAliasName computeMailboxReadAlias(PropertiesConfiguration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
-                .map(AliasName::new),
+                .map(ReadAliasName::new),
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
-                .map(AliasName::new))
+                .map(ReadAliasName::new))
             .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
     }
 
@@ -167,16 +168,16 @@ public class ElasticSearchConfiguration {
 
     private final ImmutableList<Host> hosts;
     private final IndexName indexMailboxName;
-    private final AliasName readAliasMailboxName;
-    private final AliasName writeAliasMailboxName;
+    private final ReadAliasName readAliasMailboxName;
+    private final WriteAliasName writeAliasMailboxName;
     private final int nbShards;
     private final int nbReplica;
     private final int minDelay;
     private final int maxRetries;
     private final IndexAttachments indexAttachment;
 
-    public ElasticSearchConfiguration(ImmutableList<Host> hosts, IndexName indexMailboxName, AliasName readAliasMailboxName,
-                                      AliasName writeAliasMailboxName, int nbShards, int nbReplica, int minDelay,
+    public ElasticSearchConfiguration(ImmutableList<Host> hosts, IndexName indexMailboxName, ReadAliasName readAliasMailboxName,
+                                      WriteAliasName writeAliasMailboxName, int nbShards, int nbReplica, int minDelay,
                                       int maxRetries, IndexAttachments indexAttachment) {
         this.hosts = hosts;
         this.indexMailboxName = indexMailboxName;
@@ -197,11 +198,11 @@ public class ElasticSearchConfiguration {
         return indexMailboxName;
     }
 
-    public AliasName getReadAliasMailboxName() {
+    public ReadAliasName getReadAliasMailboxName() {
         return readAliasMailboxName;
     }
 
-    public AliasName getWriteAliasMailboxName() {
+    public WriteAliasName getWriteAliasMailboxName() {
         return writeAliasMailboxName;
     }
 
