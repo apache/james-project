@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Multimap;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
@@ -180,14 +181,26 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     @Override
     public void delete(MessageId messageId, Collection<MailboxId> mailboxIds) {
-        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
-        mailboxIds.stream()
-            .map(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)))
-            .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2))
-            .orElse(CompletableFuture.completedFuture(null))
-            .join();
+        deleteAsFuture(messageId, mailboxIds).join();
     }
 
+    public CompletableFuture<Void> deleteAsFuture(MessageId messageId, Collection<MailboxId> mailboxIds) {
+        CassandraMessageId cassandraMessageId = (CassandraMessageId) messageId;
+        return mailboxIds.stream()
+            .map(mailboxId -> retrieveAndDeleteIndices(cassandraMessageId, Optional.of((CassandraId) mailboxId)))
+            .reduce((f1, f2) -> CompletableFuture.allOf(f1, f2))
+            .orElse(CompletableFuture.completedFuture(null));
+    }
+
+    @Override
+    public void delete(Multimap<MessageId, MailboxId> ids) {
+        FluentFutureStream.of(
+            ids.asMap()
+                .entrySet()
+                .stream()
+                .map(entry -> deleteAsFuture(entry.getKey(), entry.getValue())))
+            .join();
+    }
 
     private CompletableFuture<Void> retrieveAndDeleteIndices(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return imapUidDAO.retrieve(messageId, mailboxId)

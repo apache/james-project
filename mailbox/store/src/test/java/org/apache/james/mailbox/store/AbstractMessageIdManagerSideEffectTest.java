@@ -68,6 +68,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         .computedLimit(QuotaCount.count(100))
         .build();
     private static final MessageUid messageUid1 = MessageUid.of(111);
+    private static final MessageUid messageUid2 = MessageUid.of(113);
 
     public static final Flags FLAGS = new Flags();
 
@@ -98,7 +99,6 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         mailbox3 = testingData.createMailbox(MailboxFixture.SENT_ALICE, session);
     }
 
-
     @Test
     public void deleteShouldCallEventDispatcher() throws Exception {
         givenUnlimitedQuota();
@@ -111,6 +111,25 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         verify(dispatcher).expunged(session, simpleMessageMetaData, mailbox1);
+        verifyNoMoreInteractions(dispatcher);
+    }
+
+    @Test
+    public void deletesShouldCallEventDispatcher() throws Exception {
+        givenUnlimitedQuota();
+        MessageId messageId1 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
+        MessageId messageId2 = testingData.persist(mailbox1.getMailboxId(), messageUid2, FLAGS, session);
+        reset(dispatcher);
+
+        MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session).get(0);
+        SimpleMessageMetaData simpleMessageMetaData1 = fromMessageResult(messageId1, messageResult1);
+        MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session).get(0);
+        SimpleMessageMetaData simpleMessageMetaData2 = fromMessageResult(messageId2, messageResult2);
+
+        messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
+
+        verify(dispatcher).expunged(session, simpleMessageMetaData1, mailbox1);
+        verify(dispatcher).expunged(session, simpleMessageMetaData2, mailbox1);
         verifyNoMoreInteractions(dispatcher);
     }
 
@@ -293,6 +312,18 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         reset(dispatcher);
 
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
+
+        verifyNoMoreInteractions(dispatcher);
+    }
+
+    @Test
+    public void deletesShouldNotDispatchEventWhenMessageDoesNotExist() throws Exception {
+        givenUnlimitedQuota();
+        MessageId messageId = testingData.createNotUsedMessageId();
+
+        reset(dispatcher);
+
+        messageIdManager.delete(ImmutableList.of(messageId), session);
 
         verifyNoMoreInteractions(dispatcher);
     }
