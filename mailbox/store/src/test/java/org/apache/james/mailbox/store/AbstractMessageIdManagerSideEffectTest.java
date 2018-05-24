@@ -290,6 +290,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         givenUnlimitedQuota();
         MessageId messageId = testingData.createNotUsedMessageId();
 
+        reset(dispatcher);
+
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
         verifyNoMoreInteractions(dispatcher);
@@ -299,6 +301,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     public void setFlagsShouldNotDispatchEventWhenMessageDoesNotExist() throws Exception {
         givenUnlimitedQuota();
         MessageId messageId = testingData.createNotUsedMessageId();
+        reset(dispatcher);
 
         messageIdManager.setFlags(FLAGS, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
 
@@ -309,6 +312,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     public void setInMailboxesShouldNotDispatchEventWhenMessageDoesNotExist() throws Exception {
         givenUnlimitedQuota();
         MessageId messageId = testingData.createNotUsedMessageId();
+        reset(dispatcher);
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 

@@ -33,6 +33,7 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -66,14 +67,16 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private final CurrentQuotaManager currentQuotaManager;
         private final DefaultUserQuotaRootResolver quotaRootResolver;
         private final StoreRightManager storeRightManager;
+        private final MessageId.Factory messageIdFactory;
 
-        public Resources(InMemoryMailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver quotaRootResolver, StoreRightManager storeRightManager) {
+        public Resources(InMemoryMailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver quotaRootResolver, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory) {
             this.mailboxManager = mailboxManager;
             this.maxQuotaManager = maxQuotaManager;
             this.quotaManager = quotaManager;
             this.currentQuotaManager = currentQuotaManager;
             this.quotaRootResolver = quotaRootResolver;
             this.storeRightManager = storeRightManager;
+            this.messageIdFactory = messageIdFactory;
         }
 
         public InMemoryMailboxManager getMailboxManager() {
@@ -98,6 +101,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public StoreRightManager getStoreRightManager() {
             return storeRightManager;
+        }
+
+        public MessageId.Factory getMessageIdFactory() {
+            return messageIdFactory;
         }
     }
 
@@ -131,7 +138,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     private Resources createMailboxManager(GroupMembershipResolver groupMembershipResolver,
-                                                    BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
+                                           BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
@@ -139,7 +146,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
-                                                                    groupMembershipResolver, mailboxEventDispatcher);
+            groupMembershipResolver, mailboxEventDispatcher);
         StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
             .apply(storeRightManager, mailboxSessionMapperFactory);
 
@@ -158,16 +165,17 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         MaxQuotaManager maxQuotaManager = createMaxQuotaManager();
         try {
             QuotaManager quotaManager = createQuotaManager(maxQuotaManager, manager);
-        return new Resources(
-            manager,
-            maxQuotaManager,
-            quotaManager,
-            currentQuotaManager,
-            quotaRootResolver,
-            storeRightManager);
-    } catch (Exception e) {
-        throw Throwables.propagate(e);
-    }
+            return new Resources(
+                manager,
+                maxQuotaManager,
+                quotaManager,
+                currentQuotaManager,
+                quotaRootResolver,
+                storeRightManager,
+                new InMemoryMessageId.Factory());
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
@@ -195,11 +203,15 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     @Override
     public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager) {
+        return createMessageIdManager(mailboxManager, new InMemoryMessageId.Factory());
+    }
+
+    public MessageIdManager createMessageIdManager(StoreMailboxManager mailboxManager, MessageId.Factory factory) {
         return new StoreMessageIdManager(
             mailboxManager,
             mailboxManager.getMapperFactory(),
             mailboxManager.getEventDispatcher(),
-            new InMemoryMessageId.Factory(),
+            factory,
             mailboxManager.getQuotaManager(),
             mailboxManager.getQuotaRootResolver());
     }
