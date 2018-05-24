@@ -45,6 +45,7 @@ import org.apache.james.webadmin.dto.ForceDelivery;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
 import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -304,8 +305,8 @@ public class MailQueueRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void deleteMails(Service service) {
-        service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS, 
-                (request, response) -> deleteMails(request, response),
+        service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
+                this::deleteMails,
                 jsonTransformer);
     }
 
@@ -433,15 +434,20 @@ public class MailQueueRoutes implements Routes {
     }
 
     private Task deleteMailsTask(ManageableMailQueue queue, Optional<MailAddress> maybeSender, Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
-        if (Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent()) != 1) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("You should provide one and only one of the query parameters 'sender', 'name' or 'recipient'.")
-                .haltError();
+        int paramCount = Booleans.countTrue(maybeSender.isPresent(), maybeName.isPresent(), maybeRecipient.isPresent());
+        switch (paramCount) {
+            case 0:
+                return new ClearMailQueueTask(queue);
+            case 1:
+                return new DeleteMailsFromMailQueueTask(queue, maybeSender, maybeName, maybeRecipient);
+            default:
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("You should provide only one of the query parameters 'sender', 'name', 'recipient' " +
+                            "for deleting mails by condition or no parameter for deleting all mails in the mail queue.")
+                    .haltError();
         }
-        
-        return new DeleteMailsFromMailQueueTask(queue, maybeSender, maybeName, maybeRecipient);
     }
 
     private void assertDelayedParamIsTrue(Request request) {
@@ -453,5 +459,4 @@ public class MailQueueRoutes implements Routes {
                 .haltError();
         }
     }
-
 }
