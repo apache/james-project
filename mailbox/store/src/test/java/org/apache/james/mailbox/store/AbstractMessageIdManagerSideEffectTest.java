@@ -44,7 +44,6 @@ import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.Quota;
@@ -196,7 +195,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         expectedException.expect(OverQuotaException.class);
 
-        messageIdManager.setInMailboxes(messageId, ImmutableList.<MailboxId>of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
     }
 
     @Test
@@ -260,7 +259,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         reset(dispatcher);
 
-        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.<MailboxId>of(), session);
+        messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(), session);
 
         verifyNoMoreInteractions(dispatcher);
     }
