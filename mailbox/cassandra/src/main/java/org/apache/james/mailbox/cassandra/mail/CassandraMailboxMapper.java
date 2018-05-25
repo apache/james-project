@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -108,10 +109,28 @@ public class CassandraMailboxMapper implements MailboxMapper {
                     cassandraIdOptional
                         .map(CassandraIdAndPath::getCassandraId)
                         .map(this::retrieveMailbox)
-                        .orElse(CompletableFuture.completedFuture(Optional.empty())));
+                        .orElse(CompletableFuture.completedFuture(Optional.empty())))
+                .thenCompose(maybeMailbox -> maybeMailbox.map(this::migrate)
+                    .orElse(CompletableFuture.completedFuture(maybeMailbox)));
         } catch (CompletionException e) {
             throw DriverExceptionHelper.handleStorageException(e);
         }
+    }
+
+    private CompletableFuture<Optional<SimpleMailbox>> migrate(SimpleMailbox mailbox) {
+        CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
+        return mailboxPathV2DAO.save(mailbox.generateAssociatedPath(), mailboxId)
+            .thenCompose(success -> deleteIfSuccess(mailbox, success))
+            .thenApply(any -> Optional.of(mailbox));
+    }
+
+    private CompletionStage<Void> deleteIfSuccess(SimpleMailbox mailbox, boolean success) {
+        if (success) {
+            return mailboxPathDAO.delete(mailbox.generateAssociatedPath());
+        }
+        LOGGER.info("Concurrent execution lead to data race while migrating {} to 'mailboxPathV2DAO'.",
+            mailbox.generateAssociatedPath());
+        return CompletableFuture.completedFuture(null);
     }
 
     @Override

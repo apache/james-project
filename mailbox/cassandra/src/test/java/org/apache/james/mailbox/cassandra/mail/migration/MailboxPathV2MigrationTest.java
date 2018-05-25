@@ -108,15 +108,16 @@ public class MailboxPathV2MigrationTest {
     }
 
     @Test
-    public void readingOldValuesShouldNotMigrateThem() throws Exception {
+    public void readingOldValuesShouldMigrateThem() throws Exception {
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).join();
         mailboxDAO.save(MAILBOX_1).join();
 
         mailboxMapper.findMailboxByPath(MAILBOX_PATH_1);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).join()).isNotEmpty();
-        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).join()).isEmpty();
+        softly.assertThat(daoV1.retrieveId(MAILBOX_PATH_1).join()).isEmpty();
+        softly.assertThat(daoV2.retrieveId(MAILBOX_PATH_1).join())
+            .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
         softly.assertAll();
     }
 
