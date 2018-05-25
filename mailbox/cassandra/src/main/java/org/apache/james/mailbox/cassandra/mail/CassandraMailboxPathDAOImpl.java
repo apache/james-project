@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.count;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
@@ -53,13 +54,17 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
 
+    private static final int FIRST_CELL = 0;
+
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private final CassandraUtils cassandraUtils;
     private final PreparedStatement delete;
     private final PreparedStatement insert;
     private final PreparedStatement select;
+    private final PreparedStatement selectAllForUser;
     private final PreparedStatement selectAll;
+    private final PreparedStatement countAll;
 
     @Inject
     public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider, CassandraUtils cassandraUtils) {
@@ -69,7 +74,9 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
         this.insert = prepareInsert(session);
         this.delete = prepareDelete(session);
         this.select = prepareSelect(session);
+        this.selectAllForUser = prepareSelectAllForUser(session);
         this.selectAll = prepareSelectAll(session);
+        this.countAll = prepareCountAll(session);
     }
 
     @VisibleForTesting
@@ -99,10 +106,20 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
             .and(eq(MAILBOX_NAME, bindMarker(MAILBOX_NAME))));
     }
 
-    private PreparedStatement prepareSelectAll(Session session) {
+    private PreparedStatement prepareSelectAllForUser(Session session) {
         return session.prepare(select(FIELDS)
             .from(TABLE_NAME)
             .where(eq(NAMESPACE_AND_USER, bindMarker(NAMESPACE_AND_USER))));
+    }
+
+    private PreparedStatement prepareSelectAll(Session session) {
+        return session.prepare(select(FIELDS)
+            .from(TABLE_NAME));
+    }
+
+    private PreparedStatement prepareCountAll(Session session) {
+        return session.prepare(select(count(NAMESPACE_AND_USER))
+            .from(TABLE_NAME));
     }
 
     public CompletableFuture<Optional<CassandraIdAndPath>> retrieveId(MailboxPath mailboxPath) {
@@ -118,7 +135,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
     @Override
     public CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user) {
         return cassandraAsyncExecutor.execute(
-            selectAll.bind()
+            selectAllForUser.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(namespace, user)))
             .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
                 .map(this::fromRowToCassandraIdAndPath)
@@ -180,6 +197,17 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
         return cassandraAsyncExecutor.executeVoid(delete.bind()
             .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(mailboxPath.getNamespace(), mailboxPath.getUser()))
             .setString(MAILBOX_NAME, mailboxPath.getName()));
+    }
+
+    public CompletableFuture<Stream<CassandraIdAndPath>> readAll() {
+        return cassandraAsyncExecutor.execute(selectAll.bind())
+            .thenApply(cassandraUtils::convertToStream)
+            .thenApply(stream -> stream.map(this::fromRowToCassandraIdAndPath));
+    }
+
+    public CompletableFuture<Long> countAll() {
+        return cassandraAsyncExecutor.executeSingleRow(countAll.bind())
+            .thenApply(optional -> optional.map(row -> row.getLong(FIRST_CELL)).orElse(0L));
     }
 
 }

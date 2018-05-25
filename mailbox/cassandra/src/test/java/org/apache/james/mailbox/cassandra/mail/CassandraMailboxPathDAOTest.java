@@ -38,11 +38,11 @@ import com.github.steveash.guavate.Guavate;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public abstract class CassandraMailboxPathDAOTest {
-    private static final String USER = "user";
-    private static final String OTHER_USER = "other";
-    private static final CassandraId INBOX_ID = CassandraId.timeBased();
-    private static final CassandraId OUTBOX_ID = CassandraId.timeBased();
-    private static final CassandraId otherMailboxId = CassandraId.timeBased();
+    protected static final String USER = "user";
+    protected static final String OTHER_USER = "other";
+    protected static final CassandraId INBOX_ID = CassandraId.timeBased();
+    protected static final CassandraId OUTBOX_ID = CassandraId.timeBased();
+    protected static final CassandraId otherMailboxId = CassandraId.timeBased();
 
     public static final MailboxPath USER_INBOX_MAILBOXPATH = MailboxPath.forUser(USER, "INBOX");
     public static final CassandraIdAndPath INBOX_ID_AND_PATH = new CassandraIdAndPath(INBOX_ID, USER_INBOX_MAILBOXPATH);
@@ -53,7 +53,7 @@ public abstract class CassandraMailboxPathDAOTest {
     
     protected CassandraCluster cassandra;
 
-    private CassandraMailboxPathDAO testee;
+    protected CassandraMailboxPathDAO testee;
 
     abstract CassandraMailboxPathDAO testee();
 
@@ -61,7 +61,6 @@ public abstract class CassandraMailboxPathDAOTest {
     public void setUp() throws Exception {
         cassandra = CassandraCluster.create(new CassandraMailboxModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = testee();
-
     }
 
     @After
