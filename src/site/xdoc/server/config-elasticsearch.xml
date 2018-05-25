@@ -118,12 +118,35 @@
         Here are the different properties:
 
         <dl>
+            <dt><strong>tika.enabled</strong></dt>
+            <dd>Should Tika text extractor be used? <br/>
+            If true, the TikaTextExtractor will be used behind a cache. <br/>
+            If false, the DefaultTextExtractor will be used (naive implementation only supporting text).<br/>
+            Defaults to false.</dd>
+
             <dt><strong>tika.host</strong></dt>
             <dd>IP or domain name of your Tika server. The default value is 127.0.0.1</dd>
+
             <dt><strong>tika.port</strong></dt>
             <dd>Port of your tika server. The default value is 9998</dd>
+
             <dt><strong>tika.timeoutInMillis</strong></dt>
             <dd>Timeout when issuing request to the tika server. The default value is 3 seconds.</dd>
+
+            <dt><strong>tika.cache.eviction.period</strong></dt>
+            <dd>A cache is used to avoid, when possible, query Tika multiple time for the same attachments. <br/>
+            This entry determines how long after the last read an entry vanishes.<br/>
+            Please note that units are supported (ms - millisecond, s - second, m - minute, h - hour, d - day). Default unit is seconds. <br/>
+            Default value is <b>1 day</b></dd>
+
+            <dt><strong>tika.cache.enabled</strong></dt>
+            <dd>Should the cache be used? False by default</dd>
+
+            <dt><strong>tika.cache.weight.max</strong></dt>
+            <dd>Maximum weight of the cache.<br/>
+            A value of <b>0</b> disables the cache<br/>
+            Please note that units are supported (K for KB, M for MB, G for GB). Defaults is no units, so in bytes.<br/>
+            Default value is <b>100 MB</b>.</dd>
         </dl>
 
         Note: You can launch a tika server using this command line:
