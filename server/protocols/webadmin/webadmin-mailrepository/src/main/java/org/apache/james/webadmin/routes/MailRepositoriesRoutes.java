@@ -50,9 +50,8 @@ import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.google.common.base.Strings;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -135,9 +134,8 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineListMails() {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails", (request, response) -> {
-            Offset offset = Offset.from(assertPositiveInteger(request, "offset"));
-            Limit limit = Limit.from(assertPositiveInteger(request, "limit")
-                .map(value -> assertNotZero(value, "limit")));
+            Offset offset = ParametersExtractor.extractOffset(request);
+            Limit limit = ParametersExtractor.extractLimit(request);
             String encodedUrl = request.params("encodedUrl");
             String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
             try {
@@ -400,43 +398,5 @@ public class MailRepositoriesRoutes implements Routes {
 
     private String decodedRepositoryUrl(Request request) throws UnsupportedEncodingException {
         return URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
-    }
-
-    private Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
-        try {
-            return Optional.ofNullable(request.queryParams(parameterName))
-                .filter(s -> !Strings.isNullOrEmpty(s))
-                .map(Integer::valueOf)
-                .map(value -> assertPositive(value, parameterName));
-        } catch (NumberFormatException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .cause(e)
-                .message("Can not parse " + parameterName)
-                .haltError();
-        }
-    }
-
-    private int assertPositive(int value, String parameterName) {
-        if (value < 0) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be negative")
-                .haltError();
-        }
-        return value;
-    }
-
-    private int assertNotZero(int value, String parameterName) {
-        if (value == 0) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be equal to zero")
-                .haltError();
-        }
-        return value;
     }
 }

@@ -52,6 +52,7 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
@@ -217,7 +218,7 @@ public class MailQueueRoutes implements Routes {
     private List<MailQueueItemDTO> listMails(Request request) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
         return mailQueueFactory.getQueue(mailQueueName)
-                .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), limit(request.queryParams(LIMIT_QUERY_PARAM))))
+                .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
                         .message(String.format("%s can not be found", mailQueueName))
@@ -229,21 +230,6 @@ public class MailQueueRoutes implements Routes {
     @VisibleForTesting Optional<Boolean> isDelayed(String delayedAsString) {
         return Optional.ofNullable(delayedAsString)
                 .map(Boolean::parseBoolean);
-    }
-
-    @VisibleForTesting Limit limit(String limitAsString) throws HaltException {
-        try {
-            return Optional.ofNullable(limitAsString)
-                    .map(Integer::parseInt)
-                    .map(Limit::limit)
-                    .orElseGet(() -> Limit.from(DEFAULT_LIMIT_VALUE));
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .message(String.format("limit can't be less or equals to zero"))
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .haltError();
-        }
     }
 
     private List<MailQueueItemDTO> listMails(ManageableMailQueue queue, Optional<Boolean> isDelayed, Limit limit) {
