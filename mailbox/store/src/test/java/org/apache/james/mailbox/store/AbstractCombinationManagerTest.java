@@ -515,6 +515,21 @@ public abstract class AbstractCombinationManagerTest {
         assertThat(messageManager1.search(searchQuery, session)).isEmpty();
     }
 
+    @Test
+    public void getUidsShouldInteractWellWithDeletes() throws Exception {
+        MessageId messageId1 = messageManager1
+            .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
+            .getMessageId();
+        MessageId messageId2 = messageManager1
+            .appendMessage(MessageManager.AppendCommand.from(mailContent), session)
+            .getMessageId();
+
+        messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
+        assertThat(messageManager1.search(searchQuery, session)).isEmpty();
+    }
+
     private Predicate<MessageResult> messageInMailbox2() {
         return messageResult -> messageResult.getMailboxId().equals(mailbox2.getMailboxId());
     }

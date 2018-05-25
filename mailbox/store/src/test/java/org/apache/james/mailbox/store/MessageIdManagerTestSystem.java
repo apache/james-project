@@ -19,7 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
 import javax.mail.Flags;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -30,20 +34,18 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
-public abstract class MessageIdManagerTestSystem {
+public class MessageIdManagerTestSystem {
+    private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(StandardCharsets.UTF_8);
+    public static final int MOD_SEQ = 452;
 
     private final MessageIdManager messageIdManager;
-
-    public MessageIdManagerTestSystem(MessageIdManager messageIdManager) {
-        this.messageIdManager = messageIdManager;
-    }
-
-    public MessageIdManager getMessageIdManager() {
-        return messageIdManager;
-    }
-
-    public abstract Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+    private final MessageId.Factory messageIdFactory;
+    private final MailboxSessionMapperFactory mapperFactory;
+    private final StoreMailboxManager mailboxManager;
 
     /**
      * Should take care of find returning the MailboxMessage
@@ -55,13 +57,63 @@ public abstract class MessageIdManagerTestSystem {
      * @param flags
      * @return the id of persisted message
      */
-    public abstract MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession session);
 
-    public abstract MessageId createNotUsedMessageId();
+    public MessageIdManagerTestSystem(MessageIdManager messageIdManager, MessageId.Factory messageIdFactory, MailboxSessionMapperFactory mapperFactory, StoreMailboxManager mailboxManager) {
+        this.messageIdManager = messageIdManager;
+        this.messageIdFactory = messageIdFactory;
+        this.mapperFactory = mapperFactory;
+        this.mailboxManager = mailboxManager;
+    }
 
-    public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
 
-    public abstract int getConstantMessageSize();
+    public MessageIdManager getMessageIdManager() {
+        return messageIdManager;
+    }
 
-    public abstract void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException;
+    public Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+        mailboxManager.createMailbox(mailboxPath, session);
+        return mapperFactory.getMailboxMapper(session).findMailboxByPath(mailboxPath);
+    }
+
+    public MessageId persist(MailboxId mailboxId, MessageUid uid, Flags flags, MailboxSession mailboxSession) {
+        try {
+            MessageId messageId = messageIdFactory.generate();
+            Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+            MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
+            mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
+            mailboxManager.getEventDispatcher().added(mailboxSession, new SimpleMessageMetaData(message), mailbox);
+            return messageId;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public MessageId createNotUsedMessageId() {
+        return messageIdFactory.generate();
+    }
+
+    public void deleteMailbox(MailboxId mailboxId, MailboxSession mailboxSession) {
+        try {
+            Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+            mailboxManager.deleteMailbox(new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName()), mailboxSession);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static MailboxMessage createMessage(MailboxId mailboxId, Flags flags, MessageId messageId, MessageUid uid) {
+        MailboxMessage mailboxMessage = new SimpleMailboxMessage(messageId, new Date(), MESSAGE_CONTENT.length, 1256,
+            new SharedByteArrayInputStream(MESSAGE_CONTENT), flags, new PropertyBuilder(), mailboxId);
+        mailboxMessage.setModSeq(MOD_SEQ);
+        mailboxMessage.setUid(uid);
+        return mailboxMessage;
+    }
+
+    public int getConstantMessageSize() {
+        return MESSAGE_CONTENT.length;
+    }
+
+    public void setACL(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
+        mailboxManager.setRights(mailboxId, mailboxACL, session);
+    }
 }
