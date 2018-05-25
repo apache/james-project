@@ -17,57 +17,57 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.cli.utils;
+package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
-public class ValueWithUnitTest {
+public class SizeTest {
 
     @Test
     public void testNoUnit() throws Exception {
-        assertThat(ValueWithUnit.parse("1024").getConvertedValue()).isEqualTo(1024);
+        assertThat(Size.parse("1024").asBytes()).isEqualTo(1024);
     }
 
     @Test
     public void testUnitB() throws Exception {
-        assertThat(ValueWithUnit.parse("1024B").getConvertedValue()).isEqualTo(1024);
+        assertThat(Size.parse("1024B").asBytes()).isEqualTo(1024);
     }
 
     @Test
     public void testUnitK() throws Exception {
-        assertThat(ValueWithUnit.parse("5K").getConvertedValue()).isEqualTo(5 * 1024);
+        assertThat(Size.parse("5K").asBytes()).isEqualTo(5 * 1024);
     }
 
     @Test
     public void testUnitM() throws Exception {
-        assertThat(ValueWithUnit.parse("5M").getConvertedValue()).isEqualTo(5 * 1024 * 1024);
+        assertThat(Size.parse("5M").asBytes()).isEqualTo(5 * 1024 * 1024);
     }
 
     @Test
     public void testUnitG() throws Exception {
-        assertThat(ValueWithUnit.parse("1G").getConvertedValue()).isEqualTo(1024 * 1024 * 1024);
+        assertThat(Size.parse("1G").asBytes()).isEqualTo(1024 * 1024 * 1024);
     }
 
     @Test
     public void testUnknown() throws Exception {
-        assertThat(ValueWithUnit.parse("unknown").getConvertedValue()).isEqualTo(ValueWithUnit.UNKNOWN_VALUE);
+        assertThat(Size.parse("unknown").asBytes()).isEqualTo(Size.UNKNOWN_VALUE);
     }
 
     @Test
     public void testUnlimited() throws Exception {
-        assertThat(ValueWithUnit.parse("unlimited").getConvertedValue()).isEqualTo(ValueWithUnit.UNLIMITED_VALUE);
+        assertThat(Size.parse("unlimited").asBytes()).isEqualTo(Size.UNLIMITED_VALUE);
     }
 
     @Test(expected = Exception.class)
     public void testBadUnit() throws Exception {
-        ValueWithUnit.parse("42T");
+        Size.parse("42T");
     }
 
     @Test(expected = NumberFormatException.class)
     public void testWrongNumber() throws Exception {
-        ValueWithUnit.parse("42RG");
+        Size.parse("42RG");
     }
 
 }

@@ -17,14 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.cli.utils;
+package org.apache.james.util;
 
 import com.google.common.math.LongMath;
 
 /**
  * This class is an helper for parsing integer input that may contain units.
  */
-public class ValueWithUnit {
+public class Size {
 
     public static final String UNKNOWN = "UNKNOWN";
     public static final String UNLIMITED = "UNLIMITED";
@@ -48,22 +48,22 @@ public class ValueWithUnit {
     Unit unit;
     Long value;
 
-    private ValueWithUnit(Unit unit, Long value) {
+    private Size(Unit unit, Long value) {
         this.unit = unit;
         this.value = value;
     }
 
-    public static ValueWithUnit parse(String providedLongWithUnitString) throws Exception {
+    public static Size parse(String providedLongWithUnitString) throws Exception {
         if (providedLongWithUnitString.equalsIgnoreCase(UNKNOWN)) {
-            return new ValueWithUnit(Unit.NoUnit, UNKNOWN_VALUE);
+            return new Size(Unit.NoUnit, UNKNOWN_VALUE);
         }
         if (providedLongWithUnitString.equalsIgnoreCase(UNLIMITED)) {
-            return new ValueWithUnit(Unit.NoUnit, UNLIMITED_VALUE);
+            return new Size(Unit.NoUnit, UNLIMITED_VALUE);
         }
         char lastChar = providedLongWithUnitString.charAt(providedLongWithUnitString.length() - 1);
         Unit unit = getUnit(lastChar);
         String argWithoutUnit = removeLastCharIfNeeded(providedLongWithUnitString, unit);
-        return new ValueWithUnit(unit, Long.parseLong(argWithoutUnit));
+        return new Size(unit, Long.parseLong(argWithoutUnit));
     }
 
     public Unit getUnit() {
@@ -74,7 +74,7 @@ public class ValueWithUnit {
         return value;
     }
 
-    public long getConvertedValue() {
+    public long asBytes() {
         switch (unit) {
             case G:
                 return value * LongMath.pow(base, 3);

@@ -44,7 +44,6 @@ import org.apache.james.cli.probe.impl.JmxMailboxProbe;
 import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.probe.impl.JmxSieveProbe;
 import org.apache.james.cli.type.CmdType;
-import org.apache.james.cli.utils.ValueWithUnit;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.QuotaValue;
@@ -56,6 +55,7 @@ import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.Port;
+import org.apache.james.util.Size;
 import org.apache.james.util.SizeFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -312,10 +312,10 @@ public class ServerCmd {
             mailboxProbe.reIndexAll();
             break;
         case SETSIEVEQUOTA:
-            sieveProbe.setSieveQuota(ValueWithUnit.parse(arguments[1]).getConvertedValue());
+            sieveProbe.setSieveQuota(Size.parse(arguments[1]).asBytes());
             break;
         case SETSIEVEUSERQUOTA:
-            sieveProbe.setSieveQuota(arguments[1], ValueWithUnit.parse(arguments[2]).getConvertedValue());
+            sieveProbe.setSieveQuota(arguments[1], Size.parse(arguments[2]).asBytes());
             break;
         case GETSIEVEQUOTA:
             printStream.println("Storage space allowed for Sieve scripts by default: "
@@ -339,7 +339,7 @@ public class ServerCmd {
     }
 
     private SerializableQuotaValue<QuotaSize> parseQuotaSize(String argument) throws Exception {
-        long convertedValue = ValueWithUnit.parse(argument).getConvertedValue();
+        long convertedValue = Size.parse(argument).asBytes();
         return longToSerializableQuotaValue(convertedValue, QuotaSize.unlimited(), QuotaSize::size);
     }
 
@@ -388,10 +388,10 @@ public class ServerCmd {
 
     private String formatStorageValue(Long value) {
         if (value == null) {
-            return ValueWithUnit.UNKNOWN;
+            return Size.UNKNOWN;
         }
         if (value == SerializableQuota.UNLIMITED) {
-            return ValueWithUnit.UNLIMITED;
+            return Size.UNLIMITED;
         }
         return SizeFormat.format(value);
     }
@@ -401,18 +401,18 @@ public class ServerCmd {
             .toValue(QuotaSize::size, QuotaSize.unlimited())
             .map(size -> {
             if (size.isUnlimited()) {
-                return ValueWithUnit.UNLIMITED;
+                return Size.UNLIMITED;
             }
             return SizeFormat.format(size.asLong());
-        }).orElse(ValueWithUnit.UNKNOWN);
+        }).orElse(Size.UNKNOWN);
     }
 
     private String formatMessageValue(Long value) {
         if (value == null) {
-            return ValueWithUnit.UNKNOWN;
+            return Size.UNKNOWN;
         }
         if (value == SerializableQuota.UNLIMITED) {
-            return ValueWithUnit.UNLIMITED;
+            return Size.UNLIMITED;
         }
         return String.valueOf(value);
     }
@@ -422,10 +422,10 @@ public class ServerCmd {
             .toValue(QuotaCount::count, QuotaCount.unlimited())
             .map(count -> {
             if (count.isUnlimited()) {
-                return ValueWithUnit.UNLIMITED;
+                return Size.UNLIMITED;
             }
             return String.valueOf(count.asLong());
-        }).orElse(ValueWithUnit.UNKNOWN);
+        }).orElse(Size.UNKNOWN);
     }
 
     private void print(Map<String, Mappings> map, PrintStream out) {
