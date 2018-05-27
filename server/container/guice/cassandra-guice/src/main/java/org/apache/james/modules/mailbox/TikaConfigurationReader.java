@@ -21,7 +21,6 @@ package org.apache.james.modules.mailbox;
 
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -29,19 +28,32 @@ import org.apache.james.util.Size;
 import org.apache.james.util.TimeConverter;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.primitives.Ints;
 
 public class TikaConfigurationReader {
+    public static final String TIKA_ENABLED = "tika.enabled";
+    public static final String TIKA_CACHE_ENABLED = "tika.cache.enabled";
     public static final String TIKA_HOST = "tika.host";
     public static final String TIKA_PORT = "tika.port";
     public static final String TIKA_TIMEOUT_IN_MS = "tika.timeoutInMillis";
-    public static final String DEFAULT_HOST = "127.0.0.1";
-    public static final int DEFAULT_PORT = 9998;
     public static final String TIKA_CACHE_EVICTION_PERIOD = "tika.cache.eviction.period";
     public static final String TIKA_CACHE_WEIGHT_MAX = "tika.cache.weight.max";
-    public static final int DEFAULT_TIMEOUT_IN_MS = Ints.checkedCast(TimeUnit.SECONDS.toMillis(30));
 
     public static TikaConfiguration readTikaConfiguration(PropertiesConfiguration configuration) {
+        Optional<Boolean> enabled = Optional.ofNullable(
+            configuration.getBoolean(TIKA_ENABLED, null));
+
+        Optional<Boolean> cacheEnabled = Optional.ofNullable(
+            configuration.getBoolean(TIKA_CACHE_ENABLED, null));
+
+        Optional<String> host = Optional.ofNullable(
+            configuration.getString(TIKA_HOST, null));
+
+        Optional<Integer> port = Optional.ofNullable(
+            configuration.getInteger(TIKA_PORT, null));
+
+        Optional<Integer> timeoutInMillis = Optional.ofNullable(
+            configuration.getInteger(TIKA_TIMEOUT_IN_MS, null));
+
         Optional<Duration> cacheEvictionPeriod = Optional.ofNullable(
             configuration.getString(TIKA_CACHE_EVICTION_PERIOD,
                 null))
@@ -54,9 +66,11 @@ public class TikaConfigurationReader {
             .map(Size::asBytes);
 
         return TikaConfiguration.builder()
-            .host(configuration.getString(TIKA_HOST, DEFAULT_HOST))
-            .port(configuration.getInt(TIKA_PORT, DEFAULT_PORT))
-            .timeoutInMillis(configuration.getInt(TIKA_TIMEOUT_IN_MS, DEFAULT_TIMEOUT_IN_MS))
+            .enable(enabled)
+            .host(host)
+            .port(port)
+            .timeoutInMillis(timeoutInMillis)
+            .cacheEnable(cacheEnabled)
             .cacheEvictionPeriod(cacheEvictionPeriod)
             .cacheWeightInBytes(cacheWeight)
             .build();

@@ -19,10 +19,6 @@
 
 package org.apache.james.modules.mailbox;
 
-import static org.apache.james.modules.mailbox.TikaConfigurationReader.DEFAULT_HOST;
-import static org.apache.james.modules.mailbox.TikaConfigurationReader.DEFAULT_PORT;
-import static org.apache.james.modules.mailbox.TikaConfigurationReader.DEFAULT_TIMEOUT_IN_MS;
-
 import java.io.FileNotFoundException;
 import java.net.URISyntaxException;
 
@@ -31,6 +27,7 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.tika.CachingTextExtractor;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaHttpClient;
@@ -71,22 +68,30 @@ public class TikaMailboxModule extends AbstractModule {
 
             return TikaConfigurationReader.readTikaConfiguration(configuration);
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find {} configuration file. Using {}:{} as contact point", TIKA_CONFIGURATION_NAME, DEFAULT_HOST, DEFAULT_PORT);
+            LOGGER.warn("Could not find {} configuration file. Disabling Tika.", TIKA_CONFIGURATION_NAME);
             return TikaConfiguration.builder()
-                    .host(DEFAULT_HOST)
-                    .port(DEFAULT_PORT)
-                    .timeoutInMillis(DEFAULT_TIMEOUT_IN_MS)
-                    .build();
+                .disabled()
+                .build();
         }
     }
 
     @Provides
     @Singleton
     private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration, MetricFactory metricFactory) {
-        return new CachingTextExtractor(
-            textExtractor,
-            configuration.getCacheEvictionPeriod(),
-            configuration.getCacheWeightInBytes(), metricFactory);
+        if (configuration.isEnabled() && configuration.isCacheEnabled()) {
+            LOGGER.info("Tika cache has been enabled.");
+            return new CachingTextExtractor(
+                textExtractor,
+                configuration.getCacheEvictionPeriod(),
+                configuration.getCacheWeightInBytes(), metricFactory);
+        }
+        if (configuration.isEnabled()) {
+            return textExtractor;
+        }
+        LOGGER.info("Tika text extraction has been disabled." +
+            " Using DefaultTextExtractor instead. " +
+            "No complex extraction will be done.");
+        return new DefaultTextExtractor();
     }
 
 }

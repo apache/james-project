@@ -36,19 +36,20 @@ import java.util.function.Supplier;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.junit.Before;
-import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 public class CachingTextExtractorTest {
 
     public static final ParsedContent RESULT = new ParsedContent("content", ImmutableMap.of());
     public static final Supplier<InputStream> INPUT_STREAM_1 = () -> new ByteArrayInputStream("content1".getBytes(StandardCharsets.UTF_8));
 
-    private TextExtractor textExtractor;
+    private CachingTextExtractor textExtractor;
     private TextExtractor wrappedTextExtractor;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         wrappedTextExtractor = mock(TextExtractor.class);
         textExtractor = new CachingTextExtractor(wrappedTextExtractor,
