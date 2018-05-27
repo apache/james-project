@@ -40,4 +40,13 @@ public class DefaultMetric implements Metric {
         value.decrementAndGet();
     }
 
+    @Override
+    public void add(int i) {
+        value.addAndGet(i);
+    }
+
+    @Override
+    public void remove(int i) {
+        value.addAndGet(-1 * i);
+    }
 }

@@ -40,4 +40,14 @@ public class DropWizardMetric implements Metric {
     public void decrement() {
         counter.dec();
     }
+
+    @Override
+    public void add(int value) {
+        counter.inc(value);
+    }
+
+    @Override
+    public void remove(int value) {
+        counter.dec(value);
+    }
 }

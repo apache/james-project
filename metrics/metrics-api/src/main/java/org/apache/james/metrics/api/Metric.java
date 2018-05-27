@@ -25,4 +25,8 @@ public interface Metric {
 
     void decrement();
 
+    void add(int value);
+
+    void remove(int value);
+
 }
