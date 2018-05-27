@@ -16,51 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.metrics.api;
 
-import java.util.function.Supplier;
+package org.apache.james.metrics.dropwizard;
 
-public class NoopMetricFactory implements MetricFactory {
+import javax.inject.Inject;
 
-    @Override
-    public Metric generate(String name) {
-        return new NoopMetric();
-    }
+import org.apache.james.metrics.api.Gauge;
+import org.apache.james.metrics.api.GaugeRegistry;
 
-    public static class NoopMetric implements Metric  {
+import com.codahale.metrics.MetricRegistry;
 
-        @Override
-        public void increment() {
-        }
+public class DropWizardGaugeRegistry implements GaugeRegistry {
+    private final MetricRegistry metricRegistry;
 
-        @Override
-        public void decrement() {
-        }
-        
+    @Inject
+    public DropWizardGaugeRegistry(MetricRegistry metricRegistry) {
+        this.metricRegistry = metricRegistry;
     }
 
     @Override
-    public TimeMetric timer(String name) {
-        return new NoopTimeMetric();
+    public <T> GaugeRegistry register(String name, Gauge<T> gauge) {
+        metricRegistry.gauge(name, () -> gauge::get);
+        return this;
     }
-
-    public static class NoopTimeMetric implements TimeMetric {
-
-        @Override
-        public String name() {
-            return "";
-        }
-
-
-        @Override
-        public long stopAndPublish() {
-            return 0;
-        }
-    }
-
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        return operation.get();
-    }
-
 }

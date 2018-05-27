@@ -24,7 +24,9 @@ import java.util.List;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.dropwizard.DropWizardGaugeRegistry;
 import org.apache.james.metrics.dropwizard.DropWizardJVMMetrics;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -44,8 +46,11 @@ public class DropWizardMetricsModule extends AbstractModule {
     protected void configure() {
         bind(MetricRegistry.class).in(Scopes.SINGLETON);
         bind(DropWizardMetricFactory.class).in(Scopes.SINGLETON);
+        bind(DropWizardGaugeRegistry.class).in(Scopes.SINGLETON);
         bind(DropWizardJVMMetrics.class).in(Scopes.SINGLETON);
         bind(MetricFactory.class).to(DropWizardMetricFactory.class);
+
+        bind(GaugeRegistry.class).to(DropWizardGaugeRegistry.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(DropWizardConfigurationPerformer.class);
     }

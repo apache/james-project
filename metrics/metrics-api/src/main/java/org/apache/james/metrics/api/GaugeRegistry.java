@@ -16,51 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.metrics.api;
 
-import java.util.function.Supplier;
-
-public class NoopMetricFactory implements MetricFactory {
-
-    @Override
-    public Metric generate(String name) {
-        return new NoopMetric();
-    }
-
-    public static class NoopMetric implements Metric  {
-
-        @Override
-        public void increment() {
-        }
-
-        @Override
-        public void decrement() {
-        }
-        
-    }
-
-    @Override
-    public TimeMetric timer(String name) {
-        return new NoopTimeMetric();
-    }
-
-    public static class NoopTimeMetric implements TimeMetric {
-
-        @Override
-        public String name() {
-            return "";
-        }
-
-
-        @Override
-        public long stopAndPublish() {
-            return 0;
-        }
-    }
-
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        return operation.get();
-    }
-
+public interface GaugeRegistry {
+    <T> GaugeRegistry register(String name, Gauge<T> gauge);
 }

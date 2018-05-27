@@ -20,6 +20,7 @@ package org.apache.james.metrics.logger;
 
 import java.util.function.Supplier;
 
+import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -50,4 +51,8 @@ public class DefaultMetricFactory implements MetricFactory {
         }
     }
 
+    @Override
+    public <T> void register(String name, Gauge<T> gauge) {
+
+    }
 }
