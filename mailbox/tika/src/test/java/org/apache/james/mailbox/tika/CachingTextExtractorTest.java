@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
@@ -52,7 +53,8 @@ public class CachingTextExtractorTest {
         wrappedTextExtractor = mock(TextExtractor.class);
         textExtractor = new CachingTextExtractor(wrappedTextExtractor,
             TikaConfiguration.DEFAULT_CACHE_EVICTION_PERIOD,
-            TikaConfiguration.DEFAULT_CACHE_LIMIT_100_MB);
+            TikaConfiguration.DEFAULT_CACHE_LIMIT_100_MB,
+            new NoopMetricFactory());
 
         when(wrappedTextExtractor.extractContent(any(), any()))
             .thenReturn(RESULT);

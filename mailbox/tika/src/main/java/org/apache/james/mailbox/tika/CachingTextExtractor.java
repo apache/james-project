@@ -30,9 +30,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
 import com.google.common.cache.Weigher;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
@@ -40,16 +43,58 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 public class CachingTextExtractor implements TextExtractor {
     private final TextExtractor underlying;
     private final Cache<String, ParsedContent> cache;
+    private final Metric weightMetric;
 
-    public CachingTextExtractor(TextExtractor underlying, Duration cacheEvictionPeriod, Long cacheWeightInBytes) {
+    public CachingTextExtractor(TextExtractor underlying, Duration cacheEvictionPeriod, Long cacheWeightInBytes, MetricFactory metricFactory) {
         this.underlying = underlying;
+        this.weightMetric = metricFactory.generate("textExtractor.cache.weight");
 
-        Weigher<String, ParsedContent> weigher = (key, parsedContent) -> getSize(parsedContent);
+        Weigher<String, ParsedContent> weigher =
+            (key, parsedContent) -> {
+                int size = getSize(parsedContent);
+                weightMetric.add(size);
+                return size;
+            };
+        RemovalListener<String, ParsedContent> removalListener =
+            notification -> Optional.ofNullable(notification.getValue())
+                .map(this::getSize)
+                .ifPresent(weightMetric::remove);
+
         this.cache = CacheBuilder.<String, String>newBuilder()
             .expireAfterAccess(cacheEvictionPeriod.toMillis(), TimeUnit.MILLISECONDS)
             .maximumWeight(cacheWeightInBytes)
             .weigher(weigher)
+            .recordStats()
+            .removalListener(removalListener)
             .build();
+        recordStats(metricFactory);
+    }
+
+    public void recordStats(MetricFactory metricFactory) {
+        metricFactory.register(
+            "textExtractor.cache.hit.rate",
+            () -> cache.stats().hitRate());
+        metricFactory.register(
+            "textExtractor.cache.hit.count",
+            () -> cache.stats().hitCount());
+        metricFactory.register(
+            "textExtractor.cache.load.count",
+            () -> cache.stats().loadCount());
+        metricFactory.register(
+            "textExtractor.cache.eviction.count",
+            () -> cache.stats().evictionCount());
+        metricFactory.register(
+            "textExtractor.cache.load.exception.rate",
+            () -> cache.stats().loadExceptionRate());
+        metricFactory.register(
+            "textExtractor.cache.load.miss.rate",
+            () -> cache.stats().missRate());
+        metricFactory.register(
+            "textExtractor.cache.load.miss.count",
+            () -> cache.stats().missCount());
+        metricFactory.register(
+            "textExtractor.cache.size",
+            cache::size);
     }
 
     private int getSize(ParsedContent parsedContent) {

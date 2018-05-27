@@ -36,6 +36,7 @@ import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaHttpClient;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,11 +82,11 @@ public class TikaMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration) {
+    private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration, MetricFactory metricFactory) {
         return new CachingTextExtractor(
             textExtractor,
             configuration.getCacheEvictionPeriod(),
-            configuration.getCacheWeightInBytes());
+            configuration.getCacheWeightInBytes(), metricFactory);
     }
 
 }
