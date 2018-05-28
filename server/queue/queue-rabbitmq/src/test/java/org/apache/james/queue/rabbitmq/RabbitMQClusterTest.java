@@ -23,17 +23,21 @@ import static org.apache.james.queue.rabbitmq.RabbitMQFixture.DIRECT;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.DURABLE;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.EXCLUSIVE;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.MESSAGES;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.MESSAGES_AS_BYTES;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.NO_PROPERTIES;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.queue.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.james.queue.rabbitmq.DockerClusterRabbitMQExtention.DockerRabbitMQCluster;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
@@ -46,15 +50,36 @@ import com.rabbitmq.client.ConnectionFactory;
 @ExtendWith(DockerClusterRabbitMQExtention.class)
 class RabbitMQClusterTest {
 
-    public static final String QUEUE = "queue";
+    private static final String QUEUE = "queue";
+
+    private Connection node1Connection;
+    private Channel node1Channel;
+    private Connection node2Connection;
+    private Channel node2Channel;
+
+    @BeforeEach
+    void setup(DockerRabbitMQCluster cluster) throws IOException, TimeoutException {
+        ConnectionFactory node1ConnectionFactory = cluster.getRabbitMQ1().connectionFactory();
+        ConnectionFactory node2ConnectionFactory = cluster.getRabbitMQ2().connectionFactory();
+        node1Connection = node1ConnectionFactory.newConnection();
+        node2Connection = node2ConnectionFactory.newConnection();
+        node1Channel = node1Connection.createChannel();
+        node2Channel = node2Connection.createChannel();
+    }
 
     @AfterEach
-    public void tearDown(DockerRabbitMQCluster cluster) throws Exception {
-        cluster.getRabbitMQ2()
-            .connectionFactory()
-            .newConnection()
-            .createChannel()
-            .queueDelete(QUEUE);
+    void tearDown() {
+        closeQuietly(node1Channel, node2Channel, node1Connection, node2Connection);
+    }
+
+    private void closeQuietly(AutoCloseable... closeables) {
+        for (AutoCloseable closeable : closeables) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                //ignoring exception
+            }
+        }
     }
 
     @Test
@@ -71,64 +96,50 @@ class RabbitMQClusterTest {
     }
 
     @Test
-    public void queuesShouldBeShared(DockerRabbitMQCluster cluster) throws Exception {
-        ConcurrentLinkedDeque<Integer> result = new ConcurrentLinkedDeque<>();
+    void queuesShouldBeShared(DockerRabbitMQCluster cluster) throws Exception {
+        node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+        node1Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
+        node1Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
-        ConnectionFactory connectionFactory1 = cluster.getRabbitMQ1().connectionFactory();
-        ConnectionFactory connectionFactory2 = cluster.getRabbitMQ2().connectionFactory();
+        int nbMessages = 10;
+        IntStream.range(0, nbMessages)
+            .mapToObj(i -> asBytes(String.valueOf(i)))
+            .forEach(Throwing.consumer(
+                bytes -> node1Channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
 
-        try (Connection connection = connectionFactory1.newConnection();
-             Channel channel = connection.createChannel()) {
 
-            channel.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
-            channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
-            channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+        InMemoryConsumer consumer2 = new InMemoryConsumer(node2Channel);
+        node2Channel.basicConsume(QUEUE, consumer2);
 
-            MESSAGES_AS_BYTES.forEach(Throwing.consumer(
-                    bytes -> channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
-        }
+        awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == nbMessages);
 
-        try (Connection connection2 = connectionFactory2.newConnection();
-             Channel channel2 = connection2.createChannel()) {
-
-            InMemoryConsumer consumer2 = new InMemoryConsumer(channel2);
-            channel2.basicConsume(QUEUE, consumer2);
-
-            awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == MESSAGES.size());
-
-            assertThat(consumer2.getConsumedMessages())
-                .containsOnlyElementsOf(MESSAGES);
-        }
-
-        assertThat(result)
-            .containsOnlyElementsOf(MESSAGES);
+        List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(Collectors.toList());
+        assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
     }
 
     @Test
-    public void queuesShouldBeDeclarableOnAnotherNode(DockerRabbitMQCluster cluster) throws Exception {
-        ConnectionFactory connectionFactory1 = cluster.getRabbitMQ1().connectionFactory();
-        ConnectionFactory connectionFactory2 = cluster.getRabbitMQ2().connectionFactory();
+    void queuesShouldBeDeclarableOnAnotherNode(DockerRabbitMQCluster cluster) throws Exception {
+        node1Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+        node2Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
+        node2Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
-        try (Connection connection = connectionFactory1.newConnection();
-             Channel channel = connection.createChannel();
-             Connection connection2 = connectionFactory2.newConnection();
-             Channel channel2 = connection2.createChannel()) {
+        int nbMessages = 10;
+        IntStream.range(0, nbMessages)
+            .mapToObj(i -> asBytes(String.valueOf(i)))
+            .forEach(Throwing.consumer(
+                bytes -> node1Channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
 
-            channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
-            channel2.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
-            channel2.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+        InMemoryConsumer consumer2 = new InMemoryConsumer(node2Channel);
+        node2Channel.basicConsume(QUEUE, consumer2);
 
-            MESSAGES_AS_BYTES.forEach(Throwing.consumer(
-                    bytes -> channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
+        awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == nbMessages);
 
-            InMemoryConsumer consumer2 = new InMemoryConsumer(channel2);
-            channel2.basicConsume(QUEUE, consumer2);
+        List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(Collectors.toList());
+        assertThat(consumer2.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+    }
 
-            awaitAtMostOneMinute.until(() -> consumer2.getConsumedMessages().size() == MESSAGES.size());
-
-            assertThat(consumer2.getConsumedMessages())
-                .containsOnlyElementsOf(MESSAGES);
-        }
+    private byte[] asBytes(String message) {
+        return message.getBytes(StandardCharsets.UTF_8);
     }
 
 }
