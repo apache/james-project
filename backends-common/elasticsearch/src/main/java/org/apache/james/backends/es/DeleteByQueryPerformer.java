@@ -70,7 +70,8 @@ public class DeleteByQueryPerformer {
                 .setQuery(queryBuilder)
                 .setSize(batchSize))
             .stream()
-            .forEach(searchResponse -> deleteRetrievedIds(client, searchResponse));
+            .map(searchResponse -> deleteRetrievedIds(client, searchResponse))
+            .forEach(ListenableActionFuture::actionGet);
     }
 
     private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {
