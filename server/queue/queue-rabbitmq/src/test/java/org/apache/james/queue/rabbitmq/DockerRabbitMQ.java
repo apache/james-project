@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.queue.rabbitmq;
 
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 
 import com.rabbitmq.client.ConnectionFactory;
@@ -70,5 +71,10 @@ public class DockerRabbitMQ {
 
     public void stop() {
         container.stop();
+    }
+
+    public void restart() {
+        DockerClientFactory.instance().client()
+            .restartContainerCmd(container.getContainerId());
     }
 }
