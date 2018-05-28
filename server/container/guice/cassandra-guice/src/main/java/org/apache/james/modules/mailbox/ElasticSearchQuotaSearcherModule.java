@@ -49,7 +49,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
     @Singleton
     public QuotaSearcher provideSearcher(Client client, ElasticSearchConfiguration configuration) {
         return new ElasticSearchQuotaSearcher(client,
-            QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
+            configuration.getReadAliasQuotaRatioName());
     }
 
     @Provides
@@ -60,7 +60,7 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         return new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
                 executor,
-                QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
+                configuration.getWriteAliasMailboxName(),
                 QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
                 new QuotaRatioToElasticSearchJson());
     }

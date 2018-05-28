@@ -28,8 +28,11 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.ReadAliasName;
+import org.apache.james.backends.es.WriteAliasName;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
+import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
@@ -287,6 +290,78 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
+    public void getReadAliasQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.read.quota.ratio.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
+            .isEqualTo(new ReadAliasName(name));
+    }
+
+    @Test
+    public void getReadAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getReadAliasQuotaRatioName())
+            .isEqualTo(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
+    }
+
+    @Test
+    public void getWriteAliasQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.alias.write.quota.ratio.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
+            .isEqualTo(new WriteAliasName(name));
+    }
+
+    @Test
+    public void getWriteAliasQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWriteAliasQuotaRatioName())
+            .isEqualTo(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS);
+    }
+
+    @Test
+    public void getIndexQuotaRatioNameShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String name = "name";
+        configuration.addProperty("elasticsearch.index.quota.ratio.name", name);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
+            .isEqualTo(new IndexName(name));
+    }
+
+    @Test
+    public void getIndexQuotaRatioNameShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getIndexQuotaRatioName())
+            .isEqualTo(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
+    }
+
+    @Test
     public void getIndexAttachmentShouldReturnConfiguredValueWhenTrue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.indexAttachments", true);
@@ -377,7 +452,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() throws Exception {
+    public void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.empty(),
@@ -390,7 +465,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoAndMultiHostSpecified() throws Exception {
+    public void validateHostsConfigurationOptionsShouldThrowWhenMonoAndMultiHostSpecified() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
@@ -401,7 +476,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutPort() throws Exception {
+    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutPort() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
@@ -413,7 +488,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutAddress() throws Exception {
+    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutAddress() {
         assertThatThrownBy(() ->
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),

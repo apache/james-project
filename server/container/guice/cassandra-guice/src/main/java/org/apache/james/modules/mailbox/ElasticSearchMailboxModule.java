@@ -132,7 +132,10 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             configuration.getWriteAliasMailboxName(),
             configuration.getIndexMailboxName());
 
-        QuotaSearchIndexCreationUtil.prepareDefaultClient(client);
+        QuotaSearchIndexCreationUtil.prepareClient(client,
+            configuration.getReadAliasQuotaRatioName(),
+            configuration.getWriteAliasMailboxName(),
+            configuration.getIndexQuotaRatioName());
 
         return client;
     }
