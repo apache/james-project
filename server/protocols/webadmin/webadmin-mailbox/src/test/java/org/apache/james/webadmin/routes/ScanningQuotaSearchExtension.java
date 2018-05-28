@@ -36,15 +36,10 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class ScanningRestQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
+public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
     private static final Runnable NO_AWAIT = () -> {};
 
-    private RestQuotaSearchTestSystem restQuotaSearchTestSystem;
-
-    @Override
-    public void afterEach(ExtensionContext context) {
-        restQuotaSearchTestSystem.getWebAdminServer().destroy();
-    }
+    private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
 
     @Override
     public void beforeEach(ExtensionContext context) {
@@ -69,15 +64,20 @@ public class ScanningRestQuotaSearchExtension implements ParameterResolver, Befo
                 resources.getCurrentQuotaManager(),
                 NO_AWAIT);
 
-            restQuotaSearchTestSystem = new RestQuotaSearchTestSystem(quotaSearchTestSystem);
+            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
     }
 
     @Override
+    public void afterEach(ExtensionContext context) {
+        restQuotaSearchTestSystem.getWebAdminServer().destroy();
+    }
+
+    @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == RestQuotaSearchTestSystem.class);
+        return (parameterContext.getParameter().getType() == WebAdminQuotaSearchTestSystem.class);
     }
 
     @Override

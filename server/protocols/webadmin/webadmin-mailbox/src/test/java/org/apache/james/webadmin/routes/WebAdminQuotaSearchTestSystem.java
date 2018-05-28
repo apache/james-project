@@ -32,12 +32,12 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.specification.RequestSpecification;
 
-public class RestQuotaSearchTestSystem {
+public class WebAdminQuotaSearchTestSystem {
     private final QuotaSearchTestSystem quotaSearchTestSystem;
     private final WebAdminServer webAdminServer;
     private final RequestSpecification requestSpecBuilder;
 
-    public RestQuotaSearchTestSystem(QuotaSearchTestSystem quotaSearchTestSystem) throws Exception {
+    public WebAdminQuotaSearchTestSystem(QuotaSearchTestSystem quotaSearchTestSystem) throws Exception {
         this.quotaSearchTestSystem = quotaSearchTestSystem;
 
         UserQuotaService userQuotaService = new UserQuotaService(quotaSearchTestSystem.getMaxQuotaManager(),
