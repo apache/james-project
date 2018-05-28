@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -34,10 +35,14 @@ import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
+import org.apache.james.quota.search.QuotaQuery;
+import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDetailsDTO;
+import org.apache.james.webadmin.dto.UsersQuotaDetailsDTO;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Sets;
 
 public class UserQuotaService {
@@ -45,12 +50,14 @@ public class UserQuotaService {
     private final MaxQuotaManager maxQuotaManager;
     private final QuotaManager quotaManager;
     private final UserQuotaRootResolver userQuotaRootResolver;
+    private final QuotaSearcher quotaSearcher;
 
     @Inject
-    public UserQuotaService(MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, UserQuotaRootResolver userQuotaRootResolver) {
+    public UserQuotaService(MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, UserQuotaRootResolver userQuotaRootResolver, QuotaSearcher quotaSearcher) {
         this.maxQuotaManager = maxQuotaManager;
         this.quotaManager = quotaManager;
         this.userQuotaRootResolver = userQuotaRootResolver;
+        this.quotaSearcher = quotaSearcher;
     }
 
     public void defineQuota(User user, QuotaDTO quota) {
@@ -118,5 +125,15 @@ public class UserQuotaService {
 
     public void deleteMaxCountQuota(User user) throws MailboxException {
         maxQuotaManager.removeMaxMessage(userQuotaRootResolver.forUser(user));
+    }
+
+    public List<UsersQuotaDetailsDTO> getUsersQuota(QuotaQuery quotaQuery) {
+        return quotaSearcher.search(quotaQuery)
+            .stream()
+            .map(Throwing.function(user -> UsersQuotaDetailsDTO.builder()
+                .user(user)
+                .detail(getQuota(user))
+                .build()))
+            .collect(Guavate.toImmutableList());
     }
 }

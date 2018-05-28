@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 import java.util.Map;
 
@@ -82,6 +83,110 @@ class UserQuotaRoutesTest {
         maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
         userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
         currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+    }
+    interface GetUsersQuotaRouteContract {
+        @Test
+        default void getUsersQuotaShouldReturnAllUsersWhenNoParameters() {
+            given()
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    BOB.asString(),
+                    JACK.asString(),
+                    THE_GUY_WITH_STRANGE_DOMAIN.asString()));
+        }
+
+        @Test
+        default void getUsersQuotaShouldFilterOnDomain() {
+            given()
+                .param("domain", PERDU_COM)
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    BOB.asString(),
+                    JACK.asString()));
+        }
+
+        @Test
+        default void getUsersQuotaShouldLimitValues() {
+            given()
+                .param("limit", 2)
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    BOB.asString(),
+                    THE_GUY_WITH_STRANGE_DOMAIN.asString()));
+        }
+
+        @Test
+        default void getUsersQuotaShouldAcceptOffset() {
+            given()
+                .param("offset", 1)
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    JACK.asString(),
+                    THE_GUY_WITH_STRANGE_DOMAIN.asString()));
+        }
+
+        @Test
+        default void getUsersQuotaShouldFilterOnMinOccupationRatio(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+            UserQuotaRootResolver quotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
+            currentQuotaManager.increase(quotaRootResolver.forUser(BOB), 1, 49);
+            currentQuotaManager.increase(quotaRootResolver.forUser(JACK), 1, 50);
+            currentQuotaManager.increase(quotaRootResolver.forUser(THE_GUY_WITH_STRANGE_DOMAIN), 1, 51);
+
+            given()
+                .param("minOccupationRatio", 0.5)
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    JACK.asString(),
+                    THE_GUY_WITH_STRANGE_DOMAIN.asString()));
+        }
+
+        @Test
+        default void getUsersQuotaShouldFilterOnMaxOccupationRatio(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+            UserQuotaRootResolver quotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
+            currentQuotaManager.increase(quotaRootResolver.forUser(BOB), 1, 49);
+            currentQuotaManager.increase(quotaRootResolver.forUser(JACK), 1, 50);
+            currentQuotaManager.increase(quotaRootResolver.forUser(THE_GUY_WITH_STRANGE_DOMAIN), 1, 51);
+
+            given()
+                .param("maxOccupationRatio", 0.5)
+                .get("/quota/users")
+                .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body("username", containsInAnyOrder(
+                    JACK.asString(),
+                    BOB.asString()));
+        }
+
+    }
+
+    @Nested
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class ScanningGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract {
+
     }
 
     @Nested

@@ -45,13 +45,28 @@ public class QuotaQuery {
             return this;
         }
 
+        public Builder moreThan(Optional<QuotaBoundary> quotaBoundary) {
+            quotaBoundary.ifPresent(this::moreThan);
+            return this;
+        }
+
         public Builder lessThan(QuotaBoundary quotaBoundary) {
             clauses.add(QuotaClause.lessThan(quotaBoundary));
             return this;
         }
 
+        public Builder lessThan(Optional<QuotaBoundary> quotaBoundary) {
+            quotaBoundary.ifPresent(this::lessThan);
+            return this;
+        }
+
         public Builder hasDomain(Domain domain) {
             clauses.add(QuotaClause.hasDomain(domain));
+            return this;
+        }
+
+        public Builder hasDomain(Optional<Domain> domain) {
+            domain.ifPresent(this::hasDomain);
             return this;
         }
 

@@ -33,9 +33,14 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.quota.search.Limit;
+import org.apache.james.quota.search.Offset;
+import org.apache.james.quota.search.QuotaBoundary;
+import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
@@ -48,6 +53,7 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
+import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -61,12 +67,16 @@ import spark.Request;
 import spark.Service;
 
 @Api(tags = "UserQuota")
-@Path(UserQuotaRoutes.QUOTA_ENDPOINT)
+@Path(UserQuotaRoutes.MAIN_QUOTA_ENDPOINT)
 @Produces("application/json")
 public class UserQuotaRoutes implements Routes {
 
     private static final String USER = "user";
-    static final String QUOTA_ENDPOINT = "/quota/users/:" + USER;
+    private static final String MIN_OCCUPATION_RATIO = "minOccupationRatio";
+    private static final String MAX_OCCUPATION_RATIO = "maxOccupationRatio";
+    private static final String DOMAIN = "domain";
+    static final String MAIN_QUOTA_ENDPOINT = "/quota/users";
+    private static final String QUOTA_ENDPOINT = MAIN_QUOTA_ENDPOINT + "/:" + USER;
     private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
 
@@ -98,6 +108,8 @@ public class UserQuotaRoutes implements Routes {
 
         defineGetQuota();
         defineUpdateQuota();
+
+        defineGetUsersQuota();
     }
 
     @PUT
@@ -137,6 +149,88 @@ public class UserQuotaRoutes implements Routes {
             User user = checkUserExist(request);
             return userQuotaService.getQuota(user);
         }, jsonTransformer);
+    }
+
+    @GET
+    @ApiOperation(
+        value = "Reading count and size at the same time",
+        notes = "If there is no limitation for count and/or size, the returned value will be -1"
+    )
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+                required = false,
+                name = "minOccuptationRatio",
+                paramType = "query parameter",
+                dataType = "Double",
+                example = "?minOccuptationRatio=0.8",
+                value = "If present, filter the users with occupation ratio lesser than this value."),
+        @ApiImplicitParam(
+                required = false,
+                name = "maxOccupationRatio",
+                paramType = "query parameter",
+                dataType = "Double",
+                example = "?maxOccupationRatio=0.99",
+                value = "If present, filter the users with occupation ratio greater than this value."),
+        @ApiImplicitParam(
+                required = false,
+                paramType = "query parameter",
+                name = "limit",
+                dataType = "Integer",
+                example = "?limit=100",
+                value = "If present, fixes the maximal number of key returned in that call. Must be more than zero if specified."),
+        @ApiImplicitParam(
+                required = false,
+                name = "offset",
+                paramType = "query parameter",
+                dataType = "Integer",
+                example = "?offset=100",
+                value = "If present, skips the given number of key in the output."),
+        @ApiImplicitParam(
+                required = false,
+                name = "domain",
+                paramType = "query parameter",
+                dataType = "String",
+                example = "?domain=james.org",
+                value = "If present, filter the users by this domain.")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDetailsDTO.class),
+            @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Validation issues with parameters"),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
+    })
+    public void defineGetUsersQuota() {
+        service.get(MAIN_QUOTA_ENDPOINT, (request, response) -> {
+            QuotaQuery quotaQuery = QuotaQuery.builder()
+                .lessThan(extractQuotaBoundary(request, MAX_OCCUPATION_RATIO))
+                .moreThan(extractQuotaBoundary(request, MIN_OCCUPATION_RATIO))
+                .hasDomain(extractDomain(request, DOMAIN))
+                .withLimit(extractLimit(request))
+                .withOffset(extractOffset(request))
+                .build();
+
+            return userQuotaService.getUsersQuota(quotaQuery);
+        }, jsonTransformer);
+    }
+
+    public Optional<Domain> extractDomain(Request request, String parameterName) {
+        return Optional.ofNullable(request.queryParams(parameterName)).map(Domain::of);
+    }
+
+    public Optional<QuotaBoundary> extractQuotaBoundary(Request request, String parameterName) {
+        return ParametersExtractor.extractPositiveDouble(request, parameterName)
+            .map(QuotaBoundary::new);
+    }
+
+    public Limit extractLimit(Request request) {
+        return ParametersExtractor.extractLimit(request)
+            .getLimit()
+            .map(Limit::of)
+            .orElse(Limit.unlimited());
+    }
+
+    public Offset extractOffset(Request request) {
+        return Offset.of(ParametersExtractor.extractOffset(request)
+            .getOffset());
     }
 
     @DELETE

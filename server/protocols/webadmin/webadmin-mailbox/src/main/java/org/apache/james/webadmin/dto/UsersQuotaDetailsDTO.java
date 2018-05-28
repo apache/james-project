@@ -20,8 +20,6 @@
 
 package org.apache.james.webadmin.dto;
 
-import javax.mail.internet.AddressException;
-
 import org.apache.james.core.User;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -69,8 +67,8 @@ public class UsersQuotaDetailsDTO {
     }
 
     @JsonProperty(USERNAME)
-    public String getUser() throws AddressException {
-        return user.asMailAddress().asPrettyString();
+    public String getUser() {
+        return user.asString();
     }
 
     public QuotaDetailsDTO getDetail() {
