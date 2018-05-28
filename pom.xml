@@ -642,7 +642,7 @@
         <jetty.version>9.4.7.v20170914</jetty.version>
         <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
-        <testcontainers-version>1.4.2</testcontainers-version>
+        <testcontainers-version>1.7.3</testcontainers-version>
         <metrics.version>3.2.1</metrics.version>
         <joda.version>2.9.4</joda.version>
         <assertj.version>3.3.0</assertj.version>

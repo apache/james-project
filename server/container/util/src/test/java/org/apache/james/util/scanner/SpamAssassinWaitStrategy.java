@@ -25,28 +25,31 @@ import java.util.concurrent.TimeUnit;
 
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.WaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
 import com.google.common.primitives.Ints;
 
 public class SpamAssassinWaitStrategy implements WaitStrategy {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
+    private final GenericContainer<?> spamAssassinContainer;
     private Duration timeout = DEFAULT_TIMEOUT;
 
-    public SpamAssassinWaitStrategy() {
-        this(DEFAULT_TIMEOUT);
+    public SpamAssassinWaitStrategy(GenericContainer<?> spamAssassinContainer) {
+        this(spamAssassinContainer, DEFAULT_TIMEOUT);
     }
 
-    public SpamAssassinWaitStrategy(Duration timeout) {
+    public SpamAssassinWaitStrategy(GenericContainer<?> spamAssassinContainer, Duration timeout) {
+        this.spamAssassinContainer = spamAssassinContainer;
         this.timeout = timeout;
     }
 
     @Override
-    public void waitUntilReady(@SuppressWarnings("rawtypes") GenericContainer container) {
+    public void waitUntilReady(WaitStrategyTarget waitStrategyTarget) {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
                 try {
-                    return container
+                    return spamAssassinContainer
                         .execInContainer("spamassassin", "-V")
                         .getStdout()
                         .contains("SpamAssassin version 3.4.1");
@@ -59,6 +62,6 @@ public class SpamAssassinWaitStrategy implements WaitStrategy {
 
     @Override
     public WaitStrategy withStartupTimeout(Duration startupTimeout) {
-        return new SpamAssassinWaitStrategy(startupTimeout);
+        return new SpamAssassinWaitStrategy(spamAssassinContainer, startupTimeout);
     }
 }
