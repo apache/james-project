@@ -24,18 +24,27 @@ import static com.jayway.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
+import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,11 +53,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.google.common.base.Strings;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
-@ExtendWith(ScanningRestQuotaSearchExtension.class)
 class UserQuotaRoutesTest {
 
     private static final String QUOTA_USERS = "/quota/users";
@@ -62,34 +71,37 @@ class UserQuotaRoutesTest {
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
     private static final String SIZE = "size";
-    private MaxQuotaManager maxQuotaManager;
-    private UserQuotaRootResolver userQuotaRootResolver;
-    private InMemoryCurrentQuotaManager currentQuotaManager;
 
-    @BeforeEach
-    void setUp(RestQuotaSearchTestSystem testSystem) throws Exception {
-        DomainList domainList = testSystem.getQuotaSearchTestSystem().getDomainList();
-        domainList.addDomain(Domain.of(PERDU_COM));
-        domainList.addDomain(Domain.of(STRANGE_ORG));
+    interface SetUp {
+        @BeforeEach
+        default void setUp(RestQuotaSearchTestSystem testSystem) throws Exception {
+            DomainList domainList = testSystem.getQuotaSearchTestSystem().getDomainList();
+            domainList.addDomain(Domain.of(PERDU_COM));
+            domainList.addDomain(Domain.of(STRANGE_ORG));
 
-        UsersRepository usersRepository = testSystem.getQuotaSearchTestSystem().getUsersRepository();
-        usersRepository.addUser(BOB.asString(), PASSWORD);
-        usersRepository.addUser(JACK.asString(), PASSWORD);
-        usersRepository.addUser(THE_GUY_WITH_STRANGE_DOMAIN.asString(), PASSWORD);
+            UsersRepository usersRepository = testSystem.getQuotaSearchTestSystem().getUsersRepository();
+            usersRepository.addUser(BOB.asString(), PASSWORD);
+            usersRepository.addUser(JACK.asString(), PASSWORD);
+            usersRepository.addUser(THE_GUY_WITH_STRANGE_DOMAIN.asString(), PASSWORD);
 
-        RestAssured.requestSpecification = testSystem.getRequestSpecification();
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-
-        maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
-        userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
-        currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+            RestAssured.requestSpecification = testSystem.getRequestSpecification();
+            RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        }
     }
+
     interface GetUsersQuotaRouteContract {
+
         @Test
-        default void getUsersQuotaShouldReturnAllUsersWhenNoParameters() {
+        default void getUsersQuotaShouldReturnAllUsersWhenNoParameters(RestQuotaSearchTestSystem testSystem) throws Exception {
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(50));
+
+            testSystem.getQuotaSearchTestSystem().await();
+
             given()
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -99,11 +111,17 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        default void getUsersQuotaShouldFilterOnDomain() {
+        default void getUsersQuotaShouldFilterOnDomain(RestQuotaSearchTestSystem testSystem) throws Exception {
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(50));
+
+            testSystem.getQuotaSearchTestSystem().await();
+
             given()
                 .param("domain", PERDU_COM)
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -112,11 +130,17 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        default void getUsersQuotaShouldLimitValues() {
+        default void getUsersQuotaShouldLimitValues(RestQuotaSearchTestSystem testSystem) throws Exception {
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(50));
+
+            testSystem.getQuotaSearchTestSystem().await();
+
             given()
                 .param("limit", 2)
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -125,11 +149,17 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        default void getUsersQuotaShouldAcceptOffset() {
+        default void getUsersQuotaShouldAcceptOffset(RestQuotaSearchTestSystem testSystem) throws Exception {
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(50));
+
+            testSystem.getQuotaSearchTestSystem().await();
+
             given()
                 .param("offset", 1)
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -138,20 +168,20 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        default void getUsersQuotaShouldFilterOnMinOccupationRatio(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+        default void getUsersQuotaShouldFilterOnMinOccupationRatio(RestQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
-            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
-            UserQuotaRootResolver quotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
 
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
-            currentQuotaManager.increase(quotaRootResolver.forUser(BOB), 1, 49);
-            currentQuotaManager.increase(quotaRootResolver.forUser(JACK), 1, 50);
-            currentQuotaManager.increase(quotaRootResolver.forUser(THE_GUY_WITH_STRANGE_DOMAIN), 1, 51);
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(49));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(51));
+
+            testSystem.getQuotaSearchTestSystem().await();
 
             given()
                 .param("minOccupationRatio", 0.5)
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -160,20 +190,20 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        default void getUsersQuotaShouldFilterOnMaxOccupationRatio(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+        default void getUsersQuotaShouldFilterOnMaxOccupationRatio(RestQuotaSearchTestSystem testSystem) throws Exception {
             MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
-            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
-            UserQuotaRootResolver quotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
 
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(100));
-            currentQuotaManager.increase(quotaRootResolver.forUser(BOB), 1, 49);
-            currentQuotaManager.increase(quotaRootResolver.forUser(JACK), 1, 50);
-            currentQuotaManager.increase(quotaRootResolver.forUser(THE_GUY_WITH_STRANGE_DOMAIN), 1, 51);
+            appendMessage(testSystem.getQuotaSearchTestSystem(), BOB, withSize(49));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), JACK, withSize(50));
+            appendMessage(testSystem.getQuotaSearchTestSystem(), THE_GUY_WITH_STRANGE_DOMAIN, withSize(51));
+
+            testSystem.getQuotaSearchTestSystem().await();
 
             given()
                 .param("maxOccupationRatio", 0.5)
                 .get("/quota/users")
-                .then()
+            .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .body("username", containsInAnyOrder(
@@ -181,16 +211,37 @@ class UserQuotaRoutesTest {
                     BOB.asString()));
         }
 
+        default void appendMessage(QuotaSearchTestSystem testSystem, User user, MessageManager.AppendCommand appendCommand) throws MailboxException, UsersRepositoryException, DomainListException {
+            MailboxManager mailboxManager = testSystem.getMailboxManager();
+            MailboxSession session = mailboxManager.createSystemSession(user.asString());
+
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(mailboxPath, session);
+            mailboxManager.getMailbox(mailboxPath, session)
+                .appendMessage(appendCommand, session);
+        }
+
+        default MessageManager.AppendCommand withSize(int size) {
+            byte[] bytes = Strings.repeat("a", size).getBytes(StandardCharsets.UTF_8);
+            return MessageManager.AppendCommand.from(new ByteArrayInputStream(bytes));
+        }
     }
 
     @Nested
     @ExtendWith(ScanningRestQuotaSearchExtension.class)
-    class ScanningGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract {
+    class ScanningGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract, SetUp {
 
     }
 
     @Nested
-    class GetCount {
+    @ExtendWith(ElasticSearchRestQuotaSearchExtension.class)
+    class ElasticSearchGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract, SetUp {
+
+    }
+
+    @Nested
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class GetCount implements SetUp {
 
         @Test
         void getCountShouldReturnNotFoundWhenUserDoesntExist() {
@@ -209,8 +260,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void getCountShouldReturnStoredValue() throws MailboxException {
+        void getCountShouldReturnStoredValue(RestQuotaSearchTestSystem testSystem) throws MailboxException {
             int value = 42;
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
 
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(value));
 
@@ -228,7 +281,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class GetSize {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class GetSize implements SetUp {
         @Test
         void getSizeShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -246,8 +300,11 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void getSizeShouldReturnStoredValue() throws MailboxException {
+        void getSizeShouldReturnStoredValue(RestQuotaSearchTestSystem testSystem) throws MailboxException {
             long value = 42;
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(value));
 
 
@@ -265,7 +322,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class PutCount {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class PutCount implements SetUp {
         @Test
         void putCountShouldReturnNotFoundWhenUserDoesntExist() {
             given()
@@ -307,7 +365,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putCountShouldSetToInfiniteWhenMinusOne() throws Exception {
+        void putCountShouldSetToInfiniteWhenMinusOne(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("-1")
             .when()
@@ -338,7 +399,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putCountShouldAcceptValidValue() throws Exception {
+        void putCountShouldAcceptValidValue(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("42")
                 .put(QUOTA_USERS + "/" + BOB.asString() + "/" + COUNT)
@@ -350,7 +414,10 @@ class UserQuotaRoutesTest {
 
         @Test
         @Disabled("no link between quota and mailbox for now")
-        void putCountShouldRejectTooSmallValue() throws Exception {
+        void putCountShouldRejectTooSmallValue(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("42")
                 .put(QUOTA_USERS + "/" + BOB.asString() + "/" + COUNT)
@@ -362,7 +429,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class PutSize {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class PutSize implements SetUp {
         @Test
         void putSizeAcceptEscapedUsers() {
             given()
@@ -404,7 +472,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putSizeShouldSetToInfiniteWhenMinusOne() throws Exception {
+        void putSizeShouldSetToInfiniteWhenMinusOne(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("-1")
             .when()
@@ -436,7 +507,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putSizeShouldAcceptValidValue() throws Exception {
+        void putSizeShouldAcceptValidValue(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("42")
             .when()
@@ -449,7 +523,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class DeleteCount {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class DeleteCount implements SetUp {
 
         @Test
         void deleteCountShouldReturnNotFoundWhenUserDoesntExist() {
@@ -460,7 +535,9 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void deleteCountShouldSetQuotaToEmpty() throws Exception {
+        void deleteCountShouldSetQuotaToEmpty(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(42));
 
             given()
@@ -473,7 +550,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class DeleteSize {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class DeleteSize implements SetUp {
         @Test
         void deleteSizeShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -483,7 +561,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void deleteSizeShouldSetQuotaToEmpty() throws Exception {
+        void deleteSizeShouldSetQuotaToEmpty(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
 
             given()
@@ -496,7 +577,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class GetQuota {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class GetQuota implements SetUp {
         @Test
         void getQuotaShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -506,7 +588,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
+        public void getQuotaShouldReturnBothWhenValueSpecified(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
             maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(22));
             maxQuotaManager.setDomainMaxStorage(Domain.of(PERDU_COM), QuotaSize.size(34));
@@ -535,7 +620,11 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOccupation() throws Exception {
+        public void getQuotaShouldReturnOccupation(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(80));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(100));
             currentQuotaManager.increase(userQuotaRootResolver.forUser(BOB), 20, 40);
@@ -558,7 +647,11 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOccupationWhenUnlimited() throws Exception {
+        public void getQuotaShouldReturnOccupationWhenUnlimited(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+            InMemoryCurrentQuotaManager currentQuotaManager = testSystem.getQuotaSearchTestSystem().getCurrentQuotaManager();
+
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.unlimited());
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.unlimited());
             currentQuotaManager.increase(userQuotaRootResolver.forUser(BOB), 20, 40);
@@ -581,7 +674,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnOnlySpecifiedValues() throws Exception {
+        public void getQuotaShouldReturnOnlySpecifiedValues(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(18));
             maxQuotaManager.setDomainMaxMessage(Domain.of(PERDU_COM), QuotaCount.count(52));
@@ -607,7 +703,9 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        public void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined() throws Exception {
+        public void getQuotaShouldReturnGlobalValuesWhenNoUserValuesDefined(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
             maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(12));
 
@@ -630,7 +728,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void getQuotaShouldReturnBothWhenValueSpecifiedAndEscaped() throws MailboxException {
+        void getQuotaShouldReturnBothWhenValueSpecifiedAndEscaped(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             int maxStorage = 42;
             int maxMessage = 52;
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(maxStorage));
@@ -665,7 +766,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void getQuotaShouldReturnSizeWhenNoCount() throws MailboxException {
+        void getQuotaShouldReturnSizeWhenNoCount(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             int maxStorage = 42;
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(maxStorage));
 
@@ -683,7 +787,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void getQuotaShouldReturnBothWhenNoSize() throws MailboxException {
+        void getQuotaShouldReturnBothWhenNoSize(RestQuotaSearchTestSystem testSystem) throws MailboxException {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             int maxMessage = 42;
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(maxMessage));
 
@@ -703,7 +810,8 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    class PutQuota {
+    @ExtendWith(ScanningRestQuotaSearchExtension.class)
+    class PutQuota implements SetUp {
 
         @Test
         void putQuotaShouldReturnNotFoundWhenUserDoesntExist() {
@@ -714,7 +822,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putQuotaShouldUpdateBothQuota() throws Exception {
+        void putQuotaShouldUpdateBothQuota(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("{\"count\":52,\"size\":42}")
                 .put(QUOTA_USERS + "/" + BOB.asString())
@@ -728,7 +839,10 @@ class UserQuotaRoutesTest {
         }
 
         @Test
-        void putQuotaShouldUpdateBothQuotaWhenEscaped() throws Exception {
+        void putQuotaShouldUpdateBothQuotaWhenEscaped(RestQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
             given()
                 .body("{\"count\":52,\"size\":42}")
                 .put(QUOTA_USERS + "/" + ESCAPED_BOB.asString())
@@ -741,5 +855,4 @@ class UserQuotaRoutesTest {
                 .contains(QuotaSize.size(42));
         }
     }
-
 }
