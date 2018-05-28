@@ -80,9 +80,13 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             return new QuotaSearchTestSystem(
                 resources.getMaxQuotaManager(),
                 resources.getMailboxManager(),
+                resources.getQuotaManager(),
+                resources.getQuotaRootResolver(),
                 new ElasticSearchQuotaSearcher(client,
                     QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
-                usersRepository, domainList,
+                usersRepository,
+                domainList,
+                resources.getCurrentQuotaManager(),
                 () -> embeddedElasticSearch.awaitForElasticSearch());
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);

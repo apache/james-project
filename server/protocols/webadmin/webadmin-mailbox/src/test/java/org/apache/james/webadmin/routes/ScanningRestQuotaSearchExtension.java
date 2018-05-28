@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.quota.search.scanning;
+package org.apache.james.webadmin.routes;
 
 import static org.mockito.Mockito.mock;
 
@@ -26,23 +26,28 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.quota.search.scanning.ClauseConverter;
+import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
-
+public class ScanningRestQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
     private static final Runnable NO_AWAIT = () -> {};
 
+    private RestQuotaSearchTestSystem restQuotaSearchTestSystem;
+
     @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == QuotaSearchTestSystem.class);
+    public void afterEach(ExtensionContext context) {
+        restQuotaSearchTestSystem.getWebAdminServer().destroy();
     }
 
     @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+    public void beforeEach(ExtensionContext context) {
         try {
             InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
 
@@ -52,7 +57,7 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
             usersRepository.setDomainList(domainList);
 
-            return new QuotaSearchTestSystem(
+            QuotaSearchTestSystem quotaSearchTestSystem = new QuotaSearchTestSystem(
                 resources.getMaxQuotaManager(),
                 resources.getMailboxManager(),
                 resources.getQuotaManager(),
@@ -63,8 +68,20 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
                 domainList,
                 resources.getCurrentQuotaManager(),
                 NO_AWAIT);
+
+            restQuotaSearchTestSystem = new RestQuotaSearchTestSystem(quotaSearchTestSystem);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return (parameterContext.getParameter().getType() == RestQuotaSearchTestSystem.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return restQuotaSearchTestSystem;
     }
 }

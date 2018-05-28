@@ -34,7 +34,6 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -64,12 +63,12 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private final InMemoryMailboxManager mailboxManager;
         private final MaxQuotaManager maxQuotaManager;
         private final QuotaManager quotaManager;
-        private final CurrentQuotaManager currentQuotaManager;
+        private final InMemoryCurrentQuotaManager currentQuotaManager;
         private final DefaultUserQuotaRootResolver quotaRootResolver;
         private final StoreRightManager storeRightManager;
         private final MessageId.Factory messageIdFactory;
 
-        public Resources(InMemoryMailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver quotaRootResolver, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory) {
+        public Resources(InMemoryMailboxManager mailboxManager, MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver quotaRootResolver, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory) {
             this.mailboxManager = mailboxManager;
             this.maxQuotaManager = maxQuotaManager;
             this.quotaManager = quotaManager;
@@ -95,7 +94,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return quotaRootResolver;
         }
 
-        public CurrentQuotaManager getCurrentQuotaManager() {
+        public InMemoryCurrentQuotaManager getCurrentQuotaManager() {
             return currentQuotaManager;
         }
 
