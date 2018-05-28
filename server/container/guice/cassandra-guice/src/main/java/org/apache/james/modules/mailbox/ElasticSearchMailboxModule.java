@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.RetryExecutorUtil;
 import org.elasticsearch.client.Client;
@@ -62,6 +63,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new ElasticSearchQuotaSearcherModule());
+
         bind(ElasticSearchListeningMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
@@ -128,6 +131,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             configuration.getReadAliasMailboxName(),
             configuration.getWriteAliasMailboxName(),
             configuration.getIndexMailboxName());
+
+        QuotaSearchIndexCreationUtil.prepareDefaultClient(client);
 
         return client;
     }

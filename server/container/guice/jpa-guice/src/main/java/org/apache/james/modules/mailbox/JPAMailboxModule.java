@@ -78,6 +78,7 @@ public class JPAMailboxModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JpaQuotaModule());
+        install(new JPAQuotaSearchModule());
 
         bind(JPAMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);

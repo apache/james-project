@@ -50,6 +50,10 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>apache-james-mailbox-quota-search-scanning</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>apache-mailet-base</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

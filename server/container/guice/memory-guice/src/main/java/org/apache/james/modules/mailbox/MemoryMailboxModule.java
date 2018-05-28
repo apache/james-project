@@ -79,6 +79,7 @@ public class MemoryMailboxModule extends AbstractModule {
     protected void configure() {
         install(new DefaultEventModule());
         install(new MemoryQuotaModule());
+        install(new MemoryQuotaSearchModule());
 
         bind(MessageMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(InMemoryMailboxSessionMapperFactory.class);
