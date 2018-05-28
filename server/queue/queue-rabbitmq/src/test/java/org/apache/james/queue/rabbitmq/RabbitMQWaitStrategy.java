@@ -17,44 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.scanner;
+package org.apache.james.queue.rabbitmq;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import org.rnorth.ducttape.unreliables.Unreliables;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategyTarget;
 
 import com.google.common.primitives.Ints;
+import com.rabbitmq.client.Connection;
 
-public class SpamAssassinWaitStrategy implements WaitStrategy {
+public class RabbitMQWaitStrategy implements WaitStrategy {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
-    private final GenericContainer<?> spamAssassinContainer;
-    private Duration timeout = DEFAULT_TIMEOUT;
 
-    public SpamAssassinWaitStrategy(GenericContainer<?> spamAssassinContainer) {
-        this(spamAssassinContainer, DEFAULT_TIMEOUT);
+    public static RabbitMQWaitStrategy withDefaultTimeout(DockerRabbitMQ rabbitMQ) {
+        return new RabbitMQWaitStrategy(rabbitMQ, DEFAULT_TIMEOUT);
     }
 
-    public SpamAssassinWaitStrategy(GenericContainer<?> spamAssassinContainer, Duration timeout) {
-        this.spamAssassinContainer = spamAssassinContainer;
+    private final DockerRabbitMQ rabbitMQ;
+    private final Duration timeout;
+
+    public RabbitMQWaitStrategy(DockerRabbitMQ rabbitMQ, Duration timeout) {
+        this.rabbitMQ = rabbitMQ;
         this.timeout = timeout;
     }
 
     @Override
     public void waitUntilReady(WaitStrategyTarget waitStrategyTarget) {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
-                try {
-                    return spamAssassinContainer
-                        .execInContainer("spamassassin", "-V")
-                        .getStdout()
-                        .contains("SpamAssassin version 3.4.1");
-                } catch (IOException | InterruptedException e) {
-                    return false;
+                try (Connection connection = rabbitMQ.connectionFactory().newConnection()) {
+                    return connection.isOpen();
                 }
             }
         );
@@ -62,6 +57,6 @@ public class SpamAssassinWaitStrategy implements WaitStrategy {
 
     @Override
     public WaitStrategy withStartupTimeout(Duration startupTimeout) {
-        return new SpamAssassinWaitStrategy(spamAssassinContainer, startupTimeout);
+        return new RabbitMQWaitStrategy(rabbitMQ, startupTimeout);
     }
 }
