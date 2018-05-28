@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZoneId;
-import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -48,6 +47,7 @@ import org.apache.james.mailbox.tika.TikaContainer;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.assertj.core.api.iterable.Extractor;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -473,11 +473,18 @@ public class IndexableMessageTest {
 
         // Then
         assertThat(indexableMessage.getAttachments())
-            .extracting(MimePart::getTextualBody)
-            .contains(Optional.of("first attachment content"));
-        assertThat(indexableMessage.getAttachments())
-            .extracting(MimePart::getTextualBody)
-            .contains(Optional.of("third attachment content"));
+            .extracting(new TextualBodyExtractor())
+            .contains("first attachment content", TextualBodyExtractor.NO_TEXTUAL_BODY, "third attachment content");
+    }
+
+    private static class TextualBodyExtractor implements Extractor<MimePart, String> {
+
+        public static final String NO_TEXTUAL_BODY = "The textual body is not present";
+
+        @Override
+        public String extract(MimePart input) {
+            return input.getTextualBody().orElse(NO_TEXTUAL_BODY);
+        }
     }
 
     @Test
