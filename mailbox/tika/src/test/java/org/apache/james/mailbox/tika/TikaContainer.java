@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
-import org.testcontainers.containers.wait.Wait;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 import com.google.common.primitives.Ints;
 

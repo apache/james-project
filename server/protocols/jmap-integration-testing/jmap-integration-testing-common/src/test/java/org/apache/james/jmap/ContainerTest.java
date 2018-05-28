@@ -30,7 +30,7 @@ import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.Rule;
 import org.junit.Test;
-import org.testcontainers.containers.wait.HttpWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 
 public class ContainerTest {
 

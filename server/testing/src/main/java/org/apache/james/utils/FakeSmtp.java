@@ -31,7 +31,7 @@ import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.jayway.awaitility.core.ConditionFactory;
 import com.jayway.restassured.builder.RequestSpecBuilder;

@@ -20,7 +20,7 @@ package org.apache.james.user.ldap;
 
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
-import org.testcontainers.containers.wait.HostPortWaitStrategy;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import com.google.common.base.Preconditions;

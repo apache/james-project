@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.wait.WaitStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
