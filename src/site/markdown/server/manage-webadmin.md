@@ -269,6 +269,7 @@ Response codes:
  - [Getting the quota size for a user](#getting-the-quota-size-for-a-user)
  - [Updating the quota size for a user](#updating-the-quota-size-for-a-user)
  - [Deleting the quota size for a user](#deleting-the-quota-size-for-a-user)
+ - [Searching user by quota ratio](#searching-user-by-quota-ratio)
 
 ### Getting the quota for a user
 
@@ -474,11 +475,73 @@ Response codes:
  - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
+### Searching user by quota ratio
+
+```
+curl -XGET http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=oppen-paas.org
+```
+
+Will return:
+
+```
+[
+  {
+    "username":"user@open-paas.org",
+    "detail": {
+      "global": {
+        "count":252,
+        "size":242
+      },
+      "domain": {
+        "count":152,
+        "size":142
+      },
+      "user": {
+        "count":52,
+        "size":42
+      },
+      "computed": {
+        "count":52,
+        "size":42
+      },
+      "occupation": {
+        "size":1000,
+        "count":10000,
+        "ratio": {
+          "size":0.8,
+          "count":0.6,
+          "max":0.8
+        }
+      }
+    }
+  },
+  ...
+]
+```
+
+Where:
+
+ - **minOccupationRatio** is a query parameter determining the minimum occupation ratio of users to be returned.
+ - **maxOccupationRatio** is a query parameter determining the maximum occupation ratio of users to be returned.
+ - **domain** is a query parameter determining the domain of users to be returned.
+ - **limit** is a query parameter determining the maximum number of users to be returned.
+ - **offset** is a query parameter determining the number of users to skip.
+
+Please note that users are alphabetically ordered on username.
+
+The response is a list of usernames, with attached quota details as defined [here](#getting-the-quota-for-a-user).
+
+Response codes:
+
+ - 200: List of users had successfully been returned.
+ - 400: Validation issues with parameters
+ - 500: Internal server error - Something went bad on the server side.
+
 ## Administrating quotas by domains
 
  - [Getting the quota for a domain](#getting-the-quota-for-a-domain)
  - [Updating the quota for a domain](#updating-the-quota-for-a-domain)
- - [Getting the quota count for a domain](#getting-the-quota-count-for-addomain)
+ - [Getting the quota count for a domain](#getting-the-quota-count-for-a-domain)
  - [Updating the quota count for a domain](#updating-the-quota-count-for-a-domain)
  - [Deleting the quota count for a domain](#deleting-the-quota-count-for-a-domain)
  - [Getting the quota size for a domain](#getting-the-quota-size-for-a-domain)
@@ -847,8 +910,8 @@ These schema updates can be triggered by webadmin using the Cassandra backend.
 
 Note that currently the progress can be tracked by logs.
 
- - [Retrieving current Cassandra schema version](#retrieving-current-Cassandra-schema-version)
- - [Retrieving latest available Cassandra schema version](#retrieving-latest-available-Cassandra-schema-version)
+ - [Retrieving current Cassandra schema version](#retrieving-current-cassandra-schema-version)
+ - [Retrieving latest available Cassandra schema version](#retrieving-latest-available-cassandra-schema-version)
  - [Upgrading to a specific version](#upgrading-to-a-specific-version)
  - [Upgrading to the latest version](#upgrading-to-the-latest-version)
 
