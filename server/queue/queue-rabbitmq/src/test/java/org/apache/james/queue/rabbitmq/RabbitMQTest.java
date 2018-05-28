@@ -58,16 +58,46 @@ class RabbitMQTest {
     @Nested
     class SingleConsumerTest {
 
+        private ConnectionFactory connectionFactory;
+        private Connection connection;
+        private Channel channel;
+
+        @BeforeEach
+        void setup(DockerRabbitMQ rabbitMQ) throws IOException, TimeoutException {
+            connectionFactory = rabbitMQ.connectionFactory();
+            connection = connectionFactory.newConnection();
+            channel = connection.createChannel();
+        }
+
+        @AfterEach
+        void tearDown() {
+            closeQuietly(connection, channel);
+        }
+
         @Test
-        void publishedEventWithoutSubscriberShouldNotBeLost(DockerRabbitMQ rabbitMQ) throws Exception {
-            ConnectionFactory connectionFactory = rabbitMQ.connectionFactory();
-            try (Connection connection = connectionFactory.newConnection();
-                 Channel channel = connection.createChannel()) {
-                String queueName = createQueue(channel);
+        void publishedEventWithoutSubscriberShouldNotBeLost() throws Exception {
+            String queueName = createQueue(channel);
+            publishAMessage(channel);
+            awaitAtMostOneMinute.until(() -> messageReceived(channel, queueName));
+        }
 
-                publishAMessage(channel);
+        @Test
+        void demonstrateDurability(DockerRabbitMQ rabbitMQ) throws Exception {
+            String queueName = createQueue(channel);
+            publishAMessage(channel);
 
-                awaitAtMostOneMinute.until(() -> messageReceived(channel, queueName));
+            rabbitMQ.restart();
+
+            awaitAtMostOneMinute.until(() -> containerIsRestarted(rabbitMQ));
+            assertThat(channel.basicGet(queueName, !AUTO_ACK)).isNotNull();
+        }
+
+        private Boolean containerIsRestarted(DockerRabbitMQ rabbitMQ) {
+            try {
+                rabbitMQ.connectionFactory().newConnection();
+                return true;
+            } catch (Exception e) {
+                return false;
             }
         }
 
@@ -128,16 +158,6 @@ class RabbitMQTest {
             closeQuietly(
                 channel1, channel2, channel3, channel4,
                 connection1, connection2, connection3, connection4);
-        }
-
-        private void closeQuietly(AutoCloseable... closeables) {
-            for (AutoCloseable closeable : closeables) {
-                try {
-                    closeable.close();
-                } catch (Exception e) {
-                    //ignoring exception
-                }
-            }
         }
 
         @Nested
@@ -289,6 +309,18 @@ class RabbitMQTest {
                 .sum();
         }
 
+    }
+
+    private void closeQuietly(AutoCloseable... closeables) {
+        Arrays.stream(closeables).forEach(this::closeQuietly);
+    }
+
+    private void closeQuietly(AutoCloseable closeable) {
+        try {
+            closeable.close();
+        } catch (Exception e) {
+            //ignore error
+        }
     }
 
     private byte[] asBytes(String message) {
