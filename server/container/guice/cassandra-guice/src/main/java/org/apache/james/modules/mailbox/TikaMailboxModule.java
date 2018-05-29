@@ -33,6 +33,7 @@ import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaHttpClient;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -77,13 +78,16 @@ public class TikaMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration, MetricFactory metricFactory) {
+    private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration,
+                                               MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         if (configuration.isEnabled() && configuration.isCacheEnabled()) {
             LOGGER.info("Tika cache has been enabled.");
             return new CachingTextExtractor(
                 textExtractor,
                 configuration.getCacheEvictionPeriod(),
-                configuration.getCacheWeightInBytes(), metricFactory);
+                configuration.getCacheWeightInBytes(),
+                metricFactory,
+                gaugeRegistry);
         }
         if (configuration.isEnabled()) {
             return textExtractor;

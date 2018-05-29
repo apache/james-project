@@ -23,13 +23,13 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 
@@ -38,14 +38,14 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.Weigher;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 
 public class CachingTextExtractor implements TextExtractor {
     private final TextExtractor underlying;
     private final Cache<String, ParsedContent> cache;
     private final Metric weightMetric;
 
-    public CachingTextExtractor(TextExtractor underlying, Duration cacheEvictionPeriod, Long cacheWeightInBytes, MetricFactory metricFactory) {
+    public CachingTextExtractor(TextExtractor underlying, Duration cacheEvictionPeriod, Long cacheWeightInBytes,
+                                MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         this.underlying = underlying;
         this.weightMetric = metricFactory.generate("textExtractor.cache.weight");
 
@@ -67,34 +67,35 @@ public class CachingTextExtractor implements TextExtractor {
             .recordStats()
             .removalListener(removalListener)
             .build();
-        recordStats(metricFactory);
+        recordStats(gaugeRegistry);
     }
 
-    public void recordStats(MetricFactory metricFactory) {
-        metricFactory.register(
-            "textExtractor.cache.hit.rate",
-            () -> cache.stats().hitRate());
-        metricFactory.register(
-            "textExtractor.cache.hit.count",
-            () -> cache.stats().hitCount());
-        metricFactory.register(
-            "textExtractor.cache.load.count",
-            () -> cache.stats().loadCount());
-        metricFactory.register(
-            "textExtractor.cache.eviction.count",
-            () -> cache.stats().evictionCount());
-        metricFactory.register(
-            "textExtractor.cache.load.exception.rate",
-            () -> cache.stats().loadExceptionRate());
-        metricFactory.register(
-            "textExtractor.cache.load.miss.rate",
-            () -> cache.stats().missRate());
-        metricFactory.register(
-            "textExtractor.cache.load.miss.count",
-            () -> cache.stats().missCount());
-        metricFactory.register(
-            "textExtractor.cache.size",
-            cache::size);
+    public void recordStats(GaugeRegistry gaugeRegistry) {
+        gaugeRegistry
+            .register(
+                "textExtractor.cache.hit.rate",
+                () -> cache.stats().hitRate())
+            .register(
+                "textExtractor.cache.hit.count",
+                () -> cache.stats().hitCount());
+            gaugeRegistry.register(
+                "textExtractor.cache.load.count",
+                () -> cache.stats().loadCount())
+            .register(
+                "textExtractor.cache.eviction.count",
+                () -> cache.stats().evictionCount())
+            .register(
+                "textExtractor.cache.load.exception.rate",
+                () -> cache.stats().loadExceptionRate())
+            .register(
+                "textExtractor.cache.load.miss.rate",
+                () -> cache.stats().missRate())
+            .register(
+                "textExtractor.cache.load.miss.count",
+                () -> cache.stats().missCount())
+            .register(
+                "textExtractor.cache.size",
+                cache::size);
     }
 
     private int getSize(ParsedContent parsedContent) {
@@ -112,19 +113,15 @@ public class CachingTextExtractor implements TextExtractor {
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
         byte[] bytes = IOUtils.toByteArray(inputStream);
         String key = DigestUtils.sha256Hex(bytes);
-        try {
-            return cache.get(key,
-                () -> underlying.extractContent(new ByteArrayInputStream(bytes), contentType));
-        } catch (UncheckedExecutionException | ExecutionException e) {
-            throw unwrap(e);
-        }
-    }
 
-    private Exception unwrap(Exception e) {
-        return Optional.ofNullable(e.getCause())
-            .filter(throwable -> throwable instanceof Exception)
-            .map(throwable -> (Exception) throwable)
-            .orElse(e);
+        ParsedContent cachedValue = cache.getIfPresent(key);
+        if (cachedValue != null) {
+            return cachedValue;
+        }
+
+        ParsedContent realValue = underlying.extractContent(new ByteArrayInputStream(bytes), contentType);
+        cache.put(key, realValue);
+        return realValue;
     }
 
     @VisibleForTesting

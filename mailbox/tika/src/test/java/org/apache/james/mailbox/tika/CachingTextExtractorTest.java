@@ -40,6 +40,7 @@ import java.util.stream.IntStream;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,7 +69,8 @@ public class CachingTextExtractorTest {
         textExtractor = new CachingTextExtractor(wrappedTextExtractor,
             TikaConfiguration.DEFAULT_CACHE_EVICTION_PERIOD,
             CACHE_LIMIT_10_MiB,
-            new NoopMetricFactory());
+            new NoopMetricFactory(),
+            new NoopGaugeRegistry());
 
         when(wrappedTextExtractor.extractContent(any(), any()))
             .thenReturn(RESULT);
