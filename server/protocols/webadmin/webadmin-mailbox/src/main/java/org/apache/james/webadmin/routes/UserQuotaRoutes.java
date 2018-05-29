@@ -67,7 +67,7 @@ import spark.Request;
 import spark.Service;
 
 @Api(tags = "UserQuota")
-@Path(UserQuotaRoutes.MAIN_QUOTA_ENDPOINT)
+@Path(UserQuotaRoutes.USERS_QUOTA_ENDPOINT)
 @Produces("application/json")
 public class UserQuotaRoutes implements Routes {
 
@@ -75,8 +75,8 @@ public class UserQuotaRoutes implements Routes {
     private static final String MIN_OCCUPATION_RATIO = "minOccupationRatio";
     private static final String MAX_OCCUPATION_RATIO = "maxOccupationRatio";
     private static final String DOMAIN = "domain";
-    static final String MAIN_QUOTA_ENDPOINT = "/quota/users";
-    private static final String QUOTA_ENDPOINT = MAIN_QUOTA_ENDPOINT + "/:" + USER;
+    static final String USERS_QUOTA_ENDPOINT = "/quota/users";
+    private static final String QUOTA_ENDPOINT = USERS_QUOTA_ENDPOINT + "/:" + USER;
     private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
 
@@ -199,7 +199,7 @@ public class UserQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetUsersQuota() {
-        service.get(MAIN_QUOTA_ENDPOINT, (request, response) -> {
+        service.get(USERS_QUOTA_ENDPOINT, (request, response) -> {
             QuotaQuery quotaQuery = QuotaQuery.builder()
                 .lessThan(extractQuotaBoundary(request, MAX_OCCUPATION_RATIO))
                 .moreThan(extractQuotaBoundary(request, MIN_OCCUPATION_RATIO))
