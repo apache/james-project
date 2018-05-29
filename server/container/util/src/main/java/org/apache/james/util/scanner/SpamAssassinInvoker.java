@@ -19,6 +19,7 @@
 
 package org.apache.james.util.scanner;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -111,7 +112,8 @@ public class SpamAssassinInvoker {
     public SpamAssassinResult scanMailWithAdditionalHeaders(MimeMessage message, String... additionalHeaders) throws MessagingException {
         try (Socket socket = new Socket(spamdHost, spamdPort);
              OutputStream out = socket.getOutputStream();
-             PrintWriter writer = new PrintWriter(out);
+             BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out);
+             PrintWriter writer = new PrintWriter(bufferedOutputStream);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             writer.write("CHECK SPAMC/1.2");
@@ -212,7 +214,8 @@ public class SpamAssassinInvoker {
     private boolean reportMessageAs(InputStream message, String user, MessageClass messageClass) throws MessagingException {
         try (Socket socket = new Socket(spamdHost, spamdPort);
              OutputStream out = socket.getOutputStream();
-             PrintWriter writer = new PrintWriter(out);
+             BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out);
+             PrintWriter writer = new PrintWriter(bufferedOutputStream);
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
             byte[] byteArray = IOUtils.toByteArray(message);
