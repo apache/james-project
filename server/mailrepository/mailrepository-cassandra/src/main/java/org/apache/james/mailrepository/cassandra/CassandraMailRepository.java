@@ -46,7 +46,6 @@ import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 import com.google.common.primitives.Bytes;
 
 public class CassandraMailRepository implements MailRepository {
@@ -168,7 +167,7 @@ public class CassandraMailRepository implements MailRepository {
         try {
             return new MimeMessage(Session.getInstance(new Properties()), new ByteArrayInputStream(bytes));
         } catch (MessagingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

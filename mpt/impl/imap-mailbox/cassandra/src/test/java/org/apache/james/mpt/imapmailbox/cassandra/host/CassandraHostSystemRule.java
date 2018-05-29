@@ -25,7 +25,6 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.junit.rules.ExternalResource;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 
 public class CassandraHostSystemRule extends ExternalResource {
 
@@ -49,7 +48,7 @@ public class CassandraHostSystemRule extends ExternalResource {
         try {
             clean();
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

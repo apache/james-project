@@ -46,7 +46,6 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Throwables;
 
 public class JMAPServlet extends HttpServlet {
 
@@ -95,7 +94,7 @@ public class JMAPServlet extends HttpServlet {
         try {
             return requestHandler.handle(request);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

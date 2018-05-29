@@ -27,7 +27,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -61,7 +60,7 @@ public class JPAUsersRepositoryModule extends AbstractModule {
             try {
                 usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

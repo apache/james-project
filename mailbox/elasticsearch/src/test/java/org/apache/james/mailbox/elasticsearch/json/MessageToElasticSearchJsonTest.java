@@ -55,7 +55,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class MessageToElasticSearchJsonTest {
@@ -289,26 +288,24 @@ public class MessageToElasticSearchJsonTest {
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/recursiveMailWithoutAttachments.json"));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void emailWithNoMailboxIdShouldThrow() throws IOException {
+    @Test
+    public void emailWithNoMailboxIdShouldThrow() {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
-        MailboxMessage mailWithNoMailboxId;
-        try {
-            mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
-                SIZE,
-                BODY_START_OCTET,
-                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
-                new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
-                propertyBuilder,
-                null);
-            mailWithNoMailboxId.setModSeq(MOD_SEQ);
-            mailWithNoMailboxId.setUid(UID);
-        } catch (Exception exception) {
-            throw Throwables.propagate(exception);
-        }
-        messageToElasticSearchJson.convertToJson(mailWithNoMailboxId, ImmutableList.of(MAILBOX_SESSION.getUser()));
+        MailboxMessage mailWithNoMailboxId = new SimpleMailboxMessage(MESSAGE_ID, date,
+            SIZE,
+            BODY_START_OCTET,
+            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/recursiveMail.eml"),
+            new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
+            propertyBuilder,
+            null);
+        mailWithNoMailboxId.setModSeq(MOD_SEQ);
+        mailWithNoMailboxId.setUid(UID);
+
+        assertThatThrownBy(() ->
+            messageToElasticSearchJson.convertToJson(mailWithNoMailboxId, ImmutableList.of(MAILBOX_SESSION.getUser())))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test

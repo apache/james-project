@@ -26,7 +26,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -62,7 +61,7 @@ public class LdapUsersRepositoryModule extends AbstractModule {
                 usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
                 usersRepository.init();
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

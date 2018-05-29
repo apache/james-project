@@ -49,8 +49,6 @@ import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.google.common.base.Throwables;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -106,7 +104,7 @@ public class DomainQuotaRoutes implements Routes {
         try {
             return usersRepository.supportVirtualHosting();
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

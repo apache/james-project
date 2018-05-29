@@ -39,8 +39,6 @@ import org.apache.james.task.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 public class MailboxMergingTaskRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxMergingTaskRunner.class);
 
@@ -97,7 +95,7 @@ public class MailboxMergingTaskRunner {
             cassandraACLMapper.setACL(newMailboxId, finalAcl);
             rightsDAO.update(oldMailboxId, ACLDiff.computeDiff(oldAcl, MailboxACL.EMPTY)).join();
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

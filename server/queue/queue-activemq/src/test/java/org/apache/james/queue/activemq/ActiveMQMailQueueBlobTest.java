@@ -45,8 +45,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 @ExtendWith(BrokerExtension.class)
 @Tag(BrokerExtension.STATISTICS)
 public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueContract, DelayedPriorityMailQueueContract, PriorityManageableMailQueueContract {
@@ -181,7 +179,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
             } catch (FileNotFoundException e) {
                 LOGGER.info("No file specified");
             } catch (IOException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

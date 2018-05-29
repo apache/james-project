@@ -31,8 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.xml.sax.InputSource;
 
-import com.google.common.base.Throwables;
-
 public class JcrUserRepositoryTest extends AbstractUsersRepositoryTest {
 
     private static final String JACKRABBIT_HOME = "target/jackrabbit";
@@ -66,7 +64,7 @@ public class JcrUserRepositoryTest extends AbstractUsersRepositoryTest {
         try {
             FileUtils.forceDelete(file);
         } catch (IOException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

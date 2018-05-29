@@ -74,8 +74,6 @@ import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.EMailer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.Property;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
-import com.google.common.base.Throwables;
-
 public class MailboxMappingFactory {
 
     private static final int MAXIMUM_TERM_LENGTH = 4096;
@@ -361,7 +359,7 @@ public class MailboxMappingFactory {
                     .endObject()
                 .endObject();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

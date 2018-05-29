@@ -27,7 +27,6 @@ import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.google.common.base.Throwables;
 import com.google.inject.Module;
 
 
@@ -56,7 +55,7 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
         try {
             return ElasticSearchConfiguration.fromProperties(configuration);
         } catch (ConfigurationException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

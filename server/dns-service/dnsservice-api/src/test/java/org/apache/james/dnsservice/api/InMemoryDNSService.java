@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Predicate;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.net.InetAddresses;
@@ -77,7 +76,7 @@ public class InMemoryDNSService implements DNSService {
         try {
             return hostRecord(hostname).mxRecords;
         } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -86,7 +85,7 @@ public class InMemoryDNSService implements DNSService {
         try {
             return hostRecord(hostname).txtRecords;
         } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -117,7 +116,7 @@ public class InMemoryDNSService implements DNSService {
         try {
             return getDNSEntry(filterByValue).getKey();
         } catch (UnknownHostException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

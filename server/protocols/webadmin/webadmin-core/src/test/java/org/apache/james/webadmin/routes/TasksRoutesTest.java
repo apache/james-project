@@ -44,7 +44,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
 import com.jayway.restassured.RestAssured;
 
 public class TasksRoutesTest {
@@ -107,7 +106,7 @@ public class TasksRoutesTest {
         try {
             new CountDownLatch(1).await();
         } catch (InterruptedException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -178,7 +177,7 @@ public class TasksRoutesTest {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
             return Task.Result.COMPLETED;
         });

@@ -36,8 +36,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 public class PropagateLookupRightListener implements MailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(PropagateLookupRightListener.class);
 
@@ -86,7 +84,7 @@ public class PropagateLookupRightListener implements MailboxListener {
                             .map(entry -> new Entry(entry.getKey(), entry.getValue()))
                     ));
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

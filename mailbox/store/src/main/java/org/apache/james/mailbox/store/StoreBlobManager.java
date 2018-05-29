@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class StoreBlobManager implements BlobManager {
@@ -103,7 +102,7 @@ public class StoreBlobManager implements BlobManager {
                 .map(Throwing.function(message -> message.getFullContent().getInputStream()))
                 .findFirst();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

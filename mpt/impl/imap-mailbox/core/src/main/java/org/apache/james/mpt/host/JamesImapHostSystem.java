@@ -43,8 +43,6 @@ import org.apache.james.mpt.helper.ByteBufferOutputStream;
 import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
-import com.google.common.base.Throwables;
-
 public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
 
     private MemoryUsersRepository memoryUsersRepository;
@@ -62,7 +60,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         try {
             memoryUsersRepository.configure(userRepositoryConfiguration());
         } catch (ConfigurationException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         authenticator = new UserRepositoryAuthenticator(memoryUsersRepository);
         authorizator = new UserRepositoryAuthorizator(memoryUsersRepository);

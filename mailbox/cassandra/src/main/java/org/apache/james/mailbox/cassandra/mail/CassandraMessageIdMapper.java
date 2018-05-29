@@ -56,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Multimap;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
@@ -257,7 +256,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                         .newFlags(composedMessageIdWithMetaData.getFlags())
                         .build()));
         } catch (LightweightTransactionException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } catch (MailboxDeleteDuringUpdateException e) {
             LOGGER.info("Mailbox {} was deleted during flag update", mailboxId);
             return Stream.of();

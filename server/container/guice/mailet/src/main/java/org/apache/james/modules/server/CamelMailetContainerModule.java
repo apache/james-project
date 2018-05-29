@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -137,7 +136,7 @@ public class CamelMailetContainerModule extends AbstractModule {
                 configureJamesSpooler();
                 configureMailetContext();
             } catch (Exception e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
 
         }

@@ -40,8 +40,6 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
-import com.google.common.base.Throwables;
-
 public class JpaMailboxManagerProvider {
 
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -71,7 +69,7 @@ public class JpaMailboxManagerProvider {
         try {
             openJPAMailboxManager.init();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         return openJPAMailboxManager;

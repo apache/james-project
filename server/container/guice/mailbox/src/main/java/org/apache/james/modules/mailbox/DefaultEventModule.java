@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -81,7 +80,7 @@ public class DefaultEventModule extends AbstractModule {
             try {
                 listeners.configure(configurationProvider.getConfiguration("listeners"));
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

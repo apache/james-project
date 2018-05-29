@@ -61,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -112,7 +111,7 @@ public class MIMEMessageConverter {
         try {
             return DefaultMessageWriter.asBytes(message);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -217,7 +216,7 @@ public class MIMEMessageConverter {
             }
         } catch (IOException e) {
             LOGGER.error("Error while creating textBody \n{}\n or htmlBody \n{}", newMessage.getTextBody().get(), newMessage.getHtmlBody().get(), e);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -264,7 +263,7 @@ public class MIMEMessageConverter {
                 builder.addBodyPart(attachmentBodyPart(att));
             } catch (IOException e) {
                 LOGGER.error("Error while creating attachment", e);
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         };
     }

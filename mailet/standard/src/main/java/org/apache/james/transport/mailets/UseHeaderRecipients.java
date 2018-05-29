@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -183,7 +182,7 @@ public class UseHeaderRecipients extends GenericMailet {
         try {
             return new MailAddress(mailbox.getAddress());
         } catch (AddressException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

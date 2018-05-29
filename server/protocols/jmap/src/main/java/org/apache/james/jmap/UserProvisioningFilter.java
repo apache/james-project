@@ -41,7 +41,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 
 public class UserProvisioningFilter implements Filter {
 
@@ -78,7 +77,7 @@ public class UserProvisioningFilter implements Filter {
         } catch (AlreadyExistInUsersRepositoryException e) {
             // Ignore
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
         }

@@ -53,7 +53,6 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.base.Throwables;
 
 public class CassandraACLMapper {
     public static final int INITIAL_VALUE = 0;
@@ -182,7 +181,7 @@ public class CassandraACLMapper {
                 .thenApply(optional -> optional.filter(b -> b).map(any -> aclWithVersion.mailboxACL))
                 .join();
         } catch (JsonProcessingException exception) {
-            throw Throwables.propagate(exception);
+            throw new RuntimeException(exception);
         }
     }
 
@@ -196,7 +195,7 @@ public class CassandraACLMapper {
                 .thenApply(optional -> optional.filter(b -> b).map(any -> acl))
                 .join();
         } catch (JsonProcessingException exception) {
-            throw Throwables.propagate(exception);
+            throw new RuntimeException(exception);
         }
     }
 
@@ -237,7 +236,7 @@ public class CassandraACLMapper {
             try {
                 return new ACLWithVersion(version, mailboxACL.apply(command));
             } catch (UnsupportedRightException exception) {
-                throw Throwables.propagate(exception);
+                throw new RuntimeException(exception);
             }
         }
     }

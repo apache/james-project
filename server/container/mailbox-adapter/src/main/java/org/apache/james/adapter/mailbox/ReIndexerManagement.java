@@ -30,8 +30,6 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.util.MDCBuilder;
 
-import com.google.common.base.Throwables;
-
 public class ReIndexerManagement implements ReIndexerManagementMBean {
 
     private ReIndexer reIndexer;
@@ -50,7 +48,7 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
                      .build()) {
             reIndexer.reIndex(new MailboxPath(namespace, user, name));
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -63,7 +61,7 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
                      .build()) {
             reIndexer.reIndex();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

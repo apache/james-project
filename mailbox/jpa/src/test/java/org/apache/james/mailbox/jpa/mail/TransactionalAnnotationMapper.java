@@ -30,8 +30,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
-import com.google.common.base.Throwables;
-
 public class TransactionalAnnotationMapper implements AnnotationMapper {
     private final JPAAnnotationMapper wrapped;
 
@@ -45,7 +43,7 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
     }
 
     @Override
-    public <T> T execute(Transaction<T> transaction) throws MailboxException {
+    public <T> T execute(Transaction<T> transaction) {
         throw new NotImplementedException();
     }
 
@@ -74,7 +72,7 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
         try {
             wrapped.execute(Mapper.toTransaction(() -> wrapped.deleteAnnotation(mailboxId, key)));
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -83,7 +81,7 @@ public class TransactionalAnnotationMapper implements AnnotationMapper {
         try {
             wrapped.execute(Mapper.toTransaction(() -> wrapped.insertAnnotation(mailboxId, mailboxAnnotation)));
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

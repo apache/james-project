@@ -33,7 +33,6 @@ import org.apache.james.mailbox.model.MessageId;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 public class ListMessageAssert {
@@ -50,8 +49,7 @@ public class ListMessageAssert {
             return new InnerMessage(message.getMessageId(), message.getUid(), message.getMailboxId(), message.getInternalDate(), message.getBodyOctets(),
                     message.getFullContentOctets(), message.getMediaType(), message.getSubType(), IOUtils.toString(message.getFullContent(), StandardCharsets.UTF_8));
         } catch (IOException e) {
-            Throwables.propagate(e);
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

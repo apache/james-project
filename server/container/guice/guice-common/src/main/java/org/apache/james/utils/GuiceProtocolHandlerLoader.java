@@ -24,7 +24,6 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -45,7 +44,7 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
         try {
             handler.init(config);
         } catch (ConfigurationException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         return handler;
     }

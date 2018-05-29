@@ -29,8 +29,6 @@ import org.apache.james.rrt.lib.RewriteTablesStepdefs;
 import org.apache.james.system.hbase.TablePool;
 import org.apache.james.user.hbase.def.HUsersRepository;
 
-import com.google.common.base.Throwables;
-
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 
@@ -45,7 +43,7 @@ public class HBaseStepdefs {
             this.mainStepdefs = mainStepdefs;
             TablePool.getInstance(cluster.getConf());
         } catch (IOException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

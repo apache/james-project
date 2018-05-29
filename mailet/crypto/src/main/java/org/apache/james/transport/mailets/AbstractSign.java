@@ -46,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
 
 /**
  * <P>Abstract mailet providing common SMIME signature services.
@@ -607,7 +606,7 @@ public abstract class AbstractSign extends GenericMailet {
         try {
             return usersRepository.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

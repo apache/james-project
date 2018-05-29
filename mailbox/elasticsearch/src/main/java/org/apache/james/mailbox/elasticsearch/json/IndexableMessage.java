@@ -43,7 +43,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 
@@ -80,7 +79,7 @@ public class IndexableMessage {
             try {
                 return instanciateIndexedMessage();
             } catch (IOException | MimeException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

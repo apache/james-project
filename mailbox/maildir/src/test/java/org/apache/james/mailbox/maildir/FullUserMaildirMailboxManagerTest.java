@@ -28,8 +28,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.base.Throwables;
-
 public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest {
 
     @Rule
@@ -46,7 +44,7 @@ public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest {
         try {
             return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", tmpFolder);
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

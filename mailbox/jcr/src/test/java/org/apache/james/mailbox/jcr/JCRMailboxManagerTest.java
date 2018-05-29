@@ -31,8 +31,6 @@ import org.apache.james.mailbox.MailboxManagerTest;
 import org.junit.After;
 import org.junit.Before;
 
-import com.google.common.base.Throwables;
-
 public class JCRMailboxManagerTest extends MailboxManagerTest {
 
     private Optional<RepositoryImpl> repository = Optional.empty();
@@ -65,7 +63,7 @@ public class JCRMailboxManagerTest extends MailboxManagerTest {
             try {
                 FileUtils.forceDelete(new File(JACKRABBIT_HOME));
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

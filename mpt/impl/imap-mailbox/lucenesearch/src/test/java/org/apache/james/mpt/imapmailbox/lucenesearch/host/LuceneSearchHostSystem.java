@@ -66,7 +66,6 @@ import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.lucene.store.FSDirectory;
 
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 public class LuceneSearchHostSystem extends JamesImapHostSystem {
@@ -151,7 +150,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 defaultImapProcessorFactory);
 
         } catch (IOException | MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

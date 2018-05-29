@@ -32,7 +32,6 @@ import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.utils.ConfigurationPerformer;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -71,7 +70,7 @@ public class DropWizardMetricsModule extends AbstractModule {
             try {
                 dropWizardInitializer.configure(NO_CONFIGURATION);
             } catch (ConfigurationException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

@@ -48,7 +48,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.util.MDCBuilder;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 
 
@@ -154,7 +153,7 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
                 return response;
             }
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
             session.needsCommandInjectionDetection();

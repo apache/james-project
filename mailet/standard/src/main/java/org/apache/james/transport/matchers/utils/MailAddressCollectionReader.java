@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers.utils;
 
 import java.util.Set;
+
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
@@ -28,7 +29,6 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 
 
 public class MailAddressCollectionReader {
@@ -46,7 +46,7 @@ public class MailAddressCollectionReader {
         try {
             return new MailAddress(s);
         } catch (AddressException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -33,7 +33,6 @@ import org.apache.james.utils.InMemoryMailRepositoryStore;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.MailRepositoryProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -96,7 +95,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
                 javaMailRepositoryStore.configure(configurationProvider.getConfiguration("mailrepositorystore"));
                 javaMailRepositoryStore.init();
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

@@ -35,7 +35,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 @JsonDeserialize(builder = Emailer.Builder.class)
 public class Emailer {
@@ -133,7 +132,7 @@ public class Emailer {
             return new MailAddress(email.get());
         } catch (AddressException e) {
             LOGGER.error("Invalid mail address", email);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

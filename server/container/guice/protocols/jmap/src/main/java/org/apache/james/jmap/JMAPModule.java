@@ -54,7 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -71,7 +70,7 @@ public class JMAPModule extends AbstractModule {
             try {
                 return FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("defaultJmapMailetContainer.xml"));
             } catch (ConfigurationException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         };
 

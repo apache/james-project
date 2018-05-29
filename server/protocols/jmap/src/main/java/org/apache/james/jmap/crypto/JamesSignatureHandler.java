@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class JamesSignatureHandler implements SignatureHandler {
 
@@ -84,7 +83,7 @@ public class JamesSignatureHandler implements SignatureHandler {
             javaSignature.update(source.getBytes());
             return new Base64().encodeAsString(javaSignature.sign());
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -98,7 +97,7 @@ public class JamesSignatureHandler implements SignatureHandler {
             javaSignature.update(source.getBytes());
             return javaSignature.verify(new Base64().decode(signature));
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } catch (SignatureException e) {
             LOGGER.warn("Attempt to use a malformed signature '{}' for source '{}'", signature, source, e);
             return false;

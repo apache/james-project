@@ -28,8 +28,6 @@ import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
-import com.google.common.base.Throwables;
-
 public class ClearMailRepositoryTask implements Task {
 
     public static final String TYPE = "clearMailRepository";
@@ -91,7 +89,7 @@ public class ClearMailRepositoryTask implements Task {
         try {
             return mailRepository.size();
         } catch (MessagingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

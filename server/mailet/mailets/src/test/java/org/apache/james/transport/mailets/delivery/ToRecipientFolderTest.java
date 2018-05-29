@@ -52,8 +52,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 
-import com.google.common.base.Throwables;
-
 @Deprecated
 public class ToRecipientFolderTest {
 
@@ -89,7 +87,7 @@ public class ToRecipientFolderTest {
         try {
             when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         when(session.getUser()).thenReturn(user);
     }

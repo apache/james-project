@@ -49,7 +49,6 @@ import org.apache.james.mailbox.quota.QuotaValue;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
 
 public class MailboxFactory {
     public static final boolean NO_RESET_RECENT = false;
@@ -92,7 +91,7 @@ public class MailboxFactory {
             } catch (MailboxNotFoundException e) {
                 return Optional.empty();
             } catch (MailboxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

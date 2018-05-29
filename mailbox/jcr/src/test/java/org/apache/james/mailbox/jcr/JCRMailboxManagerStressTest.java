@@ -32,8 +32,6 @@ import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.junit.After;
 import org.junit.Before;
 
-import com.google.common.base.Throwables;
-
 public class JCRMailboxManagerStressTest extends MailboxManagerStressTest {
 
     private Optional<RepositoryImpl> repository = Optional.empty();
@@ -64,7 +62,7 @@ public class JCRMailboxManagerStressTest extends MailboxManagerStressTest {
             try {
                 FileUtils.forceDelete(new File(JACKRABBIT_HOME));
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

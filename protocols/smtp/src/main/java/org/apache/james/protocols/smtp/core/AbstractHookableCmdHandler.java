@@ -45,8 +45,6 @@ import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 /**
  * Abstract class which Handle hook-aware CommanHandler.
  * 
@@ -86,7 +84,7 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
                 return response;
             }
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
         }

@@ -23,7 +23,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.jayway.awaitility.Awaitility;
@@ -57,7 +56,7 @@ public class Docker {
             dockerClient = DefaultDockerClient.fromEnv().build();
             dockerClient.pull(imageName);
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -90,7 +89,7 @@ public class Docker {
             dockerClient.killContainer(container.id());
             dockerClient.removeContainer(container.id(), true);
         } catch (DockerException | InterruptedException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
     
@@ -109,7 +108,7 @@ public class Docker {
                                     .get(EXPOSED_IMAP_PORT))
                             .hostPort());
         } catch (NumberFormatException | DockerException | InterruptedException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
     

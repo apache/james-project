@@ -37,7 +37,6 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.jayway.awaitility.Duration;
 
 public class EmbeddedElasticSearch extends ExternalResource {
@@ -52,7 +51,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
         try {
             return temporaryFolder.newFolder().toPath();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class InMemoryMessageIdMapper implements MessageIdMapper {
@@ -69,7 +68,7 @@ public class InMemoryMessageIdMapper implements MessageIdMapper {
                 .filter(message -> messageIds.contains(message.getMessageId()))
                 .collect(Guavate.toImmutableList());
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
     }

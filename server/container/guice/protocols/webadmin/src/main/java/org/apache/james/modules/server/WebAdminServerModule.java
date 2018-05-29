@@ -46,7 +46,6 @@ import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -140,7 +139,7 @@ public class WebAdminServerModule extends AbstractModule {
             try {
                 webAdminServer.configure(NO_CONFIGURATION);
             } catch (ConfigurationException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

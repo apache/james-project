@@ -50,7 +50,6 @@ import org.apache.james.util.MDCBuilder;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class GetMessageListMethod implements Method {
 
@@ -134,7 +133,7 @@ public class GetMessageListMethod implements Method {
                 .forEach(builder::messageId);
             return builder.build();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

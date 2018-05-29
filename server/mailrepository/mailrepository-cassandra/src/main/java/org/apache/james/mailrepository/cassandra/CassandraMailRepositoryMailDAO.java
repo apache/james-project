@@ -79,7 +79,6 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UDTValue;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -254,7 +253,7 @@ public class CassandraMailRepositoryMailDAO {
             new ObjectOutputStream(outputStream).writeObject(serializable);
             return ByteBuffer.wrap(outputStream.toByteArray());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -265,7 +264,7 @@ public class CassandraMailRepositoryMailDAO {
             ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(data));
             return (Serializable) objectInputStream.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -273,7 +272,7 @@ public class CassandraMailRepositoryMailDAO {
         try {
             return new MailAddress(rawValue);
         } catch (AddressException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

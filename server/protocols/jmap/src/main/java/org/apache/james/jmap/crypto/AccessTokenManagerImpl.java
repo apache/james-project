@@ -29,7 +29,6 @@ import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class AccessTokenManagerImpl implements AccessTokenManager {
 
@@ -56,7 +55,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
             if (completionException.getCause() instanceof InvalidAccessToken) {
                 throw (InvalidAccessToken) completionException.getCause();
             } else {
-                throw Throwables.propagate(completionException);
+                throw new RuntimeException(completionException);
             }
         }
     }

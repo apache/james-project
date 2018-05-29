@@ -67,7 +67,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.extra.Temporals;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 
 /**
@@ -153,7 +152,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             connection = connectionFactory.createConnection();
             connection.start();
         } catch (JMSException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
@@ -166,7 +165,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             queue = session.createQueue(queueName);
             producer = session.createProducer(queue);
         } catch (JMSException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

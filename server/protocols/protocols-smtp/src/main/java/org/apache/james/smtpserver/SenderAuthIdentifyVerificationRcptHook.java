@@ -32,8 +32,6 @@ import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
-import com.google.common.base.Throwables;
-
 /**
  * Handler which check if the authenticated user is incorrect
  */
@@ -86,7 +84,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
         try {
             return users.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

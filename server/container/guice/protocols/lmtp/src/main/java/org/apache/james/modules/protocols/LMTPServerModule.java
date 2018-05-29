@@ -26,7 +26,6 @@ import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -58,7 +57,7 @@ public class LMTPServerModule extends AbstractModule {
                 lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver"));
                 lmtpServerFactory.init();
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

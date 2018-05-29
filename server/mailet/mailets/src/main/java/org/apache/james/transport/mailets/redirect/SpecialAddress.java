@@ -22,8 +22,6 @@ package org.apache.james.transport.mailets.redirect;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 
-import com.google.common.base.Throwables;
-
 public class SpecialAddress {
 
     public static final MailAddress SENDER = AddressMarker.SENDER;
@@ -53,7 +51,7 @@ public class SpecialAddress {
             try {
                 return new MailAddress(kind.getValue(), domain);
             } catch (Exception e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }

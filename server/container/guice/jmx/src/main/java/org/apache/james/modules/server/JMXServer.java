@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 
 public class JMXServer {
@@ -109,7 +108,7 @@ public class JMXServer {
 
             jmxConnectorServer.start();
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -125,20 +124,14 @@ public class JMXServer {
     private void doStop() {
         try {
             MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-            registeredKeys.forEach(key -> {
-                try {
-                    mBeanServer.unregisterMBean(new ObjectName(key));
-                } catch (Exception e) {
-                    throw Throwables.propagate(e);
-                }
-            });
+            registeredKeys.forEach(Throwing.consumer(key -> mBeanServer.unregisterMBean(new ObjectName(key))));
             registeredKeys.clear();
             jmxConnectorServer.stop();
             restrictingRMISocketFactory.getSockets()
                 .forEach(Throwing.consumer(ServerSocket::close)
                     .sneakyThrow());
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

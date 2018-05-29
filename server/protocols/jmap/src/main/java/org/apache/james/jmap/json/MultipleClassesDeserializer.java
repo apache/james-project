@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 public class MultipleClassesDeserializer extends StdDeserializer<Object> {
 
@@ -56,7 +55,7 @@ public class MultipleClassesDeserializer extends StdDeserializer<Object> {
         try {
             return mapper.treeToValue(root, clazz);
         } catch (JsonProcessingException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

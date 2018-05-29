@@ -22,7 +22,6 @@ package org.apache.james.modules.server;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 
-import com.google.common.base.Throwables;
 import com.google.inject.AbstractModule;
 
 public class DefaultProcessorsConfigurationProviderModule extends AbstractModule {
@@ -35,7 +34,7 @@ public class DefaultProcessorsConfigurationProviderModule extends AbstractModule
                     try {
                         return FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("defaultMailetContainer.xml"));
                     } catch (ConfigurationException e) {
-                        throw Throwables.propagate(e);
+                        throw new RuntimeException(e);
                     }
                 }
             );

@@ -41,8 +41,6 @@ import org.hamcrest.Description;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
-
 public class VacationReplyTest {
 
     public static final String REASON = "I am in vacation dudes ! (plain text)";
@@ -140,7 +138,7 @@ public class VacationReplyTest {
                 try {
                     return mimeMessage.getSubject().equals(expectedSubject);
                 } catch (MessagingException e) {
-                    throw Throwables.propagate(e);
+                    throw new RuntimeException(e);
                 }
             }
 

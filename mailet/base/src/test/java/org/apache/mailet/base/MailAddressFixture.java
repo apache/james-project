@@ -23,8 +23,6 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
 
-import com.google.common.base.Throwables;
-
 public class MailAddressFixture {
     public static final String JAMES_LOCAL = "localhost";
     public static final String JAMES_APACHE_ORG = "james.apache.org";
@@ -47,7 +45,7 @@ public class MailAddressFixture {
         try {
             return new MailAddress(mailAddress);
         } catch (AddressException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

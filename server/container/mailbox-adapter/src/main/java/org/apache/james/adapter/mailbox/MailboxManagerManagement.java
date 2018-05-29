@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 
 /**
  * JMX managmenent for Mailboxes
@@ -83,7 +82,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         } catch (MailboxException e) {
             LOGGER.error("Error while remove mailboxes for user {}", username, e);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(session);
         }
@@ -111,7 +110,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
         } catch (MailboxException e) {
             LOGGER.error("Error list mailboxes for user {}", username, e);
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(session);
         }
@@ -135,7 +134,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
                 .orElseThrow(() -> new MailboxException("mailbox name is probably empty"));
         } catch (Exception e) {
             LOGGER.error("Unable to create mailbox", e);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(session);
         }

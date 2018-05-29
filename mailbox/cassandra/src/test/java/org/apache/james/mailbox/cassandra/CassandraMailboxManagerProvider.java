@@ -45,7 +45,6 @@ import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 import com.datastax.driver.core.Session;
-import com.google.common.base.Throwables;
 
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
@@ -89,7 +88,7 @@ public class CassandraMailboxManagerProvider {
         try {
             manager.init();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         return manager;

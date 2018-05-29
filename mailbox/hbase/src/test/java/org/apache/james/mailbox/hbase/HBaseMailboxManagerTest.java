@@ -50,8 +50,6 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
 import org.junit.Ignore;
 
-import com.google.common.base.Throwables;
-
 @Ignore("https://issues.apache.org/jira/browse/MAILBOX-293")
 public class HBaseMailboxManagerTest extends MailboxManagerTest {
 
@@ -87,7 +85,7 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
         try {
             manager.init();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         return manager;
@@ -108,7 +106,7 @@ public class HBaseMailboxManagerTest extends MailboxManagerTest {
                 new byte[][]{MESSAGES_META_CF, MESSAGE_DATA_HEADERS_CF, MESSAGE_DATA_BODY_CF});
             CLUSTER.ensureTable(SUBSCRIPTIONS_TABLE, new byte[][]{SUBSCRIPTION_CF});
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

@@ -41,8 +41,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 
-import com.google.common.base.Throwables;
-
 public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
 
     private static final MessageId FIRST_MESSAGE_ID = InMemoryMessageId.of(1);
@@ -53,7 +51,7 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
     private Optional<MessageId> lastMessageIdUsed;
     private final Message message;
 
-    public InMemoryMessageManagerTestSystem(MailboxManager mailboxManager) throws MailboxException {
+    public InMemoryMessageManagerTestSystem(MailboxManager mailboxManager) {
         super(mailboxManager);
         this.mailboxManager = mailboxManager;
         this.lastMessageIdUsed = Optional.empty();
@@ -63,7 +61,7 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
                 .setBody("testmail", StandardCharsets.UTF_8)
                 .build();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -85,7 +83,7 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
             lastMessageIdUsed = Optional.of(messageId);
             return messageId;
         } catch (MailboxException | IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -102,7 +100,7 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
                 mailboxManager.deleteMailbox(mailbox.get().getPath(), session);
             }
         } catch (MailboxException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -121,7 +119,7 @@ public class InMemoryMessageManagerTestSystem extends MessageManagerTestSystem {
         try {
             return DefaultMessageWriter.asBytes(message).length;
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

@@ -34,7 +34,6 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.MessageIdProbe;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -76,7 +75,7 @@ public class JMAPServerModule extends AbstractModule {
                     registerPEMWithSecurityProvider();
                 }
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

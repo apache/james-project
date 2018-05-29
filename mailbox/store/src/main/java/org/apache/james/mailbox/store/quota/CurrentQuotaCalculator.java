@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 public class CurrentQuotaCalculator {
@@ -73,7 +72,7 @@ public class CurrentQuotaCalculator {
             try {
                 return mapper.findMailboxByPath(mailboxPath);
             } catch (MailboxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         });
     }

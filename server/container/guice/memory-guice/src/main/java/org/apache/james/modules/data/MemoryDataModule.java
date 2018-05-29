@@ -32,7 +32,6 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -78,7 +77,7 @@ public class MemoryDataModule extends AbstractModule {
                 memoryDomainList.configure(configurationProvider.getConfiguration("domainlist"));
                 memoryRecipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
             } catch (ConfigurationException e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 

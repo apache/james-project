@@ -30,7 +30,6 @@ import org.elasticsearch.metrics.ElasticsearchReporter;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
-import com.google.common.base.Throwables;
 
 public class ESMetricReporter {
 
@@ -51,7 +50,7 @@ public class ESMetricReporter {
                     .index(esReporterConfiguration.getIndex())
                     .build());
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }   
         return Optional.empty();

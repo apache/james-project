@@ -53,7 +53,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -165,7 +164,7 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
         try {
             return searchResults(session, mailbox, query).stream();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

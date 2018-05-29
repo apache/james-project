@@ -55,8 +55,6 @@ import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
-import com.google.common.base.Throwables;
-
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
 
     public static class Resources {
@@ -173,7 +171,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 storeRightManager,
                 new InMemoryMessageId.Factory());
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

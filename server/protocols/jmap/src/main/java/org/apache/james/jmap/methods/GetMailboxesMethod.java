@@ -46,7 +46,6 @@ import org.apache.james.util.OptionalUtils;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -113,7 +112,7 @@ public class GetMailboxesMethod implements Method {
                 .forEach(builder::add);
             return builder.build();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

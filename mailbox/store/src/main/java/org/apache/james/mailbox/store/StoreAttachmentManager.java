@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 
 public class StoreAttachmentManager implements AttachmentManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreAttachmentManager.class);
@@ -91,7 +90,7 @@ public class StoreAttachmentManager implements AttachmentManager {
                 || isReferencedInUserMessages(attachmentId, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.warn("Error while checking attachment related accessible message ids", e);
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

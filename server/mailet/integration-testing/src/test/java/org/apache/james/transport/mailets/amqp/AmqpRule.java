@@ -28,7 +28,6 @@ import java.util.concurrent.TimeoutException;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
 
-import com.google.common.base.Throwables;
 import com.jayway.awaitility.Awaitility;
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
@@ -86,7 +85,7 @@ public class AmqpRule extends ExternalResource {
             channel.close();
             connection.close();
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

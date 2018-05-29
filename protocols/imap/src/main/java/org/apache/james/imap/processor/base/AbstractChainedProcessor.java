@@ -29,8 +29,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 public abstract class AbstractChainedProcessor<M extends ImapMessage> implements ImapProcessor {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(AbstractChainedProcessor.class);
@@ -62,7 +60,7 @@ public abstract class AbstractChainedProcessor<M extends ImapMessage> implements
                     throw e;
                 }
             } catch (IOException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         } else {
             next.process(message, responder, session);

@@ -35,8 +35,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
-
 public class EmbeddedActiveMQ {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedActiveMQ.class);
@@ -58,7 +56,7 @@ public class EmbeddedActiveMQ {
             persistenceAdapter.setDirectory(fileSystem.getFile(KAHADB_STORE_LOCATION));
             launchEmbeddedBroker(fileSystem);
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
         activeMQConnectionFactory = createActiveMQConnectionFactory(createBlobTransferPolicy(fileSystem));
     }

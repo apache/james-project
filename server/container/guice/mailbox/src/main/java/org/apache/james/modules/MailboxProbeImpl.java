@@ -47,8 +47,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.utils.GuiceProbe;
 
-import com.google.common.base.Throwables;
-
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     private final MailboxManager mailboxManager;
     private final MailboxMapperFactory mailboxMapperFactory;
@@ -71,7 +69,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             return mailboxManager.createMailbox(new MailboxPath(namespace, user, name), mailboxSession)
                     .orElseThrow(() -> new MailboxException("mailbox name is probably empty"));
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -86,7 +84,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
             return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name));
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -98,7 +96,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             try {
                 mailboxManager.logout(session, true);
             } catch (MailboxException e) {
-                throw Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
     }
@@ -115,7 +113,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
                     .map(MailboxPath::getName)
                     .collect(Collectors.toList());
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }
@@ -138,7 +136,7 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             mailboxManager.startProcessingRequest(mailboxSession);
             mailboxManager.deleteMailbox(new MailboxPath(namespace, user, name), mailboxSession);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             closeSession(mailboxSession);
         }

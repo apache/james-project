@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.util.MDCBuilder;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Throwables;
 
 public class QuotaManagement implements QuotaManagementMBean {
 
@@ -60,7 +59,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -73,7 +72,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -86,7 +85,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -99,7 +98,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -112,7 +111,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -129,7 +128,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                         maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), value))
                         .sneakyThrow());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -146,7 +145,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                         maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), value))
                         .sneakyThrow());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -161,7 +160,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                 .toValue(QuotaCount::count, QuotaCount.unlimited())
                 .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxMessage).sneakyThrow());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -176,7 +175,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                 .toValue(QuotaSize::size, QuotaSize.unlimited())
                 .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxStorage).sneakyThrow());
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -189,7 +188,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuota.newInstance(quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -202,7 +201,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .build()) {
             return SerializableQuota.newInstance(quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot)));
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 }

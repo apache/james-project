@@ -37,7 +37,6 @@ import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
-import com.google.common.base.Throwables;
 
 public final class CassandraCluster implements AutoCloseable {
 
@@ -78,7 +77,7 @@ public final class CassandraCluster implements AutoCloseable {
             session = new FunctionRunnerWithRetry(MAX_RETRY).executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {
-            Throwables.propagate(exception);
+            throw new RuntimeException(exception);
         }
     }
 
@@ -110,7 +109,7 @@ public final class CassandraCluster implements AutoCloseable {
         try {
             Thread.sleep(sleepMs);
         } catch (InterruptedException interruptedException) {
-            Throwables.propagate(interruptedException);
+            throw new RuntimeException(interruptedException);
         }
     }
 

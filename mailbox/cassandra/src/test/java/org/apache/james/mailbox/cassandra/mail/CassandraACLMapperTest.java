@@ -44,8 +44,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-import com.google.common.base.Throwables;
-
 public class CassandraACLMapperTest {
 
     public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
@@ -206,7 +204,7 @@ public class CassandraACLMapperTest {
             try {
                 aclMapper.updateACL(MAILBOX_ID, MailboxACL.command().key(key).rights(rights).asAddition());
             } catch (MailboxException exception) {
-                throw Throwables.propagate(exception);
+                throw new RuntimeException(exception);
             }
             return true;
         });

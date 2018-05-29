@@ -29,8 +29,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 
-import com.google.common.base.Throwables;
-
 public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
     private static final String JAMES_USER = "james-user";
     private static final String PASSWORD = "secret";
@@ -62,7 +60,7 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
         try {
             imapClient.disconnect();
         } catch (IOException e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

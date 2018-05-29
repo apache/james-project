@@ -35,7 +35,6 @@ import org.apache.james.mpt.protocol.ProtocolSession;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
@@ -130,7 +129,7 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
                 session.stop();
             }
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

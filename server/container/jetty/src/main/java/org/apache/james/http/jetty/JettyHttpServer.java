@@ -35,7 +35,6 @@ import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimaps;
 
@@ -117,7 +116,7 @@ public class JettyHttpServer implements Closeable {
         try {
             stop();
         } catch (Exception e) {
-            Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
     

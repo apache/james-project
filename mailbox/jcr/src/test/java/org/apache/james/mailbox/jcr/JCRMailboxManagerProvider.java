@@ -39,8 +39,6 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.xml.sax.InputSource;
 
-import com.google.common.base.Throwables;
-
 public class JCRMailboxManagerProvider {
     public static final String JACKRABBIT_HOME = "target/jackrabbit";
 
@@ -50,7 +48,7 @@ public class JCRMailboxManagerProvider {
             config = RepositoryConfig.create(new InputSource(JCRMailboxManagerTest.class.getClassLoader().getResourceAsStream("test-repository.xml")), JACKRABBIT_HOME);
             return RepositoryImpl.create(config);
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -79,7 +77,7 @@ public class JCRMailboxManagerProvider {
         try {
             manager.init();
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
 
         return manager;

@@ -45,7 +45,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Throwables;
 
 public class DefaultMailboxesProvisioningFilter implements Filter {
 
@@ -65,7 +64,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     }
     
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
     }
     
     @Override
@@ -82,7 +81,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
             User user = session.getUser();
             createDefaultMailboxes(user);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         } finally {
             timeMetric.stopAndPublish();
         }
@@ -100,7 +99,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
         try {
             return !mailboxManager.mailboxExists(mailboxPath, session);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -118,7 +117,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
         } catch (MailboxExistsException e) {
             LOGGER.info("Mailbox {} have been created concurrently", mailboxPath);
         } catch (MailboxException e) {
-            throw Throwables.propagate(e);
+            throw new RuntimeException(e);
         }
     }
 

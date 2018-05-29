@@ -48,7 +48,6 @@ import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -142,7 +141,7 @@ public class JMXServerModule extends AbstractModule {
                 jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
                 jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
             } catch (Exception e) {
-                Throwables.propagate(e);
+                throw new RuntimeException(e);
             }
         }
 
