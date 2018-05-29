@@ -26,6 +26,8 @@ import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.service.DomainQuotaService;
+import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
@@ -50,10 +52,21 @@ public class WebAdminQuotaSearchTestSystem {
         UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(quotaSearchTestSystem.getUsersRepository(),
             userQuotaService, jsonTransformer,
             ImmutableSet.of(quotaModule));
+        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(
+            quotaSearchTestSystem.getDomainList(),
+            new DomainQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),
+            quotaSearchTestSystem.getUsersRepository(),
+            jsonTransformer,
+            ImmutableSet.of(quotaModule));
+        GlobalQuotaRoutes globalQuotaRoutes = new GlobalQuotaRoutes(
+            new GlobalQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),
+            jsonTransformer);
 
         this.webAdminServer = WebAdminUtils.createWebAdminServer(
             new NoopMetricFactory(),
-            userQuotaRoutes);
+            userQuotaRoutes,
+            domainQuotaRoutes,
+            globalQuotaRoutes);
         this.webAdminServer.configure(NO_CONFIGURATION);
         this.webAdminServer.await();
 

@@ -21,34 +21,24 @@ package org.apache.james.webadmin.routes;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
 import org.apache.james.core.Domain;
-import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
+import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
-import org.apache.james.metrics.api.NoopMetricFactory;
-import org.apache.james.user.memory.MemoryUsersRepository;
-import org.apache.james.webadmin.WebAdminServer;
-import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.jackson.QuotaModule;
-import org.apache.james.webadmin.service.DomainQuotaService;
-import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
+@ExtendWith(ScanningQuotaSearchExtension.class)
 class DomainQuotaRoutesTest {
 
     private static final String QUOTA_DOMAINS = "/quota/domains";
@@ -56,34 +46,17 @@ class DomainQuotaRoutesTest {
     private static final Domain TROUVÉ_COM = Domain.of("trouvé.com");
     private static final String COUNT = "count";
     private static final String SIZE = "size";
-    private WebAdminServer webAdminServer;
-    private InMemoryPerUserMaxQuotaManager maxQuotaManager;
+    private MaxQuotaManager maxQuotaManager;
 
     @BeforeEach
-    void setUp() throws Exception {
-        maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
-        memoryDomainList.setAutoDetect(false);
-        memoryDomainList.setAutoDetectIP(false);
-        memoryDomainList.addDomain(TROUVÉ_COM);
-        DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
-        QuotaModule quotaModule = new QuotaModule();
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
-        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
-        webAdminServer = WebAdminUtils.createWebAdminServer(
-            new NoopMetricFactory(),
-            domainQuotaRoutes);
-        webAdminServer.configure(NO_CONFIGURATION);
-        webAdminServer.await();
+    void setUp(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+        testSystem.getQuotaSearchTestSystem().getDomainList()
+            .addDomain(TROUVÉ_COM);
 
-        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-            .build();
+        maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+
+        RestAssured.requestSpecification = testSystem.getRequestSpecification();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
-    }
-
-    @AfterEach
-    void stop() {
-        webAdminServer.destroy();
     }
 
     @Test
@@ -103,7 +76,7 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void getCountShouldReturnStoredValue() {
+    void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(value));
 
@@ -200,7 +173,7 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void deleteCountShouldSetQuotaToEmpty() {
+    void deleteCountShouldSetQuotaToEmpty() throws Exception {
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(42));
 
         given()
@@ -228,10 +201,9 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void getSizeShouldReturnStoredValue() {
+    void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(value));
-
 
         long quota =
             given()
@@ -327,7 +299,7 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void deleteSizeShouldSetQuotaToEmpty() {
+    void deleteSizeShouldSetQuotaToEmpty() throws Exception {
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
 
         given()
@@ -362,7 +334,7 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void getQuotaShouldReturnSizeWhenNoCount() {
+    void getQuotaShouldReturnSizeWhenNoCount() throws Exception {
         int maxStorage = 42;
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(maxStorage));
 
@@ -380,7 +352,7 @@ class DomainQuotaRoutesTest {
     }
 
     @Test
-    void getQuotaShouldReturnBothWhenNoSize() {
+    void getQuotaShouldReturnBothWhenNoSize() throws Exception {
         int maxMessage = 42;
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(maxMessage));
 
