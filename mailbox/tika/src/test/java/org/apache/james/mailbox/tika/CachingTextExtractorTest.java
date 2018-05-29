@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -42,7 +43,9 @@ import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -177,6 +180,18 @@ public class CachingTextExtractorTest {
         textExtractor.extractContent(STREAM_GENERATOR.apply(0), CONTENT_TYPE);
 
         verifyZeroInteractions(wrappedTextExtractor);
+    }
+
+    @RepeatedTest(10)
+    void concurrentValueComputationShouldNotLeadToDuplicatedBackendAccess() throws Exception {
+        int concurrentThreadCount = 10;
+        int operationCount = 1;
+        new ConcurrentTestRunner(concurrentThreadCount, operationCount,
+            (a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
+            .run()
+            .awaitTermination(1, TimeUnit.MINUTES);
+
+        verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
     }
 
 }

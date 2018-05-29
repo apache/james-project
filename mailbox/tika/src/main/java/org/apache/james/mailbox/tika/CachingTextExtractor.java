@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.digest.DigestUtils;
@@ -114,14 +115,19 @@ public class CachingTextExtractor implements TextExtractor {
         byte[] bytes = IOUtils.toByteArray(inputStream);
         String key = DigestUtils.sha256Hex(bytes);
 
-        ParsedContent cachedValue = cache.getIfPresent(key);
-        if (cachedValue != null) {
-            return cachedValue;
+        try {
+            return cache.get(key,
+                () -> underlying.extractContent(new ByteArrayInputStream(bytes), contentType));
+        } catch (ExecutionException e) {
+            throw unwrap(e);
         }
+    }
 
-        ParsedContent realValue = underlying.extractContent(new ByteArrayInputStream(bytes), contentType);
-        cache.put(key, realValue);
-        return realValue;
+    private Exception unwrap(Exception e) {
+        return Optional.ofNullable(e.getCause())
+            .filter(throwable -> throwable instanceof Exception)
+            .map(throwable -> (Exception) throwable)
+            .orElse(e);
     }
 
     @VisibleForTesting
