@@ -20,6 +20,7 @@ package org.apache.james.queue.rabbitmq;
 
 import java.util.Optional;
 
+import org.apache.james.util.docker.Images;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
@@ -52,7 +53,7 @@ public class DockerRabbitMQ {
 
     @SuppressWarnings("resource")
     private DockerRabbitMQ(Optional<String> hostName, Optional<String> erlangCookie, Optional<String> nodeName, Optional<Network> net) {
-        container = new GenericContainer<>("rabbitmq:3.7.5")
+        container = new GenericContainer<>(Images.RABBITMQ)
                 .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse("localhost")))
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT)
