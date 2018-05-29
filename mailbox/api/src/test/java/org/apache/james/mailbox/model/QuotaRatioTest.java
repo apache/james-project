@@ -27,50 +27,50 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaRatioTest {
+class QuotaRatioTest {
 
-    private static final Quota<QuotaSize> QUOTA_SIZE = Quota.<QuotaSize> builder()
+    private static final Quota<QuotaSize> QUOTA_SIZE = Quota.<QuotaSize>builder()
             .used(QuotaSize.size(15))
             .computedLimit(QuotaSize.size(60))
             .build();
-    private static final Quota<QuotaCount> QUOTA_COUNT = Quota.<QuotaCount> builder()
+    private static final Quota<QuotaCount> QUOTA_COUNT = Quota.<QuotaCount>builder()
             .used(QuotaCount.count(1))
             .computedLimit(QuotaCount.count(2))
             .build();
 
     @Test
-    public void shouldMatchBeanContact() {
+    void shouldMatchBeanContact() {
         EqualsVerifier.forClass(QuotaRatio.class)
             .allFieldsShouldBeUsed()
             .verify();
     }
 
     @Test
-    public void quotaRatioShouldThrowWhenQuotaSizeIsNull() {
+    void quotaRatioShouldThrowWhenQuotaSizeIsNull() {
         assertThatThrownBy(() -> QuotaRatio.from(null, QUOTA_COUNT))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void quotaRatioShouldThrowWhenQuotaCountIsNull() {
+    void quotaRatioShouldThrowWhenQuotaCountIsNull() {
         assertThatThrownBy(() -> QuotaRatio.from(QUOTA_SIZE, null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void quotaSizeShouldReturnTheQuotaSize() {
+    void quotaSizeShouldReturnTheQuotaSize() {
         QuotaRatio quotaRatio = QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT);
         assertThat(quotaRatio.getQuotaSize()).isEqualTo(QUOTA_SIZE);
     }
 
     @Test
-    public void quotaCountShouldReturnTheQuotaCount() {
+    void quotaCountShouldReturnTheQuotaCount() {
         QuotaRatio quotaRatio = QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT);
         assertThat(quotaRatio.getQuotaCount()).isEqualTo(QUOTA_COUNT);
     }
 
     @Test
-    public void maxShouldReturnTheMaxRatio() {
+    void maxShouldReturnTheMaxRatio() {
         double max = QuotaRatio.from(QUOTA_SIZE, QUOTA_COUNT)
                 .max();
 

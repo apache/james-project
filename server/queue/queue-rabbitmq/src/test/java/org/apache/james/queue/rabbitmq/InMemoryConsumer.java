@@ -39,7 +39,7 @@ public class InMemoryConsumer extends DefaultConsumer {
     private final Operation operation;
 
     public InMemoryConsumer(Channel channel) {
-        this(channel, () -> {});
+        this(channel, () -> { });
     }
 
     public InMemoryConsumer(Channel channel, Operation operation) {

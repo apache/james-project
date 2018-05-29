@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
 
-    private static final Runnable NO_AWAIT = () -> {};
+    private static final Runnable NO_AWAIT = () -> { };
 
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
