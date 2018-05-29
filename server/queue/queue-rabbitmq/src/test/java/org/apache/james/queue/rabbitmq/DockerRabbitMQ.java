@@ -112,19 +112,28 @@ public class DockerRabbitMQ {
     }
 
     public void join(DockerRabbitMQ rabbitMQ) throws Exception {
-        container()
+        stopApp();
+        joinCluster(rabbitMQ);
+    }
+
+    private void stopApp() throws java.io.IOException, InterruptedException {
+        String stdout = container()
             .execInContainer("rabbitmqctl", "stop_app")
             .getStdout();
-        container()
+        LOGGER.debug("stop_app: {}", stdout);
+    }
+
+    private void joinCluster(DockerRabbitMQ rabbitMQ) throws java.io.IOException, InterruptedException {
+        String stdout = container()
             .execInContainer("rabbitmqctl", "join_cluster", rabbitMQ.node())
             .getStdout();
+        LOGGER.debug("join_cluster: {}", stdout);
     }
 
     public void startApp() throws Exception {
         String stdout = container()
                 .execInContainer("rabbitmqctl", "start_app")
                 .getStdout();
-        System.out.println(stdout);
-
+        LOGGER.debug("start_app: {}", stdout);
     }
 }
