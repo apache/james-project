@@ -18,9 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.cassandra;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
 import java.io.IOException;
 
-import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
@@ -69,7 +70,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
             .build();
         return new JamesWithSpamAssassin(
                 new GuiceJamesServer(configuration)
-                    .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS, CassandraJamesServerMain.PLUGINS)
+                    .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                     .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                     .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
                     .overrideWith(new TestESMetricReporterModule())

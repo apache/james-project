@@ -98,10 +98,15 @@ public class CassandraJamesServerMain {
         new TikaMailboxModule(),
         new SpamAssassinListenerModule());
 
+    public static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
+        CASSANDRA_SERVER_MODULE,
+        PROTOCOLS,
+        PLUGINS);
+
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
         GuiceJamesServer server = new GuiceJamesServer(configuration)
-                    .combineWith(CASSANDRA_SERVER_MODULE, PROTOCOLS, PLUGINS, new JMXServerModule());
+                    .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE, new JMXServerModule());
         server.start();
     }
 

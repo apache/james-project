@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
 import java.io.IOException;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -60,9 +62,7 @@ public class CassandraJmapTestRule implements TestRule {
             .build();
 
         return new GuiceJamesServer(configuration)
-            .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE,
-                CassandraJamesServerMain.PROTOCOLS,
-                CassandraJamesServerMain.PLUGINS)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())

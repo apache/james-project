@@ -19,6 +19,8 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
 import org.apache.james.data.LdapUsersRepositoryModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -28,7 +30,7 @@ import com.google.inject.util.Modules;
 
 public class CassandraLdapJamesServerMain {
 
-    public static final Module cassandraLdapServerModule = Modules.override(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS)
+    public static final Module cassandraLdapServerModule = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
         .with(new LdapUsersRepositoryModule());
 
     public static void main(String[] args) throws Exception {

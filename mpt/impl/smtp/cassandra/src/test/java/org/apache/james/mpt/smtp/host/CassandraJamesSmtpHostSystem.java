@@ -91,7 +91,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     }
 
     @Override
-    public void afterTest() throws Exception {
+    public void afterTest() {
         jamesServer.stop();
         embeddedElasticSearch.after();
         folder.delete();

@@ -19,13 +19,14 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
 import java.util.Arrays;
 
 import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
@@ -69,7 +70,7 @@ public class CassandraStepdefs {
             .build();
 
         mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
-                .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS, CassandraJamesServerMain.PLUGINS)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraServer.getIp(), cassandraServer.getBindingPort()))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
