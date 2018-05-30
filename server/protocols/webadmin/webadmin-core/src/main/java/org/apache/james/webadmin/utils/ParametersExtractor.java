@@ -19,6 +19,7 @@
 package org.apache.james.webadmin.utils;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
@@ -34,30 +35,28 @@ public class ParametersExtractor {
     public static final String OFFSET_PARAMETER_NAME = "offset";
 
     public static Limit extractLimit(Request request) {
-        return Limit.from(assertPositiveInteger(request, LIMIT_PARAMETER_NAME)
+        return Limit.from(extractPositiveInteger(request, LIMIT_PARAMETER_NAME)
                 .map(value -> assertNotZero(value, LIMIT_PARAMETER_NAME)));
     }
 
     public static Offset extractOffset(Request request) {
-        return Offset.from(assertPositiveInteger(request, OFFSET_PARAMETER_NAME));
+        return Offset.from(extractPositiveInteger(request, OFFSET_PARAMETER_NAME));
     }
 
     public static Optional<Double> extractPositiveDouble(Request request, String parameterName) {
-        return extractPositiveNumber(request, parameterName)
-                .map(Number::doubleValue);
+        return extractPositiveNumber(request, parameterName, Double::valueOf);
     }
 
-    private static Optional<Integer> assertPositiveInteger(Request request, String parameterName) {
-        return extractPositiveNumber(request, parameterName)
-                .map(Number::intValue);
+    public static Optional<Integer> extractPositiveInteger(Request request, String parameterName) {
+        return extractPositiveNumber(request, parameterName, Integer::valueOf);
     }
 
-    private static Optional<Number> extractPositiveNumber(Request request, String parameterName) {
+    private static <T extends Number> Optional<T> extractPositiveNumber(Request request, String parameterName, Function<String, T> toNumber) {
         try {
             return Optional.ofNullable(request.queryParams(parameterName))
                 .filter(s -> !Strings.isNullOrEmpty(s))
-                .map(Double::valueOf)
-                .map(value -> assertPositive(value, parameterName));
+                .map(toNumber)
+                .map(value -> ParametersExtractor.assertPositive(value, parameterName));
         } catch (NumberFormatException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
@@ -68,7 +67,7 @@ public class ParametersExtractor {
         }
     }
 
-    private static Number assertPositive(Number value, String parameterName) {
+    private static <T extends Number> T assertPositive(T value, String parameterName) {
         if (value.doubleValue() < 0) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
