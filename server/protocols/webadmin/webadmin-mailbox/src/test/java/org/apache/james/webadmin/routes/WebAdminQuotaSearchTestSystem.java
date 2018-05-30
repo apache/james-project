@@ -21,17 +21,14 @@ package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
+import java.util.List;
+
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.jackson.QuotaModule;
-import org.apache.james.webadmin.service.DomainQuotaService;
-import org.apache.james.webadmin.service.GlobalQuotaService;
-import org.apache.james.webadmin.service.UserQuotaService;
-import org.apache.james.webadmin.utils.JsonTransformer;
 
-import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.specification.RequestSpecification;
 
 public class WebAdminQuotaSearchTestSystem {
@@ -39,34 +36,9 @@ public class WebAdminQuotaSearchTestSystem {
     private final WebAdminServer webAdminServer;
     private final RequestSpecification requestSpecBuilder;
 
-    public WebAdminQuotaSearchTestSystem(QuotaSearchTestSystem quotaSearchTestSystem) throws Exception {
+    public WebAdminQuotaSearchTestSystem(QuotaSearchTestSystem quotaSearchTestSystem, List<Routes> routes) throws Exception {
         this.quotaSearchTestSystem = quotaSearchTestSystem;
-
-        UserQuotaService userQuotaService = new UserQuotaService(quotaSearchTestSystem.getMaxQuotaManager(),
-            quotaSearchTestSystem.getQuotaManager(),
-            quotaSearchTestSystem.getQuotaRootResolver(),
-            quotaSearchTestSystem.getQuotaSearcher());
-
-        QuotaModule quotaModule = new QuotaModule();
-        JsonTransformer jsonTransformer = new JsonTransformer(quotaModule);
-        UserQuotaRoutes userQuotaRoutes = new UserQuotaRoutes(quotaSearchTestSystem.getUsersRepository(),
-            userQuotaService, jsonTransformer,
-            ImmutableSet.of(quotaModule));
-        DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(
-            quotaSearchTestSystem.getDomainList(),
-            new DomainQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),
-            quotaSearchTestSystem.getUsersRepository(),
-            jsonTransformer,
-            ImmutableSet.of(quotaModule));
-        GlobalQuotaRoutes globalQuotaRoutes = new GlobalQuotaRoutes(
-            new GlobalQuotaService(quotaSearchTestSystem.getMaxQuotaManager()),
-            jsonTransformer);
-
-        this.webAdminServer = WebAdminUtils.createWebAdminServer(
-            new NoopMetricFactory(),
-            userQuotaRoutes,
-            domainQuotaRoutes,
-            globalQuotaRoutes);
+        this.webAdminServer = WebAdminUtils.createWebAdminServer(new NoopMetricFactory(), routes);
         this.webAdminServer.configure(NO_CONFIGURATION);
         this.webAdminServer.await();
 

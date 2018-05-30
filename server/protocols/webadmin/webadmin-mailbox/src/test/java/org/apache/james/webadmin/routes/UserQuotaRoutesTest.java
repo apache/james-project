@@ -48,15 +48,20 @@ import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.service.UserQuotaService;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
@@ -74,6 +79,20 @@ class UserQuotaRoutesTest {
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
     private static final String SIZE = "size";
+
+    private final ScanningQuotaSearchExtension scanningExtension = new ScanningQuotaSearchExtension(this::createUserQuotaRoutes);
+
+    private UserQuotaRoutes createUserQuotaRoutes(QuotaSearchTestSystem testSystem) {
+        QuotaModule quotaModule = new QuotaModule();
+        return new UserQuotaRoutes(testSystem.getUsersRepository(),
+            new UserQuotaService(
+                testSystem.getMaxQuotaManager(),
+                testSystem.getQuotaManager(),
+                testSystem.getQuotaRootResolver(),
+                testSystem.getQuotaSearcher()),
+            new JsonTransformer(quotaModule),
+            ImmutableSet.of(quotaModule));
+    }
 
     @BeforeEach
     public void setUp(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
@@ -450,20 +469,21 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class ScanningGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract {
-
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
     }
 
     @Nested
-    @ExtendWith(ElasticSearchQuotaSearchExtension.class)
     class ElasticSearchGetUsersQuotaRouteTest implements GetUsersQuotaRouteContract {
-
+        @RegisterExtension
+        Extension registeredExtension = new ElasticSearchQuotaSearchExtension();
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class GetCount {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
 
         @Test
         void getCountShouldReturnNotFoundWhenUserDoesntExist() {
@@ -503,8 +523,10 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class GetSize {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
+
         @Test
         void getSizeShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -544,8 +566,10 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class PutCount {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
+
         @Test
         void putCountShouldReturnNotFoundWhenUserDoesntExist() {
             given()
@@ -650,8 +674,10 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class PutSize {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
+
         @Test
         void putSizeAcceptEscapedUsers() {
             given()
@@ -742,8 +768,9 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class DeleteCount {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
 
         @Test
         void deleteCountShouldReturnNotFoundWhenUserDoesntExist() {
@@ -769,8 +796,10 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class DeleteSize {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
+
         @Test
         void deleteSizeShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -796,8 +825,10 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class GetQuota {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
+
         @Test
         void getQuotaShouldReturnNotFoundWhenUserDoesntExist() {
             when()
@@ -1042,8 +1073,9 @@ class UserQuotaRoutesTest {
     }
 
     @Nested
-    @ExtendWith(ScanningQuotaSearchExtension.class)
     class PutQuota {
+        @RegisterExtension
+        Extension registeredExtension = scanningExtension;
 
         @Test
         void putQuotaShouldReturnNotFoundWhenUserDoesntExist() {

@@ -29,17 +29,34 @@ import org.apache.james.core.Domain;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.service.DomainQuotaService;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.common.collect.ImmutableSet;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
-@ExtendWith(ScanningQuotaSearchExtension.class)
 class DomainQuotaRoutesTest {
+    @RegisterExtension
+    Extension scanningExtension = new ScanningQuotaSearchExtension(this::createDomainQuotaRoutes);
+
+    private DomainQuotaRoutes createDomainQuotaRoutes(QuotaSearchTestSystem testSystem) {
+        QuotaModule quotaModule = new QuotaModule();
+        return new DomainQuotaRoutes(
+            testSystem.getDomainList(),
+            new DomainQuotaService(testSystem.getMaxQuotaManager()),
+            testSystem.getUsersRepository(),
+            new JsonTransformer(quotaModule),
+            ImmutableSet.of(quotaModule));
+    }
 
     private static final String QUOTA_DOMAINS = "/quota/domains";
     private static final String PERDU_COM = "perdu.com";

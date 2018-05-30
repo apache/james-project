@@ -617,7 +617,7 @@
 
         <dnsjava.version>2.1.1</dnsjava.version>
         <junit.version>4.11</junit.version>
-        <junit.jupiter.version>5.0.2</junit.jupiter.version>
+        <junit.jupiter.version>5.2.0</junit.jupiter.version>
         <junit.plateform.version>1.0.2</junit.plateform.version>
         <junit.vintage.version>4.12.2</junit.vintage.version>
         <jmock.version>2.6.0</jmock.version>

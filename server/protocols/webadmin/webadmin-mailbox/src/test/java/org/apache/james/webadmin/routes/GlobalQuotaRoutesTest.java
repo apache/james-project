@@ -28,18 +28,31 @@ import java.util.Map;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.quota.search.QuotaSearchTestSystem;
+import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.service.GlobalQuotaService;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.Extension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 
-@ExtendWith(ScanningQuotaSearchExtension.class)
 class GlobalQuotaRoutesTest {
+    @RegisterExtension
+    Extension scanningExtension = new ScanningQuotaSearchExtension(this::createGlobalQuotaRoutes);
+
+    private GlobalQuotaRoutes createGlobalQuotaRoutes(QuotaSearchTestSystem testSystem) {
+        return new GlobalQuotaRoutes(
+            new GlobalQuotaService(testSystem.getMaxQuotaManager()),
+            new JsonTransformer(new QuotaModule()));
+    }
+
     private MaxQuotaManager maxQuotaManager;
 
     @BeforeEach

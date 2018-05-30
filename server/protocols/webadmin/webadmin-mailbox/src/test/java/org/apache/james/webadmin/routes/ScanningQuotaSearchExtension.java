@@ -21,6 +21,9 @@ package org.apache.james.webadmin.routes;
 
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
+import java.util.function.Function;
+
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -30,6 +33,7 @@ import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.scanning.ClauseConverter;
 import org.apache.james.quota.search.scanning.ScanningQuotaSearcher;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.webadmin.Routes;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -37,10 +41,20 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+import com.jayway.restassured.specification.RequestSpecification;
+
 public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
     private static final Runnable NO_AWAIT = () -> {};
 
+    private final List<Function<QuotaSearchTestSystem, Routes>> routesGenerators;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
+    private QuotaSearchTestSystem quotaSearchTestSystem;
+
+    public ScanningQuotaSearchExtension(Function<QuotaSearchTestSystem, Routes>... routesGenerators) {
+        this.routesGenerators = ImmutableList.copyOf(routesGenerators);
+    }
 
     @Override
     public void beforeEach(ExtensionContext context) {
@@ -54,7 +68,7 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
             domainList.configure(new DefaultConfigurationBuilder());
             usersRepository.setDomainList(domainList);
 
-            QuotaSearchTestSystem quotaSearchTestSystem = new QuotaSearchTestSystem(
+            quotaSearchTestSystem = new QuotaSearchTestSystem(
                 resources.getMaxQuotaManager(),
                 resources.getMailboxManager(),
                 resources.getQuotaManager(),
@@ -66,7 +80,11 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
                 resources.getCurrentQuotaManager(),
                 NO_AWAIT);
 
-            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
+            List<Routes> routes = routesGenerators.stream()
+                .map(generator -> generator.apply(quotaSearchTestSystem))
+                .collect(Guavate.toImmutableList());
+
+            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem, routes);
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
@@ -85,5 +103,13 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return restQuotaSearchTestSystem;
+    }
+
+    public QuotaSearchTestSystem getQuotaSearchTestSystem() {
+        return quotaSearchTestSystem;
+    }
+
+    public RequestSpecification getRequestSpecification() {
+        return restQuotaSearchTestSystem.getRequestSpecification();
     }
 }

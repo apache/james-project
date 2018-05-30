@@ -38,6 +38,9 @@ import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.webadmin.jackson.QuotaModule;
+import org.apache.james.webadmin.service.UserQuotaService;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.elasticsearch.client.Client;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -46,6 +49,9 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.rules.TemporaryFolder;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class ElasticSearchQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
 
@@ -91,7 +97,17 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                 resources.getCurrentQuotaManager(),
                 () -> embeddedElasticSearch.awaitForElasticSearch());
 
-            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem);
+            UserQuotaRoutes routes = new UserQuotaRoutes(
+                quotaSearchTestSystem.getUsersRepository(),
+                new UserQuotaService(
+                    quotaSearchTestSystem.getMaxQuotaManager(),
+                    quotaSearchTestSystem.getQuotaManager(),
+                    quotaSearchTestSystem.getQuotaRootResolver(),
+                    quotaSearchTestSystem.getQuotaSearcher()),
+                new JsonTransformer(new QuotaModule()),
+                ImmutableSet.of(new QuotaModule()));
+
+            restQuotaSearchTestSystem = new WebAdminQuotaSearchTestSystem(quotaSearchTestSystem, ImmutableList.of(routes));
         } catch (Exception e) {
             throw new ParameterResolutionException("Error while resolving parameter", e);
         }
