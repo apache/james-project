@@ -30,10 +30,6 @@
 
     <name>Apache James MPT SMTP Cassandra</name>
 
-    <properties>
-        <cassandra.includes>empty</cassandra.includes>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -94,32 +90,19 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>**/suite/*.java</exclude>
-                        <exclude>**/suite/**/*.java</exclude>
-                    </excludes>
-                    <includes>
-                        <include>${cassandra.includes}</include>
-                    </includes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
     
 </project>
