@@ -256,17 +256,19 @@ class RabbitMQClusterTest {
 
             AtomicInteger counter = new AtomicInteger(0);
             InMemoryConsumer consumer = new InMemoryConsumer(resilientChannel,
-                () -> {
-                    if (counter.incrementAndGet() == nbMessages / 2) {
-                        cluster.getRabbitMQ1().stop();
-                    }
-                });
+                () -> stopWhenHalfProcessed(cluster, nbMessages, counter));
             resilientChannel.basicConsume(QUEUE, consumer);
 
             awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);
 
             List<Integer> expectedResult = IntStream.range(0, nbMessages).boxed().collect(Guavate.toImmutableList());
             assertThat(consumer.getConsumedMessages()).containsOnlyElementsOf(expectedResult);
+        }
+
+        private void stopWhenHalfProcessed(DockerRabbitMQCluster cluster, int nbMessages, AtomicInteger counter) {
+            if (counter.incrementAndGet() == nbMessages / 2) {
+                cluster.getRabbitMQ1().stop();
+            }
         }
 
     }
