@@ -37,7 +37,7 @@ public class CassandraSmtpStarttlsCommandTest extends SmtpStarttlsCommandTest {
     @Before
     public void setUp() throws Exception {
         Injector injector = Guice.createInjector(
-                new SmtpTestModule(SmtpTestModule.Port.SMTP_START_TTLS, cassandraServer.getIp(), cassandraServer.getBindingPort()));
+                new SmtpTestModule(SmtpTestModule.Port.SMTP_START_TTLS, cassandraServer.getHost()));
         system = injector.getInstance(SmtpHostSystem.class);
         system.beforeTest();
         super.setUp();

@@ -36,6 +36,7 @@ import org.apache.james.mpt.smtp.SmtpHostSystem;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.util.Host;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
@@ -54,14 +55,12 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
 
     private GuiceJamesServer jamesServer;
     private InMemoryDNSService inMemoryDNSService;
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
 
 
-    public CassandraJamesSmtpHostSystem(int smtpPort, String cassandraHost, int cassandraPort) {
+    public CassandraJamesSmtpHostSystem(int smtpPort, Host cassandraHost) {
         super("localhost", smtpPort, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
 
     @Override
@@ -120,7 +119,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(DefaultConfigurationBuilder::new))
-            .overrideWith(new CassandraTestModule(cassandraHost, cassandraPort),
+            .overrideWith(new CassandraTestModule(cassandraHost),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 }

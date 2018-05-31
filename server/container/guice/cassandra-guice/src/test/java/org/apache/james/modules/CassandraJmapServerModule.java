@@ -22,6 +22,7 @@ package org.apache.james.modules;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.util.Host;
 
 import com.google.inject.AbstractModule;
 
@@ -29,18 +30,16 @@ public class CassandraJmapServerModule extends AbstractModule {
 
     private static final int LIMIT_TO_3_MESSAGES = 3;
     private final EmbeddedElasticSearch embeddedElasticSearch;
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
 
-    public CassandraJmapServerModule(EmbeddedElasticSearch embeddedElasticSearch, String cassandraHost, int cassandraPort) {
+    public CassandraJmapServerModule(EmbeddedElasticSearch embeddedElasticSearch, Host cassandraHost) {
         this.embeddedElasticSearch = embeddedElasticSearch;
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
 
     @Override
     protected void configure() {
-        install(new CassandraTestModule(cassandraHost, cassandraPort));
+        install(new CassandraTestModule(cassandraHost));
         install(new TestElasticSearchModule(embeddedElasticSearch));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
 

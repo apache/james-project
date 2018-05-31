@@ -71,7 +71,7 @@ public class CassandraStepdefs {
 
         mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraServer.getIp(), cassandraServer.getBindingPort()))
+                .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraServer.getHost()))
                 .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
         mainStepdefs.init();

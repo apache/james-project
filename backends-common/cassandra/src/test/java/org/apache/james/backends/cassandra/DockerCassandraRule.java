@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra;
 
 import org.apache.commons.text.RandomStringGenerator;
+import org.apache.james.util.Host;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -124,6 +125,12 @@ public class DockerCassandraRule implements TestRule {
         } finally {
             deleteTmpsFsCmd.exec();
         }
+    }
+
+    public Host getHost() {
+        return Host.from(
+            getIp(),
+            getBindingPort());
     }
     
     public String getIp() {

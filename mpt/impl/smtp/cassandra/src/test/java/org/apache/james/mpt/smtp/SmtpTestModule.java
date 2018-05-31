@@ -19,6 +19,7 @@
 package org.apache.james.mpt.smtp;
 
 import org.apache.james.mpt.smtp.host.CassandraJamesSmtpHostSystem;
+import org.apache.james.util.Host;
 
 import com.google.inject.AbstractModule;
 
@@ -34,20 +35,18 @@ public class SmtpTestModule extends AbstractModule {
             this.port = port;
         }
     }
-    
-    private final Port smtpPort;
-    private final String cassandraHost;
-    private final int cassandraPort;
 
-    public SmtpTestModule(Port smtpPort, String cassandraHost, int cassandraPort) {
+    private final Port smtpPort;
+    private final Host cassandraHost;
+
+    public SmtpTestModule(Port smtpPort, Host cassandraHost) {
         this.smtpPort = smtpPort;
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
     
     @Override
     protected void configure() {
-        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort.port, cassandraHost, cassandraPort));
+        bind(SmtpHostSystem.class).toInstance(new CassandraJamesSmtpHostSystem(smtpPort.port, cassandraHost));
     }
 
 }

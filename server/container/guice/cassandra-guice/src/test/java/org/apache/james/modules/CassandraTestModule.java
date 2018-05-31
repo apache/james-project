@@ -22,6 +22,7 @@ package org.apache.james.modules;
 import javax.inject.Singleton;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
@@ -29,22 +30,20 @@ import com.google.inject.Provides;
 import com.google.inject.name.Names;
 
 public class CassandraTestModule extends AbstractModule {
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
 
-    public CassandraTestModule(String cassandraHost, int cassandraPort) {
+    public CassandraTestModule(Host cassandraHost) {
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
 
     @Override
     protected void configure() {
         install(binder -> binder.bindConstant()
             .annotatedWith(Names.named("cassandraHost"))
-            .to(cassandraHost));
+            .to(cassandraHost.getHostName()));
         install(binder -> binder.bindConstant()
             .annotatedWith(Names.named("cassandraPort"))
-            .to(cassandraPort));
+            .to(cassandraHost.getPort()));
     }
 
     @Provides
