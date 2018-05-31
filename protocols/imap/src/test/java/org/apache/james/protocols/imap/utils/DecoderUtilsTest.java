@@ -21,7 +21,6 @@ package org.apache.james.protocols.imap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.util.Calendar;
@@ -255,7 +254,7 @@ public class DecoderUtilsTest {
     }
 
     private String formatAsImap(Date date, TimeZone zone) {
-        assertNotNull(date);
+        assertThat(date).isNotNull();
         FastDateFormat format = FastDateFormat.getInstance(
                 "dd-MMM-yyyy hh:mm:ss Z", zone, Locale.US);
         String out = format.format(date);

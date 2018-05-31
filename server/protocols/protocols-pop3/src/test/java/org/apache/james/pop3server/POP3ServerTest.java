@@ -139,7 +139,7 @@ public class POP3ServerTest {
 
         // not authenticated
         POP3MessageInfo[] entries = pop3Client.listMessages();
-        assertNull(entries);
+        assertThat(entries).isNull();
 
         pop3Client.login("foo", "bar");
         System.err.println(pop3Client.getState());
@@ -148,12 +148,12 @@ public class POP3ServerTest {
         entries = pop3Client.listMessages();
         assertEquals(1, pop3Client.getState());
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(entries.length, 0);
 
         POP3MessageInfo p3i = pop3Client.listMessage(1);
         assertEquals(1, pop3Client.getState());
-        assertNull(p3i);
+        assertThat(p3i).isNull();
     }
 
     // TODO: This currently fails with Async implementation because
@@ -223,7 +223,7 @@ public class POP3ServerTest {
         assertEquals("Expected 2 messages, found: " + list.length, 2, list.length);
 
         POP3MessageInfo p3i = pop3Client.listUniqueIdentifier(1);
-        assertNotNull(p3i);
+        assertThat(p3i).isNotNull();
 
         mailboxManager.deleteMailbox(mailboxPath, session);
 
@@ -312,18 +312,18 @@ public class POP3ServerTest {
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(2, entries.length);
         assertEquals(1, pop3Client.getState());
 
         Reader r = pop3Client.retrieveMessageTop(entries[0].number, 0);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
 
         r.close();
 
         Reader r2 = pop3Client.retrieveMessage(entries[0].number);
-        assertNotNull(r2);
+        assertThat(r2).isNotNull();
         r2.close();
 
         // existing message
@@ -356,7 +356,7 @@ public class POP3ServerTest {
 
         entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(1, entries.length);
         assertEquals(1, pop3Client.getState());
 
@@ -365,7 +365,7 @@ public class POP3ServerTest {
         assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
 
         Reader r3 = pop3Client.retrieveMessageTop(entries[0].number, 0);
-        assertNotNull(r3);
+        assertThat(r3).isNotNull();
         r3.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
     }
@@ -503,8 +503,8 @@ public class POP3ServerTest {
         assertEquals(msgCount, statInfo2.number);
 
         // This both should error and so return null
-        assertNull(pop3Protocol2.retrieveMessageTop(1, 100));
-        assertNull(pop3Protocol2.retrieveMessage(1));
+        assertThat(pop3Protocol2.retrieveMessageTop(1, 100)).isNull();
+        assertThat(pop3Protocol2.retrieveMessage(1)).isNull();
 
         pop3Protocol2.sendCommand("quit");
         pop3Protocol2.disconnect();
@@ -681,13 +681,13 @@ public class POP3ServerTest {
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(1, entries.length);
         assertEquals(1, pop3Client.getState());
 
         Reader r = pop3Client.retrieveMessage(entries[0].number);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
         r.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
 

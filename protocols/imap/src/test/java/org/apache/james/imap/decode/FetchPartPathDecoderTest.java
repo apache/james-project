@@ -19,8 +19,8 @@
 
 package org.apache.james.imap.decode;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
@@ -191,7 +191,7 @@ public class FetchPartPathDecoderTest {
         base = base + ')';
         decoder.decode(base);
         Collection<String> results = decoder.getNames();
-        assertNotNull(results);
+        assertThat(results).isNotNull();
         Iterator<String> it = results.iterator();
         for (String name : names) {
             assertEquals(name, it.next());
@@ -220,7 +220,7 @@ public class FetchPartPathDecoderTest {
     private void checkPath(int[] expected, String encoded) throws Exception {
         decoder.decode(encoded);
         final int[] path = decoder.getPath();
-        assertNotNull(path);
+        assertThat(path).isNotNull();
         assertEquals(expected.length, path.length);
         for (int i = 0; i < expected.length; i++) {
             assertEquals(expected[i], path[i]);

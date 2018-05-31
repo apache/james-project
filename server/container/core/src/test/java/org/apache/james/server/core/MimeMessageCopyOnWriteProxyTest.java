@@ -106,7 +106,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         assertNotSame(m2.getMessage(), m2clone.getMessage());
         // test that m2clone has a valid wrapped message
         MimeMessage mm3 = getWrappedMessage(m2clone.getMessage());
-        assertNotNull(mm3);
+        assertThat(mm3).isNotNull();
         // dispose m2 and check that the clone has still a valid message and it
         // is the same!
         LifecycleUtil.dispose(m2);
@@ -195,13 +195,13 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MailImpl mailClone = MailImpl.duplicate(mail);
         LifecycleUtil.dispose(mail);
 
-        assertNotNull(getWrappedMessage(mailClone.getMessage()));
-        assertNull(mail.getMessage());
+        assertThat(getWrappedMessage(mailClone.getMessage())).isNotNull();
+        assertThat(mail.getMessage()).isNull();
 
         LifecycleUtil.dispose(mailClone);
 
-        assertNull(mailClone.getMessage());
-        assertNull(mail.getMessage());
+        assertThat(mailClone.getMessage()).isNull();
+        assertThat(mail.getMessage()).isNull();
         LifecycleUtil.dispose(mail);
         LifecycleUtil.dispose(messageFromSources);
     }

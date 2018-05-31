@@ -20,6 +20,8 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -243,7 +245,7 @@ public class DNSRBLHandlerTest {
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
         rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
-        assertNull(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection));
+        assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).isNull();
         assertNotNull("Blocked", mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, State.Connection));
     }
 
@@ -258,7 +260,7 @@ public class DNSRBLHandlerTest {
         rbl.setWhitelist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
         rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
-        assertNull(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection));
+        assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, Connection)).isNull();
         assertNull("Not blocked", mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, State.Connection));
     }
    

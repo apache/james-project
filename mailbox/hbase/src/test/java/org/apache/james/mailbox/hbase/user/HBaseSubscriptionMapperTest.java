@@ -142,8 +142,8 @@ public class HBaseSubscriptionMapperTest {
                 assertEquals(subscription.getUser(), result.getUser());
             }
         }
-        assertNull(mapper.findMailboxSubscriptionForUser(fake1.getUser(), fake1.getMailbox()));
-        assertNull(mapper.findMailboxSubscriptionForUser(fake2.getUser(), fake2.getMailbox()));
+        assertThat(mapper.findMailboxSubscriptionForUser(fake1.getUser(), fake1.getMailbox())).isNull();
+        assertThat(mapper.findMailboxSubscriptionForUser(fake2.getUser(), fake2.getMailbox())).isNull();
     }
 
     /**

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.apache.mailet.base.RFC2822Headers.RETURN_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -379,7 +380,7 @@ public class MimeMessageTest {
     @Test
     public void testReturnPath() throws Exception {
         MimeMessage message = getSimpleMessage();
-        assertNull(message.getHeader(RFC2822Headers.RETURN_PATH));
+        assertThat(message.getHeader(RETURN_PATH)).isNull();
         LifecycleUtil.dispose(message);
     }
 

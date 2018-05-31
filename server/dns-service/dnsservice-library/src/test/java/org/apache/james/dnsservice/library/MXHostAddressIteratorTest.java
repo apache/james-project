@@ -50,14 +50,14 @@ public class MXHostAddressIteratorTest {
         MXHostAddressIterator it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, false);
         for (int i = 0; i < 4; i++) {
             assertThat(it.hasNext()).isTrue();
-            assertNotNull(it.next());
+            assertThat(it.next()).isNotNull();
         }
         assertThat(it.hasNext()).isFalse();
 
         it = new MXHostAddressIterator(Arrays.asList("localhost", "localhost2").iterator(), dns, true);
         for (int i = 0; i < 2; i++) {
             assertThat(it.hasNext()).isTrue();
-            assertNotNull(it.next());
+            assertThat(it.next()).isNotNull();
         }
         assertThat(it.hasNext()).isFalse();
     }
