@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.MessageBuilder;
@@ -33,7 +33,7 @@ public class DelegatingMailboxMessageTest {
             throws Exception {
         MailboxMessage one = buildMessage(100);
         MailboxMessage two = buildMessage(99);
-        assertTrue(one.compareTo(two) > 0);
+        assertThat(one.compareTo(two) > 0).isTrue();
     }
 
     private MailboxMessage buildMessage(int uid) throws Exception {
@@ -47,7 +47,7 @@ public class DelegatingMailboxMessageTest {
             throws Exception {
         MailboxMessage one = buildMessage(98);
         MailboxMessage two = buildMessage(99);
-        assertTrue(one.compareTo(two) < 0);
+        assertThat(one.compareTo(two) < 0).isTrue();
     }
 
     @Test

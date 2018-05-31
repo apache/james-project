@@ -19,8 +19,8 @@
  */
 package org.apache.james.util.retry;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,14 +64,14 @@ public class ExceptionRetryHandlerTest {
 
     @Test
     public final void testExceptionRetryHandler() {
-        assertTrue(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
+        assertThat(RetryHandler.class.isAssignableFrom(new ExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
             @Override
             public Object operation() {
                 return null;
             }
-        }.getClass()));
+        }.getClass())).isTrue();
     }
 
     @Test

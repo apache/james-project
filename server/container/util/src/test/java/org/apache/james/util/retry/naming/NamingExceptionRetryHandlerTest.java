@@ -19,8 +19,8 @@
  */
 package org.apache.james.util.retry.naming;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -62,14 +62,14 @@ public class NamingExceptionRetryHandlerTest {
 
     @Test
     public void testExceptionRetryHandler() {
-        assertTrue(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
+        assertThat(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
             @Override
             public Object operation() {
                 return null;
             }
-        }.getClass()));
+        }.getClass())).isTrue();
     }
 
     @Test

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -270,7 +270,7 @@ public abstract class AbstractStateMailetProcessorTest {
             public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 if (ExceptionThrowingMailet.class.equals(m.getClass())) {
                     // the name should be not the same as we have a part match
-                    assertFalse(mail.getName().equals(mailName));
+                    assertThat(mail.getName().equals(mailName)).isFalse();
                     assertNotNull(e);
                     assertEquals(Mail.ERROR, state);
                     latch.countDown();

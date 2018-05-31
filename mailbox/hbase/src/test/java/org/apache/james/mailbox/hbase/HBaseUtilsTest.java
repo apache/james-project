@@ -42,9 +42,9 @@ import static org.apache.james.mailbox.hbase.HBaseUtils.hBaseIdFromRowKey;
 import static org.apache.james.mailbox.hbase.HBaseUtils.toPut;
 import static org.apache.james.mailbox.hbase.PropertyConvertor.getProperty;
 import static org.apache.james.mailbox.hbase.PropertyConvertor.getValue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.UUID;
@@ -98,13 +98,13 @@ public class HBaseUtilsTest {
 
         Put result = toPut(instance);
         assertArrayEquals(instance.getMailboxId().toBytes(), result.getRow());
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_USER, Bytes.toBytes(instance.getUser())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_NAME, Bytes.toBytes(instance.getName())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_NAMESPACE, Bytes.toBytes(instance.getNamespace())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_UIDVALIDITY, Bytes.toBytes(instance.getUidValidity())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_LASTUID, Bytes.toBytes(instance.getLastUid())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_HIGHEST_MODSEQ, Bytes.toBytes(instance.getHighestModSeq())));
-        assertTrue(result.has(MAILBOX_CF, MAILBOX_MESSAGE_COUNT, Bytes.toBytes(0L)));
+        assertThat(result.has(MAILBOX_CF, MAILBOX_USER, Bytes.toBytes(instance.getUser()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_NAME, Bytes.toBytes(instance.getName()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_NAMESPACE, Bytes.toBytes(instance.getNamespace()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_UIDVALIDITY, Bytes.toBytes(instance.getUidValidity()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_LASTUID, Bytes.toBytes(instance.getLastUid()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_HIGHEST_MODSEQ, Bytes.toBytes(instance.getHighestModSeq()))).isTrue();
+        assertThat(result.has(MAILBOX_CF, MAILBOX_MESSAGE_COUNT, Bytes.toBytes(0L))).isTrue();
     }
 
     /**
@@ -131,7 +131,7 @@ public class HBaseUtilsTest {
         Subscription subscription = new SimpleSubscription("ieugen", "INBOX");
         Put put = toPut(subscription);
         assertArrayEquals(Bytes.toBytes(subscription.getUser()), put.getRow());
-        assertTrue(put.has(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox()), MARKER_PRESENT));
+        assertThat(put.has(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox()), MARKER_PRESENT)).isTrue();
     }
 
     @Test
@@ -149,13 +149,13 @@ public class HBaseUtilsTest {
         message.setUid(MessageUid.of(1));
         Put put = flagsToPut(message, flags);
         //test for the system flags
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_SEEN, MARKER_PRESENT));
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_DRAFT, MARKER_PRESENT));
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_RECENT, MARKER_PRESENT));
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_FLAGGED, MARKER_PRESENT));
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_ANSWERED, MARKER_MISSING));
-        assertTrue(put.has(MESSAGES_META_CF, FLAGS_DELETED, MARKER_MISSING));
-        assertTrue(put.has(MESSAGES_META_CF, userFlagToBytes("userFlag1"), MARKER_PRESENT));
-        assertTrue(put.has(MESSAGES_META_CF, userFlagToBytes("userFlag2"), MARKER_PRESENT));
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_SEEN, MARKER_PRESENT)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_DRAFT, MARKER_PRESENT)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_RECENT, MARKER_PRESENT)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_FLAGGED, MARKER_PRESENT)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_ANSWERED, MARKER_MISSING)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, FLAGS_DELETED, MARKER_MISSING)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, userFlagToBytes("userFlag1"), MARKER_PRESENT)).isTrue();
+        assertThat(put.has(MESSAGES_META_CF, userFlagToBytes("userFlag2"), MARKER_PRESENT)).isTrue();
     }
 }

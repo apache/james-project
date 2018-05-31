@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.pop3server;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -111,7 +111,7 @@ public class POP3ServerTest {
 
         pop3Client.login("known", "test");
         assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -124,7 +124,7 @@ public class POP3ServerTest {
 
         pop3Client.login("unknown", "test");
         assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -328,17 +328,17 @@ public class POP3ServerTest {
 
         // existing message
         boolean deleted = pop3Client.deleteMessage(entries[0].number);
-        assertTrue(deleted);
+        assertThat(deleted).isTrue();
 
         // already deleted message
         deleted = pop3Client.deleteMessage(entries[0].number);
 
         // TODO: Understand why this fails...
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         // unexisting message
         deleted = pop3Client.deleteMessage(10);
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         pop3Client.logout();
         //m_pop3Protocol.disconnect();
@@ -490,7 +490,7 @@ public class POP3ServerTest {
         assertEquals(msgCount, uidlEntries2.length);
         assertEquals(msgCount, statInfo2.number);
 
-        assertTrue(pop3Client.logout());
+        assertThat(pop3Client.logout()).isTrue();
         pop3Client.disconnect();
 
         // even after the message was deleted and the session was quit it should
@@ -563,7 +563,7 @@ public class POP3ServerTest {
 
         pop3Client.login("foo", pass);
         assertEquals(1, pop3Client.getState());
-        assertTrue(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1"));
+        assertThat(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1")).isTrue();
 
     }
 
@@ -584,7 +584,7 @@ public class POP3ServerTest {
         pop3Client.getReplyString();
         List<String> replies = Arrays.asList(pop3Client.getReplyStrings());
 
-        assertTrue("contains USER", replies.contains("USER"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
 
         pop3Client.login("foo", pass);
         assertEquals(POP3Reply.OK, pop3Client.sendCommand("CAPA"));
@@ -592,9 +592,9 @@ public class POP3ServerTest {
         pop3Client.getAdditionalReply();
         pop3Client.getReplyString();
         replies = Arrays.asList(pop3Client.getReplyStrings());
-        assertTrue("contains USER", replies.contains("USER"));
-        assertTrue("contains UIDL", replies.contains("UIDL"));
-        assertTrue("contains TOP", replies.contains("TOP"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
+        assertThat(replies.contains("UIDL")).describedAs("contains UIDL").isTrue();
+        assertThat(replies.contains("TOP")).describedAs("contains TOP").isTrue();
         
     }
 

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -296,7 +297,7 @@ public class MimeMessageTest {
         MimeMessage mm = getMissingEncodingMessage();
         try {
             int count = mm.getLineCount();
-            assertTrue(count == -1 || count == 7);
+            assertThat(count == -1 || count == 7).isTrue();
         } catch (Exception e) {
             fail("Unexpected exception in getLineCount");
         }

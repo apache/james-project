@@ -18,12 +18,11 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
@@ -62,15 +61,15 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         assertNotSame(m2, mail);
         assertNotSame(m2.getMessage(), mail.getMessage());
         // test that the wrapped message is the same
-        assertTrue(isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // test it is the same after read only operations!
         mail.getMessage().getSubject();
-        assertTrue(isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         mail.getMessage().setText("new body");
         mail.getMessage().saveChanges();
         // test it is different after a write operation!
         mail.getMessage().setSubject("new Subject");
-        assertTrue(!isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(!isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         LifecycleUtil.dispose(mail);
         LifecycleUtil.dispose(m2);
         LifecycleUtil.dispose(messageFromSources);
@@ -88,21 +87,21 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         assertNotSame(m2, mail);
         assertNotSame(m2.getMessage(), mail.getMessage());
         // test that the wrapped message is the same
-        assertTrue(isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // test it is the same after real only operations!
         m2.getMessage().getSubject();
-        assertTrue(isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         m2.getMessage().setText("new body");
         m2.getMessage().saveChanges();
         // test it is different after a write operation!
         m2.getMessage().setSubject("new Subject");
-        assertTrue(!isSameMimeMessage(m2.getMessage(), mail.getMessage()));
+        assertThat(!isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // check that the subjects are correct on both mails!
         assertEquals(m2.getMessage().getSubject(), "new Subject");
         assertEquals(mail.getMessage().getSubject(), "foo");
         // cloning again the messages
         Mail m2clone = m2.duplicate("clone2");
-        assertTrue(isSameMimeMessage(m2clone.getMessage(), m2.getMessage()));
+        assertThat(isSameMimeMessage(m2clone.getMessage(), m2.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(m2.getMessage());
         assertNotSame(m2.getMessage(), m2clone.getMessage());
         // test that m2clone has a valid wrapped message
@@ -116,7 +115,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         // been disposed, so it should not clone it!
         m2clone.getMessage().setSubject("new Subject 2");
         m2clone.getMessage().setText("new Body 3");
-        assertTrue(isSameMimeMessage(m2clone.getMessage(), mm));
+        assertThat(isSameMimeMessage(m2clone.getMessage(), mm)).isTrue();
         LifecycleUtil.dispose(mail);
         LifecycleUtil.dispose(messageFromSources);
     }
@@ -135,7 +134,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
         // cloning the message
         Mail mailClone = MailImpl.duplicate(mail);
-        assertTrue(isSameMimeMessage(mailClone.getMessage(), mail.getMessage()));
+        assertThat(isSameMimeMessage(mailClone.getMessage(), mail.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(mail.getMessage());
         assertNotSame(mail.getMessage(), mailClone.getMessage());
         // dispose mail and check that the clone has still a valid message and
@@ -147,12 +146,12 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         System.gc();
         Thread.sleep(1000);
         // dumb test
-        assertTrue(isSameMimeMessage(mailClone.getMessage(), mailClone.getMessage()));
+        assertThat(isSameMimeMessage(mailClone.getMessage(), mailClone.getMessage())).isTrue();
         // change the message that should be not referenced by mail that has
         // been disposed, so it should not clone it!
         mailClone.getMessage().setSubject("new Subject 2");
         mailClone.getMessage().setText("new Body 3");
-        assertTrue(isSameMimeMessage(mailClone.getMessage(), mm));
+        assertThat(isSameMimeMessage(mailClone.getMessage(), mm)).isTrue();
         LifecycleUtil.dispose(mailClone);
         LifecycleUtil.dispose(mm);
     }
@@ -171,7 +170,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
             .build();
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r,
             mimeMessage);
-        assertTrue(isSameMimeMessage(mimeMessage, mail.getMessage()));
+        assertThat(isSameMimeMessage(mimeMessage, mail.getMessage())).isTrue();
         // change the message that should be not referenced by mail that has
         // been disposed, so it should not clone it!
         System.gc();
@@ -180,7 +179,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         mail.getMessage().setText("new Body 3");
         System.gc();
         Thread.sleep(100);
-        assertFalse(isSameMimeMessage(mimeMessage, mail.getMessage()));
+        assertThat(isSameMimeMessage(mimeMessage, mail.getMessage())).isFalse();
         LifecycleUtil.dispose(mail);
         LifecycleUtil.dispose(mimeMessage);
     }
