@@ -21,7 +21,7 @@ package org.apache.james.server.core;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Fail.fail;
 
 import java.util.ArrayList;
 

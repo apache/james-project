@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.decode.main;
 
+import static org.assertj.core.api.Fail.fail;
 import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
@@ -28,7 +29,6 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
-import org.junit.Assert;
 import org.junit.Test;
 
 public class IdRangeParseTest  {
@@ -60,7 +60,7 @@ public class IdRangeParseTest  {
 
         try {
             ranges(rangeAsString(0, val1));
-            Assert.fail();
+            fail("Expecting DecodingException");
         } catch (DecodingException e) {
             // number smaller then 1 should not work
         }
@@ -68,7 +68,7 @@ public class IdRangeParseTest  {
 
         try {
             ranges(rangeAsString(Long.MAX_VALUE, val1));
-            Assert.fail();
+            fail("Expecting DecodingException");
         } catch (DecodingException e) {
             // number smaller then 1 should not work
         }

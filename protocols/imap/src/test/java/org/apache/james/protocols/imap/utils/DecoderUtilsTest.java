@@ -20,8 +20,8 @@
 package org.apache.james.protocols.imap.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -47,7 +47,7 @@ public class DecoderUtilsTest {
         Flags flags = new Flags();
         try {
             DecoderUtils.setFlag("\\Recent", flags);
-            fail();
+            fail("DecodingException was expect");
         } catch (DecodingException e) {
             // expected
         }

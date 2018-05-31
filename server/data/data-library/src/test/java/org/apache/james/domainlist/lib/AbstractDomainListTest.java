@@ -19,7 +19,7 @@
 package org.apache.james.domainlist.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Fail.fail;
 
 import java.net.UnknownHostException;
 

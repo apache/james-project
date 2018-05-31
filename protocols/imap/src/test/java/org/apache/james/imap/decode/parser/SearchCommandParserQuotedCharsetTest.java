@@ -19,8 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.assertj.core.api.Fail.fail;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -174,7 +174,7 @@ public class SearchCommandParserQuotedCharsetTest {
     }
 
     @Test
-    public void testBadCharset() throws Exception {      
+    public void testBadCharset() throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());

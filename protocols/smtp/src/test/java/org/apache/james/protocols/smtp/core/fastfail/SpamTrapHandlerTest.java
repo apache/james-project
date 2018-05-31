@@ -20,7 +20,7 @@
 package org.apache.james.protocols.smtp.core.fastfail;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.assertj.core.api.Fail.fail;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
