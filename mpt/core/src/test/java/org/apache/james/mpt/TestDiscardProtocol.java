@@ -63,7 +63,7 @@ public class TestDiscardProtocol extends TestCase {
         super.setUp();
         protocol = new DiscardProtocol();
         protocol.start();
-        socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort());
+        socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort().getValue());
         record = protocol.recordNext();
     }
 

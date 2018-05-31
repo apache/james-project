@@ -26,6 +26,7 @@ import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.Session;
 import org.apache.james.mpt.api.SessionFactory;
+import org.apache.james.util.Port;
 
 /**
  * Session factory creates session which connection to a server port.
@@ -41,8 +42,8 @@ public class ExternalSessionFactory implements SessionFactory {
         this(null, monitor, shabang);
     }
     
-    public ExternalSessionFactory(String host, int port, Monitor monitor, String shabang) {
-        this(new InetSocketAddress(host, port), monitor, shabang);
+    public ExternalSessionFactory(String host, Port port, Monitor monitor, String shabang) {
+        this(new InetSocketAddress(host, port.getValue()), monitor, shabang);
     }
 
     public ExternalSessionFactory(InetSocketAddress address, Monitor monitor, String shabang) {

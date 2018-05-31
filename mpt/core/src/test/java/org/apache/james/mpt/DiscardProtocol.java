@@ -32,6 +32,7 @@ import java.util.Queue;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.james.util.Port;
 
 /**
  * Simple <a href='http://tools.ietf.org/html/rfc863'>RFC 863</a> implementation.
@@ -47,7 +48,7 @@ public class DiscardProtocol {
     private static final Log LOG = LogFactory.getLog(DiscardProtocol.class);
     
     /** Serve on this port */
-    private int port;
+    private Port port;
     
     /** 
      * Queues requests for recordings.
@@ -80,7 +81,7 @@ public class DiscardProtocol {
             if (socket == null) {
                 socket = ServerSocketChannel.open();
                 socket.socket().bind(new InetSocketAddress(0));
-                port = socket.socket().getLocalPort();
+                port = new Port(socket.socket().getLocalPort());
                 // only going to record a single conversation
                 socket.configureBlocking(false);
                 
@@ -93,7 +94,7 @@ public class DiscardProtocol {
         }
     }
     
-    public int getPort() {
+    public Port getPort() {
         return port;
     }
     

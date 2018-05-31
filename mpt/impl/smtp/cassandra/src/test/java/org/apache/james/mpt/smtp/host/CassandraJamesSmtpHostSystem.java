@@ -37,6 +37,7 @@ import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.Host;
+import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
@@ -58,7 +59,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     private final Host cassandraHost;
 
 
-    public CassandraJamesSmtpHostSystem(int smtpPort, Host cassandraHost) {
+    public CassandraJamesSmtpHostSystem(Port smtpPort, Host cassandraHost) {
         super("localhost", smtpPort, new SystemLoggingMonitor(), "220 mydomain.tld smtp");
         this.cassandraHost = cassandraHost;
     }

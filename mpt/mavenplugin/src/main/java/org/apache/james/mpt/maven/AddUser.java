@@ -20,6 +20,9 @@
 package org.apache.james.mpt.maven;
 
 import java.io.File;
+import java.util.Optional;
+
+import org.apache.james.util.Port;
 
 
 /**
@@ -27,7 +30,7 @@ import java.io.File;
  */
 public class AddUser {
     
-    private int port;
+    private Optional<Port> port = Optional.empty();
     private String user;
     private String passwd;
     private String scriptText;
@@ -52,7 +55,7 @@ public class AddUser {
      * script should be executed.
      * @return port number
      */
-    public int getPort() {
+    public Optional<Port> getPort() {
         return port;
     }
 
@@ -61,8 +64,8 @@ public class AddUser {
      * script should be executed.
      * @param port port number
      */
-    public void setPort(int port) {
-        this.port = port;
+    public void setPort(Port port) {
+        this.port = Optional.of(port);
     }
 
     /**

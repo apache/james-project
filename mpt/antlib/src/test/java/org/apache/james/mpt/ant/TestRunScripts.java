@@ -56,7 +56,7 @@ public class TestRunScripts extends TestCase {
         
         subject = new MailProtocolTestTask();
         subject.setHost("127.0.0.1");
-        subject.setPort(fakeServer.getPort());
+        subject.setPort(fakeServer.getPort().getValue());
         subject.setProject(new Project());
     }
 

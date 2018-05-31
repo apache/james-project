@@ -28,6 +28,7 @@ import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.monitor.NullMonitor;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
 import org.apache.james.mpt.session.ExternalSessionFactory;
+import org.apache.james.util.Port;
 
 /**
  * Adds a user by executing a script at a port.
@@ -41,7 +42,7 @@ public class ScriptedUserAdder implements UserAdder {
     private static final String USER_VARIABLE_NAME = "user";
     
     private final String host;
-    private final int port;
+    private final Port port;
     private final String script;
     private final Monitor monitor;
     
@@ -51,11 +52,11 @@ public class ScriptedUserAdder implements UserAdder {
      * @param host connect to this host
      * @param port connect to this port
      */
-    public ScriptedUserAdder(String host, int port) {
+    public ScriptedUserAdder(String host, Port port) {
         this(host, port, (String) null);
     }
     
-    public ScriptedUserAdder(String host, int port, String script) {
+    public ScriptedUserAdder(String host, Port port, String script) {
         this(host, port, script, new NullMonitor());
     }
     
@@ -65,11 +66,11 @@ public class ScriptedUserAdder implements UserAdder {
      * @param port connect to this port
      * @param monitor not null
      */
-    public ScriptedUserAdder(String host, int port, Monitor monitor) {
+    public ScriptedUserAdder(String host, Port port, Monitor monitor) {
         this(host, port, null, monitor);
     }
     
-    public ScriptedUserAdder(String host, int port, String script, Monitor monitor) {
+    public ScriptedUserAdder(String host, Port port, String script, Monitor monitor) {
         this.host = host;
         this.port = port;
         this.script = script;

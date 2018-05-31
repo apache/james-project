@@ -30,6 +30,7 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.UserAdder;
 import org.apache.james.mpt.session.ExternalSessionFactory;
+import org.apache.james.util.Port;
 
 /**
  * <p>
@@ -67,7 +68,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
      * @param userAdder
      *            null when test system has appropriate users already set
      */
-    public ExternalHostSystem(ImapFeatures features, String host, int port, 
+    public ExternalHostSystem(ImapFeatures features, String host, Port port,
             Monitor monitor, String shabang, UserAdder userAdder) {
         super(host, port, monitor, shabang);
         this.features = features;
