@@ -93,7 +93,6 @@ public class CassandraMailboxModule extends AbstractModule {
     protected void configure() {
         install(new DefaultEventModule());
         install(new CassandraQuotaModule());
-        install(new CassandraObjectStoreModule());
 
         bind(CassandraApplicableFlagDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);
@@ -157,7 +156,6 @@ public class CassandraMailboxModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule.class);
-        cassandraDataDefinitions.addBinding().to(org.apache.james.blob.cassandra.CassandraBlobModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule.class);
         cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule.class);

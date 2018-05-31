@@ -19,17 +19,11 @@
 
 package org.apache.james.modules;
 
-import javax.inject.Singleton;
-
-import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 
-import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.name.Names;
 
 public class CassandraJmapServerModule extends AbstractModule {
 
@@ -46,16 +40,11 @@ public class CassandraJmapServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new CassandraTestModule(cassandraHost, cassandraPort));
         install(new TestElasticSearchModule(embeddedElasticSearch));
         install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+
         install(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class));
-        install(binder -> binder.bindConstant().annotatedWith(Names.named("cassandraHost")).to(cassandraHost));
-        install(binder -> binder.bindConstant().annotatedWith(Names.named("cassandraPort")).to(cassandraPort));
     }
-    
-    @Provides
-    @Singleton
-    Session provideSession(CassandraCluster initializedCassandra) {
-        return initializedCassandra.getConf();
-    }
+
 }

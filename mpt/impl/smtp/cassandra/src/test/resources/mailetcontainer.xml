@@ -63,7 +63,6 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
-            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
@@ -80,17 +79,6 @@
                 <deliveryThreads>1</deliveryThreads>
                 <sendpartial>false</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
-            </mailet>
-        </processor>
-
-        <processor state="local-address-error" enableJmx="true">
-            <mailet match="All" class="Bounce">
-                <attachment>none</attachment>
-                <passThrough>true</passThrough>
-                <debug>true</debug>
-            </mailet>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/address-error/</repositoryPath>
             </mailet>
         </processor>
 

@@ -21,28 +21,36 @@ package org.apache.james.mpt.smtp.host;
 
 import java.util.Iterator;
 
+import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.modules.CassandraJmapServerModule;
+import org.apache.james.modules.CassandraTestModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
+import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.mpt.monitor.SystemLoggingMonitor;
 import org.apache.james.mpt.session.ExternalSessionFactory;
 import org.apache.james.mpt.smtp.SmtpHostSystem;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory implements SmtpHostSystem {
 
+    private static final Module SMTP_PROTOCOL_MODULE = Modules.combine(
+        new ProtocolHandlerModule(),
+        new SMTPServerModule());
+
     private TemporaryFolder folder;
-    private EmbeddedElasticSearch embeddedElasticSearch;
 
     private GuiceJamesServer jamesServer;
     private InMemoryDNSService inMemoryDNSService;
@@ -84,8 +92,6 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
         inMemoryDNSService = new InMemoryDNSService();
         folder = new TemporaryFolder();
         folder.create();
-        embeddedElasticSearch = new EmbeddedElasticSearch(folder.getRoot().toPath(), MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
-        embeddedElasticSearch.before();
         jamesServer = createJamesServer();
         jamesServer.start();
     }
@@ -93,7 +99,6 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
     @Override
     public void afterTest() {
         jamesServer.stop();
-        embeddedElasticSearch.after();
         folder.delete();
     }
 
@@ -109,8 +114,13 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
             .build();
 
         return new GuiceJamesServer(configuration)
-            .combineWith(CassandraJamesServerMain.CASSANDRA_SERVER_MODULE, CassandraJamesServerMain.PROTOCOLS, new ProtocolHandlerModule())
-            .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraHost, cassandraPort),
+            .combineWith(
+                CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
+                SMTP_PROTOCOL_MODULE,
+                binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
+                binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
+                    .toInstance(DefaultConfigurationBuilder::new))
+            .overrideWith(new CassandraTestModule(cassandraHost, cassandraPort),
                 (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 }

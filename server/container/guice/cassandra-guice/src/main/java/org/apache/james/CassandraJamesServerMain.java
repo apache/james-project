@@ -28,6 +28,7 @@ import org.apache.james.modules.data.CassandraSieveRepositoryModule;
 import org.apache.james.modules.data.CassandraUsersRepositoryModule;
 import org.apache.james.modules.eventstore.CassandraEventStoreModule;
 import org.apache.james.modules.mailbox.CassandraMailboxModule;
+import org.apache.james.modules.mailbox.CassandraObjectStoreModule;
 import org.apache.james.modules.mailbox.CassandraQuotaMailingModule;
 import org.apache.james.modules.mailbox.CassandraSessionModule;
 import org.apache.james.modules.mailbox.ElasticSearchMailboxModule;
@@ -68,6 +69,7 @@ public class CassandraJamesServerMain {
         new WebAdminServerModule());
 
     public static final Module PROTOCOLS = Modules.combine(
+        new CassandraJmapModule(),
         new IMAPServerModule(),
         new LMTPServerModule(),
         new ManageSieveServerModule(),
@@ -80,18 +82,20 @@ public class CassandraJamesServerMain {
     public static final Module PLUGINS = Modules.combine(
         new CassandraQuotaMailingModule());
 
-    public static final Module CASSANDRA_SERVER_MODULE = Modules.combine(
+    public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
         new CassandraEventStoreModule(),
-        new CassandraJmapModule(),
-        new CassandraMailboxModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),
+        new CassandraObjectStoreModule(),
         new CassandraRecipientRewriteTableModule(),
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
-        new CassandraUsersRepositoryModule(),
+        new CassandraUsersRepositoryModule());
+
+    public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
+        new CassandraMailboxModule(),
         new ElasticSearchMailboxModule(),
         new ElasticSearchMetricReporterModule(),
         new MailboxModule(),
@@ -99,7 +103,8 @@ public class CassandraJamesServerMain {
         new SpamAssassinListenerModule());
 
     public static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
-        CASSANDRA_SERVER_MODULE,
+        CASSANDRA_SERVER_CORE_MODULE,
+        CASSANDRA_MAILBOX_MODULE,
         PROTOCOLS,
         PLUGINS);
 
