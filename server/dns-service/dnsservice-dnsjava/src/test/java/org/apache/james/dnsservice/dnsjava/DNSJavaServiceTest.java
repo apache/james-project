@@ -20,7 +20,6 @@ package org.apache.james.dnsservice.dnsjava;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -224,7 +223,7 @@ public class DNSJavaServiceTest {
     private static Zone loadZone(String zoneName) throws IOException {
         String zoneFilename = zoneName + "zone";
         URL zoneResource = Resources.getResource(DNSJavaServiceTest.class, zoneFilename);
-        assertNotNull("test resource for zone could not be loaded: " + zoneFilename, zoneResource);
+        assertThat(zoneResource).withFailMessage("test resource for zone could not be loaded: " + zoneFilename).isNotNull();
         return new Zone(Name.fromString(zoneName), zoneResource.getFile());
     }
 
