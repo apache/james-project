@@ -169,7 +169,8 @@ class RabbitMQClusterTest {
             closeQuietly(resilientConnection, resilientChannel);
         }
 
-        @Disabled("For some reason, we are unable to recover topology when reconnecting")
+        @Disabled("JAMES-2334 For some reason, we are unable to recover topology when reconnecting" +
+            "See https://github.com/rabbitmq/rabbitmq-server/issues/959")
         @Test
         void nodeKillingWhenProducing(DockerRabbitMQCluster cluster) throws Exception {
             resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
