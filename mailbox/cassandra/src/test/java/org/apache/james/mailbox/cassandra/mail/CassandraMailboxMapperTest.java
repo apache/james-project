@@ -53,8 +53,6 @@ public class CassandraMailboxMapperTest {
     private static final Mailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
 
     private static final CassandraId MAILBOX_ID_2 = CassandraId.timeBased();
-    private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(USER, "name2");
-    private static final Mailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, UID_VALIDITY, MAILBOX_ID_2);
 
 
     private static final Mailbox MAILBOX_BIS = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);

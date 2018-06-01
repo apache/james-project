@@ -47,7 +47,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheDisabled()
-                    .cacheWeightInBytes(100L * 1024L *1024L)
+                    .cacheWeightInBytes(100L * 1024L * 1024L)
                     .cacheEvictionPeriod(Duration.ofDays(1))
                     .build());
     }

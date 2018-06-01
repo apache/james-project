@@ -46,12 +46,13 @@ import com.google.common.collect.ImmutableList;
 import com.jayway.restassured.specification.RequestSpecification;
 
 public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
-    private static final Runnable NO_AWAIT = () -> {};
+    private static final Runnable NO_AWAIT = () -> { };
 
     private final List<Function<QuotaSearchTestSystem, Routes>> routesGenerators;
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private QuotaSearchTestSystem quotaSearchTestSystem;
 
+    @SafeVarargs
     public ScanningQuotaSearchExtension(Function<QuotaSearchTestSystem, Routes>... routesGenerators) {
         this.routesGenerators = ImmutableList.copyOf(routesGenerators);
     }

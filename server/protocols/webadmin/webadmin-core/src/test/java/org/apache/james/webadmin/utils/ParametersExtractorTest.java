@@ -104,7 +104,7 @@ public class ParametersExtractorTest {
         when(request.queryParams("offset"))
             .thenReturn("");
 
-        Offset offset= ParametersExtractor.extractOffset(request);
+        Offset offset = ParametersExtractor.extractOffset(request);
 
         assertThat(offset).isEqualTo(Offset.none());
     }

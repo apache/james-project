@@ -58,7 +58,7 @@ public class CachingTextExtractor implements TextExtractor {
                 .map(this::computeWeight)
                 .ifPresent(weightMetric::remove);
 
-        this.cache = CacheBuilder.<String, String>newBuilder()
+        this.cache = CacheBuilder.newBuilder()
             .expireAfterAccess(cacheEvictionPeriod.toMillis(), TimeUnit.MILLISECONDS)
             .maximumWeight(cacheWeightInBytes)
             .weigher(weigher)
