@@ -22,6 +22,9 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
@@ -32,6 +35,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -40,10 +44,20 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.core.builder.MimeMessageBuilder.BodyPartBuilder;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -66,6 +80,7 @@ import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
@@ -467,19 +482,24 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void retrievingAMailShouldDisplayItsInformation() throws Exception {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
-
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
         String recipient2 = "recipient2@domain";
         String state = "state";
         String errorMessage = "Error: why this mail is stored";
+        String remoteHost = "smtp.domain";
+        String remoteAddr = "66.66.66.66";
+        Date lastUpdated = new Date(07060504030201L);
         mailRepository.store(FakeMail.builder()
             .name(name)
             .sender(sender)
             .recipients(recipient1, recipient2)
             .state(state)
             .errorMessage(errorMessage)
+            .remoteHost(remoteHost)
+            .remoteAddr(remoteAddr)
+            .lastUpdated(lastUpdated)
             .build());
 
         when()
@@ -488,9 +508,229 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
             .body("sender", is(sender))
+            .body("recipients", containsInAnyOrder(recipient1, recipient2))
             .body("state", is(state))
             .body("error", is(errorMessage))
-            .body("recipients", containsInAnyOrder(recipient1, recipient2));
+            .body("remoteHost", is(remoteHost))
+            .body("remoteAddr", is(remoteAddr))
+            .body("lastUpdated", is(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+                    .format(ZonedDateTime.ofInstant(lastUpdated.toInstant(), ZoneId.of("UTC")))));
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAllAdditionalFieldsWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+
+        BodyPartBuilder textMessage = MimeMessageBuilder.bodyPartBuilder()
+                .addHeader("Content-type", "text/plain")
+                .data("My awesome body!!");
+        BodyPartBuilder htmlMessage = MimeMessageBuilder.bodyPartBuilder()
+                .addHeader("Content-type", "text/html")
+                .data("My awesome <em>body</em>!!");
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("headerName3", "value5")
+                .addHeader("headerName3", "value8")
+                .addHeader("headerName4", "value6")
+                .addHeader("headerName4", "value7")
+                .setContent(MimeMessageBuilder.multipartBuilder()
+                    .subType("alternative")
+                    .addBody(textMessage)
+                    .addBody(htmlMessage))
+                .build();
+
+        MailAddress recipientHeaderAddress = new MailAddress("third@party");
+        FakeMail mail = FakeMail.builder()
+            .name(name)
+            .attribute("name1", "value1")
+            .attribute("name2", "value2")
+            .mimeMessage(mimeMessage)
+            .size(42424242)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName1")
+                    .value("value1")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName1")
+                    .value("value2")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName2")
+                    .value("value3")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName2")
+                    .value("value4")
+                    .build(), recipientHeaderAddress)
+            .build();
+
+        mailRepository.store(mail);
+
+        String jsonAsString =
+            given()
+                .parameters("additionalFields", "attributes,headers,textBody,htmlBody,messageSize,perRecipientsHeaders")
+            .when()
+                .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .then()
+            .extract()
+                .body()
+                .asString();
+
+        assertThatJson(jsonAsString)
+            .when(IGNORING_ARRAY_ORDER)
+            .when(IGNORING_EXTRA_FIELDS)
+                .isEqualTo("{" +
+                        "  \"name\": \"name1\"," +
+                        "  \"sender\": null," +
+                        "  \"recipients\": []," +
+                        "  \"error\": null," +
+                        "  \"state\": null," +
+                        "  \"remoteHost\": \"111.222.333.444\"," +
+                        "  \"remoteAddr\": \"127.0.0.1\"," +
+                        "  \"lastUpdated\": null," +
+                        "  \"attributes\": {" +
+                        "    \"name2\": \"value2\"," +
+                        "    \"name1\": \"value1\"" +
+                        "  }," +
+                        "  \"perRecipientsHeaders\": {" +
+                        "    \"third@party\": {" +
+                        "      \"headerName1\": [" +
+                        "        \"value1\"," +
+                        "        \"value2\"" +
+                        "      ]," +
+                        "      \"headerName2\": [" +
+                        "        \"value3\"," +
+                        "        \"value4\"" +
+                        "      ]" +
+                        "    }" +
+                        "  }," +
+                        "  \"headers\": {" +
+                        "    \"headerName4\": [" +
+                        "      \"value6\"," +
+                        "      \"value7\"" +
+                        "    ]," +
+                        "    \"headerName3\": [" +
+                        "      \"value5\"," +
+                        "      \"value8\"" +
+                        "    ]" +
+                        "  }," +
+                        "  \"textBody\": \"My awesome body!!\"," +
+                        "  \"htmlBody\": \"My awesome <em>body</em>!!\"," +
+                        "  \"messageSize\": 42424242" +
+                        "}");
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAllValidAdditionalFieldsWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        int messageSize = 42424242;
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .size(messageSize)
+            .build());
+
+        given()
+            .parameters("additionalFields", ",,,messageSize")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", is(sender))
+            .body("headers", nullValue())
+            .body("textBody", nullValue())
+            .body("htmlBody", nullValue())
+            .body("messageSize", is(messageSize))
+            .body("attributes", nullValue())
+            .body("perRecipientsHeaders", nullValue());
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayCorrectlyEncodedHeadersInValidAdditionalFieldsWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("friend", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fred.martin@linagora.com>")
+                .build();
+
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .mimeMessage(mimeMessage)
+            .build());
+
+        given()
+            .parameters("additionalFields", "headers")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", is(sender))
+            .body("headers.friend", is(Arrays.asList("Frédéric MARTIN <fred.martin@linagora.com>")));
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAllValidAdditionalFieldsEvenTheDuplicatedOnesWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        int messageSize = 42424242;
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .size(messageSize)
+            .build());
+
+        given()
+            .parameters("additionalFields", "messageSize,messageSize")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", is(sender))
+            .body("headers", nullValue())
+            .body("textBody", nullValue())
+            .body("htmlBody", nullValue())
+            .body("messageSize", is(messageSize))
+            .body("attributes", nullValue())
+            .body("perRecipientsHeaders", nullValue());
+    }
+
+    @Test
+    public void retrievingAMailShouldFailWhenAnUnknownFieldIsRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        int messageSize = 42424242;
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .size(messageSize)
+            .build());
+
+        given()
+            .parameters("additionalFields", "nonExistingField")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("The field 'nonExistingField' can't be requested in additionalFields parameter"));
     }
 
     @Test

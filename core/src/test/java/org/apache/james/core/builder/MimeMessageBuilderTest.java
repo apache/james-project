@@ -61,4 +61,17 @@ public class MimeMessageBuilderTest {
             .containsExactly(value);
     }
 
+    @Test
+    public void buildShouldAllowToSpecifyMultipartSubtype() throws Exception {
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .setContent(MimeMessageBuilder.multipartBuilder()
+                .subType("alternative")
+                .addBody(MimeMessageBuilder.bodyPartBuilder().data("Body 1"))
+                .addBody(MimeMessageBuilder.bodyPartBuilder().data("Body 2")))
+            .build();
+
+        assertThat(mimeMessage.getContentType())
+            .startsWith("multipart/alternative");
+    }
+
 }

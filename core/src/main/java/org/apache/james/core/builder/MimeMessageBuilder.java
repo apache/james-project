@@ -81,6 +81,12 @@ public class MimeMessageBuilder {
 
     public static class MultipartBuilder {
         private ImmutableList.Builder<BodyPart> bodyParts = ImmutableList.builder();
+        private Optional<String> subType = Optional.empty();
+
+        public MultipartBuilder subType(String subType) {
+            this.subType = Optional.of(subType);
+            return this;
+        }
 
         public MultipartBuilder addBody(BodyPart bodyPart) {
             this.bodyParts.add(bodyPart);
@@ -106,6 +112,7 @@ public class MimeMessageBuilder {
 
         public MimeMultipart build() throws MessagingException {
             MimeMultipart multipart = new MimeMultipart();
+            subType.ifPresent(Throwing.consumer(multipart::setSubType));
             List<BodyPart> bodyParts = this.bodyParts.build();
             for (BodyPart bodyPart : bodyParts) {
                 multipart.addBodyPart(bodyPart);

@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import javax.inject.Inject;
@@ -48,7 +49,9 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
+import org.apache.james.webadmin.dto.InaccessibleFieldException;
 import org.apache.james.webadmin.dto.MailDto;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
@@ -59,6 +62,9 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Splitter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -215,9 +221,8 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineGetMail() {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
-            (request, response) -> getMailAsJson(
-                decodedRepositoryUrl(request),
-                new MailKey(request.params("mailKey"))),
+            (request, response) ->
+                getMailAsJson(decodedRepositoryUrl(request), new MailKey(request.params("mailKey")), request),
             jsonTransformer);
 
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.RFC822_CONTENT_TYPE,
@@ -250,13 +255,35 @@ public class MailRepositoriesRoutes implements Routes {
         }
     }
 
-    private MailDto getMailAsJson(MailRepositoryUrl url, MailKey mailKey) {
+    private MailDto getMailAsJson(MailRepositoryUrl url, MailKey mailKey, Request request) {
         try {
-            return repositoryStoreService.retrieveMail(url, mailKey)
+            return repositoryStoreService.retrieveMail(url, mailKey, extractAdditionalFields(request.queryParamOrDefault("additionalFields", "")))
                 .orElseThrow(mailNotFoundError(mailKey));
         } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
             throw internalServerError(e);
+        } catch (IllegalArgumentException e) {
+            throw invalidField(e);
+        } catch (InaccessibleFieldException e) {
+            throw inaccessibleField(e);
         }
+    }
+
+    private HaltException inaccessibleField(InaccessibleFieldException e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .type(ErrorType.SERVER_ERROR)
+            .cause(e)
+            .message("The field '" + e.getField().getName() + "' requested in additionalFields parameter can't be accessed")
+            .haltError();
+    }
+
+    private HaltException invalidField(IllegalArgumentException e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .type(ErrorType.INVALID_ARGUMENT)
+            .cause(e)
+            .message("The field '" + e.getMessage() + "' can't be requested in additionalFields parameter")
+            .haltError();
     }
 
     private Supplier<HaltException> mailNotFoundError(MailKey mailKey) {
@@ -477,4 +504,16 @@ public class MailRepositoriesRoutes implements Routes {
     private MailRepositoryUrl decodedRepositoryUrl(Request request) throws UnsupportedEncodingException {
         return MailRepositoryUrl.fromEncoded(request.params("encodedUrl"));
     }
+
+    private Set<AdditionalField> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
+        return Splitter
+            .on(',')
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(additionalFieldsParam)
+            .stream()
+            .map((field) -> AdditionalField.find(field).orElseThrow(() -> new IllegalArgumentException(field)))
+            .collect(Guavate.toImmutableSet());
+    }
+
 }

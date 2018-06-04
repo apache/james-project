@@ -21,6 +21,7 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -34,7 +35,9 @@ import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
+import org.apache.james.webadmin.dto.InaccessibleFieldException;
 import org.apache.james.webadmin.dto.MailDto;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 import org.apache.james.webadmin.dto.MailKeyDTO;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -82,11 +85,11 @@ public class MailRepositoryStoreService {
         return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
     }
 
-    public Optional<MailDto> retrieveMail(MailRepositoryUrl url, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<MailDto> retrieveMail(MailRepositoryUrl url, MailKey mailKey, Set<AdditionalField> additionalAttributes) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException, InaccessibleFieldException {
         MailRepository mailRepository = getRepository(url);
 
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
-            .map(Throwing.function(MailDto::fromMail).sneakyThrow());
+            .map(Throwing.function((Mail mail) -> MailDto.fromMail(mail, additionalAttributes)).sneakyThrow());
     }
 
     public Optional<MimeMessage> retrieveMessage(MailRepositoryUrl url, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
