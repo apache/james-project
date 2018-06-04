@@ -24,20 +24,37 @@ import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
 
+import javax.mail.internet.MimeMessage;
+
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -56,8 +73,11 @@ import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
+import org.apache.mailet.base.test.FakeMail.Builder;
 import org.eclipse.jetty.http.HttpStatus;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -406,19 +426,26 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void retrievingAMailShouldDisplayItsInformation() throws Exception {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
-
+        SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        dateTimeFormatter.setTimeZone(TimeZone.getTimeZone("UTC"));
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
         String recipient2 = "recipient2@domain";
         String state = "state";
         String errorMessage = "Error: why this mail is stored";
+        String remoteHost = "smtp.domain";
+        String remoteAddr = "66.66.66.66";
+        Date lastUpdated = new Date();
         mailRepository.store(FakeMail.builder()
             .name(name)
             .sender(sender)
             .recipients(recipient1, recipient2)
             .state(state)
             .errorMessage(errorMessage)
+            .remoteHost(remoteHost)
+            .remoteAddr(remoteAddr)
+            .lastUpdated(lastUpdated)
             .build());
 
         when()
@@ -427,9 +454,157 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
             .body("sender", is(sender))
+            .body("recipients", containsInAnyOrder(recipient1, recipient2))
             .body("state", is(state))
             .body("error", is(errorMessage))
-            .body("recipients", containsInAnyOrder(recipient1, recipient2));
+            .body("remoteHost", is(remoteHost))
+            .body("remoteAddr", is(remoteAddr))
+            .body("lastUpdated", is(dateTimeFormatter.format(lastUpdated)));
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAllAdditionalsFieldWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        Map<String,Serializable> attributes = new HashMap<>();
+        attributes.put("name1", "value1");
+        attributes.put("name2", "value2");
+        Map<String,List<String>> headers = new HashMap<>();
+        headers.put("headerName3", Arrays.asList("value5", "value8"));
+        headers.put("headerName4", Arrays.asList("value6", "value7"));
+        int messageSize = 42424242;
+        String body = "My awesome body!!";
+        MimeMessageBuilder mimeMessageBuilder = MimeMessageBuilder.mimeMessageBuilder()
+                .setText(body);
+        for (String headerName : headers.keySet()) {
+            for (String headerValue : headers.get(headerName)) {
+                mimeMessageBuilder.addHeader(headerName, headerValue);
+            }
+        }
+        MimeMessage mimeMessage = mimeMessageBuilder.build();
+
+        Map<String,Map<String,List<String>>> perRecipientHeaders = new HashMap<>();
+        Map<String,List<String>> perRecipientHeader1 = new HashMap<>();
+        List<String> perRecipientHeader1Values = new ArrayList<>();
+        perRecipientHeader1Values.add("value1");
+        perRecipientHeader1Values.add("value2");
+        perRecipientHeader1.put("headerName1", perRecipientHeader1Values);
+        List<String> perRecipientHeader2Values = new ArrayList<>();
+        perRecipientHeader2Values.add("value3");
+        perRecipientHeader2Values.add("value4");
+        perRecipientHeader1.put("headerName2", perRecipientHeader2Values);
+        perRecipientHeaders.put("third@party", perRecipientHeader1);
+
+        Builder mailBuilder = FakeMail.builder()
+            .name(name)
+            .attributes(attributes)
+            .mimeMessage(mimeMessage)
+            .size(messageSize);
+
+        for (String recipient : perRecipientHeaders.keySet()) {
+            MailAddress recipientKey = new MailAddress(recipient);
+            Map<String,List<String>> perRecipientHeaderValue = perRecipientHeaders.get(recipient);
+            for (String perRecipientHeader : perRecipientHeaderValue.keySet()) {
+                for (String perRecipientValue : perRecipientHeaderValue.get(perRecipientHeader)) {
+                    mailBuilder.addHeaderForRecipient(Header.builder()
+                            .name(perRecipientHeader)
+                            .value(perRecipientValue)
+                            .build(), recipientKey);
+                }
+            }
+        }
+
+        mailRepository.store(mailBuilder.build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
+                    + "?additionalFields=attributes,headers,body,messageSize,perRecipientsHeaders")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("headers", Matchers.allOf(headers
+                    .keySet()
+                    .stream()
+                    .map((headerName) -> Matchers.hasEntry(headerName, headers.get(headerName)))
+                    .collect(Collectors.toList())))
+            .body("body", is(body))
+            .body("messageSize", is(messageSize))
+            .body("attributes", is(attributes))
+            .body("perRecipientsHeaders", is(perRecipientHeaders));
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAllValidAdditionalsFieldWhenRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        int messageSize = 42424242;
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .size(messageSize)
+            .build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
+                    + "?additionalFields=,,,messageSize")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("name", is(name))
+            .body("sender", is(sender))
+            .body("headers", nullValue())
+            .body("body", nullValue())
+            .body("messageSize", is(messageSize))
+            .body("attributes", nullValue())
+            .body("perRecipientsHeaders", nullValue());
+    }
+
+    @Test
+    public void retrievingAMailShouldFailWhenAnUnknownFieldIsRequested() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        int messageSize = 42424242;
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .size(messageSize)
+            .build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
+                    + "?additionalFields=nonExistingField")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("The field 'nonExistingField' can't be requested"));
+    }
+
+    @Test
+    public void retrievingAMailShouldDisplayAnErrorWhenRequestedAdditionalsFieldIsMissing() throws Exception {
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        String name = NAME_1;
+        String sender = "sender@domain";
+        String recipient1 = "recipient1@domain";
+        mailRepository.store(FakeMail.builder()
+            .name(name)
+            .sender(sender)
+            .recipients(recipient1)
+            .build());
+
+        when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
+                    + "?additionalFields=attributes,headers,body,messageSize,perRecipientsHeaders")
+        .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .body("statusCode", is(500))
+            .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
+            .body("message", allOf(startsWith("The field '"), endsWith("' can't be accessed")));
     }
 
     @Test
