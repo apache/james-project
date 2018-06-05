@@ -35,7 +35,6 @@ import org.elasticsearch.search.SearchHit;
 import com.google.common.annotations.VisibleForTesting;
 
 public class DeleteByQueryPerformer {
-    public static final int DEFAULT_BATCH_SIZE = 100;
     public static final TimeValue TIMEOUT = new TimeValue(60000);
 
     private final Client client;
@@ -43,11 +42,6 @@ public class DeleteByQueryPerformer {
     private final int batchSize;
     private final AliasName aliasName;
     private final TypeName typeName;
-
-    public DeleteByQueryPerformer(Client client, ExecutorService executor,
-                                  AliasName aliasName, TypeName typeName) {
-        this(client, executor, DEFAULT_BATCH_SIZE, aliasName, typeName);
-    }
 
     @VisibleForTesting
     public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
