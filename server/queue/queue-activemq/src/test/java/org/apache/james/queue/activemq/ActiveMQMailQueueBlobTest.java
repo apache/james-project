@@ -72,8 +72,8 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @AfterEach
     public void tearDown() throws Exception {
-        fileSystem.destroy();
         mailQueue.dispose();
+        fileSystem.destroy();
     }
 
     @Override
