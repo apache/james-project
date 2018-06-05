@@ -40,11 +40,11 @@ public class DeleteByQueryPerformer {
     private final Client client;
     private final ExecutorService executor;
     private final int batchSize;
-    private final AliasName aliasName;
+    private final WriteAliasName aliasName;
     private final TypeName typeName;
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, AliasName aliasName, TypeName typeName) {
+    public DeleteByQueryPerformer(Client client, ExecutorService executor, int batchSize, WriteAliasName aliasName, TypeName typeName) {
         this.client = client;
         this.executor = executor;
         this.batchSize = batchSize;
