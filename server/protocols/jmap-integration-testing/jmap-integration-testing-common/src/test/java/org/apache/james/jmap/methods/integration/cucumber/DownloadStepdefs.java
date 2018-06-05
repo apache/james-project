@@ -22,6 +22,7 @@ package org.apache.james.jmap.methods.integration.cucumber;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,6 +53,7 @@ import org.apache.james.mime4j.codec.DecoderUtil;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -98,6 +100,18 @@ public class DownloadStepdefs {
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
+
+        inputToMessageId.put(messageId, composedMessageId.getMessageId());
+    }
+
+    @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a big message \"([^\"]*)\"$")
+    public void appendBigMessageToMailbox(String user, String mailbox, String messageId) throws Throwable {
+        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+
+        ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
+            AppendCommand.from(new ByteArrayInputStream(
+                Strings.repeat("header: 0123456789\r\n", 1024 * 1024)
+                    .getBytes(StandardCharsets.UTF_8))));
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
     }
