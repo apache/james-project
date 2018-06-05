@@ -19,11 +19,13 @@
 
 package org.apache.james.webadmin.service;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -35,6 +37,7 @@ import org.apache.james.webadmin.dto.MailDto;
 import org.apache.james.webadmin.dto.MailKey;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.mailet.Mail;
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.Throwing;
@@ -81,6 +84,14 @@ public class MailRepositoryStoreService {
 
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
             .map(Throwing.function(MailDto::fromMail).sneakyThrow());
+    }
+
+    public Optional<InputStream> downloadMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+        MailRepository mailRepository = getRepository(url);
+
+        return Optional.ofNullable(mailRepository.retrieve(mailKey))
+            .map(Throwing.function(Mail::getMessage).sneakyThrow())
+            .map(Throwing.function(MimeMessage::getRawInputStream).sneakyThrow());
     }
 
     public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {

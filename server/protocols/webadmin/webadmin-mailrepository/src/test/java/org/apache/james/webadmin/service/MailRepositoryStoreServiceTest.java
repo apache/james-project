@@ -23,8 +23,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.util.streams.Limit;
@@ -125,5 +128,48 @@ public class MailRepositoryStoreServiceTest {
 
         assertThat(testee.listMails(FIRST_REPOSITORY, Offset.from(1), Limit.from(1)).get())
             .containsOnly(new MailKey(NAME_2));
+    }
+
+    @Test
+    public void downloadMailShouldThrownWhenUnknownRepository() throws Exception {
+        when(mailRepositoryStore.get("unkown")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void dowloadMailShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
+        when(mailRepositoryStore.get(FIRST_REPOSITORY))
+            .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
+
+        assertThatThrownBy(() -> testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+            .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
+    }
+
+    @Test
+    public void dowloadMailShouldReturnEmptyWhenMailNotFound() throws Exception {
+        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
+
+        assertThat(testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+            .isEmpty();
+    }
+
+    @Test
+    public void dowloadMailShouldReturnThInputStreamWhenMailExists() throws Exception {
+        when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
+
+        FakeMail mail = FakeMail.builder()
+            .name(NAME_1)
+            .fileName("mail.eml")
+            .build();
+        repository.store(mail);
+
+        Optional<InputStream> downloadMail = testee.downloadMail(FIRST_REPOSITORY, NAME_1);
+        assertThat(downloadMail).isNotEmpty();
+
+        String eml = IOUtils.toString(downloadMail.get(), StandardCharsets.UTF_8);
+        String expectedContent = IOUtils.toString(mail.getMessage().getRawInputStream(), StandardCharsets.UTF_8);
+        assertThat(eml).isEqualTo(expectedContent);
     }
 }
