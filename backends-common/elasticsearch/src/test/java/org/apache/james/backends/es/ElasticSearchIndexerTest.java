@@ -20,6 +20,7 @@
 package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import java.util.concurrent.Executors;
@@ -35,7 +36,7 @@ import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchIndexerTest {
 
@@ -64,7 +65,7 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void indexMessageShouldWork() throws Exception {
+    public void indexMessageShouldWork() {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
@@ -80,20 +81,21 @@ public class ElasticSearchIndexerTest {
         }
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void indexMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        testee.index("1", null);
+    @Test
+    public void indexMessageShouldThrowWhenJsonIsNull() {
+        assertThatThrownBy(() -> testee.index("1", null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
-    public void updateMessages() throws Exception {
+    public void updateMessages() {
         String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
         testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.update(Lists.newArrayList(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.update(ImmutableList.of(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -113,28 +115,32 @@ public class ElasticSearchIndexerTest {
         }
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void updateMessageShouldThrowWhenJsonIsNull() throws InterruptedException {
-        testee.update(Lists.newArrayList(new UpdatedRepresentation("1", null)));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void updateMessageShouldThrowWhenIdIsNull() throws InterruptedException {
-        testee.update(Lists.newArrayList(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void updateMessageShouldThrowWhenJsonIsEmpty() throws InterruptedException {
-        testee.update(Lists.newArrayList(new UpdatedRepresentation("1", "")));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void updateMessageShouldThrowWhenIdIsEmpty() throws InterruptedException {
-        testee.update(Lists.newArrayList(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}")));
+    @Test
+    public void updateMessageShouldThrowWhenJsonIsNull() {
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("1", null))))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void deleteByQueryShouldWorkOnSingleMessage() throws Exception {
+    public void updateMessageShouldThrowWhenIdIsNull() {
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}"))))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void updateMessageShouldThrowWhenJsonIsEmpty() {
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("1", ""))))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void updateMessageShouldThrowWhenIdIsEmpty() {
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}"))))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void deleteByQueryShouldWorkOnSingleMessage() {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
 
@@ -154,7 +160,7 @@ public class ElasticSearchIndexerTest {
     }
 
     @Test
-    public void deleteByQueryShouldWorkWhenMultipleMessages() throws Exception {
+    public void deleteByQueryShouldWorkWhenMultipleMessages() {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
@@ -184,14 +190,14 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void deleteMessage() throws Exception {
+    public void deleteMessage() {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
         testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.delete(Lists.newArrayList(messageId));
+        testee.delete(ImmutableList.of(messageId));
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
@@ -204,7 +210,7 @@ public class ElasticSearchIndexerTest {
     }
 
     @Test
-    public void deleteShouldWorkWhenMultipleMessages() throws Exception {
+    public void deleteShouldWorkWhenMultipleMessages() {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
 
@@ -221,7 +227,7 @@ public class ElasticSearchIndexerTest {
         testee.index(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.delete(Lists.newArrayList(messageId, messageId3));
+        testee.delete(ImmutableList.of(messageId, messageId3));
         embeddedElasticSearch.awaitForElasticSearch();
 
         try (Client client = node.client()) {
@@ -234,12 +240,12 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void updateMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.update(Lists.newArrayList());
+    public void updateMessagesShouldNotThrowWhenEmptyList() {
+        testee.update(ImmutableList.of());
     }
     
     @Test
-    public void deleteMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.delete(Lists.newArrayList());
+    public void deleteMessagesShouldNotThrowWhenEmptyList() {
+        testee.delete(ImmutableList.of());
     }
 }
