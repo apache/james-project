@@ -30,7 +30,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class IndexCreationFactoryTest {
     public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final AliasName ALIAS_NAME = new AliasName("alias");
+    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);

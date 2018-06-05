@@ -34,6 +34,7 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.elasticsearch.action.search.SearchRequestBuilder;
@@ -53,7 +54,7 @@ public class ScrollIterableTest {
     public static final int SIZE = 2;
     public static final String MESSAGE = "message";
     public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final AliasName ALIAS_NAME = new AliasName("alias");
+    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
     public static final TypeName TYPE_NAME = new TypeName("messages");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();

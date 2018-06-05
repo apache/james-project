@@ -32,7 +32,7 @@ import org.junit.rules.TemporaryFolder;
 public class NodeMappingFactoryTest {
     public static final String MESSAGE = "message";
     public static final IndexName INDEX_NAME = new IndexName("index");
-    public static final AliasName ALIAS_NAME = new AliasName("alias");
+    public static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
     public static final TypeName TYPE_NAME = new TypeName("type");
 
     private TemporaryFolder temporaryFolder = new TemporaryFolder();

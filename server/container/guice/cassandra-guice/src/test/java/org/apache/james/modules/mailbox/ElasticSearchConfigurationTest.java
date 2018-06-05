@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
@@ -197,7 +196,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new ReadAliasName(name));
     }
 
     @Test
@@ -210,7 +209,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new ReadAliasName(name));
     }
 
     @Test
@@ -224,7 +223,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getReadAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new ReadAliasName(name));
     }
 
     @Test
@@ -248,7 +247,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new WriteAliasName(name));
     }
 
     @Test
@@ -261,7 +260,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new WriteAliasName(name));
     }
 
     @Test
@@ -275,7 +274,7 @@ public class ElasticSearchConfigurationTest {
         ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
 
         assertThat(elasticSearchConfiguration.getWriteAliasMailboxName())
-            .isEqualTo(new AliasName(name));
+            .isEqualTo(new WriteAliasName(name));
     }
 
     @Test
