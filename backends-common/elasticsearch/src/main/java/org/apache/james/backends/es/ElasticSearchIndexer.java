@@ -54,7 +54,7 @@ public class ElasticSearchIndexer {
 
     @VisibleForTesting
     public ElasticSearchIndexer(Client client, ExecutorService executor,
-                                AliasName aliasName,
+                                WriteAliasName aliasName,
                                 TypeName typeName,
                                 int batchSize) {
         this.client = client;

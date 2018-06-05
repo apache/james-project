@@ -42,7 +42,7 @@ public class ElasticSearchIndexerTest {
 
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
-    private static final AliasName ALIAS_NAME = new AliasName("alias_name");
+    private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
     private static final TypeName TYPE_NAME = new TypeName("type_name");
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
