@@ -58,11 +58,11 @@ public class DeleteByQueryPerformer {
         this.typeName = typeName;
     }
 
-    public Future<?> perform(QueryBuilder queryBuilder) {
+    public Future<Void> perform(QueryBuilder queryBuilder) {
         return executor.submit(() -> doDeleteByQuery(queryBuilder));
     }
 
-    protected void doDeleteByQuery(QueryBuilder queryBuilder) {
+    protected Void doDeleteByQuery(QueryBuilder queryBuilder) {
         new ScrollIterable(client,
             client.prepareSearch(aliasName.getValue())
                 .setTypes(typeName.getValue())
@@ -73,6 +73,7 @@ public class DeleteByQueryPerformer {
             .stream()
             .map(searchResponse -> deleteRetrievedIds(client, searchResponse))
             .forEach(ListenableActionFuture::actionGet);
+        return null;
     }
 
     private ListenableActionFuture<BulkResponse> deleteRetrievedIds(Client client, SearchResponse searchResponse) {

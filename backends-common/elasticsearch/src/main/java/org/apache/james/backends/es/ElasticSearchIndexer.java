@@ -106,7 +106,7 @@ public class ElasticSearchIndexer {
         }
     }
 
-    public Future<?> deleteAllMatchingQuery(QueryBuilder queryBuilder) {
+    public Future<Void> deleteAllMatchingQuery(QueryBuilder queryBuilder) {
         return deleteByQueryPerformer.perform(queryBuilder);
     }
 
