@@ -20,6 +20,7 @@
 package org.apache.james.backends.es;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.james.backends.es.search.ScrollIterable;
 import org.elasticsearch.action.ListenableActionFuture;
@@ -57,8 +58,8 @@ public class DeleteByQueryPerformer {
         this.typeName = typeName;
     }
 
-    public void perform(QueryBuilder queryBuilder) {
-        executor.execute(() -> doDeleteByQuery(queryBuilder));
+    public Future<?> perform(QueryBuilder queryBuilder) {
+        return executor.submit(() -> doDeleteByQuery(queryBuilder));
     }
 
     protected void doDeleteByQuery(QueryBuilder queryBuilder) {

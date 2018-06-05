@@ -140,14 +140,14 @@ public class ElasticSearchIndexerTest {
     }
 
     @Test
-    public void deleteByQueryShouldWorkOnSingleMessage() {
+    public void deleteByQueryShouldWorkOnSingleMessage() throws Exception {
         String messageId = "1:2";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
 
         testee.index(messageId, content);
         embeddedElasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllMatchingQuery(termQuery("property", "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {
@@ -160,7 +160,7 @@ public class ElasticSearchIndexerTest {
     }
 
     @Test
-    public void deleteByQueryShouldWorkWhenMultipleMessages() {
+    public void deleteByQueryShouldWorkWhenMultipleMessages() throws Exception {
         String messageId = "1:1";
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
@@ -177,7 +177,7 @@ public class ElasticSearchIndexerTest {
         testee.index(messageId3, content3);
         embeddedElasticSearch.awaitForElasticSearch();
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1")).get();
         embeddedElasticSearch.awaitForElasticSearch();
         
         try (Client client = node.client()) {

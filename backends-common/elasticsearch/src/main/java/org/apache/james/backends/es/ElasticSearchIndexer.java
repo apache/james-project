@@ -21,6 +21,7 @@ package org.apache.james.backends.es;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -105,8 +106,8 @@ public class ElasticSearchIndexer {
         }
     }
 
-    public void deleteAllMatchingQuery(QueryBuilder queryBuilder) {
-        deleteByQueryPerformer.perform(queryBuilder);
+    public Future<?> deleteAllMatchingQuery(QueryBuilder queryBuilder) {
+        return deleteByQueryPerformer.perform(queryBuilder);
     }
 
     private void checkArgument(String content) {
