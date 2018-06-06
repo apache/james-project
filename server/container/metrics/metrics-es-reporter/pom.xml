@@ -32,6 +32,11 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>apache-james-backends-es</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-util-java8</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -65,11 +70,6 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch</artifactId>
-            <version>2.2.1</version>
         </dependency>
         <dependency>
             <groupId>org.elasticsearch</groupId>
