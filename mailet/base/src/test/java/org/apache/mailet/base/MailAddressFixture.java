@@ -21,12 +21,17 @@ package org.apache.mailet.base;
 
 import javax.mail.internet.AddressException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 
 public class MailAddressFixture {
     public static final String JAMES_LOCAL = "localhost";
     public static final String JAMES_APACHE_ORG = "james.apache.org";
     public static final String JAMES2_APACHE_ORG = "james2.apache.org";
+
+    public static final Domain JAMES_LOCAL_DOMAIN = Domain.of(JAMES_LOCAL);
+    public static final Domain JAMES_APACHE_ORG_DOMAIN = Domain.of(JAMES_APACHE_ORG);
+    public static final Domain JAMES2_APACHE_ORG_DOMAIN = Domain.of(JAMES2_APACHE_ORG);
 
     public static final MailAddress SENDER = createMailAddress("sender@" + JAMES_LOCAL);
     public static final MailAddress RECIPIENT1 = createMailAddress("recipient1@" + JAMES_LOCAL);

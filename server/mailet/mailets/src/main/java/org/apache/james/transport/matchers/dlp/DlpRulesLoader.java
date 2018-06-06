@@ -17,22 +17,41 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.dlp.api;
+package org.apache.james.transport.matchers.dlp;
 
-import java.util.List;
+import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
+import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPConfigurationStore;
 
-import com.google.common.collect.ImmutableList;
+public interface DlpRulesLoader {
 
-public interface DLPConfigurationStore extends DLPConfigurationLoader {
+    DlpDomainRules load(Domain domain);
 
-    void store(Domain domain, List<DLPConfigurationItem> rule);
+    class Impl implements DlpRulesLoader {
 
-    default void store(Domain domain, DLPConfigurationItem rule) {
-        store(domain, ImmutableList.of(rule));
+        private final DLPConfigurationStore configurationStore;
+
+        @Inject
+        public Impl(DLPConfigurationStore configurationStore) {
+            this.configurationStore = configurationStore;
+        }
+
+        @Override
+        public DlpDomainRules load(Domain domain) {
+          return toRules(configurationStore.list(domain));
+        }
+
+        private DlpDomainRules toRules(Stream<DLPConfigurationItem> items) {
+            DlpDomainRules.DlpDomainRulesBuilder builder = DlpDomainRules.builder();
+            items.forEach(item ->
+                item.getTargets().list().forEach(type ->
+                    builder.rule(type, item.getId(), item.getRegexp())
+                ));
+            return builder.build();
+        }
     }
-
-    void clear(Domain domain);
-    
 }
