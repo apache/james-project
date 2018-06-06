@@ -35,9 +35,11 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -46,6 +48,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailRepositoryTask;
@@ -65,6 +68,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.parsing.Parser;
 
 public class MailRepositoriesRoutesTest {
 
@@ -457,6 +461,54 @@ public class MailRepositoriesRoutesTest {
 
         String name = "name";
         when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("statusCode", is(404))
+            .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+            .body("message", is("Could not retrieve " + name));
+    }
+
+    @Test
+    public void downloadingAMailShouldReturnTheEml() throws Exception {
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecificationWithPortOnly(webAdminServer.getPort())
+                .setBasePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+                .build();
+        RestAssured.registerParser(Constants.RFC822_CONTENT_TYPE, Parser.JSON);
+
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+
+        String name = NAME_1;
+        FakeMail mail = FakeMail.builder()
+            .name(name)
+            .fileName("mail.eml")
+            .build();
+        mailRepository.store(mail);
+
+        String expectedContent = IOUtils.toString(mail.getMessage().getRawInputStream(), StandardCharsets.UTF_8);
+        given()
+            .accept(Constants.RFC822_CONTENT_TYPE)
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(Constants.RFC822_CONTENT_TYPE)
+            .content(is(expectedContent));
+    }
+
+    @Test
+    public void downloadingAMailShouldFailWhenUnknown() throws Exception {
+        RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecificationWithPortOnly(webAdminServer.getPort())
+                .setBasePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
+                .build();
+        RestAssured.registerParser(Constants.RFC822_CONTENT_TYPE, Parser.JSON);
+
+        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+
+        String name = "name";
+        given()
+            .accept(Constants.RFC822_CONTENT_TYPE)
+        .when()
             .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)

@@ -24,5 +24,6 @@ public interface Constants {
     String SEPARATOR = "/";
     String EMPTY_BODY = "";
     String JSON_CONTENT_TYPE = "application/json";
+    String RFC822_CONTENT_TYPE = "message/rfc822";
 
 }

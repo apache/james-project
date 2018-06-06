@@ -54,4 +54,8 @@ public class WebAdminUtils {
             .setPort(port.getValue());
     }
 
+    public static RequestSpecBuilder buildRequestSpecificationWithPortOnly(Port port) {
+        return new RequestSpecBuilder()
+            .setPort(port.getValue());
+    }
 }

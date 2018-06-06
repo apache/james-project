@@ -19,11 +19,13 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -42,6 +44,7 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
+import org.apache.james.webadmin.dto.MailDto;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
@@ -60,6 +63,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.jaxrs.PATCH;
+import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
@@ -177,25 +181,49 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not found - Could not retrieve the given mail.")
     })
     public void defineGetMail() {
-        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", (request, response) -> {
-            String url = decodedRepositoryUrl(request);
-            String mailKey = request.params("mailKey");
-            try {
-                return repositoryStoreService.retrieveMail(url, mailKey)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                        .statusCode(HttpStatus.NOT_FOUND_404)
-                        .type(ErrorResponder.ErrorType.NOT_FOUND)
-                        .message("Could not retrieve " + mailKey)
-                        .haltError());
-            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
-                    .cause(e)
-                    .message("Error while retrieving mail")
-                    .haltError();
-            }
-        }, jsonTransformer);
+
+        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
+            (request, response) -> getMailAsJson(decodedRepositoryUrl(request), request.params("mailKey")), jsonTransformer);
+
+        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.RFC822_CONTENT_TYPE, (request, response) -> {
+            response.type(Constants.RFC822_CONTENT_TYPE);
+            return getMailAsEml(decodedRepositoryUrl(request), request.params("mailKey"));
+        });
+    }
+
+    private InputStream getMailAsEml(String url, String mailKey) {
+        try {
+            return repositoryStoreService.downloadMail(url, mailKey)
+                .orElseThrow(mailNotFoundError(mailKey));
+        } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+            throw internalServerError(e);
+        }
+    }
+
+    private MailDto getMailAsJson(String url, String mailKey) {
+        try {
+            return repositoryStoreService.retrieveMail(url, mailKey)
+                .orElseThrow(mailNotFoundError(mailKey));
+        } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+            throw internalServerError(e);
+        }
+    }
+
+    private Supplier<HaltException> mailNotFoundError(String mailKey) {
+        return () -> ErrorResponder.builder()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorResponder.ErrorType.NOT_FOUND)
+            .message("Could not retrieve " + mailKey)
+            .haltError();
+    }
+
+    private HaltException internalServerError(Exception e) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .type(ErrorResponder.ErrorType.SERVER_ERROR)
+            .cause(e)
+            .message("Error while retrieving mail")
+            .haltError();
     }
 
     @GET
