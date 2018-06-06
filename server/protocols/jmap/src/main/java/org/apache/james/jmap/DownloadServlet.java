@@ -123,13 +123,12 @@ public class DownloadServlet extends HttpServlet {
     @VisibleForTesting void download(MailboxSession mailboxSession, DownloadPath downloadPath, HttpServletResponse resp) {
         String blobId = downloadPath.getBlobId();
         try {
-            addContentDispositionHeader(downloadPath.getName(), resp);
-
             Blob blob = blobManager.retrieve(BlobId.fromString(blobId), mailboxSession);
-            IOUtils.copy(blob.getStream(), resp.getOutputStream());
 
+            addContentDispositionHeader(downloadPath.getName(), resp);
             resp.setHeader("Content-Length", String.valueOf(blob.getSize()));
             resp.setStatus(SC_OK);
+            IOUtils.copy(blob.getStream(), resp.getOutputStream());
         } catch (BlobNotFoundException e) {
             LOGGER.info("Attachment '{}' not found", blobId, e);
             resp.setStatus(SC_NOT_FOUND);
