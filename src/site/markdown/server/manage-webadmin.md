@@ -1360,7 +1360,7 @@ Response codes:
  - 404: This repository can not be found
  - 500: Internal error
 
-### Reading a mail details
+### Reading/downloading a mail details
 
 ```
 curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey
@@ -1372,7 +1372,7 @@ Resource name `encodedUrlOfTheRepository` should be the resource id of an existi
 curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1
 ```
 
-Response looks like:
+If the Accept header in the request is "application/json", then the response looks like:
 
 ```
 {
@@ -1383,6 +1383,8 @@ Response looks like:
     "error": "A small message explaining what happened to that mail..."
 }
 ```
+If the Accept header in the request is "message/rfc822", then the response will be the _eml_ file itself.
+
 
 Response codes:
 

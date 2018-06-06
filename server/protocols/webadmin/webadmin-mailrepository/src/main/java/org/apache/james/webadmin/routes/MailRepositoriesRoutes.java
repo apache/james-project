@@ -67,7 +67,7 @@ import spark.HaltException;
 import spark.Request;
 import spark.Service;
 
-@Api(tags = "MailRepositories")
+@Api(tags = "MailRepositories", consumes = "application/json")
 @Path("/mailRepositories")
 @Produces("application/json")
 public class MailRepositoriesRoutes implements Routes {
@@ -173,8 +173,10 @@ public class MailRepositoriesRoutes implements Routes {
             jsonTransformer);
     }
 
+    @GET
+    @Produces("application/json, message/rfc822")
     @Path("/{encodedUrl}/mails/{mailKey}")
-    @ApiOperation(value = "Retrieving a specific mail details")
+    @ApiOperation(value = "Retrieving a specific mail details (this endpoint can accept both \"application/json\" or \"message/rfc822\")")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "The list of all mails in a repository", response = List.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
