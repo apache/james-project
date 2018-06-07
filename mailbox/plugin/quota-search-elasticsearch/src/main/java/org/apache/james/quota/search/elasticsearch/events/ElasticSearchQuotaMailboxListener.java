@@ -54,7 +54,7 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener {
 
     @Override
     public ExecutionMode getExecutionMode() {
-        return ExecutionMode.ASYNCHRONOUS;
+        return ExecutionMode.SYNCHRONOUS;
     }
 
     @Override

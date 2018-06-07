@@ -54,7 +54,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
     @Override
     public ExecutionMode getExecutionMode() {
-        return ExecutionMode.ASYNCHRONOUS;
+        return ExecutionMode.SYNCHRONOUS;
     }
 
     /**
