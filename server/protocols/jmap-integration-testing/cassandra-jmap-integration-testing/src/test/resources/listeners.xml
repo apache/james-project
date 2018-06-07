@@ -21,6 +21,7 @@
 <listeners>
   <listener>
     <class>org.apache.james.mailbox.spamassassin.SpamAssassinListener</class>
+    <async>false</async>
   </listener>
   <listener>
     <class>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</class>
