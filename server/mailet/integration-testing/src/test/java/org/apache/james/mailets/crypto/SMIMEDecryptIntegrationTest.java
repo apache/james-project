@@ -85,8 +85,9 @@ public class SMIMEDecryptIntegrationTest {
             .build(temporaryFolder);
 
         jamesServer.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DEFAULT_DOMAIN)
-            .fluentAddUser(FROM, PASSWORD);
+            .fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD);
     }
 
     @After

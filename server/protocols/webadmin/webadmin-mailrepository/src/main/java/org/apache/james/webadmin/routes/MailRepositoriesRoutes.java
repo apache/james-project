@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
@@ -95,6 +96,8 @@ public class MailRepositoriesRoutes implements Routes {
     public void define(Service service) {
         this.service = service;
 
+        definePutMailRepository();
+
         defineGetMailRepositories();
 
         defineListMails();
@@ -110,6 +113,31 @@ public class MailRepositoriesRoutes implements Routes {
         defineReprocessAll();
 
         defineReprocessOne();
+    }
+
+    @PUT
+    @Path("/{encodedUrl}")
+    @ApiOperation(value = "Create a repository")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "The repository is created"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+    })
+    public void definePutMailRepository() {
+        service.put(MAIL_REPOSITORIES + "/:encodedUrl", (request, response) -> {
+            String url = decodedRepositoryUrl(request);
+            try {
+                repositoryStoreService.createMailRepository(url);
+                response.status(HttpStatus.NO_CONTENT_204);
+                return Constants.EMPTY_BODY;
+            } catch (MailRepositoryStore.MailRepositoryStoreException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message(String.format("Error while creating a mail repository with url '%s'", url))
+                    .haltError();
+            }
+        }, jsonTransformer);
     }
 
     @GET
@@ -144,7 +172,7 @@ public class MailRepositoriesRoutes implements Routes {
             Offset offset = ParametersExtractor.extractOffset(request);
             Limit limit = ParametersExtractor.extractLimit(request);
             String encodedUrl = request.params("encodedUrl");
-            String url = URLDecoder.decode(encodedUrl, StandardCharsets.UTF_8.displayName());
+            String url = decodedRepositoryUrl(request);
             try {
                 return repositoryStoreService.listMails(url, offset, limit)
                     .orElseThrow(() -> ErrorResponder.builder()

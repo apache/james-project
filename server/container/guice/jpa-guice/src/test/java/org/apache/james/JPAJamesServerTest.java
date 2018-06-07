@@ -78,8 +78,9 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
     @Test
     public void jpaGuiceServerShouldUpdateQuota() throws Exception {
         server.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DOMAIN)
-            .fluentAddUser(USER, PASSWORD);
+            .fluent()
+            .addDomain(DOMAIN)
+            .addUser(USER, PASSWORD);
         server.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(50 * 1024)));
 
         // ~ 12 KB email

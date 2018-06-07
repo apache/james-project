@@ -58,6 +58,9 @@ public class MailRepositoryStoreService {
             .collect(Guavate.toImmutableList());
     }
 
+    public MailRepository createMailRepository(String repositoryUrl) throws MailRepositoryStore.MailRepositoryStoreException {
+        return mailRepositoryStore.create(repositoryUrl);
+    }
 
     public Optional<List<MailKey>> listMails(String url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));

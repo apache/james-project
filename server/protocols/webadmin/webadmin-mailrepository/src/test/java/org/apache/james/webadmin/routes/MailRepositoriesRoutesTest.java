@@ -32,7 +32,11 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -73,12 +77,12 @@ import com.jayway.restassured.parsing.Parser;
 
 public class MailRepositoriesRoutesTest {
 
-    public static final String URL_MY_REPO = "url://myRepo";
-    public static final String URL_ESCAPED_MY_REPO = "url%3A%2F%2FmyRepo";
-    public static final String MY_REPO_MAILS = "url%3A%2F%2FmyRepo/mails";
-    public static final String CUSTOM_QUEUE = "customQueue";
-    public static final String NAME_1 = "name1";
-    public static final String NAME_2 = "name2";
+    private static final String URL_MY_REPO = "url://myRepo";
+    private static final String URL_ESCAPED_MY_REPO = "url%3A%2F%2FmyRepo";
+    private static final String MY_REPO_MAILS = "url%3A%2F%2FmyRepo/mails";
+    private static final String CUSTOM_QUEUE = "customQueue";
+    private static final String NAME_1 = "name1";
+    private static final String NAME_2 = "name2";
     private WebAdminServer webAdminServer;
     private MailRepositoryStore mailRepositoryStore;
     private MemoryMailRepository mailRepository;
@@ -111,11 +115,54 @@ public class MailRepositoriesRoutesTest {
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
             .setBasePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .build();
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
     @After
     public void tearDown() {
         webAdminServer.destroy();
+    }
+
+    @Test
+    public void putMailRepositoryShouldReturnOkWhenRepositoryIsCreated() throws Exception {
+        when()
+            .put(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        verify(mailRepositoryStore).create(URL_MY_REPO);
+        verifyNoMoreInteractions(mailRepositoryStore);
+    }
+
+    @Test
+    public void putMailRepositoryShouldReturnOkWhenRepositoryAlreadyExists() throws Exception {
+        when()
+            .put(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        when()
+            .put(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        verify(mailRepositoryStore, times(2)).create(URL_MY_REPO);
+        verifyNoMoreInteractions(mailRepositoryStore);
+    }
+
+    @Test
+    public void putMailRepositoryShouldReturnServerErrorWhenCannotCreateRepository() throws Exception {
+        when(mailRepositoryStore.create(anyString()))
+            .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("Error while selecting repository url://myRepo"));
+
+        when()
+            .put(URL_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .body("statusCode", is(500))
+            .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
+            .body("message", is("Error while creating a mail repository with url 'url://myRepo'"))
+            .body("details", is("Error while selecting repository url://myRepo"));
     }
 
     @Test

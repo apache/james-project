@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import static org.apache.mailet.base.MailAddressFixture.JAMES_LOCAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -41,9 +42,10 @@ import org.junit.jupiter.api.Test;
 
 class ToSenderDomainRepositoryTest {
 
+    private static final String MEMORY_URL_PREFIX = "memory://var/mail/dlp/";
     private static final FakeMailetConfig DEFAULT_MAILET_CONFIG = FakeMailetConfig.builder()
         .mailetName("TestConfig")
-        .setProperty("urlPrefix", "memory://var/mail/dlp/")
+        .setProperty("urlPrefix", MEMORY_URL_PREFIX)
         .build();
     private ToSenderDomainRepository mailet;
     private MockMailRepositoryStore mailRepositoryStore;
@@ -51,7 +53,7 @@ class ToSenderDomainRepositoryTest {
     @BeforeEach
     void setup() {
         mailRepositoryStore = new MockMailRepositoryStore();
-        mailRepositoryStore.add("memory://var/mail/dlp/" + JAMES_LOCAL, new MemoryMailRepository());
+        mailRepositoryStore.add(MEMORY_URL_PREFIX + JAMES_LOCAL, new MemoryMailRepository());
         mailet = new ToSenderDomainRepository(mailRepositoryStore);
     }
 
@@ -66,8 +68,10 @@ class ToSenderDomainRepositoryTest {
     }
 
     @Test
-    void initShouldNotThrowWhenUrlPrefixIsPresent() throws MessagingException {
-        mailet.init(DEFAULT_MAILET_CONFIG);
+    void initShouldNotThrowWhenUrlPrefixIsPresent() {
+        assertThatCode(
+            () -> mailet.init(DEFAULT_MAILET_CONFIG))
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -80,7 +84,7 @@ class ToSenderDomainRepositoryTest {
             .sender(MailAddressFixture.SENDER)
             .build());
 
-        MailRepository mailRepository = mailRepositoryStore.select("memory://var/mail/dlp/" + JAMES_LOCAL);
+        MailRepository mailRepository = mailRepositoryStore.select(MEMORY_URL_PREFIX + JAMES_LOCAL);
 
         assertThat(mailRepository.list())
             .extracting(mailRepository::retrieve)
@@ -93,7 +97,7 @@ class ToSenderDomainRepositoryTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("TestConfig")
             .setProperty("passThrough", "false")
-            .setProperty("urlPrefix", "memory://var/mail/dlp/")
+            .setProperty("urlPrefix", MEMORY_URL_PREFIX)
             .build();
         mailet.init(mailetConfig);
 
@@ -114,7 +118,7 @@ class ToSenderDomainRepositoryTest {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("TestConfig")
             .setProperty("passThrough", "true")
-            .setProperty("urlPrefix", "memory://var/mail/dlp/")
+            .setProperty("urlPrefix", MEMORY_URL_PREFIX)
             .build();
         mailet.init(mailetConfig);
 
@@ -169,7 +173,7 @@ class ToSenderDomainRepositoryTest {
     void initShouldSetNotPassThroughWhenPassThroughIsNotBoolean() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
             .mailetName("TestConfig")
-            .setProperty("urlPrefix", "memory://var/mail/dlp/")
+            .setProperty("urlPrefix", MEMORY_URL_PREFIX)
             .setProperty("passThrough", "not boolean")
             .build();
 

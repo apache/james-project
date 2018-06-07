@@ -100,15 +100,16 @@ public class ContactExtractorTest {
             .withMailetContainer(mailets)
             .build(folder);
 
-        DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.fluentAddDomain(DEFAULT_DOMAIN)
-            .fluentAddUser(SENDER, PASSWORD)
-            .fluentAddUser(TO, PASSWORD)
-            .fluentAddUser(TO2, PASSWORD)
-            .fluentAddUser(CC, PASSWORD)
-            .fluentAddUser(CC2, PASSWORD)
-            .fluentAddUser(BCC, PASSWORD)
-            .fluentAddUser(BCC2, PASSWORD);
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(SENDER, PASSWORD)
+            .addUser(TO, PASSWORD)
+            .addUser(TO2, PASSWORD)
+            .addUser(CC, PASSWORD)
+            .addUser(CC2, PASSWORD)
+            .addUser(BCC, PASSWORD)
+            .addUser(BCC2, PASSWORD);
     }
 
     @After

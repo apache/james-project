@@ -46,7 +46,10 @@ import com.github.fge.lambdas.consumers.ThrowingConsumer;
  *  - "allowRepositoryCreation" optional, defaults to true. If true, non existing repository will be created. In case of
  *  misconfiguration, this might lead to arbitrary repository creation. If false, the incoming mails will be stored only
  *  in already existing repository. If not existing, the email will be dropped with an appropriate log warning (leading
- *  to potential data loss).
+ *  to potential data loss). In case, you want to create a repository manually, make a http PUT request to
+ *  /mailRepositories/encodedUrlOfTheRepository from web admin api.
+ *  For example http://ip:port/mailRepositories/file%3A%2F%2FmailRepo
+ *  @see <a href="https://james.apache.org/server/manage-webadmin.html">Create a mail repository</a>
  *
  *  Example:
  *
@@ -82,8 +85,8 @@ public class ToSenderDomainRepository extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        String url = urlPrefix + mail.getSender().getDomain().asString();
-        store(mail, url);
+        String repositoryUrl = urlPrefix + mail.getSender().getDomain().asString();
+        store(mail, repositoryUrl);
         if (!passThrough) {
             mail.setState(Mail.GHOST);
         }

@@ -58,11 +58,6 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         usersRepository.addUser(userName, password);
     }
 
-    public DataProbeImpl fluentAddUser(String userName, String password) throws Exception {
-        addUser(userName, password);
-        return this;
-    }
-
     @Override
     public void removeUser(String username) throws Exception {
         usersRepository.removeUser(username);
@@ -81,11 +76,6 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void addDomain(String domain) throws Exception {
         domainList.addDomain(Domain.of(domain));
-    }
-
-    public DataProbeImpl fluentAddDomain(String domain) throws Exception {
-        addDomain(domain);
-        return this;
     }
 
     @Override

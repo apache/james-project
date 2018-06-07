@@ -66,8 +66,9 @@ public class CassandraMailRepositoryIntegrationTest {
     @Test
     public void deniedSenderMailShouldBeStoredInCassandraMailRepositoryWhenConfigured() throws Exception {
         server.getProbe(DataProbeImpl.class)
-            .fluentAddDomain("domain.com")
-            .fluentAddUser("user@domain.com", "secret");
+            .fluent()
+            .addDomain("domain.com")
+            .addUser("user@domain.com", "secret");
 
         smtpMessageSender.connect("127.0.0.1", 1025)
             .sendMessage("denied@other.com", "user@domain.com");

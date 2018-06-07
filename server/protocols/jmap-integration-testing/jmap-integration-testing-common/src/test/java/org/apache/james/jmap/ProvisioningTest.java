@@ -64,8 +64,9 @@ public abstract class ProvisioningTest {
             .build();
 
         jmapServer.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DOMAIN)
-            .fluentAddUser(USER, PASSWORD);
+            .fluent()
+            .addDomain(DOMAIN)
+            .addUser(USER, PASSWORD);
     }
 
     @After

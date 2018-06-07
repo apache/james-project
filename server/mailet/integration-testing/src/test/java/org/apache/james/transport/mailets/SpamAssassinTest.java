@@ -87,10 +87,11 @@ public class SpamAssassinTest {
             .build(temporaryFolder);
 
         jamesServer.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DEFAULT_DOMAIN)
-            .fluentAddUser(FROM, PASSWORD)
-            .fluentAddUser(RECIPIENT, PASSWORD)
-            .fluentAddUser(RECIPIENT2, PASSWORD);
+            .fluent()
+            .addDomain(DEFAULT_DOMAIN)
+            .addUser(FROM, PASSWORD)
+            .addUser(RECIPIENT, PASSWORD)
+            .addUser(RECIPIENT2, PASSWORD);
     }
 
     @After

@@ -26,6 +26,33 @@ import org.apache.james.rrt.lib.Mappings;
 
 public interface DataProbe {
 
+    class FluentDataProbe {
+
+        private final DataProbe dataProbe;
+
+        private FluentDataProbe(DataProbe dataProbe) {
+            this.dataProbe = dataProbe;
+        }
+
+        public DataProbe getDataProbe() {
+            return dataProbe;
+        }
+
+        public FluentDataProbe addUser(String userName, String password) throws Exception {
+            dataProbe.addUser(userName, password);
+            return this;
+        }
+
+        public FluentDataProbe addDomain(String domain) throws Exception {
+            dataProbe.addDomain(domain);
+            return this;
+        }
+    }
+
+    default FluentDataProbe fluent() {
+        return new FluentDataProbe(this);
+    }
+
     void addUser(String userName, String password) throws Exception;
 
     void removeUser(String username) throws Exception;

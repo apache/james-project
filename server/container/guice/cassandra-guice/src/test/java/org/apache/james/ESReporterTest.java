@@ -78,8 +78,9 @@ public class ESReporterTest {
         server = cassandraJmap.jmapServer();
         server.start();
         server.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DOMAIN)
-            .fluentAddUser(USERNAME, PASSWORD);
+            .fluent()
+            .addDomain(DOMAIN)
+            .addUser(USERNAME, PASSWORD);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)

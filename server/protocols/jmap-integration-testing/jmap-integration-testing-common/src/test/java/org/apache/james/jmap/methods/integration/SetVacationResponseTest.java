@@ -72,8 +72,9 @@ public abstract class SetVacationResponseTest {
                 .build();
 
         jmapServer.getProbe(DataProbeImpl.class)
-            .fluentAddDomain(DOMAIN)
-            .fluentAddUser(USER, PASSWORD);
+            .fluent()
+            .addDomain(DOMAIN)
+            .addUser(USER, PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
 
         await();
