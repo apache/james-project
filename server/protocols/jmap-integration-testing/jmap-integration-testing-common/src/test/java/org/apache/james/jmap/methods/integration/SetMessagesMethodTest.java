@@ -2228,11 +2228,6 @@ public abstract class SetMessagesMethodTest {
             }
 
             @Override
-            public ExecutionMode getExecutionMode() {
-                return ExecutionMode.SYNCHRONOUS;
-            }
-
-            @Override
             public void event(Event event) {
                 events.add(event);
             }

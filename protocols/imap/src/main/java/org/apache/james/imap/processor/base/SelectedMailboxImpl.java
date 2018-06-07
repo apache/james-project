@@ -105,11 +105,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public synchronized Optional<MessageUid> getFirstUid() {
         return uidMsnConverter.getFirstUid();
     }

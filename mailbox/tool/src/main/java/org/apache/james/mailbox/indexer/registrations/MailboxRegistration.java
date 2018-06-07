@@ -50,11 +50,6 @@ public class MailboxRegistration implements MailboxListener {
         return ListenerType.MAILBOX;
     }
 
-    @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
     public List<ImpactingMessageEvent> getImpactingEvents(MessageUid uid) {
         return ImmutableList.copyOf(impactingMessageEvents.get(uid));
     }

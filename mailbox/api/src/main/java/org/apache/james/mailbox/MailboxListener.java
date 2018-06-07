@@ -57,7 +57,9 @@ public interface MailboxListener {
 
     ListenerType getType();
 
-    ExecutionMode getExecutionMode();
+    default ExecutionMode getExecutionMode() {
+        return ExecutionMode.SYNCHRONOUS;
+    }
 
     /**
      * Informs this listener about the given event.

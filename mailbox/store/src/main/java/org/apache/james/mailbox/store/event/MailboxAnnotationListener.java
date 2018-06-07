@@ -47,11 +47,6 @@ public class MailboxAnnotationListener implements MailboxListener {
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public void event(Event event) {
         if (event instanceof EventFactory.MailboxDeletionImpl) {
             try {

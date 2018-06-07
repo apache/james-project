@@ -52,11 +52,6 @@ public class PropagateLookupRightListener implements MailboxListener {
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public void event(Event event) {
         MailboxSession mailboxSession = event.getSession();
 

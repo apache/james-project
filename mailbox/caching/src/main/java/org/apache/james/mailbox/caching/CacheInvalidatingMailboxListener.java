@@ -40,11 +40,6 @@ public class CacheInvalidatingMailboxListener implements MailboxListener {
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public void event(Event event) {
         if (event instanceof MailboxEvent) {
             mailboxEvent((MailboxEvent) event);

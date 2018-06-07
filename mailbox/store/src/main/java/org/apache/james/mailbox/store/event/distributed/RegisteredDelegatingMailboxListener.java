@@ -74,11 +74,6 @@ public class RegisteredDelegatingMailboxListener implements DistributedDelegatin
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public void addListener(MailboxPath path, MailboxListener listener, MailboxSession session) throws MailboxException {
         mailboxListenerRegistry.addListener(path, listener);
         mailboxPathRegister.register(path);

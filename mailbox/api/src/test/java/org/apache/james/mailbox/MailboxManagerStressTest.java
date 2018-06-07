@@ -71,11 +71,6 @@ public abstract class MailboxManagerStressTest {
             }
 
             @Override
-            public ExecutionMode getExecutionMode() {
-                return ExecutionMode.SYNCHRONOUS;
-            }
-
-            @Override
             public void event(Event event) {
                 MessageUid u = ((Added) event).getUids().get(0);
                 uList.add(u);

@@ -80,11 +80,6 @@ public class QuotaThresholdCrossingListener implements MailboxListener, Configur
     }
 
     @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
-    @Override
     public void event(Event event) {
         try {
             if (event instanceof QuotaUsageUpdatedEvent) {

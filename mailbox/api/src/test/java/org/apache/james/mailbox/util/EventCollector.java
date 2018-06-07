@@ -44,11 +44,6 @@ public class EventCollector implements MailboxListener {
         return listenerType;
     }
 
-    @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
     public List<Event> getEvents() {
         return events;
     }

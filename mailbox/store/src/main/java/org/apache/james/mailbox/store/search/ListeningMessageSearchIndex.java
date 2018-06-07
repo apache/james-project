@@ -52,11 +52,6 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         this.factory = factory;
     }
 
-    @Override
-    public ExecutionMode getExecutionMode() {
-        return ExecutionMode.SYNCHRONOUS;
-    }
-
     /**
      * Return the {@link MessageMapperFactory}
      * 
