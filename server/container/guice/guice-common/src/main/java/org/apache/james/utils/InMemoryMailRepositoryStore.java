@@ -89,7 +89,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -111,7 +111,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+    public Optional<MailRepository> get(String url) {
         return Optional.ofNullable(destinationToRepositoryAssociations.get(url));
     }
 
@@ -127,8 +127,9 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     private MailRepository createNewMailRepository(Destination destination) throws MailRepositoryStoreException {
         MailRepository newMailRepository = retrieveMailRepository(destination);
         newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(destination));
-        destinationToRepositoryAssociations.putIfAbsent(destination.url, newMailRepository);
-        return newMailRepository;
+        MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(destination.url, newMailRepository);
+        return Optional.ofNullable(previousRepository)
+            .orElse(newMailRepository);
     }
 
     private void readConfigurationEntry(HierarchicalConfiguration repositoryConfiguration) throws ConfigurationException {
@@ -153,7 +154,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         }
     }
 
-    private CombinedConfiguration createRepositoryCombinedConfig(Destination destination) throws MailRepositoryStoreException {
+    private CombinedConfiguration createRepositoryCombinedConfig(Destination destination) {
         CombinedConfiguration config = new CombinedConfiguration();
         HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(destination.protocol);
         if (defaultProtocolConfig != null) {

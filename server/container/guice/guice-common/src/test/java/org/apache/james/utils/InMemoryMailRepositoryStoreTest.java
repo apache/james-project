@@ -22,21 +22,39 @@ package org.apache.james.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.file.FileMailRepository;
+import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
 public class InMemoryMailRepositoryStoreTest {
+
+    private static class MemoryMailRepositoryProvider implements MailRepositoryProvider {
+        @Override
+        public String canonicalName() {
+            return MemoryMailRepository.class.getCanonicalName();
+        }
+
+        @Override
+        public MailRepository provide(String url) {
+            return new MemoryMailRepository();
+        }
+    }
 
     private InMemoryMailRepositoryStore repositoryStore;
     private FileSystemImpl fileSystem;
@@ -51,7 +69,8 @@ public class InMemoryMailRepositoryStoreTest {
         fileSystem = new FileSystemImpl(configuration.directories());
         repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
                 new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                        fileSystem)));
+                        fileSystem),
+                new MemoryMailRepositoryProvider()));
         repositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
             .getConfiguration("mailrepositorystore"));
         repositoryStore.init();
@@ -123,7 +142,7 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getShouldReturnEmptyWhenUrlNotInUse() throws Exception {
+    public void getShouldReturnEmptyWhenUrlNotInUse() {
         assertThat(repositoryStore.get("file://repo"))
             .isEmpty();
     }
@@ -135,6 +154,27 @@ public class InMemoryMailRepositoryStoreTest {
 
         assertThat(repositoryStore.get(url))
             .contains(mailRepository);
+    }
+
+    @Test
+    public void selectShouldNotReturnDifferentResultsWhenUsedInAConcurrentEnvironment() throws Exception {
+        String url = "memory://repo";
+        int threadCount = 10;
+        int operationCount = 1;
+
+        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            (threadNb, operationNb) -> repositoryStore.select(url)
+                .store(FakeMail.builder()
+                    .name("name" + threadNb)
+                    .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setText("Any body"))
+                    .build()));
+        concurrentTestRunner.run().awaitTermination(1, TimeUnit.MINUTES);
+        concurrentTestRunner.assertNoException();
+
+        long actualSize = repositoryStore.get(url).get().size();
+
+        assertThat(actualSize).isEqualTo(threadCount);
     }
 
 }
