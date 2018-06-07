@@ -24,9 +24,15 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 
 /**
  * Stores incoming Mail in a repository defined by the sender's domain.<br>
@@ -37,21 +43,29 @@ import org.apache.mailet.base.GenericMailet;
  *  For example for the value 'cassandra://var/mail/sendersRepositories/', a mail sent by 'user@james.org'
  *  will be stored in 'cassandra://var/mail/sendersRepositories/james.org'.
  *  - "passThrough" optional, defaults to false. If true, the processing of the mail continues. If false it stops.
+ *  - "allowRepositoryCreation" optional, defaults to true. If true, non existing repository will be created. In case of
+ *  misconfiguration, this might lead to arbitrary repository creation. If false, the incoming mails will be stored only
+ *  in already existing repository. If not existing, the email will be dropped with an appropriate log warning (leading
+ *  to potential data loss).
  *
  *  Example:
  *
  * &lt;mailet matcher="All" class="ToSenderDomainRepository"&gt;
  *     &lt;urlPrefix&gt;cassandra://var/mail/sendersRepositories/&lt;/urlPrefix&gt;
  *     &lt;passThrough&gt;false&lt;/passThrough&gt;
+ *     &lt;allowRepositoryCreation&gt;true&lt;/allowRepositoryCreation&gt;
  * &lt;/mailet&gt;
  */
 public class ToSenderDomainRepository extends GenericMailet {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ToSenderDomainRepository.class);
     private static final boolean DEFAULT_CONSUME = false;
+    private static final boolean DEFAULT_ALLOW_REPOSITORY_CREATION = true;
 
     private final MailRepositoryStore mailRepositoryStore;
     private String urlPrefix;
     private boolean passThrough;
+    private boolean allowRepositoryCreation;
 
     @Inject
     public ToSenderDomainRepository(MailRepositoryStore mailRepositoryStore) {
@@ -63,6 +77,7 @@ public class ToSenderDomainRepository extends GenericMailet {
         urlPrefix = Optional.ofNullable(getInitParameter("urlPrefix"))
             .orElseThrow(() -> new MessagingException("'urlPrefix' is a mandatory configuration property"));
         passThrough = getInitParameter("passThrough", DEFAULT_CONSUME);
+        allowRepositoryCreation = getInitParameter("allowRepositoryCreation", DEFAULT_ALLOW_REPOSITORY_CREATION);
     }
 
     @Override
@@ -76,9 +91,23 @@ public class ToSenderDomainRepository extends GenericMailet {
 
     private void store(Mail mail, String url) throws MessagingException {
         try {
-            mailRepositoryStore.select(url).store(mail);
+            Optional<MailRepository> mailRepository = retrieveRepository(url);
+            if (!mailRepository.isPresent()) {
+                LOGGER.warn("'{}' mail repository does not exist and will not be created. Mail {} will not be stored in it.",
+                    url, mail.getName());
+            }
+            ThrowingConsumer<MailRepository> storingConsumer = repository -> repository.store(mail);
+            mailRepository.ifPresent(Throwing.consumer(storingConsumer).sneakyThrow());
         } catch (MailRepositoryStore.MailRepositoryStoreException e) {
             throw new MessagingException("Error while selecting url " + url, e);
+        }
+    }
+
+    private Optional<MailRepository> retrieveRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
+        if (allowRepositoryCreation) {
+            return Optional.of(mailRepositoryStore.select(url));
+        } else {
+            return mailRepositoryStore.get(url);
         }
     }
 

@@ -24,19 +24,18 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -45,6 +44,7 @@ public class ToSenderDomainRepositoryTest {
 
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     private static final String CUSTOM_REPOSITORY_PREFIX = "file://var/mail/custom/";
+    public static final String AWAIT_REPOSITORY_PATH = "file://var/mail/await/";
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -54,49 +54,140 @@ public class ToSenderDomainRepositoryTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
 
     private TemporaryJamesServer jamesServer;
-    private MailRepositoryProbeImpl probe;
-
-    @Before
-    public void setup() throws Exception {
-        MailetContainer.Builder mailetContainer = TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-            .putProcessor(ProcessorConfiguration.root()
-                .addMailet(MailetConfiguration.builder()
-                    .matcher(All.class)
-                    .mailet(ToSenderDomainRepository.class)
-                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX)));
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withMailetContainer(mailetContainer)
-            .build(temporaryFolder);
-
-        DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(RECIPIENT, PASSWORD);
-
-        probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
-    }
 
     @After
     public void tearDown() {
-        jamesServer.shutdown();
+        if (jamesServer != null) {
+            jamesServer.shutdown();
+        }
     }
 
     @Test
     public void incomingMailShouldBeStoredInCorrespondingMailRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX))));
+
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+    }
+
+    @Test
+    public void incomingMailShouldBeStoredWhenRepositoryDoNotExistAndAllowedToCreateRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX)
+                    .addProperty("allowRepositoryCreation", "true"))));
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(RECIPIENT, RECIPIENT);
+
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+    }
+
+    @Test
+    public void incomingMailShouldBeStoredWhenRepositoryExistsAndAllowedToCreateRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX)
+                    .addProperty("allowRepositoryCreation", "true"))));
+        jamesServer.getProbe(MailRepositoryProbeImpl.class)
+            .createRepository(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(RECIPIENT, RECIPIENT);
+
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+    }
+
+    @Test
+    public void incomingMailShouldBeIgnoredWhenRepositoryDoNotExistAndNotAllowedToCreateRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX)
+                    .addProperty("allowRepositoryCreation", "false")
+                    .addProperty("passThrough", "true"))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToRepository.class)
+                    .addProperty("repositoryPath", AWAIT_REPOSITORY_PATH))));
+        MailRepositoryProbeImpl mailRepositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(RECIPIENT, RECIPIENT);
+
+        awaitAtMostOneMinute.until(
+            () -> mailRepositoryProbe.getRepositoryMailCount(AWAIT_REPOSITORY_PATH) == 1);
+
+        assertThat(mailRepositoryProbe.listRepositoryUrls())
+            .doesNotContain(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+    }
+
+    @Test
+    public void incomingMailShouldBeStoredWhenRepositoryExistsAndNotAllowedToCreateRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX)
+                    .addProperty("allowRepositoryCreation", "false"))));
+        jamesServer.getProbe(MailRepositoryProbeImpl.class)
+            .createRepository(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+
+        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
+            .sendMessage(RECIPIENT, RECIPIENT);
+
+        awaitAtMostOneMinute.until(
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
     }
 
     @Test
     public void incomingMailsShouldBeStoredInCorrespondingMailRepository() throws Exception {
+        initializeJamesServer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+            .putProcessor(ProcessorConfiguration.root()
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(All.class)
+                    .mailet(ToSenderDomainRepository.class)
+                    .addProperty("urlPrefix", CUSTOM_REPOSITORY_PREFIX))));
+
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 2);
+            () -> jamesServer.getProbe(MailRepositoryProbeImpl.class)
+                .getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 2);
+    }
+
+    private void initializeJamesServer(MailetContainer.Builder mailetContainer) throws Exception {
+        jamesServer = TemporaryJamesServer.builder()
+            .withMailetContainer(mailetContainer)
+            .build(temporaryFolder);
+
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(DEFAULT_DOMAIN)
+            .fluentAddUser(RECIPIENT, PASSWORD);
     }
 }

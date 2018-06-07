@@ -43,10 +43,19 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
         return repositoryStore.select(url).size();
     }
 
+    public void createRepository(String url) throws Exception {
+        repositoryStore.select(url);
+    }
+
     public List<String> listMailKeys(String url) throws Exception {
         return ImmutableList.copyOf(
             repositoryStore.select(url)
                 .list());
+    }
+
+    public List<String> listRepositoryUrls() {
+        return ImmutableList.copyOf(
+            repositoryStore.getUrls());
     }
 
 }
