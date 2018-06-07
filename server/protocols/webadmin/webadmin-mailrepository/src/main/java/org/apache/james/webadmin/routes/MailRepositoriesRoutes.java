@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -197,8 +198,15 @@ public class MailRepositoriesRoutes implements Routes {
 
     private Object writeMimeMessage(MimeMessage mimeMessage, HttpServletResponse rawResponse) throws MessagingException, IOException {
         rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
+        rawResponse.setHeader("Content-Length", String.valueOf(computeExactSize(mimeMessage)));
         mimeMessage.writeTo(rawResponse.getOutputStream());
         return rawResponse;
+    }
+
+    private long computeExactSize(MimeMessage mimeMessage) throws IOException, MessagingException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        mimeMessage.writeTo(byteArrayOutputStream);
+        return byteArrayOutputStream.size();
     }
 
     private MimeMessage getMailAsMimeMessage(String url, String mailKey) {

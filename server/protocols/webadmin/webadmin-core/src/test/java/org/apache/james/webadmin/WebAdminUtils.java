@@ -35,7 +35,7 @@ import com.jayway.restassured.http.ContentType;
 
 public class WebAdminUtils {
 
-    public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) throws IOException {
+    public static WebAdminServer createWebAdminServer(MetricFactory metricFactory, Routes... routes) {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             ImmutableSet.copyOf(routes),
             new NoAuthenticationFilter(),
@@ -51,11 +51,6 @@ public class WebAdminUtils {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(port.getValue());
-    }
-
-    public static RequestSpecBuilder buildRequestSpecificationWithPortOnly(Port port) {
-        return new RequestSpecBuilder()
             .setPort(port.getValue());
     }
 }
