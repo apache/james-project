@@ -84,9 +84,9 @@ public class SMIMEDecryptIntegrationTest {
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
-        DataProbeImpl serverProbe = jamesServer.getProbe(DataProbeImpl.class);
-        serverProbe.addDomain(DEFAULT_DOMAIN);
-        serverProbe.addUser(FROM, PASSWORD);
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(DEFAULT_DOMAIN)
+            .fluentAddUser(FROM, PASSWORD);
     }
 
     @After

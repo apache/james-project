@@ -86,11 +86,11 @@ public class SpamAssassinTest {
             .withMailetContainer(mailets)
             .build(temporaryFolder);
 
-        DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(DEFAULT_DOMAIN);
-        probe.addUser(FROM, PASSWORD);
-        probe.addUser(RECIPIENT, PASSWORD);
-        probe.addUser(RECIPIENT2, PASSWORD);
+        jamesServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(DEFAULT_DOMAIN)
+            .fluentAddUser(FROM, PASSWORD)
+            .fluentAddUser(RECIPIENT, PASSWORD)
+            .fluentAddUser(RECIPIENT2, PASSWORD);
     }
 
     @After

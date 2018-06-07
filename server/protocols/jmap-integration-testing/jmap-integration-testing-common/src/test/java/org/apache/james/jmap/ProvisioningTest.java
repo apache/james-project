@@ -63,9 +63,9 @@ public abstract class ProvisioningTest {
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
             .build();
 
-        DataProbeImpl serverProbe = jmapServer.getProbe(DataProbeImpl.class);
-        serverProbe.addDomain(DOMAIN);
-        serverProbe.addUser(USER, PASSWORD);
+        jmapServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(DOMAIN)
+            .fluentAddUser(USER, PASSWORD);
     }
 
     @After

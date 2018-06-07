@@ -58,13 +58,18 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         usersRepository.addUser(userName, password);
     }
 
+    public DataProbeImpl fluentAddUser(String userName, String password) throws Exception {
+        addUser(userName, password);
+        return this;
+    }
+
     @Override
     public void removeUser(String username) throws Exception {
         usersRepository.removeUser(username);
     }
 
     @Override
-    public void setPassword(String userName, String password) throws Exception {
+    public void setPassword(String userName, String password) {
         throw new NotImplementedException();
     }
 
@@ -78,6 +83,10 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         domainList.addDomain(Domain.of(domain));
     }
 
+    public DataProbeImpl fluentAddDomain(String domain) throws Exception {
+        addDomain(domain);
+        return this;
+    }
 
     @Override
     public boolean containsDomain(String domain) throws Exception {
@@ -107,12 +116,12 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
             .collect(
                 Guavate.toImmutableMap(
                     entry -> entry.getKey().asString(),
-                    entry -> entry.getValue()));
+                    Map.Entry::getValue));
 
     }
 
     @Override
-    public Mappings listUserDomainMappings(String user, String domain) throws Exception {
+    public Mappings listUserDomainMappings(String user, String domain) {
         throw new NotImplementedException();
     }
 

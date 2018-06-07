@@ -73,11 +73,12 @@ public interface SpamAssassinContract {
                 .build();
         RestAssured.defaultParser = Parser.JSON;
 
-        james.getJmapServer().getProbe(DataProbeImpl.class).addDomain(BOBS_DOMAIN);
-        james.getJmapServer().getProbe(DataProbeImpl.class).addDomain(RECIPIENTS_DOMAIN);
-        james.getJmapServer().getProbe(DataProbeImpl.class).addUser(BOB, BOB_PASSWORD);
-        james.getJmapServer().getProbe(DataProbeImpl.class).addUser(ALICE, ALICE_PASSWORD);
-        james.getJmapServer().getProbe(DataProbeImpl.class).addUser(PAUL, PAUL_PASSWORD);
+        james.getJmapServer().getProbe(DataProbeImpl.class)
+            .fluentAddDomain(BOBS_DOMAIN)
+            .fluentAddDomain(RECIPIENTS_DOMAIN)
+            .fluentAddUser(BOB, BOB_PASSWORD)
+            .fluentAddUser(ALICE, ALICE_PASSWORD)
+            .fluentAddUser(PAUL, PAUL_PASSWORD);
     }
 
     default AccessToken accessTokenFor(GuiceJamesServer james, String user, String password) {

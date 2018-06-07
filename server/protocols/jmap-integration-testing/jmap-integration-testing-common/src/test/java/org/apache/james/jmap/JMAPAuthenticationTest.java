@@ -72,8 +72,9 @@ public abstract class JMAPAuthenticationTest {
 
         
         String domain = "domain.tld";
-        jmapServer.getProbe(DataProbeImpl.class).addDomain(domain);
-        jmapServer.getProbe(DataProbeImpl.class).addUser(userCredentials.getUsername(), userCredentials.getPassword());
+        jmapServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(domain)
+            .fluentAddUser(userCredentials.getUsername(), userCredentials.getPassword());
         
     }
     

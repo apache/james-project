@@ -101,14 +101,14 @@ public class ContactExtractorTest {
             .build(folder);
 
         DataProbeImpl probe = jamesServer.getProbe(DataProbeImpl.class);
-        probe.addDomain(DEFAULT_DOMAIN);
-        probe.addUser(SENDER, PASSWORD);
-        probe.addUser(TO, PASSWORD);
-        probe.addUser(TO2, PASSWORD);
-        probe.addUser(CC, PASSWORD);
-        probe.addUser(CC2, PASSWORD);
-        probe.addUser(BCC, PASSWORD);
-        probe.addUser(BCC2, PASSWORD);
+        probe.fluentAddDomain(DEFAULT_DOMAIN)
+            .fluentAddUser(SENDER, PASSWORD)
+            .fluentAddUser(TO, PASSWORD)
+            .fluentAddUser(TO2, PASSWORD)
+            .fluentAddUser(CC, PASSWORD)
+            .fluentAddUser(CC2, PASSWORD)
+            .fluentAddUser(BCC, PASSWORD)
+            .fluentAddUser(BCC2, PASSWORD);
     }
 
     @After

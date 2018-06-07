@@ -71,8 +71,9 @@ public abstract class SetVacationResponseTest {
                 .setPort(jmapGuiceProbe.getJmapPort())
                 .build();
 
-        jmapServer.getProbe(DataProbeImpl.class).addDomain(DOMAIN);
-        jmapServer.getProbe(DataProbeImpl.class).addUser(USER, PASSWORD);
+        jmapServer.getProbe(DataProbeImpl.class)
+            .fluentAddDomain(DOMAIN)
+            .fluentAddUser(USER, PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
 
         await();

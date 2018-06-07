@@ -109,8 +109,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void removeUserShouldWork() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(MAIL_ADDRESS, PASSWORD);
+        dataProbe.fluentAddDomain(DOMAIN)
+            .fluentAddUser(MAIL_ADDRESS, PASSWORD);
 
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "REMOVEUSER", MAIL_ADDRESS});
 
@@ -119,8 +119,8 @@ public class DataCommandsIntegrationTest {
 
     @Test
     public void listUsersShouldWork() throws Exception {
-        dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(MAIL_ADDRESS, PASSWORD);
+        dataProbe.fluentAddDomain(DOMAIN)
+            .fluentAddUser(MAIL_ADDRESS, PASSWORD);
 
         ServerCmd.executeAndOutputToStream(new String[] {"-h", "127.0.0.1", "-p", "9999", "listusers"}, outputCapture.getPrintStream());
 
