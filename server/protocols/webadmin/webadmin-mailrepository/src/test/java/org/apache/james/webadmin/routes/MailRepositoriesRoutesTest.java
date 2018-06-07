@@ -35,11 +35,9 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -48,6 +46,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -248,7 +247,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void listingKeysShouldReturnErrorOnInvalidOffset() throws Exception {
+    public void listingKeysShouldReturnErrorOnInvalidOffset() {
         given()
             .param("offset", "invalid")
         .when()
@@ -261,7 +260,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void listingKeysShouldReturnErrorOnNegativeOffset() throws Exception {
+    public void listingKeysShouldReturnErrorOnNegativeOffset() {
         given()
             .param("offset", "-1")
         .when()
@@ -297,7 +296,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void listingKeysShouldReturnErrorOnInvalidLimit() throws Exception {
+    public void listingKeysShouldReturnErrorOnInvalidLimit() {
         given()
             .param("limit", "invalid")
         .when()
@@ -310,7 +309,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void listingKeysShouldReturnErrorOnNegativeLimit() throws Exception {
+    public void listingKeysShouldReturnErrorOnNegativeLimit() {
         given()
             .param("limit", "-1")
         .when()
@@ -344,7 +343,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void zeroLimitShouldNotBeValid() throws Exception {
+    public void zeroLimitShouldNotBeValid() {
         given()
             .param("limit", "0")
         .when()
@@ -485,7 +484,7 @@ public class MailRepositoriesRoutesTest {
             .build();
         mailRepository.store(mail);
 
-        String expectedContent = IOUtils.toString(mail.getMessage().getRawInputStream(), StandardCharsets.UTF_8);
+        String expectedContent = ClassLoaderUtils.getSystemResourceAsString("mail.eml");
         given()
             .accept(Constants.RFC822_CONTENT_TYPE)
         .when()

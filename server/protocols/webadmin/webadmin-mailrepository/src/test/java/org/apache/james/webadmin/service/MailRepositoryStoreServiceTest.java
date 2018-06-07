@@ -23,13 +23,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+
+import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
+import org.apache.james.server.core.MimeMessageInputStream;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.dto.MailKey;
@@ -131,32 +134,32 @@ public class MailRepositoryStoreServiceTest {
     }
 
     @Test
-    public void downloadMailShouldThrownWhenUnknownRepository() throws Exception {
+    public void retrieveMessageShouldThrownWhenUnknownRepository() throws Exception {
         when(mailRepositoryStore.get("unkown")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+        assertThatThrownBy(() -> testee.retrieveMessage(FIRST_REPOSITORY, NAME_1))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void dowloadMailShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
+    public void retrieveMessageShouldThrowWhenMailRepositoryStoreThrows() throws Exception {
         when(mailRepositoryStore.get(FIRST_REPOSITORY))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
-        assertThatThrownBy(() -> testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+        assertThatThrownBy(() -> testee.retrieveMessage(FIRST_REPOSITORY, NAME_1))
             .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
     }
 
     @Test
-    public void dowloadMailShouldReturnEmptyWhenMailNotFound() throws Exception {
+    public void retrieveMessageShouldReturnEmptyWhenMailNotFound() throws Exception {
         when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
 
-        assertThat(testee.downloadMail(FIRST_REPOSITORY, NAME_1))
+        assertThat(testee.retrieveMessage(FIRST_REPOSITORY, NAME_1))
             .isEmpty();
     }
 
     @Test
-    public void dowloadMailShouldReturnThInputStreamWhenMailExists() throws Exception {
+    public void retrieveMessageShouldReturnTheMessageWhenMailExists() throws Exception {
         when(mailRepositoryStore.get(FIRST_REPOSITORY)).thenReturn(Optional.of(repository));
 
         FakeMail mail = FakeMail.builder()
@@ -165,11 +168,11 @@ public class MailRepositoryStoreServiceTest {
             .build();
         repository.store(mail);
 
-        Optional<InputStream> downloadMail = testee.downloadMail(FIRST_REPOSITORY, NAME_1);
-        assertThat(downloadMail).isNotEmpty();
+        Optional<MimeMessage> mimeMessage = testee.retrieveMessage(FIRST_REPOSITORY, NAME_1);
+        assertThat(mimeMessage).isNotEmpty();
 
-        String eml = IOUtils.toString(downloadMail.get(), StandardCharsets.UTF_8);
-        String expectedContent = IOUtils.toString(mail.getMessage().getRawInputStream(), StandardCharsets.UTF_8);
-        assertThat(eml).isEqualTo(expectedContent);
+        String eml = IOUtils.toString(new MimeMessageInputStream(mimeMessage.get()), StandardCharsets.UTF_8);
+        String expectedContent = ClassLoaderUtils.getSystemResourceAsString("mail.eml");
+        assertThat(eml).isEqualToNormalizingNewlines(expectedContent);
     }
 }

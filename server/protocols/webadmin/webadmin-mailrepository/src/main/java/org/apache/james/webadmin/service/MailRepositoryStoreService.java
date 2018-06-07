@@ -19,7 +19,6 @@
 
 package org.apache.james.webadmin.service;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,7 +73,7 @@ public class MailRepositoryStoreService {
                 .collect(Guavate.toImmutableList());
     }
 
-    public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException {
         Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
         return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
     }
@@ -86,12 +85,11 @@ public class MailRepositoryStoreService {
             .map(Throwing.function(MailDto::fromMail).sneakyThrow());
     }
 
-    public Optional<InputStream> downloadMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<MimeMessage> retrieveMessage(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         MailRepository mailRepository = getRepository(url);
 
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
-            .map(Throwing.function(Mail::getMessage).sneakyThrow())
-            .map(Throwing.function(MimeMessage::getRawInputStream).sneakyThrow());
+            .map(Throwing.function(Mail::getMessage).sneakyThrow());
     }
 
     public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {

@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +29,8 @@ import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -187,15 +189,21 @@ public class MailRepositoriesRoutes implements Routes {
         service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.JSON_CONTENT_TYPE,
             (request, response) -> getMailAsJson(decodedRepositoryUrl(request), request.params("mailKey")), jsonTransformer);
 
-        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.RFC822_CONTENT_TYPE, (request, response) -> {
-            response.type(Constants.RFC822_CONTENT_TYPE);
-            return getMailAsEml(decodedRepositoryUrl(request), request.params("mailKey"));
-        });
+        service.get(MAIL_REPOSITORIES + "/:encodedUrl/mails/:mailKey", Constants.RFC822_CONTENT_TYPE,
+            (request, response) -> writeMimeMessage(
+                getMailAsMimeMessage(decodedRepositoryUrl(request), request.params("mailKey")),
+                response.raw()));
     }
 
-    private InputStream getMailAsEml(String url, String mailKey) {
+    private Object writeMimeMessage(MimeMessage mimeMessage, HttpServletResponse rawResponse) throws MessagingException, IOException {
+        rawResponse.setContentType(Constants.RFC822_CONTENT_TYPE);
+        mimeMessage.writeTo(rawResponse.getOutputStream());
+        return rawResponse;
+    }
+
+    private MimeMessage getMailAsMimeMessage(String url, String mailKey) {
         try {
-            return repositoryStoreService.downloadMail(url, mailKey)
+            return repositoryStoreService.retrieveMessage(url, mailKey)
                 .orElseThrow(mailNotFoundError(mailKey));
         } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
             throw internalServerError(e);
@@ -248,7 +256,7 @@ public class MailRepositoriesRoutes implements Routes {
                             .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
                             .haltError());
                 return new ExtendedMailRepositoryResponse(url, size);
-            } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
+            } catch (MailRepositoryStore.MailRepositoryStoreException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
