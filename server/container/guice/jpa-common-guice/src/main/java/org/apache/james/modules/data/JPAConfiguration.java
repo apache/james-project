@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james;
+package org.apache.james.modules.data;
 
 import org.apache.james.backends.jpa.JPAConstants;
 

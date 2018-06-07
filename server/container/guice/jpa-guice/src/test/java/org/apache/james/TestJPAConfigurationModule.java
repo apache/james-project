@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.modules.data.JPAConfiguration;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

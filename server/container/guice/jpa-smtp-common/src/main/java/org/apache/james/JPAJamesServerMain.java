@@ -19,9 +19,8 @@
 
 package org.apache.james;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.apache.james.modules.data.JPADataModule;
+import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
@@ -34,7 +33,6 @@ import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.server.core.configuration.Configuration;
-import org.apache.openjpa.persistence.OpenJPAPersistence;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
@@ -52,8 +50,8 @@ public class JPAJamesServerMain {
         new DefaultProcessorsConfigurationProviderModule());
     
     public static final Module JPA_SERVER_MODULE = Modules.combine(
+        new JPAEntityManagerModule(),
         new JPADataModule(),
-        (binder) -> binder.bind(EntityManagerFactory.class).toProvider(OpenJPAPersistence::getEntityManagerFactory),
         new ActiveMQQueueModule(),
         new RawPostDequeueDecoratorModule(),
         new ElasticSearchMetricReporterModule());
