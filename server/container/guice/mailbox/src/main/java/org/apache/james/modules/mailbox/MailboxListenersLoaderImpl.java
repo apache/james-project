@@ -30,6 +30,7 @@ import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.inject.Inject;
 
 public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
@@ -80,13 +81,32 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
             MailboxListener listener = mailboxListenerFactory.createInstance(clazz);
-            if (listener instanceof Configurable && configuration.getConfiguration().isPresent()) {
-                ((Configurable)listener).configure(configuration.getConfiguration().get());
+            if (listener instanceof Configurable) {
+                configureListener(configuration, (Configurable) listener);
+            }
+            if (listener instanceof MailboxListener.ConfigurableExecutionMode) {
+                MailboxListener.ConfigurableExecutionMode configurableExecutionMode = (MailboxListener.ConfigurableExecutionMode) listener;
+                configuration.isAsync()
+                    .map(this::getExecutionMode)
+                    .ifPresent(configurableExecutionMode::set);
             }
             return listener;
         } catch (ClassNotFoundException | ConfigurationException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
             throw new RuntimeException(e);
         }
+    }
+
+    private void configureListener(ListenerConfiguration configuration, Configurable configurableListener) throws ConfigurationException {
+        configuration.getConfiguration()
+            .ifPresent(Throwing.consumer(configurableListener::configure).sneakyThrow());
+    }
+
+
+    MailboxListener.ExecutionMode getExecutionMode(boolean isAsync) {
+        if (isAsync) {
+            return MailboxListener.ExecutionMode.ASYNCHRONOUS;
+        }
+        return MailboxListener.ExecutionMode.SYNCHRONOUS;
     }
 }

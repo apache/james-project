@@ -30,11 +30,12 @@ public class ListenerConfiguration {
     public static ListenerConfiguration from(HierarchicalConfiguration configuration) {
         String listenerClass = configuration.getString("class");
         Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
-        return new ListenerConfiguration(listenerClass, extractSubconfiguration(configuration));
+        Optional<Boolean> isAsync = Optional.ofNullable(configuration.getBoolean("async", null));
+        return new ListenerConfiguration(listenerClass, extractSubconfiguration(configuration), isAsync);
     }
 
     public static ListenerConfiguration forClass(String clazz) {
-        return new ListenerConfiguration(clazz, Optional.empty());
+        return new ListenerConfiguration(clazz, Optional.empty(), Optional.empty());
     }
 
     private static Optional<HierarchicalConfiguration> extractSubconfiguration(HierarchicalConfiguration configuration) {
@@ -45,10 +46,12 @@ public class ListenerConfiguration {
 
     private final String clazz;
     private final Optional<HierarchicalConfiguration> configuration;
+    private final Optional<Boolean> isAsync;
 
-    private ListenerConfiguration(String clazz, Optional<HierarchicalConfiguration> configuration) {
+    private ListenerConfiguration(String clazz, Optional<HierarchicalConfiguration> configuration, Optional<Boolean> isAsync) {
         this.clazz = clazz;
         this.configuration = configuration;
+        this.isAsync = isAsync;
     }
 
     public String getClazz() {
@@ -57,5 +60,9 @@ public class ListenerConfiguration {
 
     public Optional<HierarchicalConfiguration> getConfiguration() {
         return configuration;
+    }
+
+    public Optional<Boolean> isAsync() {
+        return isAsync;
     }
 }

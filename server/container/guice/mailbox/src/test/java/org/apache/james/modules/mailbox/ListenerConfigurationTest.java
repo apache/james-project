@@ -53,4 +53,16 @@ public class ListenerConfigurationTest {
 
         assertThat(listenerConfiguration.getClazz()).isEqualTo(expectedClazz);
     }
+
+    @Test
+    public void isAsyncShouldReturnConfiguredValue() {
+        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        String expectedClazz = "MyClassName";
+        configuration.addProperty("class", expectedClazz);
+        configuration.addProperty("async", "false");
+
+        ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
+
+        assertThat(listenerConfiguration.isAsync()).contains(false);
+    }
 }

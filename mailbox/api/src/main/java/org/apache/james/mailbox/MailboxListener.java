@@ -40,6 +40,10 @@ import org.apache.james.mailbox.quota.QuotaSize;
  */
 public interface MailboxListener {
 
+    interface ConfigurableExecutionMode {
+        void set(ExecutionMode executionMode);
+    }
+
     enum ListenerType {
         ONCE,
         EACH_NODE,
