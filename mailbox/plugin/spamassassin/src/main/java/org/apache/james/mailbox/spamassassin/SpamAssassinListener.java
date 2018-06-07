@@ -60,7 +60,7 @@ public class SpamAssassinListener implements SpamEventListener, MailboxListener.
     }
 
     @Override
-    public void set(ExecutionMode executionMode) {
+    public void setExecutionMode(ExecutionMode executionMode) {
         this.executionMode = Optional.of(executionMode);
     }
 

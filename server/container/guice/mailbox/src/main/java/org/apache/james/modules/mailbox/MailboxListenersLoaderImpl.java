@@ -88,7 +88,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
                 MailboxListener.ConfigurableExecutionMode configurableExecutionMode = (MailboxListener.ConfigurableExecutionMode) listener;
                 configuration.isAsync()
                     .map(this::getExecutionMode)
-                    .ifPresent(configurableExecutionMode::set);
+                    .ifPresent(configurableExecutionMode::setExecutionMode);
             }
             return listener;
         } catch (ClassNotFoundException | ConfigurationException e) {
