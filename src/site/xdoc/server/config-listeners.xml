@@ -41,12 +41,21 @@
             <p>To do so, just register the class that needs to be instantiated and added to global listeners. These JAR can be
                part of James source code, or provided as an extension and thus should be located in the<code>extensions-jars</code> folder.</p>
 
+            <p>
+                Some MailboxListener allows you to specify if you want to run them synchronously or asynchronously. To do so,
+                for MailboxListener that supports this, you can use the <b>async</b> attribute (optional, per mailet default) to govern the execution mode.
+                If <b>true</b> the execution will be scheduled by a FixedThreadPool whose size is defined by the <b>poolSize</b>
+                attribute (optional, default to 8). If <b>false</b>, the execution is synchronous, on the current thread.
+            </p>
+
             <ul>
                 Already provided additional listeners includes:
 
                  <li><code>org.apache.james.mailbox.spamassassin.SpamAssassinListener</code>:
                      Provides per user real-time HAM/SPAM feedback to a SpamAssassin server depending on user actions.
-                     Please note that a <code>spamassassin.properties</code> file is needed.</li>
+                     Please note that a <code>spamassassin.properties</code> file is needed.<br/>
+                     This mailet is asynchronous by default, but this behaviour can be overridden by the <b>async</b>
+                     configuration property.</li>
                  <li><code>org.apache.james.mailbox.cassandra.MailboxOperationLoggingListener</code>:
                      For Cassandra guice wiring. Provides more insights on mailbox operations</li>
                  <li><code>org.apache.james.mailbox.quota.mailing.listeners.QuotaThresholdCrossingListener</code>:
