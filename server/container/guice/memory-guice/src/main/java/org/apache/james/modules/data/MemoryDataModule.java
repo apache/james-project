@@ -25,6 +25,8 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -50,6 +52,9 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(MemoryRecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(MemoryRecipientRewriteTable.class);
+
+        bind(MemoryMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
+        bind(MailRepositoryUrlStore.class).to(MemoryMailRepositoryUrlStore.class);
 
         bind(MemoryUsersRepository.class).toInstance(MemoryUsersRepository.withVirtualHosting());
         bind(UsersRepository.class).to(MemoryUsersRepository.class);

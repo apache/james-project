@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.modules.data;
 
+import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
+import org.apache.james.mailrepository.jpa.JPAMailRepositoryUrlStore;
+
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
-public class JPADataModule extends AbstractModule {
-
+public class JPAMailRepositoryModule extends AbstractModule {
     @Override
     protected void configure() {
-        install(new JPAUsersRepositoryModule());
-        install(new JPADomainListModule());
-        install(new JPARecipientRewriteTableModule());
-        install(new JPAMailRepositoryModule());
-    }
+        bind(JPAMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
 
+        bind(MailRepositoryUrlStore.class).to(JPAMailRepositoryUrlStore.class);
+    }
 }

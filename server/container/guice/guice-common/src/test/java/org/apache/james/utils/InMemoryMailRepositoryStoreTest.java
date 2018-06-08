@@ -32,6 +32,7 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
@@ -45,6 +46,8 @@ import com.google.common.collect.Sets;
 
 public class InMemoryMailRepositoryStoreTest {
     private static final MailRepositoryUrl FILE_REPO = MailRepositoryUrl.from("file://repo");
+
+    private MemoryMailRepositoryUrlStore urlStore;
 
     private static class MemoryMailRepositoryProvider implements MailRepositoryProvider {
         @Override
@@ -69,9 +72,10 @@ public class InMemoryMailRepositoryStoreTest {
             .configurationFromClasspath()
             .build();
         fileSystem = new FileSystemImpl(configuration.directories());
-        repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
-                new MailStoreRepositoryModule.FileMailRepositoryProvider(
-                        fileSystem),
+        urlStore = new MemoryMailRepositoryUrlStore();
+        MailStoreRepositoryModule.FileMailRepositoryProvider fileProvider = new MailStoreRepositoryModule.FileMailRepositoryProvider(fileSystem);
+        repositoryStore = new InMemoryMailRepositoryStore(urlStore, Sets.newHashSet(
+            fileProvider,
                 new MemoryMailRepositoryProvider()));
         repositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
             .getConfiguration("mailrepositorystore"));
@@ -103,7 +107,7 @@ public class InMemoryMailRepositoryStoreTest {
 
     @Test
     public void configureShouldThrowWhenNonValidClassesAreProvided() throws Exception {
-        repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
+        repositoryStore = new InMemoryMailRepositoryStore(urlStore, Sets.newHashSet(
             new MailStoreRepositoryModule.FileMailRepositoryProvider(
                 fileSystem)));
         repositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration).getConfiguration("fakemailrepositorystore"));
@@ -114,7 +118,7 @@ public class InMemoryMailRepositoryStoreTest {
 
     @Test
     public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
-        repositoryStore = new InMemoryMailRepositoryStore(Sets.newHashSet(
+        repositoryStore = new InMemoryMailRepositoryStore(urlStore, Sets.newHashSet(
             new MailStoreRepositoryModule.FileMailRepositoryProvider(
                 fileSystem)));
         repositoryStore.configure(new HierarchicalConfiguration());
@@ -149,6 +153,14 @@ public class InMemoryMailRepositoryStoreTest {
     public void getShouldReturnEmptyWhenUrlNotInUse() {
         assertThat(repositoryStore.get(FILE_REPO))
             .isEmpty();
+    }
+
+    @Test
+    public void getShouldReturnRepositoryWhenUrlExists() {
+        urlStore.add(FILE_REPO);
+
+        assertThat(repositoryStore.get(FILE_REPO))
+            .isNotEmpty();
     }
 
     @Test
