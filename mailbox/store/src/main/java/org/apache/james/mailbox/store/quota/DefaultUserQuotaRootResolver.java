@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.quota;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -57,10 +58,13 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     @Override
     public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) {
         Preconditions.checkArgument(!mailboxPath.getNamespace().contains(SEPARATOR), "Namespace should not contain " + SEPARATOR);
-        Preconditions.checkArgument(!mailboxPath.getUser().contains(SEPARATOR), "Username should not contain " + SEPARATOR);
-        User user = User.fromUsername(mailboxPath.getUser());
-        return QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(),
-            user.getDomainPart());
+        return Optional.ofNullable(mailboxPath.getUser())
+                .map(user -> {
+                    Preconditions.checkArgument(!mailboxPath.getUser().contains(SEPARATOR), "Username should not contain " + SEPARATOR);
+                    return User.fromUsername(mailboxPath.getUser());
+                })
+                .map(user -> QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(), user.getDomainPart()))
+                .orElseGet(() -> QuotaRoot.quotaRoot(mailboxPath.getNamespace(), Optional.empty()));
     }
 
     @Override
