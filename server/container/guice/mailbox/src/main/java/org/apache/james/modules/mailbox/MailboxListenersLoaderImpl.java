@@ -20,7 +20,6 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
@@ -30,7 +29,6 @@ import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.inject.Inject;
 
 public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
@@ -79,31 +77,18 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
         String listenerClass = configuration.getClazz();
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
-            Class<MailboxListener> clazz = classLoader.locateClass(listenerClass);
-            MailboxListener listener = mailboxListenerFactory.createInstance(clazz);
-            if (listener instanceof Configurable) {
-                configureListener(configuration, (Configurable) listener);
-            }
-            if (listener instanceof MailboxListener.ConfigurableExecutionMode) {
-                MailboxListener.ConfigurableExecutionMode configurableExecutionMode = (MailboxListener.ConfigurableExecutionMode) listener;
-                configuration.isAsync()
-                    .map(this::getExecutionMode)
-                    .ifPresent(configurableExecutionMode::setExecutionMode);
-            }
-            return listener;
-        } catch (ClassNotFoundException | ConfigurationException e) {
+            return mailboxListenerFactory.newInstance()
+                .withConfiguration(configuration.getConfiguration())
+                .withExecutionMode(configuration.isAsync().map(this::getExecutionMode))
+                .clazz(classLoader.locateClass(listenerClass))
+                .build();
+        } catch (ClassNotFoundException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
             throw new RuntimeException(e);
         }
     }
 
-    private void configureListener(ListenerConfiguration configuration, Configurable configurableListener) throws ConfigurationException {
-        configuration.getConfiguration()
-            .ifPresent(Throwing.consumer(configurableListener::configure).sneakyThrow());
-    }
-
-
-    MailboxListener.ExecutionMode getExecutionMode(boolean isAsync) {
+    private MailboxListener.ExecutionMode getExecutionMode(boolean isAsync) {
         if (isAsync) {
             return MailboxListener.ExecutionMode.ASYNCHRONOUS;
         }

@@ -31,6 +31,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -86,7 +87,7 @@ public class SpamAssassinListenerTest {
         spamCapitalMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
         trashMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
-        listener = new SpamAssassinListener(spamAssassin, mapperFactory);
+        listener = new SpamAssassinListener(spamAssassin, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @After

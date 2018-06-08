@@ -18,13 +18,66 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
+import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.mailbox.MailboxListener;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Injector;
 
 public class MailboxListenerFactory {
+
+    public static class MailboxListenerBuilder {
+        private final Injector injector;
+        private Optional<Class<MailboxListener>> clazz;
+        private Optional<MailboxListener.ExecutionMode> executionMode;
+        private Optional<HierarchicalConfiguration> configuration;
+
+        public MailboxListenerBuilder(Injector injector) {
+            this.injector = injector;
+            this.clazz = Optional.empty();
+            this.executionMode = Optional.empty();
+            this.configuration = Optional.empty();
+        }
+
+        public MailboxListenerBuilder withExecutionMode(MailboxListener.ExecutionMode executionMode) {
+            this.executionMode = Optional.of(executionMode);
+            return this;
+        }
+
+        public MailboxListenerBuilder withConfiguration(HierarchicalConfiguration configuration) {
+            this.configuration = Optional.of(configuration);
+            return this;
+        }
+
+        public MailboxListenerBuilder withExecutionMode(Optional<MailboxListener.ExecutionMode> executionMode) {
+            executionMode.ifPresent(this::withExecutionMode);
+            return this;
+        }
+
+        public MailboxListenerBuilder withConfiguration(Optional<HierarchicalConfiguration> configuration) {
+            configuration.ifPresent(this::withConfiguration);
+            return this;
+        }
+
+        public MailboxListenerBuilder clazz(Class<MailboxListener> clazz) {
+            this.clazz = Optional.of(clazz);
+            return this;
+        }
+
+        public MailboxListener build() {
+            Preconditions.checkState(clazz.isPresent(), "'clazz' is mandatory");
+            return injector.createChildInjector(
+                binder -> binder.bind(MailboxListener.ExecutionMode.class)
+                    .toInstance(executionMode.orElse(MailboxListener.ExecutionMode.SYNCHRONOUS)),
+                binder -> binder.bind(HierarchicalConfiguration.class)
+                    .toInstance(configuration.orElse(new HierarchicalConfiguration())))
+                .getInstance(clazz.get());
+        }
+    }
 
     private final Injector injector;
 
@@ -33,7 +86,7 @@ public class MailboxListenerFactory {
         this.injector = injector;
     }
 
-    public MailboxListener createInstance(Class<MailboxListener> clazz) {
-        return injector.getInstance(clazz);
+    public MailboxListenerBuilder newInstance() {
+        return new MailboxListenerBuilder(injector);
     }
 }

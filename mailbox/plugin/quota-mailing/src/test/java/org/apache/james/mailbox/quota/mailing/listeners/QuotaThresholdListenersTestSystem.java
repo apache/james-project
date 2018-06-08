@@ -41,9 +41,7 @@ public class QuotaThresholdListenersTestSystem {
         FileSystem fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
 
         QuotaThresholdCrossingListener thresholdCrossingListener =
-            new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(), fileSystem, eventStore);
-
-        thresholdCrossingListener.configure(configuration);
+            new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(), fileSystem, eventStore, configuration);
 
         MockMailboxSession mailboxSession = new MockMailboxSession("system");
         delegatingListener.addGlobalListener(thresholdCrossingListener, mailboxSession);

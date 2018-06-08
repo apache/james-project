@@ -20,12 +20,10 @@ package org.apache.james.mailbox.spamassassin;
 
 import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -44,24 +42,19 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
-public class SpamAssassinListener implements SpamEventListener, MailboxListener.ConfigurableExecutionMode {
+public class SpamAssassinListener implements SpamEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListener.class);
 
     private final SpamAssassin spamAssassin;
     private final MailboxSessionMapperFactory mapperFactory;
-    private Optional<ExecutionMode> executionMode;
+    private final ExecutionMode executionMode;
 
     @Inject
-    public SpamAssassinListener(SpamAssassin spamAssassin, MailboxSessionMapperFactory mapperFactory) {
+    public SpamAssassinListener(SpamAssassin spamAssassin, MailboxSessionMapperFactory mapperFactory, ExecutionMode executionMode) {
         this.spamAssassin = spamAssassin;
         this.mapperFactory = mapperFactory;
-        this.executionMode = Optional.empty();
-    }
-
-    @Override
-    public void setExecutionMode(ExecutionMode executionMode) {
-        this.executionMode = Optional.of(executionMode);
+        this.executionMode = executionMode;
     }
 
     @Override
@@ -71,7 +64,7 @@ public class SpamAssassinListener implements SpamEventListener, MailboxListener.
 
     @Override
     public ExecutionMode getExecutionMode() {
-        return executionMode.orElse(ExecutionMode.ASYNCHRONOUS);
+        return executionMode;
     }
 
     @Override
