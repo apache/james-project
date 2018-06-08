@@ -19,30 +19,23 @@
 
 package org.apache.james.webadmin.dto;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-@JsonSerialize(using = HeadersDtoJsonSerializer.class)
 public class HeadersDto {
-    private Map<String, List<String>> headers;
+    private Multimap<String, String> headers;
 
     public HeadersDto() {
-        headers = new HashMap<>();
+        headers = ArrayListMultimap.create();
     }
 
     public void add(String key, String value) {
-        if (!headers.containsKey(key)) {
-            headers.put(key, new ArrayList<>());
-        }
-
-        headers.get(key).add(value);
+        headers.put(key, value);
     }
 
-    public Map<String, List<String>> getHeaders() {
+    @JsonValue
+    public Multimap<String, String> getHeaders() {
         return headers;
     }
 }

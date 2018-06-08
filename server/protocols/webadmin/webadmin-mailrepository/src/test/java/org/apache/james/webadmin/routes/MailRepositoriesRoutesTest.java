@@ -27,18 +27,15 @@ import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -501,7 +498,6 @@ public class MailRepositoriesRoutesTest {
             .when()
                 .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
             .then()
-            .log().all()
             .extract()
                 .body()
                 .asString();
@@ -601,30 +597,7 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("The field 'nonExistingField' can't be requested"));
-    }
-
-    @Test
-    public void retrievingAMailShouldDisplayAnErrorWhenRequestedAdditionalsFieldIsMissing() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
-        String name = NAME_1;
-        String sender = "sender@domain";
-        String recipient1 = "recipient1@domain";
-        mailRepository.store(FakeMail.builder()
-            .name(name)
-            .sender(sender)
-            .recipients(recipient1)
-            .build());
-
-        given()
-            .parameters("additionalFields", "attributes,headers,body,messageSize,perRecipientsHeaders")
-        .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
-        .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-            .body("statusCode", is(500))
-            .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
-            .body("message", allOf(startsWith("The field '"), endsWith("' can't be accessed")));
+            .body("message", is("The field 'nonExistingField' can't be requested in additionalFields parameter"));
     }
 
     @Test

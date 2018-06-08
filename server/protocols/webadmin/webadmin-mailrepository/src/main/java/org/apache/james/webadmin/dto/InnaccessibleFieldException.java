@@ -19,18 +19,26 @@
 
 package org.apache.james.webadmin.dto;
 
+import javax.mail.MessagingException;
+
 import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 
 public class InnaccessibleFieldException extends Exception {
 
     private final AdditionalField field;
+    private final MessagingException originalException;
 
-    public InnaccessibleFieldException(AdditionalField field) {
-        super("The field '" + field + "' can't be accessed");
+    public InnaccessibleFieldException(AdditionalField field, MessagingException originalException) {
+        super("The field '" + field.getName() + "' can't be accessed");
         this.field = field;
+        this.originalException = originalException;
     }
 
     public AdditionalField getField() {
         return field;
+    }
+
+    public MessagingException getOriginalException() {
+        return originalException;
     }
 }

@@ -204,14 +204,14 @@ public class MailRepositoriesRoutes implements Routes {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                     .cause(e)
-                    .message("The field '" + e.getMessage() + "' can't be requested")
+                    .message("The field '" + e.getMessage() + "' can't be requested in additionalFields parameter")
                     .haltError();
             } catch (InnaccessibleFieldException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
                     .cause(e)
-                    .message("The field '" + e.getField() + "' can't be accessed")
+                    .message("The field '" + e.getField().getName() + "' requested in additionalFields parameter can't be accessed")
                     .haltError();
             }
         }, jsonTransformer);

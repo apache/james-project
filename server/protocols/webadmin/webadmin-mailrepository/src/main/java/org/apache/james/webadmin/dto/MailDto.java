@@ -72,7 +72,7 @@ public class MailDto {
         try {
             return Optional.of(new Long(mail.getMessageSize()));
         } catch (MessagingException e) {
-            throw new InnaccessibleFieldException(AdditionalField.MESSAGE_SIZE);
+            throw new InnaccessibleFieldException(AdditionalField.MESSAGE_SIZE, e);
         }
     }
 
@@ -88,7 +88,7 @@ public class MailDto {
                     .map(Throwing.function((Message message) -> extractor.extract(message)).sneakyThrow())
                     .flatMap(extractBody());
         } catch (MessagingException e) {
-            throw new InnaccessibleFieldException(AdditionalField.BODY);
+            throw new InnaccessibleFieldException(AdditionalField.BODY, e);
         }
     }
 
@@ -106,7 +106,7 @@ public class MailDto {
     private static Message convertMessage(MimeMessage message) throws IOException, MessagingException {
         ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
         message.writeTo(rawMessage);
-        return org.apache.james.mime4j.dom.Message.Builder
+        return Message.Builder
                 .of()
                 .use(MimeConfig.PERMISSIVE)
                 .parse(new ByteArrayInputStream(rawMessage.toByteArray()))
@@ -119,14 +119,16 @@ public class MailDto {
         }
 
         try {
-            HeadersDto headers = new HeadersDto();
-            Collections
-                .list(mail.getMessage().getAllHeaders())
-                .forEach((header) -> headers.add(header.getName(), header.getValue()));
-
-            return Optional.of(headers);
+            return Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function((MimeMessage message) -> {
+                        HeadersDto headers = new HeadersDto();
+                        Collections
+                            .list(message.getAllHeaders())
+                            .forEach((header) -> headers.add(header.getName(), header.getValue()));
+                        return headers;
+                    }).sneakyThrow());
         } catch (MessagingException e) {
-            throw new InnaccessibleFieldException(AdditionalField.HEADERS);
+            throw new InnaccessibleFieldException(AdditionalField.HEADERS, e);
         }
     }
 
@@ -136,7 +138,7 @@ public class MailDto {
         }
         Map<String, HeadersDto> headers = new HashMap<>();
         PerRecipientHeaders specificHeaders = mail.getPerRecipientSpecificHeaders();
-        Multimap<MailAddress, org.apache.mailet.PerRecipientHeaders.Header> headersByRecipient = specificHeaders.getHeadersByRecipient();
+        Multimap<MailAddress, PerRecipientHeaders.Header> headersByRecipient = specificHeaders.getHeadersByRecipient();
 
         for (MailAddress address : headersByRecipient.keySet()) {
             headers.put(address.asString(), fetchPerRecipientHeader(headersByRecipient, address));
@@ -146,7 +148,7 @@ public class MailDto {
     }
 
     private static HeadersDto fetchPerRecipientHeader(
-            Multimap<MailAddress, org.apache.mailet.PerRecipientHeaders.Header> headersByRecipient,
+            Multimap<MailAddress, PerRecipientHeaders.Header> headersByRecipient,
             MailAddress address) {
         HeadersDto header = new HeadersDto();
         headersByRecipient.get(address).forEach((rawHeader) -> header.add(rawHeader.getName(), rawHeader.getValue()));
@@ -194,6 +196,10 @@ public class MailDto {
 
         AdditionalField(String fieldName) {
             this.fieldName = fieldName;
+        }
+
+        public String getName() {
+            return fieldName;
         }
     }
 
