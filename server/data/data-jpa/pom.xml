@@ -49,6 +49,12 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-library</artifactId>
         </dependency>
         <dependency>
@@ -109,13 +115,23 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -137,7 +153,10 @@
                 <artifactId>openjpa-maven-plugin</artifactId>
                 <version>2.4.2</version>
                 <configuration>
-                    <includes>org/apache/james/user/jpa/model/JPAUser.class,org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,org/apache/james/domainlist/jpa/model/JPADomain.class</includes>
+                    <includes>org/apache/james/user/jpa/model/JPAUser.class,
+                        org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,
+                        org/apache/james/domainlist/jpa/model/JPADomain.class,
+                        org/apache/james/mailrepository/jpa/JPAUrl.class</includes>
                     <addDefaultConstructor>true</addDefaultConstructor>
                     <enforcePropertyRestrictions>true</enforcePropertyRestrictions>
                     <toolProperties>
@@ -147,7 +166,10 @@
                         </property>
                         <property>
                             <name>metaDataFactory</name>
-                            <value>jpa(Types=org.apache.james.user.jpa.model.JPAUser;org.apache.james.rrt.jpa.model.JPARecipientRewrite;org.apache.james.domainlist.jpa.model.JPADomain)</value>
+                            <value>jpa(Types=org.apache.james.user.jpa.model.JPAUser;
+                                org.apache.james.rrt.jpa.model.JPARecipientRewrite;
+                                org.apache.james.domainlist.jpa.model.JPADomain;
+                                org.apache.james.mailrepository.jpa.JPAUrl)</value>
                         </property>
                     </toolProperties>
                 </configuration>

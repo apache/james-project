@@ -31,6 +31,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.domainlist.jpa.model.JPADomain;
+import org.apache.james.mailrepository.jpa.JPAUrl;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.user.jpa.model.JPAUser;
@@ -66,7 +67,7 @@ public class JPAJamesServerTest {
                 .overrideWith(
                         new TestJPAConfigurationModule(),
                         (binder) -> binder.bind(EntityManagerFactory.class)
-                            .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class)
+                            .toInstance(JpaTestCluster.create(JPAUser.class, JPADomain.class, JPARecipientRewrite.class, JPAUrl.class)
                                     .getEntityManagerFactory()));
     }
     

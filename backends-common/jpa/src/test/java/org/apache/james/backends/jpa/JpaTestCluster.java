@@ -22,6 +22,7 @@ package org.apache.james.backends.jpa;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
