@@ -36,7 +36,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-public class DefaultQuotaRootResolverTest {
+public class DefaultUserQuotaRootResolverTest {
 
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
@@ -67,6 +67,13 @@ public class DefaultQuotaRootResolverTest {
     @Test(expected = IllegalArgumentException.class)
     public void getQuotaRootShouldThrowWhenUserContainsSeparator() throws Exception {
         testee.getQuotaRoot(MailboxPath.forUser("ben&wa", "INBOX"));
+    }
+
+    @Test
+    public void getQuotaRootShouldWorkUserIsNull() throws Exception {
+        QuotaRoot quotaRoot = testee.getQuotaRoot(new MailboxPath("#private", null, "INBOX"));
+
+        assertThat(quotaRoot).isEqualTo(QuotaRoot.quotaRoot("#private", Optional.empty()));
     }
 
     @Test
