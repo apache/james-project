@@ -86,7 +86,7 @@ public class CommandDispatcher {
             .orElseThrow(() -> new TooManyRetries(c, MAX_RETRY));
     }
 
-    public Optional<Integer> trySeveralTimes(Supplier<Boolean> singleTry) {
+    private Optional<Integer> trySeveralTimes(Supplier<Boolean> singleTry) {
         return IntStream.range(0, MAX_RETRY)
             .boxed()
             .filter(any -> singleTry.get())

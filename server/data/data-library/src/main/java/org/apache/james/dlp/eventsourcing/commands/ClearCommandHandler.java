@@ -17,48 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing;
+package org.apache.james.dlp.eventsourcing.commands;
 
 import java.util.List;
-import java.util.Set;
 
-import javax.inject.Inject;
-
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
+import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
+import org.apache.james.eventsourcing.CommandHandler;
+import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.eventstore.EventStoreFailedException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-
-public class EventBus {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventBus.class);
+public class ClearCommandHandler implements CommandHandler<ClearCommand> {
 
     private final EventStore eventStore;
-    private final Set<Subscriber> subscribers;
 
-    @Inject
-    public EventBus(EventStore eventStore, Set<Subscriber> subscribers) {
+    public ClearCommandHandler(EventStore eventStore) {
         this.eventStore = eventStore;
-        this.subscribers = ImmutableSet.copyOf(subscribers);
     }
 
-    public void publish(List<Event> events) throws EventStoreFailedException {
-        eventStore.appendAll(events);
-        events.stream()
-            .flatMap(event -> subscribers.stream().map(subscriber -> Pair.of(event, subscriber)))
-            .forEach(this::handle);
+    @Override
+    public Class<ClearCommand> handledClass() {
+        return ClearCommand.class;
     }
 
-    private void handle(Pair<Event, Subscriber> pair) {
-        Subscriber subscriber = pair.getRight();
-        Event event = pair.getLeft();
-        try {
-            subscriber.handle(event);
-        } catch (Exception e) {
-            LOGGER.error("Error while calling {} for {}", subscriber, event, e);
-        }
+    @Override
+    public List<? extends Event> handle(ClearCommand clearCommand) {
+        DLPAggregateId aggregateId = new DLPAggregateId(clearCommand.getDomain());
+
+        return DLPDomainConfiguration.load(
+                aggregateId,
+                eventStore.getEventsOfAggregate(aggregateId))
+            .clear();
     }
 }
