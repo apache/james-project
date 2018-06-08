@@ -39,7 +39,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.util.BodyOffsetInputStream;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
@@ -50,13 +52,13 @@ import com.google.common.primitives.Bytes;
 
 public class CassandraMailRepository implements MailRepository {
 
-    private final String url;
+    private final MailRepositoryUrl url;
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDAO mailDAO;
     private final ObjectStore objectStore;
 
-    public CassandraMailRepository(String url, CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, ObjectStore objectStore) {
+    public CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, ObjectStore objectStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
@@ -65,8 +67,9 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     @Override
-    public void store(Mail mail) throws MessagingException {
+    public MailKey store(Mail mail) throws MessagingException {
         try {
+            MailKey mailKey = MailKey.forMail(mail);
             Pair<byte[], byte[]> splitHeaderBody = splitHeaderBody(mail.getMessage());
 
             CompletableFuture<Pair<BlobId, BlobId>> blobIds = CompletableFutureUtil.combine(
@@ -78,8 +81,9 @@ public class CassandraMailRepository implements MailRepository {
                 mailDAO.store(url, mail, pair.getLeft(), pair.getRight())))
                 .thenCompose(any -> CompletableFuture.allOf(
                     countDAO.increment(url),
-                    keysDAO.store(url, mail.getName())))
+                    keysDAO.store(url, mailKey)))
                 .join();
+            return mailKey;
         } catch (IOException e) {
             throw new MessagingException("Exception while storing mail", e);
         }
@@ -137,14 +141,14 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     @Override
-    public Iterator<String> list() {
+    public Iterator<MailKey> list() {
         return keysDAO.list(url)
             .join()
             .iterator();
     }
 
     @Override
-    public Mail retrieve(String key) {
+    public Mail retrieve(MailKey key) {
         return CompletableFutureUtil
             .unwrap(mailDAO.read(url, key)
                 .thenApply(optional -> optional.map(this::toMail)))
@@ -173,23 +177,23 @@ public class CassandraMailRepository implements MailRepository {
 
     @Override
     public void remove(Mail mail) {
-        removeAsync(mail.getName()).join();
+        removeAsync(MailKey.forMail(mail)).join();
     }
 
     @Override
     public void remove(Collection<Mail> toRemove) {
         FluentFutureStream.of(toRemove.stream()
-            .map(Mail::getName)
+            .map(MailKey::forMail)
             .map(this::removeAsync))
             .join();
     }
 
     @Override
-    public void remove(String key) {
+    public void remove(MailKey key) {
         removeAsync(key).join();
     }
 
-    public CompletableFuture<Void> removeAsync(String key) {
+    public CompletableFuture<Void> removeAsync(MailKey key) {
         return CompletableFuture.allOf(
             keysDAO.remove(url, key),
             countDAO.decrement(url))
@@ -210,12 +214,12 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     @Override
-    public boolean lock(String key) {
+    public boolean lock(MailKey key) {
         return false;
     }
 
     @Override
-    public boolean unlock(String key) {
+    public boolean unlock(MailKey key) {
         return false;
     }
 }

@@ -35,6 +35,8 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -76,22 +78,22 @@ public class CassandraMailRepositoryKeysDAO {
             .value(MAIL_KEY, bindMarker(MAIL_KEY)));
     }
 
-    public CompletableFuture<Void> store(String url, String key) {
+    public CompletableFuture<Void> store(MailRepositoryUrl url, MailKey key) {
         return executor.executeVoid(insertKey.bind()
-            .setString(REPOSITORY_NAME, url)
-            .setString(MAIL_KEY, key));
+            .setString(REPOSITORY_NAME, url.asString())
+            .setString(MAIL_KEY, key.asString()));
     }
 
-    public CompletableFuture<Stream<String>> list(String url) {
+    public CompletableFuture<Stream<MailKey>> list(MailRepositoryUrl url) {
         return executor.execute(listKeys.bind()
-            .setString(REPOSITORY_NAME, url))
+            .setString(REPOSITORY_NAME, url.asString()))
             .thenApply(cassandraUtils::convertToStream)
-            .thenApply(stream -> stream.map(row -> row.getString(MAIL_KEY)));
+            .thenApply(stream -> stream.map(row -> new MailKey(row.getString(MAIL_KEY))));
     }
 
-    public CompletableFuture<Void> remove(String url, String key) {
+    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
         return executor.executeVoid(deleteKey.bind()
-            .setString(REPOSITORY_NAME, url)
-            .setString(MAIL_KEY, key));
+            .setString(REPOSITORY_NAME, url.asString())
+            .setString(MAIL_KEY, key.asString()));
     }
 }

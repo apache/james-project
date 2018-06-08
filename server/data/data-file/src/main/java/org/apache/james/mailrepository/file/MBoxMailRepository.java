@@ -71,6 +71,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
@@ -467,7 +468,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public void store(Mail mc) {
+    public MailKey store(Mail mc) {
         LOGGER.debug("Will store message to file {}", mboxFile);
 
         this.mList = null;
@@ -494,16 +495,16 @@ public class MBoxMailRepository implements MailRepository, Configurable {
             saveFile.writeBytes((fromHeader + "\n"));
             saveFile.writeBytes((message + "\n"));
             saveFile.close();
-
         } catch (FileNotFoundException e) {
             LOGGER.error("Unable to save(open) file (File not found) {}", mboxFile, e);
         } catch (IOException e) {
             LOGGER.error("Unable to write file (General I/O problem) {}", mboxFile, e);
         }
+        return MailKey.forMail(mc);
     }
 
     @Override
-    public Iterator<String> list() {
+    public Iterator<MailKey> list() {
         ArrayList<String> keys = loadKeysAsArray();
 
         if (!keys.isEmpty()) {
@@ -517,7 +518,9 @@ public class MBoxMailRepository implements MailRepository, Configurable {
         if (fifo) {
             Collections.sort(keys); // Keys is a HashSet; impose FIFO for apps that need it
         }
-        return keys.iterator();
+        return keys.stream()
+            .map(MailKey::new)
+            .iterator();
     }
 
     private ArrayList<String> loadKeysAsArray() {
@@ -526,19 +529,19 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public Mail retrieve(String key) throws MessagingException {
+    public Mail retrieve(MailKey key) throws MessagingException {
 
         loadKeys();
         MailImpl res;
 
-        MimeMessage foundMessage = findMessage(key);
+        MimeMessage foundMessage = findMessage(key.asString());
         if (foundMessage == null) {
             LOGGER.error("found message is null!");
             return null;
         }
         res = new MailImpl();
         res.setMessage(foundMessage);
-        res.setName(key);
+        res.setName(key.asString());
         LOGGER.debug("Retrieving entry for key {}", key);
         return res;
     }
@@ -669,7 +672,7 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public void remove(String key) throws MessagingException {
+    public void remove(MailKey key) throws MessagingException {
         loadKeys();
         try {
             lockMBox();
@@ -685,23 +688,23 @@ public class MBoxMailRepository implements MailRepository, Configurable {
     }
 
     @Override
-    public boolean lock(String key) {
+    public boolean lock(MailKey key) {
         return false;
     }
 
     @Override
-    public boolean unlock(String key) {
+    public boolean unlock(MailKey key) {
         return false;
     }
 
     @Override
-    public long size() throws MessagingException {
+    public long size() {
         return loadKeysAsArray().size();
     }
 
     @Override
     public void removeAll() throws MessagingException {
         ImmutableList.copyOf(list())
-            .forEach(Throwing.<String>consumer(this::remove).sneakyThrow());
+            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
     }
 }

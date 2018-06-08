@@ -35,6 +35,8 @@ import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -49,17 +51,17 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     /**
      * Map of [destinationURL + type]->Repository
      */
-    private Map<String, MailRepository> repositories;
+    private Map<MailRepositoryUrl, MailRepository> repositories;
 
     /**
      * Map of [protocol(destinationURL) + type ]->classname of repository;
      */
-    private Map<String, String> classes;
+    private Map<Protocol, String> classes;
 
     /**
      * Map of [protocol(destinationURL) + type ]->default config for repository.
      */
-    private Map<String, HierarchicalConfiguration> defaultConfigs;
+    private Map<Protocol, HierarchicalConfiguration> defaultConfigs;
 
     /**
      * The configuration used by the instance
@@ -67,7 +69,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     private HierarchicalConfiguration configuration;
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -88,7 +90,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     }
 
     @Override
-    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+    public Optional<MailRepository> get(MailRepositoryUrl url) {
         return Optional.ofNullable(repositories.get(url));
     }
 
@@ -121,14 +123,14 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
 
             LOGGER.info("Registering Repository instance of class {} to handle {} protocol requests", className, protocol);
 
-            if (classes.get(protocol) != null) {
+            if (classes.get(new Protocol(protocol)) != null) {
                 throw new ConfigurationException("The combination of protocol and type comprise a unique key for repositories.  This constraint has been violated.  Please check your repository configuration.");
             }
 
-            classes.put(protocol, className);
+            classes.put(new Protocol(protocol), className);
 
             if (defConf != null) {
-                defaultConfigs.put(protocol, defConf);
+                defaultConfigs.put(new Protocol(protocol), defConf);
             }
         }
 
@@ -153,33 +155,26 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      */
     @Override
     @SuppressWarnings("deprecation")
-    public synchronized MailRepository select(String destination) throws MailRepositoryStoreException {
-        int idx = destination.indexOf(':');
-        if (idx == -1) {
-            throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
-        }
-        String protocol = destination.substring(0, idx);
-
-        String repID = destination;
-        MailRepository reply = repositories.get(repID);
+    public synchronized MailRepository select(MailRepositoryUrl destination) throws MailRepositoryStoreException {
+        MailRepository reply = repositories.get(destination);
         if (reply != null) {
-            LOGGER.debug("obtained repository: {},{}", repID, reply.getClass());
+            LOGGER.debug("obtained repository: {},{}", destination, reply.getClass());
             return reply;
         } else {
-            String repClass = classes.get(protocol);
-            LOGGER.debug("obtained repository: {} to handle: {}", repClass, protocol);
+            String repClass = classes.get(destination.getProtocol());
+            LOGGER.debug("obtained repository: {} to handle: {}", repClass, destination.getProtocol().getValue());
 
             // If default values have been set, create a new repository
             // configuration element using the default values
             // and the values in the selector.
             // If no default values, just use the selector.
             final CombinedConfiguration config = new CombinedConfiguration();
-            HierarchicalConfiguration defConf = defaultConfigs.get(protocol);
+            HierarchicalConfiguration defConf = defaultConfigs.get(destination.getProtocol());
             if (defConf != null) {
                 config.addConfiguration(defConf);
             }
             DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-            builder.addProperty("[@destinationURL]", destination);
+            builder.addProperty("[@destinationURL]", destination.asString());
             config.addConfiguration(builder);
 
             try {
@@ -192,10 +187,10 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                     ((Configurable) reply).configure(config);
                 }
 
-                reply = (MailRepository) getBeanFactory().initializeBean(reply, protocol);
+                reply = (MailRepository) getBeanFactory().initializeBean(reply, destination.getProtocol().getValue());
 
-                repositories.put(repID, reply);
-                LOGGER.info("added repository: {}->{}", repID, repClass);
+                repositories.put(destination, reply);
+                LOGGER.info("added repository: {}->{}", defConf, repClass);
                 return reply;
             } catch (Exception e) {
                 LOGGER.warn("Exception while creating repository: {}", e.getMessage(), e);
@@ -206,7 +201,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     }
 
     @Override
-    public synchronized List<String> getUrls() {
+    public synchronized List<MailRepositoryUrl> getUrls() {
         return new ArrayList<>(repositories.keySet());
     }
 

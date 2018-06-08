@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -33,18 +34,18 @@ public class ClearMailRepositoryTask implements Task {
     public static final String TYPE = "clearMailRepository";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final String repositoryUrl;
+        private final MailRepositoryUrl repositoryUrl;
         private final Supplier<Long> countSupplier;
         private final long initialCount;
 
-        public AdditionalInformation(String repositoryUrl, Supplier<Long> countSupplier) {
+        public AdditionalInformation(MailRepositoryUrl repositoryUrl, Supplier<Long> countSupplier) {
             this.repositoryUrl = repositoryUrl;
             this.initialCount = countSupplier.get();
             this.countSupplier = countSupplier;
         }
 
         public String getRepositoryUrl() {
-            return repositoryUrl;
+            return repositoryUrl.asString();
         }
 
         public long getRemainingCount() {
@@ -59,7 +60,7 @@ public class ClearMailRepositoryTask implements Task {
     private final MailRepository mailRepository;
     private final AdditionalInformation additionalInformation;
 
-    public ClearMailRepositoryTask(MailRepository mailRepository, String url) {
+    public ClearMailRepositoryTask(MailRepository mailRepository, MailRepositoryUrl url) {
         this.mailRepository = mailRepository;
         this.additionalInformation = new AdditionalInformation(url, this::getRemainingSize);
     }

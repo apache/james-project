@@ -32,6 +32,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.mailets.ToProcessor;
 import org.apache.james.transport.mailets.ToRepository;
@@ -49,7 +50,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class SmtpAuthIntegrationTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
-    private static final String DROPPED_MAILS = "file://var/mail/dropped-mails/";
+    private static final MailRepositoryUrl DROPPED_MAILS = MailRepositoryUrl.from("file://var/mail/dropped-mails/");
 
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
@@ -91,7 +92,7 @@ public class SmtpAuthIntegrationTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", DROPPED_MAILS));
+                .addProperty("repositoryPath", DROPPED_MAILS.asString()));
     }
 
     @After

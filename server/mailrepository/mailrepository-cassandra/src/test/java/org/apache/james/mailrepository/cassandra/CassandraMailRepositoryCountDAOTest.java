@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +31,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerCassandraExtension.class)
 public class CassandraMailRepositoryCountDAOTest {
-    static final String URL = "url";
-    static final String URL2 = "url2";
+    static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
+    static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
 
     CassandraCluster cassandra;
     CassandraMailRepositoryCountDAO testee;

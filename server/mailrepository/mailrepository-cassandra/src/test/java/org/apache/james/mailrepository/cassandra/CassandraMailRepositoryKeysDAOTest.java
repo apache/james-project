@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,12 +34,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(DockerCassandraExtension.class)
 public class CassandraMailRepositoryKeysDAOTest {
 
-
-    static final String URL = "url";
-    static final String URL2 = "url2";
-    static final String KEY_1 = "key1";
-    static final String KEY_2 = "key2";
-    static final String KEY_3 = "key3";
+    static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
+    static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
+    static final MailKey KEY_1 = new MailKey("key1");
+    static final MailKey KEY_2 = new MailKey("key2");
+    static final MailKey KEY_3 = new MailKey("key3");
 
     CassandraCluster cassandra;
     CassandraMailRepositoryKeysDAO testee;

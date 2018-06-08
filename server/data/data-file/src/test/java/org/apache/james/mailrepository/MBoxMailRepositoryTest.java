@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.file.MBoxMailRepository;
 import org.junit.Test;
@@ -67,7 +68,7 @@ public class MBoxMailRepositoryTest {
     public void testReadMboxrdFile() throws Exception {
         MailRepository mr = getMailRepository();
 
-        Iterator<String> keys = mr.list();
+        Iterator<MailKey> keys = mr.list();
 
         assertTrue("Two messages in list", keys.hasNext());
         keys.next();

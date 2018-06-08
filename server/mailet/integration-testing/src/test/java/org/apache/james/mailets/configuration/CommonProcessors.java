@@ -21,6 +21,7 @@
 package org.apache.james.mailets.configuration;
 
 import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.transport.mailets.Bounce;
 import org.apache.james.transport.mailets.DSNBounce;
@@ -46,7 +47,7 @@ import org.apache.mailet.Mail;
 
 public class CommonProcessors {
 
-    public static final String ERROR_REPOSITORY = "file://var/mail/error/";
+    public static final MailRepositoryUrl ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/error/");
 
     public static ProcessorConfiguration root() {
         return ProcessorConfiguration.root()
@@ -106,7 +107,7 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", ERROR_REPOSITORY))
+                        .addProperty("repositoryPath", ERROR_REPOSITORY.asString()))
                 .build();
     }
 

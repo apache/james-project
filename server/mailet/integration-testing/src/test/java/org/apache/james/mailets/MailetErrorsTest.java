@@ -31,6 +31,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.mailets.ErrorMailet;
 import org.apache.james.transport.mailets.ErrorMatcher;
 import org.apache.james.transport.mailets.NoopMailet;
@@ -49,7 +50,7 @@ import org.junit.rules.TemporaryFolder;
 
 public class MailetErrorsTest {
     public static final String CUSTOM_PROCESSOR = "custom";
-    public static final String CUSTOM_REPOSITORY = "file://var/mail/custom/";
+    public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("file://var/mail/custom/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -162,7 +163,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -187,7 +188,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -292,7 +293,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -317,7 +318,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY))))
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))))
             .build(temporaryFolder);
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
@@ -338,7 +339,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(RuntimeErrorMatcher.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())
                         .addProperty("onMatchException", "matchall"))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
@@ -363,7 +364,7 @@ public class MailetErrorsTest {
                     .addMailet(MailetConfiguration.builder()
                         .matcher(ErrorMatcher.class)
                         .mailet(ToRepository.class)
-                        .addProperty("repositoryPath", CUSTOM_REPOSITORY)
+                        .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())
                         .addProperty("onMatchException", "matchall"))
                     .addMailet(MailetConfiguration.builder()
                         .matcher(All.class)
@@ -387,11 +388,11 @@ public class MailetErrorsTest {
                             .matcher(HasException.class)
                             .matcherCondition("javax.mail.MessagingException")
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(All.class)
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                            .addProperty("repositoryPath", ERROR_REPOSITORY.asString())))
                 .putProcessor(customProcessor())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
@@ -416,11 +417,11 @@ public class MailetErrorsTest {
                             .matcher(HasException.class)
                             .matcherCondition("javax.mail.MessagingException")
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(All.class)
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                            .addProperty("repositoryPath", ERROR_REPOSITORY.asString())))
                 .putProcessor(customProcessor())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
@@ -445,11 +446,11 @@ public class MailetErrorsTest {
                             .matcher(HasException.class)
                             .matcherCondition("javax.mail.MessagingException")
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(All.class)
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                            .addProperty("repositoryPath", ERROR_REPOSITORY.asString())))
                 .putProcessor(customProcessor())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
@@ -474,11 +475,11 @@ public class MailetErrorsTest {
                             .matcher(HasException.class)
                             .matcherCondition("javax.mail.MessagingException")
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", CUSTOM_REPOSITORY))
+                            .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()))
                     .addMailet(MailetConfiguration.builder()
                             .matcher(All.class)
                             .mailet(ToRepository.class)
-                            .addProperty("repositoryPath", ERROR_REPOSITORY)))
+                            .addProperty("repositoryPath", ERROR_REPOSITORY.asString())))
                 .putProcessor(customProcessor())
                 .putProcessor(ProcessorConfiguration.root()
                     .addMailet(MailetConfiguration.builder()
@@ -497,7 +498,7 @@ public class MailetErrorsTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", ERROR_REPOSITORY));
+                .addProperty("repositoryPath", ERROR_REPOSITORY.asString()));
     }
 
     private ProcessorConfiguration.Builder customProcessor() {
@@ -506,6 +507,6 @@ public class MailetErrorsTest {
             .addMailet(MailetConfiguration.builder()
                 .matcher(All.class)
                 .mailet(ToRepository.class)
-                .addProperty("repositoryPath", CUSTOM_REPOSITORY));
+                .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString()));
     }
 }

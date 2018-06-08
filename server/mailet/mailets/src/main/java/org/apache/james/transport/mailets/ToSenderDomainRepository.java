@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -85,14 +86,14 @@ public class ToSenderDomainRepository extends GenericMailet {
 
     @Override
     public void service(Mail mail) throws MessagingException {
-        String repositoryUrl = urlPrefix + mail.getSender().getDomain().asString();
+        MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(urlPrefix + mail.getSender().getDomain().asString());
         store(mail, repositoryUrl);
         if (!passThrough) {
             mail.setState(Mail.GHOST);
         }
     }
 
-    private void store(Mail mail, String url) throws MessagingException {
+    private void store(Mail mail, MailRepositoryUrl url) throws MessagingException {
         try {
             Optional<MailRepository> mailRepository = retrieveRepository(url);
             if (!mailRepository.isPresent()) {
@@ -106,7 +107,7 @@ public class ToSenderDomainRepository extends GenericMailet {
         }
     }
 
-    private Optional<MailRepository> retrieveRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
+    private Optional<MailRepository> retrieveRepository(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
         if (allowRepositoryCreation) {
             return Optional.of(mailRepositoryStore.select(url));
         } else {

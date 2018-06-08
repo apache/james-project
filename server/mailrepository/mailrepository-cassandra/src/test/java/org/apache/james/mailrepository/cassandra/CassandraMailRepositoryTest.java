@@ -28,6 +28,7 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -36,7 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerCassandraExtension.class)
 class CassandraMailRepositoryTest implements MailRepositoryContract {
-    static final String URL = "url";
+    static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     CassandraMailRepository cassandraMailRepository;

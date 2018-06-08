@@ -21,6 +21,7 @@ package org.apache.james;
 
 import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -34,6 +35,8 @@ import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class CassandraMailRepositoryIntegrationTest {
+
+    private static final MailRepositoryUrl SENDER_DENIED_URL = MailRepositoryUrl.from("cassandra://var/mail/sender-denied/");
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
@@ -74,7 +77,7 @@ public class CassandraMailRepositoryIntegrationTest {
             .sendMessage("denied@other.com", "user@domain.com");
 
         MailRepositoryProbeImpl repositoryProbe = server.getProbe(MailRepositoryProbeImpl.class);
-        await.until(() -> repositoryProbe.getRepositoryMailCount("cassandra://var/mail/sender-denied/") == 1);
+        await.until(() -> repositoryProbe.getRepositoryMailCount(SENDER_DENIED_URL) == 1);
     }
 
 

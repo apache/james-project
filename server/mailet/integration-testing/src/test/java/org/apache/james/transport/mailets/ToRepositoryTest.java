@@ -27,13 +27,12 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
@@ -54,7 +53,7 @@ import com.jayway.restassured.specification.RequestSpecification;
 
 public class ToRepositoryTest {
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
-    public static final String CUSTOM_REPOSITORY = "file://var/mail/custom/";
+    public static final MailRepositoryUrl CUSTOM_REPOSITORY = MailRepositoryUrl.from("file://var/mail/custom/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -74,7 +73,7 @@ public class ToRepositoryTest {
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(ToRepository.class)
-                    .addProperty("repositoryPath", CUSTOM_REPOSITORY)));
+                    .addProperty("repositoryPath", CUSTOM_REPOSITORY.asString())));
 
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
@@ -118,7 +117,7 @@ public class ToRepositoryTest {
             .queryParam("processor", ProcessorConfiguration.STATE_TRANSPORT)
             .queryParam("action", "reprocess")
         .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
-                + "/" + URLEncoder.encode(CUSTOM_REPOSITORY, StandardCharsets.UTF_8.displayName())
+                + "/" + CUSTOM_REPOSITORY.urlEncoded()
                 + "/mails")
             .jsonPath()
             .getString("taskId");
@@ -142,15 +141,15 @@ public class ToRepositoryTest {
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(() -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY) == 2);
-        String key = probe.listMailKeys(CUSTOM_REPOSITORY).get(0);
+        MailKey key = probe.listMailKeys(CUSTOM_REPOSITORY).get(0);
 
         with()
             .spec(webAdminAPI)
             .queryParam("processor", ProcessorConfiguration.STATE_TRANSPORT)
             .queryParam("action", "reprocess")
             .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES
-                + "/" + URLEncoder.encode(CUSTOM_REPOSITORY, StandardCharsets.UTF_8.displayName())
-                + "/mails/" + key)
+                + "/" + CUSTOM_REPOSITORY.urlEncoded()
+                + "/mails/" + key.asString())
             .jsonPath()
             .get("taskId");
 

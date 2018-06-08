@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.repository.api.Initializable;
 import org.apache.mailet.Mail;
@@ -73,7 +74,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      * @return true if successfully released the lock, false otherwise
      */
     @Override
-    public boolean unlock(String key) {
+    public boolean unlock(MailKey key) {
         return lock.unlock(key);
     }
 
@@ -86,14 +87,14 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
      * @return true if successfully obtained the lock, false otherwise
      */
     @Override
-    public boolean lock(String key) {
+    public boolean lock(MailKey key) {
         return lock.lock(key);
     }
 
     @Override
-    public void store(Mail mc) throws MessagingException {
+    public MailKey store(Mail mc) throws MessagingException {
         boolean wasLocked = true;
-        String key = mc.getName();
+        MailKey key = MailKey.forMail(mc);
         try {
             synchronized (this) {
                 wasLocked = lock.isLocked(key);
@@ -103,6 +104,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
                 }
             }
             internalStore(mc);
+            return key;
         } catch (MessagingException e) {
             LOGGER.error("Exception caught while storing mail {}", key, e);
             throw e;
@@ -124,7 +126,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
 
     @Override
     public void remove(Mail mail) throws MessagingException {
-        remove(mail.getName());
+        remove(MailKey.forMail(mail));
     }
 
     @Override
@@ -135,7 +137,7 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
     }
 
     @Override
-    public void remove(String key) throws MessagingException {
+    public void remove(MailKey key) throws MessagingException {
         if (lock(key)) {
             try {
                 internalRemove(key);
@@ -143,12 +145,11 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
                 unlock(key);
             }
         } else {
-            String exceptionBuffer = "Cannot lock " + key + " to remove it";
-            throw new MessagingException(exceptionBuffer.toString());
+            throw new MessagingException("Cannot lock " + key + " to remove it");
         }
     }
 
-    protected abstract void internalRemove(String key) throws MessagingException;
+    protected abstract void internalRemove(MailKey key) throws MessagingException;
 
     @Override
     public long size() throws MessagingException {
@@ -158,6 +159,6 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
     @Override
     public void removeAll() throws MessagingException {
         ImmutableList.copyOf(list())
-            .forEach(Throwing.<String>consumer(this::remove).sneakyThrow());
+            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
     }
 }

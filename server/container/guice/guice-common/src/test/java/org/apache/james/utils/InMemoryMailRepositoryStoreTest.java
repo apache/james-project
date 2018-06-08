@@ -29,6 +29,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
@@ -43,6 +44,7 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 
 public class InMemoryMailRepositoryStoreTest {
+    private static final MailRepositoryUrl FILE_REPO = MailRepositoryUrl.from("file://repo");
 
     private static class MemoryMailRepositoryProvider implements MailRepositoryProvider {
         @Override
@@ -51,7 +53,7 @@ public class InMemoryMailRepositoryStoreTest {
         }
 
         @Override
-        public MailRepository provide(String url) {
+        public MailRepository provide(MailRepositoryUrl url) {
             return new MemoryMailRepository();
         }
     }
@@ -77,23 +79,26 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test(expected = MailRepositoryStore.MailRepositoryStoreException.class)
-    public void selectingANonRegisteredProtocolShouldFail() throws Exception {
-        repositoryStore.select("proto://repo");
+    public void selectingANonRegisteredProtocolShouldFail() {
+        repositoryStore.select(MailRepositoryUrl.from("proto://repo"));
     }
 
     @Test
-    public void selectingARegisteredProtocolShouldWork() throws Exception {
-        assertThat(repositoryStore.select("file://repo")).isInstanceOf(FileMailRepository.class);
+    public void selectingARegisteredProtocolShouldWork() {
+        assertThat(repositoryStore.select(FILE_REPO))
+            .isInstanceOf(FileMailRepository.class);
     }
 
     @Test
-    public void selectingTwiceARegisteredProtocolWithSameDestinationShouldReturnTheSameResult() throws Exception {
-        assertThat(repositoryStore.select("file://repo")).isEqualTo(repositoryStore.select("file://repo"));
+    public void selectingTwiceARegisteredProtocolWithSameDestinationShouldReturnTheSameResult() {
+        assertThat(repositoryStore.select(FILE_REPO))
+            .isEqualTo(repositoryStore.select(FILE_REPO));
     }
 
     @Test
-    public void selectingTwiceARegisteredProtocolWithDifferentDestinationShouldReturnDifferentResults() throws Exception {
-        assertThat(repositoryStore.select("file://repo")).isNotEqualTo(repositoryStore.select("file://repo1"));
+    public void selectingTwiceARegisteredProtocolWithDifferentDestinationShouldReturnDifferentResults() {
+        assertThat(repositoryStore.select(FILE_REPO))
+            .isNotEqualTo(repositoryStore.select(MailRepositoryUrl.from("file://repo1")));
     }
 
     @Test
@@ -123,10 +128,10 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getUrlsShouldReturnUsedUrls() throws Exception {
-        String url1 = "file://repo1";
-        String url2 = "file://repo2";
-        String url3 = "file://repo3";
+    public void getUrlsShouldReturnUsedUrls() {
+        MailRepositoryUrl url1 = MailRepositoryUrl.from("file://repo1");
+        MailRepositoryUrl url2 = MailRepositoryUrl.from("file://repo2");
+        MailRepositoryUrl url3 = MailRepositoryUrl.from("file://repo3");
         repositoryStore.select(url1);
         repositoryStore.select(url2);
         repositoryStore.select(url3);
@@ -134,31 +139,29 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test
-    public void getUrlsResultsShouldNotBeDuplicated() throws Exception {
-        String url1 = "file://repo1";
-        repositoryStore.select(url1);
-        repositoryStore.select(url1);
-        assertThat(repositoryStore.getUrls()).containsExactly(url1);
+    public void getUrlsResultsShouldNotBeDuplicated() {
+        repositoryStore.select(FILE_REPO);
+        repositoryStore.select(FILE_REPO);
+        assertThat(repositoryStore.getUrls()).containsExactly(FILE_REPO);
     }
 
     @Test
     public void getShouldReturnEmptyWhenUrlNotInUse() {
-        assertThat(repositoryStore.get("file://repo"))
+        assertThat(repositoryStore.get(FILE_REPO))
             .isEmpty();
     }
 
     @Test
-    public void getShouldReturnPreviouslyCreatedMailRepository() throws Exception {
-        String url = "file://repo";
-        MailRepository mailRepository = repositoryStore.select(url);
+    public void getShouldReturnPreviouslyCreatedMailRepository() {
+        MailRepository mailRepository = repositoryStore.select(FILE_REPO);
 
-        assertThat(repositoryStore.get(url))
+        assertThat(repositoryStore.get(FILE_REPO))
             .contains(mailRepository);
     }
 
     @Test
     public void selectShouldNotReturnDifferentResultsWhenUsedInAConcurrentEnvironment() throws Exception {
-        String url = "memory://repo";
+        MailRepositoryUrl url = MailRepositoryUrl.from("memory://repo");
         int threadCount = 10;
         int operationCount = 1;
 

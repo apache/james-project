@@ -25,6 +25,7 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.file.FileMailRepository;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -69,7 +70,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public MailRepository provide(String url) {
+        public MailRepository provide(MailRepositoryUrl url) {
             FileMailRepository fileMailRepository = new FileMailRepository();
             fileMailRepository.setFileSystem(fileSystem);
             return fileMailRepository;

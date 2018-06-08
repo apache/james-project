@@ -26,14 +26,16 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
 import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.dto.MailDto;
-import org.apache.james.webadmin.dto.MailKey;
+import org.apache.james.webadmin.dto.MailKeyDTO;
 import org.apache.james.webadmin.dto.MailRepositoryResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.mailet.Mail;
@@ -58,53 +60,53 @@ public class MailRepositoryStoreService {
             .collect(Guavate.toImmutableList());
     }
 
-    public MailRepository createMailRepository(String repositoryUrl) throws MailRepositoryStore.MailRepositoryStoreException {
+    public MailRepository createMailRepository(MailRepositoryUrl repositoryUrl) throws MailRepositoryStore.MailRepositoryStoreException {
         return mailRepositoryStore.create(repositoryUrl);
     }
 
-    public Optional<List<MailKey>> listMails(String url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<List<MailKeyDTO>> listMails(MailRepositoryUrl url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
-        ThrowingFunction<MailRepository, List<MailKey>> list = repository -> list(repository, offset, limit);
+        ThrowingFunction<MailRepository, List<MailKeyDTO>> list = repository -> list(repository, offset, limit);
         return mailRepository.map(Throwing.function(list).sneakyThrow());
     }
 
-    private List<MailKey> list(MailRepository mailRepository, Offset offset, Limit limit) throws MessagingException {
+    private List<MailKeyDTO> list(MailRepository mailRepository, Offset offset, Limit limit) throws MessagingException {
         return limit.applyOnStream(
                 Iterators.toStream(mailRepository.list())
                     .skip(offset.getOffset()))
-                .map(MailKey::new)
+                .map(MailKeyDTO::new)
                 .collect(Guavate.toImmutableList());
     }
 
-    public Optional<Long> size(String url) throws MailRepositoryStore.MailRepositoryStoreException {
+    public Optional<Long> size(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
         Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
         return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
     }
 
-    public Optional<MailDto> retrieveMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<MailDto> retrieveMail(MailRepositoryUrl url, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         MailRepository mailRepository = getRepository(url);
 
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
             .map(Throwing.function(MailDto::fromMail).sneakyThrow());
     }
 
-    public Optional<MimeMessage> retrieveMessage(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Optional<MimeMessage> retrieveMessage(MailRepositoryUrl url, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         MailRepository mailRepository = getRepository(url);
 
         return Optional.ofNullable(mailRepository.retrieve(mailKey))
             .map(Throwing.function(Mail::getMessage).sneakyThrow());
     }
 
-    public void deleteMail(String url, String mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public void deleteMail(MailRepositoryUrl url, MailKey mailKey) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         getRepository(url)
             .remove(mailKey);
     }
 
-    public Task createClearMailRepositoryTask(String url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
+    public Task createClearMailRepositoryTask(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         return new ClearMailRepositoryTask(getRepository(url), url);
     }
 
-    public MailRepository getRepository(String url) throws MailRepositoryStore.MailRepositoryStoreException {
+    public MailRepository getRepository(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
         return mailRepositoryStore.get(url)
             .orElseThrow(() -> ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)

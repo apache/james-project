@@ -30,6 +30,7 @@ import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -44,7 +45,8 @@ public class ToSenderDomainRepositoryTest {
 
     private static final String RECIPIENT = "touser@" + DEFAULT_DOMAIN;
     private static final String CUSTOM_REPOSITORY_PREFIX = "file://var/mail/custom/";
-    public static final String AWAIT_REPOSITORY_PATH = "file://var/mail/await/";
+    public static final MailRepositoryUrl DOMAIN_URL = MailRepositoryUrl.from(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+    public static final MailRepositoryUrl AWAIT_REPOSITORY_PATH = MailRepositoryUrl.from("file://var/mail/await/");
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -76,9 +78,9 @@ public class ToSenderDomainRepositoryTest {
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+            () -> probe.getRepositoryMailCount(DOMAIN_URL) == 1);
 
-        assertThat(probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN))
+        assertThat(probe.getRepositoryMailCount(DOMAIN_URL))
             .isEqualTo(1);
     }
 
@@ -97,9 +99,9 @@ public class ToSenderDomainRepositoryTest {
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+            () -> probe.getRepositoryMailCount(DOMAIN_URL) == 1);
 
-        assertThat(probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN))
+        assertThat(probe.getRepositoryMailCount(DOMAIN_URL))
             .isEqualTo(1);
     }
 
@@ -114,15 +116,15 @@ public class ToSenderDomainRepositoryTest {
                     .addProperty("allowRepositoryCreation", "true"))));
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        probe.createRepository(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+        probe.createRepository(DOMAIN_URL);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+            () -> probe.getRepositoryMailCount(DOMAIN_URL) == 1);
 
-        assertThat(probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN))
+        assertThat(probe.getRepositoryMailCount(DOMAIN_URL))
             .isEqualTo(1);
     }
 
@@ -139,7 +141,7 @@ public class ToSenderDomainRepositoryTest {
                 .addMailet(MailetConfiguration.builder()
                     .matcher(All.class)
                     .mailet(ToRepository.class)
-                    .addProperty("repositoryPath", AWAIT_REPOSITORY_PATH))));
+                    .addProperty("repositoryPath", AWAIT_REPOSITORY_PATH.asString()))));
         MailRepositoryProbeImpl mailRepositoryProbe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
@@ -149,7 +151,7 @@ public class ToSenderDomainRepositoryTest {
             () -> mailRepositoryProbe.getRepositoryMailCount(AWAIT_REPOSITORY_PATH) == 1);
 
         assertThat(mailRepositoryProbe.listRepositoryUrls())
-            .doesNotContain(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+            .doesNotContain(DOMAIN_URL);
     }
 
     @Test
@@ -163,15 +165,15 @@ public class ToSenderDomainRepositoryTest {
                     .addProperty("allowRepositoryCreation", "false"))));
         MailRepositoryProbeImpl probe = jamesServer.getProbe(MailRepositoryProbeImpl.class);
 
-        probe.createRepository(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+        probe.createRepository(DOMAIN_URL);
 
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 1);
+            () -> probe.getRepositoryMailCount(DOMAIN_URL) == 1);
 
-        assertThat(probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN))
+        assertThat(probe.getRepositoryMailCount(DOMAIN_URL))
             .isEqualTo(1);
     }
 
@@ -190,9 +192,9 @@ public class ToSenderDomainRepositoryTest {
             .sendMessage(RECIPIENT, RECIPIENT);
 
         awaitAtMostOneMinute.until(
-            () -> probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN) == 2);
+            () -> probe.getRepositoryMailCount(DOMAIN_URL) == 2);
 
-        assertThat(probe.getRepositoryMailCount(CUSTOM_REPOSITORY_PREFIX + DEFAULT_DOMAIN))
+        assertThat(probe.getRepositoryMailCount(DOMAIN_URL))
             .isEqualTo(2);
     }
 

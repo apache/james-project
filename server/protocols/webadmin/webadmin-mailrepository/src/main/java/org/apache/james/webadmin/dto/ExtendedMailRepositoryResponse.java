@@ -19,11 +19,13 @@
 
 package org.apache.james.webadmin.dto;
 
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
+
 public class ExtendedMailRepositoryResponse extends MailRepositoryResponse {
 
     private final long size;
 
-    public ExtendedMailRepositoryResponse(String repository, long size) {
+    public ExtendedMailRepositoryResponse(MailRepositoryUrl repository, long size) {
         super(repository);
         this.size = size;
     }

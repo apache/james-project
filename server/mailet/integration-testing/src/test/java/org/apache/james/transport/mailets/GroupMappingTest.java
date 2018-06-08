@@ -39,6 +39,7 @@ import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
@@ -74,7 +75,7 @@ public class GroupMappingTest {
     private static final String USER_DOMAIN2 = "user@" + DOMAIN2;
     private static final String MESSAGE_CONTENT = "any text";
     public static final String RRT_ERROR = "rrt-error";
-    public static final String RRT_ERROR_REPOSITORY = "file://var/mail/rrt-error/";
+    public static final MailRepositoryUrl RRT_ERROR_REPOSITORY = MailRepositoryUrl.from("file://var/mail/rrt-error/");
 
     private TemporaryJamesServer jamesServer;
     private MimeMessage message;
@@ -111,7 +112,7 @@ public class GroupMappingTest {
                     .matcher(All.class)
                     .mailet(ToRepository.class)
                     .addProperty("passThrough", "true")
-                    .addProperty("repositoryPath", RRT_ERROR_REPOSITORY))
+                    .addProperty("repositoryPath", RRT_ERROR_REPOSITORY.asString()))
                 .addMailet(MailetConfiguration.builder()
                     .matcher(IsSenderInRRTLoop.class)
                     .mailet(Null.class))

@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -54,18 +55,21 @@ import com.google.common.hash.Hashing;
 public interface MailRepositoryContract {
 
     String TEST_ATTRIBUTE = "testAttribute";
+    MailKey MAIL_1 = new MailKey("mail1");
+    MailKey MAIL_2 = new MailKey("mail2");
+    MailKey UNKNOWN_KEY = new MailKey("random");
 
-    default MailImpl createMail(String name) throws MessagingException {
-        return createMail(name, "original body");
+    default MailImpl createMail(MailKey key) throws MessagingException {
+        return createMail(key, "original body");
     }
 
-    default MailImpl createMail(String name, String body) throws MessagingException {
+    default MailImpl createMail(MailKey key, String body) throws MessagingException {
         MimeMessage mailContent = generateMailContent(body);
         List<MailAddress> recipients = ImmutableList
             .of(new MailAddress("rec1@domain.com"),
                 new MailAddress("rec2@domain.com"));
         MailAddress sender = new MailAddress("sender@domain.com");
-        MailImpl mail = new MailImpl(name, sender, recipients, mailContent);
+        MailImpl mail = new MailImpl(key.asString(), sender, recipients, mailContent);
         mail.setAttribute(TEST_ATTRIBUTE, "testValue");
         return mail;
     }
@@ -105,8 +109,8 @@ public interface MailRepositoryContract {
     default void sizeShouldReturnMailCount() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        testee.store(createMail("mail1"));
-        testee.store(createMail("mail2"));
+        testee.store(createMail(MAIL_1));
+        testee.store(createMail(MAIL_2));
 
         assertThat(testee.size()).isEqualTo(2L);
     }
@@ -115,9 +119,8 @@ public interface MailRepositoryContract {
     default void sizeShouldBeIncrementedByOneWhenDuplicates() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        String key = "mail1";
-        testee.store(createMail(key));
-        testee.store(createMail(key));
+        testee.store(createMail(MAIL_1));
+        testee.store(createMail(MAIL_1));
 
         assertThat(testee.size()).isEqualTo(1L);
     }
@@ -126,9 +129,8 @@ public interface MailRepositoryContract {
     default void sizeShouldBeDecrementedByRemove() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        String key = "mail1";
-        testee.store(createMail(key));
-        testee.remove(key);
+        testee.store(createMail(MAIL_1));
+        testee.remove(MAIL_1);
 
         assertThat(testee.size()).isEqualTo(0L);
     }
@@ -136,7 +138,7 @@ public interface MailRepositoryContract {
     @Test
     default void storeRegularMailShouldNotFail() throws Exception {
         MailRepository testee = retrieveRepository();
-        Mail mail = createMail("mail1");
+        Mail mail = createMail(MAIL_1);
 
         testee.store(mail);
     }
@@ -145,7 +147,7 @@ public interface MailRepositoryContract {
     default void storeBigMailShouldNotFail() throws Exception {
         MailRepository testee = retrieveRepository();
         String bigString = Strings.repeat("my mail is big 🐋", 1_000_000);
-        Mail mail = createMail("mail1", bigString);
+        Mail mail = createMail(MAIL_1, bigString);
 
         testee.store(mail);
     }
@@ -153,18 +155,17 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldGetStoredMail() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key1 = "mail1";
-        Mail mail = createMail(key1);
+        Mail mail = createMail(MAIL_1);
 
         testee.store(mail);
 
-        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
     @Test
     default void removeAllShouldRemoveStoredMails() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail("name"));
+        testee.store(createMail(MAIL_1));
 
         testee.removeAll();
 
@@ -174,18 +175,17 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldReturnNullAfterRemoveAll() throws Exception {
         MailRepository testee = retrieveRepository();
-        String name = "name";
-        testee.store(createMail(name));
+        testee.store(createMail(MAIL_1));
 
         testee.removeAll();
 
-        assertThat(testee.retrieve(name)).isNull();
+        assertThat(testee.retrieve(MAIL_1)).isNull();
     }
 
     @Test
     default void removeAllShouldBeIdempotent() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail("name"));
+        testee.store(createMail(MAIL_1));
 
         testee.removeAll();
         testee.removeAll();
@@ -196,7 +196,6 @@ public interface MailRepositoryContract {
     @Test
     default void removeAllShouldNotFailWhenEmpty() throws Exception {
         MailRepository testee = retrieveRepository();
-        testee.store(createMail("name"));
 
         testee.removeAll();
     }
@@ -204,22 +203,21 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldGetStoredEmojiMail() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key1 = "mail1";
-        Mail mail = createMail(key1, "my content contains 🐋");
+        Mail mail = createMail(MAIL_1, "my content contains 🐋");
 
         testee.store(mail);
 
-        assertThat(testee.retrieve(key1).getMessage().getContent()).isEqualTo("my content contains 🐋");
+        assertThat(testee.retrieve(MAIL_1).getMessage().getContent()).isEqualTo("my content contains 🐋");
     }
 
     @Test
     default void retrieveBigMailShouldHaveSameHash() throws Exception {
         MailRepository testee = retrieveRepository();
         String bigString = Strings.repeat("my mail is big 🐋", 1_000_000);
-        Mail mail = createMail("mail1", bigString);
+        Mail mail = createMail(MAIL_1, bigString);
         testee.store(mail);
 
-        Mail actual = testee.retrieve("mail1");
+        Mail actual = testee.retrieve(MAIL_1);
 
         assertThat(Hashing.sha256().hashString((String)actual.getMessage().getContent(), StandardCharsets.UTF_8))
             .isEqualTo(Hashing.sha256().hashString(bigString, StandardCharsets.UTF_8));
@@ -229,8 +227,7 @@ public interface MailRepositoryContract {
     @Test
     default void retrieveShouldReturnAllMailProperties() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key1 = "mail1";
-        MailImpl mail = createMail(key1);
+        MailImpl mail = createMail(MAIL_1);
         mail.setErrorMessage("Error message");
         mail.setRemoteAddr("172.5.2.3");
         mail.setRemoteHost("smtp@domain.com");
@@ -243,7 +240,7 @@ public interface MailRepositoryContract {
 
         testee.store(mail);
 
-        assertThat(testee.retrieve(key1)).satisfies(actual -> checkMailEquality(actual, mail));
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
     @Test
@@ -257,50 +254,45 @@ public interface MailRepositoryContract {
     default void retrievingUnknownMailShouldReturnNull() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        assertThat(testee.retrieve("random")).isNull();
+        assertThat(testee.retrieve(UNKNOWN_KEY)).isNull();
     }
 
     @Test
     default void removingUnknownMailShouldHaveNoEffect() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        testee.remove("random");
+        testee.remove(UNKNOWN_KEY);
     }
 
     @Test
     default void retrieveShouldReturnNullWhenKeyWasRemoved() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key = "mail1";
-        testee.store(createMail(key));
+        testee.store(createMail(MAIL_1));
 
-        testee.remove(key);
+        testee.remove(MAIL_1);
 
-        assertThat(retrieveRepository().list()).doesNotContain(key);
-        assertThat(retrieveRepository().retrieve(key)).isNull();
+        assertThat(retrieveRepository().list()).doesNotContain(MAIL_1);
+        assertThat(retrieveRepository().retrieve(MAIL_1)).isNull();
     }
 
     @Test
     default void removeShouldnotAffectUnrelatedMails() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key1 = "mail1";
-        testee.store(createMail(key1));
-        String key2 = "mail2";
-        testee.store(createMail(key2));
+        testee.store(createMail(MAIL_1));
+        testee.store(createMail(MAIL_2));
 
-        testee.remove(key1);
+        testee.remove(MAIL_1);
 
-        assertThat(retrieveRepository().list()).contains(key2);
+        assertThat(retrieveRepository().list()).contains(MAIL_2);
     }
 
     @Test
     default void removedMailsShouldNotBeListed() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        String key1 = "mail1";
-        String key2 = "mail2";
-        String key3 = "mail3";
-        Mail mail1 = createMail(key1);
-        Mail mail2 = createMail(key2);
+        MailKey key3 = new MailKey("mail3");
+        Mail mail1 = createMail(MAIL_1);
+        Mail mail2 = createMail(MAIL_2);
         Mail mail3 = createMail(key3);
         retrieveRepository().store(mail1);
         retrieveRepository().store(mail2);
@@ -309,19 +301,17 @@ public interface MailRepositoryContract {
         testee.remove(ImmutableList.of(mail1, mail3));
 
         assertThat(retrieveRepository().list())
-            .contains(key2)
-            .doesNotContain(key1, key3);
+            .contains(MAIL_2)
+            .doesNotContain(MAIL_1, key3);
     }
 
     @Test
     default void removedMailShouldNotBeListed() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        String key1 = "mail1";
-        String key2 = "mail2";
-        String key3 = "mail3";
-        Mail mail1 = createMail(key1);
-        Mail mail2 = createMail(key2);
+        MailKey key3 = new MailKey("mail3");
+        Mail mail1 = createMail(MAIL_1);
+        Mail mail2 = createMail(MAIL_2);
         Mail mail3 = createMail(key3);
         retrieveRepository().store(mail1);
         retrieveRepository().store(mail2);
@@ -330,15 +320,15 @@ public interface MailRepositoryContract {
         testee.remove(mail2);
 
         assertThat(retrieveRepository().list())
-            .contains(key1, key3)
-            .doesNotContain(key2);
+            .contains(MAIL_1, key3)
+            .doesNotContain(MAIL_2);
     }
 
     @Test
     default void removeShouldHaveNoEffectForUnknownMails() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        testee.remove(ImmutableList.of(createMail("unknown")));
+        testee.remove(ImmutableList.of(createMail(UNKNOWN_KEY)));
 
         assertThat(retrieveRepository().list()).isEmpty();
     }
@@ -347,7 +337,7 @@ public interface MailRepositoryContract {
     default void removeShouldHaveNoEffectForUnknownMail() throws Exception {
         MailRepository testee = retrieveRepository();
 
-        testee.remove(createMail("unknown"));
+        testee.remove(createMail(UNKNOWN_KEY));
 
         assertThat(retrieveRepository().list()).isEmpty();
     }
@@ -355,40 +345,36 @@ public interface MailRepositoryContract {
     @Test
     default void listShouldReturnStoredMailsKeys() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key1 = "mail1";
-        String key2 = "mail2";
-        testee.store(createMail(key1));
+        testee.store(createMail(MAIL_1));
 
-        testee.store(createMail(key2));
+        testee.store(createMail(MAIL_2));
 
-        assertThat(testee.list()).containsOnly(key1, key2);
+        assertThat(testee.list()).containsOnly(MAIL_1, MAIL_2);
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageContent() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key = "mail1";
-        testee.store(createMail(key));
+        testee.store(createMail(MAIL_1));
 
-        Mail updatedMail = createMail(key, "modified content");
+        Mail updatedMail = createMail(MAIL_1, "modified content");
         testee.store(updatedMail);
 
         assertThat(testee.list()).hasSize(1);
-        assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, updatedMail));
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, updatedMail));
     }
 
     @Test
     default void storingMessageWithSameKeyTwiceShouldUpdateMessageAttributes() throws Exception {
         MailRepository testee = retrieveRepository();
-        String key = "mail1";
-        Mail mail = createMail(key);
+        Mail mail = createMail(MAIL_1);
         testee.store(mail);
 
         mail.setAttribute(TEST_ATTRIBUTE, "newValue");
         testee.store(mail);
 
         assertThat(testee.list()).hasSize(1);
-        assertThat(testee.retrieve(key)).satisfies(actual -> checkMailEquality(actual, mail));
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
     @RepeatedTest(100)
@@ -397,7 +383,7 @@ public interface MailRepositoryContract {
         int nbKeys = 20;
         int nbIterations = 10;
         int threadCount = 10;
-        ConcurrentHashMap.KeySetView<String, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
+        ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
         List<Object> locks = IntStream.range(0, 10)
             .boxed()
             .collect(Guavate.toImmutableList());
@@ -405,7 +391,7 @@ public interface MailRepositoryContract {
         Random random = new Random();
         ThrowingRunnable add = () -> {
             int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
-            String key =  computeKey(keyIndex);
+            MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.store(createMail(key));
                 expectedResult.add(key);
@@ -414,7 +400,7 @@ public interface MailRepositoryContract {
 
         ThrowingRunnable remove = () -> {
             int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
-            String key =  computeKey(keyIndex);
+            MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.remove(key);
                 expectedResult.remove(key);
@@ -434,8 +420,8 @@ public interface MailRepositoryContract {
         assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
     }
 
-    default String computeKey(int keyIndex) {
-        return "mail" + keyIndex;
+    default MailKey computeKey(int keyIndex) {
+        return new MailKey("mail" + keyIndex);
     }
 
     default int computeKeyIndex(int nbKeys, Integer i) {

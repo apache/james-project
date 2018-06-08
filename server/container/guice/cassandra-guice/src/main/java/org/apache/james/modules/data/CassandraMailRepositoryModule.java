@@ -22,6 +22,7 @@ package org.apache.james.modules.data;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepository;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryCountDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAO;
@@ -67,7 +68,7 @@ public class CassandraMailRepositoryModule extends AbstractModule {
         }
 
         @Override
-        public MailRepository provide(String url) {
+        public MailRepository provide(MailRepositoryUrl url) {
             return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, objectStore);
         }
     }

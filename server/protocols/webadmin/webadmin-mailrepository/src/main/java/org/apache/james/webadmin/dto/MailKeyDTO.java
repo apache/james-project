@@ -17,14 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.webadmin.dto;
 
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import java.util.Objects;
 
-public interface MailRepositoryProvider {
+import org.apache.james.mailrepository.api.MailKey;
 
-    String canonicalName();
+public class MailKeyDTO {
 
-    MailRepository provide(MailRepositoryUrl url);
+    private final MailKey mailKey;
+
+    public MailKeyDTO(MailKey mailKey) {
+        this.mailKey = mailKey;
+    }
+
+    public String getMailKey() {
+        return mailKey.asString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MailKeyDTO) {
+            MailKeyDTO that = (MailKeyDTO) o;
+
+            return Objects.equals(this.mailKey, that.mailKey);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(mailKey);
+    }
 }

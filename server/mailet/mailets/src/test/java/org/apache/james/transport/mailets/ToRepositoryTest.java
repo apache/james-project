@@ -39,6 +39,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class ToRepositoryTest {
+    public static final String REPOSITORY_PATH = "file://var/mail/any";
     @Rule public ExpectedException expectedException = ExpectedException.none();
     
     private ToRepository mailet;
@@ -67,29 +68,32 @@ public class ToRepositoryTest {
     public void initShouldNotThrowWhenInvalidPassThrough() throws Exception {
         MailetConfig mockedMailetConfig = mock(MailetConfig.class);
         when(mockedMailetConfig.getInitParameter("passThrough")).thenThrow(new RuntimeException());
+        when(mockedMailetConfig.getInitParameter("repositoryPath")).thenReturn(REPOSITORY_PATH);
 
         mailet.init(mockedMailetConfig);
     }
 
     @Test
     public void initShouldThrowWhenMailStoreThrows() throws Exception {
-        when(mailRepositoryStore.select(any(String.class))).thenThrow(new RuntimeException());
+        when(mailRepositoryStore.select(any())).thenThrow(new RuntimeException());
         expectedException.expect(MessagingException.class);
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .build();
+            .mailetName("Test")
+            .setProperty("repositoryPath", REPOSITORY_PATH)
+            .build();
         mailet.init(mailetConfig);
     }
 
     @Test
     public void serviceShouldStoreMailIntoRepository() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
-        when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+        when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .build();
+            .mailetName("Test")
+            .setProperty("repositoryPath", REPOSITORY_PATH)
+            .build();
         mailet.init(mailetConfig);
 
         mailet.service(message);
@@ -100,10 +104,11 @@ public class ToRepositoryTest {
     @Test
     public void serviceShouldGhostMailIfPassThroughNotSet() throws Exception {
         MailRepository mailRepository = mock(MailRepository.class);
-        when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+        when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName("Test")
+                .setProperty("repositoryPath", REPOSITORY_PATH)
                 .build();
         mailet.init(mailetConfig);
 
@@ -115,11 +120,12 @@ public class ToRepositoryTest {
     @Test
     public void serviceShouldGhostMailIfPassThroughSetToFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .setProperty("passThrough", "false")
-                .build();
+            .mailetName("Test")
+            .setProperty("passThrough", "false")
+            .setProperty("repositoryPath", REPOSITORY_PATH)
+            .build();
         MailRepository mailRepository = mock(MailRepository.class);
-        when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+        when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
         mailet.init(mailetConfig);
 
         mailet.service(message);
@@ -130,11 +136,12 @@ public class ToRepositoryTest {
     @Test
     public void serviceShouldNotGhostMailIfPassThroughSetToTrue() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .setProperty("passThrough", "true")
-                .build();
+            .mailetName("Test")
+            .setProperty("passThrough", "true")
+            .setProperty("repositoryPath", REPOSITORY_PATH)
+            .build();
         MailRepository mailRepository = mock(MailRepository.class);
-        when(mailRepositoryStore.select(any(String.class))).thenReturn(mailRepository);
+        when(mailRepositoryStore.select(any())).thenReturn(mailRepository);
         mailet.init(mailetConfig);
 
         mailet.service(message);

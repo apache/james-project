@@ -24,7 +24,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -35,13 +37,13 @@ public class ReprocessingAllMailsTask implements Task {
     public static final String TYPE = "reprocessingAllTask";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final String repositoryUrl;
+        private final MailRepositoryUrl repositoryUrl;
         private final String targetQueue;
         private final Optional<String> targetProcessor;
         private final long initialCount;
         private final AtomicLong processedCount;
 
-        public AdditionalInformation(String repositoryUrl, String targetQueue, Optional<String> targetProcessor, long initialCount) {
+        public AdditionalInformation(MailRepositoryUrl repositoryUrl, String targetQueue, Optional<String> targetProcessor, long initialCount) {
             this.repositoryUrl = repositoryUrl;
             this.targetQueue = targetQueue;
             this.targetProcessor = targetProcessor;
@@ -58,7 +60,7 @@ public class ReprocessingAllMailsTask implements Task {
         }
 
         public String getRepositoryUrl() {
-            return repositoryUrl;
+            return repositoryUrl.asString();
         }
 
         public long getRemainingCount() {
@@ -70,19 +72,19 @@ public class ReprocessingAllMailsTask implements Task {
         }
 
         @JsonIgnore
-        public void notifyProgress(String key) {
+        public void notifyProgress(MailKey key) {
             processedCount.incrementAndGet();
         }
     }
 
     private final ReprocessingService reprocessingService;
-    private final String repositoryUrl;
+    private final MailRepositoryUrl repositoryUrl;
     private final String targetQueue;
     private final Optional<String> targetProcessor;
     private final AdditionalInformation additionalInformation;
 
     public ReprocessingAllMailsTask(ReprocessingService reprocessingService, long repositorySize,
-                                    String repositoryUrl, String targetQueue, Optional<String> targetProcessor) {
+                                    MailRepositoryUrl repositoryUrl, String targetQueue, Optional<String> targetProcessor) {
         this.reprocessingService = reprocessingService;
         this.repositoryUrl = repositoryUrl;
         this.targetQueue = targetQueue;

@@ -26,6 +26,8 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.TestBlobId;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
@@ -39,8 +41,8 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 @ExtendWith(DockerCassandraExtension.class)
 public class CassandraMailRepositoryMailDAOTest {
 
-    static final String URL = "url";
-    static final String KEY_1 = "key1";
+    static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
+    static final MailKey KEY_1 = new MailKey("key1");
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
     CassandraCluster cassandra;
@@ -79,7 +81,7 @@ public class CassandraMailRepositoryMailDAOTest {
 
         testee.store(URL,
             FakeMail.builder()
-                .name(KEY_1)
+                .name(KEY_1.asString())
                 .sender(MailAddressFixture.SENDER)
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
                 .errorMessage(errorMessage)
@@ -99,7 +101,7 @@ public class CassandraMailRepositoryMailDAOTest {
         assertAll(
             () -> assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody),
             () -> assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader),
-            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1),
+            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1.asString()),
             () -> assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage),
             () -> assertThat(partialMail.getState()).isEqualTo(state),
             () -> assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr),
@@ -121,7 +123,7 @@ public class CassandraMailRepositoryMailDAOTest {
 
         testee.store(URL,
             FakeMail.builder()
-                .name(KEY_1)
+                .name(KEY_1.asString())
                 .build(),
             blobIdHeader,
             blobIdBody)
@@ -133,7 +135,7 @@ public class CassandraMailRepositoryMailDAOTest {
         assertAll(
             () -> assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody),
             () -> assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader),
-            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1));
+            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1.asString()));
     }
 
     @Test
@@ -143,7 +145,7 @@ public class CassandraMailRepositoryMailDAOTest {
 
         testee.store(URL,
             FakeMail.builder()
-                .name(KEY_1)
+                .name(KEY_1.asString())
                 .build(),
             blobIdHeader,
             blobIdBody)

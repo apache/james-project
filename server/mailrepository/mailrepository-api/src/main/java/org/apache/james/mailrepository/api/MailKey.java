@@ -17,14 +17,50 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.mailrepository.api;
 
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import java.util.Objects;
 
-public interface MailRepositoryProvider {
+import org.apache.mailet.Mail;
 
-    String canonicalName();
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-    MailRepository provide(MailRepositoryUrl url);
+public class MailKey {
+    public static MailKey forMail(Mail mail) {
+        return new MailKey(mail.getName());
+    }
+
+    private final String value;
+
+    public MailKey(String value) {
+        Preconditions.checkNotNull(value);
+        this.value = value;
+    }
+
+    public String asString() {
+        return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MailKey) {
+            MailKey mailKey = (MailKey) o;
+
+            return Objects.equals(this.value, mailKey.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

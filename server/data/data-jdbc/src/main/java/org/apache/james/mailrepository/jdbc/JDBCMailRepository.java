@@ -53,6 +53,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
@@ -592,7 +593,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
     @Override
     @SuppressWarnings("unchecked")
-    public Mail retrieve(String key) throws MessagingException {
+    public Mail retrieve(MailKey key) throws MessagingException {
         if (DEEP_DEBUG) {
             System.err.println("retrieving " + key);
         }
@@ -606,7 +607,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             }
 
             retrieveMessage = conn.prepareStatement(sqlQueries.getSqlString("retrieveMessageSQL", true));
-            retrieveMessage.setString(1, key);
+            retrieveMessage.setString(1, key.asString());
             retrieveMessage.setString(2, repositoryName);
             rsMessage = retrieveMessage.executeQuery();
             if (DEEP_DEBUG) {
@@ -625,7 +626,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                 try {
                     retrieveMessageAttr = conn.prepareStatement(retrieveMessageAttrSql);
 
-                    retrieveMessageAttr.setString(1, key);
+                    retrieveMessageAttr.setString(1, key.asString());
                     retrieveMessageAttr.setString(2, repositoryName);
                     rsMessageAttr = retrieveMessageAttr.executeQuery();
 
@@ -662,7 +663,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
             MailImpl mc = new MailImpl();
             mc.setAttributesRaw(attributes);
-            mc.setName(key);
+            mc.setName(key.asString());
             mc.setState(rsMessage.getString(1));
             mc.setErrorMessage(rsMessage.getString(2));
             String sender = rsMessage.getString(3);
@@ -681,7 +682,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             mc.setRemoteAddr(rsMessage.getString(6));
             mc.setLastUpdated(rsMessage.getTimestamp(7));
 
-            MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key, sr);
+            MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
             MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
             mc.setMessage(message);
             return mc;
@@ -699,18 +700,18 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void internalRemove(String key) throws MessagingException {
+    protected void internalRemove(MailKey key) throws MessagingException {
         Connection conn = null;
         PreparedStatement removeMessage = null;
         try {
             conn = datasource.getConnection();
             removeMessage = conn.prepareStatement(sqlQueries.getSqlString("removeMessageSQL", true));
-            removeMessage.setString(1, key);
+            removeMessage.setString(1, key.asString());
             removeMessage.setString(2, repositoryName);
             removeMessage.execute();
 
             if (sr != null) {
-                sr.remove(key);
+                sr.remove(key.asString());
             }
         } catch (Exception me) {
             throw new MessagingException("Exception while removing mail: " + me.getMessage(), me);
@@ -721,7 +722,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    public Iterator<String> list() throws MessagingException {
+    public Iterator<MailKey> list() throws MessagingException {
         // System.err.println("listing messages");
         Connection conn = null;
         PreparedStatement listMessages = null;
@@ -736,7 +737,9 @@ public class JDBCMailRepository extends AbstractMailRepository {
             while (rsListMessages.next() && !Thread.currentThread().isInterrupted()) {
                 messageList.add(rsListMessages.getString(1));
             }
-            return messageList.iterator();
+            return messageList.stream()
+                .map(MailKey::new)
+                .iterator();
         } catch (Exception me) {
             throw new MessagingException("Exception while listing mail: " + me.getMessage(), me);
         } finally {

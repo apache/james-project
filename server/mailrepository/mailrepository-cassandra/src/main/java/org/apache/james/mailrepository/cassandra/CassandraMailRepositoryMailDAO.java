@@ -68,6 +68,8 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
@@ -136,9 +138,9 @@ public class CassandraMailRepositoryMailDAO {
                 .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
     }
 
-    public CompletableFuture<Void> store(String url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException {
+    public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException {
         return executor.executeVoid(insertMail.bind()
-            .setString(REPOSITORY_NAME, url)
+            .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, mail.getName())
             .setString(HEADER_BLOB_ID, headerId.asString())
             .setString(BODY_BLOB_ID, bodyId.asString())
@@ -157,16 +159,16 @@ public class CassandraMailRepositoryMailDAO {
         );
     }
 
-    public CompletableFuture<Void> remove(String url, String key) {
+    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
         return executor.executeVoid(deleteMail.bind()
-            .setString(REPOSITORY_NAME, url)
-            .setString(MAIL_KEY, key));
+            .setString(REPOSITORY_NAME, url.asString())
+            .setString(MAIL_KEY, key.asString()));
     }
 
-    public CompletableFuture<Optional<MailDTO>> read(String url, String key) {
+    public CompletableFuture<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key) {
         return executor.executeSingleRow(selectMail.bind()
-            .setString(REPOSITORY_NAME, url)
-            .setString(MAIL_KEY, key))
+            .setString(REPOSITORY_NAME, url.asString())
+            .setString(MAIL_KEY, key.asString()))
             .thenApply(rowOptional -> rowOptional.map(this::toMail));
     }
 

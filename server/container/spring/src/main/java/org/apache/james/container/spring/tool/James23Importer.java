@@ -33,9 +33,11 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryStore.MailRepositoryStoreException;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MimeMessageInputStream;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -135,8 +137,8 @@ public class James23Importer {
         while (james23userRepositoryIterator.hasNext()) {
 
             String userName23 = james23userRepositoryIterator.next();
-            MailRepository mailRepository = mailRepositoryStore.select(james23MailRepositoryPath + "/" + userName23);
-            Iterator<String> mailRepositoryIterator = mailRepository.list();
+            MailRepository mailRepository = mailRepositoryStore.select(MailRepositoryUrl.from(james23MailRepositoryPath + "/" + userName23));
+            Iterator<MailKey> mailRepositoryIterator = mailRepository.list();
 
             String userName30 = convert23UserTo30(userName23);
 

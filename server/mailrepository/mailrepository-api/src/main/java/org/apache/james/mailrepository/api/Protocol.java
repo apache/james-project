@@ -17,14 +17,44 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.mailrepository.api;
 
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import java.util.Objects;
 
-public interface MailRepositoryProvider {
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-    String canonicalName();
+public class Protocol {
+    private final String value;
 
-    MailRepository provide(MailRepositoryUrl url);
+    public Protocol(String value) {
+        Preconditions.checkNotNull(value);
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Protocol) {
+            Protocol protocol = (Protocol) o;
+
+            return Objects.equals(this.value, protocol.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

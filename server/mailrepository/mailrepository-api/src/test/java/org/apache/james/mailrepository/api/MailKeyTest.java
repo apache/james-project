@@ -17,34 +17,38 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.mailrepository.api;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class MailKey {
+import org.apache.mailet.base.test.FakeMail;
+import org.junit.jupiter.api.Test;
 
-    private final String repository;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public MailKey(String mailKey) {
-        this.repository = mailKey;
+public class MailKeyTest {
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailKey.class)
+            .verify();
     }
 
-    public String getMailKey() {
-        return repository;
+    @Test
+    public void forMailShouldBeBasedOnTheName() throws Exception {
+        String name = "toto";
+        assertThat(
+            MailKey.forMail(FakeMail.builder()
+                .name(name)
+                .build()))
+            .isEqualTo(new MailKey(name));
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MailKey) {
-            MailKey mailKey = (MailKey) o;
-
-            return Objects.equals(this.repository, mailKey.repository);
-        }
-        return false;
+    @Test
+    public void constructorShouldThrowWhenNull() {
+        assertThatThrownBy(() -> new MailKey(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    @Override
-    public final int hashCode() {
-        return Objects.hash(repository);
-    }
 }

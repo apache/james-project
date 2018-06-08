@@ -17,14 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.mailrepository.api;
 
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public interface MailRepositoryProvider {
+import org.junit.jupiter.api.Test;
 
-    String canonicalName();
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    MailRepository provide(MailRepositoryUrl url);
+public class ProtocolTest {
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Protocol.class)
+            .verify();
+    }
+
+    @Test
+    public void constructorShouldThrowWhenNull() {
+        assertThatThrownBy(() -> new Protocol(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
 }

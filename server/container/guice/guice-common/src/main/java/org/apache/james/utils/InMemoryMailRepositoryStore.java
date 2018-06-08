@@ -34,6 +34,8 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.repository.api.Initializable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,36 +45,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
-
-    public static class Destination {
-
-        public static Destination fromUrl(String destinationUrl) throws MailRepositoryStoreException {
-            return new Destination(destinationUrl, retrieveProtocol(destinationUrl));
-        }
-
-        private static String retrieveProtocol(String destination) throws MailRepositoryStoreException {
-            int protocolSeparatorPosition = destination.indexOf(':');
-            if (protocolSeparatorPosition == -1) {
-                throw new MailRepositoryStoreException("Destination is malformed. Must be a valid URL: " + destination);
-            }
-            return destination.substring(0, protocolSeparatorPosition);
-        }
-
-        private final String url;
-        private final String protocol;
-
-        public Destination(String url, String protocol) {
-            this.url = url;
-            this.protocol = protocol;
-        }
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);
 
     private final Set<MailRepositoryProvider> mailRepositories;
-    private final ConcurrentMap<String, MailRepository> destinationToRepositoryAssociations;
-    private final Map<String, MailRepositoryProvider> protocolToRepositoryProvider;
-    private final Map<String, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
+    private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
+    private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
+    private final Map<Protocol, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
     private HierarchicalConfiguration configuration;
 
     @Inject
@@ -84,7 +62,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public List<String> getUrls() {
+    public List<MailRepositoryUrl> getUrls() {
         return ImmutableList.copyOf(destinationToRepositoryAssociations.keySet());
     }
 
@@ -111,23 +89,22 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public Optional<MailRepository> get(String url) {
+    public Optional<MailRepository> get(MailRepositoryUrl url) {
         return Optional.ofNullable(destinationToRepositoryAssociations.get(url));
     }
 
     @Override
-    public MailRepository select(String destinationUrl) throws MailRepositoryStoreException {
-        Destination destination = Destination.fromUrl(destinationUrl);
-        return Optional.ofNullable(destinationToRepositoryAssociations.get(destination.url))
+    public MailRepository select(MailRepositoryUrl mailRepositoryUrl) {
+        return Optional.ofNullable(destinationToRepositoryAssociations.get(mailRepositoryUrl))
             .orElseGet(Throwing.supplier(
-                () -> createNewMailRepository(destination))
+                () -> createNewMailRepository(mailRepositoryUrl))
                 .sneakyThrow());
     }
 
-    private MailRepository createNewMailRepository(Destination destination) throws MailRepositoryStoreException {
-        MailRepository newMailRepository = retrieveMailRepository(destination);
-        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(destination));
-        MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(destination.url, newMailRepository);
+    private MailRepository createNewMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
+        MailRepository newMailRepository = retrieveMailRepository(mailRepositoryUrl);
+        newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
+        MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(mailRepositoryUrl, newMailRepository);
         return Optional.ofNullable(previousRepository)
             .orElse(newMailRepository);
     }
@@ -139,12 +116,12 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
             .findAny()
             .orElseThrow(() -> new ConfigurationException("MailRepository " + className + " has not been registered"));
         for (String protocol : repositoryConfiguration.getStringArray("protocols.protocol")) {
-            protocolToRepositoryProvider.put(protocol, usedMailRepository);
-            registerRepositoryDefaultConfiguration(repositoryConfiguration, protocol);
+            protocolToRepositoryProvider.put(new Protocol(protocol), usedMailRepository);
+            registerRepositoryDefaultConfiguration(repositoryConfiguration, new Protocol(protocol));
         }
     }
 
-    private void registerRepositoryDefaultConfiguration(HierarchicalConfiguration repositoryConfiguration, String protocol) {
+    private void registerRepositoryDefaultConfiguration(HierarchicalConfiguration repositoryConfiguration, Protocol protocol) {
         HierarchicalConfiguration defConf = null;
         if (repositoryConfiguration.getKeys("config").hasNext()) {
             defConf = repositoryConfiguration.configurationAt("config");
@@ -154,14 +131,14 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         }
     }
 
-    private CombinedConfiguration createRepositoryCombinedConfig(Destination destination) {
+    private CombinedConfiguration createRepositoryCombinedConfig(MailRepositoryUrl mailRepositoryUrl) {
         CombinedConfiguration config = new CombinedConfiguration();
-        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(destination.protocol);
+        HierarchicalConfiguration defaultProtocolConfig = perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol());
         if (defaultProtocolConfig != null) {
             config.addConfiguration(defaultProtocolConfig);
         }
         DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-        builder.addProperty("[@destinationURL]", destination.url);
+        builder.addProperty("[@destinationURL]", mailRepositoryUrl.asString());
         config.addConfiguration(builder);
         return config;
     }
@@ -180,10 +157,11 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
         }
     }
 
-    private MailRepository retrieveMailRepository(Destination destination) throws MailRepositoryStoreException {
-        return Optional.ofNullable(protocolToRepositoryProvider.get(destination.protocol))
-            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + destination.protocol))
-            .provide(destination.url);
+    private MailRepository retrieveMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
+        Protocol protocol = mailRepositoryUrl.getProtocol();
+        return Optional.ofNullable(protocolToRepositoryProvider.get(protocol))
+            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()))
+            .provide(mailRepositoryUrl);
     }
 
 }

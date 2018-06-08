@@ -59,6 +59,7 @@ import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
 import org.apache.james.server.core.MailImpl;
@@ -118,7 +119,7 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     }
 
     @Override
-    public Iterator<String> list() throws MessagingException {
+    public Iterator<MailKey> list() throws MessagingException {
         try {
             Session session = login();
             try {
@@ -130,7 +131,9 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
                     String name = iterator.nextNode().getName();
                     keys.add(Text.unescapeIllegalJcrChars(name));
                 }
-                return keys.iterator();
+                return keys.stream()
+                    .map(MailKey::new)
+                    .iterator();
             } finally {
                 session.logout();
             }
@@ -140,11 +143,11 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     }
 
     @Override
-    public Mail retrieve(String key) throws MessagingException {
+    public Mail retrieve(MailKey key) throws MessagingException {
         try {
             Session session = login();
             try {
-                String name = toSafeName(key);
+                String name = toSafeName(key.asString());
                 QueryManager manager = session.getWorkspace().getQueryManager();
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(" + name + ",james:mail)", Query.XPATH);
                 NodeIterator iterator = query.execute().getNodes();
@@ -591,11 +594,11 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
     }
 
     @Override
-    protected void internalRemove(String key) throws MessagingException {
+    protected void internalRemove(MailKey key) throws MessagingException {
         try {
             Session session = login();
             try {
-                String name = ISO9075.encode(Text.escapeIllegalJcrChars(key));
+                String name = ISO9075.encode(Text.escapeIllegalJcrChars(key.asString()));
                 QueryManager manager = session.getWorkspace().getQueryManager();
                 Query query = manager.createQuery("/jcr:root/" + MAIL_PATH + "//element(" + name + ",james:mail)", Query.XPATH);
                 NodeIterator nodes = query.execute().getNodes();

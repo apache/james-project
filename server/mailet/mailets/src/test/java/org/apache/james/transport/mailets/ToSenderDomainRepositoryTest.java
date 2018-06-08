@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
 import org.apache.mailet.Mail;
@@ -43,17 +44,19 @@ import org.junit.jupiter.api.Test;
 class ToSenderDomainRepositoryTest {
 
     private static final String MEMORY_URL_PREFIX = "memory://var/mail/dlp/";
+    private static final MailRepositoryUrl JAMES_LOCAL_REPOSITORY_URL = MailRepositoryUrl.from("memory://var/mail/dlp/" + JAMES_LOCAL);
     private static final FakeMailetConfig DEFAULT_MAILET_CONFIG = FakeMailetConfig.builder()
         .mailetName("TestConfig")
         .setProperty("urlPrefix", MEMORY_URL_PREFIX)
         .build();
+
     private ToSenderDomainRepository mailet;
     private MockMailRepositoryStore mailRepositoryStore;
 
     @BeforeEach
     void setup() {
         mailRepositoryStore = new MockMailRepositoryStore();
-        mailRepositoryStore.add(MEMORY_URL_PREFIX + JAMES_LOCAL, new MemoryMailRepository());
+        mailRepositoryStore.add(JAMES_LOCAL_REPOSITORY_URL, new MemoryMailRepository());
         mailet = new ToSenderDomainRepository(mailRepositoryStore);
     }
 
@@ -84,7 +87,7 @@ class ToSenderDomainRepositoryTest {
             .sender(MailAddressFixture.SENDER)
             .build());
 
-        MailRepository mailRepository = mailRepositoryStore.select(MEMORY_URL_PREFIX + JAMES_LOCAL);
+        MailRepository mailRepository = mailRepositoryStore.select(JAMES_LOCAL_REPOSITORY_URL);
 
         assertThat(mailRepository.list())
             .extracting(mailRepository::retrieve)

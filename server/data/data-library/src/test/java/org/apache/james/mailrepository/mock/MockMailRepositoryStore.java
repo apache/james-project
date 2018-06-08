@@ -27,27 +27,28 @@ import java.util.Optional;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
 public class MockMailRepositoryStore implements MailRepositoryStore {
 
-    final Map<String, MailRepository> storedObjectMap = new HashMap<>();
+    private final Map<MailRepositoryUrl, MailRepository> storedObjectMap = new HashMap<>();
 
-    public void add(String url, MailRepository obj) {
+    public void add(MailRepositoryUrl url, MailRepository obj) {
         storedObjectMap.put(url, obj);
     }
 
     @Override
-    public MailRepository select(String url) throws MailRepositoryStoreException {
+    public MailRepository select(MailRepositoryUrl url) {
         return storedObjectMap.get(url);
     }
 
     @Override
-    public Optional<MailRepository> get(String url) throws MailRepositoryStoreException {
+    public Optional<MailRepository> get(MailRepositoryUrl url) {
         return Optional.ofNullable(storedObjectMap.get(url));
     }
 
     @Override
-    public List<String> getUrls() {
+    public List<MailRepositoryUrl> getUrls() {
         return new ArrayList<>(storedObjectMap.keySet());
     }
 
