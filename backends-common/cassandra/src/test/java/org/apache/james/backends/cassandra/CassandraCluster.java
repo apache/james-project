@@ -33,6 +33,7 @@ import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
+import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
@@ -54,6 +55,10 @@ public final class CassandraCluster implements AutoCloseable {
 
     public static CassandraCluster create(CassandraModule module, String host, int port) {
         return new CassandraCluster(module, host, port);
+    }
+
+    public static CassandraCluster create(CassandraModule module, Host host) {
+        return new CassandraCluster(module, host.getHostName(), host.getPort());
     }
     
     @Inject
