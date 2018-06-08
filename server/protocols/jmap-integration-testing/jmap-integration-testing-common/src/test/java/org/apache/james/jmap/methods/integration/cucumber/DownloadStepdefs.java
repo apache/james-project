@@ -110,7 +110,7 @@ public class DownloadStepdefs {
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(new ByteArrayInputStream(
-                Strings.repeat("header: 0123456789\r\n", 1024 * 1024)
+                Strings.repeat("header: 0123456789\r\n", 128 * 1024)
                     .getBytes(StandardCharsets.UTF_8))));
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());

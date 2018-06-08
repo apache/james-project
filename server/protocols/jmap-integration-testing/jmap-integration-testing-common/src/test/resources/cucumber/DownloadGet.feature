@@ -58,7 +58,7 @@ Feature: Download GET
   Scenario: Getting a message blob previously stored
     Given "alice@domain.tld" mailbox "INBOX" contains a big message "1"
     When "alice@domain.tld" downloads "1"
-    Then the blob size is 20971520
+    Then the blob size is 2621440
 
   Scenario: Getting a message then getting its blob
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
