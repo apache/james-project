@@ -19,30 +19,37 @@
 
 package org.apache.james.webadmin.dto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
-import javax.mail.Header;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.dom.Message;
+import org.apache.james.mime4j.stream.MimeConfig;
+import org.apache.james.util.mime.MessageContentExtractor;
+import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
 
 public class MailDto {
-    public static MailDto fromMail(Mail mail, List<AdditionalFields> additionalFields) throws MessagingException, MissingRequestedField {
+    public static MailDto fromMail(Mail mail, List<AdditionalField> additionalFields) throws MessagingException, InnaccessibleFieldException {
         return new MailDto(mail.getName(),
             Optional.ofNullable(mail.getSender()).map(MailAddress::asString),
             mail.getRecipients().stream().map(MailAddress::asString).collect(Guavate.toImmutableList()),
@@ -58,58 +65,76 @@ public class MailDto {
             fetchMessageSize(additionalFields, mail));
     }
 
-    private static Optional<Long> fetchMessageSize(List<AdditionalFields> additionalFields, Mail mail) throws MissingRequestedField {
-        if (!additionalFields.contains(AdditionalFields.MESSAGE_SIZE)) {
+    private static Optional<Long> fetchMessageSize(List<AdditionalField> additionalFields, Mail mail) throws InnaccessibleFieldException {
+        if (!additionalFields.contains(AdditionalField.MESSAGE_SIZE)) {
             return Optional.empty();
         }
         try {
-            return Optional.ofNullable(new Long(mail.getMessageSize()));
+            return Optional.of(new Long(mail.getMessageSize()));
         } catch (MessagingException e) {
-            throw new MissingRequestedField("messageSize");
+            throw new InnaccessibleFieldException(AdditionalField.MESSAGE_SIZE);
         }
     }
 
-    private static Optional<String> fetchBody(List<AdditionalFields> additionalFields, Mail mail) throws MissingRequestedField {
-        if (!additionalFields.contains(AdditionalFields.BODY)) {
+    private static Optional<String> fetchBody(List<AdditionalField> additionalFields, Mail mail) throws InnaccessibleFieldException {
+        if (!additionalFields.contains(AdditionalField.BODY)) {
             return Optional.empty();
         }
+
         try {
-            return Optional.ofNullable(mail.getMessage().getContent().toString());
-        } catch (IOException | MessagingException | NullPointerException e) {
-            throw new MissingRequestedField("body");
+            MessageContentExtractor extractor = new MessageContentExtractor();
+            return Optional.ofNullable(mail.getMessage())
+                    .map(Throwing.function(MailDto::convertMessage).sneakyThrow())
+                    .map(Throwing.function((Message message) -> extractor.extract(message)).sneakyThrow())
+                    .flatMap(extractBody());
+        } catch (MessagingException e) {
+            throw new InnaccessibleFieldException(AdditionalField.BODY);
         }
     }
 
-    private static Optional<Map<String, List<String>>> fetchHeaders(List<AdditionalFields> additionalFields, Mail mail) throws MissingRequestedField {
-        if (!additionalFields.contains(AdditionalFields.HEADERS)) {
-            return Optional.empty();
-        }
-        Map<String, List<String>> headers = new HashMap<>();
-
-        Enumeration<Header> rawHeaders;
-        try {
-            rawHeaders = mail.getMessage().getAllHeaders();
-            while (rawHeaders.hasMoreElements()) {
-                Header header = rawHeaders.nextElement();
-                String name = header.getName();
-                if (!headers.containsKey(name)) {
-                    headers.put(name, new ArrayList<>());
-                }
-
-                headers.get(name).add(header.getValue());
+    private static Function<? super MessageContent, Optional<String>> extractBody() {
+        return (content) -> {
+            Optional<String> body = content.getTextBody();
+            if (body.isPresent()) {
+                return body;
+            } else {
+                return content.getHtmlBody();
             }
+        };
+    }
+
+    private static Message convertMessage(MimeMessage message) throws IOException, MessagingException {
+        ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
+        message.writeTo(rawMessage);
+        return org.apache.james.mime4j.dom.Message.Builder
+                .of()
+                .use(MimeConfig.PERMISSIVE)
+                .parse(new ByteArrayInputStream(rawMessage.toByteArray()))
+                .build();
+    }
+
+    private static Optional<HeadersDto> fetchHeaders(List<AdditionalField> additionalFields, Mail mail) throws InnaccessibleFieldException {
+        if (!additionalFields.contains(AdditionalField.HEADERS)) {
+            return Optional.empty();
+        }
+
+        try {
+            HeadersDto headers = new HeadersDto();
+            Collections
+                .list(mail.getMessage().getAllHeaders())
+                .forEach((header) -> headers.add(header.getName(), header.getValue()));
 
             return Optional.of(headers);
-        } catch (NullPointerException | MessagingException e) {
-            throw new MissingRequestedField("headers");
+        } catch (MessagingException e) {
+            throw new InnaccessibleFieldException(AdditionalField.HEADERS);
         }
     }
 
-    private static Optional<Map<String, Map<String, List<String>>>> fetchPerRecipientsHeaders(List<AdditionalFields> additionalFields, Mail mail) {
-        if (!additionalFields.contains(AdditionalFields.PER_RECIPIENTS_HEADERS)) {
+    private static Optional<Map<String, HeadersDto>> fetchPerRecipientsHeaders(List<AdditionalField> additionalFields, Mail mail) {
+        if (!additionalFields.contains(AdditionalField.PER_RECIPIENTS_HEADERS)) {
             return Optional.empty();
         }
-        Map<String, Map<String, List<String>>> headers = new HashMap<>();
+        Map<String, HeadersDto> headers = new HashMap<>();
         PerRecipientHeaders specificHeaders = mail.getPerRecipientSpecificHeaders();
         Multimap<MailAddress, org.apache.mailet.PerRecipientHeaders.Header> headersByRecipient = specificHeaders.getHeadersByRecipient();
 
@@ -120,34 +145,22 @@ public class MailDto {
         return Optional.of(headers);
     }
 
-    private static Map<String, List<String>> fetchPerRecipientHeader(
+    private static HeadersDto fetchPerRecipientHeader(
             Multimap<MailAddress, org.apache.mailet.PerRecipientHeaders.Header> headersByRecipient,
             MailAddress address) {
-        Map<String, List<String>> header = new HashMap<>();
-        for (org.apache.mailet.PerRecipientHeaders.Header rawHeader : headersByRecipient.get(address)) {
-            String name = rawHeader.getName();
-            if (!header.containsKey(name)) {
-                header.put(name, new ArrayList<>());
-            }
-
-            header.get(name).add(rawHeader.getValue());
-        }
+        HeadersDto header = new HeadersDto();
+        headersByRecipient.get(address).forEach((rawHeader) -> header.add(rawHeader.getName(), rawHeader.getValue()));
         return header;
     }
 
-    private static Optional<Map<String, String>> fetchAttributes(List<AdditionalFields> additionalFields, Mail mail) {
-        if (!additionalFields.contains(AdditionalFields.ATTRIBUTES)) {
+    private static Optional<Map<String, String>> fetchAttributes(List<AdditionalField> additionalFields, Mail mail) {
+        if (!additionalFields.contains(AdditionalField.ATTRIBUTES)) {
             return Optional.empty();
         }
-        Map<String, String> attributes = new HashMap<>();
 
-        Iterator<String> attributeNames = mail.getAttributeNames();
-        while (attributeNames.hasNext()) {
-            String attributeName = (String) attributeNames.next();
-            attributes.put(attributeName, mail.getAttribute(attributeName).toString());
-        }
-
-        return Optional.of(attributes);
+        return Optional.of(Iterators.toStream(mail.getAttributeNames())
+                                    .collect(Guavate.toImmutableMap(attributeName -> attributeName,
+                                                                    attributeName -> mail.getAttribute(attributeName).toString())));
     }
 
     private final String name;
@@ -158,26 +171,37 @@ public class MailDto {
     private final Optional<String> remoteHost;
     private final Optional<String> remoteAddr;
     private final Optional<Date> lastUpdated;
-    private final Optional<Map<String,String>> attributes;
-    private final Optional<Map<String,Map<String,List<String>>>> perRecipientsHeaders;
-    private final Optional<Map<String,List<String>>> headers;
+    private final Optional<Map<String, String>> attributes;
+    private final Optional<Map<String, HeadersDto>> perRecipientsHeaders;
+    private final Optional<HeadersDto> headers;
     private final Optional<String> body;
     private final Optional<Long> messageSize;
 
-    public enum AdditionalFields {
-        ATTRIBUTES,
-        PER_RECIPIENTS_HEADERS,
-        HEADERS,
-        BODY,
-        MESSAGE_SIZE
-    }
+    public enum AdditionalField {
+        ATTRIBUTES("attributes"),
+        PER_RECIPIENTS_HEADERS("perRecipientsHeaders"),
+        BODY("body"),
+        HEADERS("headers"),
+        MESSAGE_SIZE("messageSize");
 
+        public static Optional<AdditionalField> find(String fieldName) {
+            return Arrays.stream(values())
+                .filter(value -> value.fieldName.equalsIgnoreCase(fieldName))
+                .findAny();
+        }
+
+        private final String fieldName;
+
+        AdditionalField(String fieldName) {
+            this.fieldName = fieldName;
+        }
+    }
 
     private MailDto(String name, Optional<String> sender, List<String> recipients, Optional<String> error,
             Optional<String> state, Optional<String> remoteHost, Optional<String> remoteAddr,
             Optional<Date> lastUpdated, Optional<Map<String, String>> attributes,
-            Optional<Map<String, Map<String, List<String>>>> perRecipientsHeaders,
-            Optional<Map<String, List<String>>> headers, Optional<String> body, Optional<Long> messageSize) {
+            Optional<Map<String, HeadersDto>> perRecipientsHeaders,
+            Optional<HeadersDto> headers, Optional<String> body, Optional<Long> messageSize) {
         this.name = name;
         this.sender = sender;
         this.recipients = recipients;
@@ -229,11 +253,11 @@ public class MailDto {
         return attributes;
     }
 
-    public Optional<Map<String, Map<String, List<String>>>> getPerRecipientsHeaders() {
+    public Optional<Map<String, HeadersDto>> getPerRecipientsHeaders() {
         return perRecipientsHeaders;
     }
 
-    public Optional<Map<String, List<String>>> getHeaders() {
+    public Optional<HeadersDto> getHeaders() {
         return headers;
     }
 
@@ -254,13 +278,21 @@ public class MailDto {
                 && Objects.equals(this.sender, mailDto.sender)
                 && Objects.equals(this.recipients, mailDto.recipients)
                 && Objects.equals(this.error, mailDto.error)
-                && Objects.equals(this.state, mailDto.state);
+                && Objects.equals(this.state, mailDto.state)
+                && Objects.equals(this.remoteHost, mailDto.remoteHost)
+                && Objects.equals(this.remoteAddr, mailDto.remoteAddr)
+                && Objects.equals(this.lastUpdated, mailDto.lastUpdated)
+                && Objects.equals(this.attributes, mailDto.attributes)
+                && Objects.equals(this.perRecipientsHeaders, mailDto.perRecipientsHeaders)
+                && Objects.equals(this.headers, mailDto.headers)
+                && Objects.equals(this.body, mailDto.body)
+                && Objects.equals(this.messageSize, mailDto.messageSize);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(name, sender, recipients, error, state);
+        return Objects.hash(name, sender, recipients, error, state, remoteHost, remoteAddr, lastUpdated, attributes, perRecipientsHeaders, headers, body, messageSize);
     }
 }

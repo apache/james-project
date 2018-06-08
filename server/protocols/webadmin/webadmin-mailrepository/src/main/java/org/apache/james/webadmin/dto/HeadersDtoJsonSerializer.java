@@ -19,18 +19,30 @@
 
 package org.apache.james.webadmin.dto;
 
-public class MissingRequestedField extends Exception {
+import java.io.IOException;
 
-    private static final long serialVersionUID = 5297676920331779265L;
+import java.util.List;
 
-    private final String field;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.github.fge.lambdas.Throwing;
 
-    public MissingRequestedField(String field) {
-        super();
-        this.field = field;
-    }
-
-    public String getField() {
-        return field;
+public class HeadersDtoJsonSerializer extends JsonSerializer<HeadersDto> {
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public void serialize(
+      HeadersDto headers, JsonGenerator jgen, SerializerProvider provider) 
+      throws IOException, JsonProcessingException {
+        jgen.writeStartObject();
+        headers.getHeaders().forEach(Throwing.biConsumer((key, values) -> {
+            jgen.writeArrayFieldStart((String) key);
+            ((List<String>) values)
+                .forEach(Throwing.consumer((value) -> jgen.writeString((String) value)).sneakyThrow());
+            jgen.writeEndArray();
+        }).sneakyThrow());
+        jgen.writeEndObject();
     }
 }

@@ -23,9 +23,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -45,8 +43,8 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
-import org.apache.james.webadmin.dto.MailDto.AdditionalFields;
-import org.apache.james.webadmin.dto.MissingRequestedField;
+import org.apache.james.webadmin.dto.InnaccessibleFieldException;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
@@ -57,6 +55,8 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.google.common.base.Splitter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -206,7 +206,7 @@ public class MailRepositoriesRoutes implements Routes {
                     .cause(e)
                     .message("The field '" + e.getMessage() + "' can't be requested")
                     .haltError();
-            } catch (MissingRequestedField e) {
+            } catch (InnaccessibleFieldException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
@@ -419,21 +419,13 @@ public class MailRepositoriesRoutes implements Routes {
         return URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
     }
 
-    private List<AdditionalFields> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
-        List<AdditionalFields> additionalFields = new ArrayList<>();
-        Map<String,AdditionalFields> parametersEquivalent = new HashMap<>();
-        parametersEquivalent.put("attributes", AdditionalFields.ATTRIBUTES);
-        parametersEquivalent.put("perRecipientsHeaders", AdditionalFields.PER_RECIPIENTS_HEADERS);
-        parametersEquivalent.put("headers", AdditionalFields.HEADERS);
-        parametersEquivalent.put("body", AdditionalFields.BODY);
-        parametersEquivalent.put("messageSize", AdditionalFields.MESSAGE_SIZE);
+    private List<AdditionalField> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
+        List<AdditionalField> additionalFields = new ArrayList<>();
 
-        for (String requestedField : additionalFieldsParam.split(",")) {
-            if (requestedField.isEmpty()) {
-                continue;
-            }
-            if (parametersEquivalent.containsKey(requestedField)) {
-                additionalFields.add(parametersEquivalent.get(requestedField));
+        for (String requestedField : Splitter.on(',').trimResults().omitEmptyStrings().split(additionalFieldsParam)) {
+            Optional<AdditionalField> correspondingField = AdditionalField.find(requestedField);
+            if (correspondingField.isPresent()) {
+                additionalFields.add(correspondingField.get());
             } else {
                 throw new IllegalArgumentException(requestedField);
             }

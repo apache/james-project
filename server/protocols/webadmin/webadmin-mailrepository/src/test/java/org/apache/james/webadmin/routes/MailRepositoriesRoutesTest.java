@@ -22,6 +22,9 @@ package org.apache.james.webadmin.routes;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.RestAssured.with;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.allOf;
@@ -39,18 +42,11 @@ import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.Serializable;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
-
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
@@ -75,9 +71,7 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders.Header;
 import org.apache.mailet.base.test.FakeMail;
-import org.apache.mailet.base.test.FakeMail.Builder;
 import org.eclipse.jetty.http.HttpStatus;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -466,71 +460,94 @@ public class MailRepositoriesRoutesTest {
     public void retrievingAMailShouldDisplayAllAdditionalsFieldWhenRequested() throws Exception {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
         String name = NAME_1;
-        Map<String,Serializable> attributes = new HashMap<>();
-        attributes.put("name1", "value1");
-        attributes.put("name2", "value2");
-        Map<String,List<String>> headers = new HashMap<>();
-        headers.put("headerName3", Arrays.asList("value5", "value8"));
-        headers.put("headerName4", Arrays.asList("value6", "value7"));
-        int messageSize = 42424242;
-        String body = "My awesome body!!";
-        MimeMessageBuilder mimeMessageBuilder = MimeMessageBuilder.mimeMessageBuilder()
-                .setText(body);
-        for (String headerName : headers.keySet()) {
-            for (String headerValue : headers.get(headerName)) {
-                mimeMessageBuilder.addHeader(headerName, headerValue);
-            }
-        }
-        MimeMessage mimeMessage = mimeMessageBuilder.build();
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+                .addHeader("headerName3", "value5")
+                .addHeader("headerName3", "value8")
+                .addHeader("headerName4", "value6")
+                .addHeader("headerName4", "value7")
+                .setText("My awesome body!!")
+                .build();
 
-        Map<String,Map<String,List<String>>> perRecipientHeaders = new HashMap<>();
-        Map<String,List<String>> perRecipientHeader1 = new HashMap<>();
-        List<String> perRecipientHeader1Values = new ArrayList<>();
-        perRecipientHeader1Values.add("value1");
-        perRecipientHeader1Values.add("value2");
-        perRecipientHeader1.put("headerName1", perRecipientHeader1Values);
-        List<String> perRecipientHeader2Values = new ArrayList<>();
-        perRecipientHeader2Values.add("value3");
-        perRecipientHeader2Values.add("value4");
-        perRecipientHeader1.put("headerName2", perRecipientHeader2Values);
-        perRecipientHeaders.put("third@party", perRecipientHeader1);
-
-        Builder mailBuilder = FakeMail.builder()
+        MailAddress recipientHeaderAddress = new MailAddress("third@party");
+        FakeMail mail = FakeMail.builder()
             .name(name)
-            .attributes(attributes)
+            .attribute("name1", "value1")
+            .attribute("name2", "value2")
             .mimeMessage(mimeMessage)
-            .size(messageSize);
+            .size(42424242)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName1")
+                    .value("value1")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName1")
+                    .value("value2")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName2")
+                    .value("value3")
+                    .build(), recipientHeaderAddress)
+            .addHeaderForRecipient(Header.builder()
+                    .name("headerName2")
+                    .value("value4")
+                    .build(), recipientHeaderAddress)
+            .build();
 
-        for (String recipient : perRecipientHeaders.keySet()) {
-            MailAddress recipientKey = new MailAddress(recipient);
-            Map<String,List<String>> perRecipientHeaderValue = perRecipientHeaders.get(recipient);
-            for (String perRecipientHeader : perRecipientHeaderValue.keySet()) {
-                for (String perRecipientValue : perRecipientHeaderValue.get(perRecipientHeader)) {
-                    mailBuilder.addHeaderForRecipient(Header.builder()
-                            .name(perRecipientHeader)
-                            .value(perRecipientValue)
-                            .build(), recipientKey);
-                }
-            }
-        }
+        mailRepository.store(mail);
 
-        mailRepository.store(mailBuilder.build());
+        String jsonAsString =
+            given()
+                .parameters("additionalFields", "attributes,headers,body,messageSize,perRecipientsHeaders")
+            .when()
+                .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .then()
+            .log().all()
+            .extract()
+                .body()
+                .asString();
 
-        when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
-                    + "?additionalFields=attributes,headers,body,messageSize,perRecipientsHeaders")
-        .then()
-            .statusCode(HttpStatus.OK_200)
-            .body("name", is(name))
-            .body("headers", Matchers.allOf(headers
-                    .keySet()
-                    .stream()
-                    .map((headerName) -> Matchers.hasEntry(headerName, headers.get(headerName)))
-                    .collect(Collectors.toList())))
-            .body("body", is(body))
-            .body("messageSize", is(messageSize))
-            .body("attributes", is(attributes))
-            .body("perRecipientsHeaders", is(perRecipientHeaders));
+        assertThatJson(jsonAsString)
+            .when(IGNORING_ARRAY_ORDER)
+            .when(IGNORING_EXTRA_FIELDS)
+            .ignoring("body")
+                .isEqualTo("{\n" +
+                        "  \"name\": \"name1\",\n" +
+                        "  \"sender\": null,\n" +
+                        "  \"recipients\": [],\n" +
+                        "  \"error\": null,\n" +
+                        "  \"state\": null,\n" +
+                        "  \"remoteHost\": \"111.222.333.444\",\n" +
+                        "  \"remoteAddr\": \"127.0.0.1\",\n" +
+                        "  \"lastUpdated\": null,\n" +
+                        "  \"attributes\": {\n" +
+                        "    \"name2\": \"value2\",\n" +
+                        "    \"name1\": \"value1\"\n" +
+                        "  },\n" +
+                        "  \"perRecipientsHeaders\": {\n" +
+                        "    \"third@party\": {\n" +
+                        "      \"headerName1\": [\n" +
+                        "        \"value1\",\n" +
+                        "        \"value2\"\n" +
+                        "      ],\n" +
+                        "      \"headerName2\": [\n" +
+                        "        \"value3\",\n" +
+                        "        \"value4\"\n" +
+                        "      ]\n" +
+                        "    }\n" +
+                        "  },\n" +
+                        "  \"headers\": {\n" +
+                        "    \"headerName4\": [\n" +
+                        "      \"value6\",\n" +
+                        "      \"value7\"\n" +
+                        "    ],\n" +
+                        "    \"headerName3\": [\n" +
+                        "      \"value5\",\n" +
+                        "      \"value8\"\n" +
+                        "    ]\n" +
+                        "  },\n" +
+                        "  \"body\": \"My awesome body!!\",\n" +
+                        "  \"messageSize\": 42424242\n" +
+                        "}\n");
     }
 
     @Test
@@ -547,9 +564,10 @@ public class MailRepositoriesRoutesTest {
             .size(messageSize)
             .build());
 
-        when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
-                    + "?additionalFields=,,,messageSize")
+        given()
+            .parameters("additionalFields", ",,,messageSize")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
@@ -575,9 +593,10 @@ public class MailRepositoriesRoutesTest {
             .size(messageSize)
             .build());
 
-        when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
-                    + "?additionalFields=nonExistingField")
+        given()
+            .parameters("additionalFields", "nonExistingField")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -597,9 +616,10 @@ public class MailRepositoriesRoutesTest {
             .recipients(recipient1)
             .build());
 
-        when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name
-                    + "?additionalFields=attributes,headers,body,messageSize,perRecipientsHeaders")
+        given()
+            .parameters("additionalFields", "attributes,headers,body,messageSize,perRecipientsHeaders")
+        .when()
+            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
             .body("statusCode", is(500))
