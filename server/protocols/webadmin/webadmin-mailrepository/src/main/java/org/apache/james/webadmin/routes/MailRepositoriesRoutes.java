@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,8 @@ import org.apache.james.util.streams.Offset;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExtendedMailRepositoryResponse;
+import org.apache.james.webadmin.dto.InnaccessibleFieldException;
+import org.apache.james.webadmin.dto.MailDto.AdditionalField;
 import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
@@ -52,6 +55,8 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.google.common.base.Splitter;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -181,7 +186,7 @@ public class MailRepositoriesRoutes implements Routes {
             String url = decodedRepositoryUrl(request);
             String mailKey = request.params("mailKey");
             try {
-                return repositoryStoreService.retrieveMail(url, mailKey)
+                return repositoryStoreService.retrieveMail(url, mailKey, extractAdditionalFields(request.queryParamOrDefault("additionalFields", "")))
                     .orElseThrow(() -> ErrorResponder.builder()
                         .statusCode(HttpStatus.NOT_FOUND_404)
                         .type(ErrorResponder.ErrorType.NOT_FOUND)
@@ -193,6 +198,20 @@ public class MailRepositoriesRoutes implements Routes {
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
                     .cause(e)
                     .message("Error while retrieving mail")
+                    .haltError();
+            } catch (IllegalArgumentException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                    .cause(e)
+                    .message("The field '" + e.getMessage() + "' can't be requested in additionalFields parameter")
+                    .haltError();
+            } catch (InnaccessibleFieldException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                    .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                    .cause(e)
+                    .message("The field '" + e.getField().getName() + "' requested in additionalFields parameter can't be accessed")
                     .haltError();
             }
         }, jsonTransformer);
@@ -399,4 +418,20 @@ public class MailRepositoriesRoutes implements Routes {
     private String decodedRepositoryUrl(Request request) throws UnsupportedEncodingException {
         return URLDecoder.decode(request.params("encodedUrl"), StandardCharsets.UTF_8.displayName());
     }
+
+    private List<AdditionalField> extractAdditionalFields(String additionalFieldsParam) throws IllegalArgumentException {
+        List<AdditionalField> additionalFields = new ArrayList<>();
+
+        for (String requestedField : Splitter.on(',').trimResults().omitEmptyStrings().split(additionalFieldsParam)) {
+            Optional<AdditionalField> correspondingField = AdditionalField.find(requestedField);
+            if (correspondingField.isPresent()) {
+                additionalFields.add(correspondingField.get());
+            } else {
+                throw new IllegalArgumentException(requestedField);
+            }
+        }
+
+        return additionalFields;
+    }
+
 }
