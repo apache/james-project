@@ -258,7 +258,7 @@ public class MailRepositoriesRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
-            .body("mailKey", containsInAnyOrder("name1", "name2"));
+            .body("", containsInAnyOrder("name1", "name2"));
     }
 
     @Test
@@ -283,7 +283,7 @@ public class MailRepositoriesRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
-            .body("mailKey", contains("name2"));
+            .body("", contains("name2"));
     }
 
     @Test
@@ -394,7 +394,7 @@ public class MailRepositoriesRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(2))
-            .body("mailKey", containsInAnyOrder(NAME_1, NAME_2));
+            .body("", containsInAnyOrder(NAME_1, NAME_2));
     }
 
     @Test
@@ -596,7 +596,7 @@ public class MailRepositoriesRoutesTest {
             .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
-            .body("mailKey", contains(NAME_2));
+            .body("", contains(NAME_2));
     }
 
     @Test

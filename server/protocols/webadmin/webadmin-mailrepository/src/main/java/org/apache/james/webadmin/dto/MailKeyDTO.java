@@ -23,6 +23,8 @@ import java.util.Objects;
 
 import org.apache.james.mailrepository.api.MailKey;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+
 public class MailKeyDTO {
 
     private final MailKey mailKey;
@@ -31,6 +33,7 @@ public class MailKeyDTO {
         this.mailKey = mailKey;
     }
 
+    @JsonValue
     public String getMailKey() {
         return mailKey.asString();
     }
