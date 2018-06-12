@@ -41,7 +41,7 @@ public class CassandraMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Stream<MailRepositoryUrl> list() {
+    public Stream<MailRepositoryUrl> listDistinct() {
         return urlsDao.retrieveUsedUrls()
             .join();
     }

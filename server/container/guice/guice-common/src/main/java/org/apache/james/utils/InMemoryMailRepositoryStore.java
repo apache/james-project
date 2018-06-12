@@ -67,7 +67,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
 
     @Override
     public Stream<MailRepositoryUrl> getUrls() {
-        return urlStore.list();
+        return urlStore.listDistinct();
     }
 
     @Override

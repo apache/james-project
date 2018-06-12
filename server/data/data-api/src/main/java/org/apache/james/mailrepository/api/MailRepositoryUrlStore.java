@@ -25,7 +25,7 @@ public interface MailRepositoryUrlStore {
 
     void add(MailRepositoryUrl url);
 
-    Stream<MailRepositoryUrl> list();
+    Stream<MailRepositoryUrl> listDistinct();
 
     boolean contains(MailRepositoryUrl url);
 }

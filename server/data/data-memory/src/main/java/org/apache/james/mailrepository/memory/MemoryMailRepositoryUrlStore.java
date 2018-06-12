@@ -40,7 +40,7 @@ public class MemoryMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Stream<MailRepositoryUrl> list() {
+    public Stream<MailRepositoryUrl> listDistinct() {
         return urls.stream();
     }
 

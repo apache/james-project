@@ -43,7 +43,7 @@ public class JPAMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Stream<MailRepositoryUrl> list() {
+    public Stream<MailRepositoryUrl> listDistinct() {
         return transactionRunner.runAndRetrieveResult(entityManager ->
             entityManager
                 .createNamedQuery("listUrls", JPAUrl.class)

@@ -31,31 +31,31 @@ public interface MailRepositoryUrlStoreContract {
     MailRepositoryUrl URL_2 = MailRepositoryUrl.from("proto://var/mail/tata");
 
     @Test
-    default void retrieveUsedUrlsShouldBeEmptyByDefault(MailRepositoryUrlStore store) {
-        assertThat(store.list()).isEmpty();
+    default void listDistinctShouldBeEmptyByDefault(MailRepositoryUrlStore store) {
+        assertThat(store.listDistinct()).isEmpty();
     }
 
     @Test
-    default void retrieveUsedUrlsShouldReturnAddedUrl(MailRepositoryUrlStore store) {
+    default void listDistinctShouldReturnAddedUrl(MailRepositoryUrlStore store) {
         store.add(URL_1);
 
-        assertThat(store.list()).containsOnly(URL_1);
+        assertThat(store.listDistinct()).containsOnly(URL_1);
     }
 
     @Test
-    default void retrieveUsedUrlsShouldNotReturnDuplicates(MailRepositoryUrlStore store) {
+    default void listDistinctShouldNotReturnDuplicates(MailRepositoryUrlStore store) {
         store.add(URL_1);
         store.add(URL_1);
 
-        assertThat(store.list()).containsOnly(URL_1);
+        assertThat(store.listDistinct()).containsOnly(URL_1);
     }
 
     @Test
-    default void retrieveUsedUrlsShouldReturnAddedUrls(MailRepositoryUrlStore store) {
+    default void listDistinctShouldReturnAddedUrls(MailRepositoryUrlStore store) {
         store.add(URL_1);
         store.add(URL_2);
 
-        assertThat(store.list()).containsOnly(URL_1, URL_2);
+        assertThat(store.listDistinct()).containsOnly(URL_1, URL_2);
     }
 
     @Test
@@ -80,7 +80,20 @@ public interface MailRepositoryUrlStoreContract {
         testRunner.awaitTermination(1, TimeUnit.MINUTES);
         testRunner.assertNoException();
 
-        assertThat(store.list()).hasSize(threadCount * operationCount);
+        assertThat(store.listDistinct()).hasSize(threadCount * operationCount);
+    }
+
+    @Test
+    default void addShouldNotAddDuplicatesInConcurrentEnvironment(MailRepositoryUrlStore store) throws Exception {
+        int operationCount = 10;
+        int threadCount = 10;
+        ConcurrentTestRunner testRunner = new ConcurrentTestRunner(threadCount, operationCount,
+            (a, b) -> store.add(MailRepositoryUrl.from("proto://" + b)))
+            .run();
+        testRunner.awaitTermination(1, TimeUnit.MINUTES);
+        testRunner.assertNoException();
+
+        assertThat(store.listDistinct()).hasSize(operationCount);
     }
 
 }
