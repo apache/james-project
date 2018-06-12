@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.modules.MailboxModule;
+import org.apache.james.modules.data.CassandraDLPConfigurationStoreModule;
 import org.apache.james.modules.data.CassandraDomainListModule;
 import org.apache.james.modules.data.CassandraJmapModule;
 import org.apache.james.modules.data.CassandraMailRepositoryModule;
@@ -85,6 +86,7 @@ public class CassandraJamesServerMain {
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
+        new CassandraDLPConfigurationStoreModule(),
         new CassandraEventStoreModule(),
         new CassandraMailRepositoryModule(),
         new CassandraMetricsModule(),

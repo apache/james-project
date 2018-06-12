@@ -1,0 +1,30 @@
+{
+ "type": "dlp-configuration-store",
+ "eventId": 0,
+ "aggregateId":"DLPRule/james.org",
+ "configurationItems": [
+  {
+   "id": "1",
+   "explanation": "Find whatever contains james.org",
+   "expression": "james.org",
+   "targetsContent": true,
+   "targetsSender": true,
+   "targetsRecipients": true
+  },
+  {
+   "id": "2",
+   "explanation": "Find senders have domain apache.org",
+   "expression": "apache.org",
+   "targetsContent": false,
+   "targetsSender": true,
+   "targetsRecipients": false
+  },
+  {
+   "id": "3",
+   "expression": "linagora.org",
+   "targetsContent": true,
+   "targetsSender": true,
+   "targetsRecipients": false
+  }
+ ]
+}

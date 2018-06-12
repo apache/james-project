@@ -22,6 +22,8 @@ package org.apache.james.modules.data;
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.dlp.api.DLPConfigurationStore;
+import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -46,6 +48,9 @@ public class MemoryDataModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new SieveFileRepositoryModule());
+
+        bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
+        bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
         bind(MemoryDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(MemoryDomainList.class);

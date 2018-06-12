@@ -17,51 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.dlp.eventsourcing.aggregates;
+package org.apache.james.dlp.eventsourcing.cassandra;
 
-import java.util.Objects;
-
-import org.apache.james.core.Domain;
-import org.apache.james.eventsourcing.AggregateId;
+import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 
 import com.google.common.base.Preconditions;
 
-public class DLPAggregateId implements AggregateId {
-    private static final String SEPARATOR = "/";
-    private static final String PREFIX = "DLPRule";
+public class DLPConfigurationItemsRemovedDTOModule implements EventDTOModule {
+    private static final String DLP_CONFIGURATION_CLEAR = "dlp-configuration-clear";
 
-    public static final DLPAggregateId parse(String rawString) {
-        Preconditions.checkArgument(rawString.startsWith(PREFIX + SEPARATOR));
-
-        return new DLPAggregateId(Domain.of(
-            rawString.substring(PREFIX.length() + SEPARATOR.length())));
-    }
-
-    private final Domain domain;
-
-    public DLPAggregateId(Domain domain) {
-        Preconditions.checkNotNull(domain);
-
-        this.domain = domain;
+    @Override
+    public String getType() {
+        return DLP_CONFIGURATION_CLEAR;
     }
 
     @Override
-    public String asAggregateKey() {
-        return PREFIX + SEPARATOR + domain.asString();
+    public Class<? extends EventDTO> getDTOClass() {
+        return DLPConfigurationItemsRemovedDTO.class;
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof DLPAggregateId) {
-            DLPAggregateId that = (DLPAggregateId) o;
-
-            return Objects.equals(this.domain, that.domain);
-        }
-        return false;
+    public Class<? extends Event> getEventClass() {
+        return ConfigurationItemsRemoved.class;
     }
 
     @Override
-    public final int hashCode() {
-        return Objects.hash(domain);
+    public EventDTO toDTO(Event event) {
+        Preconditions.checkArgument(event instanceof ConfigurationItemsRemoved);
+        return DLPConfigurationItemsRemovedDTO
+            .from((ConfigurationItemsRemoved) event, DLP_CONFIGURATION_CLEAR);
     }
 }

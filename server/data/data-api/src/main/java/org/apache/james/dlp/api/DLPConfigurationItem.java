@@ -95,8 +95,18 @@ public class DLPConfigurationItem {
             return this;
         }
 
+        public Builder targetsSender(boolean targetsSender) {
+            this.targetsSender = Optional.of(targetsSender);
+            return this;
+        }
+
         public Builder targetsRecipients() {
             this.targetsRecipients = Optional.of(true);
+            return this;
+        }
+
+        public Builder targetsRecipients(boolean targetsRecipients) {
+            this.targetsRecipients = Optional.of(targetsRecipients);
             return this;
         }
 
@@ -105,13 +115,28 @@ public class DLPConfigurationItem {
             return this;
         }
 
+        public Builder targetsContent(boolean targetsContent) {
+            this.targetsContent = Optional.of(targetsContent);
+            return this;
+        }
+
         public Builder expression(String expression) {
             this.expression = Optional.of(expression);
             return this;
         }
 
+        public Builder expression(Optional<String> expression) {
+            expression.ifPresent(this::expression);
+            return this;
+        }
+
         public Builder explanation(String explanation) {
             this.explanation = Optional.of(explanation);
+            return this;
+        }
+
+        public Builder explanation(Optional<String> explanation) {
+            explanation.ifPresent(this::explanation);
             return this;
         }
 
@@ -188,7 +213,6 @@ public class DLPConfigurationItem {
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("senderTargeted", senderTargeted)
                 .add("senderTargeted", senderTargeted)
                 .add("recipientTargeted", recipientTargeted)
                 .add("contentTargeted", contentTargeted)

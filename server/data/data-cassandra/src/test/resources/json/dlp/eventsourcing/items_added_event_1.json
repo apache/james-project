@@ -1,0 +1,6 @@
+{
+ "type": "dlp-configuration-store",
+ "eventId": 0,
+ "aggregateId":"DLPRule/james.org",
+ "configurationItems": []
+}
