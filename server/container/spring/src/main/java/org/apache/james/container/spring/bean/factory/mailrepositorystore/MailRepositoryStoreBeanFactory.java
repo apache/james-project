@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.container.spring.bean.factory.mailrepositorystore;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -201,8 +201,8 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     }
 
     @Override
-    public synchronized List<MailRepositoryUrl> getUrls() {
-        return new ArrayList<>(repositories.keySet());
+    public synchronized Stream<MailRepositoryUrl> getUrls() {
+        return repositories.keySet().stream();
     }
 
 }

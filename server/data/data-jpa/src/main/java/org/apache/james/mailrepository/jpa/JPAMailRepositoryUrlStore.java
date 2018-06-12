@@ -19,7 +19,7 @@
 
 package org.apache.james.mailrepository.jpa;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManagerFactory;
@@ -27,8 +27,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
-
-import com.github.steveash.guavate.Guavate;
 
 public class JPAMailRepositoryUrlStore implements MailRepositoryUrlStore {
     private final TransactionRunner transactionRunner;
@@ -45,14 +43,13 @@ public class JPAMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Set<MailRepositoryUrl> list() {
+    public Stream<MailRepositoryUrl> list() {
         return transactionRunner.runAndRetrieveResult(entityManager ->
             entityManager
                 .createNamedQuery("listUrls", JPAUrl.class)
                 .getResultList()
                 .stream()
-                .map(JPAUrl::toMailRepositoryUrl)
-                .collect(Guavate.toImmutableSet()));
+                .map(JPAUrl::toMailRepositoryUrl));
     }
 
     @Override

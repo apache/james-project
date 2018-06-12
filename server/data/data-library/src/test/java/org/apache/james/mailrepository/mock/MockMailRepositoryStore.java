@@ -19,11 +19,10 @@
 
 package org.apache.james.mailrepository.mock;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -48,8 +47,8 @@ public class MockMailRepositoryStore implements MailRepositoryStore {
     }
 
     @Override
-    public List<MailRepositoryUrl> getUrls() {
-        return new ArrayList<>(storedObjectMap.keySet());
+    public Stream<MailRepositoryUrl> getUrls() {
+        return storedObjectMap.keySet().stream();
     }
 
 }

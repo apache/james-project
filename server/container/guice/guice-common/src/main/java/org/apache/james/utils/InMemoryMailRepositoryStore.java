@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -65,8 +66,8 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     @Override
-    public List<MailRepositoryUrl> getUrls() {
-        return ImmutableList.copyOf(urlStore.list());
+    public Stream<MailRepositoryUrl> getUrls() {
+        return urlStore.list();
     }
 
     @Override

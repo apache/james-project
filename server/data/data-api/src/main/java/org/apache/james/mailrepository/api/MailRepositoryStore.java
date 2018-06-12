@@ -21,6 +21,7 @@ package org.apache.james.mailrepository.api;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public interface MailRepositoryStore {
 
@@ -53,7 +54,7 @@ public interface MailRepositoryStore {
      * 
      * @return urls
      */
-    List<MailRepositoryUrl> getUrls();
+    Stream<MailRepositoryUrl> getUrls();
 
     class MailRepositoryStoreException extends Exception {
         public MailRepositoryStoreException(String msg, Throwable t) {

@@ -42,6 +42,7 @@ import static org.mockito.Mockito.when;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -170,6 +171,8 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void getMailRepositoriesShouldReturnEmptyWhenEmpty() {
+        when(mailRepositoryStore.getUrls()).thenReturn(Stream.empty());
+
         List<Object> mailRepositories =
             when()
                 .get()
@@ -187,7 +190,7 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void getMailRepositoriesShouldReturnRepositoryWhenOne() {
         when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of(URL_MY_REPO));
+            .thenReturn(Stream.of(URL_MY_REPO));
 
         when()
             .get()
@@ -202,7 +205,7 @@ public class MailRepositoriesRoutesTest {
     public void getMailRepositoriesShouldReturnTwoRepositoriesWhenTwo() {
         ImmutableList<MailRepositoryUrl> myRepositories = ImmutableList.of(URL_MY_REPO, MailRepositoryUrl.from("url://mySecondRepo"));
         when(mailRepositoryStore.getUrls())
-            .thenReturn(myRepositories);
+            .thenReturn(myRepositories.stream());
 
         List<String> mailRepositories =
             when()

@@ -19,14 +19,12 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
-
-import com.github.steveash.guavate.Guavate;
 
 public class CassandraMailRepositoryUrlStore implements MailRepositoryUrlStore {
 
@@ -43,10 +41,9 @@ public class CassandraMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Set<MailRepositoryUrl> list() {
+    public Stream<MailRepositoryUrl> list() {
         return urlsDao.retrieveUsedUrls()
-            .join()
-            .collect(Guavate.toImmutableSet());
+            .join();
     }
 
     @Override

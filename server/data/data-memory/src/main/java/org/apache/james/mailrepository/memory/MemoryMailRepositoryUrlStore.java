@@ -20,11 +20,11 @@
 package org.apache.james.mailrepository.memory;
 
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class MemoryMailRepositoryUrlStore implements MailRepositoryUrlStore {
@@ -40,8 +40,8 @@ public class MemoryMailRepositoryUrlStore implements MailRepositoryUrlStore {
     }
 
     @Override
-    public Set<MailRepositoryUrl> list() {
-        return ImmutableSet.copyOf(urls);
+    public Stream<MailRepositoryUrl> list() {
+        return urls.stream();
     }
 
     @Override

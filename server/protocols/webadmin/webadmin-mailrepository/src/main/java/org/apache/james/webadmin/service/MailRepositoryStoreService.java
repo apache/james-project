@@ -55,7 +55,6 @@ public class MailRepositoryStoreService {
 
     public List<MailRepositoryResponse> listMailRepositories() {
         return mailRepositoryStore.getUrls()
-            .stream()
             .map(MailRepositoryResponse::new)
             .collect(Guavate.toImmutableList());
     }

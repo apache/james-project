@@ -19,13 +19,13 @@
 
 package org.apache.james.mailrepository.api;
 
-import java.util.Set;
+import java.util.stream.Stream;
 
 public interface MailRepositoryUrlStore {
 
     void add(MailRepositoryUrl url);
 
-    Set<MailRepositoryUrl> list();
+    Stream<MailRepositoryUrl> list();
 
     boolean contains(MailRepositoryUrl url);
 }

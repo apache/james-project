@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
@@ -42,8 +43,6 @@ import org.apache.james.webadmin.dto.MailRepositoryResponse;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
 
 public class MailRepositoryStoreServiceTest {
     private static final MailRepositoryUrl FIRST_REPOSITORY = MailRepositoryUrl.from("url://repository");
@@ -64,13 +63,15 @@ public class MailRepositoryStoreServiceTest {
 
     @Test
     public void listMailRepositoriesShouldReturnEmptyWhenEmpty() {
+        when(mailRepositoryStore.getUrls()).thenReturn(Stream.empty());
+
         assertThat(testee.listMailRepositories()).isEmpty();
     }
 
     @Test
     public void listMailRepositoriesShouldReturnOneRepositoryWhenOne() {
         when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of(FIRST_REPOSITORY));
+            .thenReturn(Stream.of(FIRST_REPOSITORY));
         assertThat(testee.listMailRepositories())
             .extracting(MailRepositoryResponse::getRepository)
             .containsOnly(FIRST_REPOSITORY.asString());
@@ -79,7 +80,7 @@ public class MailRepositoryStoreServiceTest {
     @Test
     public void listMailRepositoriesShouldReturnTwoRepositoriesWhentwo() {
         when(mailRepositoryStore.getUrls())
-            .thenReturn(ImmutableList.of(FIRST_REPOSITORY, SECOND_REPOSITORY));
+            .thenReturn(Stream.of(FIRST_REPOSITORY, SECOND_REPOSITORY));
         assertThat(testee.listMailRepositories())
             .extracting(MailRepositoryResponse::getRepository)
             .containsOnly(FIRST_REPOSITORY.asString(), SECOND_REPOSITORY.asString());
