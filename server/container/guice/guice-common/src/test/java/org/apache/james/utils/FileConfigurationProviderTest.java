@@ -26,7 +26,9 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
 public class FileConfigurationProviderTest {
 
@@ -34,17 +36,26 @@ public class FileConfigurationProviderTest {
     private static final String CONFIG_KEY_2 = "property";
     private static final String CONFIG_KEY_4 = "james";
     private static final String CONFIG_KEY_5 = "internal";
+    private static final String CONFIG_KEY_ENV = "env";
+    private static final String CONFIG_KEY_NOT_ENV = "notEnv";
     private static final String VALUE_1 = "0";
     private static final String VALUE_2 = "awesome";
     private static final String VALUE_3 = "james";
+    private static final String VALUE_NOT_ENV = "${env:MY_NOT_IN_ENV_VAR}";
+    private static final String ENVIRONMENT_SET_VALUE = "testvalue";
     private static final String FAKE_CONFIG_KEY = "fake";
     private static final String ROOT_CONFIG_KEY = "test";
     private static final String CONFIG_SEPARATOR = ".";
 
     private FileConfigurationProvider configurationProvider;
 
+    @Rule
+    public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
+
     @Before
     public void setUp() {
+        environmentVariables.set("MY_ENV_VAR", ENVIRONMENT_SET_VALUE);
+        environmentVariables.clear("MY_NOT_IN_ENV_VAR");
         Configuration configuration = Configuration.builder()
             .workingDirectory("../")
             .configurationFromClasspath()
@@ -78,7 +89,8 @@ public class FileConfigurationProviderTest {
         HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getKeys()).containsOnly(CONFIG_KEY_1,
                 String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_2),
-                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2));
+                String.join(CONFIG_SEPARATOR, CONFIG_KEY_4, CONFIG_KEY_5, CONFIG_KEY_2),
+                CONFIG_KEY_ENV, CONFIG_KEY_NOT_ENV);
         assertThat(hierarchicalConfiguration.getProperty(CONFIG_KEY_1)).isEqualTo(VALUE_1);
     }
 
@@ -118,4 +130,15 @@ public class FileConfigurationProviderTest {
         configurationProvider.getConfiguration(String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, FAKE_CONFIG_KEY));
     }
 
+    @Test
+    public void getConfigurationShouldNotReplaceEnvironmentVariableWhenNotSet() throws Exception {
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_NOT_ENV)).isEqualTo(VALUE_NOT_ENV);
+    }
+
+    @Test
+    public void getConfigurationShouldReplaceEnvironmentVariableWhenSet() throws Exception {
+        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV)).isEqualTo(ENVIRONMENT_SET_VALUE);
+    }
 }

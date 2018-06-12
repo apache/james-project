@@ -25,4 +25,6 @@
           <property>james</property>
         </internal>
     </james>
+    <env>${env:MY_ENV_VAR}</env>
+    <notEnv>${env:MY_NOT_IN_ENV_VAR}</notEnv>
 </test>
