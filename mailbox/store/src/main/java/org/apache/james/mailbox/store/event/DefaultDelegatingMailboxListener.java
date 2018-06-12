@@ -28,6 +28,9 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.metrics.api.NoopMetricFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Receive a {@link org.apache.james.mailbox.MailboxListener.MailboxEvent} and delegate it to an other
@@ -45,8 +48,9 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
         return ListenerType.EACH_NODE;
     }
 
+    @VisibleForTesting
     public DefaultDelegatingMailboxListener() {
-        this(new SynchronousEventDelivery(),
+        this(new SynchronousEventDelivery(new NoopMetricFactory()),
             new MailboxListenerRegistry());
     }
 

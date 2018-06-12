@@ -32,9 +32,9 @@ public class AsynchronousEventDelivery implements EventDelivery {
     private final ExecutorService threadPoolExecutor;
     private final SynchronousEventDelivery synchronousEventDelivery;
 
-    public AsynchronousEventDelivery(int threadPoolSize) {
+    public AsynchronousEventDelivery(int threadPoolSize, SynchronousEventDelivery synchronousEventDelivery) {
         this.threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize);
-        this.synchronousEventDelivery = new SynchronousEventDelivery();
+        this.synchronousEventDelivery = synchronousEventDelivery;
     }
 
     @Override

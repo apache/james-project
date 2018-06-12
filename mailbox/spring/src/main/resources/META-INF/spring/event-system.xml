@@ -71,12 +71,15 @@
         <constructor-arg index="0" ref="mailbox-id-deserializer"/>
     </bean>
 
-    <bean id="synchronous-event-delivery" class="org.apache.james.mailbox.store.event.SynchronousEventDelivery" lazy-init="true"/>
+    <bean id="synchronous-event-delivery" class="org.apache.james.mailbox.store.event.SynchronousEventDelivery" lazy-init="true">
+        <constructor-arg index="0" ref="metricFactory"/>
+    </bean>
 
     <bean id="event-registry" class="org.apache.james.mailbox.store.event.MailboxListenerRegistry"/>
 
     <bean id="asynchronous-event-delivery" class="org.apache.james.mailbox.store.event.AsynchronousEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="${event.delivery.thread.count}"/>
+        <constructor-arg index="1" ref="synchronous-event-delivery"/>
     </bean>
 
     <bean id="mixed-event-delivery" class="org.apache.james.mailbox.store.event.MixedEventDelivery" lazy-init="true">

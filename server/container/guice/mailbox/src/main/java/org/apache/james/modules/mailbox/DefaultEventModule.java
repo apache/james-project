@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
 import org.apache.james.mailbox.store.event.MixedEventDelivery;
 import org.apache.james.mailbox.store.event.SynchronousEventDelivery;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
@@ -69,12 +70,13 @@ public class DefaultEventModule extends AbstractModule {
 
     @Provides
     @Singleton
-    EventDelivery provideEventDelivery(ConfigurationProvider configurationProvider) {
+    EventDelivery provideEventDelivery(ConfigurationProvider configurationProvider, MetricFactory metricFactory) {
         int poolSize = retrievePoolSize(configurationProvider);
 
+        SynchronousEventDelivery synchronousEventDelivery = new SynchronousEventDelivery(metricFactory);
         return new MixedEventDelivery(
-            new AsynchronousEventDelivery(poolSize),
-            new SynchronousEventDelivery());
+            new AsynchronousEventDelivery(poolSize, synchronousEventDelivery),
+            synchronousEventDelivery);
     }
 
     private int retrievePoolSize(ConfigurationProvider configurationProvider) {

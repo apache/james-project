@@ -33,8 +33,11 @@ import org.apache.james.mailbox.store.event.SynchronousEventDelivery;
 import org.apache.james.mailbox.store.publisher.MessageConsumer;
 import org.apache.james.mailbox.store.publisher.Publisher;
 import org.apache.james.mailbox.store.publisher.Topic;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
 
 public class BroadcastDelegatingMailboxListener implements DistributedDelegatingMailboxListener {
 
@@ -60,11 +63,12 @@ public class BroadcastDelegatingMailboxListener implements DistributedDelegating
         messageConsumer.init(this.globalTopic);
     }
 
+    @VisibleForTesting
     public BroadcastDelegatingMailboxListener(Publisher publisher,
                                               MessageConsumer messageConsumer,
                                               EventSerializer eventSerializer,
                                               String globalTopic) throws Exception {
-        this(publisher, messageConsumer, eventSerializer, new SynchronousEventDelivery(), globalTopic);
+        this(publisher, messageConsumer, eventSerializer, new SynchronousEventDelivery(new NoopMetricFactory()), globalTopic);
     }
 
     @Override

@@ -29,4 +29,6 @@
         <constructor-arg index="0" ref="delegating-listener"/>
     </bean>
 
+    <bean id="metricFactory" class="org.apache.james.metrics.api.NoopMetricFactory"/>
+
 </beans>

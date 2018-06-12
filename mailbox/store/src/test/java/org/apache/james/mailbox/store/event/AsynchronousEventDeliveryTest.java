@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,8 @@ public class AsynchronousEventDeliveryTest {
     @Before
     public void setUp() {
         mailboxListener = mock(MailboxListener.class);
-        asynchronousEventDelivery = new AsynchronousEventDelivery(2);
+        asynchronousEventDelivery = new AsynchronousEventDelivery(2,
+            new SynchronousEventDelivery(new NoopMetricFactory()));
     }
 
     @After

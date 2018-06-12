@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,9 @@ public class MixedEventDeliveryTest {
     @Before
     public void setUp() {
         listener = mock(MailboxListener.class);
-        mixedEventDelivery = new MixedEventDelivery(new AsynchronousEventDelivery(2), new SynchronousEventDelivery());
+        SynchronousEventDelivery synchronousEventDelivery = new SynchronousEventDelivery(new NoopMetricFactory());
+        AsynchronousEventDelivery asynchronousEventDelivery = new AsynchronousEventDelivery(2, synchronousEventDelivery);
+        mixedEventDelivery = new MixedEventDelivery(asynchronousEventDelivery, synchronousEventDelivery);
     }
 
     @After
@@ -53,7 +56,7 @@ public class MixedEventDeliveryTest {
     }
 
     @Test
-    public void deliverShouldWorkOnSynchronousListeners() throws Exception {
+    public void deliverShouldWorkOnSynchronousListeners() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         mixedEventDelivery.deliver(listener, event);
@@ -61,7 +64,7 @@ public class MixedEventDeliveryTest {
     }
 
     @Test
-    public void deliverShouldEventuallyDeliverOnAsynchronousListeners() throws Exception {
+    public void deliverShouldEventuallyDeliverOnAsynchronousListeners() {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         mixedEventDelivery.deliver(listener, event);
@@ -69,7 +72,7 @@ public class MixedEventDeliveryTest {
     }
 
     @Test(timeout = ONE_MINUTE)
-    public void deliverShouldNotBlockOnAsynchronousListeners() throws Exception {
+    public void deliverShouldNotBlockOnAsynchronousListeners() {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         final CountDownLatch latch = new CountDownLatch(1);
