@@ -69,7 +69,7 @@ public class InMemoryEventStore implements EventStore {
 
         History previousHistory = store.putIfAbsent(aggregateId, newHistory);
         if (previousHistory != null) {
-            throw new EventStoreFailedException();
+            throw new EventStoreFailedException("Concurrent update to the EventStore detected");
         }
     }
 
@@ -80,7 +80,7 @@ public class InMemoryEventStore implements EventStore {
 
         boolean isReplaced = store.replace(aggregateId, currentHistory, updatedHistory);
         if (!isReplaced) {
-            throw new EventStoreFailedException();
+            throw new EventStoreFailedException("Concurrent update to the EventStore detected");
         }
     }
 

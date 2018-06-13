@@ -20,4 +20,7 @@
 package org.apache.james.eventsourcing.eventstore;
 
 public class EventStoreFailedException extends RuntimeException {
+    public EventStoreFailedException(String message) {
+        super(message);
+    }
 }

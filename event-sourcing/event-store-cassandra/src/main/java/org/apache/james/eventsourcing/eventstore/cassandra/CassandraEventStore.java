@@ -53,7 +53,7 @@ public class CassandraEventStore implements EventStore {
 
         boolean success = eventStoreDao.appendAll(events).join();
         if (!success) {
-            throw new EventStoreFailedException();
+            throw new EventStoreFailedException("Concurrent update to the EventStore detected");
         }
     }
 

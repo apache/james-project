@@ -48,7 +48,7 @@ public class History {
 
     private History(List<Event> events) {
         if (hasEventIdDuplicates(events)) {
-            throw new EventStoreFailedException();
+            throw new EventStoreFailedException("Event History contains duplicated EventId");
         }
         this.events = events;
     }
