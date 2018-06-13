@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class JPAMailRepositoryUrlStoreExtension implements ParameterResolver, AfterEachCallback{
+public class JPAMailRepositoryUrlStoreExtension implements ParameterResolver, AfterEachCallback {
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUrl.class);
 
     @Override

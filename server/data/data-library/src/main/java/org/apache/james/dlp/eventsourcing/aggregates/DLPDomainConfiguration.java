@@ -55,17 +55,9 @@ public class DLPDomainConfiguration {
             this.rules = rules;
         }
 
-        State add(DLPConfigurationItem rule) {
-            return add(ImmutableList.of(rule));
-        }
-
         State add(List<DLPConfigurationItem> toAdd) {
             ImmutableSet<DLPConfigurationItem> union = Stream.concat(this.rules.stream(), toAdd.stream()).collect(Guavate.toImmutableSet());
             return new State(union);
-        }
-
-        State remove(DLPConfigurationItem toRemove) {
-            return remove(ImmutableList.of(toRemove));
         }
 
         State remove(List<DLPConfigurationItem> toRemove) {
