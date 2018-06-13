@@ -36,6 +36,7 @@
 
     <modules>
         <module>api</module>
+        <module>backup</module>
         <module>caching</module>
         <module>cassandra</module>
         <module>elasticsearch</module>
