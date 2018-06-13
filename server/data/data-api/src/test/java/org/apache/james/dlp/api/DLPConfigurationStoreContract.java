@@ -80,6 +80,7 @@ public interface DLPConfigurationStoreContract {
 
         assertThat(dlpConfigurationStore.list(OTHER_DOMAIN)).containsOnly(RULE_2);
     }
+
     @Test
     default void clearShouldOnlyRemovePreviouslyExistingEntries(DLPConfigurationStore dlpConfigurationStore) {
         dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of(RULE, RULE_2));

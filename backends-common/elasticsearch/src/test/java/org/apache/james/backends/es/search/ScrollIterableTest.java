@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.ClientProvider;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;

@@ -22,7 +22,6 @@ package org.apache.james.webadmin;
 import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.metrics.api.MetricFactory;
