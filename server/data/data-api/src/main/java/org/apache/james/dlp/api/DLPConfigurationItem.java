@@ -21,6 +21,8 @@ package org.apache.james.dlp.api;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -122,6 +124,8 @@ public class DLPConfigurationItem {
         public DLPConfigurationItem build() {
             Preconditions.checkState(id.isPresent(), "`id` is mandatory");
             Preconditions.checkState(expression.isPresent(), "`expression` is mandatory");
+            Preconditions.checkState(isValidPattern(expression.get()), "`expression` must be a valid regex");
+
             return new DLPConfigurationItem(
                 id.get(),
                 explanation,
@@ -130,6 +134,15 @@ public class DLPConfigurationItem {
                     targetsSender.orElse(NOT_TARGETED),
                     targetsRecipients.orElse(NOT_TARGETED),
                     targetsContent.orElse(NOT_TARGETED)));
+        }
+
+        private static boolean isValidPattern(String regex) {
+            try {
+                Pattern.compile(regex);
+                return true;
+            } catch (PatternSyntaxException e) {
+                return false;
+            }
         }
     }
 

@@ -107,6 +107,17 @@ public class DLPConfigurationItemTest {
     }
 
     @Test
+    void expressionShouldBeValidPattern() {
+        assertThatThrownBy(() ->
+            DLPConfigurationItem.builder()
+                .id(UNIQUE_ID)
+                .expression("*")
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+
+    @Test
     void builderShouldPreserveExpression() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
             .id(UNIQUE_ID)
