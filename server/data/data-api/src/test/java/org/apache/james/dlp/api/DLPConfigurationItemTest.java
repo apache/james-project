@@ -32,6 +32,7 @@ public class DLPConfigurationItemTest {
 
     private static final String EXPLANATION = "explanation";
     private static final String REGEX = "regex";
+    public static final DLPConfigurationItem.Id UNIQUE_ID = DLPConfigurationItem.Id.of("uniqueId");
 
     @Test
     void shouldMatchBeanContract() {
@@ -48,9 +49,32 @@ public class DLPConfigurationItemTest {
     }
 
     @Test
-    void expressionShouldBeMandatory() {
+    void innerClassIdShouldMatchBeanContract() {
+        EqualsVerifier.forClass(DLPConfigurationItem.Targets.class)
+            .allFieldsShouldBeUsed()
+            .verify();
+    }
+
+    @Test
+    void idShouldThrowOnNull() {
+        assertThatThrownBy(() -> DLPConfigurationItem.Id.of(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void idShouldThrowOnEmpty() {
+        assertThatThrownBy(() -> DLPConfigurationItem.Id.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void idShouldThrowOnBlank() {
+        assertThatThrownBy(() -> DLPConfigurationItem.Id.of("   ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void idShouldBeMandatory() {
         assertThatThrownBy(() ->
             DLPConfigurationItem.builder()
+                .expression("my expression")
                 .targetsRecipients()
                 .targetsSender()
                 .targetsContent()
@@ -60,9 +84,23 @@ public class DLPConfigurationItemTest {
     }
 
     @Test
-    void expressionShouldBeTheOnlyMandatoryField() {
+    void expressionShouldBeMandatory() {
+        assertThatThrownBy(() ->
+            DLPConfigurationItem.builder()
+                .id(UNIQUE_ID)
+                .targetsRecipients()
+                .targetsSender()
+                .targetsContent()
+                .explanation(EXPLANATION)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void expressionAndIdShouldBeTheOnlyMandatoryFields() {
         assertThatCode(() ->
             DLPConfigurationItem.builder()
+                .id(UNIQUE_ID)
                 .expression(REGEX)
                 .build())
             .doesNotThrowAnyException();
@@ -71,6 +109,7 @@ public class DLPConfigurationItemTest {
     @Test
     void builderShouldPreserveExpression() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .expression(REGEX)
             .build();
 
@@ -80,6 +119,7 @@ public class DLPConfigurationItemTest {
     @Test
     void builderShouldPreserveExplanation() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .explanation(EXPLANATION)
             .expression(REGEX)
             .build();
@@ -90,6 +130,7 @@ public class DLPConfigurationItemTest {
     @Test
     void dlpRuleShouldHaveNoTargetsWhenNoneSpecified() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .expression(REGEX)
             .build();
 
@@ -103,6 +144,7 @@ public class DLPConfigurationItemTest {
     @Test
     void targetsRecipientsShouldBeReportedInTargets() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .targetsRecipients()
             .expression(REGEX)
             .build();
@@ -117,6 +159,7 @@ public class DLPConfigurationItemTest {
     @Test
     void targetsSenderShouldBeReportedInTargets() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .targetsSender()
             .expression(REGEX)
             .build();
@@ -131,6 +174,7 @@ public class DLPConfigurationItemTest {
     @Test
     void targetsContentShouldBeReportedInTargets() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .targetsContent()
             .expression(REGEX)
             .build();
@@ -145,6 +189,7 @@ public class DLPConfigurationItemTest {
     @Test
     void allTargetsShouldBeReportedInTargets() {
         DLPConfigurationItem dlpConfigurationItem = DLPConfigurationItem.builder()
+            .id(UNIQUE_ID)
             .targetsContent()
             .targetsSender()
             .targetsRecipients()

@@ -22,10 +22,53 @@ package org.apache.james.dlp.api;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public class DLPConfigurationItem {
+
+    public static class Id {
+
+        public static Id of(String id) {
+            Preconditions.checkNotNull(id, "id should no be null");
+            Preconditions.checkArgument(StringUtils.isNotBlank(id), "id should no be empty");
+            return new Id(id);
+        }
+
+        private final String value;
+
+        private Id(String value) {
+            this.value = value;
+        }
+
+        public String asString() {
+            return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Id) {
+                Id id = (Id) o;
+                return Objects.equals(value, id.value);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("value", value)
+                .toString();
+        }
+    }
 
     public static class Builder {
         private static final boolean NOT_TARGETED = false;
@@ -35,6 +78,7 @@ public class DLPConfigurationItem {
         private Optional<Boolean> targetsContent;
         private Optional<String> explanation;
         private Optional<String> expression;
+        private Optional<Id> id;
 
         public Builder() {
             targetsSender = Optional.empty();
@@ -42,6 +86,7 @@ public class DLPConfigurationItem {
             targetsContent = Optional.empty();
             explanation = Optional.empty();
             expression = Optional.empty();
+            id = Optional.empty();
         }
 
         public Builder targetsSender() {
@@ -69,9 +114,16 @@ public class DLPConfigurationItem {
             return this;
         }
 
+        public Builder id(Id id) {
+            this.id = Optional.of(id);
+            return this;
+        }
+
         public DLPConfigurationItem build() {
+            Preconditions.checkState(id.isPresent(), "`id` is mandatory");
             Preconditions.checkState(expression.isPresent(), "`expression` is mandatory");
             return new DLPConfigurationItem(
+                id.get(),
                 explanation,
                 expression.get(),
                 new Targets(
@@ -125,6 +177,7 @@ public class DLPConfigurationItem {
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("senderTargeted", senderTargeted)
+                .add("senderTargeted", senderTargeted)
                 .add("recipientTargeted", recipientTargeted)
                 .add("contentTargeted", contentTargeted)
                 .toString();
@@ -135,11 +188,13 @@ public class DLPConfigurationItem {
         return new Builder();
     }
 
+    private final Id id;
     private final Optional<String> explanation;
     private final String regexp;
     private final Targets targets;
 
-    private DLPConfigurationItem(Optional<String> explanation, String regexp, Targets targets) {
+    private DLPConfigurationItem(Id id, Optional<String> explanation, String regexp, Targets targets) {
+        this.id = id;
         this.explanation = explanation;
         this.regexp = regexp;
         this.targets = targets;
@@ -157,12 +212,17 @@ public class DLPConfigurationItem {
         return targets;
     }
 
+    public Id getId() {
+        return id;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof DLPConfigurationItem) {
             DLPConfigurationItem dlpConfigurationItem = (DLPConfigurationItem) o;
 
-            return Objects.equals(this.explanation, dlpConfigurationItem.explanation)
+            return Objects.equals(this.id, dlpConfigurationItem.id)
+                && Objects.equals(this.explanation, dlpConfigurationItem.explanation)
                 && Objects.equals(this.regexp, dlpConfigurationItem.regexp)
                 && Objects.equals(this.targets, dlpConfigurationItem.targets);
         }
@@ -171,12 +231,13 @@ public class DLPConfigurationItem {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(explanation, regexp, targets);
+        return Objects.hash(id, explanation, regexp, targets);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+            .add("id", id)
             .add("explanation", explanation)
             .add("regexp", regexp)
             .add("targets", targets)
