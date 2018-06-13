@@ -18,9 +18,16 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_1;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_2;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONTENT_1;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONTENT_2;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_1;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_2;
+import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 
 import java.io.File;
+import java.io.FileOutputStream;
 
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.james.junit.TemporaryFolderExtension;
@@ -34,20 +41,63 @@ import com.google.common.collect.ImmutableList;
 @ExtendWith(TemporaryFolderExtension.class)
 public class ZipperTest {
     private Zipper testee;
+    private File destination;
 
     @BeforeEach
-    void beforeEach() {
+    void beforeEach(TemporaryFolder temporaryFolder) throws Exception {
         testee = new Zipper();
+        destination = File.createTempFile("backup-test", ".zip", temporaryFolder.getTempDir());
     }
 
     @Test
-    void archiveShouldWriteEmptyValidArchiveWhenNoMessage(TemporaryFolder temporaryFolder) throws Exception {
-        File destination = File.createTempFile("backup-test", ".zip", temporaryFolder.getTempDir());
-        testee.archive(ImmutableList.of(), destination);
+    void archiveShouldWriteEmptyValidArchiveWhenNoMessage() throws Exception {
+        testee.archive(ImmutableList.of(), new FileOutputStream(destination));
 
         try (ZipFile zipFile = new ZipFile(destination)) {
-            assertThat(zipFile.getEntries().hasMoreElements()).isFalse();
+            assertThatZip(zipFile).hasNoEntry();
         }
     }
 
+    @Test
+    void archiveShouldWriteOneMessageWhenOne() throws Exception {
+        testee.archive(ImmutableList.of(MESSAGE_1), new FileOutputStream(destination));
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    zipEntryAssert -> zipEntryAssert
+                        .hasName(MESSAGE_ID_1.serialize())
+                        .hasStringContent(MESSAGE_CONTENT_1));
+        }
+    }
+
+    @Test
+    void archiveShouldWriteTwoMessagesWhenTwo() throws Exception {
+        testee.archive(ImmutableList.of(MESSAGE_1, MESSAGE_2), new FileOutputStream(destination));
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    zipEntryAssert -> zipEntryAssert
+                        .hasName(MESSAGE_ID_1.serialize())
+                        .hasStringContent(MESSAGE_CONTENT_1),
+                    zipEntryAssert -> zipEntryAssert
+                        .hasName(MESSAGE_ID_2.serialize())
+                        .hasStringContent(MESSAGE_CONTENT_2));
+        }
+    }
+
+    @Test
+    void archiveShouldOverwriteContent() throws Exception {
+        testee.archive(ImmutableList.of(MESSAGE_1), new FileOutputStream(destination));
+        testee.archive(ImmutableList.of(MESSAGE_2), new FileOutputStream(destination));
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    zipEntryAssert -> zipEntryAssert
+                        .hasName(MESSAGE_ID_2.serialize())
+                        .hasStringContent(MESSAGE_CONTENT_2));
+        }
+    }
 }

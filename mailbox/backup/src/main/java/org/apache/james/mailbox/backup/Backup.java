@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public interface Backup {
 
-    void archive(List<MailboxMessage> messages, File destination) throws IOException;
+    void archive(List<MailboxMessage> messages, OutputStream destination) throws IOException;
 }

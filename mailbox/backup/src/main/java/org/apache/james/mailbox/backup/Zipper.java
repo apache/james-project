@@ -20,17 +20,31 @@ package org.apache.james.mailbox.backup;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
+import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class Zipper implements Backup {
 
     @Override
-    public void archive(List<MailboxMessage> messages, File destination) throws IOException {
+    public void archive(List<MailboxMessage> messages, OutputStream destination) throws IOException {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
+            for (MailboxMessage message: messages) {
+                storeInArchive(message, archiveOutputStream);
+            }
             archiveOutputStream.finish();
         }
+    }
+
+    private void storeInArchive(MailboxMessage message, ZipArchiveOutputStream archiveOutputStream) throws IOException {
+        String entryId = message.getMessageId().serialize();
+        ArchiveEntry archiveEntry = archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
+        archiveOutputStream.putArchiveEntry(archiveEntry);
+        IOUtils.copy(message.getFullContent(), archiveOutputStream);
+        archiveOutputStream.closeArchiveEntry();
     }
 }
