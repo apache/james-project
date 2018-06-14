@@ -20,6 +20,7 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 import com.github.steveash.guavate.Guavate;
@@ -60,5 +61,13 @@ public class InMemoryMessageManager extends StoreMessageManager {
                     .map(MessageAttachment::getAttachment)
                     .collect(Guavate.toImmutableList()),
                 message.getMessageId());
+    }
+
+    @Override
+    protected MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
+        SimpleMailboxMessage copy = SimpleMailboxMessage.copy(message.getMailboxId(), message);
+        copy.setUid(message.getUid());
+        copy.setModSeq(message.getModSeq());
+        return copy;
     }
 }
