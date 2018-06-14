@@ -24,6 +24,7 @@ import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONT
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONTENT_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_2;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.SIZE_1;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 
 import java.io.File;
@@ -98,6 +99,18 @@ public class ZipperTest {
                     zipEntryAssert -> zipEntryAssert
                         .hasName(MESSAGE_ID_2.serialize())
                         .hasStringContent(MESSAGE_CONTENT_2));
+        }
+    }
+
+    @Test
+    void archiveShouldWriteSizeMetadata() throws Exception {
+        testee.archive(ImmutableList.of(MESSAGE_1), new FileOutputStream(destination));
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatZip(zipFile)
+                .containsExactlyEntriesMatching(
+                    zipEntryAssert -> zipEntryAssert
+                        .containsExactlyExtraFields(new SizeExtraField(SIZE_1)));
         }
     }
 }

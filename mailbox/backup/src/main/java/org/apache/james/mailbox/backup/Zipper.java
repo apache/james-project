@@ -23,12 +23,16 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class Zipper implements Backup {
+    public Zipper() {
+        ExtraFieldUtils.register(SizeExtraField.class);
+    }
 
     @Override
     public void archive(List<MailboxMessage> messages, OutputStream destination) throws IOException {
@@ -42,7 +46,8 @@ public class Zipper implements Backup {
 
     private void storeInArchive(MailboxMessage message, ZipArchiveOutputStream archiveOutputStream) throws IOException {
         String entryId = message.getMessageId().serialize();
-        ArchiveEntry archiveEntry = archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
+        ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File(entryId), entryId);
+        archiveEntry.addExtraField(new SizeExtraField(message.getFullContentOctets()));
         archiveOutputStream.putArchiveEntry(archiveEntry);
         IOUtils.copy(message.getFullContent(), archiveOutputStream);
         archiveOutputStream.closeArchiveEntry();

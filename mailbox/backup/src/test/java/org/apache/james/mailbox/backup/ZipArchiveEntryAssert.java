@@ -22,8 +22,10 @@ package org.apache.james.mailbox.backup;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.AbstractAssert;
@@ -45,6 +47,15 @@ public class ZipArchiveEntryAssert extends AbstractAssert<ZipArchiveEntryAssert,
 
     private static BasicErrorMessageFactory shouldHaveContent(ZipArchiveEntry zipArchiveEntry, String expectedContent, String actualContent) {
         return new BasicErrorMessageFactory("%nExpecting %s to have content %s but was %s", zipArchiveEntry, expectedContent, actualContent);
+    }
+
+    private static BasicErrorMessageFactory shouldHaveExtraFields(ZipArchiveEntry zipArchiveEntry,
+                                                                  ZipExtraField[] expectedExtraFields,
+                                                                  ZipExtraField[] actualExtraFields) {
+        return new BasicErrorMessageFactory("%nExpecting %s to contain exactly being %s" +
+            " but was containing being %s", zipArchiveEntry,
+            Arrays.toString(expectedExtraFields),
+            Arrays.toString(actualExtraFields));
     }
 
     private final ZipFile zipFile;
@@ -73,6 +84,20 @@ public class ZipArchiveEntryAssert extends AbstractAssert<ZipArchiveEntryAssert,
         String actualContentAsString = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
         if (!actualContentAsString.equals(content)) {
             throwAssertionError(shouldHaveContent(actual, content, actualContentAsString));
+        }
+        return myself;
+    }
+
+    public ZipArchiveEntryAssert containsExactlyExtraFields(ZipExtraField... expectedExtraFields) {
+        isNotNull();
+        ZipExtraField[] actualExtraFields = actual.getExtraFields();
+        if (expectedExtraFields.length != actualExtraFields.length) {
+            throwAssertionError(shouldHaveExtraFields(actual, expectedExtraFields, actualExtraFields));
+        }
+        for (int i = 0; i < expectedExtraFields.length; i++) {
+            if (!expectedExtraFields[i].equals(actualExtraFields[i])) {
+                throwAssertionError(shouldHaveExtraFields(actual, expectedExtraFields, actualExtraFields));
+            }
         }
         return myself;
     }

@@ -49,8 +49,8 @@ public interface MailboxMessageFixture {
     SharedByteArrayInputStream CONTENT_STREAM_2 = new SharedByteArrayInputStream(MESSAGE_CONTENT_2.getBytes(MESSAGE_CHARSET));
     MessageId MESSAGE_ID_1 = MESSAGE_ID_FACTORY.generate();
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
-    int SIZE_1 = 1000;
-    int SIZE_2 = 2000;
+    long SIZE_1 = 1000;
+    long SIZE_2 = 2000;
 
     SimpleMailboxMessage MESSAGE_1 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_1)
