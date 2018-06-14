@@ -20,11 +20,14 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import java.io.IOException;
+import java.util.List;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
+import org.apache.james.javax.MultipartUtil;
 import org.apache.mailet.MailetContext;
 
 public class Converter7Bit {
@@ -37,10 +40,9 @@ public class Converter7Bit {
 
     public MimePart convertTo7Bit(MimePart part) throws MessagingException, IOException {
         if (part.isMimeType("multipart/*")) {
-            MimeMultipart parts = (MimeMultipart) part.getContent();
-            int count = parts.getCount();
-            for (int i = 0; i < count; i++) {
-                convertTo7Bit((MimePart) parts.getBodyPart(i));
+            List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts((MimeMultipart) part.getContent());
+            for (BodyPart bodyPart : bodyParts) {
+                convertTo7Bit((MimePart) bodyPart);
             }
         } else if ("8bit".equals(part.getEncoding())) {
             // The content may already be in encoded the form (likely with mail
