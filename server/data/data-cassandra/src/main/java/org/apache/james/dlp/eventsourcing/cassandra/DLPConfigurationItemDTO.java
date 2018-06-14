@@ -40,7 +40,7 @@ public class DLPConfigurationItemDTO {
         return new DLPConfigurationItemDTO(
             dlpConfiguration.getId().asString(),
             dlpConfiguration.getExplanation(),
-            dlpConfiguration.getRegexp(),
+            dlpConfiguration.getRegexp().pattern(),
             targets.isContentTargeted(),
             targets.isSenderTargeted(),
             targets.isRecipientTargeted());

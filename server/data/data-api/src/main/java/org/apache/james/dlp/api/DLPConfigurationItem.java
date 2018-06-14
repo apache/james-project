@@ -19,10 +19,12 @@
 
 package org.apache.james.dlp.api;
 
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -72,51 +74,52 @@ public class DLPConfigurationItem {
     }
 
     public static class Builder {
-        private static final boolean NOT_TARGETED = false;
 
-        private Optional<Boolean> targetsSender;
-        private Optional<Boolean> targetsRecipients;
-        private Optional<Boolean> targetsContent;
+        private EnumSet<Targets.Type> targets;
         private Optional<String> explanation;
         private Optional<String> expression;
         private Optional<Id> id;
 
         public Builder() {
-            targetsSender = Optional.empty();
-            targetsRecipients = Optional.empty();
-            targetsContent = Optional.empty();
+            targets = EnumSet.noneOf(Targets.Type.class);
             explanation = Optional.empty();
             expression = Optional.empty();
             id = Optional.empty();
         }
 
         public Builder targetsSender() {
-            this.targetsSender = Optional.of(true);
+            this.targets.add(Targets.Type.Sender);
             return this;
         }
 
         public Builder targetsSender(boolean targetsSender) {
-            this.targetsSender = Optional.of(targetsSender);
+            if (targetsSender) {
+                return targetsSender();
+            }
             return this;
         }
 
         public Builder targetsRecipients() {
-            this.targetsRecipients = Optional.of(true);
+            this.targets.add(Targets.Type.Recipient);
             return this;
         }
 
         public Builder targetsRecipients(boolean targetsRecipients) {
-            this.targetsRecipients = Optional.of(targetsRecipients);
+            if (targetsRecipients) {
+                return targetsRecipients();
+            }
             return this;
         }
 
         public Builder targetsContent() {
-            this.targetsContent = Optional.of(true);
+            this.targets.add(Targets.Type.Content);
             return this;
         }
 
         public Builder targetsContent(boolean targetsContent) {
-            this.targetsContent = Optional.of(targetsContent);
+            if (targetsContent) {
+                return targetsContent();
+            }
             return this;
         }
 
@@ -153,10 +156,7 @@ public class DLPConfigurationItem {
                 id.get(),
                 explanation,
                 ensureValidPattern(expression.get()),
-                new Targets(
-                    targetsSender.orElse(NOT_TARGETED),
-                    targetsRecipients.orElse(NOT_TARGETED),
-                    targetsContent.orElse(NOT_TARGETED)));
+                new Targets(targets));
         }
 
         private Pattern ensureValidPattern(String input) {
@@ -174,26 +174,33 @@ public class DLPConfigurationItem {
     }
 
     public static class Targets {
-        private final boolean senderTargeted;
-        private final boolean recipientTargeted;
-        private final boolean contentTargeted;
 
-        public Targets(boolean senderTargeted, boolean recipientTargeted, boolean contentTargeted) {
-            this.senderTargeted = senderTargeted;
-            this.recipientTargeted = recipientTargeted;
-            this.contentTargeted = contentTargeted;
+        public enum Type {
+            Sender,
+            Recipient,
+            Content
+        }
+
+        private final EnumSet<Type> targets;
+
+        private Targets(EnumSet<Type> targets) {
+            this.targets = targets;
         }
 
         public boolean isSenderTargeted() {
-            return senderTargeted;
+            return targets.contains(Type.Sender);
         }
 
         public boolean isRecipientTargeted() {
-            return recipientTargeted;
+            return targets.contains(Type.Recipient);
         }
 
         public boolean isContentTargeted() {
-            return contentTargeted;
+            return targets.contains(Type.Content);
+        }
+
+        public Stream<Type> list() {
+            return targets.stream();
         }
 
         @Override
@@ -201,24 +208,20 @@ public class DLPConfigurationItem {
             if (o instanceof Targets) {
                 Targets targets = (Targets) o;
 
-                return Objects.equals(this.senderTargeted, targets.senderTargeted)
-                    && Objects.equals(this.recipientTargeted, targets.recipientTargeted)
-                    && Objects.equals(this.contentTargeted, targets.contentTargeted);
+                return Objects.equals(this.targets, targets.targets);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(senderTargeted, recipientTargeted, contentTargeted);
+            return Objects.hash(targets);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("senderTargeted", senderTargeted)
-                .add("recipientTargeted", recipientTargeted)
-                .add("contentTargeted", contentTargeted)
+                .add("targets", targets)
                 .toString();
         }
     }

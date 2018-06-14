@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.dlp.api.DLPConfigurationItem.Targets.Type;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -149,6 +150,7 @@ public class DLPConfigurationItemTest {
             softly.assertThat(dlpConfigurationItem.getTargets().isContentTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isRecipientTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isSenderTargeted()).isFalse();
+            softly.assertThat(dlpConfigurationItem.getTargets().list()).isEmpty();
         });
     }
 
@@ -164,6 +166,7 @@ public class DLPConfigurationItemTest {
             softly.assertThat(dlpConfigurationItem.getTargets().isContentTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isRecipientTargeted()).isTrue();
             softly.assertThat(dlpConfigurationItem.getTargets().isSenderTargeted()).isFalse();
+            softly.assertThat(dlpConfigurationItem.getTargets().list()).contains(Type.Recipient);
         });
     }
 
@@ -179,6 +182,7 @@ public class DLPConfigurationItemTest {
             softly.assertThat(dlpConfigurationItem.getTargets().isContentTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isRecipientTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isSenderTargeted()).isTrue();
+            softly.assertThat(dlpConfigurationItem.getTargets().list()).contains(Type.Sender);
         });
     }
 
@@ -194,6 +198,7 @@ public class DLPConfigurationItemTest {
             softly.assertThat(dlpConfigurationItem.getTargets().isContentTargeted()).isTrue();
             softly.assertThat(dlpConfigurationItem.getTargets().isRecipientTargeted()).isFalse();
             softly.assertThat(dlpConfigurationItem.getTargets().isSenderTargeted()).isFalse();
+            softly.assertThat(dlpConfigurationItem.getTargets().list()).contains(Type.Content);
         });
     }
 
@@ -211,6 +216,7 @@ public class DLPConfigurationItemTest {
             softly.assertThat(dlpConfigurationItem.getTargets().isContentTargeted()).isTrue();
             softly.assertThat(dlpConfigurationItem.getTargets().isRecipientTargeted()).isTrue();
             softly.assertThat(dlpConfigurationItem.getTargets().isSenderTargeted()).isTrue();
+            softly.assertThat(dlpConfigurationItem.getTargets().list()).contains(Type.Content, Type.Sender, Type.Recipient);
         });
     }
 
