@@ -148,24 +148,27 @@ public class DLPConfigurationItem {
         public DLPConfigurationItem build() {
             Preconditions.checkState(id.isPresent(), "`id` is mandatory");
             Preconditions.checkState(expression.isPresent(), "`expression` is mandatory");
-            Preconditions.checkState(isValidPattern(expression.get()), "`expression` must be a valid regex");
 
             return new DLPConfigurationItem(
                 id.get(),
                 explanation,
-                expression.get(),
+                ensureValidPattern(expression.get()),
                 new Targets(
                     targetsSender.orElse(NOT_TARGETED),
                     targetsRecipients.orElse(NOT_TARGETED),
                     targetsContent.orElse(NOT_TARGETED)));
         }
 
-        private static boolean isValidPattern(String regex) {
+        private Pattern ensureValidPattern(String input) {
+            return isValidPattern(input)
+                .orElseThrow(() -> new IllegalStateException("`expression` must be a valid regex"));
+        }
+
+        private static Optional<Pattern> isValidPattern(String regex) {
             try {
-                Pattern.compile(regex);
-                return true;
+                return Optional.of(Pattern.compile(regex));
             } catch (PatternSyntaxException e) {
-                return false;
+                return Optional.empty();
             }
         }
     }
@@ -226,10 +229,10 @@ public class DLPConfigurationItem {
 
     private final Id id;
     private final Optional<String> explanation;
-    private final String regexp;
+    private final Pattern regexp;
     private final Targets targets;
 
-    private DLPConfigurationItem(Id id, Optional<String> explanation, String regexp, Targets targets) {
+    private DLPConfigurationItem(Id id, Optional<String> explanation, Pattern regexp, Targets targets) {
         this.id = id;
         this.explanation = explanation;
         this.regexp = regexp;
@@ -240,7 +243,7 @@ public class DLPConfigurationItem {
         return explanation;
     }
 
-    public String getRegexp() {
+    public Pattern getRegexp() {
         return regexp;
     }
 
@@ -257,9 +260,11 @@ public class DLPConfigurationItem {
         if (o instanceof DLPConfigurationItem) {
             DLPConfigurationItem dlpConfigurationItem = (DLPConfigurationItem) o;
 
+            Optional<String> regexp = Optional.ofNullable(this.regexp).map(Pattern::pattern);
+            Optional<String> otherRegexp = Optional.ofNullable(dlpConfigurationItem.regexp).map(Pattern::pattern);
             return Objects.equals(this.id, dlpConfigurationItem.id)
                 && Objects.equals(this.explanation, dlpConfigurationItem.explanation)
-                && Objects.equals(this.regexp, dlpConfigurationItem.regexp)
+                && Objects.equals(regexp, otherRegexp)
                 && Objects.equals(this.targets, dlpConfigurationItem.targets);
         }
         return false;

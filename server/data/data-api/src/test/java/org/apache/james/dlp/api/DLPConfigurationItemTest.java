@@ -124,7 +124,7 @@ public class DLPConfigurationItemTest {
             .expression(REGEX)
             .build();
 
-        assertThat(dlpConfigurationItem.getRegexp()).isEqualTo(REGEX);
+        assertThat(dlpConfigurationItem.getRegexp().pattern()).isEqualTo(REGEX);
     }
 
     @Test
