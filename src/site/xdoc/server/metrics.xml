@@ -65,6 +65,7 @@
                     <li>Cassandra Java driver metrics</li>
                     <li>Tika HTTP client statistics</li>
                     <li>SpamAssassin TCP client statistics</li>
+                    <li>Mailbox listeners statistics time percentiles</li>
                 </ul>
 
                 Retrieve <a href="https://github.com/apache/james-project/tree/master/grafana-reporting">available boards</a> for Grafana.

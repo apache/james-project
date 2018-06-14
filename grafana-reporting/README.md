@@ -34,3 +34,4 @@ Note that you need to run a guice version of James.
  - Cassandra driver statistics
  - Tika HTTP client statistics
  - SpamAssassin TCP client statistics
+ - Mailbox listeners statistics
