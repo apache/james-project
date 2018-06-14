@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.MessagingException;
 
 import org.apache.james.transport.mailets.AddFooter;
+import org.apache.james.transport.mailets.sub.TestMailet;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
@@ -54,6 +55,19 @@ public class GuiceMailetLoaderTest {
             .build());
 
         assertThat(mailet).isInstanceOf(AddFooter.class);
+    }
+
+    @Test
+    public void getMailetShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
+        GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
+            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+
+        Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
+            .mailetName("sub.TestMailet")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+
+        assertThat(mailet).isInstanceOf(TestMailet.class);
     }
 
     @Test
