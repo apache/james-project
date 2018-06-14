@@ -98,6 +98,17 @@ public class MimeMessageBuilder {
             return this;
         }
 
+        public MultipartBuilder addBody(MimeMessageBuilder builder) throws IOException, MessagingException {
+            return addBody(builder.build());
+        }
+
+        public MultipartBuilder addBody(MimeMessage mimeMessage) throws IOException, MessagingException {
+            MimeBodyPart mimeBodyPart = new MimeBodyPart();
+            mimeBodyPart.setContent(mimeMessage, "message/rfc822");
+            this.bodyParts.add(mimeBodyPart);
+            return this;
+        }
+
         public MultipartBuilder addBodies(BodyPart... bodyParts) {
             this.bodyParts.addAll(Arrays.asList(bodyParts));
             return this;
