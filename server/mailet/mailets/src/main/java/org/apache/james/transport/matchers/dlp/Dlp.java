@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 
@@ -39,10 +40,14 @@ public class Dlp extends GenericMatcher {
 
     private final DlpRulesLoader rulesLoader;
 
-    @Inject
     @VisibleForTesting
     Dlp(DlpRulesLoader rulesLoader) {
         this.rulesLoader = rulesLoader;
+    }
+
+    @Inject
+    public Dlp(DLPConfigurationStore configurationStore) {
+        this(new DlpRulesLoader.Impl(configurationStore));
     }
 
     @Override

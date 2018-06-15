@@ -64,6 +64,9 @@ public class MemoryDataModule extends AbstractModule {
         bind(MemoryUsersRepository.class).toInstance(MemoryUsersRepository.withVirtualHosting());
         bind(UsersRepository.class).to(MemoryUsersRepository.class);
 
+        bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
+        bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
+
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MemoryDataConfigurationPerformer.class);
     }
 
