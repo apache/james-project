@@ -19,13 +19,24 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
+import static spark.Spark.halt;
+
 import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
-import io.swagger.annotations.*;
+import com.github.steveash.guavate.Guavate;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -36,16 +47,16 @@ import spark.Response;
 import spark.Service;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
-import static com.github.steveash.guavate.Guavate.toImmutableList;
-import static com.github.steveash.guavate.Guavate.toImmutableMap;
-import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
-import static spark.Spark.halt;
 
 @Api(tags = "Domain Mappings")
 @Path(DOMAIN_MAPPINGS)
@@ -67,7 +78,8 @@ public class DomainMappingsRoutes implements Routes {
 
     @Override
     public void define(final Service service) {
-        service.get(DOMAIN_MAPPINGS, this::get, jsonTransformer);
+        service.get(DOMAIN_MAPPINGS, this::getAllMappings, jsonTransformer);
+        service.get(SPECIFIC_MAPPING, this::getMapping, jsonTransformer);
         service.put(SPECIFIC_MAPPING, this::addDomainMapping);
         service.delete(SPECIFIC_MAPPING, this::removeDomainMapping);
     }
@@ -114,28 +126,56 @@ public class DomainMappingsRoutes implements Routes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
                     message = "Internal server error - Something went bad on the server side.")
     })
-    public Map<String, List<String>> get(Request request, Response response) throws RecipientRewriteTableException {
+    public Map<String, List<String>> getAllMappings(Request request, Response response) throws RecipientRewriteTableException {
         return recipientRewriteTable.getAllMappings()
                 .entrySet()
                 .stream()
-                .collect(toImmutableMap(e -> e.getKey().getFixedDomain(),
-                        e -> e.getValue()
-                                .select(Mapping.Type.Domain)
-                                .asStream()
-                                .map(Mapping::asString)
-                                .map(Mapping.Type.Domain::withoutPrefix)
-                                .collect(toImmutableList())
+                .filter(mappingsEntry -> !mappingsEntry.getValue().isEmpty())
+                .filter(mappingsEntry -> mappingsEntry.getValue().contains(Mapping.Type.Domain))
+                .collect(Guavate.toImmutableMap(
+                        mappingsEntry -> mappingsEntry.getKey().getFixedDomain(),
+                        mappingsEntry -> toDomainList(mappingsEntry.getValue())
                 ));
     }
 
-    private void doMapping(final Request request, final ThrowingBiConsumer<MappingSource, Domain> op) {
-        MappingSource fromDomain = createDomainOrThrow()
+    @GET
+    @Path(SPECIFIC_MAPPING_PATH)
+    @ApiOperation(value = "Lists mappings for specific domain.")
+    @ApiImplicitParams({
+            @ApiImplicitParam(required = true, dataType = "string", name = FROM_DOMAIN, paramType = "path")
+    })
+    @ApiResponses(value = {
+            @ApiResponse(code = HttpStatus.OK_200, message = "Domain mappings.", responseContainer = "List"),
+            @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "Not existing mappings."),
+            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+                    message = "Internal server error - Something went bad on the server side.")
+    })
+    public List<String> getMapping(Request request, Response response) throws RecipientRewriteTableException {
+        final MappingSource mappingSource = mappingSourceFrom(request);
+
+        return Optional.ofNullable(recipientRewriteTable.getAllMappings().get(mappingSource))
+                .filter(mappings -> !mappings.isEmpty())
+                .filter(mappings -> mappings.contains(Mapping.Type.Domain))
+                .map(this::toDomainList)
+                .orElseThrow(() -> ErrorResponder.builder()
+                        .statusCode(HttpStatus.NOT_FOUND_404)
+                        .type(ErrorResponder.ErrorType.NOT_FOUND)
+                        .message(String.format("Cannot find mappings for %s", mappingSource.getFixedDomain()))
+                        .haltError());
+    }
+
+    private MappingSource mappingSourceFrom(final Request request) {
+        return createDomainOrThrow()
                 .andThen(MappingSource::fromDomain)
                 .apply(request.params(FROM_DOMAIN));
+    }
+
+    private void doMapping(Request request, ThrowingBiConsumer<MappingSource, Domain> mappingOperation) {
+        MappingSource fromDomain = mappingSourceFrom(request);
 
         Domain toDomain = createDomainOrThrow().apply(request.body());
 
-        op.accept(fromDomain, toDomain);
+        mappingOperation.accept(fromDomain, toDomain);
     }
 
     private Function<String, Domain> createDomainOrThrow() {
@@ -151,5 +191,14 @@ public class DomainMappingsRoutes implements Routes {
                         .haltError();
             }
         };
+    }
+
+    private List<String> toDomainList(Mappings mappings) {
+        return mappings
+                .select(Mapping.Type.Domain)
+                .asStream()
+                .map(Mapping::asString)
+                .map(Mapping.Type.Domain::withoutPrefix)
+                .collect(Guavate.toImmutableList());
     }
 }

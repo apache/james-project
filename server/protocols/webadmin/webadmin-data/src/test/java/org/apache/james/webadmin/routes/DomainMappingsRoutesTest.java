@@ -19,7 +19,20 @@
 
 package org.apache.james.webadmin.routes;
 
+import static com.jayway.restassured.RestAssured.delete;
+import static com.jayway.restassured.RestAssured.given;
+import static com.jayway.restassured.RestAssured.put;
+import static com.jayway.restassured.RestAssured.when;
+import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.entry;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.filter.log.LogDetail;
 import com.jayway.restassured.http.ContentType;
@@ -30,48 +43,27 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Stream;
-
-import static com.jayway.restassured.RestAssured.*;
-import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.isEmptyString;
-import static org.mockito.Mockito.spy;
 
 class DomainMappingsRoutesTest {
     private RecipientRewriteTable recipientRewriteTable;
     private WebAdminServer webAdminServer;
-
-    @SuppressWarnings("unused")
-    static Stream<Arguments> invalidInputs() {
-        return Stream.of(
-                Arguments.of("domain.com", ""),
-                // Why this params should pass the test ?
-                // "domain.com, '    '",
-                // "domain.com, '    \n\t\r'",
-                Arguments.of("abc@domain.com", "domain.com"),
-                Arguments.of("domain.com", "abc@domain.com")
-
-        );
-    }
 
     private void createServer(DomainMappingsRoutes domainMappingsRoutes) throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), domainMappingsRoutes);
@@ -101,27 +93,29 @@ class DomainMappingsRoutesTest {
 
         @Test
         void addDomainMappingShouldRespondWithNoContent() {
-            // @formatter:off
-            given(with().body("to.com"))
-                        .put("from.com")
-                    .then()
-                        .statusCode(HttpStatus.NO_CONTENT_204)
-                        .body(isEmptyString());
-            // @formatter:on
+            given()
+                .body("to.com")
+            .when()
+                .put("from.com")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .body(isEmptyString());
         }
 
         @Test
         void getDomainMappings() throws RecipientRewriteTableException {
+            String alias1 = "to_1.com";
+            String alias2 = "to_2.com";
+            String alias3 = "to_3.com";
+
             Domain expectedDomain = Domain.of("abc.com");
             MappingSource mappingSource = MappingSource.fromDomain(expectedDomain);
-            ImmutableList<String> expectedAliases = ImmutableList.of("to_1.com", "to_2.com", "to_3.com");
 
-            for (String alias : expectedAliases) {
-                recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias));
-            }
+            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias1));
+            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias2));
+            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias3));
 
-            // @formatter:off
-            final Map<String, List<String>> map =
+            Map<String, List<String>> map =
                     when()
                         .get()
                     .then()
@@ -131,33 +125,178 @@ class DomainMappingsRoutesTest {
                         .body()
                         .jsonPath()
                         .getMap(".");
-            // @formatter:on
 
             assertThat(map)
-                    .containsOnly(entry(expectedDomain.name(), expectedAliases));
+                    .containsOnly(entry(expectedDomain.name(), ImmutableList.of(alias1, alias2, alias3)));
         }
 
         @Test
-        void getDomainMappingsShouldBeEmpty() {
-            // @formatter:off
+        void getDomainMappingsEmptyMappingsAreFilteredOut() throws RecipientRewriteTableException {
+            MappingSource nonEmptyMapping = MappingSource.fromDomain(Domain.of("abc.com"));
+            MappingSource emptyMapping = MappingSource.fromDomain(Domain.of("def.com"));
+
+            Map<MappingSource, Mappings> mappings = ImmutableMap.of(
+                    nonEmptyMapping, MappingsImpl.fromRawString("domain:a.com"),
+                    emptyMapping, MappingsImpl.empty()
+            );
+
+            when(recipientRewriteTable.getAllMappings()).thenReturn(mappings);
+
+            Map<String, List<String>> map =
+                    when()
+                        .get()
+                    .then()
+                        .contentType(ContentType.JSON)
+                        .statusCode(HttpStatus.OK_200)
+                    .extract()
+                        .body()
+                        .jsonPath()
+                        .getMap(".");
+
+            assertThat(map)
+                    .containsKey(nonEmptyMapping.asString())
+                    .doesNotContainKey(emptyMapping.asString());
+        }
+
+        @Test
+        void getDomainMappingsShouldFilterNonDomainMappings() throws RecipientRewriteTableException {
+            MappingSource mappingSource = MappingSource.fromDomain(Domain.of("abc.com"));
+            String address = "addr@domain.com";
+
+            recipientRewriteTable.addAddressMapping(mappingSource, address);
+            recipientRewriteTable.addForwardMapping(mappingSource, address);
+            recipientRewriteTable.addErrorMapping(mappingSource, address);
+            recipientRewriteTable.addGroupMapping(mappingSource, address);
+            recipientRewriteTable.addRegexMapping(mappingSource, address);
+
             when()
                 .get()
             .then()
                 .contentType(ContentType.JSON)
                 .statusCode(HttpStatus.OK_200)
                 .body(is("{}"));
-            // @formatter:on
+        }
+
+        @Test
+        void getDomainMappingsShouldBeEmptyByDefault() {
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("{}"));
         }
 
         @Test
         void deleteDomainMappingShouldRespondWithNoContent() {
-            // @formatter:off
-            given(with().body("to.com"))
-                        .delete("from.com")
+            given()
+                .body("to.com")
+            .when()
+                .delete("from.com")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .body(isEmptyString());
+        }
+
+        @Test
+        void deleteDomainMappingShouldRemoveMapping() throws RecipientRewriteTableException {
+            MappingSource mappingSource = MappingSource.fromDomain(Domain.of("from.com"));
+            String alias = "to.com";
+
+            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(alias));
+
+            Assumptions.assumeTrue(recipientRewriteTable.getUserDomainMappings(mappingSource) != null);
+
+            given()
+                .body("to.com")
+            .when()
+                .delete("from.com")
+            .then()
+                .body(isEmptyString());
+
+            assertThat(recipientRewriteTable.getAllMappings()).isEmpty();
+        }
+
+        @Test
+        void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasNoAliases() {
+            String domain = "from.com";
+
+            when()
+                .get(domain)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("message", is("Cannot find mappings for " + domain));
+        }
+
+        @Test
+        void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasEmptyAliases() throws RecipientRewriteTableException {
+            String domain = "from.com";
+
+            Map<MappingSource, Mappings> allMappings = ImmutableMap.of(
+                    MappingSource.fromDomain(Domain.of(domain)),
+                    MappingsImpl.empty()
+            );
+
+            when(recipientRewriteTable.getAllMappings()).thenReturn(allMappings);
+
+            when()
+                .get(domain)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("message", is("Cannot find mappings for " + domain));
+        }
+
+        @Test
+        void getSpecificDomainMappingNotDomainsMappingsShouldBeFilteredOut() throws RecipientRewriteTableException {
+            String domain = "from.com";
+            String aliasDomain = "to.com";
+            final MappingSource mappingSource = MappingSource.fromDomain(Domain.of(domain));
+
+            recipientRewriteTable.addRegexMapping(mappingSource, "(.*)@localhost");
+            recipientRewriteTable.addGroupMapping(mappingSource, "user@domain.com");
+            recipientRewriteTable.addForwardMapping(mappingSource, "user@domain.com");
+            recipientRewriteTable.addErrorMapping(mappingSource, "disabled");
+            recipientRewriteTable.addAliasDomainMapping(mappingSource, Domain.of(aliasDomain));
+
+            List<String> body =
+                    when()
+                        .get(domain)
                     .then()
-                        .statusCode(HttpStatus.NO_CONTENT_204)
-                        .body(isEmptyString());
-            // @formatter:on
+                        .contentType(ContentType.JSON)
+                        .statusCode(HttpStatus.OK_200)
+                    .extract()
+                        .jsonPath()
+                        .getList(".");
+
+            assertThat(body).containsOnly(aliasDomain);
+        }
+
+        @Test
+        void getSpecificDomainMappingShouldResponseWithOK() throws RecipientRewriteTableException {
+            String domain = "abc.com";
+            String aliasDomain = "a.com";
+            MappingSource mapping = MappingSource.fromDomain(Domain.of(domain));
+            Map<MappingSource, Mappings> mappings = ImmutableMap.of(mapping, MappingsImpl.fromRawString("domain:" + aliasDomain));
+
+            when(recipientRewriteTable.getAllMappings()).thenReturn(mappings);
+
+            List<String> body =
+            when()
+                .get(domain)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .extract()
+                .jsonPath()
+                .getList(".");
+
+            assertThat(body).contains(aliasDomain);
         }
     }
 
@@ -165,40 +304,72 @@ class DomainMappingsRoutesTest {
     class IllegalInputs {
         @Test
         void addDomainMappingShouldRespondWithNotFound() {
-            // @formatter:off
             when()
                 .put("")
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
-            // @formatter:on
         }
 
         @Test
         void deleteDomainMappingShouldRespondWithNotFound() {
-            // @formatter:off
             when()
                 .delete("")
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
-            // @formatter:on
         }
 
-        @ParameterizedTest
-        @MethodSource("org.apache.james.webadmin.routes.DomainMappingsRoutesTest#invalidInputs")
-        void addDomainMappingWithInvalidDomainInPath(String fromDomain, String toDomain) {
-            assertBadRequest(toDomain, spec -> put(fromDomain));
+        @Test
+        void addDomainMappingWithInvalidDomainInBody() {
+            assertBadRequest("abc@domain.com", spec -> put("domain.com"));
+        }
+
+        @Test
+        void deleteDomainMappingWithInvalidDomainInBody() {
+            assertBadRequest("abc@domain.com", spec -> put("domain.com"));
+        }
+
+        @Test
+        void addDomainMappingWithInvalidDomainInPath() {
+            assertBadRequest("domain.com", spec -> put("abc@domain.com"));
+        }
+
+        @Test
+        void deleteDomainMappingWithInvalidDomainInPath() {
+            assertBadRequest("domain.com", spec -> put("abc@domain.com"));
+        }
+
+        @Test
+        void addDomainMappingWithEmptyAliasDomain() {
+            assertBadRequest("", spec -> put("domain.com"));
+        }
+
+        @Test
+        void deleteDomainMappingWithEmptyAliasDomain() {
+            assertBadRequest("", spec -> delete("domain.com"));
         }
 
 
-        @ParameterizedTest
-        @MethodSource("org.apache.james.webadmin.routes.DomainMappingsRoutesTest#invalidInputs")
-        void deleteDomainMappingWithInvalidDomainInPath(String fromDomain, String toDomain) {
-            assertBadRequest(toDomain, spec -> delete(fromDomain));
+        @Test
+        void addSpecificDomainMappingWithInvalidDomainInPath() {
+            Map<String, Object> errors =
+            when()
+                .get("abc@domain.com")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                    .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                    .containsEntry("type", "InvalidArgument")
+                    .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
         }
 
         private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> op) {
-            // @formatter:off
-            Map<String, Object> errors = op.apply(given(with().body(toDomain)))
+            Map<String, Object> errors = op.apply(given().body(toDomain).when())
                     .then()
                         .statusCode(HttpStatus.BAD_REQUEST_400)
                         .contentType(ContentType.JSON)
@@ -206,7 +377,6 @@ class DomainMappingsRoutesTest {
                         .body()
                         .jsonPath()
                         .getMap(".");
-            // @formatter:on
 
             assertThat(errors)
                     .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
