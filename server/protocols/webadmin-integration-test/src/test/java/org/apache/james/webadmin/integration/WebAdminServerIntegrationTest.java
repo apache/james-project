@@ -119,10 +119,10 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "file://var/mail/error/",
-                "file://var/mail/relay-denied/",
-                "file://var/mail/spam/",
-                "file://var/mail/address-error/"));
+                "var/mail/error/",
+                "var/mail/relay-denied/",
+                "var/mail/spam/",
+                "var/mail/address-error/"));
     }
 
     @Test
@@ -135,10 +135,10 @@ public class WebAdminServerIntegrationTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("repository", containsInAnyOrder(
-                "file://var/mail/error/",
-                "file://var/mail/relay-denied/",
-                "file://var/mail/spam/",
-                "file://var/mail/address-error/"));
+                "var/mail/error/",
+                "var/mail/relay-denied/",
+                "var/mail/spam/",
+                "var/mail/address-error/"));
     }
 
     @Test

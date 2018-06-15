@@ -19,7 +19,6 @@
 
 package org.apache.james.mailrepository.api;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -49,12 +48,26 @@ public interface MailRepositoryStore {
     Optional<MailRepository> get(MailRepositoryUrl url) throws MailRepositoryStoreException;
 
     /**
-     * Return a {@link List} which contains all urls of the selected
+     * Returns all the {@link MailRepository} for the given path.
+     */
+    Stream<MailRepository> getByPath(MailRepositoryPath path) throws MailRepositoryStoreException;
+
+    /**
+     * Return a {@link Stream} which contains all urls of the selected
      * {@link MailRepository}'s
-     * 
-     * @return urls
      */
     Stream<MailRepositoryUrl> getUrls();
+
+    /**
+     * Return a {@link Stream} which contains all paths of the selected
+     * {@link MailRepository}'s
+     */
+    default Stream<MailRepositoryPath> getPaths() {
+        return getUrls()
+            .map(MailRepositoryUrl::getPath)
+            .sorted()
+            .distinct();
+    }
 
     class MailRepositoryStoreException extends Exception {
         public MailRepositoryStoreException(String msg, Throwable t) {

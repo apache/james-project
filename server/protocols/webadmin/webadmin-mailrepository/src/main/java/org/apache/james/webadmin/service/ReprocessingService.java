@@ -27,8 +27,8 @@ import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.util.streams.Iterators;
@@ -48,20 +48,23 @@ public class ReprocessingService {
         this.mailRepositoryStoreService = mailRepositoryStoreService;
     }
 
-    public void reprocessAll(MailRepositoryUrl url, Optional<String> targetProcessor, String targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailRepository repository = mailRepositoryStoreService.getRepository(url);
+    public void reprocessAll(MailRepositoryPath path, Optional<String> targetProcessor, String targetQueue, Consumer<MailKey> keyListener) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         MailQueue mailQueue = getMailQueue(targetQueue);
 
-        Iterators.toStream(repository.list())
-            .peek(keyListener)
-            .forEach(Throwing.consumer(key -> reprocess(repository, mailQueue, key, targetProcessor)));
+        mailRepositoryStoreService
+            .getRepositories(path)
+            .forEach(Throwing.consumer((MailRepository repository) ->
+                Iterators.toStream(repository.list())
+                    .peek(keyListener)
+                    .forEach(Throwing.consumer(key -> reprocess(repository, mailQueue, key, targetProcessor)))).sneakyThrow());
     }
 
-    public void reprocess(MailRepositoryUrl url, MailKey key, Optional<String> targetProcessor, String targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        MailRepository repository = mailRepositoryStoreService.getRepository(url);
+    public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, String targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         MailQueue mailQueue = getMailQueue(targetQueue);
 
-        reprocess(repository, mailQueue, key, targetProcessor);
+        mailRepositoryStoreService
+            .getRepositories(path)
+            .forEach(Throwing.consumer((MailRepository repository) -> reprocess(repository, mailQueue, key, targetProcessor)).sneakyThrow());
     }
 
     private void reprocess(MailRepository repository, MailQueue mailQueue, MailKey key, Optional<String> targetProcessor) throws MessagingException {

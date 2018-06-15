@@ -174,7 +174,7 @@ public class DlpIntegrationTest {
         MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(REPOSITORY_PREFIX + DEFAULT_DOMAIN);
         given()
             .spec(specification)
-        .get("/mailRepositories/" + repositoryUrl.urlEncoded() + "/mails")
+        .get("/mailRepositories/" + repositoryUrl.getPath().urlEncoded() + "/mails")
             .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
@@ -223,7 +223,8 @@ public class DlpIntegrationTest {
         MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(REPOSITORY_PREFIX + DEFAULT_DOMAIN);
         given()
             .spec(specification)
-            .put("/mailRepositories/" + repositoryUrl.urlEncoded());
+            .param("protocol", repositoryUrl.getProtocol().getValue())
+            .put("/mailRepositories/" + repositoryUrl.getPath().urlEncoded());
 
         given()
             .spec(specification)
@@ -253,8 +254,7 @@ public class DlpIntegrationTest {
         try {
             return given()
                 .spec(specification)
-                .get("/mailRepositories/" + repositoryUrl.urlEncoded() + "/mails")
-                .prettyPeek()
+            .get("/mailRepositories/" + repositoryUrl.getPath().urlEncoded() + "/mails")
                 .jsonPath()
                 .getList(".")
                 .size() == 1;

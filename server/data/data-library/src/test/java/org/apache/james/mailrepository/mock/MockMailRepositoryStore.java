@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
@@ -44,6 +45,15 @@ public class MockMailRepositoryStore implements MailRepositoryStore {
     @Override
     public Optional<MailRepository> get(MailRepositoryUrl url) {
         return Optional.ofNullable(storedObjectMap.get(url));
+    }
+
+    @Override
+    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
+        return storedObjectMap
+                .keySet()
+                .stream()
+                .filter((MailRepositoryUrl key) -> key.getPath().equals(path))
+                .map(storedObjectMap::get);
     }
 
     @Override

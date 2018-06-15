@@ -21,21 +21,10 @@ package org.apache.james.webadmin.dto;
 
 import java.io.UnsupportedEncodingException;
 
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+public interface MailRepositoryResponse {
 
-public class MailRepositoryResponse {
+    String getRepository();
 
-    private final MailRepositoryUrl repository;
+    String getPath() throws UnsupportedEncodingException;
 
-    public MailRepositoryResponse(MailRepositoryUrl repository) {
-        this.repository = repository;
-    }
-
-    public String getRepository() {
-        return repository.asString();
-    }
-
-    public String getId() throws UnsupportedEncodingException {
-        return repository.urlEncoded();
-    }
 }

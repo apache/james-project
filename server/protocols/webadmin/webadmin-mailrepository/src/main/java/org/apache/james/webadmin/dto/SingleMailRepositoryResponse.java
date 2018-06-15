@@ -23,14 +23,12 @@ import java.io.UnsupportedEncodingException;
 
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 
-public class ExtendedMailRepositoryResponse implements MailRepositoryResponse {
+public class SingleMailRepositoryResponse implements MailRepositoryResponse {
 
     private final MailRepositoryPath repository;
-    private final long size;
 
-    public ExtendedMailRepositoryResponse(MailRepositoryPath repository, long size) {
+    public SingleMailRepositoryResponse(MailRepositoryPath repository) {
         this.repository = repository;
-        this.size = size;
     }
 
     @Override
@@ -41,9 +39,5 @@ public class ExtendedMailRepositoryResponse implements MailRepositoryResponse {
     @Override
     public String getPath() throws UnsupportedEncodingException {
         return repository.urlEncoded();
-    }
-
-    public long getSize() {
-        return size;
     }
 }

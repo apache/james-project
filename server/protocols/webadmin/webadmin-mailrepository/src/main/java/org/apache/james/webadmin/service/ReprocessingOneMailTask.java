@@ -24,8 +24,8 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -34,13 +34,13 @@ public class ReprocessingOneMailTask implements Task {
     public static final String TYPE = "reprocessingOneTask";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final MailRepositoryUrl repositoryUrl;
+        private final MailRepositoryPath repositoryPath;
         private final String targetQueue;
         private final MailKey mailKey;
         private final Optional<String> targetProcessor;
 
-        public AdditionalInformation(MailRepositoryUrl repositoryUrl, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
-            this.repositoryUrl = repositoryUrl;
+        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
+            this.repositoryPath = repositoryPath;
             this.targetQueue = targetQueue;
             this.mailKey = mailKey;
             this.targetProcessor = targetProcessor;
@@ -58,32 +58,32 @@ public class ReprocessingOneMailTask implements Task {
             return targetProcessor;
         }
 
-        public String getRepositoryUrl() {
-            return repositoryUrl.asString();
+        public String getRepositoryPath() {
+            return repositoryPath.asString();
         }
     }
 
     private final ReprocessingService reprocessingService;
-    private final MailRepositoryUrl repositoryUrl;
+    private final MailRepositoryPath repositoryPath;
     private final String targetQueue;
     private final MailKey mailKey;
     private final Optional<String> targetProcessor;
     private final AdditionalInformation additionalInformation;
 
     public ReprocessingOneMailTask(ReprocessingService reprocessingService,
-                                   MailRepositoryUrl repositoryUrl, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
+                                   MailRepositoryPath repositoryPath, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
         this.reprocessingService = reprocessingService;
-        this.repositoryUrl = repositoryUrl;
+        this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
-        this.additionalInformation = new AdditionalInformation(repositoryUrl, targetQueue, mailKey, targetProcessor);
+        this.additionalInformation = new AdditionalInformation(repositoryPath, targetQueue, mailKey, targetProcessor);
     }
 
     @Override
     public Result run() {
         try {
-            reprocessingService.reprocess(repositoryUrl, mailKey, targetProcessor, targetQueue);
+            reprocessingService.reprocess(repositoryPath, mailKey, targetProcessor, targetQueue);
             return Result.COMPLETED;
         } catch (MessagingException | MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while reprocessing repository", e);

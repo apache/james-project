@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -37,14 +37,14 @@ public class ReprocessingAllMailsTask implements Task {
     public static final String TYPE = "reprocessingAllTask";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final MailRepositoryUrl repositoryUrl;
+        private final MailRepositoryPath repositoryPath;
         private final String targetQueue;
         private final Optional<String> targetProcessor;
         private final long initialCount;
         private final AtomicLong processedCount;
 
-        public AdditionalInformation(MailRepositoryUrl repositoryUrl, String targetQueue, Optional<String> targetProcessor, long initialCount) {
-            this.repositoryUrl = repositoryUrl;
+        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor, long initialCount) {
+            this.repositoryPath = repositoryPath;
             this.targetQueue = targetQueue;
             this.targetProcessor = targetProcessor;
             this.initialCount = initialCount;
@@ -59,8 +59,8 @@ public class ReprocessingAllMailsTask implements Task {
             return targetProcessor;
         }
 
-        public String getRepositoryUrl() {
-            return repositoryUrl.asString();
+        public String getRepositoryPath() {
+            return repositoryPath.asString();
         }
 
         public long getRemainingCount() {
@@ -78,25 +78,25 @@ public class ReprocessingAllMailsTask implements Task {
     }
 
     private final ReprocessingService reprocessingService;
-    private final MailRepositoryUrl repositoryUrl;
+    private final MailRepositoryPath repositoryPath;
     private final String targetQueue;
     private final Optional<String> targetProcessor;
     private final AdditionalInformation additionalInformation;
 
     public ReprocessingAllMailsTask(ReprocessingService reprocessingService, long repositorySize,
-                                    MailRepositoryUrl repositoryUrl, String targetQueue, Optional<String> targetProcessor) {
+                                    MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor) {
         this.reprocessingService = reprocessingService;
-        this.repositoryUrl = repositoryUrl;
+        this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
         this.additionalInformation = new AdditionalInformation(
-            repositoryUrl, targetQueue, targetProcessor, repositorySize);
+            repositoryPath, targetQueue, targetProcessor, repositorySize);
     }
 
     @Override
     public Result run() {
         try {
-            reprocessingService.reprocessAll(repositoryUrl, targetProcessor, targetQueue, additionalInformation::notifyProgress);
+            reprocessingService.reprocessAll(repositoryPath, targetProcessor, targetQueue, additionalInformation::notifyProgress);
             return Result.COMPLETED;
         } catch (MessagingException | MailRepositoryStore.MailRepositoryStoreException e) {
             LOGGER.error("Encountered error while reprocessing repository", e);

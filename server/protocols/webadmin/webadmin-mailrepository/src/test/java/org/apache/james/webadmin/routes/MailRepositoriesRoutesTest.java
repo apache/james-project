@@ -59,6 +59,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.BodyPartBuilder;
 import org.apache.james.mailrepository.api.MailKey;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
@@ -86,6 +87,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.stubbing.Answer;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
@@ -97,14 +99,17 @@ import com.jayway.restassured.parsing.Parser;
 public class MailRepositoriesRoutesTest {
 
     private static final MailRepositoryUrl URL_MY_REPO = MailRepositoryUrl.from("url://myRepo");
-    private static final String URL_ESCAPED_MY_REPO = "url%3A%2F%2FmyRepo";
-    private static final String MY_REPO_MAILS = "url%3A%2F%2FmyRepo/mails";
+    private static final MailRepositoryPath PATH_MY_REPO = MailRepositoryPath.from("myRepo");
+    private static final String PATH_ESCAPED_MY_REPO = "myRepo";
+    private static final String MY_REPO_MAILS = "myRepo/mails";
     private static final String CUSTOM_QUEUE = "customQueue";
     private static final String NAME_1 = "name1";
     private static final String NAME_2 = "name2";
+    private static final Answer<?> RETURN_NO_MAIL_REPOSITORY = (invocation) -> Stream.empty();
     private WebAdminServer webAdminServer;
     private MailRepositoryStore mailRepositoryStore;
     private MemoryMailRepository mailRepository;
+    private Answer<?> returnMailRepository;
     private ManageableMailQueue spoolQueue;
     private ManageableMailQueue customQueue;
 
@@ -112,6 +117,7 @@ public class MailRepositoriesRoutesTest {
     public void setUp() throws Exception {
         mailRepositoryStore = mock(MailRepositoryStore.class);
         mailRepository = new MemoryMailRepository();
+        returnMailRepository = (invocation) -> Stream.of(mailRepository);
 
         MemoryTaskManager taskManager = new MemoryTaskManager();
         JsonTransformer jsonTransformer = new JsonTransformer();
@@ -144,8 +150,10 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void putMailRepositoryShouldReturnOkWhenRepositoryIsCreated() throws Exception {
-        when()
-            .put(URL_ESCAPED_MY_REPO)
+        given()
+            .parameters("protocol", "url")
+        .when()
+            .put(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -155,13 +163,17 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void putMailRepositoryShouldReturnOkWhenRepositoryAlreadyExists() throws Exception {
-        when()
-            .put(URL_ESCAPED_MY_REPO)
+        given()
+            .parameters("protocol", "url")
+        .when()
+            .put(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        when()
-            .put(URL_ESCAPED_MY_REPO)
+        given()
+            .parameters("protocol", "url")
+        .when()
+            .put(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -174,19 +186,21 @@ public class MailRepositoriesRoutesTest {
         when(mailRepositoryStore.create(any()))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("Error while selecting repository url://myRepo"));
 
-        when()
-            .put(URL_ESCAPED_MY_REPO)
+        given()
+            .parameters("protocol", "url")
+        .when()
+            .put(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
             .body("statusCode", is(500))
             .body("type", is(ErrorResponder.ErrorType.SERVER_ERROR.getType()))
-            .body("message", is("Error while creating a mail repository with url 'url://myRepo'"))
+            .body("message", is("Error while creating a mail repository with path 'myRepo' and protocol 'url'"))
             .body("details", is("Error while selecting repository url://myRepo"));
     }
 
     @Test
     public void getMailRepositoriesShouldReturnEmptyWhenEmpty() {
-        when(mailRepositoryStore.getUrls()).thenReturn(Stream.empty());
+        when(mailRepositoryStore.getPaths()).thenAnswer(RETURN_NO_MAIL_REPOSITORY);
 
         List<Object> mailRepositories =
             when()
@@ -204,22 +218,22 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void getMailRepositoriesShouldReturnRepositoryWhenOne() {
-        when(mailRepositoryStore.getUrls())
-            .thenReturn(Stream.of(URL_MY_REPO));
+        when(mailRepositoryStore.getPaths())
+            .thenAnswer((invocation) -> Stream.of(PATH_MY_REPO));
 
         when()
             .get()
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
-            .body("[0].repository", is(URL_MY_REPO.asString()))
-            .body("[0].id", is(URL_ESCAPED_MY_REPO));
+            .body("[0].repository", is(PATH_MY_REPO.asString()))
+            .body("[0].path", is(PATH_ESCAPED_MY_REPO));
     }
 
     @Test
     public void getMailRepositoriesShouldReturnTwoRepositoriesWhenTwo() {
-        ImmutableList<MailRepositoryUrl> myRepositories = ImmutableList.of(URL_MY_REPO, MailRepositoryUrl.from("url://mySecondRepo"));
-        when(mailRepositoryStore.getUrls())
+        ImmutableList<MailRepositoryPath> myRepositories = ImmutableList.of(PATH_MY_REPO, MailRepositoryPath.from("mySecondRepo"));
+        when(mailRepositoryStore.getPaths())
             .thenReturn(myRepositories.stream());
 
         List<String> mailRepositories =
@@ -235,24 +249,24 @@ public class MailRepositoriesRoutesTest {
 
         assertThat(mailRepositories)
             .containsOnlyElementsOf(myRepositories.stream()
-                .map(MailRepositoryUrl::asString)
+                .map(MailRepositoryPath::asString)
                 .collect(Guavate.toImmutableList()));
     }
 
     @Test
     public void listingKeysShouldReturnNotFoundWhenNoRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.empty());
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(RETURN_NO_MAIL_REPOSITORY);
 
         when()
             .get(MY_REPO_MAILS)
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
-            .body("message", is("The repository 'url%3A%2F%2FmyRepo' (decoded value: 'url://myRepo') does not exist"));
+            .body("message", is("myRepo does not exist"));
     }
 
     @Test
     public void listingKeysShouldReturnEmptyWhenNoMail() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         when()
             .get(MY_REPO_MAILS)
@@ -263,7 +277,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnContainedKeys() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name("name1")
@@ -282,7 +296,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldApplyLimitAndOffset() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name("name1")
@@ -307,7 +321,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldHandleErrorGracefully() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO))
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO))
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("message"));
 
         when()
@@ -348,7 +362,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldReturnEmptyWhenOffsetExceedsSize() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name("name1")
@@ -397,7 +411,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void listingKeysShouldIgnoreZeroedOffset() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
@@ -431,33 +445,33 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingRepositoryShouldReturnNotFoundWhenNone() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.empty());
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(RETURN_NO_MAIL_REPOSITORY);
 
         given()
-            .get(URL_ESCAPED_MY_REPO)
+            .get(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
     @Test
     public void retrievingRepositoryShouldReturnBasicInformation() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         given()
-            .get(URL_ESCAPED_MY_REPO)
+            .get(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
-            .body("repository", is(URL_MY_REPO.asString()))
-            .body("id", is(URL_ESCAPED_MY_REPO));
+            .body("repository", is(PATH_MY_REPO.asString()))
+            .body("path", is(PATH_ESCAPED_MY_REPO));
     }
 
     @Test
     public void retrievingRepositorySizeShouldReturnZeroWhenEmpty() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         given()
-            .get(URL_ESCAPED_MY_REPO)
+            .get(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
@@ -466,14 +480,14 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingRepositorySizeShouldReturnNumberOfContainedMails() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
 
         given()
-            .get(URL_ESCAPED_MY_REPO)
+            .get(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
@@ -482,7 +496,8 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldDisplayItsInformation() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
+
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
@@ -504,7 +519,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
@@ -520,7 +535,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldDisplayAllAdditionalFieldsWhenRequested() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name = NAME_1;
 
         BodyPartBuilder textMessage = MimeMessageBuilder.bodyPartBuilder()
@@ -571,7 +586,7 @@ public class MailRepositoriesRoutesTest {
             given()
                 .parameters("additionalFields", "attributes,headers,textBody,htmlBody,messageSize,perRecipientsHeaders")
             .when()
-                .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .then()
             .extract()
                 .body()
@@ -623,7 +638,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldDisplayAllValidAdditionalFieldsWhenRequested() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
@@ -638,7 +653,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .parameters("additionalFields", ",,,messageSize")
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
@@ -653,7 +668,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldDisplayCorrectlyEncodedHeadersInValidAdditionalFieldsWhenRequested() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
@@ -671,7 +686,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .parameters("additionalFields", "headers")
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
@@ -681,7 +696,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldDisplayAllValidAdditionalFieldsEvenTheDuplicatedOnesWhenRequested() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
@@ -696,7 +711,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .parameters("additionalFields", "messageSize,messageSize")
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(name))
@@ -711,7 +726,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldFailWhenAnUnknownFieldIsRequested() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name = NAME_1;
         String sender = "sender@domain";
         String recipient1 = "recipient1@domain";
@@ -726,7 +741,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .parameters("additionalFields", "nonExistingField")
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -736,14 +751,14 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldNotFailWhenOnlyNameProperty() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
 
         when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("name", is(NAME_1))
@@ -755,11 +770,11 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void retrievingAMailShouldFailWhenUnknown() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         String name = "name";
         when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
@@ -774,7 +789,7 @@ public class MailRepositoriesRoutesTest {
                 .build();
         RestAssured.registerParser(Constants.RFC822_CONTENT_TYPE, Parser.TEXT);
 
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         String name = NAME_1;
         FakeMail mail = FakeMail.builder()
@@ -788,7 +803,7 @@ public class MailRepositoriesRoutesTest {
         String actualContent = given()
             .accept(Constants.RFC822_CONTENT_TYPE)
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.OK_200)
             .header("Content-Length", "471")
@@ -807,13 +822,13 @@ public class MailRepositoriesRoutesTest {
             .build();
         RestAssured.registerParser(Constants.RFC822_CONTENT_TYPE, Parser.TEXT);
 
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         String name = "name";
         given()
             .accept(Constants.RFC822_CONTENT_TYPE)
         .when()
-            .get(URL_ESCAPED_MY_REPO + "/mails/" + name)
+            .get(PATH_ESCAPED_MY_REPO + "/mails/" + name)
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
@@ -823,7 +838,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void deletingAMailShouldRemoveIt() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
@@ -833,10 +848,10 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         given()
-            .delete(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1);
+            .delete(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1);
 
         when()
-            .get(URL_ESCAPED_MY_REPO + "/mails")
+            .get(PATH_ESCAPED_MY_REPO + "/mails")
             .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
@@ -845,34 +860,34 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void deletingAMailShouldReturnOkWhenExist() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
 
         when()
-            .delete(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .delete(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
 
     @Test
     public void deletingAMailShouldReturnOkWhenNotExist() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         when()
-            .delete(URL_ESCAPED_MY_REPO + "/mails/name")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails/name")
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
 
     @Test
     public void deletingAllMailsShouldCreateATask() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         when()
-            .delete(URL_ESCAPED_MY_REPO + "/mails")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
@@ -881,7 +896,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void clearTaskShouldHaveDetails() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
@@ -891,7 +906,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .delete(URL_ESCAPED_MY_REPO + "/mails")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -903,7 +918,7 @@ public class MailRepositoriesRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(ClearMailRepositoryTask.TYPE))
-            .body("additionalInformation.repositoryUrl", is(URL_MY_REPO.asString()))
+            .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
             .body("startedDate", is(notNullValue()))
@@ -913,7 +928,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void clearTaskShouldRemoveAllTheMailsFromTheMailRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
@@ -923,7 +938,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         String taskId = with()
-            .delete(URL_ESCAPED_MY_REPO + "/mails")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -932,7 +947,7 @@ public class MailRepositoriesRoutesTest {
             .get(taskId + "/await");
 
         when()
-            .get(URL_ESCAPED_MY_REPO + "/mails")
+            .get(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(0));
@@ -940,38 +955,38 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void patchShouldReturnNotFoundWhenNoMailRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.empty());
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(RETURN_NO_MAIL_REPOSITORY);
 
         when()
-            .delete(URL_ESCAPED_MY_REPO + "/mails")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
             .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
-            .body("message", is(URL_MY_REPO.asString() + " does not exist"));
+            .body("message", is(PATH_MY_REPO.asString() + " does not exist"));
     }
 
     @Test
     public void deleteShouldReturnNotFoundWhenNoMailRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.empty());
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(RETURN_NO_MAIL_REPOSITORY);
 
         when()
-            .delete(URL_ESCAPED_MY_REPO + "/mails/any")
+            .delete(PATH_ESCAPED_MY_REPO + "/mails/any")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
             .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
-            .body("message", is(URL_MY_REPO.asString() + " does not exist"));
+            .body("message", is(PATH_MY_REPO.asString() + " does not exist"));
     }
 
     @Test
     public void reprocessingAllTaskShouldCreateATask() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
 
         given()
             .param("action", "reprocess")
         .when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
@@ -985,7 +1000,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .param("action", "invalid")
         .when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -998,7 +1013,7 @@ public class MailRepositoriesRoutesTest {
         when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
 
         when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -1008,7 +1023,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldIncludeDetailsWhenDefaultValues() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
@@ -1018,7 +1033,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1030,7 +1045,7 @@ public class MailRepositoriesRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(ReprocessingAllMailsTask.TYPE))
-            .body("additionalInformation.repositoryUrl", is(URL_MY_REPO.asString()))
+            .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", isEmptyOrNullString())
@@ -1042,7 +1057,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldIncludeDetails() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name1 = "name1";
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
@@ -1057,7 +1072,7 @@ public class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1069,7 +1084,7 @@ public class MailRepositoriesRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(ReprocessingAllMailsTask.TYPE))
-            .body("additionalInformation.repositoryUrl", is(URL_MY_REPO.asString()))
+            .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.initialCount", is(2))
             .body("additionalInformation.remainingCount", is(0))
             .body("additionalInformation.targetProcessor", is(transport))
@@ -1081,7 +1096,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldClearMailRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name1 = "name1";
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
@@ -1096,7 +1111,7 @@ public class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1109,7 +1124,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldEnqueueMailsOnDefaultQueue() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
@@ -1119,7 +1134,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1135,7 +1150,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldPreserveStateWhenProcessorIsNotSpecified() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String state1 = "state1";
         String state2 = "state2";
         mailRepository.store(FakeMail.builder()
@@ -1149,7 +1164,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1165,7 +1180,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldOverWriteStateWhenProcessorSpecified() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String state1 = "state1";
         String state2 = "state2";
         mailRepository.store(FakeMail.builder()
@@ -1181,7 +1196,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1197,7 +1212,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingAllTaskShouldEnqueueMailsOnSpecifiedQueue() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
@@ -1208,7 +1223,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
-            .patch(URL_ESCAPED_MY_REPO + "/mails")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
             .jsonPath()
             .get("taskId");
 
@@ -1233,7 +1248,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .param("action", "reprocess")
         .when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/name1")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/name1")
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .header("Location", is(notNullValue()))
@@ -1251,7 +1266,7 @@ public class MailRepositoriesRoutesTest {
         given()
             .param("action", "invalid")
         .when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -1268,7 +1283,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         when()
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
@@ -1278,7 +1293,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldIncludeDetailsWhenDefaultValues() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name1 = "name1";
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
@@ -1290,7 +1305,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1302,7 +1317,7 @@ public class MailRepositoriesRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(ReprocessingOneMailTask.TYPE))
-            .body("additionalInformation.repositoryUrl", is(URL_MY_REPO.asString()))
+            .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", isEmptyOrNullString())
             .body("additionalInformation.targetQueue", is(MailQueueFactory.SPOOL))
@@ -1313,7 +1328,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldIncludeDetails() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name1 = "name1";
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
@@ -1328,7 +1343,7 @@ public class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1340,7 +1355,7 @@ public class MailRepositoriesRoutesTest {
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
             .body("type", is(ReprocessingOneMailTask.TYPE))
-            .body("additionalInformation.repositoryUrl", is(URL_MY_REPO.asString()))
+            .body("additionalInformation.repositoryPath", is(PATH_MY_REPO.asString()))
             .body("additionalInformation.mailKey", is(NAME_1))
             .body("additionalInformation.targetProcessor", is(transport))
             .body("additionalInformation.targetQueue", is(CUSTOM_QUEUE))
@@ -1351,7 +1366,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldRemoveMailFromRepository() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String name1 = "name1";
         String name2 = "name2";
         mailRepository.store(FakeMail.builder()
@@ -1366,7 +1381,7 @@ public class MailRepositoriesRoutesTest {
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1380,7 +1395,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldEnqueueMailsOnDefaultQueue() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
@@ -1390,7 +1405,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1406,7 +1421,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldPreserveStateWhenProcessorIsNotSpecified() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String state1 = "state1";
         String state2 = "state2";
         mailRepository.store(FakeMail.builder()
@@ -1420,7 +1435,7 @@ public class MailRepositoriesRoutesTest {
 
         String taskId = with()
             .param("action", "reprocess")
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1436,7 +1451,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldOverWriteStateWhenProcessorSpecified() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         String state1 = "state1";
         String state2 = "state2";
         mailRepository.store(FakeMail.builder()
@@ -1452,7 +1467,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("processor", transport)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1468,7 +1483,7 @@ public class MailRepositoriesRoutesTest {
 
     @Test
     public void reprocessingOneTaskShouldEnqueueMailsOnSpecifiedQueue() throws Exception {
-        when(mailRepositoryStore.get(URL_MY_REPO)).thenReturn(Optional.of(mailRepository));
+        when(mailRepositoryStore.getByPath(PATH_MY_REPO)).thenAnswer(returnMailRepository);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
@@ -1479,7 +1494,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .jsonPath()
             .get("taskId");
 
@@ -1506,7 +1521,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 
@@ -1531,7 +1546,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 
@@ -1556,7 +1571,7 @@ public class MailRepositoriesRoutesTest {
         String taskId = with()
             .param("action", "reprocess")
             .param("queue", CUSTOM_QUEUE)
-            .patch(URL_ESCAPED_MY_REPO + "/mails/" + "unknown")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + "unknown")
             .jsonPath()
             .get("taskId");
 

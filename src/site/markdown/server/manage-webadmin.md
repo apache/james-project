@@ -1220,13 +1220,13 @@ Response codes:
 ### Create a mail repository
 
 ```
-curl -XPUT http://ip:port/mailRepositories/encodedUrlOfTheRepository
+curl -XPUT http://ip:port/mailRepositories/encodedPathOfTheRepository?protocol=someProtocol
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of the created mail repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of the created mail repository. Example:
 
 ```
-curl -XPUT http://ip:port/mailRepositories/file%3A%2F%2FmailRepo
+curl -XPUT http://ip:port/mailRepositories/mailRepo?protocol=file
 ```
 
 Response codes:
@@ -1244,20 +1244,20 @@ The answer looks like:
 ```
 [
     {
-        "repository": "file://var/mail/error/",
-        "id": "file%3A%2F%2Fvar%2Fmail%2Ferror%2F"
+        "repository": "var/mail/error/",
+        "path": "var%2Fmail%2Ferror%2F"
     },
     {
-        "repository": "file://var/mail/relay-denied/",
-        "id": "file%3A%2F%2Fvar%2Fmail%2Frelay-denied%2F"
+        "repository": "var/mail/relay-denied/",
+        "path": "var%2Fmail%2Frelay-denied%2F"
     },
     {
-        "repository": "file://var/mail/spam/",
-        "id": "file%3A%2F%2Fvar%2Fmail%2Fspam%2F"
+        "repository": "var/mail/spam/",
+        "path": "var%2Fmail%2Fspam%2F"
     },
     {
-        "repository": "file://var/mail/address-error/",
-        "id": "file%3A%2F%2Fvar%2Fmail%2Faddress-error%2F"
+        "repository": "var/mail/address-error/",
+        "path": "var%2Fmail%2Faddress-error%2F"
     }
 ]
 ```
@@ -1271,21 +1271,21 @@ Response codes:
 ### Getting additional information for a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/
+curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/
+curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/
 ```
 
 The answer looks like:
 
 ```
 {
-   "repository": "file://var/mail/error/",
-   "id": "file%3A%2F%2Fvar%2Fmail%2Ferror%2F",
+   "repository": "var/mail/error/",
+   "path": "mail%2Ferror%2F",
    "size": 243
 }
 ```
@@ -1298,13 +1298,13 @@ Response codes:
 ### Listing mails contained in a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails
+curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/mails
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails
+curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails
 ```
 
 The answer will contains all mailKey contained in that repository.
@@ -1326,7 +1326,7 @@ You can pass additional URL parameters to this call in order to limit the output
 Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?limit=100&offset=500
+curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?limit=100&offset=500
 ```
 
 Response codes:
@@ -1338,13 +1338,13 @@ Response codes:
 ### Reading/downloading a mail details
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey
+curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1
+curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/mail-key-1
 ```
 
 If the Accept header in the request is "application/json", then the response looks like:
@@ -1427,13 +1427,13 @@ Response codes:
 ### Removing a mail from a mail repository
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey
+curl -XDELETE http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1
+curl -XDELETE http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/mail-key-1
 ```
 
 Response codes:
@@ -1445,13 +1445,13 @@ Response codes:
 
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails
+curl -XDELETE http://ip:port/mailRepositories/encodedPathOfTheRepository/mails
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails
+curl -XDELETE http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails
 ```
 
 The response to that request will be the scheduled `taskId` :
@@ -1477,7 +1477,7 @@ The scheduled task will have the following type `clearMailRepository` and the fo
 
 ```
 {
-  "repositoryUrl":"file://var/mail/error/",
+  "repositoryPath":"var/mail/error/",
   "initialCount": 243,
   "remainingCount": 17
 }
@@ -1490,15 +1490,15 @@ Sometime, you want to re-process emails stored in a mail repository. For instanc
 To reprocess mails from a repository:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/encodedPathOfTheRepository/mails?action=reprocess
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
 
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=reprocess
 ```
 
 Additional query paramaters are supported:
@@ -1509,7 +1509,7 @@ Additional query paramaters are supported:
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails?action=reprocess&processor=transport&queue=spool
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=reprocess&processor=transport&queue=spool
 ```
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
@@ -1538,7 +1538,7 @@ The scheduled task will have the following type `reprocessingAllTask` and the fo
 
 ```
 {
-  "repositoryUrl":"file://var/mail/error/",
+  "repositoryPath":"var/mail/error/",
   "targetQueue":"spool",
   "targetProcessor":"transport",
   "initialCount": 243,
@@ -1551,15 +1551,15 @@ The scheduled task will have the following type `reprocessingAllTask` and the fo
 To reprocess a specific mail from a mail repository:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/encodedUrlOfTheRepository/mails/mailKey?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey?action=reprocess
 ```
 
-Resource name `encodedUrlOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
+Resource name `encodedPathOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
 
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/name1?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?action=reprocess
 ```
 
 Additional query paramaters are supported:
@@ -1570,7 +1570,7 @@ Additional query paramaters are supported:
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/name1?action=reprocess&processor=transport&queue=spool
+curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?action=reprocess&processor=transport&queue=spool
 ```
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
@@ -1599,7 +1599,7 @@ The scheduled task will have the following type `reprocessingOneTask` and the fo
 
 ```
 {
-  "repositoryUrl":"file://var/mail/error/",
+  "repositoryPath":"var/mail/error/",
   "targetQueue":"spool",
   "targetProcessor":"transport",
   "mailKey":"name1"

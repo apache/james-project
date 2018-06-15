@@ -34,6 +34,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
@@ -93,6 +94,16 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     public Optional<MailRepository> get(MailRepositoryUrl url) {
         return Optional.ofNullable(repositories.get(url));
     }
+
+    @Override
+    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
+        return repositories
+                .keySet()
+                .stream()
+                .filter((MailRepositoryUrl key) -> key.getPath().equals(path))
+                .map(repositories::get);
+    }
+
 
     /**
      * <p>

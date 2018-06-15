@@ -28,6 +28,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.file.FileMailRepository;
@@ -46,6 +47,8 @@ import com.google.common.collect.Sets;
 
 public class InMemoryMailRepositoryStoreTest {
     private static final MailRepositoryUrl FILE_REPO = MailRepositoryUrl.from("file://repo");
+    private static final MailRepositoryUrl MEMORY_REPO = MailRepositoryUrl.from("memory://repo");
+    private static final MailRepositoryPath PATH_REPO = MailRepositoryPath.from("repo");
 
     private MemoryMailRepositoryUrlStore urlStore;
 
@@ -150,6 +153,36 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test
+    public void getPathsShouldBeEmptyIfNoSelectWerePerformed() {
+        assertThat(repositoryStore.getPaths()).isEmpty();
+    }
+
+    @Test
+    public void getPathsShouldReturnUsedUrls() {
+        MailRepositoryPath path1 = MailRepositoryPath.from("repo1");
+        MailRepositoryPath path2 = MailRepositoryPath.from("repo1");
+        MailRepositoryPath path3 = MailRepositoryPath.from("repo1");
+        repositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(path1, "file"));
+        repositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(path2, "file"));
+        repositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(path3, "file"));
+        assertThat(repositoryStore.getPaths()).containsOnly(path1, path2, path3);
+    }
+
+    @Test
+    public void getPathsResultsShouldNotBeDuplicatedWithTheSameProtocol() {
+        repositoryStore.select(FILE_REPO);
+        repositoryStore.select(FILE_REPO);
+        assertThat(repositoryStore.getPaths()).containsExactly(PATH_REPO);
+    }
+
+    @Test
+    public void getPathsResultsShouldNotBeDuplicatedWithDifferentProtocols() {
+        repositoryStore.select(FILE_REPO);
+        repositoryStore.select(MEMORY_REPO);
+        assertThat(repositoryStore.getPaths()).containsExactly(PATH_REPO);
+    }
+
+    @Test
     public void getShouldReturnEmptyWhenUrlNotInUse() {
         assertThat(repositoryStore.get(FILE_REPO))
             .isEmpty();
@@ -169,6 +202,38 @@ public class InMemoryMailRepositoryStoreTest {
 
         assertThat(repositoryStore.get(FILE_REPO))
             .contains(mailRepository);
+    }
+
+    @Test
+    public void getByPathShouldReturnEmptyWhenUrlNotInUse() {
+        assertThat(repositoryStore.getByPath(PATH_REPO))
+            .isEmpty();
+    }
+
+    @Test
+    public void getByPathShouldReturnPreviouslyCreatedMatchingMailRepository() {
+        MailRepository mailRepository = repositoryStore.select(FILE_REPO);
+
+        assertThat(repositoryStore.getByPath(PATH_REPO))
+            .contains(mailRepository);
+    }
+
+    @Test
+    public void getByPathShouldReturnPreviouslyCreatedMatchingMailRepositories() {
+        MailRepository mailRepositoryFile = repositoryStore.select(FILE_REPO);
+        MailRepository mailRepositoryArbitrary = repositoryStore.select(MEMORY_REPO);
+
+        assertThat(repositoryStore.getByPath(PATH_REPO))
+            .contains(mailRepositoryFile)
+            .contains(mailRepositoryArbitrary);
+    }
+
+    @Test
+    public void getByPathShouldReturnEmptyWhenNoMailRepositoriesAreMatching() {
+        repositoryStore.select(FILE_REPO);
+
+        assertThat(repositoryStore.getByPath(MailRepositoryPath.from("unknown")))
+            .isEmpty();
     }
 
     @Test

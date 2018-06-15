@@ -34,6 +34,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
@@ -98,6 +99,15 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
             return Optional.of(select(url));
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
+        return destinationToRepositoryAssociations
+                .keySet()
+                .stream()
+                .filter((MailRepositoryUrl key) -> key.getPath().equals(path))
+                .map(destinationToRepositoryAssociations::get);
     }
 
     @Override

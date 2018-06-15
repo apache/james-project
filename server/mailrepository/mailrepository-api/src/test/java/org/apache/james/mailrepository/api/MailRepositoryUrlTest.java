@@ -28,45 +28,69 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class MailRepositoryUrlTest {
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailRepositoryUrl.class)
-            .withIgnoredFields("protocol")
+            .withIgnoredFields("protocol", "path")
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowWhenNull() {
+    void constructorShouldThrowWhenNull() {
         assertThatThrownBy(() -> MailRepositoryUrl.from(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void constructorShouldThrowWhenNoSeparator() {
+    void constructorShouldThrowWhenNoSeparator() {
         assertThatThrownBy(() -> MailRepositoryUrl.from("invalid"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void getProtocolShouldReturnValue() {
+    void getProtocolShouldReturnValue() {
         assertThat(MailRepositoryUrl.from("proto://abc").getProtocol())
             .isEqualTo(new Protocol("proto"));
     }
 
     @Test
-    public void getProtocolShouldReturnValueWhenEmpty() {
+    void getProtocolShouldReturnValueWhenEmpty() {
         assertThat(MailRepositoryUrl.from("://abc").getProtocol())
             .isEqualTo(new Protocol(""));
     }
 
     @Test
-    public void fromEncodedShouldReturnDecodedValue() throws Exception {
+    void fromEncodedShouldReturnDecodedValue() throws Exception {
         assertThat(MailRepositoryUrl.fromEncoded("url%3A%2F%2FmyRepo"))
             .isEqualTo(MailRepositoryUrl.from("url://myRepo"));
     }
 
     @Test
-    public void encodedValueShouldEncodeUnderlyingValue() throws Exception {
+    void fromPathAndProtocolShouldReturnTheFullValue() {
+        assertThat(MailRepositoryUrl.fromPathAndProtocol(MailRepositoryPath.from("myRepo"), "url"))
+            .isEqualTo(MailRepositoryUrl.from("url://myRepo"));
+    }
+
+    @Test
+    void encodedValueShouldEncodeUnderlyingValue() throws Exception {
         assertThat(MailRepositoryUrl.from("url://myRepo").urlEncoded())
             .isEqualTo("url%3A%2F%2FmyRepo");
+    }
+
+    @Test
+    void getPathShouldReturnValue() {
+        assertThat(MailRepositoryUrl.from("proto://abc").getPath())
+            .isEqualTo(MailRepositoryPath.from("abc"));
+    }
+
+    @Test
+    void getPathShouldReturnValueWhenEmtpyPath() {
+        assertThat(MailRepositoryUrl.from("proto://").getPath())
+            .isEqualTo(MailRepositoryPath.from(""));
+    }
+
+    @Test
+    void getPathShouldReturnValueWhenSeveralProtocolSeparators() {
+        assertThat(MailRepositoryUrl.from("proto://abc://def").getPath())
+            .isEqualTo(MailRepositoryPath.from("abc://def"));
     }
 }
