@@ -31,10 +31,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 
 import java.net.InetAddress;
-import java.util.List;
 
 import org.apache.james.core.Domain;
-import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.EventSourcingDLPConfigurationStore;
 import org.apache.james.dnsservice.api.DNSService;
@@ -42,7 +40,6 @@ import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
-import org.apache.james.webadmin.DLPModule;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -52,7 +49,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.google.common.collect.ImmutableList;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.specification.RequestSpecification;
@@ -64,35 +60,13 @@ class DLPConfigurationRoutesTest {
     private static final String DOMAIN_2 = "apache.org";
     private static final Domain SENDER_DOMAIN_2 = Domain.of(DOMAIN_2);
 
-    private static final DLPConfigurationItem CONFIGURATION_ITEM_1 = DLPConfigurationItem.builder()
-        .id(DLPConfigurationItem.Id.of("1"))
-        .explanation("explanation 1")
-        .expression(DEFAULT_DOMAIN)
-        .targetsSender()
-        .targetsRecipients()
-        .targetsContent()
-        .build();
-    private static final DLPConfigurationItem CONFIGURATION_ITEM_2 = DLPConfigurationItem.builder()
-        .id(DLPConfigurationItem.Id.of("2"))
-        .expression(DEFAULT_DOMAIN)
-        .targetsSender()
-        .build();
-
-    private static final List<DLPConfigurationItem> CONFIGURATION_ITEMS_FOR_DOMAIN_2 = ImmutableList.of(DLPConfigurationItem.builder()
-        .id(DLPConfigurationItem.Id.of("3"))
-        .expression(DOMAIN_2)
-        .targetsSender()
-        .build());
-
-    private static final List<DLPConfigurationItem> CONFIGURATION_ITEMS = ImmutableList.of(CONFIGURATION_ITEM_1, CONFIGURATION_ITEM_2);
-
     private WebAdminServer webAdminServer;
     private EventSourcingDLPConfigurationStore dlpStore;
 
     private void createServer(DLPConfigurationStore dlpConfigurationStore, DomainList domainList) throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
-            new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer(new DLPModule())));
+            new DLPConfigurationRoutes(dlpConfigurationStore, domainList, new JsonTransformer()));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
@@ -247,13 +221,13 @@ class DLPConfigurationRoutesTest {
         @Test
         void putShouldReturnBadRequestWhenIdIsNotSpecified() {
             String body =
-                "{" +
+                "{\"rules\": [{" +
                 "  \"expression\": \"expression 4\"," +
                 "  \"explanation\": \"explanation 4\"," +
                 "  \"targetsSender\": false," +
                 "  \"targetsRecipients\": false," +
                 "  \"targetsContent\": false" +
-                "}";
+                "}]}";
 
             given()
                 .body(body)
@@ -264,19 +238,20 @@ class DLPConfigurationRoutesTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(400))
                 .body("type", is("InvalidArgument"))
-                .body("message", is("JSON payload of the request is not valid"));
+                .body("message", is("JSON payload of the request is not valid"))
+                .body("details", is("Instantiation of [simple type, class org.apache.james.webadmin.dto.DLPConfigurationItemDTO] value failed: 'id' is mandatory (through reference chain: org.apache.james.webadmin.dto.DLPConfigurationDTO[\"rules\"])"));
         }
 
         @Test
         void putShouldReturnBadRequestWhenExpressionIsNotSpecified() {
             String body =
-                "{" +
+                "{\"rules\": [{" +
                 "  \"id\": \"5\"," +
                 "  \"explanation\": \"explanation 5\"," +
                 "  \"targetsSender\": false," +
                 "  \"targetsRecipients\": false," +
                 "  \"targetsContent\": false" +
-                "}";
+                "}]}";
 
             given()
                 .body(body)
@@ -287,7 +262,8 @@ class DLPConfigurationRoutesTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(400))
                 .body("type", is("InvalidArgument"))
-                .body("message", is("JSON payload of the request is not valid"));
+                .body("message", is("JSON payload of the request is not valid"))
+                .body("details", is("Instantiation of [simple type, class org.apache.james.webadmin.dto.DLPConfigurationItemDTO] value failed: 'expression' is mandatory (through reference chain: org.apache.james.webadmin.dto.DLPConfigurationDTO[\"rules\"])"));
         }
 
         @Test
@@ -351,7 +327,8 @@ class DLPConfigurationRoutesTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
-                .body("message", is("Invalid request for domain: dr@strange.com"));
+                .body("message", is("Invalid request for domain: dr@strange.com"))
+                .body("details", is("Domain can not be empty nor contain `@`"));
         }
     }
 
@@ -360,7 +337,31 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void deleteShouldRemoveTheConfigurations() {
-            dlpStore.store(SENDER_DOMAIN, CONFIGURATION_ITEMS);
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"expression 1\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"expression 2\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": false," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             when()
                 .delete(DEFAULT_DOMAIN)
@@ -380,8 +381,48 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void deleteShouldRemoveOnlyConfigurationsFromCorrespondingDomain() {
-            dlpStore.store(SENDER_DOMAIN, CONFIGURATION_ITEMS);
-            dlpStore.store(SENDER_DOMAIN_2, CONFIGURATION_ITEMS_FOR_DOMAIN_2);
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"expression 1\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"expression 2\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": false," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+
+            String storeDomain2Body =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"3\"," +
+                "    \"expression\": \"apache.org\"," +
+                "    \"targetsSender\": true" +
+                "  }" +
+                "]}";
+
+            given()
+                .body(storeDomain2Body)
+            .when()
+                .put(DOMAIN_2)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             when()
                 .delete(DEFAULT_DOMAIN)
@@ -441,7 +482,8 @@ class DLPConfigurationRoutesTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
-                .body("message", is("Invalid request for domain: dr@strange.com"));
+                .body("message", is("Invalid request for domain: dr@strange.com"))
+                .body("details", is("Domain can not be empty nor contain `@`"));
         }
     }
 
@@ -450,7 +492,24 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void getShouldReturnOK() {
-            dlpStore.store(SENDER_DOMAIN, CONFIGURATION_ITEMS);
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"expression 1\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }" +
+                "]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             when()
                 .get(DEFAULT_DOMAIN)
@@ -461,7 +520,31 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void getShouldReturnABody() {
-            dlpStore.store(SENDER_DOMAIN, CONFIGURATION_ITEMS);
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"james.org\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"james.org\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             String body = when()
                 .get(DEFAULT_DOMAIN)
@@ -485,7 +568,7 @@ class DLPConfigurationRoutesTest {
                 "  {" +
                 "    \"id\": \"2\"," +
                 "    \"expression\": \"james.org\"," +
-                "    \"explanation\": null," +
+                "    \"explanation\": \"explanation 2\"," +
                 "    \"targetsSender\": true," +
                 "    \"targetsRecipients\": false," +
                 "    \"targetsContent\": false" +
@@ -495,7 +578,14 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void getShouldReturnAnEmptyBodyWhenDLPStoreIsEmpty() {
-            dlpStore.store(SENDER_DOMAIN, ImmutableList.of());
+            String storeBody = "{\"rules\": []}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             String body = when()
                 .get(DEFAULT_DOMAIN)
@@ -511,8 +601,48 @@ class DLPConfigurationRoutesTest {
 
         @Test
         void getShouldReturnOnlyConfigurationsFromCorrespondingDomain() {
-            dlpStore.store(SENDER_DOMAIN, CONFIGURATION_ITEMS);
-            dlpStore.store(SENDER_DOMAIN_2, CONFIGURATION_ITEMS_FOR_DOMAIN_2);
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"james.org\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"james.org\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": false," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+
+            String storeDomain2Body =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"3\"," +
+                "    \"expression\": \"apache.org\"," +
+                "    \"targetsSender\": true" +
+                "  }" +
+                "]}";
+
+            given()
+                .body(storeDomain2Body)
+            .when()
+                .put(DOMAIN_2)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
 
             String body = when()
                 .get(DEFAULT_DOMAIN)
@@ -536,8 +666,8 @@ class DLPConfigurationRoutesTest {
                 "  {" +
                 "    \"id\": \"2\"," +
                 "    \"expression\": \"james.org\"," +
-                "    \"explanation\": null," +
-                "    \"targetsSender\": true," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": false," +
                 "    \"targetsRecipients\": false," +
                 "    \"targetsContent\": false" +
                 "  }" +
@@ -565,7 +695,8 @@ class DLPConfigurationRoutesTest {
                 .contentType(JSON_CONTENT_TYPE)
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
-                .body("message", is("Invalid request for domain: dr@strange.com"));
+                .body("message", is("Invalid request for domain: dr@strange.com"))
+                .body("details", is("Domain can not be empty nor contain `@`"));
         }
     }
 }

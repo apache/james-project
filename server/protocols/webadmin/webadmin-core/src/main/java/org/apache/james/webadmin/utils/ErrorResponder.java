@@ -115,7 +115,7 @@ public class ErrorResponder {
             cause.map(Throwable::getMessage)));
     }
 
-    static class ErrorDetail {
+    public static class ErrorDetail {
         private final int statusCode;
         private final String type;
         private final String message;

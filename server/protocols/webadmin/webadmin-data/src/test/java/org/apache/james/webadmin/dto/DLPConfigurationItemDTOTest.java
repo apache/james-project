@@ -21,14 +21,11 @@ package org.apache.james.webadmin.dto;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableList;
 
 class DLPConfigurationItemDTOTest {
 
@@ -39,41 +36,41 @@ class DLPConfigurationItemDTOTest {
     private static final String NULL_EXPRESSION = null;
 
     @Test
-    void toDTOsShouldBeSetAllFields() {
+    void toDTOsShouldSetAllFields() {
         DLPConfigurationItemDTO dto = DLPConfigurationItemDTO.toDTO(
             DLPConfigurationItem.builder()
                 .id(DLPConfigurationItem.Id.of(ID))
                 .expression(EXPRESSION)
                 .explanation(EXPLANATION)
-                .targetsSender(Optional.of(true))
-                .targetsRecipients(Optional.of(true))
-                .targetsContent(Optional.of(true))
+                .targetsSender(true)
+                .targetsRecipients(true)
+                .targetsContent(true)
                 .build());
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(dto.getId()).isEqualTo(ID);
             softly.assertThat(dto.getExpression()).isEqualTo(EXPRESSION);
             softly.assertThat(dto.getExplanation().get()).isEqualTo(EXPLANATION);
-            softly.assertThat(dto.getTargetsSender().get()).isTrue();
-            softly.assertThat(dto.getTargetsRecipients().get()).isTrue();
-            softly.assertThat(dto.getTargetsContent().get()).isTrue();
+            softly.assertThat(dto.getTargetsSender()).isTrue();
+            softly.assertThat(dto.getTargetsRecipients()).isTrue();
+            softly.assertThat(dto.getTargetsContent()).isTrue();
         });
     }
 
     @Test
-    void toDLPConfigurationsShouldBeSetAllFields() {
-        DLPConfigurationItem item = DLPConfigurationItemDTO.toDLPConfiguration(
-            new DLPConfigurationItemDTO(
-                ID,
-                EXPRESSION,
-                Optional.of(EXPLANATION),
-                Optional.of(true),
-                Optional.of(true),
-                Optional.of(true)));
+    void toDLPConfigurationsShouldSetAllFields() {
+        DLPConfigurationItemDTO itemDTO = new DLPConfigurationItemDTO(
+            ID,
+            EXPRESSION,
+            Optional.of(EXPLANATION),
+            true,
+            true,
+            true);
+        DLPConfigurationItem item = itemDTO.toDLPConfiguration();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(item.getId().asString()).isEqualTo(ID);
-            softly.assertThat(item.getRegexp()).isEqualTo(EXPRESSION);
+            softly.assertThat(item.getRegexp().pattern()).isEqualTo(EXPRESSION);
             softly.assertThat(item.getExplanation().get()).isEqualTo(EXPLANATION);
             softly.assertThat(item.getTargets().isSenderTargeted()).isTrue();
             softly.assertThat(item.getTargets().isRecipientTargeted()).isTrue();
@@ -86,9 +83,9 @@ class DLPConfigurationItemDTOTest {
         assertThatThrownBy(() -> new DLPConfigurationItemDTO(NULL_ID,
                 EXPRESSION,
                 Optional.of(EXPLANATION),
-                Optional.of(true),
-                Optional.of(true),
-                Optional.of(true)))
+                true,
+                true,
+                true))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -97,9 +94,9 @@ class DLPConfigurationItemDTOTest {
         assertThatThrownBy(() -> new DLPConfigurationItemDTO(ID,
                 NULL_EXPRESSION,
                 Optional.of(EXPLANATION),
-                Optional.of(true),
-                Optional.of(true),
-                Optional.of(true)))
+                true,
+                true,
+                true))
             .isInstanceOf(NullPointerException.class);
     }
 }

@@ -33,6 +33,7 @@ import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
+import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
@@ -56,7 +57,8 @@ public class MemoryJamesServerMain {
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SwaggerRoutesModule());
+        new SwaggerRoutesModule(),
+        new DLPRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),

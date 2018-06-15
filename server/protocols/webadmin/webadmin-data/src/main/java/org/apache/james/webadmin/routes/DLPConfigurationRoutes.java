@@ -46,11 +46,12 @@ import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.github.steveash.guavate.Guavate;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -59,6 +60,9 @@ import spark.Request;
 import spark.Service;
 
 @Api(tags = "DLPRules")
+@ApiModel(description = "DLP (stands for Data Leak Prevention) is supported by James. A DLP matcher will, on incoming emails, " +
+        "execute regular expressions on email sender, recipients or content, in order to report suspicious emails to" +
+        "an administrator. WebAdmin can be used to manage these DLP rules on a per sender-domain basis.")
 @Path(DLPConfigurationRoutes.BASE_PATH)
 @Produces(JSON_CONTENT_TYPE)
 public class DLPConfigurationRoutes implements Routes {
@@ -73,46 +77,47 @@ public class DLPConfigurationRoutes implements Routes {
     private final JsonExtractor<DLPConfigurationDTO> jsonExtractor;
     private final DomainList domainList;
 
-    private Service service;
-
     @Inject
     public DLPConfigurationRoutes(DLPConfigurationStore dlpConfigurationStore, DomainList domainList, JsonTransformer jsonTransformer) {
         this.dlpConfigurationStore = dlpConfigurationStore;
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
-        this.jsonExtractor = new JsonExtractor<>(DLPConfigurationDTO.class, new GuavaModule());
+        this.jsonExtractor = new JsonExtractor<>(DLPConfigurationDTO.class);
     }
 
     @Override
     public void define(Service service) {
-        this.service = service;
 
-        defineStore();
+        defineStore(service);
 
-        defineList();
+        defineList(service);
 
-        defineClear();
+        defineClear(service);
     }
 
     @PUT
     @Path("/{senderDomain}")
-    @ApiOperation(value = "Store a list of dlp configs for given senderDomain")
+    @ApiOperation(value = "Store a DLP configuration for given senderDomain")
     @ApiImplicitParams({
-        @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path")
+        @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path"),
+        @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.DLPConfigurationDTO", paramType = "body")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. dlp config is stored."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain or payload in request"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. DLP configuration is stored."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain or payload in request",
+            response = ErrorResponder.ErrorDetail.class),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist.",
+            response = ErrorResponder.ErrorDetail.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
+            message = "Internal server error - Something went bad on the server side.",
+            response = ErrorResponder.ErrorDetail.class)
     })
-    public void defineStore() {
+    public void defineStore(Service service) {
         service.put(SPECIFIC_DLP_RULE_DOMAIN, (request, response) -> {
             Domain senderDomain = parseDomain(request);
             DLPConfigurationDTO dto = jsonExtractor.parse(request.body());
 
-            dlpConfigurationStore.store(senderDomain, DLPConfigurationDTO.toDLPConfigurations(dto));
+            dlpConfigurationStore.store(senderDomain, dto.toDLPConfigurations());
 
             response.status(HttpStatus.NO_CONTENT_204);
             return EMPTY_BODY;
@@ -121,18 +126,21 @@ public class DLPConfigurationRoutes implements Routes {
 
     @GET
     @Path("/{senderDomain}")
-    @ApiOperation(value = "Retrieve a list of dlp configs for given senderDomain")
+    @ApiOperation(value = "Return a DLP configuration for given senderDomain")
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK. dlp configs returned"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain in request"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK. DLP configuration is returned", response = DLPConfigurationDTO.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain in request",
+            response = ErrorResponder.ErrorDetail.class),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist.",
+            response = ErrorResponder.ErrorDetail.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
+            message = "Internal server error - Something went bad on the server side.",
+            response = ErrorResponder.ErrorDetail.class)
     })
-    public void defineList() {
+    public void defineList(Service service) {
         service.get(SPECIFIC_DLP_RULE_DOMAIN, (request, response) -> {
             Domain senderDomain = parseDomain(request);
             List<DLPConfigurationItem> dlpConfigurations = dlpConfigurationStore
@@ -148,18 +156,21 @@ public class DLPConfigurationRoutes implements Routes {
 
     @DELETE
     @Path("/{senderDomain}")
-    @ApiOperation(value = "Clear all dlp configs for given senderDomain")
+    @ApiOperation(value = "Clear a DLP configuration for a given senderDomain")
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path")
     })
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. dlp configs are cleared"),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain in request"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist."),
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. DLP configuration is cleared"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid senderDomain in request",
+            response = ErrorResponder.ErrorDetail.class),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The domain does not exist.",
+            response = ErrorResponder.ErrorDetail.class),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-            message = "Internal server error - Something went bad on the server side.")
+            message = "Internal server error - Something went bad on the server side.",
+            response = ErrorResponder.ErrorDetail.class)
     })
-    public void defineClear() {
+    public void defineClear(Service service) {
         service.delete(SPECIFIC_DLP_RULE_DOMAIN, (request, response) -> {
             Domain senderDomain = parseDomain(request);
             dlpConfigurationStore.clear(senderDomain);

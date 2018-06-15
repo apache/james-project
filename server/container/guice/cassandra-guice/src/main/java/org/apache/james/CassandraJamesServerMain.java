@@ -44,6 +44,7 @@ import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.CassandraRoutesModule;
+import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.ElasticSearchMetricReporterModule;
 import org.apache.james.modules.server.JMXServerModule;
@@ -67,7 +68,8 @@ public class CassandraJamesServerMain {
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule(),
-        new WebAdminServerModule());
+        new WebAdminServerModule(),
+        new DLPRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),

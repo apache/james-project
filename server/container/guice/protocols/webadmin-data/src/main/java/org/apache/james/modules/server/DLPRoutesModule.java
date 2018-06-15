@@ -17,20 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin;
+package org.apache.james.modules.server;
 
-import org.apache.james.webadmin.utils.JsonTransformerModule;
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-public class DLPModule implements JsonTransformerModule {
-
-    public DLPModule() {
-    }
-
+public class DLPRoutesModule extends AbstractModule {
     @Override
-    public Module asJacksonModule() {
-        return new GuavaModule();
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), Routes.class)
+            .addBinding()
+            .to(DLPConfigurationRoutes.class);
     }
 }

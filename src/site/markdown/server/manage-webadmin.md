@@ -33,6 +33,7 @@ In case of any error, the system will return an error message which is json form
  - [Creating address forwards](#Creating_address_forwards)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
+ - [Administrating DLP Configuration](#Administrating_dlp_configuration)
  - [Task management](#Task_management)
 
 ## Administrating domains
@@ -1753,6 +1754,120 @@ Response codes:
  - 400: Invalid request
  - 404: The mail queue does not exist
  - 500: Internal error
+
+## Administrating DLP Configuration
+
+DLP (stands for Data Leak Prevention) is supported by James. A DLP matcher will, on incoming emails,
+execute regular expressions on email sender, recipients or content, in order to report suspicious emails to
+an administrator. WebAdmin can be used to manage these DLP rules on a per `senderDomain` basis.
+
+`senderDomain` is domain of the sender of incoming emails, for example: `apache.org`, `james.org`,...
+Each `senderDomain` correspond to a distinct DLP configuration.
+
+- [List DLP configuration by sender domain](List_dlp_configuration_by_sender_domain)
+- [Store DLP configuration by sender domain](Store_dlp_configuration_by_sender_domain)
+- [Remove DLP configuration by sender domain](Remove_dlp_configuration_by_sender_domain)
+
+### List DLP configuration by sender domain
+
+Retrieve a DLP configuration for corresponding `senderDomain`, a configuration contains list of configuration items
+
+```
+curl -XGET http://ip:port/dlp/rules/senderDomain
+```
+
+Response codes:
+
+ - 200: A list of dlp configuration items is returned
+ - 400: Invalid senderDomain or payload in request
+ - 404: The domain does not exist.
+ - 500: Internal error
+
+This is an example of returned body. The rules field is a list of rules as described below.
+
+```
+{"rules : [
+  {
+    "id": "1",
+    "expression": "james.org",
+    "explanation": "Find senders or recipients containing james[any char]org",
+    "targetsSender": true,
+    "targetsRecipients": true,
+    "targetsContent": false
+  },
+  {
+    "id": "2",
+    "expression": "Find senders containing apache[any char]org",
+    "explanation": "apache.org",
+    "targetsSender": true,
+    "targetsRecipients": false,
+    "targetsContent": false
+  }
+]}
+```
+
+### Store DLP configuration by sender domain
+
+Store a DLP configuration for corresponding `senderDomain`, if any item of DLP configuration in the request is stored before, 
+it will not be stored anymore
+
+```
+curl -XPUT http://ip:port/dlp/rules/senderDomain
+```
+
+The body can contain a list of DLP configuration items formed by those fields: 
+- `id`(String) is mandatory, unique identifier of the configuration item
+- `expression`(String) is mandatory, regular expression to match contents of targets
+- `explanation`(String) is optional, description of the configuration item
+- `targetsSender`(boolean) is optional and defaults to false. If true, `expression` will be applied to Sender and to From headers of the mail
+- `targetsContent`(boolean) is optional and defaults to false. If true, `expression` will be applied to Subject headers and textual bodies (text/plain and text/html) of the mail
+- `targetsRecipients`(boolean) is optional and defaults to false. If true, `expression` will be applied to recipients of the mail
+
+This is an example of returned body. The rules field is a list of rules as described below.
+
+```
+{"rules": [
+  {
+    "id": "1",
+    "expression": "james.org",
+    "explanation": "Find senders or recipients containing james[any char]org",
+    "targetsSender": true,
+    "targetsRecipients": true,
+    "targetsContent": false
+  },
+  {
+    "id": "2",
+    "expression": "Find senders containing apache[any char]org",
+    "explanation": "apache.org",
+    "targetsSender": true,
+    "targetsRecipients": false,
+    "targetsContent": false
+  }
+]}
+```
+
+Response codes:
+
+ - 204: List of dlp configuration items is stored
+ - 400: Invalid senderDomain or payload in request
+ - 404: The domain does not exist.
+ - 500: Internal error
+
+### Remove DLP configuration by sender domain
+
+Remove a DLP configuration for corresponding `senderDomain`
+
+```
+curl -XDELETE http://ip:port/dlp/rules/senderDomain
+```
+
+Response codes:
+
+ - 204: DLP configuration is removed
+ - 400: Invalid senderDomain or payload in request
+ - 404: The domain does not exist.
+ - 500: Internal error
+
 
 ## Task management
 
