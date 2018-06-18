@@ -34,7 +34,6 @@ class HistoryTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(History.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -33,7 +33,6 @@ public class UsernameTest {
     @Test
     public void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Username.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

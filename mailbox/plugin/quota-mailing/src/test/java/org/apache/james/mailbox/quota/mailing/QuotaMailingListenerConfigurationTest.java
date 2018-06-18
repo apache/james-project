@@ -47,7 +47,6 @@ public class QuotaMailingListenerConfigurationTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaMailingListenerConfiguration.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

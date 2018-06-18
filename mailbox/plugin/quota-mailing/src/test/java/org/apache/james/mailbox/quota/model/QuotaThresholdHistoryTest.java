@@ -38,7 +38,6 @@ public class QuotaThresholdHistoryTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaThresholdHistory.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

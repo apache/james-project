@@ -35,7 +35,6 @@ public class ExtensionFieldTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(ExtensionField.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -33,7 +33,6 @@ public class BlobIdTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(BlobId.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

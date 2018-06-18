@@ -33,7 +33,6 @@ public class DispositionModifierTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(DispositionModifier.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

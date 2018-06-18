@@ -35,7 +35,6 @@ public class GatewayTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(Gateway.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

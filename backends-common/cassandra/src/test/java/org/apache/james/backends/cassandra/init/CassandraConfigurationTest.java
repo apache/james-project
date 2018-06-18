@@ -35,7 +35,6 @@ public class CassandraConfigurationTest {
     @Test
     public void cassandraConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraConfiguration.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

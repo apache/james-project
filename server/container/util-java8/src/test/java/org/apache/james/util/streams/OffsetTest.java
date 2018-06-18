@@ -34,7 +34,6 @@ public class OffsetTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Offset.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

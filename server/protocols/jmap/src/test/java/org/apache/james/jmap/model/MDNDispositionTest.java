@@ -34,7 +34,6 @@ public class MDNDispositionTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MDNDisposition.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

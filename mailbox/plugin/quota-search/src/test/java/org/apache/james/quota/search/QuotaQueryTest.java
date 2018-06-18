@@ -33,7 +33,6 @@ public class QuotaQueryTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaQuery.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

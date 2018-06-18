@@ -35,7 +35,6 @@ public class FinalRecipientTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(FinalRecipient.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

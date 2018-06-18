@@ -34,7 +34,6 @@ public class UserQuotaThresholdsTest {
     @Test
     public void aggregateShouldMatchBeanContract() {
         EqualsVerifier.forClass(UserQuotaThresholds.Id.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

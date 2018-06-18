@@ -28,7 +28,6 @@ public class HookResultTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(HookResult.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

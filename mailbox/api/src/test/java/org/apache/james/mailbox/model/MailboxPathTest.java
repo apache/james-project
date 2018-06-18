@@ -32,7 +32,6 @@ public class MailboxPathTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxPath.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

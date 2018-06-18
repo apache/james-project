@@ -34,7 +34,6 @@ public class StoreCommandTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(StoreCommand.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

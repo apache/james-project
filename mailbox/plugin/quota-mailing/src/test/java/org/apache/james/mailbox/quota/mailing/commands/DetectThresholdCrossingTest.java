@@ -28,6 +28,7 @@ public class DetectThresholdCrossingTest {
     @Test
     public void aggregateShouldMatchBeanContract() {
         EqualsVerifier.forClass(DetectThresholdCrossing.class)
+            .withIgnoredFields("instant")
             .verify();
     }
 }

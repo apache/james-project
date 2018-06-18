@@ -32,7 +32,6 @@ public class DLPAggregateIdTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPAggregateId.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

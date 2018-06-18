@@ -30,7 +30,6 @@ public class ClearCommandTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ClearCommand.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

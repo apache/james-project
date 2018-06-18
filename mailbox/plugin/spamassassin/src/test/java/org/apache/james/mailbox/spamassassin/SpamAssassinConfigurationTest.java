@@ -32,7 +32,6 @@ public class SpamAssassinConfigurationTest {
     @Test
     public void spamAssassinConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(SpamAssassinConfiguration.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -35,28 +35,24 @@ public class QuotaClauseTest {
     @Test
     public void lessThanShouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaClause.LessThan.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
     
     @Test
     public void moreThanShouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaClause.MoreThan.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
     
     @Test
     public void hasDomainShouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaClause.HasDomain.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
     
     @Test
     public void andShouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaClause.And.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

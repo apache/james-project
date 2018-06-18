@@ -38,21 +38,18 @@ public class DLPConfigurationItemTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPConfigurationItem.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
     @Test
     void innerClassTargetsShouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPConfigurationItem.Targets.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
     @Test
     void innerClassIdShouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPConfigurationItem.Targets.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

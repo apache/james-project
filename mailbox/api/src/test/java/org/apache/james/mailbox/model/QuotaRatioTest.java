@@ -41,7 +41,6 @@ class QuotaRatioTest {
     @Test
     void shouldMatchBeanContact() {
         EqualsVerifier.forClass(QuotaRatio.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

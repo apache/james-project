@@ -332,7 +332,6 @@ public class CassandraMessageDAOTest {
     @Test
     public void messageIdAttachmentIdsShouldMatchBeanContract() {
         EqualsVerifier.forClass(MessageIdAttachmentIds.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

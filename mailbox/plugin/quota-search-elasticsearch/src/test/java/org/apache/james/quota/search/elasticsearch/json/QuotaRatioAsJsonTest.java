@@ -45,7 +45,6 @@ public class QuotaRatioAsJsonTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaRatioAsJson.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -424,6 +424,8 @@ public class FakeMail implements Mail, Serializable {
                 && Objects.equal(this.errorMessage, that.errorMessage)
                 && Objects.equal(this.lastUpdated, that.lastUpdated)
                 && Objects.equal(this.attributes, that.attributes)
+                && Objects.equal(this.remoteHost, that.remoteHost)
+                && Objects.equal(this.perRecipientHeaders, that.perRecipientHeaders)
                 && Objects.equal(this.remoteAddr, that.remoteAddr);
         }
         return false;
@@ -431,7 +433,7 @@ public class FakeMail implements Mail, Serializable {
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, remoteAddr);
+        return Objects.hashCode(name, sender, recipients, state, errorMessage, lastUpdated, attributes, size, remoteAddr, remoteHost, perRecipientHeaders);
     }
 
     @Override

@@ -37,7 +37,6 @@ public class ReportingUserAgentTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(ReportingUserAgent.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

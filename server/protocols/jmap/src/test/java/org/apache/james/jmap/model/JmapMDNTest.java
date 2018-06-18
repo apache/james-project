@@ -60,7 +60,6 @@ public class JmapMDNTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(JmapMDN.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

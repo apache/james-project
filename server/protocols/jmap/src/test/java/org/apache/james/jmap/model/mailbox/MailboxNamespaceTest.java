@@ -30,7 +30,6 @@ public class MailboxNamespaceTest {
     @Test
     public void shouldRespectJavaBeanContract() throws Exception {
         EqualsVerifier.forClass(MailboxNamespace.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

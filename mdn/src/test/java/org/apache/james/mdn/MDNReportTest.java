@@ -52,7 +52,6 @@ public class MDNReportTest {
     @Test
     public void shouldMatchBeanContact() {
         EqualsVerifier.forClass(MDNReport.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

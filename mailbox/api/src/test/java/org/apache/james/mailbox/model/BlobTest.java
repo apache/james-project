@@ -37,6 +37,7 @@ public class BlobTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Blob.class)
+            .withIgnoredFields("payload", "size")
             .verify();
     }
 

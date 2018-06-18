@@ -42,14 +42,12 @@ public class RightsTest {
     @Test
     public void rightsShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rights.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
     @Test
     public void usernameShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rights.Username.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

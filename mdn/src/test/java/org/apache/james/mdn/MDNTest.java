@@ -55,7 +55,6 @@ public class MDNTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MDN.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -36,7 +36,6 @@ public class ConfigurationItemsAddedTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ConfigurationItemsAdded.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

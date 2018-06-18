@@ -30,7 +30,6 @@ class EventIdTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(EventId.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

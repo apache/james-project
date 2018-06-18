@@ -34,7 +34,6 @@ public class AddressTypeTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(AddressType.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

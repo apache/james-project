@@ -36,7 +36,6 @@ public class ConfigurationItemsRemovedTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ConfigurationItemsRemoved.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

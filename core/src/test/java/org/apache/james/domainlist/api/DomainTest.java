@@ -31,7 +31,9 @@ public class DomainTest {
 
     @Test
     public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(Domain.class).verify();
+        EqualsVerifier.forClass(Domain.class)
+            .withIgnoredFields("domainName")
+            .verify();
     }
 
     @Test

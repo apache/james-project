@@ -41,7 +41,6 @@ public class DispositionTest {
     @Test
     public void shouldMatchBeanContract() throws Exception {
         EqualsVerifier.forClass(Disposition.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

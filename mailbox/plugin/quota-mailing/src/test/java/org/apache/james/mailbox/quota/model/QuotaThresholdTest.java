@@ -38,7 +38,6 @@ public class QuotaThresholdTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(QuotaThreshold.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 

@@ -30,7 +30,6 @@ public class LimitTest {
     @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Limit.class)
-            .allFieldsShouldBeUsed()
             .verify();
     }
 
