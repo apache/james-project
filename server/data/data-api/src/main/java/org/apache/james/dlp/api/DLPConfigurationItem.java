@@ -263,11 +263,9 @@ public class DLPConfigurationItem {
         if (o instanceof DLPConfigurationItem) {
             DLPConfigurationItem dlpConfigurationItem = (DLPConfigurationItem) o;
 
-            Optional<String> regexp = Optional.ofNullable(this.regexp).map(Pattern::pattern);
-            Optional<String> otherRegexp = Optional.ofNullable(dlpConfigurationItem.regexp).map(Pattern::pattern);
             return Objects.equals(this.id, dlpConfigurationItem.id)
                 && Objects.equals(this.explanation, dlpConfigurationItem.explanation)
-                && Objects.equals(regexp, otherRegexp)
+                && Objects.equals(this.regexp.pattern(), dlpConfigurationItem.regexp.pattern())
                 && Objects.equals(this.targets, dlpConfigurationItem.targets);
         }
         return false;

@@ -38,6 +38,7 @@ public class DLPConfigurationItemTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(DLPConfigurationItem.class)
+            .withNonnullFields("regexp")
             .verify();
     }
 
