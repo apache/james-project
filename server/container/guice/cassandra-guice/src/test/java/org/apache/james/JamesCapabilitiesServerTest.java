@@ -111,7 +111,7 @@ public class JamesCapabilitiesServerTest {
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.MailboxCapabilities.class));
         when(mailboxManager.getSupportedMessageCapabilities())
-            .thenReturn(EnumSet.complementOf(EnumSet.of(MailboxManager.MessageCapabilities.Attachment)));
+            .thenReturn(EnumSet.allOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.allOf(MailboxManager.SearchCapabilities.class));
 

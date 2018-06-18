@@ -77,15 +77,11 @@ public class SimpleMessageSearchIndex implements MessageSearchIndex {
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MessageCapabilities> messageCapabilities) {
-        if (messageCapabilities.contains(MessageCapabilities.Attachment)) {
-            return EnumSet.of(SearchCapabilities.MultimailboxSearch,
-                SearchCapabilities.Text,
-                SearchCapabilities.Attachment,
-                SearchCapabilities.PartialEmailMatch,
-                SearchCapabilities.AttachmentFileName);
-        }
         return EnumSet.of(SearchCapabilities.MultimailboxSearch,
-            SearchCapabilities.Text);
+            SearchCapabilities.Text,
+            SearchCapabilities.Attachment,
+            SearchCapabilities.PartialEmailMatch,
+            SearchCapabilities.AttachmentFileName);
     }
     
     /**

@@ -53,7 +53,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
         MailboxCapabilities.Annotation,
         MailboxCapabilities.ACL,
         MailboxCapabilities.Quota);
-    public static final EnumSet<MessageCapabilities> MESSAGE_CAPABILITIES = EnumSet.of(MessageCapabilities.Attachment, MessageCapabilities.UniqueID);
+    public static final EnumSet<MessageCapabilities> MESSAGE_CAPABILITIES = EnumSet.of(MessageCapabilities.UniqueID);
 
     private final MailboxPathLocker locker;
     private final CassandraMailboxSessionMapperFactory mapperFactory;

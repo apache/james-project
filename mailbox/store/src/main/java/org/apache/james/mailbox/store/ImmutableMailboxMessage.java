@@ -83,10 +83,7 @@ public class ImmutableMailboxMessage implements MailboxMessage {
         }
 
         private ImmutableList<MessageAttachment> attachments(MailboxMessage message) {
-            if (mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.Attachment)) {
-                return ImmutableList.copyOf(message.getAttachments());
-            }
-            return ImmutableList.of();
+            return ImmutableList.copyOf(message.getAttachments());
         }
     }
 

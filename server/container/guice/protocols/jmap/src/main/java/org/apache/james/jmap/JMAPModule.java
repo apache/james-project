@@ -148,8 +148,6 @@ public class JMAPModule extends AbstractModule {
                     "ACL support in MailboxManager is required by JMAP Module");
 
             EnumSet<MailboxManager.MessageCapabilities> messageCapabilities = mailboxManager.getSupportedMessageCapabilities();
-            Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.Attachment),
-                    "Attachment support in MailboxManager is required by JMAP Module");
             Preconditions.checkArgument(messageCapabilities.contains(MailboxManager.MessageCapabilities.UniqueID),
                     "MessageIdManager is not defined by this Mailbox implementation");
 
