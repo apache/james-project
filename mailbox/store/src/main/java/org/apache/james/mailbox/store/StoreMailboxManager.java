@@ -100,6 +100,7 @@ import com.google.common.collect.Iterables;
 public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
+    public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
 
     private final MailboxEventDispatcher dispatcher;
     private final DelegatingMailboxListener delegatingListener;
@@ -243,7 +244,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
-        return EnumSet.noneOf(MessageCapabilities.class);
+        return DEFAULT_NO_MESSAGE_CAPABILITIES;
     }
     
     @Override
@@ -415,7 +416,7 @@ public class StoreMailboxManager implements MailboxManager {
      * @return storeMailbox
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return new StoreMessageManager(getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(), 
+        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(),
                 getLocker(), mailbox, getQuotaManager(),
                 getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes(),
                 getImmutableMailboxMessageFactory(), getStoreRightManager());

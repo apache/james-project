@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import javax.mail.util.SharedFileInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -127,6 +129,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
 
+    private final EnumSet<MailboxManager.MessageCapabilities> messageCapabilities;
+
     private final Mailbox mailbox;
 
     private final MailboxEventDispatcher dispatcher;
@@ -151,11 +155,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
     private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
 
-    public StoreMessageManager(MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher, 
+    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher,
             MailboxPathLocker locker, Mailbox mailbox,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
             ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager)
                     throws MailboxException {
+        this.messageCapabilities = messageCapabilities;
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
@@ -466,10 +471,18 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     }
 
     protected MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
-        SimpleMailboxMessage copy = SimpleMailboxMessage.copyWithoutAttachments(message.getMailboxId(), message);
+        SimpleMailboxMessage copy = copyMessageWithoutMetadata(message);
         copy.setUid(message.getUid());
         copy.setModSeq(message.getModSeq());
         return copy;
+    }
+
+    private SimpleMailboxMessage copyMessageWithoutMetadata(MailboxMessage message) throws MailboxException {
+        if (messageCapabilities.contains(MailboxManager.MessageCapabilities.Attachment)) {
+            return SimpleMailboxMessage.copy(message.getMailboxId(), message);
+        } else {
+            return SimpleMailboxMessage.copyWithoutAttachments(message.getMailboxId(), message);
+        }
     }
 
     @Override

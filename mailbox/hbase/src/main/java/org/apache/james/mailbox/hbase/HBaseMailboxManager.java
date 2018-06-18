@@ -45,6 +45,8 @@ import org.apache.james.mailbox.store.transaction.Mapper;
  */
 public class HBaseMailboxManager extends StoreMailboxManager {
 
+    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.Namespace);
+
     public HBaseMailboxManager(HBaseMailboxSessionMapperFactory mapperFactory,
                                Authenticator authenticator,
                                Authorizator authorizator,
@@ -60,7 +62,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
     }
 
     @Override
-    protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
+    protected Mailbox doCreateMailbox(MailboxPath mailboxPath, MailboxSession session) {
         return new HBaseMailbox(mailboxPath, randomUidValidity());
     }
 
@@ -80,7 +82,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(MailboxCapabilities.Namespace);
+        return MAILBOX_CAPABILITIES;
     }
 
     @Override

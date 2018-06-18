@@ -20,7 +20,6 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 import com.github.steveash.guavate.Guavate;
@@ -41,7 +40,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   BatchSizes batchSizes,
                                   ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
                                   StoreRightManager storeRightManager) throws MailboxException {
-        super(mapperFactory, index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
+        super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;
     }
@@ -61,13 +60,5 @@ public class InMemoryMessageManager extends StoreMessageManager {
                     .map(MessageAttachment::getAttachment)
                     .collect(Guavate.toImmutableList()),
                 message.getMessageId());
-    }
-
-    @Override
-    protected MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
-        SimpleMailboxMessage copy = SimpleMailboxMessage.copy(message.getMailboxId(), message);
-        copy.setUid(message.getUid());
-        copy.setModSeq(message.getModSeq());
-        return copy;
     }
 }

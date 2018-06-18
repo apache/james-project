@@ -47,6 +47,15 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  * Cassandra implementation of {@link StoreMailboxManager}
  */
 public class CassandraMailboxManager extends StoreMailboxManager {
+    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(
+        MailboxCapabilities.Move,
+        MailboxCapabilities.UserFlag,
+        MailboxCapabilities.Namespace,
+        MailboxCapabilities.Annotation,
+        MailboxCapabilities.ACL,
+        MailboxCapabilities.Quota);
+    public static final EnumSet<MessageCapabilities> MESSAGE_CAPABILITIES = EnumSet.of(MessageCapabilities.Attachment, MessageCapabilities.UniqueID);
+
     private final MailboxPathLocker locker;
     private final CassandraMailboxSessionMapperFactory mapperFactory;
 
@@ -78,18 +87,12 @@ public class CassandraMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxManager.MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(
-            MailboxCapabilities.Move,
-            MailboxCapabilities.UserFlag,
-            MailboxCapabilities.Namespace,
-            MailboxCapabilities.Annotation,
-            MailboxCapabilities.ACL,
-            MailboxCapabilities.Quota);
+        return MAILBOX_CAPABILITIES;
     }
 
     @Override
     public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
-        return EnumSet.of(MessageCapabilities.Attachment, MessageCapabilities.UniqueID);
+        return MESSAGE_CAPABILITIES;
     }
     
     @Override

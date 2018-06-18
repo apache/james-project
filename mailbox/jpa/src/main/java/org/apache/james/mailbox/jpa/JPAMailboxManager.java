@@ -43,6 +43,10 @@ import org.apache.james.mailbox.store.transaction.Mapper;
  */
 public abstract class JPAMailboxManager extends StoreMailboxManager {
 
+    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
+        MailboxCapabilities.Namespace,
+        MailboxCapabilities.Annotation);
+
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
                              Authenticator authenticator,
                              Authorizator authorizator,
@@ -65,9 +69,7 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
 
     @Override
     public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
-        return EnumSet.of(MailboxCapabilities.UserFlag,
-            MailboxCapabilities.Namespace,
-            MailboxCapabilities.Annotation);
+        return MAILBOX_CAPABILITIES;
     }
 
     /**
