@@ -1,6 +1,7 @@
-FROM ruby:2.1
+FROM ruby:2.2
 
-RUN apt-get update \
+RUN apt-key update \
+  && apt-get update \
   && apt-get install -y \
     node \
     python-pygments \
