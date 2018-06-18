@@ -21,8 +21,7 @@ package org.apache.james.mailbox.backup;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 import javax.mail.Flags;
@@ -36,10 +35,8 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public interface MailboxMessageFixture {
 
-    SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-
-    Date DATE_1 = parseDate("2018-02-15 15:54:02");
-    Date DATE_2 = parseDate("2018-03-15 15:54:02");
+    ZonedDateTime DATE_1 = ZonedDateTime.parse("2018-02-15T15:54:02Z");
+    ZonedDateTime DATE_2 = ZonedDateTime.parse("2018-03-15T15:54:02Z");
 
     MessageId.Factory MESSAGE_ID_FACTORY = new TestMessageId.Factory();
     Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
@@ -56,7 +53,7 @@ public interface MailboxMessageFixture {
         .messageId(MESSAGE_ID_1)
         .content(CONTENT_STREAM_1)
         .size(SIZE_1)
-        .internalDate(DATE_1)
+        .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
         .propertyBuilder(new PropertyBuilder())
@@ -66,18 +63,11 @@ public interface MailboxMessageFixture {
         .messageId(MESSAGE_ID_2)
         .content(CONTENT_STREAM_2)
         .size(SIZE_2)
-        .internalDate(DATE_2)
+        .internalDate(new Date(DATE_2.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
         .propertyBuilder(new PropertyBuilder())
         .mailboxId(TestId.of(1L))
         .build();
 
-    static Date parseDate(String input) {
-        try {
-            return SIMPLE_DATE_FORMAT.parse(input);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
