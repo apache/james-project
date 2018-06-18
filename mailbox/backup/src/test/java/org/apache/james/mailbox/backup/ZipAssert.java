@@ -21,17 +21,53 @@ package org.apache.james.mailbox.backup;
 
 import static org.apache.james.mailbox.backup.ZipArchiveEntryAssert.assertThatZipEntry;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.error.BasicErrorMessageFactory;
 
+import com.github.steveash.guavate.Guavate;
+
 public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
     interface EntryCheck {
-        void test(ZipArchiveEntryAssert assertion) throws Exception;
+        default EntryCheck compose(EntryCheck other) {
+            return assertion -> other.test(this.test(assertion));
+        }
+
+        ZipArchiveEntryAssert test(ZipArchiveEntryAssert assertion) throws Exception;
+    }
+
+    public static class EntryChecks {
+        public static EntryChecks hasName(String name) {
+            return new EntryChecks(name, assertion -> assertion.hasName(name));
+        }
+
+        private final String name;
+        private final EntryCheck check;
+
+        private EntryChecks(String name, EntryCheck check) {
+            this.name = name;
+            this.check = check;
+        }
+
+        public EntryChecks check(EntryCheck additionalCheck) {
+            return new EntryChecks(name,
+                check.compose(additionalCheck));
+        }
+
+        public EntryChecks hasStringContent(String stringConyent) {
+            return check(check.compose(assertion -> assertion.hasStringContent(stringConyent)));
+        }
+
+        public EntryChecks containsExtraFields(ZipExtraField... expectedExtraFields) {
+            return check(check.compose(assertion -> assertion.containsExtraFields(expectedExtraFields)));
+        }
     }
 
     public static ZipAssert assertThatZip(ZipFile zipFile) {
@@ -39,7 +75,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
     }
 
     private static BasicErrorMessageFactory shouldHaveSize(ZipFile zipFile, int expected, int actual) {
-        return new BasicErrorMessageFactory("%nExpecting %s to have side %d but was %d", zipFile, expected, actual);
+        return new BasicErrorMessageFactory("%nExpecting %s to have side %s but was %s", zipFile, expected, actual);
     }
 
     private static BasicErrorMessageFactory shouldBeEmpty(ZipFile zipFile) {
@@ -53,14 +89,20 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
         this.zipFile = zipFile;
     }
 
-    public ZipAssert containsExactlyEntriesMatching(EntryCheck... entryChecks) throws Exception {
+    public ZipAssert containsOnlyEntriesMatching(EntryChecks... entryChecks) throws Exception {
         isNotNull();
-        List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries());
+        List<EntryChecks> sortedEntryChecks= Arrays.stream(entryChecks)
+            .sorted(Comparator.comparing(checks -> checks.name))
+            .collect(Guavate.toImmutableList());
+        List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries())
+            .stream()
+            .sorted(Comparator.comparing(ZipArchiveEntry::getName))
+            .collect(Guavate.toImmutableList());
         if (entries.size() != entryChecks.length) {
             throwAssertionError(shouldHaveSize(zipFile, entryChecks.length, entries.size()));
         }
         for (int i = 0; i < entries.size(); i++) {
-            entryChecks[i].test(assertThatZipEntry(zipFile, entries.get(i)));
+            sortedEntryChecks.get(i).check.test(assertThatZipEntry(zipFile, entries.get(i)));
         }
         return myself;
     }

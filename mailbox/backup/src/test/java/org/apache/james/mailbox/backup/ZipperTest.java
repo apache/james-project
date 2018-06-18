@@ -25,11 +25,13 @@ import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONT
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.SIZE_1;
+import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
+import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.junit.TemporaryFolderExtension.TemporaryFolder;
@@ -48,6 +50,8 @@ public class ZipperTest {
     void beforeEach(TemporaryFolder temporaryFolder) throws Exception {
         testee = new Zipper();
         destination = File.createTempFile("backup-test", ".zip", temporaryFolder.getTempDir());
+
+        ExtraFieldUtils.register(SizeExtraField.class);
     }
 
     @Test
@@ -65,9 +69,8 @@ public class ZipperTest {
 
         try (ZipFile zipFile = new ZipFile(destination)) {
             assertThatZip(zipFile)
-                .containsExactlyEntriesMatching(
-                    zipEntryAssert -> zipEntryAssert
-                        .hasName(MESSAGE_ID_1.serialize())
+                .containsOnlyEntriesMatching(
+                    hasName(MESSAGE_ID_1.serialize())
                         .hasStringContent(MESSAGE_CONTENT_1));
         }
     }
@@ -78,12 +81,10 @@ public class ZipperTest {
 
         try (ZipFile zipFile = new ZipFile(destination)) {
             assertThatZip(zipFile)
-                .containsExactlyEntriesMatching(
-                    zipEntryAssert -> zipEntryAssert
-                        .hasName(MESSAGE_ID_1.serialize())
+                .containsOnlyEntriesMatching(
+                    hasName(MESSAGE_ID_1.serialize())
                         .hasStringContent(MESSAGE_CONTENT_1),
-                    zipEntryAssert -> zipEntryAssert
-                        .hasName(MESSAGE_ID_2.serialize())
+                    hasName(MESSAGE_ID_2.serialize())
                         .hasStringContent(MESSAGE_CONTENT_2));
         }
     }
@@ -95,9 +96,8 @@ public class ZipperTest {
 
         try (ZipFile zipFile = new ZipFile(destination)) {
             assertThatZip(zipFile)
-                .containsExactlyEntriesMatching(
-                    zipEntryAssert -> zipEntryAssert
-                        .hasName(MESSAGE_ID_2.serialize())
+                .containsOnlyEntriesMatching(
+                    hasName(MESSAGE_ID_2.serialize())
                         .hasStringContent(MESSAGE_CONTENT_2));
         }
     }
@@ -108,9 +108,9 @@ public class ZipperTest {
 
         try (ZipFile zipFile = new ZipFile(destination)) {
             assertThatZip(zipFile)
-                .containsExactlyEntriesMatching(
-                    zipEntryAssert -> zipEntryAssert
-                        .containsExactlyExtraFields(new SizeExtraField(SIZE_1)));
+                .containsOnlyEntriesMatching(
+                    hasName(MESSAGE_ID_1.serialize())
+                        .containsExtraFields(new SizeExtraField(SIZE_1)));
         }
     }
 }
