@@ -42,7 +42,6 @@ import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -58,8 +57,10 @@ import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.UidComparator;
+import org.apache.james.mime4j.MimeException;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
@@ -508,7 +509,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
     @Override
     public List<MessageAttachment> getAttachments() {
-        throw new NotImplementedException("Attachments are not implemented");
+        try {
+            return new MessageParser().retrieveAttachments(getFullContent());
+        } catch (MimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

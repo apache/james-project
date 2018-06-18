@@ -469,19 +469,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         return new SimpleMailboxMessage(messageIdFactory.generate(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
     }
 
-    protected MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
-        SimpleMailboxMessage copy = copyMessageWithoutMetadata(message);
-        copy.setUid(message.getUid());
-        copy.setModSeq(message.getModSeq());
-        return copy;
-    }
-
-    private SimpleMailboxMessage copyMessageWithoutMetadata(MailboxMessage message) throws MailboxException {
-        if (messageCapabilities.contains(MailboxManager.MessageCapabilities.Attachment)) {
-            return SimpleMailboxMessage.copy(message.getMailboxId(), message);
-        } else {
-            return SimpleMailboxMessage.copyWithoutAttachments(message.getMailboxId(), message);
-        }
+    private MailboxMessage copyMessage(MailboxMessage message) throws MailboxException {
+        return SimpleMailboxMessage
+            .from(message)
+            .mailboxId(message.getMailboxId())
+            .uid(message.getUid())
+            .modseq(message.getModSeq())
+            .build();
     }
 
     @Override

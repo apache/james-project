@@ -36,7 +36,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BoundedInputStream;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.jackrabbit.JcrConstants;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.james.mailbox.MessageUid;
@@ -51,8 +50,10 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.UidComparator;
+import org.apache.james.mime4j.MimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -710,6 +711,10 @@ public class JCRMailboxMessage implements MailboxMessage, JCRImapConstants, Pers
 
     @Override
     public List<MessageAttachment> getAttachments() {
-        throw new NotImplementedException("Attachments are not implemented");
+        try {
+            return new MessageParser().retrieveAttachments(getFullContent());
+        } catch (MimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

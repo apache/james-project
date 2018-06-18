@@ -29,13 +29,13 @@ import java.util.List;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
 import org.apache.james.mailbox.store.streaming.LimitingFileInputStream;
@@ -282,7 +282,11 @@ public class MaildirMessage implements Message {
 
     @Override
     public List<MessageAttachment> getAttachments() {
-        throw new NotImplementedException("Attachments are not implemented");
+        try {
+            return new MessageParser().retrieveAttachments(getFullContent());
+        } catch (MimeException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
