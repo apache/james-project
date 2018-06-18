@@ -21,7 +21,7 @@ package org.apache.james.mailbox.backup;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
@@ -29,17 +29,19 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.github.fge.lambdas.Throwing;
+
 public class Zipper implements Backup {
     public Zipper() {
         ExtraFieldUtils.register(SizeExtraField.class);
     }
 
     @Override
-    public void archive(List<MailboxMessage> messages, OutputStream destination) throws IOException {
+    public void archive(Stream<MailboxMessage> messages, OutputStream destination) throws IOException {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
-            for (MailboxMessage message: messages) {
+            messages.forEach(Throwing.<MailboxMessage>consumer(message -> {
                 storeInArchive(message, archiveOutputStream);
-            }
+            }).sneakyThrow());
             archiveOutputStream.finish();
         }
     }
