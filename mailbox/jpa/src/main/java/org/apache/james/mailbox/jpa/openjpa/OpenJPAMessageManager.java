@@ -64,7 +64,7 @@ public class OpenJPAMessageManager extends JPAMessageManager {
                                  MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) throws MailboxException {
+                                 ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) {
 
         super(mapperFactory,  index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);

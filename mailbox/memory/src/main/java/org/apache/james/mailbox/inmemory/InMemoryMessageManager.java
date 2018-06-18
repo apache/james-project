@@ -39,7 +39,8 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   MessageId.Factory messageIdFactory,
                                   BatchSizes batchSizes,
                                   ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
-                                  StoreRightManager storeRightManager) throws MailboxException {
+                                  StoreRightManager storeRightManager) {
+
         super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;

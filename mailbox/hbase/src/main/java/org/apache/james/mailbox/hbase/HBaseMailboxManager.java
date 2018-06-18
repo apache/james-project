@@ -74,7 +74,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
      */
     public void deleteEverything(MailboxSession mailboxSession) throws MailboxException {
 
-        final HBaseMailboxMapper mapper = (HBaseMailboxMapper) getMapperFactory().getMailboxMapper(mailboxSession);
+        HBaseMailboxMapper mapper = (HBaseMailboxMapper) getMapperFactory().getMailboxMapper(mailboxSession);
 
         mapper.execute(Mapper.toTransaction(mapper::deleteAllMemberships));
         mapper.execute(Mapper.toTransaction(mapper::deleteAllMailboxes));
@@ -86,7 +86,7 @@ public class HBaseMailboxManager extends StoreMailboxManager {
     }
 
     @Override
-    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new HBaseMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

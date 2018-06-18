@@ -22,7 +22,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -53,10 +52,10 @@ public class HBaseMessageManager extends StoreMessageManager {
                                MessageId.Factory messageIdFactory,
                                BatchSizes batchSizes,
                                ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
-                               StoreRightManager storeRightManager) throws MailboxException {
+                               StoreRightManager storeRightManager) {
+
         super(HBaseMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox, quotaManager,
                 quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
-
     }
 
     @Override

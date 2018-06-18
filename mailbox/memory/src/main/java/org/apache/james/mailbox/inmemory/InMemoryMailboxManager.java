@@ -25,7 +25,6 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
@@ -78,7 +77,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     }
 
     @Override
-    protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) {
         return new InMemoryMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),

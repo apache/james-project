@@ -22,7 +22,6 @@ import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jcr.mail.model.JCRMailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -63,7 +62,7 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
     }
     
     @Override
-    protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailboxEntity, MailboxSession session) {
         return new JCRMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),
@@ -79,8 +78,8 @@ public class JCRMailboxManager extends StoreMailboxManager implements JCRImapCon
     }
 
     @Override
-    protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) throws MailboxException {
-        return new org.apache.james.mailbox.jcr.mail.model.JCRMailbox(path, randomUidValidity());
+    protected Mailbox doCreateMailbox(MailboxPath path, MailboxSession session) {
+        return new JCRMailbox(path, randomUidValidity());
     }
 
 }

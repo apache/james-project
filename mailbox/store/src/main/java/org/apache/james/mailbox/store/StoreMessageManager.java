@@ -158,8 +158,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher,
             MailboxPathLocker locker, Mailbox mailbox,
             QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager)
-                    throws MailboxException {
+            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) {
         this.messageCapabilities = messageCapabilities;
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;

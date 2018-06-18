@@ -22,7 +22,6 @@ package org.apache.james.mailbox.jpa.openjpa;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
@@ -63,7 +62,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
     }
 
     @Override
-    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) throws MailboxException {
+    protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new OpenJPAMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
             getEventDispatcher(),
