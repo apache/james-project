@@ -31,7 +31,6 @@ import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import java.io.File;
 import java.io.FileOutputStream;
 
-import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.junit.TemporaryFolderExtension.TemporaryFolder;
@@ -50,8 +49,6 @@ public class ZipperTest {
     void beforeEach(TemporaryFolder temporaryFolder) throws Exception {
         testee = new Zipper();
         destination = File.createTempFile("backup-test", ".zip", temporaryFolder.getTempDir());
-
-        ExtraFieldUtils.register(SizeExtraField.class);
     }
 
     @Test
