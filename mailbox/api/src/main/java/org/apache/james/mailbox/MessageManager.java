@@ -23,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedCriteriaException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -268,6 +270,7 @@ public interface MessageManager {
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
 
+    EnumSet<MessageCapabilities> getSupportedMessageCapabilities();
 
     /**
      * Gets the id of the referenced mailbox
