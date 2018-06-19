@@ -28,20 +28,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.filter.log.LogDetail;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.response.Response;
-import com.jayway.restassured.specification.RequestSpecification;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
 import org.apache.james.core.Domain;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.rrt.lib.MappingsImpl;
@@ -57,9 +56,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.jayway.restassured.RestAssured;
+import com.jayway.restassured.filter.log.LogDetail;
+import com.jayway.restassured.http.ContentType;
+import com.jayway.restassured.response.Response;
+import com.jayway.restassured.specification.RequestSpecification;
 
 class DomainMappingsRoutesTest {
     private RecipientRewriteTable recipientRewriteTable;
@@ -103,7 +106,7 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
-        void getDomainMappings() throws RecipientRewriteTableException {
+        void getDomainMappingsShouldReturnAllDomainMappings() throws RecipientRewriteTableException {
             String alias1 = "to_1.com";
             String alias2 = "to_2.com";
             String alias3 = "to_3.com";
@@ -218,8 +221,10 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
-        void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasNoAliases() {
+        void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasNoAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
+
+            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -235,12 +240,7 @@ class DomainMappingsRoutesTest {
         void getSpecificDomainMappingShouldRespondWithNotFoundWhenHasEmptyAliases() throws RecipientRewriteTableException {
             String domain = "from.com";
 
-            Map<MappingSource, Mappings> allMappings = ImmutableMap.of(
-                    MappingSource.fromDomain(Domain.of(domain)),
-                    MappingsImpl.empty()
-            );
-
-            when(recipientRewriteTable.getAllMappings()).thenReturn(allMappings);
+            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(MappingsImpl.empty());
 
             when()
                 .get(domain)
@@ -253,7 +253,7 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
-        void getSpecificDomainMappingNotDomainsMappingsShouldBeFilteredOut() throws RecipientRewriteTableException {
+        void getSpecificDomainMappingShouldFilterOutNonDomainMappings() throws RecipientRewriteTableException {
             String domain = "from.com";
             String aliasDomain = "to.com";
             final MappingSource mappingSource = MappingSource.fromDomain(Domain.of(domain));
@@ -278,13 +278,12 @@ class DomainMappingsRoutesTest {
         }
 
         @Test
-        void getSpecificDomainMappingShouldResponseWithOK() throws RecipientRewriteTableException {
+        void getSpecificDomainMappingShouldReturnDomainMappings() throws RecipientRewriteTableException {
             String domain = "abc.com";
             String aliasDomain = "a.com";
-            MappingSource mapping = MappingSource.fromDomain(Domain.of(domain));
-            Map<MappingSource, Mappings> mappings = ImmutableMap.of(mapping, MappingsImpl.fromRawString("domain:" + aliasDomain));
+            Mappings mappings = MappingsImpl.fromMappings(Mapping.domain(Domain.of(aliasDomain)));
 
-            when(recipientRewriteTable.getAllMappings()).thenReturn(mappings);
+            when(recipientRewriteTable.getUserDomainMappings(any())).thenReturn(mappings);
 
             List<String> body =
             when()

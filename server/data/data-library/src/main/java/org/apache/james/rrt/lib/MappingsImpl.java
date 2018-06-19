@@ -22,9 +22,11 @@ package org.apache.james.rrt.lib;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.function.Predicate;
@@ -86,7 +88,11 @@ public class MappingsImpl implements Mappings, Serializable {
     public static MappingsImpl fromRawString(String raw) {
         return fromCollection(mappingToCollection(raw));
     }
-    
+
+    public static MappingsImpl fromMappings(Mapping... mappings) {
+        return fromMappings(Arrays.stream(mappings));
+    }
+
     private static ArrayList<String> mappingToCollection(String rawMapping) {
         ArrayList<String> map = new ArrayList<>();
         StringTokenizer tokenizer = new StringTokenizer(rawMapping, RecipientRewriteTableUtil.getSeparator(rawMapping));

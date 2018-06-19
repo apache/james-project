@@ -23,14 +23,18 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.routes.DomainMappingsRoutes.DOMAIN_MAPPINGS;
 import static spark.Spark.halt;
 
-import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
-import com.github.steveash.guavate.Guavate;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+
+import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -41,22 +45,20 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
+
+import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
+import com.github.steveash.guavate.Guavate;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
-
-import javax.inject.Inject;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
-
 
 @Api(tags = "Domain Mappings")
 @Path(DOMAIN_MAPPINGS)
@@ -151,9 +153,9 @@ public class DomainMappingsRoutes implements Routes {
                     message = "Internal server error - Something went bad on the server side.")
     })
     public List<String> getMapping(Request request, Response response) throws RecipientRewriteTableException {
-        final MappingSource mappingSource = mappingSourceFrom(request);
+        MappingSource mappingSource = mappingSourceFrom(request);
 
-        return Optional.ofNullable(recipientRewriteTable.getAllMappings().get(mappingSource))
+        return Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(mappingSource).select(Mapping.Type.Domain))
                 .filter(mappings -> !mappings.isEmpty())
                 .filter(mappings -> mappings.contains(Mapping.Type.Domain))
                 .map(this::toDomainList)
