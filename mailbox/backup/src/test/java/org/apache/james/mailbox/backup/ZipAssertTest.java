@@ -64,9 +64,11 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-                .hasNoEntry())
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                    .hasNoEntry())
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -81,9 +83,11 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-                .hasNoEntry())
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                    .hasNoEntry())
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -92,9 +96,11 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching())
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching())
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -114,11 +120,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching(
-                    hasName(ENTRY_NAME),
-                    hasName(ENTRY_NAME_2)))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME),
+                        hasName(ENTRY_NAME_2)))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -132,10 +140,12 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching(
-                    hasName(ENTRY_NAME_2)))
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME_2)))
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -155,11 +165,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching(
-                    hasName(ENTRY_NAME),
-                    hasName(ENTRY_NAME_2)))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME),
+                        hasName(ENTRY_NAME_2)))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -179,12 +191,14 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching(
-                    hasName(ENTRY_NAME),
-                    hasName(ENTRY_NAME_2),
-                    hasName("extraEntry")))
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME),
+                        hasName(ENTRY_NAME_2),
+                        hasName("extraEntry")))
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -204,10 +218,12 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-                .containsOnlyEntriesMatching(
-                    hasName(ENTRY_NAME)))
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME)))
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -222,11 +238,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .hasStringContent(STRING_ENTRY_CONTENT)))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .hasStringContent(STRING_ENTRY_CONTENT)))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -241,11 +259,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .hasStringContent(STRING_ENTRY_CONTENT_2)))
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .hasStringContent(STRING_ENTRY_CONTENT_2)))
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -260,11 +280,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .containsExtraFields()))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .containsExtraFields()))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -279,11 +301,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatThrownBy(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .containsExtraFields(EXTRA_FIELD)))
-            .isInstanceOf(AssertionError.class);
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .containsExtraFields(EXTRA_FIELD)))
+                .isInstanceOf(AssertionError.class);
+        }
     }
 
     @Test
@@ -299,11 +323,13 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .containsExtraFields()))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .containsExtraFields()))
+                .doesNotThrowAnyException();
+        }
     }
 
     @Test
@@ -319,10 +345,12 @@ public class ZipAssertTest {
             archiveOutputStream.finish();
         }
 
-        assertThatCode(() -> assertThatZip(new ZipFile(destination))
-            .containsOnlyEntriesMatching(
-                hasName(ENTRY_NAME)
-                    .containsExtraFields(EXTRA_FIELD)))
-            .doesNotThrowAnyException();
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(ENTRY_NAME)
+                        .containsExtraFields(EXTRA_FIELD)))
+                .doesNotThrowAnyException();
+        }
     }
 }
