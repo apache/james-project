@@ -52,7 +52,7 @@ public class ImmutableMailboxMessageTest {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedMessageCapabilities()).thenReturn(EnumSet.noneOf(MessageCapabilities.class));
 
-        messageFactory = new ImmutableMailboxMessage.Factory(mailboxManager);
+        messageFactory = new ImmutableMailboxMessage.Factory();
     }
 
     @Test

@@ -156,7 +156,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.dispatcher = mailboxEventDispatcher;
-        this.immutableMailboxMessageFactory = new ImmutableMailboxMessage.Factory(this);
+        this.immutableMailboxMessageFactory = new ImmutableMailboxMessage.Factory();
         this.storeRightManager = storeRightManager;
     }
 

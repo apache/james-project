@@ -29,7 +29,6 @@ import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -46,12 +45,6 @@ import com.google.common.collect.ImmutableList;
 public class ImmutableMailboxMessage implements MailboxMessage {
 
     public static class Factory {
-
-        private final MailboxManager mailboxManager;
-
-        public Factory(MailboxManager mailboxManager) {
-            this.mailboxManager = mailboxManager;
-        }
 
         public ImmutableMailboxMessage from(MailboxId mailboxId, MailboxMessage message) throws MailboxException {
             try {
