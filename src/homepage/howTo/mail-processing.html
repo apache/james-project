@@ -1,0 +1,287 @@
+---
+layout: default
+---
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<link href="assets/css/lightbox.css" rel="stylesheet">
+<link href="assets/css/lity.min.css" rel="stylesheet" />
+<div id="wrapper">
+  <div class="apache_ref">
+    <a href="https://www.apache.org" alt="apache foundation link"><img src="https://www.apache.org/foundation/press/kit/asf_logo.svg" title="apache foundation logo"/></a>
+  </div>
+  <div class="apache_ref_mobile">
+    <a href="https://www.apache.org" alt="apache foundation link">The Apache Software Foundation</a>
+  </div>
+  <div class="apache_ref_left">
+    <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
+  </div>
+  <div class="apache_ref_left_mobile">
+    <a href="https://www.apache.org/events/current-event.html" alt="apache foundation event"><img src="https://www.apache.org/events/current-event-234x60.png" title="apache foundation event logo"/></a>
+  </div>
+
+  <!-- Header -->
+    <header id="header" class="alt">
+      <div class="logo"><a href="/index.html" alt="Apache James"><img src="/images/james.svg" alt="james logo"/></a></div>
+      <h1 class="hidden">James Enterprise Mail Server</h1>
+      <h2>Emails at the heart of your business logic</h2>
+    </header>
+
+  <!-- Main -->
+    <div id="main">
+
+      <!-- Introduction -->
+        <section id="intro" class="main special">
+          <div class="">
+            <div class="content align-left">
+              <header class="major">
+                <h1>How to customize mail processing...</h1>
+              </header>
+                <header class="major">
+                    <h2><b>Mail processing component overview</b></h2>
+                </header>
+              <p class="align-left">At the heart of James lies the Mailet container, which allows mail processing. This is
+              splitted into smaller units, with specific responsibilities:
+
+              </p>
+
+              <ul class="no-padding">
+                <li><b>Mailets:</b> Are operations performed with the mail: modifying it, performing a side-effect, etc...</li>
+                <li><b>Matchers:</b> Are per-recipient conditions for mailet executions</li>
+                <li><b>Processors:</b> Are matcher/mailet pair execution threads</li>
+              </ul>
+
+              <p> Read <a href="/server/feature-mailetcontainer.html">this</a> for more explanations of mailet container concepts.</p>
+
+              <p>Once we define the mailet container content through the <a href="/server/config-mailetcontainer.html">mailetcontailer.xml</a> file.
+              Hence, we can arrange James standard components listed <a href="/server/dev-provided-mailets.html">here</a> to achieve basic logic. But what if our goals are more
+              complex? What if we need our own processing components?</p>
+
+              <p>This page will propose a 'hands on practice' how-to using James 3.0.1. We will implement a custom mailet and a custom matcher,
+              then deploy it in a James server.</p>
+
+              <p>We need to choose our use case. We will, when a mail is delayed over one day, write a mail to the original sender
+              to inform him about the delay, say that we are sorry, and send him a promotion code...<pre></pre></p>
+
+
+              <header class="major">
+                <h2><b>Writing custom mailets and matchers</b></h2>
+              </header>
+
+              <p>None of the matchers and mailets available in James allows us to implement what we want. We will have to
+              write our own mailet and matcher in a separated maven project depending on James Mailet API.</p>
+
+              <p>We will write a <b>IsDelayedForMoreThan</b> matcher with a configurable delay. If the Sent Date of incoming emails is older than specified delay, then the emails
+              should be matched (return all mail recipients). Otherwise, we just return an empty list of recipients.</p>
+
+              <p>To ease our Job, we can rely on the <b>org.apache.james.apache-mailet-base</b> maven project, which provides us a <b>GenericMatcher</b> that we can extend.</p>
+
+              <p>Here is the dependency:</p>
+
+              <pre><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
+    &lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+
+              <p>The main method of a matcher is the <b>match</b> method:</p>
+
+              <pre><code>Collection&lt;MailAddress&gt; match(Mail mail) throws MessagingException;</code></pre>
+
+              <p>For us, it becomes, with <b>maxDelay</b> being previously configured:</p>
+
+              <pre><code>    private final Clock clock;
+    private Duration maxDelay;
+
+    @Override
+    public Collection&lt;MailAddress&gt; match(Mail mail) throws MessagingException {
+        Date sentDate = mail.getMessage().getSentDate();
+
+        if (clock.instant().isAfter(sentDate.toInstant().plusMillis(maxDelay.toMillis()))) {
+            return ImmutableList.copyOf(mail.getRecipients());
+        }
+        return ImmutableList.of();
+    }</code></pre>
+
+                <p><b>GenericMatcher</b> exposes us the condition that had been configured. We will use it to compute <b>maxDelay</b>.
+              We can do it in the <b>init()</b> method exposed by the generic matcher:</p>
+
+              <pre><code>
+    public static final TimeConverter.Unit DEFAULT_UNIT = TimeConverter.Unit.HOURS;
+
+    @Override
+    public void init() {
+        String condition = getCondition();
+        maxDelay = Duration.ofMillis(TimeConverter.getMilliSeconds(condition, DEFAULT_UNIT));
+    }</code></pre>
+
+              <p>Now, let's take a look at the <b>SendPromotionCode</b> mailet. Of course, we want to write a generic mailet
+                 with a configurable reason (why are we sending the promotion code). To keep things simple, only one promotion
+                 code will be used, and will be written in the configuration. We can here also simply extend the
+                  <b>GenericMailet</b> helper class.</p>
+
+              <p>The main method of a mailet is the <b>service</b> method:</p>
+
+              <pre><code>void service(Mail mail) throws MessagingException</code></pre>
+
+              <p>For us, it becomes, with <b>reason</b> and <b>promotionCode</b> being previously configured:</p>
+
+                <pre><code>    public static final boolean REPLY_TO_SENDER_ONLY = false;
+
+    private String reason;
+    private String promotionCode;
+
+    @Override
+    public void service(Mail mail) throws MessagingException {
+        MimeMessage response = (MimeMessage) mail.getMessage()
+            .reply(REPLY_TO_SENDER_ONLY);
+
+        response.setText(reason + "\n\n" +
+            "Here is the following promotion code that you can use on your next order: " + promotionCode);
+
+        MailAddress sender = getMailetContext().getPostmaster();
+        ImmutableList&lt;MailAddress&gt; recipients = ImmutableList.of(mail.getSender());
+
+        getMailetContext()
+            .sendMail(sender, recipients, response);
+    }</code></pre>
+
+              <p>Note that we can interact with the mail server through the mailet context for sending mails, knowing postmaster, etc...</p>
+
+                <p><b>GenericMailet</b> exposes us the 'init parameters' that had been configured for this mailet. We will
+                    use it to retireve <b>reason</b> and <b>promotionCode</b>.
+                    We can do it in the <b>init()</b> method exposed by the generic mailet:</p>
+
+                <pre><code>    @Override
+    public void init() throws MessagingException {
+        reason = getInitParameter("reason");
+        promotionCode = getInitParameter("promotionCode");
+
+        if (Strings.isNullOrEmpty(reason)) {
+            throw new MessagingException("'reason' is compulsory");
+        }
+        if (Strings.isNullOrEmpty(promotionCode)) {
+            throw new MessagingException("'promotionCode' is compulsory");
+        }
+    }</code></pre>
+
+            <p>You can retrieve the sources of this mini-project on <a href="https://github.com/apache/james-project/examples/custom-mailets">GitHub</a></p>
+
+            <header class="major">
+               <h2><b>Loading custom mailets with James</b></h2>
+            </header>
+
+            <p>Now is the time we will run James with our awesome matcher and mailet configured.</p>
+
+            <p>First, we will need to compile our project with <code>mvn clean install</code>. A jar will be outputted in the target directory.</p>
+
+            <p>Then, we will write the <code>mailetcontainer.xml</code> file expressing the logic we want:</p>
+
+            <pre><code>
+&lt;mailetcontainer enableJmx="true">
+
+    &lt;context&gt;
+        &lt;postmaster&gt;postmaster@james.minet.net&lt;/postmaster&gt;
+    &lt;/context&gt;
+
+    &lt;spooler&gt;
+        &lt;threads&gt;20&lt;/threads&gt;
+    &lt;/spooler&gt;
+
+    &lt;processors&gt;
+        &lt;processor state="root" enableJmx="true"&gt;
+            &lt;mailet match="All" class="PostmasterAlias"/&gt;
+            &lt;mailet match="org.apache.james.examples.custom.mailets.IsDelayedForMoreThan=1 day"
+                    class="org.apache.james.examples.custom.mailets.SendPromotionCode"&gt;
+                &lt;reason&gt;Your email had been delayed for a long time. Because we are sorry about it, please find the
+                following promotion code.&lt;/reason&gt;
+                &lt;promotionCode&gt;1542-2563-5469&lt;/promotionCode&gt;
+            &lt;/mailet&gt;
+            &lt;!-- Rest of the configuration --&gt;
+        &lt;/processor&gt;
+
+        &lt;!-- Other processors --&gt;
+    &lt;/processors&gt;
+&lt;/mailetcontainer&gt;</code></pre>
+
+            <p>Finally, we will start a James server using that. We will rely on docker default image for simplicity.
+                We need to be using the <b>mailetcontainer.xml</b> configuration that we had been writing and position
+                the jar in the <b>extensions-jars</b> folder (specific to guice). This can be achieved with the following command:</p>
+
+            <pre><code>docker run -p "25:25" -p "143:143" \
+                   -v "$PWD/src/main/resources/mailetcontainer.xml:/root/conf/mailetcontainer.xml" \
+                   -v "$PWD/target/custom-mailets-3.1.0-SNAPSHOT.jar:/root/extensions-jars/custom-mailets.jar" \
+            linagora/james-jpa-sample:latest</code></pre>
+
+            </div>
+              <footer class="major">
+                  <ul class="actions align-center">
+                      <li><a href="index.html" class="button">go back to other how-tos</a></li>
+                  </ul>
+              </footer>
+          </div>
+        </section>
+
+    </div>
+    <footer id="footer" class="major">
+      <section>
+        <h2>James</h2>
+        <ul class="no-padding">
+          <li class="no-padding"><a href="https://james.apache.org/#intro" class="active">About</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/#first">Get Started</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/#posts">Last Posts</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/#second">Community</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/#third">Contribute</a></li>
+          <li class="no-padding"><a href="https://james.apache.org/"><span class="fa fa-external-link"></span> Documentation</a></li>
+        </ul>
+      </section>
+      <section>
+        <h2>Connect</h2>
+        <ul class="icons">
+          <li><a href="https://james.apache.org/mail.html" class="icon fa-envelope-o alt"><span class="label">Mailing-list</span></a></li>
+          <li><a href="https://gitter.im/apache/james-project" class="icon fa-wechat alt"><span class="label">Gitter</span></a></li>
+          <li><a href="https://github.com/apache/james-project" class="icon fa-github alt"><span class="label">GitHub</span></a></li>
+          <li><a href="https://twitter.com/ApacheJames" class="icon fa-twitter alt"><span class="label">Twitter</span></a></li>
+          <li><a href="https://james.apache.org/support.html" class="icon fa-briefcase alt"><span class="label">Support</span></a></li>
+          <li><a href="http://www.apache.org/events/current-event" class="icon fa-calendar alt"><span class="label">Apache Foundation events</span></a></li>
+          </ul>
+      </section>
+      <section class="legal-section">
+        <h2>Copyright</h2>
+        Apache James and related projects are trademarks of the Apache Software Foundation.<br/>
+        <a href="https://www.apache.org/">Copyright 2006-2018 The Apache Software Foundation. All Rights Reserved.</a><br/>
+        <a href="https://www.apache.org/licenses/">License</a><br/>
+        <a href="https://www.apache.org/foundation/sponsorship.html">Donate</a> to support the Apache Foundation<br/>
+        <a href="https://www.apache.org/foundation/thanks.html">Thanks</a><br/>
+        Design: <a href="https://html5up.net">HTML5 UP</a><br/>
+        Thanks to <a href="http://www.neoma-interactive.com/">Neoma by Linagora</a> for the website design
+      </section>
+  </footer>
+</div>
+
+<!-- Scripts -->
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/jquery.scrollex.min.js"></script>
+<script src="assets/js/jquery.scrolly.min.js"></script>
+<script src="assets/js/skel.min.js"></script>
+<script src="assets/js/util.js"></script>
+<script src="assets/js/lightbox.js"></script>
+<script src="assets/js/github-fetch.js"></script>
+<script src="assets/js/lity.min.js"></script>
+<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+<script src="assets/js/main.js"></script>
+

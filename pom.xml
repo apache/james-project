@@ -527,6 +527,7 @@
         <module>backends-common</module>
         <module>core</module>
         <module>event-sourcing</module>
+        <module>examples</module>
         <module>javax-mail-extension</module>
         <module>mailbox</module>
         <module>mailet</module>
