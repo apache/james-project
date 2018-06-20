@@ -35,7 +35,7 @@ import com.google.common.base.Charsets;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class UidExtraFieldTest {
+public class UidValidityExtraFieldTest {
     private static final byte[] ZERO_AS_BYTE_ARRAY = {0, 0, 0, 0, 0, 0, 0, 0};
     private static final byte[] _123456789ABCDEF0_AS_LE_BYTE_ARRAY = new byte[] {(byte) 0xF0, (byte) 0xDE, (byte) 0xBC, (byte) 0x9A, 0x78, 0x56, 0x34, 0x12};
     private static final byte[] FEDCBA9876543210_AS_LE_BYTE_ARRAY = new byte[] {0x10, 0x32, 0x54, 0x76, (byte) 0x98, (byte) 0xBA, (byte) 0xDC, (byte) 0xFE};
@@ -43,7 +43,7 @@ public class UidExtraFieldTest {
 
     @Test
     public void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(UidExtraField.class)
+        EqualsVerifier.forClass(UidValidityExtraField.class)
             .suppress(Warning.NONFINAL_FIELDS)
             .verify();
     }
@@ -53,12 +53,12 @@ public class UidExtraFieldTest {
 
         @Test
         void getHeaderIdShouldReturnSpecificStringInLittleEndian() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             ByteBuffer byteBuffer = ByteBuffer.wrap(testee.getHeaderId().getBytes())
                 .order(ByteOrder.LITTLE_ENDIAN);
             assertThat(Charsets.US_ASCII.decode(byteBuffer).toString())
-                .isEqualTo("ak");
+                .isEqualTo("an");
         }
     }
 
@@ -66,7 +66,7 @@ public class UidExtraFieldTest {
     class GetLocalFileDataLength {
         @Test
         void getLocalFileDataLengthShouldReturnIntegerSize() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             assertThat(testee.getLocalFileDataLength().getValue())
                 .isEqualTo(Long.BYTES);
@@ -78,7 +78,7 @@ public class UidExtraFieldTest {
 
         @Test
         void getCentralDirectoryLengthShouldReturnIntegerSize() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             assertThat(testee.getCentralDirectoryLength().getValue())
                 .isEqualTo(Long.BYTES);
@@ -87,7 +87,7 @@ public class UidExtraFieldTest {
 
         @Test
         void getCentralDirectoryDataShouldThrowWhenNoValue() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             assertThatThrownBy(() -> testee.getCentralDirectoryData())
                 .isInstanceOf(RuntimeException.class);
@@ -95,19 +95,19 @@ public class UidExtraFieldTest {
 
         @Test
         void getCentralDirectoryDataShouldReturnZeroWhenZero() {
-            byte[] actual = new UidExtraField(0).getCentralDirectoryData();
+            byte[] actual = new UidValidityExtraField(0).getCentralDirectoryData();
             assertThat(actual).isEqualTo(ZERO_AS_BYTE_ARRAY);
         }
 
         @Test
         void getCentralDirectoryDataShouldReturnValueInLittleIndianWhen123456789ABCDEF0() {
-            byte[] actual = new UidExtraField(0x123456789ABCDEF0L).getCentralDirectoryData();
+            byte[] actual = new UidValidityExtraField(0x123456789ABCDEF0L).getCentralDirectoryData();
             assertThat(actual).isEqualTo(_123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         }
 
         @Test
         void getCentralDirectoryDataShouldReturnValueInLittleIndianWhenFEDCBA9876543210() {
-            byte[] actual = new UidExtraField(0xFEDCBA9876543210L).getCentralDirectoryData();
+            byte[] actual = new UidValidityExtraField(0xFEDCBA9876543210L).getCentralDirectoryData();
             assertThat(actual).isEqualTo(FEDCBA9876543210_AS_LE_BYTE_ARRAY);
         }
     }
@@ -117,7 +117,7 @@ public class UidExtraFieldTest {
 
         @Test
         void getLocalFileDataDataShouldThrowWhenNoValue() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             assertThatThrownBy(() -> testee.getLocalFileDataData())
                 .isInstanceOf(RuntimeException.class);
@@ -125,19 +125,19 @@ public class UidExtraFieldTest {
 
         @Test
         void getLocalFileDataDataShouldReturnZeroWhenZero() {
-            byte[] actual = new UidExtraField(0).getLocalFileDataData();
+            byte[] actual = new UidValidityExtraField(0).getLocalFileDataData();
             assertThat(actual).isEqualTo(ZERO_AS_BYTE_ARRAY);
         }
 
         @Test
         void getLocalFileDataDataShouldReturnValueInLittleIndianWhen123456789ABCDEF0() {
-            byte[] actual = new UidExtraField(0x123456789ABCDEF0L).getLocalFileDataData();
+            byte[] actual = new UidValidityExtraField(0x123456789ABCDEF0L).getLocalFileDataData();
             assertThat(actual).isEqualTo(_123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         }
 
         @Test
         void getLocalFileDataDataShouldReturnValueInLittleIndianWhenFEDCBA9876543210() {
-            byte[] actual = new UidExtraField(0xFEDCBA9876543210L).getLocalFileDataData();
+            byte[] actual = new UidValidityExtraField(0xFEDCBA9876543210L).getLocalFileDataData();
             assertThat(actual).isEqualTo(FEDCBA9876543210_AS_LE_BYTE_ARRAY);
         }
     }
@@ -147,7 +147,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldThrownWhenLengthIsSmallerThan8() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             byte[] input = new byte[] {0, 0, 0, 0, 0, 0, 0};
             assertThatThrownBy(() -> testee.parseFromLocalFileData(input, 0, 7))
@@ -156,7 +156,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldThrownWhenLengthIsBiggerThan8() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             byte[] input = new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0};
             assertThatThrownBy(() -> testee.parseFromLocalFileData(input, 0, 9))
@@ -165,7 +165,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldParseWhenZero() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             testee.parseFromLocalFileData(ZERO_AS_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
@@ -174,7 +174,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             testee.parseFromLocalFileData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
@@ -183,7 +183,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
             testee.parseFromLocalFileData(input, 0, 8);
@@ -193,7 +193,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromLocalFileDataShouldHandleOffset() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
             testee.parseFromLocalFileData(input, 2, 8);
@@ -207,7 +207,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldThrownWhenLengthIsSmallerThan8() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
             byte[] input = new byte[7];
 
             assertThatThrownBy(() -> testee.parseFromCentralDirectoryData(input, 0, 7))
@@ -216,7 +216,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldThrownWhenLengthIsBiggerThan8() {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
             byte[] input = new byte[9];
 
             assertThatThrownBy(() -> testee.parseFromCentralDirectoryData(input, 0, 9))
@@ -225,7 +225,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldParseWhenZero() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             testee.parseFromCentralDirectoryData(ZERO_AS_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
@@ -234,7 +234,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
 
             testee.parseFromCentralDirectoryData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
@@ -243,7 +243,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
             byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
 
             testee.parseFromCentralDirectoryData(input, 0, 8);
@@ -253,7 +253,7 @@ public class UidExtraFieldTest {
 
         @Test
         void parseFromCentralDirectoryDataShouldHandleOffset() throws Exception {
-            UidExtraField testee = new UidExtraField();
+            UidValidityExtraField testee = new UidValidityExtraField();
             byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
 
             testee.parseFromCentralDirectoryData(input, 2, 8);

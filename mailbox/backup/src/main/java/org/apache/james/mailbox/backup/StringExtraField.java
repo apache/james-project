@@ -19,34 +19,31 @@
 
 package org.apache.james.mailbox.backup;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.zip.ZipException;
 
 import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipShort;
 
-public abstract class LongExtraField implements ZipExtraField {
+public abstract class StringExtraField implements ZipExtraField {
 
-    private Optional<Long> value;
+    private Optional<String> value;
 
-    public LongExtraField() {
+    public StringExtraField() {
         this(Optional.empty());
     }
 
-    public LongExtraField(long value) {
-        this(Optional.of(value));
-    }
-
-    public LongExtraField(Optional<Long> value) {
+    public StringExtraField(Optional<String> value) {
         this.value = value;
     }
 
     @Override
     public ZipShort getLocalFileDataLength() {
-        return new ZipShort(Long.BYTES);
+        return value
+            .map(value -> value.getBytes(StandardCharsets.UTF_8).length)
+            .map(ZipShort::new)
+            .orElseThrow(() -> new RuntimeException("Value must by initialized"));
     }
 
     @Override
@@ -56,11 +53,9 @@ public abstract class LongExtraField implements ZipExtraField {
 
     @Override
     public byte[] getLocalFileDataData() {
-        long value = this.value.orElseThrow(() -> new RuntimeException("Value must by initialized"));
-        return ByteBuffer.allocate(Long.BYTES)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .putLong(value)
-            .array();
+        return value
+            .map(value -> value.getBytes(StandardCharsets.UTF_8))
+            .orElseThrow(() -> new RuntimeException("Value must by initialized"));
     }
 
     @Override
@@ -69,31 +64,25 @@ public abstract class LongExtraField implements ZipExtraField {
     }
 
     @Override
-    public void parseFromLocalFileData(byte[] buffer, int offset, int length) throws ZipException {
-        if (length != Long.BYTES) {
-            throw new ZipException("Unexpected data length for ExtraField. Expected " + Long.BYTES + " but got " + length + ".");
-        }
-        value = Optional.of(ByteBuffer
-                .wrap(buffer, offset, Long.BYTES)
-                .order(ByteOrder.LITTLE_ENDIAN)
-                .getLong());
+    public void parseFromLocalFileData(byte[] buffer, int offset, int length) {
+        value = Optional.of(new String(buffer, offset, length, StandardCharsets.UTF_8));
     }
 
     @Override
-    public void parseFromCentralDirectoryData(byte[] buffer, int offset, int length) throws ZipException {
+    public void parseFromCentralDirectoryData(byte[] buffer, int offset, int length) {
         parseFromLocalFileData(buffer, offset, length);
     }
 
-    public Optional<Long> getValue() {
+    public Optional<String> getValue() {
         return value;
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof LongExtraField) {
-            LongExtraField that = (LongExtraField) o;
+        if (o instanceof StringExtraField) {
+            StringExtraField that = (StringExtraField) o;
 
-            return Objects.equals(this.value, that.value)
+            return Objects.equals(this.getValue(), that.getValue())
                 && Objects.equals(this.getHeaderId(), that.getHeaderId());
         }
         return false;

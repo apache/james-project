@@ -16,32 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.mailbox.backup;
 
 import java.util.Optional;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
-import org.apache.james.mailbox.model.MessageId;
 
-public class MessageIdExtraField extends StringExtraField {
+public class UidValidityExtraField extends LongExtraField {
+    public static final ZipShort ID = new ZipShort(0x6E61); // "an" in little-endian
 
-    public static final ZipShort ID = new ZipShort(0x6C61); // "al" in little-endian
-
-    public MessageIdExtraField() {
+    public UidValidityExtraField() {
         super();
     }
 
-    public MessageIdExtraField(String value) {
-        super(Optional.of(value));
-    }
-
-    public MessageIdExtraField(Optional<String> value) {
+    public UidValidityExtraField(long value) {
         super(value);
     }
 
-    public MessageIdExtraField(MessageId messageId) {
-        super(Optional.of(messageId.serialize()));
+    public UidValidityExtraField(Optional<Long> value) {
+        super(value);
     }
 
     @Override

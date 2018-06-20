@@ -19,87 +19,33 @@
 
 package org.apache.james.mailbox.backup;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.compress.archivers.zip.ZipExtraField;
 import org.apache.commons.compress.archivers.zip.ZipShort;
+import org.apache.james.mailbox.model.MailboxId;
 
-public class MailboxIdExtraField implements ZipExtraField {
+public class MailboxIdExtraField extends StringExtraField {
 
     public static final ZipShort ID = new ZipShort(0x6D61); // "am" in little-endian
 
-    private Optional<String> mailboxId;
-
     public MailboxIdExtraField() {
-        this(Optional.empty());
+        super();
     }
 
-    public MailboxIdExtraField(String mailboxId) {
-        this(Optional.of(mailboxId));
+    public MailboxIdExtraField(String value) {
+        super(Optional.of(value));
     }
 
-    public MailboxIdExtraField(Optional<String> mailboxId) {
-        this.mailboxId = mailboxId;
+    public MailboxIdExtraField(Optional<String> value) {
+        super(value);
+    }
+
+    public MailboxIdExtraField(MailboxId mailboxId) {
+        super(Optional.of(mailboxId.serialize()));
     }
 
     @Override
     public ZipShort getHeaderId() {
         return ID;
-    }
-
-    @Override
-    public ZipShort getLocalFileDataLength() {
-        return mailboxId
-            .map(value -> value.getBytes(StandardCharsets.UTF_8).length)
-            .map(ZipShort::new)
-            .orElseThrow(() -> new RuntimeException("Value must by initialized"));
-    }
-
-    @Override
-    public ZipShort getCentralDirectoryLength() {
-        return getLocalFileDataLength();
-    }
-
-    @Override
-    public byte[] getLocalFileDataData() {
-        return mailboxId
-            .map(value -> value.getBytes(StandardCharsets.UTF_8))
-            .orElseThrow(() -> new RuntimeException("Value must by initialized"));
-    }
-
-    @Override
-    public byte[] getCentralDirectoryData() {
-        return getLocalFileDataData();
-    }
-
-    @Override
-    public void parseFromLocalFileData(byte[] buffer, int offset, int length) {
-        mailboxId = Optional.of(new String(buffer, offset, length, StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public void parseFromCentralDirectoryData(byte[] buffer, int offset, int length) {
-        parseFromLocalFileData(buffer, offset, length);
-    }
-
-    public Optional<String> getMailboxId() {
-        return mailboxId;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MailboxIdExtraField) {
-            MailboxIdExtraField that = (MailboxIdExtraField) o;
-
-            return Objects.equals(this.mailboxId, that.mailboxId);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(mailboxId);
     }
 }

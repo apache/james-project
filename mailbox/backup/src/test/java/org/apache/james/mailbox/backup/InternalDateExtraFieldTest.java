@@ -19,52 +19,72 @@
 
 package org.apache.james.mailbox.backup;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.zip.ZipException;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.org.bouncycastle.util.Arrays;
 
 import com.google.common.base.Charsets;
 
-public class InternalDateExtraFieldTest {
-    private static final byte[] ZERO_AS_BYTE_ARRAY = {0, 0, 0, 0, 0, 0, 0, 0};
-    private static final byte[] _123456789ABCDEF0_AS_LE_BYTE_ARRAY = new byte[] {(byte) 0xF0, (byte) 0xDE, (byte) 0xBC, (byte) 0x9A, 0x78, 0x56, 0x34, 0x12};
-    private static final byte[] FEDCBA9876543210_AS_LE_BYTE_ARRAY = new byte[] {0x10, 0x32, 0x54, 0x76, (byte) 0x98, (byte) 0xBA, (byte) 0xDC, (byte) 0xFE};
-    private static final byte[] UNUSED = new byte[] {(byte) 0xDE, (byte) 0xAD};
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
 
-    private static final byte[] DEFAULT_DATE_BYTE_ARRAY = {(byte) 0xdd, (byte) 0xf2, (byte) 0xdc, 0x20, 0x64, 0x01, 0x00, 0x00 };
-    private static final long DEFAULT_DATE_TIMESTAMP = 1529559708381L;
-    private static final Date DEFAULT_DATE = new Date(DEFAULT_DATE_TIMESTAMP);
+public class InternalDateExtraFieldTest {
+
+    public static final String DATE_STRING_1 = "2018-02-15T22:54:02+07:00";
+    private static final ZonedDateTime DATE_1 = ZonedDateTime.parse(DATE_STRING_1, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    private static final byte[] DATE_STRING_1_BYTE_ARRAY = DATE_STRING_1.getBytes(StandardCharsets.UTF_8);
+
+    private static final String DEFAULT_MAILBOX_ID = "123456789ABCDEF0";
+    private static final byte[] DEFAULT_MAILBOX_ID_BYTE_ARRAY = new byte[] {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x30};
+    private static final byte [] EMPTY_BYTE_ARRAY = {};
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxIdExtraField.class)
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
+    }
 
     @Nested
     class GetHeaderId {
 
         @Test
         void getHeaderIdShouldReturnSpecificStringInLittleEndian() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
+            MailboxIdExtraField testee = new MailboxIdExtraField();
             ByteBuffer byteBuffer = ByteBuffer.wrap(testee.getHeaderId().getBytes())
                 .order(ByteOrder.LITTLE_ENDIAN);
+
             assertThat(Charsets.US_ASCII.decode(byteBuffer).toString())
-                .isEqualTo("ao");
+                .isEqualTo("am");
         }
     }
 
     @Nested
     class GetLocalFileDataLength {
+
+        @Test
+        void getLocalFileDataLengthShouldThrowWhenNoValue() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
+            assertThatThrownBy(() -> testee.getLocalFileDataLength().getValue())
+                .isInstanceOf(RuntimeException.class);
+        }
+
         @Test
         void getLocalFileDataLengthShouldReturnIntegerSize() {
-            InternalDateExtraField testee = new InternalDateExtraField();
+            MailboxIdExtraField testee = new MailboxIdExtraField(DEFAULT_MAILBOX_ID);
 
             assertThat(testee.getLocalFileDataLength().getValue())
-                .isEqualTo(Long.BYTES);
+                .isEqualTo(16);
         }
     }
 
@@ -72,38 +92,18 @@ public class InternalDateExtraFieldTest {
     class GetCentralDirectoryLength {
 
         @Test
-        void getCentralDirectoryLengthShouldReturnIntegerSize() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            assertThat(testee.getCentralDirectoryLength().getValue())
-                .isEqualTo(Long.BYTES);
-        }
-
-
-        @Test
-        void getCentralDirectoryDataShouldThrowWhenNoValue() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            assertThatThrownBy(() -> testee.getCentralDirectoryData())
+        void getCentralDirectoryLengthShouldThrowWhenNoValue() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
+            assertThatThrownBy(() -> testee.getCentralDirectoryLength().getValue())
                 .isInstanceOf(RuntimeException.class);
         }
 
         @Test
-        void getCentralDirectoryDataShouldReturnZeroWhenZero() {
-            byte[] actual = new InternalDateExtraField(0).getCentralDirectoryData();
-            assertThat(actual).isEqualTo(ZERO_AS_BYTE_ARRAY);
-        }
+        void getCentralDirectoryLengthShouldReturnIntegerSize() {
+            MailboxIdExtraField testee = new MailboxIdExtraField(DEFAULT_MAILBOX_ID);
 
-        @Test
-        void getCentralDirectoryDataShouldReturnValueInLittleIndianWhen123456789ABCDEF0() {
-            byte[] actual = new InternalDateExtraField(0x123456789ABCDEF0L).getCentralDirectoryData();
-            assertThat(actual).isEqualTo(_123456789ABCDEF0_AS_LE_BYTE_ARRAY);
-        }
-
-        @Test
-        void getCentralDirectoryDataShouldReturnValueInLittleIndianWhenFEDCBA9876543210() {
-            byte[] actual = new InternalDateExtraField(0xFEDCBA9876543210L).getCentralDirectoryData();
-            assertThat(actual).isEqualTo(FEDCBA9876543210_AS_LE_BYTE_ARRAY);
+            assertThat(testee.getCentralDirectoryLength().getValue())
+                .isEqualTo(16);
         }
     }
 
@@ -112,28 +112,64 @@ public class InternalDateExtraFieldTest {
 
         @Test
         void getLocalFileDataDataShouldThrowWhenNoValue() {
-            InternalDateExtraField testee = new InternalDateExtraField();
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
             assertThatThrownBy(() -> testee.getLocalFileDataData())
                 .isInstanceOf(RuntimeException.class);
         }
 
         @Test
-        void getLocalFileDataDataShouldReturnZeroWhenZero() {
-            byte[] actual = new InternalDateExtraField(0).getLocalFileDataData();
-            assertThat(actual).isEqualTo(ZERO_AS_BYTE_ARRAY);
+        void getLocalFileDataDataShouldReturnEmptyArrayWhenValueIsEmpty() {
+            byte[] actual = new MailboxIdExtraField(EMPTY).getLocalFileDataData();
+            assertThat(actual).isEqualTo(EMPTY_BYTE_ARRAY);
         }
 
         @Test
-        void getLocalFileDataDataShouldReturnValueInLittleIndianWhen123456789ABCDEF0() {
-            byte[] actual = new InternalDateExtraField(0x123456789ABCDEF0L).getLocalFileDataData();
-            assertThat(actual).isEqualTo(_123456789ABCDEF0_AS_LE_BYTE_ARRAY);
+        void getLocalFileDataDataShouldReturnValueInByteArray() {
+            byte[] actual = new MailboxIdExtraField(DEFAULT_MAILBOX_ID).getLocalFileDataData();
+            assertThat(actual).isEqualTo(DEFAULT_MAILBOX_ID_BYTE_ARRAY);
         }
 
         @Test
-        void getLocalFileDataDataShouldReturnValueInLittleIndianWhenFEDCBA9876543210() {
-            byte[] actual = new InternalDateExtraField(0xFEDCBA9876543210L).getLocalFileDataData();
-            assertThat(actual).isEqualTo(FEDCBA9876543210_AS_LE_BYTE_ARRAY);
+        void getLocalFileDataShouldReturnDateByteArrayWhenPassDate() {
+            byte[] actual = new InternalDateExtraField(Date.from(DATE_1.toInstant()))
+                .getLocalFileDataData();
+
+            assertThat(actual)
+                .isEqualTo(DATE_STRING_1_BYTE_ARRAY);
+        }
+    }
+
+    @Nested
+    class GetCentralDirectoryData {
+
+        @Test
+        void getCentralDirectoryDataShouldThrowWhenNoValue() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
+
+            assertThatThrownBy(() -> testee.getCentralDirectoryData())
+                .isInstanceOf(RuntimeException.class);
+        }
+
+        @Test
+        void getCentralDirectoryDataShouldReturnEmptyArrayWhenValueIsEmpty() {
+            byte[] actual = new MailboxIdExtraField(EMPTY).getCentralDirectoryData();
+            assertThat(actual).isEqualTo(EMPTY_BYTE_ARRAY);
+        }
+
+        @Test
+        void getCentralDirectoryDataShouldReturnValueInByteArray() {
+            byte[] actual = new MailboxIdExtraField(DEFAULT_MAILBOX_ID).getCentralDirectoryData();
+            assertThat(actual).isEqualTo(DEFAULT_MAILBOX_ID_BYTE_ARRAY);
+        }
+
+        @Test
+        void getCentralDirectoryDataShouldReturnDateByteArrayWhenPassDate() {
+            byte[] actual = new InternalDateExtraField(Date.from(DATE_1.toInstant()))
+                .getCentralDirectoryData();
+
+            assertThat(actual)
+                .isEqualTo(DATE_STRING_1_BYTE_ARRAY);
         }
     }
 
@@ -141,78 +177,43 @@ public class InternalDateExtraFieldTest {
     class ParseFromLocalFileData {
 
         @Test
-        void parseFromLocalFileDataShouldThrownWhenLengthIsSmallerThan8() {
-            InternalDateExtraField testee = new InternalDateExtraField();
+        void parseFromLocalFileDataShouldParseWhenZero() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            byte[] input = new byte[] {0, 0, 0, 0, 0, 0, 0};
-            assertThatThrownBy(() -> testee.parseFromLocalFileData(input, 0, 7))
-                .isInstanceOf(ZipException.class);
-        }
+            testee.parseFromLocalFileData(EMPTY_BYTE_ARRAY, 0, 0);
 
-        @Test
-        void parseFromLocalFileDataShouldThrownWhenLengthIsBiggerThan8() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            byte[] input = new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0};
-            assertThatThrownBy(() -> testee.parseFromLocalFileData(input, 0, 9))
-                .isInstanceOf(ZipException.class);
-        }
-
-        @Test
-        void parseFromLocalFileDataShouldParseWhenZero() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            testee.parseFromLocalFileData(ZERO_AS_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
-                .contains(0L);
+                .contains(EMPTY);
         }
 
         @Test
-        void parseFromLocalFileDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
+        void parseFromLocalFileDataShouldParseByteArray() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            testee.parseFromLocalFileData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
+            testee.parseFromLocalFileData(DEFAULT_MAILBOX_ID_BYTE_ARRAY, 0, 16);
+
             assertThat(testee.getValue())
-                .contains(0x123456789ABCDEF0L);
+                .contains(DEFAULT_MAILBOX_ID);
         }
 
         @Test
-        void parseFromLocalFileDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
+        void parseFromLocalFileDataShouldHandleOffset() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
-            testee.parseFromLocalFileData(input, 0, 8);
+            testee.parseFromLocalFileData(DEFAULT_MAILBOX_ID_BYTE_ARRAY, 2, 14);
+
             assertThat(testee.getValue())
-                .contains(0xFEDCBA9876543210L);
+                .contains("3456789ABCDEF0");
         }
 
         @Test
-        void parseFromLocalFileDataShouldHandleOffset() throws Exception {
+        void parseFromLocalFileDataShouldReturnDateWhenPassDateByteArray() {
             InternalDateExtraField testee = new InternalDateExtraField();
 
-            byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
-            testee.parseFromLocalFileData(input, 2, 8);
-            assertThat(testee.getValue())
-                .contains(0x123456789ABCDEF0L);
-        }
-
-        @Test
-        void parseFromLocalFileDataShouldReturnZeroDayWhenZero() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            testee.parseFromLocalFileData(ZERO_AS_BYTE_ARRAY, 0, 8);
+            testee.parseFromLocalFileData(DATE_STRING_1_BYTE_ARRAY, 0, 25);
 
             assertThat(testee.getDateValue())
-                .contains(new Date(0L));
-        }
-
-        @Test
-        void parseFromLocalFileDataShouldReturnDefaultDateWhenPassDefaultDateByteArray() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField(new Date());
-            testee.parseFromLocalFileData(DEFAULT_DATE_BYTE_ARRAY, 0, 8);
-
-            assertThat(testee.getDateValue())
-                .contains(DEFAULT_DATE);
+                .contains(Date.from(DATE_1.toInstant()));
         }
     }
 
@@ -220,78 +221,43 @@ public class InternalDateExtraFieldTest {
     class ParseFromCentralDirectoryData {
 
         @Test
-        void parseFromCentralDirectoryDataShouldThrownWhenLengthIsSmallerThan8() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-            byte[] input = new byte[7];
+        void parseFromCentralDirectoryDataShouldParseWhenZero() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            assertThatThrownBy(() -> testee.parseFromCentralDirectoryData(input, 0, 7))
-                .isInstanceOf(ZipException.class);
-        }
+            testee.parseFromCentralDirectoryData(EMPTY_BYTE_ARRAY, 0, 0);
 
-        @Test
-        void parseFromCentralDirectoryDataShouldThrownWhenLengthIsBiggerThan8() {
-            InternalDateExtraField testee = new InternalDateExtraField();
-            byte[] input = new byte[9];
-
-            assertThatThrownBy(() -> testee.parseFromCentralDirectoryData(input, 0, 9))
-                .isInstanceOf(ZipException.class);
-        }
-
-        @Test
-        void parseFromCentralDirectoryDataShouldParseWhenZero() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
-
-            testee.parseFromCentralDirectoryData(ZERO_AS_BYTE_ARRAY, 0, 8);
             assertThat(testee.getValue())
-                .contains(0L);
+                .contains(EMPTY);
         }
 
         @Test
-        void parseFromCentralDirectoryDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
+        void parseFromCentralDirectoryDataShouldParseByteArray() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            testee.parseFromCentralDirectoryData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
+            testee.parseFromCentralDirectoryData(DEFAULT_MAILBOX_ID_BYTE_ARRAY, 0, 16);
+
             assertThat(testee.getValue())
-                .contains(0x123456789ABCDEF0L);
+                .contains(DEFAULT_MAILBOX_ID);
         }
 
         @Test
-        void parseFromCentralDirectoryDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
-            byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
+        void parseFromCentralDirectoryDataShouldHandleOffset() {
+            MailboxIdExtraField testee = new MailboxIdExtraField();
 
-            testee.parseFromCentralDirectoryData(input, 0, 8);
+            testee.parseFromCentralDirectoryData(DEFAULT_MAILBOX_ID_BYTE_ARRAY, 2, 14);
+
             assertThat(testee.getValue())
-                .contains(0xFEDCBA9876543210L);
+                .contains("3456789ABCDEF0");
         }
 
         @Test
-        void parseFromCentralDirectoryDataShouldHandleOffset() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField();
-            byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
-
-            testee.parseFromCentralDirectoryData(input, 2, 8);
-            assertThat(testee.getValue())
-                .contains(0x123456789ABCDEF0L);
-        }
-
-        @Test
-        void parseFromCentralDirectoryDataShouldReturnZeroDayWhenZero() throws Exception {
+        void parseFromCentralDirectoryDataShouldReturnDateWhenPassDateByteArray() {
             InternalDateExtraField testee = new InternalDateExtraField();
 
-            testee.parseFromCentralDirectoryData(ZERO_AS_BYTE_ARRAY, 0, 8);
+            testee.parseFromCentralDirectoryData(DATE_STRING_1_BYTE_ARRAY, 0, 25);
 
             assertThat(testee.getDateValue())
-                .contains(new Date(0L));
-        }
-
-        @Test
-        void parseFromCentralDirectoryDataShouldReturnDefaultDateWhenPassDefaultDateByteArray() throws Exception {
-            InternalDateExtraField testee = new InternalDateExtraField(new Date());
-            testee.parseFromCentralDirectoryData(DEFAULT_DATE_BYTE_ARRAY, 0, 8);
-
-            assertThat(testee.getDateValue())
-                .contains(DEFAULT_DATE);
+                .contains(Date.from(DATE_1.toInstant()));
         }
     }
 }

@@ -19,12 +19,15 @@
 
 package org.apache.james.mailbox.backup;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Optional;
 
 import org.apache.commons.compress.archivers.zip.ZipShort;
 
-public class InternalDateExtraField extends LongExtraField {
+public class InternalDateExtraField extends StringExtraField {
 
     public static final ZipShort ID = new ZipShort(0x6F61); // "ao" in little-endian
 
@@ -32,16 +35,15 @@ public class InternalDateExtraField extends LongExtraField {
         super();
     }
 
-    public InternalDateExtraField(long time) {
-        super(time);
+    public InternalDateExtraField(Optional<Date> date) {
+        super(date
+            .map(Date::toInstant)
+            .map(instant -> ZonedDateTime.ofInstant(instant, ZoneId.systemDefault()))
+            .map(DateTimeFormatter.ISO_OFFSET_DATE_TIME::format));
     }
 
     public InternalDateExtraField(Date date) {
-        super(date.getTime());
-    }
-
-    public InternalDateExtraField(Optional<Date> date) {
-        super(date.map(Date::getTime));
+        this(Optional.of(date));
     }
 
     @Override
@@ -50,6 +52,9 @@ public class InternalDateExtraField extends LongExtraField {
     }
 
     public Optional<Date> getDateValue() {
-        return getValue().map(Date::new);
+        return getValue()
+            .map(time -> ZonedDateTime.parse(time, DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+            .map(ZonedDateTime::toInstant)
+            .map(Date::from);
     }
 }

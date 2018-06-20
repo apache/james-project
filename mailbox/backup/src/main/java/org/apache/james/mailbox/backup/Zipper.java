@@ -40,6 +40,7 @@ public class Zipper implements Backup {
         ExtraFieldUtils.register(MessageIdExtraField.class);
         ExtraFieldUtils.register(MailboxIdExtraField.class);
         ExtraFieldUtils.register(InternalDateExtraField.class);
+        ExtraFieldUtils.register(UidValidityExtraField.class);
     }
 
     @Override
@@ -60,6 +61,7 @@ public class Zipper implements Backup {
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new Directory(name), name);
 
         archiveEntry.addExtraField(new MailboxIdExtraField(mailbox.getMailboxId().serialize()));
+        archiveEntry.addExtraField(new UidValidityExtraField(mailbox.getUidValidity()));
 
         archiveOutputStream.putArchiveEntry(archiveEntry);
         archiveOutputStream.closeArchiveEntry();

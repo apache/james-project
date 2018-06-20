@@ -31,6 +31,9 @@ import org.testcontainers.shaded.org.bouncycastle.util.Arrays;
 
 import com.google.common.base.Charsets;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+import nl.jqno.equalsverifier.Warning;
+
 public class SizeExtraFieldTest {
     private static final byte[] ZERO_AS_BYTE_ARRAY = {0, 0, 0, 0, 0, 0, 0, 0};
     private static final byte[] _123456789ABCDEF0_AS_LE_BYTE_ARRAY = new byte[] {(byte) 0xF0, (byte) 0xDE, (byte) 0xBC, (byte) 0x9A, 0x78, 0x56, 0x34, 0x12};
@@ -42,6 +45,13 @@ public class SizeExtraFieldTest {
     @BeforeEach
     void setUp() {
         testee = new SizeExtraField();
+    }
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(SizeExtraField.class)
+            .suppress(Warning.NONFINAL_FIELDS)
+            .verify();
     }
 
     @Test

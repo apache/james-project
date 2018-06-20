@@ -42,8 +42,10 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public interface MailboxMessageFixture {
 
-    ZonedDateTime DATE_1 = ZonedDateTime.parse("2018-02-15T15:54:02Z");
-    ZonedDateTime DATE_2 = ZonedDateTime.parse("2018-03-15T15:54:02Z");
+    String DATE_STRING_1 = "2018-02-15T15:54:02Z";
+    String DATE_STRING_2 = "2018-03-15T15:54:02Z";
+    ZonedDateTime DATE_1 = ZonedDateTime.parse(DATE_STRING_1);
+    ZonedDateTime DATE_2 = ZonedDateTime.parse(DATE_STRING_2);
 
     MessageId.Factory MESSAGE_ID_FACTORY = new TestMessageId.Factory();
     Charset MESSAGE_CHARSET = StandardCharsets.UTF_8;
