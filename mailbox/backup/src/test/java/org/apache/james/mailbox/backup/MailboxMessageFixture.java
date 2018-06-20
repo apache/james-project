@@ -30,6 +30,8 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -53,6 +55,11 @@ public interface MailboxMessageFixture {
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
     long SIZE_1 = 1000;
     long SIZE_2 = 2000;
+    long MESSAGE_UID_1_VALUE = 1111L;
+    long MESSAGE_UID_2_VALUE = 2222L;
+    MessageUid MESSAGE_UID_1 = MessageUid.of(MESSAGE_UID_1_VALUE);
+    MessageUid MESSAGE_UID_2 = MessageUid.of(MESSAGE_UID_2_VALUE);
+    MailboxId MAILBOX_ID_1 = TestId.of(1L);
 
     MailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
     
@@ -62,23 +69,25 @@ public interface MailboxMessageFixture {
 
     SimpleMailboxMessage MESSAGE_1 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_1)
+        .uid(MESSAGE_UID_1)
         .content(CONTENT_STREAM_1)
         .size(SIZE_1)
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
         .propertyBuilder(new PropertyBuilder())
-        .mailboxId(TestId.of(1L))
+        .mailboxId(MAILBOX_ID_1)
         .build();
     SimpleMailboxMessage MESSAGE_2 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_2)
+        .uid(MESSAGE_UID_2)
         .content(CONTENT_STREAM_2)
         .size(SIZE_2)
         .internalDate(new Date(DATE_2.toEpochSecond()))
         .bodyStartOctet(0)
         .flags(new Flags())
         .propertyBuilder(new PropertyBuilder())
-        .mailboxId(TestId.of(1L))
+        .mailboxId(MAILBOX_ID_1)
         .build();
 
 }
