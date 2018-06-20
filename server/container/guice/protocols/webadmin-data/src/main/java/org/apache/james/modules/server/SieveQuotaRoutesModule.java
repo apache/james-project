@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules.data;
 
-import org.apache.james.sieverepository.api.SieveQuotaRepository;
-import org.apache.james.sieverepository.api.SieveRepository;
-import org.apache.james.sieverepository.file.SieveFileRepository;
+package org.apache.james.modules.server;
+
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.SieveQuotaRoutes;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
-public class SieveFileRepositoryModule extends AbstractModule {
-
+public class SieveQuotaRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(SieveFileRepository.class).in(Scopes.SINGLETON);
-
-        bind(SieveRepository.class).to(SieveFileRepository.class);
-        bind(SieveQuotaRepository.class).to(SieveFileRepository.class);
+        Multibinder.newSetBinder(binder(), Routes.class)
+            .addBinding()
+            .to(SieveQuotaRoutes.class);
     }
-
 }
