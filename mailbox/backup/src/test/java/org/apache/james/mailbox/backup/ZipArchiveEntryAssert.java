@@ -38,6 +38,10 @@ public class ZipArchiveEntryAssert extends AbstractAssert<ZipArchiveEntryAssert,
         return new ZipArchiveEntryAssert(zipFile, zipArchiveEntry);
     }
 
+    private static BasicErrorMessageFactory shouldBeADirectory(ZipArchiveEntry zipArchiveEntry) {
+        return new BasicErrorMessageFactory("%nExpecting %s to be a directory but was not", zipArchiveEntry);
+    }
+
     private static BasicErrorMessageFactory shouldHaveName(ZipArchiveEntry zipArchiveEntry, String expected) {
         return new BasicErrorMessageFactory("%nExpecting %s to have name %s but was %s", zipArchiveEntry, expected, zipArchiveEntry.getName());
     }
@@ -57,6 +61,14 @@ public class ZipArchiveEntryAssert extends AbstractAssert<ZipArchiveEntryAssert,
         super(zipArchiveEntry, ZipArchiveEntryAssert.class);
         this.zipFile = zipFile;
         this.actual = zipArchiveEntry;
+    }
+
+    public ZipArchiveEntryAssert isDirectory() {
+        isNotNull();
+        if (!actual.isDirectory()) {
+            throwAssertionError(shouldBeADirectory(actual));
+        }
+        return myself;
     }
 
     public ZipArchiveEntryAssert hasName(String name) {

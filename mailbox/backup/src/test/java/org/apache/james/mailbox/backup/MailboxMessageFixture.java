@@ -27,10 +27,13 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public interface MailboxMessageFixture {
@@ -48,6 +51,9 @@ public interface MailboxMessageFixture {
     MessageId MESSAGE_ID_2 = MESSAGE_ID_FACTORY.generate();
     long SIZE_1 = 1000;
     long SIZE_2 = 2000;
+
+    Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1"), 42, TestId.of(1L));
+    Mailbox MAILBOX_2 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox2"), 43, TestId.of(2L));
 
     SimpleMailboxMessage MESSAGE_1 = SimpleMailboxMessage.builder()
         .messageId(MESSAGE_ID_1)

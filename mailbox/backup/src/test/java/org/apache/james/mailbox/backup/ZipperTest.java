@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.backup;
 
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MAILBOX_1;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MAILBOX_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONTENT_1;
@@ -25,19 +27,23 @@ import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_CONT
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_ID_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.SIZE_1;
-import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
+import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class ZipperTest {
+import com.google.common.collect.ImmutableList;
 
+class ZipperTest {
+    private static final List<Mailbox> NO_MAILBOXES = ImmutableList.of();
     private Zipper testee;
     private ByteArrayOutputStream output;
 
@@ -49,7 +55,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteEmptyValidArchiveWhenNoMessage() throws Exception {
-        testee.archive(Stream.of(), output);
+        testee.archive(NO_MAILBOXES, Stream.of(), output);
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile).hasNoEntry();
         }
@@ -57,7 +63,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteOneMessageWhenOne() throws Exception {
-        testee.archive(Stream.of(MESSAGE_1), output);
+        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)
@@ -69,7 +75,7 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteTwoMessagesWhenTwo() throws Exception {
-        testee.archive(Stream.of(MESSAGE_1, MESSAGE_2), output);
+        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1, MESSAGE_2), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)
@@ -83,13 +89,39 @@ class ZipperTest {
 
     @Test
     void archiveShouldWriteSizeMetadata() throws Exception {
-        testee.archive(Stream.of(MESSAGE_1), output);
+        testee.archive(NO_MAILBOXES, Stream.of(MESSAGE_1), output);
 
         try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
             assertThatZip(zipFile)
                 .containsOnlyEntriesMatching(
                     hasName(MESSAGE_ID_1.serialize())
                         .containsExtraFields(new SizeExtraField(SIZE_1)));
+        }
+    }
+
+    @Test
+    void archiveShouldWriteOneMailboxWhenPresent() throws Exception {
+        testee.archive(ImmutableList.of(MAILBOX_1), Stream.of(), output);
+
+        try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
+            assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(MAILBOX_1.getName() + "/")
+                        .isDirectory());
+        }
+    }
+
+    @Test
+    void archiveShouldWriteMailboxesWhenPresent() throws Exception {
+        testee.archive(ImmutableList.of(MAILBOX_1, MAILBOX_2), Stream.of(), output);
+
+        try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
+            assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(MAILBOX_1.getName() + "/")
+                        .isDirectory(),
+                    hasName(MAILBOX_2.getName() + "/")
+                        .isDirectory());
         }
     }
 

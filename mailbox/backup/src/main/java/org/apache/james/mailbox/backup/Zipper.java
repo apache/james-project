@@ -21,12 +21,14 @@ package org.apache.james.mailbox.backup;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.compress.archivers.zip.ExtraFieldUtils;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.fge.lambdas.Throwing;
@@ -37,13 +39,23 @@ public class Zipper implements Backup {
     }
 
     @Override
-    public void archive(Stream<MailboxMessage> messages, OutputStream destination) throws IOException {
+    public void archive(List<Mailbox> mailboxes, Stream<MailboxMessage> messages, OutputStream destination) throws IOException {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
+            for (Mailbox mailbox: mailboxes) {
+                storeInArchive(mailbox, archiveOutputStream);
+            }
             messages.forEach(Throwing.<MailboxMessage>consumer(message -> {
                 storeInArchive(message, archiveOutputStream);
             }).sneakyThrow());
             archiveOutputStream.finish();
         }
+    }
+
+    private void storeInArchive(Mailbox mailbox, ZipArchiveOutputStream archiveOutputStream) throws IOException {
+        String name = mailbox.getName();
+        ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new Directory(name), name);
+        archiveOutputStream.putArchiveEntry(archiveEntry);
+        archiveOutputStream.closeArchiveEntry();
     }
 
     private void storeInArchive(MailboxMessage message, ZipArchiveOutputStream archiveOutputStream) throws IOException {

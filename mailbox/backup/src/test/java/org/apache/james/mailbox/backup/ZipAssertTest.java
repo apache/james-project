@@ -42,6 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public class ZipAssertTest {
     public static final String ENTRY_NAME = "entryName";
     public static final String ENTRY_NAME_2 = "entryName2";
+    public static final String DIRECTORY_NAME = "folder/";
     public static final String STRING_ENTRY_CONTENT = "abcdefghijkl";
     public static final String STRING_ENTRY_CONTENT_2 = "mnopqrstuvwxyz";
     public static final byte[] ENTRY_CONTENT = STRING_ENTRY_CONTENT.getBytes(StandardCharsets.UTF_8);
@@ -145,6 +146,45 @@ public class ZipAssertTest {
                     .containsOnlyEntriesMatching(
                         hasName(ENTRY_NAME_2)))
                 .isInstanceOf(AssertionError.class);
+        }
+    }
+
+    @Test
+    public void isDirectoryShouldThrowWhenNotADirectory() throws Exception {
+        try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
+
+            ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new File("any"), ENTRY_NAME);
+            archiveOutputStream.putArchiveEntry(archiveEntry);
+            IOUtils.copy(new ByteArrayInputStream(ENTRY_CONTENT), archiveOutputStream);
+            archiveOutputStream.closeArchiveEntry();
+            archiveOutputStream.finish();
+        }
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatThrownBy(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(ENTRY_NAME)
+                            .isDirectory()))
+                .isInstanceOf(AssertionError.class);
+        }
+    }
+
+    @Test
+    public void isDirectoryShouldNotThrowWhenDirectory() throws Exception {
+        try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
+
+            ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new Directory("any"), DIRECTORY_NAME);
+            archiveOutputStream.putArchiveEntry(archiveEntry);
+            archiveOutputStream.closeArchiveEntry();
+            archiveOutputStream.finish();
+        }
+
+        try (ZipFile zipFile = new ZipFile(destination)) {
+            assertThatCode(() -> assertThatZip(zipFile)
+                    .containsOnlyEntriesMatching(
+                        hasName(DIRECTORY_NAME)
+                            .isDirectory()))
+                .doesNotThrowAnyException();
         }
     }
 

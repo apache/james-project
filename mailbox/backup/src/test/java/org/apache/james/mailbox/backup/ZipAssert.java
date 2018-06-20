@@ -61,8 +61,12 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
                 check.compose(additionalCheck));
         }
 
-        public EntryChecks hasStringContent(String stringConyent) {
-            return check(check.compose(assertion -> assertion.hasStringContent(stringConyent)));
+        public EntryChecks hasStringContent(String stringContent) {
+            return check(check.compose(assertion -> assertion.hasStringContent(stringContent)));
+        }
+
+        public EntryChecks isDirectory() {
+            return check(check.compose(assertion -> assertion.isDirectory()));
         }
 
         public EntryChecks containsExtraFields(ZipExtraField... expectedExtraFields) {
@@ -75,7 +79,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
     }
 
     private static BasicErrorMessageFactory shouldHaveSize(ZipFile zipFile, int expected, int actual) {
-        return new BasicErrorMessageFactory("%nExpecting %s to have side %s but was %s", zipFile, expected, actual);
+        return new BasicErrorMessageFactory("%nExpecting %s to have size %s but was %s", zipFile, expected, actual);
     }
 
     private static BasicErrorMessageFactory shouldBeEmpty(ZipFile zipFile) {
