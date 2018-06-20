@@ -57,6 +57,9 @@ public class Zipper implements Backup {
     private void storeInArchive(Mailbox mailbox, ZipArchiveOutputStream archiveOutputStream) throws IOException {
         String name = mailbox.getName();
         ZipArchiveEntry archiveEntry = (ZipArchiveEntry) archiveOutputStream.createArchiveEntry(new Directory(name), name);
+
+        archiveEntry.addExtraField(new MailboxIdExtraField(mailbox.getMailboxId().serialize()));
+
         archiveOutputStream.putArchiveEntry(archiveEntry);
         archiveOutputStream.closeArchiveEntry();
     }

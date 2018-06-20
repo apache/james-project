@@ -161,6 +161,18 @@ class ZipperTest {
         }
     }
 
+    @Test
+    void archiveShouldWriteMailboxMetadataWhenPresent() throws Exception {
+        testee.archive(ImmutableList.of(MAILBOX_1), Stream.of(), output);
+
+        try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
+            assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(MAILBOX_1.getName() + "/")
+                        .containsExtraFields(new MailboxIdExtraField(MAILBOX_1.getMailboxId().serialize())));
+        }
+    }
+
     private SeekableInMemoryByteChannel toSeekableByteChannel(ByteArrayOutputStream output) {
         return new SeekableInMemoryByteChannel(output.toByteArray());
     }
