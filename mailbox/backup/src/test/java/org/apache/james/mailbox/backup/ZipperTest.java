@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.backup;
 
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MAILBOX_1;
+import static org.apache.james.mailbox.backup.MailboxMessageFixture.MAILBOX_1_SUB_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MAILBOX_2;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_1;
 import static org.apache.james.mailbox.backup.MailboxMessageFixture.MESSAGE_2;
@@ -119,6 +120,36 @@ class ZipperTest {
             assertThatZip(zipFile)
                 .containsOnlyEntriesMatching(
                     hasName(MAILBOX_1.getName() + "/")
+                        .isDirectory(),
+                    hasName(MAILBOX_2.getName() + "/")
+                        .isDirectory());
+        }
+    }
+
+    @Test
+    void archiveShouldWriteMailboxHierarchyWhenPresent() throws Exception {
+        testee.archive(ImmutableList.of(MAILBOX_1, MAILBOX_1_SUB_1, MAILBOX_2), Stream.of(), output);
+
+        try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
+            assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(MAILBOX_1.getName() + "/")
+                        .isDirectory(),
+                    hasName(MAILBOX_1_SUB_1.getName() + "/")
+                        .isDirectory(),
+                    hasName(MAILBOX_2.getName() + "/")
+                        .isDirectory());
+        }
+    }
+
+    @Test
+    void archiveShouldWriteMailboxHierarchyWhenMissingParent() throws Exception {
+        testee.archive(ImmutableList.of(MAILBOX_1_SUB_1, MAILBOX_2), Stream.of(), output);
+
+        try (ZipFile zipFile = new ZipFile(toSeekableByteChannel(output))) {
+            assertThatZip(zipFile)
+                .containsOnlyEntriesMatching(
+                    hasName(MAILBOX_1_SUB_1.getName() + "/")
                         .isDirectory(),
                     hasName(MAILBOX_2.getName() + "/")
                         .isDirectory());

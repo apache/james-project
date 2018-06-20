@@ -27,6 +27,8 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -52,7 +54,10 @@ public interface MailboxMessageFixture {
     long SIZE_1 = 1000;
     long SIZE_2 = 2000;
 
+    MailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
+    
     Mailbox MAILBOX_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1"), 42, TestId.of(1L));
+    Mailbox MAILBOX_1_SUB_1 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox1" + MAILBOX_SESSION.getPathDelimiter() + "sub1"), 420, TestId.of(11L));
     Mailbox MAILBOX_2 = new SimpleMailbox(MailboxPath.forUser("user", "mailbox2"), 43, TestId.of(2L));
 
     SimpleMailboxMessage MESSAGE_1 = SimpleMailboxMessage.builder()
