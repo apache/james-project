@@ -104,7 +104,6 @@ public class MessageIdExtraFieldTest {
 
         @Test
         void getLocalFileDataDataShouldReturnEmptyArrayWhenValueIsEmpty() {
-            MessageIdExtraField testee = new MessageIdExtraField();
             byte[] actual = new MessageIdExtraField(EMPTY).getLocalFileDataData();
 
             assertThat(actual).isEqualTo(EMPTY_BYTE_ARRAY);
@@ -112,7 +111,6 @@ public class MessageIdExtraFieldTest {
 
         @Test
         void getLocalFileDataDataShouldReturnValueInByteArray() {
-            MessageIdExtraField testee = new MessageIdExtraField();
             byte[] actual = new MessageIdExtraField(DEFAULT_MESSAGE_ID).getLocalFileDataData();
 
             assertThat(actual).isEqualTo(DEFAULT_MESSAGE_ID_BYTE_ARRAY);
