@@ -129,14 +129,14 @@ public class SizeExtraFieldTest {
     @Test
     void parseFromLocalFileDataShouldParseWhenZero() throws Exception {
         testee.parseFromLocalFileData(ZERO_AS_BYTE_ARRAY, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0L);
     }
 
     @Test
     void parseFromLocalFileDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
         testee.parseFromLocalFileData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);
     }
 
@@ -144,7 +144,7 @@ public class SizeExtraFieldTest {
     void parseFromLocalFileDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
         byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
         testee.parseFromLocalFileData(input, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0xFEDCBA9876543210L);
     }
 
@@ -152,7 +152,7 @@ public class SizeExtraFieldTest {
     void parseFromLocalFileDataShouldHandleOffset() throws Exception {
         byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         testee.parseFromLocalFileData(input, 2, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);
     }
 
@@ -173,14 +173,14 @@ public class SizeExtraFieldTest {
     @Test
     void parseFromCentralDirectoryDataShouldParseWhenZero() throws Exception {
         testee.parseFromCentralDirectoryData(ZERO_AS_BYTE_ARRAY, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0L);
     }
 
     @Test
     void parseFromCentralDirectoryDataShouldParseWhen123456789ABCDEF0InLittleEndian() throws Exception {
         testee.parseFromCentralDirectoryData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);
     }
 
@@ -188,7 +188,7 @@ public class SizeExtraFieldTest {
     void parseFromCentralDirectoryDataShouldParseWhenFEDCBA9876543210InLittleEndian() throws Exception {
         byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
         testee.parseFromCentralDirectoryData(input, 0, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0xFEDCBA9876543210L);
     }
 
@@ -196,7 +196,7 @@ public class SizeExtraFieldTest {
     void parseFromCentralDirectoryDataShouldHandleOffset() throws Exception {
         byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         testee.parseFromCentralDirectoryData(input, 2, 8);
-        assertThat(testee.getSize())
+        assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);
     }
 }

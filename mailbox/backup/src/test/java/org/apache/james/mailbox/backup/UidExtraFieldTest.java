@@ -158,7 +158,7 @@ public class UidExtraFieldTest {
             UidExtraField testee = new UidExtraField();
 
             testee.parseFromLocalFileData(ZERO_AS_BYTE_ARRAY, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0L);
         }
 
@@ -167,7 +167,7 @@ public class UidExtraFieldTest {
             UidExtraField testee = new UidExtraField();
 
             testee.parseFromLocalFileData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0x123456789ABCDEF0L);
         }
 
@@ -177,7 +177,7 @@ public class UidExtraFieldTest {
 
             byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
             testee.parseFromLocalFileData(input, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0xFEDCBA9876543210L);
         }
 
@@ -187,7 +187,7 @@ public class UidExtraFieldTest {
 
             byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
             testee.parseFromLocalFileData(input, 2, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0x123456789ABCDEF0L);
         }
     }
@@ -218,7 +218,7 @@ public class UidExtraFieldTest {
             UidExtraField testee = new UidExtraField();
 
             testee.parseFromCentralDirectoryData(ZERO_AS_BYTE_ARRAY, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0L);
         }
 
@@ -227,7 +227,7 @@ public class UidExtraFieldTest {
             UidExtraField testee = new UidExtraField();
 
             testee.parseFromCentralDirectoryData(_123456789ABCDEF0_AS_LE_BYTE_ARRAY, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0x123456789ABCDEF0L);
         }
 
@@ -237,7 +237,7 @@ public class UidExtraFieldTest {
             byte[] input = FEDCBA9876543210_AS_LE_BYTE_ARRAY;
 
             testee.parseFromCentralDirectoryData(input, 0, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0xFEDCBA9876543210L);
         }
 
@@ -247,7 +247,7 @@ public class UidExtraFieldTest {
             byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
 
             testee.parseFromCentralDirectoryData(input, 2, 8);
-            assertThat(testee.getUid())
+            assertThat(testee.getValue())
                 .contains(0x123456789ABCDEF0L);
         }
     }
