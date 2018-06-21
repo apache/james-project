@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.routes;
+package org.apache.james.sieverepository.memory;
 
 import java.util.Map;
 import java.util.Optional;

@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
+import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
