@@ -46,14 +46,22 @@ public class Zipper implements Backup {
     @Override
     public void archive(List<Mailbox> mailboxes, Stream<MailboxMessage> messages, OutputStream destination) throws IOException {
         try (ZipArchiveOutputStream archiveOutputStream = new ZipArchiveOutputStream(destination)) {
-            for (Mailbox mailbox: mailboxes) {
-                storeInArchive(mailbox, archiveOutputStream);
-            }
-            messages.forEach(Throwing.<MailboxMessage>consumer(message -> {
-                storeInArchive(message, archiveOutputStream);
-            }).sneakyThrow());
+            storeMailboxes(mailboxes, archiveOutputStream);
+            storeMessages(messages, archiveOutputStream);
             archiveOutputStream.finish();
         }
+    }
+
+    private void storeMailboxes(List<Mailbox> mailboxes, ZipArchiveOutputStream archiveOutputStream) throws IOException {
+        for (Mailbox mailbox: mailboxes) {
+            storeInArchive(mailbox, archiveOutputStream);
+        }
+    }
+
+    private void storeMessages(Stream<MailboxMessage> messages, ZipArchiveOutputStream archiveOutputStream) {
+        messages.forEach(Throwing.<MailboxMessage>consumer(message -> {
+            storeInArchive(message, archiveOutputStream);
+        }).sneakyThrow());
     }
 
     private void storeInArchive(Mailbox mailbox, ZipArchiveOutputStream archiveOutputStream) throws IOException {
