@@ -27,8 +27,10 @@ import java.util.Optional;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
+import org.apache.james.jmap.JMAPConfiguration.Builder;
 
 public class JamesSignatureHandlerProvider {
+
     private static final String JWT_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\n" +
         "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtlChO/nlVP27MpdkG0Bh\n" +
         "16XrMRf6M4NeyGa7j5+1UKm42IKUf3lM28oe82MqIIRyvskPc11NuzSor8HmvH8H\n" +
@@ -39,11 +41,29 @@ public class JamesSignatureHandlerProvider {
         "kwIDAQAB\n" +
         "-----END PUBLIC KEY-----";
 
+    public JamesSignatureHandlerProvider() {
+    }
+
     public JamesSignatureHandler provide() throws Exception {
-        FileSystem fileSystem = new FileSystem() {
+        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(newFileSystem(),
+                newConfigurationBuilder().build());
+        signatureHandler.init();
+        return signatureHandler;
+    }
+
+    public static Builder newConfigurationBuilder() {
+        return JMAPConfiguration.builder()
+            .enable()
+            .keystore("keystore")
+            .secret("james72laBalle")
+            .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY));
+    }
+
+    public static FileSystem newFileSystem() {
+        return new FileSystem() {
             @Override
             public InputStream getResource(String url) throws IOException {
-                return ClassLoader.getSystemResourceAsStream("keystore");
+                return ClassLoader.getSystemResourceAsStream(url);
             }
 
             @Override
@@ -56,15 +76,6 @@ public class JamesSignatureHandlerProvider {
                 return null;
             }
         };
-        JamesSignatureHandler signatureHandler = new JamesSignatureHandler(fileSystem, 
-                JMAPConfiguration.builder()
-                    .enable()
-                    .keystore("keystore")
-                    .secret("james72laBalle")
-                    .jwtPublicKeyPem(Optional.of(JWT_PUBLIC_KEY))
-                    .build());
-        signatureHandler.init();
-        return signatureHandler;
     }
 
 }

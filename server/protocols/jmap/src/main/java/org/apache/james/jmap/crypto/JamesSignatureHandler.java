@@ -23,11 +23,14 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyStore;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -65,11 +68,16 @@ public class JamesSignatureHandler implements SignatureHandler {
     public void init() throws Exception {
         KeyStore keystore = KeyStore.getInstance(JKS);
         InputStream fis = fileSystem.getResource(jmapConfiguration.getKeystore());
-        keystore.load(fis, jmapConfiguration.getSecret().toCharArray());
-        publicKey = keystore.getCertificate(ALIAS).getPublicKey();
-        Key key = keystore.getKey(ALIAS, jmapConfiguration.getSecret().toCharArray());
+        char[] secret = jmapConfiguration.getSecret().toCharArray();
+        keystore.load(fis, secret);
+        Certificate aliasCertificate = Optional
+                .ofNullable(keystore.getCertificate(ALIAS))
+                .orElseThrow(() -> new KeyStoreException("Alias '" + ALIAS + "' keystore can't be found"));
+
+        publicKey = aliasCertificate.getPublicKey();
+        Key key = keystore.getKey(ALIAS, secret);
         if (! (key instanceof PrivateKey)) {
-            throw new Exception("Provided key is not a PrivateKey");
+            throw new KeyStoreException("Provided key is not a PrivateKey");
         }
         privateKey = (PrivateKey) key;
     }
