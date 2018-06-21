@@ -101,7 +101,7 @@ class ZipperTest {
                         .containsExtraFields(new SizeExtraField(SIZE_1))
                         .containsExtraFields(new UidExtraField(MESSAGE_UID_1_VALUE))
                         .containsExtraFields(new MessageIdExtraField(MESSAGE_ID_1.serialize()))
-                        .containsExtraFields(new MailboxIdExtraField(MAILBOX_ID_1.serialize())));
+                        .containsExtraFields(new InternalDateExtraField(MESSAGE_1.getInternalDate())));
         }
     }
 
