@@ -42,6 +42,8 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -57,8 +59,9 @@ import spark.Service;
 public class SieveQuotaRoutes implements Routes {
 
     static final String ROOT_PATH = "/sieve/quota";
+    public static final String DEFAULT_QUOTA_PATH = ROOT_PATH + SEPARATOR + "default";
     private static final String USER_ID = "userId";
-    private static final String USER_SIEVE_QUOTA_PATH = ROOT_PATH + SEPARATOR + ":" + USER_ID;
+    private static final String USER_SIEVE_QUOTA_PATH = Joiner.on(SEPARATOR).join(ROOT_PATH, "users", ":" + USER_ID);
     private static final String REQUESTED_SIZE = "requestedSize";
     private static final Logger LOGGER = LoggerFactory.getLogger(SieveQuotaRoutes.class);
 
@@ -92,7 +95,7 @@ public class SieveQuotaRoutes implements Routes {
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetGlobalSieveQuota(Service service) {
-        service.get(ROOT_PATH, (request, response) -> {
+        service.get(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
                 QuotaSize sieveQuota = sieveQuotaRepository.getDefaultQuota();
                 response.status(HttpStatus.OK_200);
@@ -119,7 +122,7 @@ public class SieveQuotaRoutes implements Routes {
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateGlobalSieveQuota(Service service) {
-        service.put(ROOT_PATH, (request, response) -> {
+        service.put(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
                 QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
                 sieveQuotaRepository.setDefaultQuota(requestedSize);
@@ -145,18 +148,13 @@ public class SieveQuotaRoutes implements Routes {
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineRemoveGlobalSieveQuota(Service service) {
-        service.delete(ROOT_PATH, (request, response) -> {
+        service.delete(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
                 sieveQuotaRepository.removeQuota();
-                response.status(HttpStatus.NO_CONTENT_204);
             } catch (QuotaNotFoundException e) {
-                LOGGER.info("Global sieve quota not set", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .message("Global sieve quota not set")
-                    .haltError();
+                // Do nothing
             }
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         });
     }
@@ -235,15 +233,10 @@ public class SieveQuotaRoutes implements Routes {
             User userId = User.fromUsername(request.params(USER_ID));
             try {
                 sieveQuotaRepository.removeQuota(userId);
-                response.status(HttpStatus.NO_CONTENT_204);
             } catch (QuotaNotFoundException e) {
-                LOGGER.info("User sieve quota not set", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .message("User sieve quota not set")
-                    .haltError();
+                // Do nothing
             }
+            response.status(HttpStatus.NO_CONTENT_204);
             return Constants.EMPTY_BODY;
         });
     }
