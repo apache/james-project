@@ -41,7 +41,7 @@ public class DLPConfigurationItemDTO {
             dlpConfiguration.getExplanation(),
             targets.isSenderTargeted(),
             targets.isRecipientTargeted(),
-            targets.isRecipientTargeted());
+            targets.isContentTargeted());
     }
 
 

@@ -44,7 +44,7 @@ class DLPConfigurationItemDTOTest {
                 .explanation(EXPLANATION)
                 .targetsSender(true)
                 .targetsRecipients(true)
-                .targetsContent(true)
+                .targetsContent(false)
                 .build());
 
         SoftAssertions.assertSoftly(softly -> {
@@ -53,7 +53,7 @@ class DLPConfigurationItemDTOTest {
             softly.assertThat(dto.getExplanation().get()).isEqualTo(EXPLANATION);
             softly.assertThat(dto.getTargetsSender()).isTrue();
             softly.assertThat(dto.getTargetsRecipients()).isTrue();
-            softly.assertThat(dto.getTargetsContent()).isTrue();
+            softly.assertThat(dto.getTargetsContent()).isFalse();
         });
     }
 
