@@ -60,8 +60,8 @@ public class Zipper implements Backup {
 
     private void storeMessages(Stream<MailboxMessage> messages, ZipArchiveOutputStream archiveOutputStream) {
         messages.forEach(Throwing.<MailboxMessage>consumer(message -> {
-            storeInArchive(message, archiveOutputStream);
-        }).sneakyThrow());
+                storeInArchive(message, archiveOutputStream);
+            }).sneakyThrow());
     }
 
     private void storeInArchive(Mailbox mailbox, ZipArchiveOutputStream archiveOutputStream) throws IOException {
