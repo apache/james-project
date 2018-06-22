@@ -39,12 +39,12 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public long getSieveQuota() throws Exception {
-        return sieveRepository.getQuota().asLong();
+        return sieveRepository.getDefaultQuota().asLong();
     }
 
     @Override
     public void setSieveQuota(long quota) throws Exception {
-        sieveRepository.setQuota(QuotaSize.size(quota));
+        sieveRepository.setDefaultQuota(QuotaSize.size(quota));
     }
 
     @Override

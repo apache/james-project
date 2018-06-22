@@ -88,13 +88,13 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void haveSpaceShouldNotThrowWhenQuotaIsNotReached() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong());
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldThrowWhenQuotaIsExceed() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1);
     }
 
@@ -160,15 +160,15 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenScriptTooBig() throws Exception {
-        sieveRepository.setQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenQuotaChangedInBetween() throws Exception {
-        sieveRepository.setQuota(QuotaSize.size(SCRIPT_CONTENT.length()));
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length()));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
+        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
@@ -262,13 +262,13 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaNotFoundException.class)
     public void getQuotaShouldThrowIfQuotaNotFound() throws Exception {
-        sieveRepository.getQuota();
+        sieveRepository.getDefaultQuota();
     }
 
     @Test
     public void getQuotaShouldWork() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.getQuota()).isEqualTo(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.getDefaultQuota()).isEqualTo(DEFAULT_QUOTA);
     }
 
     @Test
@@ -279,18 +279,18 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void hasQuotaShouldReturnFalseWhenRepositoryDoesNotHaveQuota() throws Exception {
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
     public void hasQuotaShouldReturnTrueWhenRepositoryHaveQuota() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.hasQuota()).isTrue();
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.hasDefaultQuota()).isTrue();
     }
 
     @Test
     public void hasQuotaShouldReturnFalseWhenUserDoesNotHaveQuota() throws Exception {
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
@@ -311,9 +311,9 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void removeQuotaShouldWorkOnRepositories() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.removeQuota();
-        assertThat(sieveRepository.hasQuota()).isFalse();
+        assertThat(sieveRepository.hasDefaultQuota()).isFalse();
     }
 
     @Test
@@ -325,7 +325,7 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaNotFoundException.class)
     public void removeQuotaShouldWorkOnUsersWithGlobalQuota() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
         sieveRepository.setQuota(USER, USER_QUOTA);
         sieveRepository.removeQuota(USER);
         sieveRepository.getQuota(USER);
@@ -333,8 +333,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void setQuotaShouldWork() throws Exception {
-        sieveRepository.setQuota(DEFAULT_QUOTA);
-        assertThat(sieveRepository.getQuota()).isEqualTo(DEFAULT_QUOTA);
+        sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
+        assertThat(sieveRepository.getDefaultQuota()).isEqualTo(DEFAULT_QUOTA);
     }
 
     @Test

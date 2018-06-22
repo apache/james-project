@@ -222,21 +222,21 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public boolean hasQuota() {
+    public boolean hasDefaultQuota() {
         return cassandraSieveQuotaDAO.getQuota()
             .join()
             .isPresent();
     }
 
     @Override
-    public QuotaSize getQuota() throws QuotaNotFoundException {
+    public QuotaSize getDefaultQuota() throws QuotaNotFoundException {
         return cassandraSieveQuotaDAO.getQuota()
             .join()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setQuota(QuotaSize quota) {
+    public void setDefaultQuota(QuotaSize quota) {
         cassandraSieveQuotaDAO.setQuota(quota).join();
     }
 

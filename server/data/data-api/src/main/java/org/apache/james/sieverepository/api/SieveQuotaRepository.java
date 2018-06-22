@@ -30,11 +30,11 @@ import org.apache.james.sieverepository.api.exception.StorageException;
  */
 public interface SieveQuotaRepository {
 
-    boolean hasQuota() throws StorageException;
+    boolean hasDefaultQuota() throws StorageException;
 
-    QuotaSize getQuota() throws QuotaNotFoundException, StorageException;
+    QuotaSize getDefaultQuota() throws QuotaNotFoundException, StorageException;
 
-    void setQuota(QuotaSize quota) throws StorageException;
+    void setDefaultQuota(QuotaSize quota) throws StorageException;
 
     void removeQuota() throws QuotaNotFoundException, StorageException;
 

@@ -388,12 +388,12 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public boolean hasQuota() throws StorageException {
+    public boolean hasDefaultQuota() throws StorageException {
         return getQuotaFile().exists();
     }
 
     @Override
-    public QuotaSize getQuota() throws QuotaNotFoundException, StorageException {
+    public QuotaSize getDefaultQuota() throws QuotaNotFoundException, StorageException {
         Long quota = null;
         File file = getQuotaFile();
         if (file.exists()) {
@@ -429,7 +429,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public synchronized void setQuota(QuotaSize quota) throws StorageException {
+    public synchronized void setDefaultQuota(QuotaSize quota) throws StorageException {
         File file = getQuotaFile();
         String content = Long.toString(quota.asLong());
         toFile(file, content);

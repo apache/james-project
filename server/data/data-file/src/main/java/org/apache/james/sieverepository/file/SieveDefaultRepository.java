@@ -122,17 +122,17 @@ public class SieveDefaultRepository implements SieveRepository {
     }
 
     @Override
-    public boolean hasQuota() throws StorageException {
+    public boolean hasDefaultQuota() throws StorageException {
         throw apologizeForQuotas();
     }
 
     @Override
-    public QuotaSize getQuota() throws QuotaNotFoundException, StorageException {
+    public QuotaSize getDefaultQuota() throws QuotaNotFoundException, StorageException {
         throw apologizeForQuotas();
     }
 
     @Override
-    public void setQuota(QuotaSize quota) throws StorageException {
+    public void setDefaultQuota(QuotaSize quota) throws StorageException {
         throw apologizeForQuotas();
     }
 

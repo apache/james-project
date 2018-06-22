@@ -75,7 +75,7 @@ public class SieveQuotaRoutesTest {
     @Test
     public void getGlobalSieveQuotaShouldReturnStoredValue() throws Exception {
         long value = 1000L;
-        sieveRepository.setQuota(value);
+        sieveRepository.setDefaultQuota(value);
 
         long actual =
             given()
@@ -91,7 +91,7 @@ public class SieveQuotaRoutesTest {
 
     @Test
     public void updateGlobalSieveQuotaShouldUpdateStoredValue() throws Exception {
-        sieveRepository.setQuota(500L);
+        sieveRepository.setDefaultQuota(500L);
         long requiredSize = 1024L;
 
         given()
@@ -100,7 +100,7 @@ public class SieveQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(sieveRepository.getQuota()).isEqualTo(requiredSize);
+        assertThat(sieveRepository.getDefaultQuota()).isEqualTo(requiredSize);
     }
 
     @Test
@@ -131,7 +131,7 @@ public class SieveQuotaRoutesTest {
 
     @Test
     public void removeGlobalSieveQuotaShouldRemoveGlobalSieveQuota() throws Exception {
-        sieveRepository.setQuota(1024L);
+        sieveRepository.setDefaultQuota(1024L);
 
         given()
             .delete(SieveQuotaRoutes.ROOT_PATH)

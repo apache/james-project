@@ -35,17 +35,17 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     private Map<User, QuotaSize> userQuota = new ConcurrentHashMap<>();
 
     @Override
-    public boolean hasQuota() {
+    public boolean hasDefaultQuota() {
         return globalQuota.isPresent();
     }
 
     @Override
-    public QuotaSize getQuota() throws QuotaNotFoundException {
+    public QuotaSize getDefaultQuota() throws QuotaNotFoundException {
         return globalQuota.orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setQuota(QuotaSize quota) {
+    public void setDefaultQuota(QuotaSize quota) {
         this.globalQuota = Optional.of(quota);
     }
 

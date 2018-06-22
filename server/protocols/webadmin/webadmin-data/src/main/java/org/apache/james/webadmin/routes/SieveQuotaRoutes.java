@@ -94,7 +94,7 @@ public class SieveQuotaRoutes implements Routes {
     public void defineGetGlobalSieveQuota(Service service) {
         service.get(ROOT_PATH, (request, response) -> {
             try {
-                QuotaSize sieveQuota = sieveQuotaRepository.getQuota();
+                QuotaSize sieveQuota = sieveQuotaRepository.getDefaultQuota();
                 response.status(HttpStatus.OK_200);
                 return sieveQuota.asLong();
             } catch (QuotaNotFoundException e) {
@@ -122,7 +122,7 @@ public class SieveQuotaRoutes implements Routes {
         service.put(ROOT_PATH, (request, response) -> {
             try {
                 QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
-                sieveQuotaRepository.setQuota(requestedSize);
+                sieveQuotaRepository.setDefaultQuota(requestedSize);
                 response.status(HttpStatus.NO_CONTENT_204);
                 return Constants.EMPTY_BODY;
             } catch (JsonExtractException e) {
