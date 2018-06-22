@@ -19,6 +19,9 @@ In case of any error, the system will return an error message which is json form
 }
 ```
 
+Also be aware that, in case things go wrong, all endpoints might return a 500 internal error (with a JSON body formatted
+as exposed above). To avoid information duplication, this is ommited on endpoint specific documentation.
+
 ## Navigation menu
 
  - [Administrating domains](#Administrating_domains)
@@ -61,7 +64,6 @@ Response codes:
 
  - 204: The domain was successfully added
  - 400: The domain name is invalid
- - 500: Internal error while adding the domain
 
 ### Delete a domain
 
@@ -72,7 +74,6 @@ curl -XDELETE http://ip:port/domains/domainToBeDeleted
 Response codes:
 
  - 204: The domain was successfully removed
- - 500: Internal error while removing the domain
 
 ### Test if a domain exists
 
@@ -84,7 +85,6 @@ Response codes:
 
  - 204: The domain exists
  - 404: The domain does not exist
- - 500: Internal error while accessing the domains
 
 ### Get the list of domains
 
@@ -101,7 +101,6 @@ Possible response:
 Response codes:
 
  - 200: The domain list was successfully retrieved
- - 500: Internal error while accessing the domains
 
 ## Administrating users
 
@@ -127,7 +126,6 @@ Response codes:
  - 204: The user was successfully created
  - 400: The user name or the payload is invalid
  - 409: Conflict: A concurrent modification make that query to fail
- - 500: Internal error while adding the user
 
 Note: if the user is already, its password will be updated.
 
@@ -146,7 +144,6 @@ curl -XDELETE http://ip:port/users/userToBeDeleted
 Response codes:
 
  - 204: The user was successfully deleted
- - 500: Internal error while deleting the user
 
 ### Retrieving the user list
 
@@ -163,7 +160,6 @@ The answer looks like:
 Response codes:
 
  - 200: The user name list was successfully retrieved
- - 500: Internal error while retrieving the users
 
 ## Administrating user mailboxes
 
@@ -209,7 +205,6 @@ Response codes:
  - 204: The mailbox now does not exist on the server
  - 400: Invalid mailbox name
  - 404: The user name does not exist
- - 500: Internal error
 
 ### Testing existence of a mailbox
 
@@ -225,7 +220,6 @@ Response codes:
  - 204: The mailbox exists
  - 400: Invalid mailbox name
  - 404: The user name does not exist, the mailbox does not exist
- - 500: Internal error
 
 ### Listing user mailboxes
 
@@ -245,7 +239,6 @@ Response codes:
 
  - 200: The mailboxes list was successfully retrieved
  - 404: The user name does not exist
- - 500: Internal error
 
 ### Deleting user mailboxes
 
@@ -259,7 +252,6 @@ Response codes:
 
  - 204: The user do not have mailboxes anymore
  - 404: The user name does not exist
- - 500: Internal error
 
 ## Administrating quotas by users
 
@@ -333,7 +325,6 @@ Response codes:
 
  - 200: The user's quota was successfully retrieved
  - 404: The user does not exist
- - 500: Internal error while accessing the user's quota
 
 ### Updating the quota for a user
 
@@ -359,7 +350,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota count for a user
 
@@ -379,7 +369,6 @@ Response codes:
 
  - 200: The user's quota was successfully retrieved
  - 404: The user does not exist
- - 500: Internal error while accessing the user's quota
 
 ### Updating the quota count for a user
 
@@ -401,7 +390,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota count for a user
 
@@ -417,7 +405,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota size for a user
 
@@ -437,7 +424,6 @@ Response codes:
 
  - 200: The user's quota was successfully retrieved
  - 404: The user does not exist
- - 500: Internal error while accessing the user's quota
 
 ### Updating the quota size for a user
 
@@ -459,7 +445,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota size for a user
 
@@ -475,7 +460,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Searching user by quota ratio
 
@@ -537,7 +521,6 @@ Response codes:
 
  - 200: List of users had successfully been returned.
  - 400: Validation issues with parameters
- - 500: Internal server error - Something went bad on the server side.
 
 ## Administrating quotas by domains
 
@@ -577,7 +560,6 @@ Response codes:
  - 200: The domain's quota was successfully retrieved
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal error while accessing the domain's quota
 
 ### Updating the quota for a domain
 
@@ -604,7 +586,6 @@ Response codes:
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota count for a domain
 
@@ -648,7 +629,6 @@ Response codes:
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota count for a domain
 
@@ -686,7 +666,6 @@ Response codes:
  - 200: The domain's quota was successfully retrieved
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal error while accessing the domain's quota
 
 ### Updating the quota size for a domain
 
@@ -768,7 +747,6 @@ Note that `quota` object can contain a fixed value, an empty value (null) or an 
 Response codes:
 
  - 200: The quota was successfully retrieved
- - 500: Internal error while accessing quota
 
 ### Updating global quota
 
@@ -790,7 +768,6 @@ Response codes:
 
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the global quota count
 
@@ -809,7 +786,6 @@ The answer looks like:
 Response codes:
 
  - 200: The quota was successfully retrieved
- - 500: Internal error while accessing the quota
 
 ### Updating the global quota count
 
@@ -828,7 +804,6 @@ Response codes:
 
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the global quota count
 
@@ -844,7 +819,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the global quota size
 
@@ -862,7 +836,6 @@ The answer looks like:
 Response codes:
 
  - 200: The quota was successfully retrieved
- - 500: Internal error while accessing the quota
 
 ### Updating the global quota size
 
@@ -881,7 +854,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the global quota size
 
@@ -894,7 +866,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ## Cassandra Schema upgrades
 
@@ -934,7 +905,6 @@ Where the number corresponds to the current schema version of the database you a
 Response codes:
 
  - 200: Success
- - 500: Internal error
 
 ### Retrieving latest available Cassandra schema version
 
@@ -954,7 +924,6 @@ migrating to this schema version.
 Response codes:
 
  - 200: Success
- - 500: Internal error
 
 ### Upgrading to a specific version
 
@@ -974,7 +943,6 @@ Response codes:
  - 200: Success. The scheduled task taskId is returned.
  - 400: The version is invalid. The version should be a strictly positive number.
  - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
- - 500: Internal error while creating the migration task.
 
 Note that several calls to this endpoint will be run in a sequential pattern.
 
@@ -1011,7 +979,6 @@ Response codes:
 
  - 200: Success. The scheduled task taskId is returned.
  - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
- - 500: Internal error while creating the migration task.
 
 Note that several calls to this endpoint will be run in a sequential pattern.
 
@@ -1104,7 +1071,6 @@ Will return the groups as a list of JSON Strings representing mail addresses. Fo
 Response codes:
 
  - 200: Success
- - 500: Internal error
 
 ### Listing members of a group
 
@@ -1123,7 +1089,6 @@ Response codes:
  - 200: Success
  - 400: Group structure is not valid
  - 404: The group does not exist
- - 500: Internal error
 
 ### Adding a group member
 
@@ -1139,7 +1104,6 @@ Response codes:
  - 400: Group structure or member is not valid
  - 403: Server does not own the requested domain
  - 409: Requested group address is already used for another purpose
- - 500: Internal error
 
 ### Removing a group member
 
@@ -1153,7 +1117,6 @@ Response codes:
 
  - 200: Success
  - 400: Group structure or member is not valid
- - 500: Internal error
 
 ## Creating address forwards
 
@@ -1192,7 +1155,6 @@ Will return the users having forwards configured as a list of JSON Strings repre
 Response codes:
 
  - 200: Success
- - 500: Internal error
 
 ### Listing destinations in a forward
 
@@ -1214,7 +1176,6 @@ Response codes:
  - 200: Success
  - 400: Forward structure is not valid
  - 404: The given user don't have forwards or does not exist
- - 500: Internal error
 
 ### Adding a new destination to a forward
 
@@ -1230,7 +1191,6 @@ Response codes:
  - 400: Forward structure or member is not valid
  - 403: Server does not own the requested domain
  - 404: Requested forward address does not match an existing user
- - 500: Internal error
 
 ### Removing a destination of a forward
 
@@ -1244,7 +1204,6 @@ Response codes:
 
  - 200: Success
  - 400: Forward structure or member is not valid
- - 500: Internal error
 
 ## Administrating mail repositories
 
@@ -1273,7 +1232,6 @@ curl -XPUT http://ip:port/mailRepositories/file%3A%2F%2FmailRepo
 Response codes:
 
  - 204: The repository is created
- - 500: Internal error
 
 ### Listing mail repositories
 
@@ -1309,7 +1267,6 @@ You can use `id`, the encoded URL of the repository, to access it in later reque
 Response codes:
 
  - 200: The list of mail repositories
- - 500: Internal error
 
 ### Getting additional information for a mail repository
 
@@ -1337,7 +1294,6 @@ Response codes:
 
  - 200: Additonnal information for that repository
  - 404: This repository can not be found
- - 500: Internal error
 
 ### Listing mails contained in a mail repository
 
@@ -1378,7 +1334,6 @@ Response codes:
  - 200: The list of mail keys contained in that mail repository
  - 400: Invalid parameters
  - 404: This repository can not be found
- - 500: Internal error
 
 ### Reading/downloading a mail details
 
@@ -1468,7 +1423,6 @@ Response codes:
 
  - 200: Details of the mail
  - 404: This repository or mail can not be found
- - 500: Internal error
 
 ### Removing a mail from a mail repository
 
@@ -1486,7 +1440,6 @@ Response codes:
 
  - 204: This mail no longer exists in this repository
  - 404: This repository can not be found
- - 500: Internal error
 
 ### Removing all mails from a mail repository
 
@@ -1519,7 +1472,6 @@ Response codes:
 
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
- - 500: Internal error
 
 The scheduled task will have the following type `clearMailRepository` and the following `additionalInformation`:
 
@@ -1581,7 +1533,6 @@ Response codes:
 
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
- - 500: Internal error
 
 The scheduled task will have the following type `reprocessingAllTask` and the following `additionalInformation`:
 
@@ -1643,7 +1594,6 @@ Response codes:
 
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
- - 500: Internal error
 
 The scheduled task will have the following type `reprocessingOneTask` and the following `additionalInformation`:
 
@@ -1679,8 +1629,7 @@ The answer looks like:
 
 Response codes:
 
- - 200: The list of mail queuess
- - 500: Internal error
+ - 200: The list of mail queues
 
 ### Getting a mail queue details
 
@@ -1699,7 +1648,6 @@ Response codes:
  - 200: Success
  - 400: Mail queue is not valid
  - 404: The mail queue does not exist
- - 500: Internal error
 
 ### Listing the mails of a mail queue
 
@@ -1731,7 +1679,6 @@ Response codes:
  - 200: Success
  - 400: Mail queue is not valid or limit is invalid
  - 404: The mail queue does not exist
- - 500: Internal error
 
 ### Deleting mails from a mail queue
 
@@ -1753,7 +1700,6 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Invalid request
  - 404: The mail queue does not exist
- - 500: Internal error
 
 The scheduled task will have the following type `deleteMailsFromMailQueue` and the following `additionalInformation`:
 
@@ -1782,7 +1728,6 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Invalid request
  - 404: The mail queue does not exist
- - 500: Internal error
 
 The scheduled task will have the following type `clearMailQueue` and the following `additionalInformation`:
 
@@ -1812,7 +1757,6 @@ Response codes:
  - 204: Success (No content)
  - 400: Invalid request
  - 404: The mail queue does not exist
- - 500: Internal error
 
 ## Administrating DLP Configuration
 
@@ -1840,7 +1784,6 @@ Response codes:
  - 200: A list of dlp configuration items is returned
  - 400: Invalid senderDomain or payload in request
  - 404: The domain does not exist.
- - 500: Internal error
 
 This is an example of returned body. The rules field is a list of rules as described below.
 
@@ -1910,7 +1853,6 @@ Response codes:
  - 204: List of dlp configuration items is stored
  - 400: Invalid senderDomain or payload in request
  - 404: The domain does not exist.
- - 500: Internal error
 
 ### Remove DLP configuration by sender domain
 
@@ -1925,7 +1867,6 @@ Response codes:
  - 204: DLP configuration is removed
  - 400: Invalid senderDomain or payload in request
  - 404: The domain does not exist.
- - 500: Internal error
 
 ## Administrating Sieve quotas
 
