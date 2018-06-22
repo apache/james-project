@@ -19,9 +19,9 @@
 
 package org.apache.james.webadmin.dto;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 public class OccupationDTO {
     public static OccupationDTO from(Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota) {

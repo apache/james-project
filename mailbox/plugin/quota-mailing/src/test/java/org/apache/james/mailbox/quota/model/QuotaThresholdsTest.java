@@ -25,9 +25,9 @@ import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._95;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._99;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;

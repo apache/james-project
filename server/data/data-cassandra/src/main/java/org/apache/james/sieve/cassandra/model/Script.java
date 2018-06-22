@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 
 import com.google.common.base.Preconditions;
@@ -17,14 +19,18 @@ public class Script {
     }
 
     public static class Builder {
-        private String name;
-        private String content;
+        private ScriptName name;
+        private ScriptContent content;
         private Optional<Boolean> isActive = Optional.empty();
         private Optional<Long> size = Optional.empty();
 
-        public Builder name(String name) {
+        public Builder name(ScriptName name) {
             this.name = name;
             return this;
+        }
+
+        public Builder name(String name) {
+            return this.name(new ScriptName(name));
         }
 
         public Builder copyOf(Script script) {
@@ -35,9 +41,13 @@ public class Script {
             return this;
         }
 
-        public Builder content(String content) {
+        public Builder content(ScriptContent content) {
             this.content = content;
             return this;
+        }
+
+        public Builder content(String content) {
+            return this.content(new ScriptContent(content));
         }
 
         public Builder size(long size) {
@@ -58,28 +68,28 @@ public class Script {
             return new Script(name,
                 content,
                 isActive.get(),
-                size.orElse((long) content.getBytes(StandardCharsets.UTF_8).length));
+                size.orElse((long) content.getValue().getBytes(StandardCharsets.UTF_8).length));
         }
 
     }
 
-    private final String name;
-    private final String content;
+    private final ScriptName name;
+    private final ScriptContent content;
     private final boolean isActive;
     private final long size;
 
-    private Script(String name, String content, boolean isActive, long size) {
+    private Script(ScriptName name, ScriptContent content, boolean isActive, long size) {
         this.name = name;
         this.content = content;
         this.isActive = isActive;
         this.size = size;
     }
 
-    public String getName() {
+    public ScriptName getName() {
         return name;
     }
 
-    public String getContent() {
+    public ScriptContent getContent() {
         return content;
     }
 

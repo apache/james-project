@@ -21,6 +21,8 @@ package org.apache.james.mailbox.manager;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -30,9 +32,7 @@ import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

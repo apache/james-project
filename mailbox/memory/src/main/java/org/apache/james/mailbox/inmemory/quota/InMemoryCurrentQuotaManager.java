@@ -24,12 +24,12 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 

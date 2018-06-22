@@ -23,10 +23,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRatio;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;

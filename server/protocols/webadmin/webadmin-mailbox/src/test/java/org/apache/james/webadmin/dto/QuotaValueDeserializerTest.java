@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.webadmin.dto;
 
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.assertj.core.api.Assertions;

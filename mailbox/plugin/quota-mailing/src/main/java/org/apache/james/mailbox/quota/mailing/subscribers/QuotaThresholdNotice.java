@@ -34,10 +34,10 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;

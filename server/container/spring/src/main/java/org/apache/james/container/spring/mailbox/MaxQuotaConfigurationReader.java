@@ -25,13 +25,13 @@ import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 public class MaxQuotaConfigurationReader implements Configurable {
 

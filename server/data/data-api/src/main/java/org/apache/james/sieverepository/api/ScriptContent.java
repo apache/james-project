@@ -16,27 +16,47 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.quota;
 
-import org.junit.jupiter.api.Test;
+package org.apache.james.sieverepository.api;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import java.util.Objects;
 
-public class QuotaCountTest implements QuotaValueTest<QuotaCount> {
+import com.google.common.base.MoreObjects;
 
-    @Override
-    public QuotaCount instance(long value) {
-        return QuotaCount.count(value);
+public class ScriptContent {
+    private final String value;
+
+    public ScriptContent(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public int length() {
+        return value.length();
     }
 
     @Override
-    public QuotaCount unlimited() {
-        return QuotaCount.unlimited();
+    public final boolean equals(Object o) {
+        if (o instanceof ScriptContent) {
+            ScriptContent that = (ScriptContent) o;
+
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
     }
 
-    @Test
-    public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(QuotaCount.class).verify();
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

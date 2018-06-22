@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets.jsieve;
 import java.io.InputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -61,16 +62,15 @@ public class ResourceLocator {
     }
 
     public UserSieveInformation get(MailAddress mailAddress) throws Exception {
-        String username = retrieveUsername(mailAddress);
+        User username = retrieveUsername(mailAddress);
         return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), DateTime.now(), sieveRepository.getActive(username));
     }
 
-    private String retrieveUsername(MailAddress mailAddress) {
+    private User retrieveUsername(MailAddress mailAddress) {
         try {
-            return usersRepository.getUser(mailAddress);
+            return User.fromUsername(usersRepository.getUser(mailAddress));
         } catch (UsersRepositoryException e) {
-
-            return mailAddress.asString();
+            return User.fromMailAddress(mailAddress);
         }
     }
 

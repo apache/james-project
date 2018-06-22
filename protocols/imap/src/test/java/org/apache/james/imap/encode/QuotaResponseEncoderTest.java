@@ -21,13 +21,13 @@ package org.apache.james.imap.encode;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.junit.Test;
 
 /**

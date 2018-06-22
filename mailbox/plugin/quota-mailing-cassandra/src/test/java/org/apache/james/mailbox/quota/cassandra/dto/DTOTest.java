@@ -27,11 +27,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 
 import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;

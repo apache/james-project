@@ -54,6 +54,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -63,8 +65,6 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.ACLProbe;

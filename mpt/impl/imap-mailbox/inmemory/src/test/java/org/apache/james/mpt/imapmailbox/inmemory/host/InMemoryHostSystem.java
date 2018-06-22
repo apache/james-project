@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.imapmailbox.inmemory.host;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -30,9 +32,7 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;

@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.exception;
 
-import org.apache.james.mailbox.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaValue;
 
 /**
  * {@link MailboxException} which identicate that a user was over-quota

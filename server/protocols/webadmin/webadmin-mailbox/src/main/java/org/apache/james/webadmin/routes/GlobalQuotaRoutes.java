@@ -28,9 +28,9 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.jackson.QuotaModule;

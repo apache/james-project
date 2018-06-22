@@ -20,7 +20,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Map;
 
-import org.apache.james.mailbox.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaValue;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;

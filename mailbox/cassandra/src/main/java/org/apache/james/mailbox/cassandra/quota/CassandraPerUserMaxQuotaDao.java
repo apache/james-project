@@ -29,10 +29,10 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;

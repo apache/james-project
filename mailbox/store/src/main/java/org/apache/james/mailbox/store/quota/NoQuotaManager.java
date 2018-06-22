@@ -19,11 +19,11 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 /**
  * This quota manager is intended to be used when you want to deactivate the Quota feature

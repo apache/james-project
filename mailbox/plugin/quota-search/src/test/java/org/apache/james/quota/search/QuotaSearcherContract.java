@@ -32,13 +32,13 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.core.CoreFixture.Users.Alphabet;
 import org.apache.james.core.CoreFixture.Users.Simpson;
 import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.junit.jupiter.api.Test;
 

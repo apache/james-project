@@ -20,8 +20,8 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;

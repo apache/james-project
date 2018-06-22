@@ -21,8 +21,8 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;

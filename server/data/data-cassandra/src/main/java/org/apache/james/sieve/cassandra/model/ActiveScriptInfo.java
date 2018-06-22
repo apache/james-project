@@ -21,19 +21,20 @@ package org.apache.james.sieve.cassandra.model;
 
 import java.util.Date;
 
+import org.apache.james.sieverepository.api.ScriptName;
 import org.joda.time.DateTime;
 
 public class ActiveScriptInfo {
 
-    private final String name;
+    private final ScriptName name;
     private final DateTime activationDate;
 
-    public ActiveScriptInfo(String content, Date date) {
-        this.name = content;
+    public ActiveScriptInfo(ScriptName name, Date date) {
+        this.name = name;
         this.activationDate = new DateTime(date);
     }
 
-    public String getName() {
+    public ScriptName getName() {
         return name;
     }
 

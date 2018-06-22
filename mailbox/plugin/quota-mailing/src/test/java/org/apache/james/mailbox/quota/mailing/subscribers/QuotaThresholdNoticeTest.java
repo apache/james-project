@@ -29,12 +29,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration.RenderingInformation;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;

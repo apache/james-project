@@ -26,14 +26,14 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;

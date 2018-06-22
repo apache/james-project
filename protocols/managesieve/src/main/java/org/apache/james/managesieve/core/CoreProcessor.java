@@ -30,6 +30,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.User;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
@@ -41,6 +42,8 @@ import org.apache.james.managesieve.api.SyntaxException;
 import org.apache.james.managesieve.api.UnknownSaslMechanism;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.util.ParserUtils;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
 import org.apache.james.sieverepository.api.exception.IsActiveException;
@@ -109,7 +112,7 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String checkScript(final Session session, final String content) {
+    public String checkScript(Session session, String content) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
             return manageWarnings(parser.parse(content));
@@ -125,42 +128,42 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String deleteScript(final Session session, final String name) {
+    public String deleteScript(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.deleteScript(session.getUser(), name);
+            sieveRepository.deleteScript(User.fromUsername(session.getUser()), new ScriptName(name));
             return "OK";
         }, session);
     }
 
     @Override
-    public String getScript(final Session session, final String name) {
+    public String getScript(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            String scriptContent = IOUtils.toString(sieveRepository.getScript(session.getUser(), name), StandardCharsets.UTF_8);
+            String scriptContent = IOUtils.toString(sieveRepository.getScript(User.fromUsername(session.getUser()), new ScriptName(name)), StandardCharsets.UTF_8);
             return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
         }, session);
     }
 
     @Override
-    public String haveSpace(final Session session, final String name, final long size) {
+    public String haveSpace(Session session, String name, long size) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.haveSpace(session.getUser(), name, size);
+            sieveRepository.haveSpace(User.fromUsername(session.getUser()), new ScriptName(name), size);
             return "OK";
         }, session);
     }
 
     @Override
-    public String listScripts(final Session session) {
+    public String listScripts(Session session) {
         return handleCommandExecution(() -> listScriptsInternals(session), session);
     }
 
     private String listScriptsInternals(Session session) throws AuthenticationRequiredException, StorageException {
         authenticationCheck(session);
         String list = Joiner.on("\r\n").join(
-            Iterables.transform(sieveRepository.listScripts(session.getUser()),
-                scriptSummary -> '"' + scriptSummary.getName() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "")));
+            Iterables.transform(sieveRepository.listScripts(User.fromUsername(session.getUser())),
+                scriptSummary -> '"' + scriptSummary.getName().getValue() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "")));
         if (Strings.isNullOrEmpty(list)) {
             return "OK";
         } else {
@@ -169,28 +172,28 @@ public class CoreProcessor implements CoreCommands {
     }
 
     @Override
-    public String putScript(final Session session, final String name, final String content) {
+    public String putScript(Session session, String name, String content) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.putScript(session.getUser(), name, content);
+            sieveRepository.putScript(User.fromUsername(session.getUser()), new ScriptName(name), new ScriptContent(content));
             return manageWarnings(parser.parse(content));
         }, session);
     }
 
     @Override
-    public String renameScript(final Session session, final String oldName, final String newName) {
+    public String renameScript(Session session, String oldName, String newName) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.renameScript(session.getUser(), oldName, newName);
+            sieveRepository.renameScript(User.fromUsername(session.getUser()), new ScriptName(oldName), new ScriptName(newName));
             return "OK";
         }, session);
     }
 
     @Override
-    public String setActive(final Session session, final String name) {
+    public String setActive(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.setActive(session.getUser(), name);
+            sieveRepository.setActive(User.fromUsername(session.getUser()), new ScriptName(name));
             return "OK";
         }, session);
     }

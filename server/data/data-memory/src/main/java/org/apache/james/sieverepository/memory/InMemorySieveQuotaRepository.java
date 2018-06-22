@@ -23,14 +23,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 
 public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
 
-    private Optional<Long> globalQuota = Optional.empty();
+    private Optional<QuotaSize> globalQuota = Optional.empty();
 
-    private Map<String, Long> userQuota = new ConcurrentHashMap<>();
+    private Map<User, QuotaSize> userQuota = new ConcurrentHashMap<>();
 
     @Override
     public boolean hasQuota() {
@@ -38,12 +40,12 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public long getQuota() throws QuotaNotFoundException {
+    public QuotaSize getQuota() throws QuotaNotFoundException {
         return globalQuota.orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setQuota(long quota) {
+    public void setQuota(QuotaSize quota) {
         this.globalQuota = Optional.of(quota);
     }
 
@@ -56,24 +58,24 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public boolean hasQuota(String user) {
+    public boolean hasQuota(User user) {
         return userQuota.containsKey(user);
     }
 
     @Override
-    public long getQuota(String user) throws QuotaNotFoundException {
+    public QuotaSize getQuota(User user) throws QuotaNotFoundException {
         return Optional.ofNullable(userQuota.get(user))
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setQuota(String user, long quota) {
+    public void setQuota(User user, QuotaSize quota) {
         userQuota.put(user, quota);
     }
 
     @Override
-    public void removeQuota(String user) throws QuotaNotFoundException {
-        Optional<Long> quotaValue = Optional.ofNullable(userQuota.get(user));
+    public void removeQuota(User user) throws QuotaNotFoundException {
+        Optional<QuotaSize> quotaValue = Optional.ofNullable(userQuota.get(user));
         if (!quotaValue.isPresent()) {
             throw new QuotaNotFoundException();
         }

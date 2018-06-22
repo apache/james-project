@@ -26,13 +26,13 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRatio;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.quota.search.QuotaClause;
 

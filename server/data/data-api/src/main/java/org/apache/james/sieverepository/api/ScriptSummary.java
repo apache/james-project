@@ -25,15 +25,15 @@ import com.google.common.base.Objects;
 
 public class ScriptSummary {
 
-    private final String name;
+    private final ScriptName name;
     private final boolean activeFile;
 
-    public ScriptSummary(String name, boolean activeFile) {
+    public ScriptSummary(ScriptName name, boolean activeFile) {
         this.name = name;
         this.activeFile = activeFile;
     }
 
-    public String getName() {
+    public ScriptName getName() {
         return name;
     }
 

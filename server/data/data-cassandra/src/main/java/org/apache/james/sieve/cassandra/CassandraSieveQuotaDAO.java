@@ -33,6 +33,8 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
@@ -97,32 +99,33 @@ public class CassandraSieveQuotaDAO {
                 .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
     }
 
-    public CompletableFuture<Long> spaceUsedBy(String user) {
+    public CompletableFuture<Long> spaceUsedBy(User user) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectSpaceUsedByUserStatement.bind()
-                .setString(CassandraSieveSpaceTable.USER_NAME, user))
+                .setString(CassandraSieveSpaceTable.USER_NAME, user.asString()))
             .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveSpaceTable.SPACE_USED))
                 .orElse(0L));
     }
 
-    public CompletableFuture<Void> updateSpaceUsed(String user, long spaceUsed) {
+    public CompletableFuture<Void> updateSpaceUsed(User user, long spaceUsed) {
         return cassandraAsyncExecutor.executeVoid(
             updateSpaceUsedStatement.bind()
                 .setLong(CassandraSieveSpaceTable.SPACE_USED, spaceUsed)
-                .setString(CassandraSieveSpaceTable.USER_NAME, user));
+                .setString(CassandraSieveSpaceTable.USER_NAME, user.asString()));
     }
 
-    public CompletableFuture<Optional<Long>> getQuota() {
+    public CompletableFuture<Optional<QuotaSize>> getQuota() {
         return cassandraAsyncExecutor.executeSingleRow(
             selectClusterQuotaStatement.bind()
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveClusterQuotaTable.VALUE)));
+            .thenApply(optional -> optional.map(row ->
+                QuotaSize.size(row.getLong(CassandraSieveClusterQuotaTable.VALUE))));
     }
 
-    public CompletableFuture<Void> setQuota(long quota) {
+    public CompletableFuture<Void> setQuota(QuotaSize quota) {
         return cassandraAsyncExecutor.executeVoid(
             updateClusterQuotaStatement.bind()
-                .setLong(CassandraSieveClusterQuotaTable.VALUE, quota)
+                .setLong(CassandraSieveClusterQuotaTable.VALUE, quota.asLong())
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
 
@@ -132,24 +135,25 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
 
-    public CompletableFuture<Optional<Long>> getQuota(String user) {
+    public CompletableFuture<Optional<QuotaSize>> getQuota(User user) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user))
-            .thenApply(optional -> optional.map(row -> row.getLong(CassandraSieveQuotaTable.QUOTA)));
+                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()))
+            .thenApply(optional -> optional.map(row ->
+                QuotaSize.size(row.getLong(CassandraSieveQuotaTable.QUOTA))));
     }
 
-    public CompletableFuture<Void> setQuota(String user, long quota) {
+    public CompletableFuture<Void> setQuota(User user, QuotaSize quota) {
         return cassandraAsyncExecutor.executeVoid(
             updateUserQuotaStatement.bind()
-                .setLong(CassandraSieveQuotaTable.QUOTA, quota)
-                .setString(CassandraSieveQuotaTable.USER_NAME, user));
+                .setLong(CassandraSieveQuotaTable.QUOTA, quota.asLong())
+                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()));
     }
 
-    public CompletableFuture<Void> removeQuota(String user)  {
+    public CompletableFuture<Void> removeQuota(User user)  {
         return cassandraAsyncExecutor.executeVoid(
             deleteUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user));
+                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()));
     }
 
 }

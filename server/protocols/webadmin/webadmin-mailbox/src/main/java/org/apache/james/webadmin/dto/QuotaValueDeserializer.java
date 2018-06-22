@@ -21,7 +21,7 @@ package org.apache.james.webadmin.dto;
 import java.io.IOException;
 import java.util.function.Function;
 
-import org.apache.james.mailbox.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaValue;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;

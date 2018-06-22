@@ -16,27 +16,17 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.quota;
+
+package org.apache.james.sieverepository.api;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaSizeTest implements QuotaValueTest<QuotaSize> {
-
-    @Override
-    public QuotaSize instance(long value) {
-        return QuotaSize.size(value);
-    }
-
-    @Override
-    public QuotaSize unlimited() {
-        return QuotaSize.unlimited();
-    }
-
+public class ScriptNameTest {
     @Test
-    public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(QuotaSize.class).verify();
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(ScriptName.class)
+            .verify();
     }
-
 }

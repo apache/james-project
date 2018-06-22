@@ -21,14 +21,14 @@ package org.apache.james.mailbox.store.quota;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 /**
  * Default implementation for the Quota Manager.

@@ -16,21 +16,43 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.quota;
 
-public interface QuotaValue<T extends QuotaValue<T>> {
+package org.apache.james.sieverepository.api;
 
-    long asLong();
+import java.util.Objects;
 
-    boolean isLimited();
+import com.google.common.base.MoreObjects;
 
-    default boolean isUnlimited() {
-        return !isLimited();
+public class ScriptName {
+    private final String value;
+
+    public ScriptName(String value) {
+        this.value = value;
     }
 
-    T add(long additionalValue);
+    public String getValue() {
+        return value;
+    }
 
-    T add(T additionalValue);
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ScriptName) {
+            ScriptName that = (ScriptName) o;
 
-    boolean isGreaterThan(T other);
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

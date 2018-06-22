@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.james.mailbox.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaValue;
 
 import com.google.common.base.MoreObjects;
 

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.quota;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 
 public interface QuotaFixture {

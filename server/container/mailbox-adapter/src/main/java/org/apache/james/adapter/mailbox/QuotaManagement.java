@@ -24,13 +24,13 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuota;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.util.MDCBuilder;

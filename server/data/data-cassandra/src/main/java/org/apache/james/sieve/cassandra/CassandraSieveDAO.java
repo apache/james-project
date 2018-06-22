@@ -40,7 +40,9 @@ import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.Script;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -96,37 +98,37 @@ public class CassandraSieveDAO {
             .where(eq(USER_NAME, bindMarker(USER_NAME)));
     }
 
-    public CompletableFuture<Void> insertScript(String user, Script script) {
+    public CompletableFuture<Void> insertScript(User user, Script script) {
         return cassandraAsyncExecutor.executeVoid(
             insertScriptStatement.bind()
-                .setString(USER_NAME, user)
-                .setString(SCRIPT_NAME, script.getName())
-                .setString(SCRIPT_CONTENT, script.getContent())
+                .setString(USER_NAME, user.asString())
+                .setString(SCRIPT_NAME, script.getName().getValue())
+                .setString(SCRIPT_CONTENT, script.getContent().getValue())
                 .setBool(IS_ACTIVE, script.isActive())
                 .setLong(SIZE, script.getSize()));
     }
 
-    public CompletableFuture<List<ScriptSummary>> listScripts(String user) {
+    public CompletableFuture<List<ScriptSummary>> listScripts(User user) {
         return cassandraAsyncExecutor.execute(
             selectScriptsStatement.bind()
-                .setString(USER_NAME, user))
+                .setString(USER_NAME, user.asString()))
             .thenApply(resultSet -> resultSet.all()
                 .stream()
                 .map(row -> new ScriptSummary(
-                    row.getString(SCRIPT_NAME),
+                    new ScriptName(row.getString(SCRIPT_NAME)),
                     row.getBool(IS_ACTIVE)))
                 .collect(Guavate.toImmutableList()));
     }
 
-    public CompletableFuture<Boolean> updateScriptActivation(String user, String scriptName, boolean active) {
+    public CompletableFuture<Boolean> updateScriptActivation(User user, ScriptName scriptName, boolean active) {
         return cassandraAsyncExecutor.executeReturnApplied(
             updateScriptActivationStatement.bind()
-                .setString(USER_NAME, user)
-                .setString(SCRIPT_NAME, scriptName)
+                .setString(USER_NAME, user.asString())
+                .setString(SCRIPT_NAME, scriptName.getValue())
                 .setBool(IS_ACTIVE, active));
     }
 
-    public CompletableFuture<Optional<Script>> getScript(String user, String name) {
+    public CompletableFuture<Optional<Script>> getScript(User user, ScriptName name) {
         return getScriptRow(user, name).thenApply(opt -> opt.map(row -> Script.builder()
                 .content(row.getString(SCRIPT_CONTENT))
                 .isActive(row.getBool(IS_ACTIVE))
@@ -135,18 +137,18 @@ public class CassandraSieveDAO {
                 .build()));
     }
 
-    public CompletableFuture<Boolean> deleteScriptInCassandra(String user, String name) {
+    public CompletableFuture<Boolean> deleteScriptInCassandra(User user, ScriptName name) {
         return cassandraAsyncExecutor.executeReturnApplied(
             deleteScriptStatement.bind()
-                .setString(USER_NAME, user)
-                .setString(SCRIPT_NAME, name));
+                .setString(USER_NAME, user.asString())
+                .setString(SCRIPT_NAME, name.getValue()));
     }
 
-    private CompletableFuture<Optional<Row>> getScriptRow(String user, String name) {
+    private CompletableFuture<Optional<Row>> getScriptRow(User user, ScriptName name) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectScriptStatement.bind()
-                .setString(USER_NAME, user)
-                .setString(SCRIPT_NAME, name));
+                .setString(USER_NAME, user.asString())
+                .setString(SCRIPT_NAME, name.getValue()));
     }
 
 }

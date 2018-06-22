@@ -24,10 +24,10 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.webadmin.dto.QuotaDTO;
 
 import com.github.fge.lambdas.Throwing;

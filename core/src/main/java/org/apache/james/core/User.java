@@ -58,6 +58,12 @@ public class User {
         return new User(localPart, Optional.of(domain));
     }
 
+    public static User fromMailAddress(MailAddress address) {
+        Preconditions.checkNotNull(address);
+
+        return new User(address.getLocalPart(), Optional.of(address.getDomain()));
+    }
+
     public static User fromLocalPartWithoutDomain(String localPart) {
         return from(localPart,
             Optional.empty());

@@ -35,8 +35,8 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.User;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
 import org.apache.james.quota.search.QuotaBoundary;

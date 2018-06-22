@@ -26,11 +26,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossing;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;

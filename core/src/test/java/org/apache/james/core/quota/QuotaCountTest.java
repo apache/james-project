@@ -16,54 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.core.quota;
 
-package org.apache.james.mailbox.jpa.quota.model;
+import org.junit.jupiter.api.Test;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+public class QuotaCountTest implements QuotaValueTest<QuotaCount> {
 
-@Entity(name = "CurrentQuota")
-@Table(name = "JAMES_QUOTA_CURRENTQUOTA")
-public class JpaCurrentQuota {
-
-    @Id
-    @Column(name = "CURRENTQUOTA_QUOTAROOT")
-    private String quotaRoot;
-
-    @Column(name = "CURRENTQUOTA_MESSAGECOUNT")
-    private long messageCount;
-
-    @Column(name = "CURRENTQUOTA_SIZE")
-    private long size;
-
-    public JpaCurrentQuota() {
-    }
-
-    public JpaCurrentQuota(String quotaRoot, long messageCount, long size) {
-        this.quotaRoot = quotaRoot;
-        this.messageCount = messageCount;
-        this.size = size;
-    }
-
-    public QuotaCount getMessageCount() {
-        return QuotaCount.count(messageCount);
-    }
-
-    public QuotaSize getSize() {
-        return QuotaSize.size(size);
+    @Override
+    public QuotaCount instance(long value) {
+        return QuotaCount.count(value);
     }
 
     @Override
-    public String toString() {
-        return "JpaCurrentQuota{" +
-            "quotaRoot='" + quotaRoot + '\'' +
-            ", messageCount=" + messageCount +
-            ", size=" + size +
-            '}';
+    public QuotaCount unlimited() {
+        return QuotaCount.unlimited();
     }
+
+    @Test
+    public void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(QuotaCount.class).verify();
+    }
+
 }

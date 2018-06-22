@@ -25,7 +25,9 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -33,9 +35,9 @@ import org.junit.Test;
 
 public class CassandraActiveScriptDAOTest {
 
-    public static final String USER = "user";
-    public static final String SCRIPT_NAME = "sciptName";
-    public static final String NEW_SCRIPT_NAME = "newScriptName";
+    public static final User USER = User.fromUsername("user");
+    public static final ScriptName SCRIPT_NAME = new ScriptName("sciptName");
+    public static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     

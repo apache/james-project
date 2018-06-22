@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.server.core.configuration.Configuration;

@@ -23,6 +23,8 @@ import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
@@ -32,9 +34,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.junit.Before;
 import org.junit.Rule;

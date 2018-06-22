@@ -26,7 +26,9 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.Script;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.After;
 import org.junit.Before;
@@ -35,9 +37,9 @@ import org.junit.Test;
 
 public class CassandraSieveDAOTest {
 
-    public static final String USER = "user";
-    public static final String SCRIPT_NAME = "scriptName";
-    public static final String SCRIPT_NAME2 = "scriptName2";
+    public static final User USER = User.fromUsername("user");
+    public static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
+    public static final ScriptName SCRIPT_NAME2 = new ScriptName("scriptName2");
     public static final Script SCRIPT = Script.builder()
         .name(SCRIPT_NAME)
         .content("content")

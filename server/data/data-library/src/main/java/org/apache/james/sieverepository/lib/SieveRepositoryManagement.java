@@ -24,6 +24,8 @@ import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
 import javax.management.StandardMBean;
 
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
@@ -43,12 +45,12 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
 
     @Override
     public long getQuota() throws SieveRepositoryException {
-        return sieveRepository.getQuota();
+        return sieveRepository.getQuota().asLong();
     }
 
     @Override
     public void setQuota(long quota) throws SieveRepositoryException {
-        sieveRepository.setQuota(quota);
+        sieveRepository.setQuota(QuotaSize.size(quota));
     }
 
     @Override
@@ -58,16 +60,16 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
 
     @Override
     public long getQuota(String user) throws SieveRepositoryException {
-        return sieveRepository.getQuota(user);
+        return sieveRepository.getQuota(User.fromUsername(user)).asLong();
     }
 
     @Override
     public void setQuota(String user, long quota) throws SieveRepositoryException {
-        sieveRepository.setQuota(user, quota);
+        sieveRepository.setQuota(User.fromUsername(user), QuotaSize.size(quota));
     }
 
     @Override
     public void removeQuota(String user) throws SieveRepositoryException {
-        sieveRepository.removeQuota(user);
+        sieveRepository.removeQuota(User.fromUsername(user));
     }
 }

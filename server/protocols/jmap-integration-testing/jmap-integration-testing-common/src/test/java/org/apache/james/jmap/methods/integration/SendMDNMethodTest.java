@@ -45,13 +45,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;

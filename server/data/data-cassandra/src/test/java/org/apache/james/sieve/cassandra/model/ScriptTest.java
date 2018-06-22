@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.Rule;
 import org.junit.Test;
@@ -159,7 +160,7 @@ public class ScriptTest {
                 .size(48L)
                 .build()
                 .toSummary())
-            .isEqualTo(new ScriptSummary(name, isActive));
+            .isEqualTo(new ScriptSummary(new ScriptName(name), isActive));
     }
 
     @Test

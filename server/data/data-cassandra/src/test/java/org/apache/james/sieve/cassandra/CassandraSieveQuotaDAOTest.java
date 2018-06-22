@@ -21,10 +21,10 @@ package org.apache.james.sieve.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -32,9 +32,9 @@ import org.junit.Test;
 
 public class CassandraSieveQuotaDAOTest {
 
-    public static final String USER = "user";
+    public static final User USER = User.fromUsername("user");
+    public static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
 
-    
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     private CassandraCluster cassandra;
@@ -53,70 +53,66 @@ public class CassandraSieveQuotaDAOTest {
 
     @Test
     public void getQuotaShouldReturnEmptyByDefault() {
-        assertThat(sieveQuotaDAO.getQuota().join().isPresent())
-            .isFalse();
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
     public void getQuotaUserShouldReturnEmptyByDefault() {
-        assertThat(sieveQuotaDAO.getQuota(USER).join().isPresent())
-            .isFalse();
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test
     public void getQuotaShouldReturnStoredValue() {
-        long quota = 15L;
-        sieveQuotaDAO.setQuota(quota).join();
+        sieveQuotaDAO.setQuota(QUOTA_SIZE).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(quota);
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .contains(QUOTA_SIZE);
     }
 
     @Test
     public void getQuotaUserShouldReturnStoredValue() {
-        long quota = 15L;
-        sieveQuotaDAO.setQuota(USER, quota).join();
+        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(quota);
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .contains(QUOTA_SIZE);
     }
 
     @Test
     public void removeQuotaShouldDeleteQuota() {
-        sieveQuotaDAO.setQuota(15L).join();
+        sieveQuotaDAO.setQuota(QUOTA_SIZE).join();
 
         sieveQuotaDAO.removeQuota().join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
     public void removeQuotaUserShouldDeleteQuotaUser() {
-        sieveQuotaDAO.setQuota(USER, 15L).join();
+        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).join();
 
         sieveQuotaDAO.removeQuota(USER).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test
     public void removeQuotaShouldWorkWhenNoneStore() {
         sieveQuotaDAO.removeQuota().join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota().join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota().join())
+            .isEmpty();
     }
 
     @Test
     public void removeQuotaUserShouldWorkWhenNoneStore() {
         sieveQuotaDAO.removeQuota(USER).join();
 
-        Optional<Long> actual = sieveQuotaDAO.getQuota(USER).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(sieveQuotaDAO.getQuota(USER).join())
+            .isEmpty();
     }
 
     @Test

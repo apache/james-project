@@ -20,7 +20,11 @@ package org.apache.james.modules.protocols;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.store.probe.SieveProbe;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.utils.GuiceProbe;
 
@@ -35,12 +39,12 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public long getSieveQuota() throws Exception {
-        return sieveRepository.getQuota();
+        return sieveRepository.getQuota().asLong();
     }
 
     @Override
     public void setSieveQuota(long quota) throws Exception {
-        sieveRepository.setQuota(quota);
+        sieveRepository.setQuota(QuotaSize.size(quota));
     }
 
     @Override
@@ -50,22 +54,23 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public long getSieveQuota(String user) throws Exception {
-        return sieveRepository.getQuota(user);
+        return sieveRepository.getQuota(User.fromUsername(user)).asLong();
     }
 
     @Override
     public void setSieveQuota(String user, long quota) throws Exception {
-        sieveRepository.setQuota(user, quota);
+        sieveRepository.setQuota(User.fromUsername(user), QuotaSize.size(quota));
     }
 
     @Override
     public void removeSieveQuota(String user) throws Exception {
-        sieveRepository.removeQuota(user);
+        sieveRepository.removeQuota(User.fromUsername(user));
     }
 
     @Override
-    public void addActiveSieveScript(String user, String name, String script) throws Exception {
-        sieveRepository.putScript(user, name, script);
-        sieveRepository.setActive(user, name);
+    public void addActiveSieveScript(String username, String name, String script) throws Exception {
+        User user = User.fromUsername(username);
+        sieveRepository.putScript(user, new ScriptName(name), new ScriptContent(script));
+        sieveRepository.setActive(user, new ScriptName(name));
     }
 }

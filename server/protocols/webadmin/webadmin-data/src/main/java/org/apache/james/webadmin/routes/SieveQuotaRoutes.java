@@ -28,6 +28,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.User;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.webadmin.Constants;
@@ -92,9 +94,9 @@ public class SieveQuotaRoutes implements Routes {
     public void defineGetGlobalSieveQuota(Service service) {
         service.get(ROOT_PATH, (request, response) -> {
             try {
-                long sieveQuota = sieveQuotaRepository.getQuota();
+                QuotaSize sieveQuota = sieveQuotaRepository.getQuota();
                 response.status(HttpStatus.OK_200);
-                return sieveQuota;
+                return sieveQuota.asLong();
             } catch (QuotaNotFoundException e) {
                 LOGGER.info("Global sieve quota not set", e);
                 throw ErrorResponder.builder()
@@ -119,7 +121,7 @@ public class SieveQuotaRoutes implements Routes {
     public void defineUpdateGlobalSieveQuota(Service service) {
         service.put(ROOT_PATH, (request, response) -> {
             try {
-                Long requestedSize = extractRequestedQuotaSizeFromRequest(request);
+                QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
                 sieveQuotaRepository.setQuota(requestedSize);
                 response.status(HttpStatus.NO_CONTENT_204);
                 return Constants.EMPTY_BODY;
@@ -171,11 +173,11 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineGetPerUserSieveQuota(Service service) {
         service.get(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            String userId = request.params(USER_ID);
+            User userId = User.fromUsername(request.params(USER_ID));
             try {
-                long userQuota = sieveQuotaRepository.getQuota(userId);
+                QuotaSize userQuota = sieveQuotaRepository.getQuota(userId);
                 response.status(HttpStatus.OK_200);
-                return userQuota;
+                return userQuota.asLong();
             } catch (QuotaNotFoundException e) {
                 LOGGER.info("User sieve quota not set", e);
                 throw ErrorResponder.builder()
@@ -200,9 +202,9 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            String userId = request.params(USER_ID);
+            User userId = User.fromUsername(request.params(USER_ID));
             try {
-                Long requestedSize = extractRequestedQuotaSizeFromRequest(request);
+                QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
                 sieveQuotaRepository.setQuota(userId, requestedSize);
                 response.status(HttpStatus.NO_CONTENT_204);
             } catch (JsonExtractException e) {
@@ -230,7 +232,7 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineRemovePerUserSieveQuota(Service service) {
         service.delete(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            String userId = request.params(USER_ID);
+            User userId = User.fromUsername(request.params(USER_ID));
             try {
                 sieveQuotaRepository.removeQuota(userId);
                 response.status(HttpStatus.NO_CONTENT_204);
@@ -246,7 +248,7 @@ public class SieveQuotaRoutes implements Routes {
         });
     }
 
-    private Long extractRequestedQuotaSizeFromRequest(Request request) throws JsonExtractException {
+    private QuotaSize extractRequestedQuotaSizeFromRequest(Request request) throws JsonExtractException {
         Long requestedSize = jsonExtractor.parse(request.body());
         if (requestedSize < 0) {
             throw ErrorResponder.builder()
@@ -255,6 +257,6 @@ public class SieveQuotaRoutes implements Routes {
                 .message("Requested quota size have to be a positive integer")
                 .haltError();
         }
-        return requestedSize;
+        return QuotaSize.size(requestedSize);
     }
 }

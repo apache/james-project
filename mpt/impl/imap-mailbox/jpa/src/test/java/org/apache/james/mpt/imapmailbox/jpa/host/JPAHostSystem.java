@@ -25,6 +25,8 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -45,8 +47,6 @@ import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;

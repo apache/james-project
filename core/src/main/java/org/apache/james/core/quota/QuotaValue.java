@@ -16,31 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.webadmin.jackson;
+package org.apache.james.core.quota;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.webadmin.dto.QuotaValueDeserializer;
-import org.apache.james.webadmin.dto.QuotaValueSerializer;
-import org.apache.james.webadmin.utils.JsonTransformerModule;
+public interface QuotaValue<T extends QuotaValue<T>> {
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+    long asLong();
 
-public class QuotaModule implements JsonTransformerModule {
+    boolean isLimited();
 
-    private final SimpleModule simpleModule;
-
-    public QuotaModule() {
-        simpleModule = new SimpleModule()
-            .addSerializer(QuotaSize.class, new QuotaValueSerializer<>())
-            .addSerializer(QuotaCount.class, new QuotaValueSerializer<>())
-            .addDeserializer(QuotaSize.class, new QuotaValueDeserializer<>(QuotaSize.unlimited(), QuotaSize::size))
-            .addDeserializer(QuotaCount.class, new QuotaValueDeserializer<>(QuotaCount.unlimited(), QuotaCount::count));
+    default boolean isUnlimited() {
+        return !isLimited();
     }
 
-    @Override
-    public Module asJacksonModule() {
-        return simpleModule;
-    }
+    T add(long additionalValue);
+
+    T add(T additionalValue);
+
+    boolean isGreaterThan(T other);
 }

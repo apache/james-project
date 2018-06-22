@@ -21,6 +21,7 @@
 package org.apache.james.transport.mailets.managesieve;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,9 +39,12 @@ import javax.mail.internet.MimeMultipart;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.api.SyntaxException;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
@@ -56,12 +60,12 @@ import com.google.common.collect.Lists;
 
 public class ManageSieveMailetTestCase {
 
-    public static final String USER = "test@localhost";
-    public static final String SCRIPT_NAME = "scriptName";
-    public static final String SCRIPT_CONTENT = "scriptContent";
+    public static final User USER = User.fromUsername("test@localhost");
+    public static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
+    public static final ScriptContent SCRIPT_CONTENT = new ScriptContent("scriptContent");
     public static final String SYNTAX_EXCEPTION = "SyntaxException";
-    public static final String OLD_SCRIPT_NAME = "oldScriptName";
-    public static final String NEW_SCRIPT_NAME = "newScriptName";
+    public static final ScriptName OLD_SCRIPT_NAME = new ScriptName("oldScriptName");
+    public static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
     public static final String SIEVE_LOCALHOST = "sieve@localhost";
 
     private ManageSieveMailet mailet;
@@ -76,7 +80,7 @@ public class ManageSieveMailetTestCase {
         sieveParser = mock(SieveParser.class);
         usersRepository = mock(UsersRepository.class);
         initializeMailet();
-        when(usersRepository.contains(USER)).thenReturn(true);
+        when(usersRepository.contains(USER.asString())).thenReturn(true);
     }
 
     @Test
@@ -131,7 +135,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testPutScript() throws Exception {
-        when(sieveParser.parse(SCRIPT_CONTENT)).thenReturn(Lists.newArrayList("warning1", "warning2"));
+        when(sieveParser.parse(anyString())).thenReturn(Lists.newArrayList("warning1", "warning2"));
         MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {100+}");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
@@ -189,10 +193,10 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testGetScript() throws Exception {
-        when(sieveRepository.getScript(USER, SCRIPT_NAME)).thenReturn(new ByteArrayInputStream(SCRIPT_CONTENT.getBytes()));
+        when(sieveRepository.getScript(USER, SCRIPT_NAME)).thenReturn(new ByteArrayInputStream(SCRIPT_CONTENT.getValue().getBytes()));
         MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
-        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER.asString());
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "{13}\r\n" + SCRIPT_CONTENT + "\r\nOK");
     }
@@ -210,19 +214,19 @@ public class ManageSieveMailetTestCase {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT_NAME);
         MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
-        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER.asString());
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "NO (NONEXISTENT) \"There is no script by that name\"");
     }
 
     @Test
     public final void testGetScriptNoScriptName() throws Exception {
-        String scriptContent = "line1\r\nline2";
+        ScriptContent scriptContent = new ScriptContent("line1\r\nline2");
         sieveRepository.putScript(USER, SCRIPT_NAME, scriptContent);
         MimeMessage message = prepareMimeMessage("GETSCRIPT");
         Mail mail = createUnauthenticatedMail(message);
 
-        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER);
+        mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER.asString());
         mailet.service(mail);
         ensureResponse("Re: GETSCRIPT", "NO \"Missing argument: script name\"");
     }
@@ -237,7 +241,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testCheckScript() throws Exception {
-        when(sieveParser.parse(SCRIPT_CONTENT)).thenReturn(Lists.newArrayList("warning1", "warning2"));
+        when(sieveParser.parse(anyString())).thenReturn(Lists.newArrayList("warning1", "warning2"));
         MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "CHECKSCRIPT {100+}");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
@@ -367,7 +371,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testListScripts() throws Exception {
-        when(sieveRepository.listScripts(USER)).thenReturn(Lists.newArrayList(new ScriptSummary("scriptName2", true), new ScriptSummary("scriptName1", false)));
+        when(sieveRepository.listScripts(USER)).thenReturn(Lists.newArrayList(new ScriptSummary(new ScriptName("scriptName2"), true), new ScriptSummary(new ScriptName("scriptName1"), false)));
         MimeMessage message = prepareMimeMessage("LISTSCRIPTS");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
@@ -384,7 +388,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testRenameScriptsUnauthorised() throws Exception {
-        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, NEW_SCRIPT_NAME);
+        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, SCRIPT_CONTENT);
         MimeMessage message = prepareMimeMessage("RENAMESCRIPT \"" + OLD_SCRIPT_NAME + "\" \"" + NEW_SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
@@ -393,7 +397,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testRenameScripts() throws Exception {
-        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, NEW_SCRIPT_NAME);
+        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, SCRIPT_CONTENT);
         MimeMessage message = prepareMimeMessage("RENAMESCRIPT \"" + OLD_SCRIPT_NAME + "\" \"" + NEW_SCRIPT_NAME + "\"");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
@@ -402,7 +406,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testRenameScriptsExtraArgs() throws Exception {
-        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, NEW_SCRIPT_NAME);
+        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, SCRIPT_CONTENT);
         MimeMessage message = prepareMimeMessage("RENAMESCRIPT \"" + OLD_SCRIPT_NAME + "\" \"" + NEW_SCRIPT_NAME + "\" extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
@@ -411,7 +415,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testRenameScriptsNoScriptName() throws Exception {
-        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, NEW_SCRIPT_NAME);
+        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, SCRIPT_CONTENT);
         MimeMessage message = prepareMimeMessage("RENAMESCRIPT");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
@@ -420,7 +424,7 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testRenameScriptsNoNewScriptName() throws Exception {
-        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, NEW_SCRIPT_NAME);
+        sieveRepository.putScript(USER, OLD_SCRIPT_NAME, SCRIPT_CONTENT);
         MimeMessage message = prepareMimeMessage("RENAMESCRIPT \"" + OLD_SCRIPT_NAME + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
@@ -503,7 +507,7 @@ public class ManageSieveMailetTestCase {
     private Mail createUnauthenticatedMail(MimeMessage message) throws Exception {
         return FakeMail.builder()
                 .mimeMessage(message)
-                .sender(USER)
+                .sender(USER.asString())
                 .recipient(SIEVE_LOCALHOST)
                 .build();
     }
@@ -518,20 +522,24 @@ public class ManageSieveMailetTestCase {
         return MimeMessageBuilder.mimeMessageBuilder()
             .setSubject(subject)
             .addToRecipient(SIEVE_LOCALHOST)
-            .setSender(USER)
+            .setSender(USER.asString())
             .build();
+    }
+
+    private MimeMessage prepareMessageWithAttachment(ScriptContent scriptContent, String subject) throws MessagingException, IOException {
+        return prepareMessageWithAttachment(scriptContent.getValue(), subject);
     }
 
     private MimeMessage prepareMessageWithAttachment(String scriptContent, String subject) throws MessagingException, IOException {
         return MimeMessageBuilder.mimeMessageBuilder()
             .setSubject(subject)
             .addToRecipient(SIEVE_LOCALHOST)
-            .setSender(USER)
+            .setSender(USER.asString())
             .setMultipartWithBodyParts(
                 MimeMessageBuilder.bodyPartBuilder()
                     .data(scriptContent)
                     .disposition(MimeBodyPart.ATTACHMENT)
-                    .filename(SCRIPT_NAME)
+                    .filename(SCRIPT_NAME.getValue())
                     .addHeader("Content-Type", "application/sieve; charset=UTF-8"))
             .build();
     }
@@ -557,14 +565,14 @@ public class ManageSieveMailetTestCase {
 
     private MimeMessage verifyHeaders(String subject) throws MessagingException {
         FakeMailContext.SentMail sentMail = FakeMailContext.sentMailBuilder()
-            .recipient(new MailAddress(USER))
+            .recipient(new MailAddress(USER.asString()))
             .sender(new MailAddress(SIEVE_LOCALHOST))
             .fromMailet()
             .build();
         assertThat(fakeMailContext.getSentMails()).containsOnly(sentMail);
         MimeMessage result = fakeMailContext.getSentMails().get(0).getMsg();
         assertThat(result.getSubject()).isEqualTo(subject);
-        assertThat(result.getRecipients(RecipientType.TO)).containsOnly(new InternetAddress(USER));
+        assertThat(result.getRecipients(RecipientType.TO)).containsOnly(new InternetAddress(USER.asString()));
         return result;
     }
 }

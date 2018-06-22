@@ -21,11 +21,11 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaValue;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
-import org.apache.james.mailbox.quota.QuotaValue;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.collect.ImmutableMap;

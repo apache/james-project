@@ -26,12 +26,12 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.TransactionRunner;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
 import com.google.common.base.Preconditions;

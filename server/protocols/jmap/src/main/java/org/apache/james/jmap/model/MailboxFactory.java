@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaValue;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.jmap.model.mailbox.Quotas;
@@ -44,7 +45,6 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaValue;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

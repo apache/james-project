@@ -75,6 +75,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -92,7 +93,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.ACLProbe;

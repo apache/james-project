@@ -21,11 +21,11 @@ package org.apache.james.mailbox.quota.mailing.events;
 
 import java.util.Objects;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
 import org.apache.james.mailbox.quota.model.HistoryEvolution;
 

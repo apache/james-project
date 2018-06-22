@@ -29,8 +29,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;

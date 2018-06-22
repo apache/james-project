@@ -38,10 +38,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.quota.QuotaSize;
 import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;

@@ -23,8 +23,8 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaValue;
 import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.quota.QuotaValue;
 
 import com.google.common.base.MoreObjects;
 

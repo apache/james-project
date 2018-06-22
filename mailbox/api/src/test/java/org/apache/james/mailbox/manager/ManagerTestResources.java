@@ -25,6 +25,8 @@ import java.util.Calendar;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -35,10 +37,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaCount;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.quota.QuotaSize;
 
 /**
  * Provide an initialized Mailbox environment where we can run managers tests

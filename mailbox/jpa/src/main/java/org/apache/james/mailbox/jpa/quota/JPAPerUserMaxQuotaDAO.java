@@ -28,6 +28,9 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.Domain;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaValue;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount;
@@ -35,9 +38,6 @@ import org.apache.james.mailbox.jpa.quota.model.MaxGlobalStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxUserStorage;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
-import org.apache.james.mailbox.quota.QuotaValue;
 
 public class JPAPerUserMaxQuotaDAO {
 

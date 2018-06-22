@@ -21,8 +21,8 @@ package org.apache.james.webadmin.validation;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.quota.QuotaCount;
-import org.apache.james.mailbox.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
