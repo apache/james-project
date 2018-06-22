@@ -46,7 +46,10 @@ public class SieveQuota {
     }
 
     public boolean isExceededUponModification(long sizeDifference) {
-        return limit.map(limitContent -> !limitContent.isGreaterThan(QuotaSize.size(currentUsage + sizeDifference)))
-                .orElse(false);
+        return limit.map(limitContent ->
+            QuotaSize.size(currentUsage)
+                .add(sizeDifference)
+                .isGreaterThan(limitContent))
+            .orElse(false);
     }
 }

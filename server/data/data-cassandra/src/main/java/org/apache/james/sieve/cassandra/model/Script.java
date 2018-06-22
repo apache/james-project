@@ -2,7 +2,6 @@
 
 package org.apache.james.sieve.cassandra.model;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -68,7 +67,7 @@ public class Script {
             return new Script(name,
                 content,
                 isActive.get(),
-                size.orElse((long) content.getValue().getBytes(StandardCharsets.UTF_8).length));
+                size.orElse((long) content.length()));
         }
 
     }

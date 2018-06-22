@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
 import org.junit.Rule;
@@ -73,7 +74,7 @@ public class ScriptTest {
 
     @Test
     public void buildShouldPreserveName() {
-        String name = "name";
+        ScriptName name = new ScriptName("name");
         assertThat(
             Script.builder()
                 .name(name)
@@ -86,7 +87,7 @@ public class ScriptTest {
 
     @Test
     public void buildShouldPreserveContent() {
-        String content = "content";
+        ScriptContent content = new ScriptContent("content");
         assertThat(
             Script.builder()
                 .name("name")

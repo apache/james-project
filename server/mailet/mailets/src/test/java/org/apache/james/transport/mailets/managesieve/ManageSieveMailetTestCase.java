@@ -127,52 +127,52 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testPutScriptinvalidLiteral() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", "NO \"Missing argument: script size\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "NO \"Missing argument: script size\"");
     }
 
     @Test
     public final void testPutScript() throws Exception {
         when(sieveParser.parse(anyString())).thenReturn(Lists.newArrayList("warning1", "warning2"));
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {100+}");
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {100+}");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {100+}", "OK (WARNINGS) \"warning1\" \"warning2\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {100+}", "OK (WARNINGS) \"warning1\" \"warning2\"");
     }
 
     @Test
     public final void testPutScriptInvalidLiteral() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" extra");
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" extra", "NO \"extra is an invalid size literal : it should be at least 4 char looking like {_+}\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra", "NO \"extra is an invalid size literal : it should be at least 4 char looking like {_+}\"");
     }
 
     @Test
     public final void testPutScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+} extra");
+        MimeMessage message = prepareMessageWithAttachment(SCRIPT_CONTENT, "PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {10+} extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+} extra", "NO \"Extra arguments not supported\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {10+} extra", "NO \"Extra arguments not supported\"");
     }
 
     @Test
     public final void testPutScriptSyntaxError() throws Exception {
         doThrow(new SyntaxException("error message")).when(sieveParser).parse(SYNTAX_EXCEPTION);
-        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+}");
+        MimeMessage message = prepareMessageWithAttachment(SYNTAX_EXCEPTION, "PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {10+}");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\" {10+}", "NO \"Syntax Error: error message\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\" {10+}", "NO \"Syntax Error: error message\"");
     }
 
     @Test
     public final void testPutScriptNoScript() throws Exception {
-        MimeMessage message = prepareMimeMessage("PUTSCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME + "\"", "NO \"Missing argument: script size\"");
+        ensureResponse("Re: PUTSCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "NO \"Missing argument: script size\"");
     }
 
     @Test
@@ -185,38 +185,38 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testGetScriptNonAuthorized() throws Exception {
-        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "NO");
+        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "NO");
     }
 
     @Test
     public final void testGetScript() throws Exception {
-        when(sieveRepository.getScript(USER, SCRIPT_NAME)).thenReturn(new ByteArrayInputStream(SCRIPT_CONTENT.getValue().getBytes()));
-        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
+        when(sieveRepository.getScript(USER, SCRIPT_NAME)).thenReturn(new ByteArrayInputStream(SCRIPT_CONTENT.getValue().getBytes(StandardCharsets.UTF_8)));
+        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER.asString());
         mailet.service(mail);
-        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "{13}\r\n" + SCRIPT_CONTENT + "\r\nOK");
+        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "{13}\r\n" + SCRIPT_CONTENT.getValue() + "\r\nOK");
     }
 
     @Test
     public final void testGetScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\" extra");
+        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\" extra", "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra", "NO \"Too many arguments: extra\"");
     }
 
     @Test
     public final void testGetScriptNoScript() throws Exception {
         doThrow(new ScriptNotFoundException()).when(sieveRepository).getScript(USER, SCRIPT_NAME);
-        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mail.setAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME, USER.asString());
         mailet.service(mail);
-        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME + "\"", "NO (NONEXISTENT) \"There is no script by that name\"");
+        ensureResponse("Re: GETSCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "NO (NONEXISTENT) \"There is no script by that name\"");
     }
 
     @Test
@@ -283,26 +283,26 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testDeleteScriptUnauthenticated() throws Exception {
-        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME + "\"", "NO");
+        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "NO");
     }
 
     @Test
     public final void testDeleteScript() throws Exception {
-        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME + "\"", "OK");
+        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\"", "OK");
     }
 
     @Test
     public final void testDeleteScriptExtraArgs() throws Exception {
-        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME + "\" extra");
+        MimeMessage message = prepareMimeMessage("DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME + "\" extra", "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: DELETESCRIPT \"" + SCRIPT_NAME.getValue() + "\" extra", "NO \"Too many arguments: extra\"");
     }
 
     @Test
@@ -315,26 +315,26 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testHaveSpaceUnauthenticated() throws Exception {
-        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME + "\" 1");
+        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME + "\" 1", "NO");
+        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1", "NO");
     }
 
     @Test
     public final void testHaveSpace() throws Exception {
-        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME + "\" 1");
+        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME + "\" 1", "OK");
+        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1", "OK");
     }
 
     @Test
     public final void testHaveSpaceExtraArgs() throws Exception {
-        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME + "\" 1 extra");
+        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1 extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME + "\" 1 extra", "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" 1 extra", "NO \"Too many arguments: extra\"");
     }
 
     @Test
@@ -347,18 +347,18 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testHaveSpaceNoScriptSize() throws Exception {
-        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME + "\"", "NO \"Missing argument: script size\"");
+        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME.getValue() + "\"", "NO \"Missing argument: script size\"");
     }
 
     @Test
     public final void testHaveSpaceInvalidScriptSize() throws Exception {
-        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME + "\" X");
+        MimeMessage message = prepareMimeMessage("HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" X");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME + "\" X", "NO \"Invalid argument: script size\"");
+        ensureResponse("Re: HAVESPACE \"" + SCRIPT_NAME.getValue() + "\" X", "NO \"Invalid argument: script size\"");
     }
 
     @Test
@@ -433,26 +433,26 @@ public class ManageSieveMailetTestCase {
 
     @Test
     public final void testSetActiveUnauthorised() throws Exception {
-        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME + "\"", "NO");
+        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME.getValue() + "\"", "NO");
     }
 
     @Test
     public final void testSetActive() throws Exception {
-        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME + "\"");
+        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME.getValue() + "\"");
         Mail mail = createAuthentificatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME + "\"", "OK");
+        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME.getValue() + "\"", "OK");
     }
 
     @Test
     public final void testSetActiveExtraArgs() throws Exception {
-        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME + "\" extra");
+        MimeMessage message = prepareMimeMessage("SETACTIVE \"" + SCRIPT_NAME.getValue() + "\" extra");
         Mail mail = createUnauthenticatedMail(message);
         mailet.service(mail);
-        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME + "\" extra", "NO \"Too many arguments: extra\"");
+        ensureResponse("Re: SETACTIVE \"" + SCRIPT_NAME.getValue() + "\" extra", "NO \"Too many arguments: extra\"");
     }
 
     @Test

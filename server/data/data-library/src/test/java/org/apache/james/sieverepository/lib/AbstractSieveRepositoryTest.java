@@ -343,8 +343,8 @@ public abstract class AbstractSieveRepositoryTest {
         assertThat(sieveRepository.getQuota(USER)).isEqualTo(DEFAULT_QUOTA);
     }
 
-    protected String getScriptContent(InputStream inputStream) throws IOException {
-        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {
+        return new ScriptContent(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
     }
 
     protected abstract SieveRepository createSieveRepository() throws Exception;

@@ -19,6 +19,7 @@
 
 package org.apache.james.sieverepository.api;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
@@ -35,7 +36,7 @@ public class ScriptContent {
     }
 
     public int length() {
-        return value.length();
+        return value.getBytes(StandardCharsets.UTF_8).length;
     }
 
     @Override
