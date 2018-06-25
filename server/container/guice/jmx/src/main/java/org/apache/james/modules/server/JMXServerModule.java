@@ -19,8 +19,10 @@
 
 package org.apache.james.modules.server;
 
+import java.io.FileNotFoundException;
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagement;
 import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagement;
@@ -47,16 +49,22 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
+import org.apache.james.utils.PropertiesProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 
 public class JMXServerModule extends AbstractModule {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(JMXServerModule.class);
 
     private static final String JMX_COMPONENT_DOMAINLIST = "org.apache.james:type=component,name=domainlist";
     private static final String JMX_COMPONENT_USERS_REPOSITORY = "org.apache.james:type=component,name=usersrepository";
@@ -92,6 +100,17 @@ public class JMXServerModule extends AbstractModule {
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
         Multibinder<ConfigurationPerformer> configurationMultibinder = Multibinder.newSetBinder(binder(), ConfigurationPerformer.class);
         configurationMultibinder.addBinding().to(JMXModuleConfigurationPerformer.class);
+    }
+
+    @Provides
+    @Singleton
+    public JmxConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        try {
+            return JmxConfiguration.fromProperties(propertiesProvider.getConfiguration("jmx"));
+        } catch (FileNotFoundException e) {
+            LOGGER.warn("Could not locate configuration file for JMX. Defaults to rmi://127.0.0.1:9999");
+            return JmxConfiguration.DEFAULT_CONFIGURATION;
+        }
     }
 
     @Singleton
