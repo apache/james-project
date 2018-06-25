@@ -181,11 +181,7 @@ public class MailRepositoriesRoutes implements Routes {
             MailRepositoryUrl url = MailRepositoryUrl.fromEncoded(encodedUrl);
             try {
                 return repositoryStoreService.listMails(url, offset, limit)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                            .statusCode(HttpStatus.NOT_FOUND_404)
-                            .type(ErrorType.NOT_FOUND)
-                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
-                            .haltError());
+                    .orElseThrow(() -> repositoryNotFound(encodedUrl, url));
 
             } catch (MailRepositoryStore.MailRepositoryStoreException | MessagingException e) {
                 throw ErrorResponder.builder()
@@ -294,6 +290,14 @@ public class MailRepositoriesRoutes implements Routes {
             .haltError();
     }
 
+    private HaltException repositoryNotFound(String encodedUrl, MailRepositoryUrl url) {
+        return ErrorResponder.builder()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorType.NOT_FOUND)
+            .message("The repository '" + encodedUrl + "' (decoded value: '" + url.asString() + "') does not exist")
+            .haltError();
+    }
+
     private HaltException internalServerError(Exception e) {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
@@ -317,11 +321,7 @@ public class MailRepositoriesRoutes implements Routes {
             MailRepositoryUrl url = MailRepositoryUrl.fromEncoded(encodedUrl);
             try {
                 long size = repositoryStoreService.size(url)
-                    .orElseThrow(() -> ErrorResponder.builder()
-                            .statusCode(HttpStatus.NOT_FOUND_404)
-                            .type(ErrorType.NOT_FOUND)
-                            .message("The repository " + encodedUrl + "(decoded value: '" + url + "') does not exist")
-                            .haltError());
+                    .orElseThrow(() -> repositoryNotFound(encodedUrl, url));
                 return new ExtendedMailRepositoryResponse(url, size);
             } catch (MailRepositoryStore.MailRepositoryStoreException e) {
                 throw ErrorResponder.builder()

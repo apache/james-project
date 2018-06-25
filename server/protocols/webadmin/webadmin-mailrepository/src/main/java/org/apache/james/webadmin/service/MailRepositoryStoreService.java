@@ -67,7 +67,7 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<List<MailKeyDTO>> listMails(MailRepositoryUrl url, Offset offset, Limit limit) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
-        Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
+        Optional<MailRepository> mailRepository = mailRepositoryStore.get(url);
         ThrowingFunction<MailRepository, List<MailKeyDTO>> list = repository -> list(repository, offset, limit);
         return mailRepository.map(Throwing.function(list).sneakyThrow());
     }
@@ -81,7 +81,7 @@ public class MailRepositoryStoreService {
     }
 
     public Optional<Long> size(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
-        Optional<MailRepository> mailRepository = Optional.ofNullable(getRepository(url));
+        Optional<MailRepository> mailRepository = mailRepositoryStore.get(url);
         return mailRepository.map(Throwing.function(MailRepository::size).sneakyThrow());
     }
 
@@ -113,7 +113,7 @@ public class MailRepositoryStoreService {
             .orElseThrow(() -> ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message(url + "does not exist")
+                .message(url.asString() + " does not exist")
                 .haltError());
     }
 
