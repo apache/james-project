@@ -117,6 +117,8 @@
                 <p>This is used to configure the JMX MBean server via which all management is achieved (also used by via the james-cli).</p>
 
                 <dl>
+                    <dt><strong>jmx.enabled</strong></dt>
+                    <dd>(Guice only). Boolean. Should the JMX server be enabled? Defaults to `true`.</dd>
                     <dt><strong>jmx.address</strong></dt>
                     <dd>The IP address (host name) the MBean Server will bind/listen to.</dd>
                     <dt><strong>jmx.port</strong></dt>
