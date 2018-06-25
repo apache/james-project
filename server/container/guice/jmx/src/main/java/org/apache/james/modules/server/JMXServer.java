@@ -57,6 +57,9 @@ public class JMXServer {
 
     public void start() {
         synchronized (lock) {
+            if (!jmxConfiguration.isEnabled()) {
+                return;
+            }
             if (isStarted) {
                 return;
             }

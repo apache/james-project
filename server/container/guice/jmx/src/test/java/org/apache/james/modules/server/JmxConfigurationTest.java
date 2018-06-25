@@ -22,6 +22,7 @@ package org.apache.james.modules.server;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringReader;
+import java.util.Optional;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.util.Host;
@@ -50,6 +51,28 @@ public class JmxConfigurationTest {
                 "jmx.port=889\n"));
 
         assertThat(JmxConfiguration.fromProperties(configuration))
-            .isEqualTo(new JmxConfiguration(Host.from("172.0.0.5", 889)));
+            .isEqualTo(new JmxConfiguration(JmxConfiguration.ENABLED, Optional.of(Host.from("172.0.0.5", 889))));
+    }
+
+    @Test
+    void fromPropertiesShouldReturnDisabledWhenConfiguredAsDisabled() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.load(new StringReader(
+                    "jmx.enabled=false\n"));
+
+        assertThat(JmxConfiguration.fromProperties(configuration))
+            .isEqualTo(JmxConfiguration.DISABLED);
+    }
+
+    @Test
+    void fromPropertiesShouldReturnDisabledWhenConfiguredAsDisabledWithHost() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.load(new StringReader(
+                    "jmx.enabled=false\n" +
+                "jmx.address=172.0.0.5\n" +
+                "jmx.port=889\n"));
+
+        assertThat(JmxConfiguration.fromProperties(configuration))
+            .isEqualTo(JmxConfiguration.DISABLED);
     }
 }
