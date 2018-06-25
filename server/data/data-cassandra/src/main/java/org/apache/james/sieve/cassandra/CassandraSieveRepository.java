@@ -42,7 +42,6 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.apache.james.sieverepository.api.exception.StorageException;
 import org.apache.james.util.CompletableFutureUtil;
 import org.joda.time.DateTime;
 
@@ -60,18 +59,18 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public DateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException {
+    public DateTime getActivationDateForActiveScript(User user) throws ScriptNotFoundException {
         return cassandraActiveScriptDAO.getActiveSctiptInfo(user).join()
             .orElseThrow(ScriptNotFoundException::new)
             .getActivationDate();
     }
 
     @Override
-    public void haveSpace(User user, ScriptName name, long newSize) throws QuotaExceededException, StorageException {
+    public void haveSpace(User user, ScriptName name, long newSize) throws QuotaExceededException {
         throwOnOverQuota(user, spaceThatWillBeUsedByNewScript(user, name, newSize));
     }
 
-    private void throwOnOverQuota(User user, CompletableFuture<Long> sizeDifference) throws QuotaExceededException, StorageException {
+    private void throwOnOverQuota(User user, CompletableFuture<Long> sizeDifference) throws QuotaExceededException {
         CompletableFuture<Optional<QuotaSize>> userQuotaFuture = cassandraSieveQuotaDAO.getQuota(user);
         CompletableFuture<Optional<QuotaSize>> globalQuotaFuture = cassandraSieveQuotaDAO.getQuota();
         CompletableFuture<Long> spaceUsedFuture = cassandraSieveQuotaDAO.spaceUsedBy(user);
@@ -80,7 +79,7 @@ public class CassandraSieveRepository implements SieveRepository {
             .checkOverQuotaUponModification(sizeDifference.join());
     }
 
-    public CompletableFuture<Long> spaceThatWillBeUsedByNewScript(User user, ScriptName name, long scriptSize) {
+    private CompletableFuture<Long> spaceThatWillBeUsedByNewScript(User user, ScriptName name, long scriptSize) {
         return cassandraSieveDAO.getScript(user, name)
             .thenApply(optional -> optional.map(Script::getSize).orElse(0L))
             .thenApply(sizeOfStoredScript -> scriptSize - sizeOfStoredScript);
@@ -94,7 +93,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public void putScript(User user, ScriptName name, ScriptContent content) throws QuotaExceededException, StorageException {
+    public void putScript(User user, ScriptName name, ScriptContent content) throws QuotaExceededException {
         CompletableFuture<Long> spaceUsed = spaceThatWillBeUsedByNewScript(user, name, content.length());
         throwOnOverQuota(user, spaceUsed);
 
@@ -109,7 +108,7 @@ public class CassandraSieveRepository implements SieveRepository {
             .join();
     }
 
-    public CompletableFuture<Void> updateSpaceUsed(User user, long spaceUsed) {
+    private CompletableFuture<Void> updateSpaceUsed(User user, long spaceUsed) {
         if (spaceUsed == 0) {
             return CompletableFuture.completedFuture(null);
         }
@@ -241,7 +240,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public void removeQuota() throws QuotaNotFoundException {
+    public void removeQuota() {
         cassandraSieveQuotaDAO.removeQuota().join();
     }
 
@@ -267,7 +266,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public void removeQuota(User user) throws QuotaNotFoundException {
+    public void removeQuota(User user) {
         cassandraSieveQuotaDAO.removeQuota(user).join();
     }
 
