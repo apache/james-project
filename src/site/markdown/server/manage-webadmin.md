@@ -1399,11 +1399,69 @@ If the Accept header in the request is "application/json", then the response loo
     "sender": "sender@domain.com",
     "recipients": ["recipient1@domain.com", "recipient2@domain.com"],
     "state": "address-error",
-    "error": "A small message explaining what happened to that mail..."
+    "error": "A small message explaining what happened to that mail...",
+    "remoteHost": "111.222.333.444",
+    "remoteAddr": "127.0.0.1",
+    "lastUpdated": null
 }
 ```
 If the Accept header in the request is "message/rfc822", then the response will be the _eml_ file itself.
 
+Additional query parameter `additionalFields` add the existing informations to the response for the supported values:
+ - attributes
+ - headers
+ - textBody
+ - htmlBody
+ - messageSize
+ - perRecipientsHeaders
+
+```
+curl -XGET http://ip:port/mailRepositories/file%3A%2F%2Fvar%2Fmail%2Ferror%2F/mails/mail-key-1?additionalFields=attributes,headers,textBody,htmlBody,messageSize,perRecipientsHeaders
+```
+
+Give the following kind of response:
+
+```
+{
+    "name": "mail-key-1",
+    "sender": "sender@domain.com",
+    "recipients": ["recipient1@domain.com", "recipient2@domain.com"],
+    "state": "address-error",
+    "error": "A small message explaining what happened to that mail...",
+    "remoteHost": "111.222.333.444",
+    "remoteAddr": "127.0.0.1",
+    "lastUpdated": null,
+    "attributes": {
+      "name2": "value2",
+      "name1": "value1"
+    },
+    "perRecipientsHeaders": {
+      "third@party": {
+        "headerName1": [
+          "value1",
+          "value2"
+        ],
+        "headerName2": [
+          "value3",
+          "value4"
+        ]
+      }
+    },
+    "headers": {
+      "headerName4": [
+        "value6",
+        "value7"
+      ],
+      "headerName3": [
+        "value5",
+        "value8"
+      ]
+    },
+    "textBody": "My body!!",
+    "htmlBody": "My <em>body</em>!!",
+    "messageSize": 42424242
+}
+```
 
 Response codes:
 

@@ -40,9 +40,12 @@ public class FileConfigurationProvider implements ConfigurationProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileConfigurationProvider.class);
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
+    private static final char SEMICOLON = ';';
+
     public static final HierarchicalConfiguration EMTY_CONFIGURATION = new HierarchicalConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
+        XMLConfiguration.setDefaultListDelimiter(SEMICOLON);
         XMLConfiguration config = new XMLConfiguration();
         config.setDelimiterParsingDisabled(true);
         config.setAttributeSplittingDisabled(true);

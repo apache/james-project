@@ -41,6 +41,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -829,5 +830,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         return messageMapper.execute(
             () -> messageMapper.listAllMessageUids(mailbox));
+    }
+
+    @Override
+    public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
+        return messageCapabilities;
     }
 }

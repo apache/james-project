@@ -246,7 +246,8 @@ public class MailRepositoriesRoutesTest {
         when()
             .get(MY_REPO_MAILS)
         .then()
-            .statusCode(HttpStatus.NOT_FOUND_404);
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("message", is("The repository 'url%3A%2F%2FmyRepo' (decoded value: 'url://myRepo') does not exist"));
     }
 
     @Test
@@ -947,7 +948,7 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
             .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
-            .body("message", is(URL_MY_REPO + "does not exist"));
+            .body("message", is(URL_MY_REPO.asString() + " does not exist"));
     }
 
     @Test
@@ -960,7 +961,7 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.NOT_FOUND_404)
             .body("statusCode", is(404))
             .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
-            .body("message", is(URL_MY_REPO + "does not exist"));
+            .body("message", is(URL_MY_REPO.asString() + " does not exist"));
     }
 
     @Test
