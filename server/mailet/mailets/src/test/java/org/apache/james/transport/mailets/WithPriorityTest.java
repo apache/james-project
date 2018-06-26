@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
@@ -26,8 +30,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 public class WithPriorityTest {
 
@@ -50,23 +52,23 @@ public class WithPriorityTest {
     @Test
     public void initShouldNotThrowWhenValidPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
-            .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "7")
-            .build();
+                .mailetContext(FakeMailContext.defaultContext())
+                .setProperty("priority", "7")
+                .build();
 
         assertThatCode(() -> mailet.init(mockedMailetConfig))
-            .doesNotThrowAnyException();
+                .doesNotThrowAnyException();
     }
 
     @Test
     public void initShouldThrowWhenInvalidPriority() {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
-            .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "-1")
-            .build();
+                .mailetContext(FakeMailContext.defaultContext())
+                .setProperty("priority", "-1")
+                .build();
 
         assertThatThrownBy(() -> mailet.init(mockedMailetConfig))
-            .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -104,9 +106,9 @@ public class WithPriorityTest {
     @Test
     public void serviceShouldSetMailPriorityWhenNone() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
-            .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "7")
-            .build();
+                .mailetContext(FakeMailContext.defaultContext())
+                .setProperty("priority", "7")
+                .build();
 
         mailet.init(mockedMailetConfig);
         Mail mail = FakeMail.builder().build();
@@ -118,9 +120,9 @@ public class WithPriorityTest {
     @Test
     public void serviceShouldSetMailPriorityWhenPriorityExists() throws Exception {
         MailetConfig mockedMailetConfig = FakeMailetConfig.builder()
-            .mailetContext(FakeMailContext.defaultContext())
-            .setProperty("priority", "7")
-            .build();
+                .mailetContext(FakeMailContext.defaultContext())
+                .setProperty("priority", "7")
+                .build();
 
         mailet.init(mockedMailetConfig);
         Mail mail = FakeMail.builder()

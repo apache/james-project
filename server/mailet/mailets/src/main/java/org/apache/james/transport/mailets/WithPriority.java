@@ -29,11 +29,11 @@ import org.apache.mailet.base.GenericMailet;
 
 /**
  * This mailet sets the priority of the incoming mail.
- *
+ * <p>
  * Example configuration:
  *
  * <mailet match="All" class="WithPriority">
- *     <priority>7</priority>
+ * <priority>7</priority>
  * </mailet>
  */
 public class WithPriority extends GenericMailet {
