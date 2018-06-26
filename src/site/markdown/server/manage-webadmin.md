@@ -1895,7 +1895,7 @@ Will return the bytes count allowed by user per default on this server.
 
 Response codes:
  - 200: Request is a success and the value is returned
- - 404: No quota is being configured
+ - 204: No default quota is being configured
 
 ### Updating global sieve quota
 
@@ -1942,7 +1942,7 @@ Will return the bytes count allowed for this user.
 
 Response codes:
  - 200: Request is a success and the value is returned
- - 404: No quota is being configured for this user
+ - 204: No quota is being configured for this user
 
 ### Updating user sieve quota
 

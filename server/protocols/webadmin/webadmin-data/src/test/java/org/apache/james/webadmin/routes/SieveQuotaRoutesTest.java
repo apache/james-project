@@ -47,7 +47,7 @@ public class SieveQuotaRoutesTest {
     private SieveQuotaRepository sieveRepository;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         sieveRepository = new InMemorySieveQuotaRepository();
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new DefaultMetricFactory(),
@@ -60,20 +60,20 @@ public class SieveQuotaRoutesTest {
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         webAdminServer.destroy();
     }
 
     @Test
-    public void getGlobalSieveQuotaShouldReturn404WhenNoQuotaSet() {
+    void getGlobalSieveQuotaShouldReturn204WhenNoQuotaSet() {
         given()
             .get("/sieve/quota/default")
         .then()
-            .statusCode(404);
+            .statusCode(204);
     }
 
     @Test
-    public void getGlobalSieveQuotaShouldReturnStoredValue() throws Exception {
+    void getGlobalSieveQuotaShouldReturnStoredValue() throws Exception {
         QuotaSize value = QuotaSize.size(1000L);
         sieveRepository.setDefaultQuota(value);
 
@@ -90,7 +90,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updateGlobalSieveQuotaShouldUpdateStoredValue() throws Exception {
+    void updateGlobalSieveQuotaShouldUpdateStoredValue() throws Exception {
         sieveRepository.setDefaultQuota(QuotaSize.size(500L));
         long requiredSize = 1024L;
 
@@ -104,7 +104,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updateGlobalSieveQuotaShouldReturn400WhenMalformedJSON() {
+    void updateGlobalSieveQuotaShouldReturn400WhenMalformedJSON() {
         given()
             .body("invalid")
             .put("/sieve/quota/default")
@@ -113,7 +113,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updateGlobalSieveQuotaShouldReturn400WhenRequestedSizeNotPositiveInteger() {
+    void updateGlobalSieveQuotaShouldReturn400WhenRequestedSizeNotPositiveInteger() {
         given()
             .body(-100L)
             .put("/sieve/quota/default")
@@ -122,7 +122,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void removeGlobalSieveQuotaShouldReturn404WhenNoQuotaSet() {
+    void removeGlobalSieveQuotaShouldReturn204WhenNoQuotaSet() {
         given()
             .delete("/sieve/quota/default")
         .then()
@@ -130,7 +130,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void removeGlobalSieveQuotaShouldRemoveGlobalSieveQuota() throws Exception {
+    void removeGlobalSieveQuotaShouldRemoveGlobalSieveQuota() throws Exception {
         sieveRepository.setDefaultQuota(QuotaSize.size(1024L));
 
         given()
@@ -140,15 +140,15 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void getPerUserQuotaShouldReturn404WhenNoQuotaSetForUser() {
+    void getPerUserQuotaShouldReturn204WhenNoQuotaSetForUser() {
         given()
             .get("/sieve/quota/users/" + USER_A.asString())
         .then()
-            .statusCode(HttpStatus.NOT_FOUND_404);
+            .statusCode(HttpStatus.NO_CONTENT_204);
     }
 
     @Test
-    public void getPerUserSieveQuotaShouldReturnedStoredValue() throws Exception {
+    void getPerUserSieveQuotaShouldReturnStoredValue() throws Exception {
         QuotaSize value = QuotaSize.size(1024L);
         sieveRepository.setQuota(USER_A, value);
 
@@ -165,7 +165,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updatePerUserSieveQuotaShouldUpdateStoredValue() throws Exception {
+    void updatePerUserSieveQuotaShouldUpdateStoredValue() throws Exception {
         sieveRepository.setQuota(USER_A, QuotaSize.size(500L));
         long requiredSize = 1024L;
 
@@ -179,7 +179,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updatePerUserSieveQuotaShouldReturn400WhenMalformedJSON() {
+    void updatePerUserSieveQuotaShouldReturn400WhenMalformedJSON() {
         given()
             .body("invalid")
             .put("/sieve/quota/users/" + USER_A.asString())
@@ -188,7 +188,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void updatePerUserSieveQuotaShouldReturn400WhenRequestedSizeNotPositiveInteger() {
+    void updatePerUserSieveQuotaShouldReturn400WhenRequestedSizeNotPositiveInteger() {
         given()
             .body(-100L)
             .put("/sieve/quota/users/" + USER_A.asString())
@@ -197,7 +197,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void removePerUserSieveQuotaShouldReturn404WhenNoQuotaSetForUser() {
+    void removePerUserSieveQuotaShouldReturn204WhenNoQuotaSetForUser() {
         given()
             .delete("/sieve/quota/users/" + USER_A.asString())
         .then()
@@ -205,7 +205,7 @@ public class SieveQuotaRoutesTest {
     }
 
     @Test
-    public void removePerUserSieveQuotaShouldRemoveQuotaForUser() throws Exception {
+    void removePerUserSieveQuotaShouldRemoveQuotaForUser() throws Exception {
         sieveRepository.setQuota(USER_A, QuotaSize.size(1024));
 
         given()

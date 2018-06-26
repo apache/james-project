@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
 import javax.inject.Inject;
@@ -91,7 +92,7 @@ public class SieveQuotaRoutes implements Routes {
     @ApiOperation(value = "Reading global sieve quota size")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 404, message = "Global sieve quota not set."),
+            @ApiResponse(code = 204, message = "Global sieve quota not set."),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetGlobalSieveQuota(Service service) {
@@ -101,12 +102,8 @@ public class SieveQuotaRoutes implements Routes {
                 response.status(HttpStatus.OK_200);
                 return sieveQuota.asLong();
             } catch (QuotaNotFoundException e) {
-                LOGGER.info("Global sieve quota not set", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .message("Global sieve quota not set")
-                    .haltError();
+                response.status(HttpStatus.NO_CONTENT_204);
+                return EMPTY_BODY;
             }
         }, jsonTransformer);
     }
@@ -144,7 +141,6 @@ public class SieveQuotaRoutes implements Routes {
     @ApiOperation(value = "Removes global sieve quota")
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "Global sieve quota removed."),
-            @ApiResponse(code = 404, message = "Global sieve quota not set."),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineRemoveGlobalSieveQuota(Service service) {
@@ -166,7 +162,7 @@ public class SieveQuotaRoutes implements Routes {
     })
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Long.class),
-            @ApiResponse(code = 404, message = "User sieve quota not set."),
+            @ApiResponse(code = 204, message = "User sieve quota not set."),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetPerUserSieveQuota(Service service) {
@@ -177,12 +173,8 @@ public class SieveQuotaRoutes implements Routes {
                 response.status(HttpStatus.OK_200);
                 return userQuota.asLong();
             } catch (QuotaNotFoundException e) {
-                LOGGER.info("User sieve quota not set", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .statusCode(HttpStatus.NOT_FOUND_404)
-                    .message("User sieve quota not set")
-                    .haltError();
+                response.status(HttpStatus.NO_CONTENT_204);
+                return EMPTY_BODY;
             }
         }, jsonTransformer);
     }
@@ -194,7 +186,7 @@ public class SieveQuotaRoutes implements Routes {
             @ApiImplicitParam(required = true, dataType = "long", name = REQUESTED_SIZE, paramType = "body")
     })
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK", response = Long.class),
+            @ApiResponse(code = 204, message = "OK", response = Long.class),
             @ApiResponse(code = 400, message = "The body is not a positive integer."),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
@@ -225,7 +217,6 @@ public class SieveQuotaRoutes implements Routes {
     })
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "User sieve quota removed."),
-            @ApiResponse(code = 404, message = "User sieve quota not set."),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineRemovePerUserSieveQuota(Service service) {
