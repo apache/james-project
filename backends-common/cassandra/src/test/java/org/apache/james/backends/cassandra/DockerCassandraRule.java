@@ -86,6 +86,8 @@ public class DockerCassandraRule implements TestRule {
                         .run("echo auto_bootstrap: false >> " + CASSANDRA_YAML)
                         .run("echo \"-Xms1500M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx1500M\" >> " + JVM_OPTIONS)
+                        // disable assertions (modest performance benefit)
+                        .run("sed -i -e 's/JVM_OPTS=\"$JVM_OPTS -ea\"/JVM_OPTS=\"$JVM_OPTS -da\"/' " + CASSANDRA_ENV)
                         .build()))
             .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withBinds(new Binds(new Bind(tmpFsName, new Volume("/var/lib/cassandra")))))
             .withCreateContainerCmdModifier(cmd -> cmd.withMemory(2000 * 1024 * 1024L))
