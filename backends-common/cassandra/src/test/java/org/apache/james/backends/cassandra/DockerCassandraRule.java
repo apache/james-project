@@ -88,6 +88,9 @@ public class DockerCassandraRule implements TestRule {
                         .run("echo \"-Xmx1500M\" >> " + JVM_OPTIONS)
                         // disable assertions (modest performance benefit)
                         .run("sed -i -e 's/JVM_OPTS=\"$JVM_OPTS -ea\"/JVM_OPTS=\"$JVM_OPTS -da\"/' " + CASSANDRA_ENV)
+                        // use caches for keys & rows
+                        .run("sed -i -e \"s/key_cache_size_in_mb:/key_cache_size_in_mb: 256/\" " + CASSANDRA_YAML)
+                        .run("sed -i -e \"s/row_cache_size_in_mb: 0/row_cache_size_in_mb: 512/\" " + CASSANDRA_YAML)
                         .build()))
             .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withBinds(new Binds(new Bind(tmpFsName, new Volume("/var/lib/cassandra")))))
             .withCreateContainerCmdModifier(cmd -> cmd.withMemory(2000 * 1024 * 1024L))
