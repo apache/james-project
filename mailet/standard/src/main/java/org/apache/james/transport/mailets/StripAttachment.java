@@ -365,11 +365,19 @@ public class StripAttachment extends GenericMailet {
         }
     }
 
-    private String getFilename(BodyPart bodyPart) throws UnsupportedEncodingException, MessagingException {
-        String fileName = bodyPart.getFileName();
-        if (fileName != null) {
-            return renameWithConfigurationPattern(decodeFilename(fileName));
+    @VisibleForTesting String getFilename(BodyPart bodyPart) {
+        try {
+            String fileName = bodyPart.getFileName();
+            if (fileName != null) {
+                return renameWithConfigurationPattern(decodeFilename(fileName));
+            }
+        } catch (Exception e) {
+            LOGGER.warn("Unparsable filename, using a random filename instead.", e);
         }
+        return randomFilename();
+    }
+
+    private String randomFilename() {
         return UUID.randomUUID().toString();
     }
 

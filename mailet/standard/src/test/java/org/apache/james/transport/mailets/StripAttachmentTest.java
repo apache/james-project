@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.internet.MimeBodyPart;
@@ -919,5 +920,17 @@ class StripAttachmentTest {
         String expectedPrefix = "abcd";
         String prefix = OutputFileName.prependedPrefix(expectedPrefix);
         assertThat(prefix).isEqualTo(expectedPrefix);
+    }
+
+    @Test
+    void getFilenameShouldReturnRandomFilenameWhenExceptionOccured() throws Exception {
+        BodyPart bodyPart = mock(BodyPart.class);
+        when(bodyPart.getFileName())
+            .thenThrow(new MessagingException());
+
+        StripAttachment mailet = new StripAttachment();
+        String filename = mailet.getFilename(bodyPart);
+
+        assertThat(filename).isNotNull();
     }
 }
