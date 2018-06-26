@@ -35,22 +35,22 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     private Map<User, QuotaSize> userQuota = new ConcurrentHashMap<>();
 
     @Override
-    public boolean hasDefaultQuota() {
+    public synchronized boolean hasDefaultQuota() {
         return globalQuota.isPresent();
     }
 
     @Override
-    public QuotaSize getDefaultQuota() throws QuotaNotFoundException {
+    public synchronized QuotaSize getDefaultQuota() throws QuotaNotFoundException {
         return globalQuota.orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setDefaultQuota(QuotaSize quota) {
+    public synchronized void setDefaultQuota(QuotaSize quota) {
         this.globalQuota = Optional.of(quota);
     }
 
     @Override
-    public void removeQuota() throws QuotaNotFoundException {
+    public synchronized void removeQuota() throws QuotaNotFoundException {
         if (!globalQuota.isPresent()) {
             throw new QuotaNotFoundException();
         }
@@ -58,7 +58,7 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public boolean hasQuota(User user) {
+    public synchronized boolean hasQuota(User user) {
         return userQuota.containsKey(user);
     }
 
@@ -69,12 +69,12 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public void setQuota(User user, QuotaSize quota) {
+    public synchronized void setQuota(User user, QuotaSize quota) {
         userQuota.put(user, quota);
     }
 
     @Override
-    public void removeQuota(User user) throws QuotaNotFoundException {
+    public synchronized void removeQuota(User user) throws QuotaNotFoundException {
         Optional<QuotaSize> quotaValue = Optional.ofNullable(userQuota.get(user));
         if (!quotaValue.isPresent()) {
             throw new QuotaNotFoundException();
