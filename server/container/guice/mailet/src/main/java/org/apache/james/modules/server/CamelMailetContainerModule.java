@@ -47,7 +47,9 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailetLoader;
 import org.apache.james.utils.GuiceMatcherLoader;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.MailetConfigurationOverride;
+import org.apache.james.utils.SpoolerProbe;
 import org.apache.mailet.MailetContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +81,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         bind(MatcherLoader.class).to(GuiceMatcherLoader.class);
 
         Multibinder.newSetBinder(binder(), MailetConfigurationOverride.class);
-
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SpoolerProbe.class);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(MailetModuleConfigurationPerformer.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);

@@ -51,7 +51,7 @@ public abstract class AbstractJmapJamesServerTest {
     protected static final String JAMES_SERVER_HOST = "127.0.0.1";
     protected static final int IMAP_PORT = 1143; // You need to be root (superuser) to bind to ports under 1024.
 
-    private GuiceJamesServer server;
+    protected GuiceJamesServer server;
     private SocketChannel socketChannel;
 
     @Before

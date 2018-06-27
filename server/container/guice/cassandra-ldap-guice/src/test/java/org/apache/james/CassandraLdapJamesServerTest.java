@@ -19,21 +19,37 @@
 
 package org.apache.james;
 
+import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.core.Domain;
 import org.apache.james.user.ldap.LdapGenericContainer;
+import org.apache.james.utils.IMAPMessageReader;
+import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SpoolerProbe;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
+
+import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
+import com.jayway.awaitility.core.ConditionFactory;
 
 public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
     private static final String JAMES_USER = "james-user";
     private static final String PASSWORD = "secret";
     private static final String DOMAIN = "james.org";
     private static final String ADMIN_PASSWORD = "mysecretpassword";
+    private static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+    private static ConditionFactory calmlyAwait = Awaitility.with()
+        .pollInterval(slowPacedPollInterval)
+        .and()
+        .with()
+        .pollDelay(slowPacedPollInterval)
+        .await();
 
     private LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
         .domain(DOMAIN)
@@ -44,6 +60,11 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(ldapContainer).around(cassandraLdapJmap);
+
+    @Rule
+    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    @Rule
+    public SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
 
     @Override
     protected GuiceJamesServer createJamesServer() throws IOException {
@@ -70,4 +91,18 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
 
         assertThat(imapClient.login(JAMES_USER, PASSWORD)).isTrue();
     }
+
+    @Test
+    public void mailsShouldBeWellReceivedBeforeFirstUserConnectionWithLdap() throws Exception {
+        messageSender.connect("127.0.0.1", 1025)
+            .sendMessage("bob@any.com", JAMES_USER + "@localhost");
+
+        calmlyAwait.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
+
+        imapMessageReader.connect("127.0.0.1", 1143)
+            .login(JAMES_USER, PASSWORD)
+            .select("INBOX")
+            .awaitMessage(calmlyAwait);
+    }
+
 }
