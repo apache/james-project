@@ -21,22 +21,16 @@ package org.apache.james;
 
 import java.io.IOException;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.plist.PropertyListConfiguration;
-import org.apache.james.http.jetty.ConfigurationException;
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import com.google.inject.Inject;
 import com.google.inject.Module;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 
 public class CassandraLdapJmapTestRule implements TestRule {
     private static final int LIMIT_TO_3_MESSAGES = 3;
@@ -65,12 +59,31 @@ public class CassandraLdapJmapTestRule implements TestRule {
             .build();
 
         return new GuiceJamesServer(configuration)
-            .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule,
-                binder -> binder.bind(String.class).annotatedWith(Names.named("ldapIp")).toInstance(ldapIp))
+            .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES))
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith(additionals)
-            .overrideWith(binder -> binder.bind(ConfigurationProvider.class).to(UnionConfigurationProvider.class));
+            .overrideWith(binder -> binder.bind(LdapRepositoryConfiguration.class)
+                .toInstance(computeConfiguration(ldapIp)));
+    }
+
+    private LdapRepositoryConfiguration computeConfiguration(String ldapIp) {
+        try {
+            return LdapRepositoryConfiguration.builder()
+                .ldapHost(ldapIp)
+                .principal("cn=admin,dc=james,dc=org")
+                .credentials("mysecretpassword")
+                .userBase("ou=People,dc=james,dc=org")
+                .userIdAttribute("uid")
+                .userObjectClass("inetOrgPerson")
+                .maxRetries(4)
+                .retryStartInterval(0)
+                .retryMaxInterval(8)
+                .scale(1000)
+                .build();
+        } catch (ConfigurationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -80,40 +93,5 @@ public class CassandraLdapJmapTestRule implements TestRule {
 
     public void await() {
         guiceModuleTestRule.await();
-    }
-
-    private static class UnionConfigurationProvider implements ConfigurationProvider {
-        private final FileConfigurationProvider fileConfigurationProvider;
-        private final String ldapIp;
-
-        @Inject
-        public UnionConfigurationProvider(FileConfigurationProvider fileConfigurationProvider,
-            @Named("ldapIp") String ldapIp) {
-            this.fileConfigurationProvider = fileConfigurationProvider;
-            this.ldapIp = ldapIp;
-        }
-
-        @Override
-        public HierarchicalConfiguration getConfiguration(String component) throws org.apache.commons.configuration.ConfigurationException {
-            if (component.equals("usersrepository")) {
-                return ldapRepositoryConfiguration();
-            }
-            return fileConfigurationProvider.getConfiguration(component);
-        }
-
-        private HierarchicalConfiguration ldapRepositoryConfiguration() throws ConfigurationException {
-            PropertyListConfiguration configuration = new PropertyListConfiguration();
-            configuration.addProperty("[@ldapHost]", ldapIp);
-            configuration.addProperty("[@principal]", "cn=admin\\,dc=james\\,dc=org");
-            configuration.addProperty("[@credentials]", "mysecretpassword");
-            configuration.addProperty("[@userBase]", "ou=People\\,dc=james\\,dc=org");
-            configuration.addProperty("[@userIdAttribute]", "uid");
-            configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-            configuration.addProperty("[@maxRetries]", "4");
-            configuration.addProperty("[@retryStartInterval]", "0");
-            configuration.addProperty("[@retryMaxInterval]", "8");
-            configuration.addProperty("[@retryIntervalScale]", "1000");
-            return configuration;
-        }
     }
 }

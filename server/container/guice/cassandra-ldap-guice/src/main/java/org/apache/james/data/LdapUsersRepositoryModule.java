@@ -20,15 +20,18 @@ package org.apache.james.data;
 
 import java.util.List;
 
+import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
 import org.apache.james.utils.ConfigurationPerformer;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -43,22 +46,29 @@ public class LdapUsersRepositoryModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(LdapUsersRepositoryConfigurationPerformer.class);
     }
 
+    @Provides
+    @Singleton
+    public LdapRepositoryConfiguration provideConfiguration(ConfigurationProvider configurationProvider) throws ConfigurationException {
+        return LdapRepositoryConfiguration.from(
+            configurationProvider.getConfiguration("usersrepository"));
+    }
+
     @Singleton
     public static class LdapUsersRepositoryConfigurationPerformer implements ConfigurationPerformer {
 
-        private final ConfigurationProvider configurationProvider;
+        private final LdapRepositoryConfiguration configuration;
         private final ReadOnlyUsersLDAPRepository usersRepository;
 
         @Inject
-        public LdapUsersRepositoryConfigurationPerformer(ConfigurationProvider configurationProvider, ReadOnlyUsersLDAPRepository usersRepository) {
-            this.configurationProvider = configurationProvider;
+        public LdapUsersRepositoryConfigurationPerformer(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
+            this.configuration = configuration;
             this.usersRepository = usersRepository;
         }
 
         @Override
         public void initModule() {
             try {
-                usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
+                usersRepository.configure(configuration);
                 usersRepository.init();
             } catch (Exception e) {
                 throw new RuntimeException(e);

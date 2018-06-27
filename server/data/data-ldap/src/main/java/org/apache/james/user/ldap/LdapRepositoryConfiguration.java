@@ -25,8 +25,130 @@ import java.util.Optional;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 
+import com.google.common.base.Preconditions;
+
 public class LdapRepositoryConfiguration {
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
+
+    private static final boolean USE_CONNECTION_POOL = true;
+    private static final int NO_CONNECTION_TIMEOUT = -1;
+    private static final int NO_READ_TIME_OUT = -1;
+    private static final boolean ENABLE_VIRTUAL_HOSTING = true;
+    private static final ReadOnlyLDAPGroupRestriction NO_RESTRICTION = new ReadOnlyLDAPGroupRestriction(null);
+    private static final String NO_FILTER = null;
+    private static final Optional<String> NO_ADMINISTRATOR_ID = Optional.empty();
+
+    public static class Builder {
+        private Optional<String> ldapHost;
+        private Optional<String> principal;
+        private Optional<String> credentials;
+        private Optional<String> userBase;
+        private Optional<String> userIdAttribute;
+        private Optional<String> userObjectClass;
+        private Optional<Integer> maxRetries;
+        private Optional<Long> retryStartInterval;
+        private Optional<Long> retryMaxInterval;
+        private Optional<Integer> scale;
+
+        public Builder() {
+            ldapHost = Optional.empty();
+            principal = Optional.empty();
+            credentials = Optional.empty();
+            userBase = Optional.empty();
+            userIdAttribute = Optional.empty();
+            userObjectClass = Optional.empty();
+            maxRetries = Optional.empty();
+            retryStartInterval = Optional.empty();
+            retryMaxInterval = Optional.empty();
+            scale = Optional.empty();
+        }
+
+        public Builder ldapHost(String ldapHost) {
+            this.ldapHost = Optional.of(ldapHost);
+            return this;
+        }
+
+        public Builder principal(String principal) {
+            this.principal = Optional.of(principal);
+            return this;
+        }
+
+        public Builder credentials(String credentials) {
+            this.credentials = Optional.of(credentials);
+            return this;
+        }
+
+        public Builder userBase(String userBase) {
+            this.userBase = Optional.of(userBase);
+            return this;
+        }
+
+        public Builder userIdAttribute(String userIdAttribute) {
+            this.userIdAttribute = Optional.of(userIdAttribute);
+            return this;
+        }
+
+        public Builder userObjectClass(String userObjectClass) {
+            this.userObjectClass = Optional.of(userObjectClass);
+            return this;
+        }
+
+        public Builder maxRetries(int maxRetries) {
+            this.maxRetries = Optional.of(maxRetries);
+            return this;
+        }
+
+        public Builder retryStartInterval(long retryStartInterval) {
+            this.retryStartInterval = Optional.of(retryStartInterval);
+            return this;
+        }
+
+        public Builder retryMaxInterval(long retryMaxInterval) {
+            this.retryMaxInterval = Optional.of(retryMaxInterval);
+            return this;
+        }
+
+        public Builder scale(int scale) {
+            this.scale = Optional.of(scale);
+            return this;
+        }
+
+        public LdapRepositoryConfiguration build() throws ConfigurationException {
+            Preconditions.checkState(ldapHost.isPresent(), "'ldapHost' is mandatory");
+            Preconditions.checkState(principal.isPresent(), "'principal' is mandatory");
+            Preconditions.checkState(credentials.isPresent(), "'credentials' is mandatory");
+            Preconditions.checkState(userBase.isPresent(), "'userBase' is mandatory");
+            Preconditions.checkState(userIdAttribute.isPresent(), "'userIdAttribute' is mandatory");
+            Preconditions.checkState(userObjectClass.isPresent(), "'userObjectClass' is mandatory");
+            Preconditions.checkState(maxRetries.isPresent(), "'maxRetries' is mandatory");
+            Preconditions.checkState(retryStartInterval.isPresent(), "'retryStartInterval' is mandatory");
+            Preconditions.checkState(retryMaxInterval.isPresent(), "'retryMaxInterval' is mandatory");
+            Preconditions.checkState(scale.isPresent(), "'scale' is mandatory");
+
+            return new LdapRepositoryConfiguration(
+                ldapHost.get(),
+                principal.get(),
+                credentials.get(),
+                userBase.get(),
+                userIdAttribute.get(),
+                userObjectClass.get(),
+                USE_CONNECTION_POOL,
+                NO_CONNECTION_TIMEOUT,
+                NO_READ_TIME_OUT,
+                maxRetries.get(),
+                !ENABLE_VIRTUAL_HOSTING,
+                retryStartInterval.get(),
+                retryMaxInterval.get(),
+                scale.get(),
+                NO_RESTRICTION,
+                NO_FILTER,
+                NO_ADMINISTRATOR_ID);
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
 
     public static LdapRepositoryConfiguration from(HierarchicalConfiguration configuration) throws ConfigurationException {
         String ldapHost = configuration.getString("[@ldapHost]", "");
@@ -36,13 +158,13 @@ public class LdapRepositoryConfiguration {
         String userIdAttribute = configuration.getString("[@userIdAttribute]");
         String userObjectClass = configuration.getString("[@userObjectClass]");
         // Default is to use connection pooling
-        boolean useConnectionPool = configuration.getBoolean("[@useConnectionPool]", true);
-        int connectionTimeout = configuration.getInt("[@connectionTimeout]", -1);
-        int readTimeout = configuration.getInt("[@readTimeout]", -1);
+        boolean useConnectionPool = configuration.getBoolean("[@useConnectionPool]", USE_CONNECTION_POOL);
+        int connectionTimeout = configuration.getInt("[@connectionTimeout]", NO_CONNECTION_TIMEOUT);
+        int readTimeout = configuration.getInt("[@readTimeout]", NO_READ_TIME_OUT);
         // Default maximum retries is 1, which allows an alternate connection to
         // be found in a multi-homed environment
         int maxRetries = configuration.getInt("[@maxRetries]", 1);
-        boolean supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, false);
+        boolean supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, !ENABLE_VIRTUAL_HOSTING);
         // Default retry start interval is 0 second
         long retryStartInterval = configuration.getLong("[@retryStartInterval]", 0);
         // Default maximum retry interval is 60 seconds
