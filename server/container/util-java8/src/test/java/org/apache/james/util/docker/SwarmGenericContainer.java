@@ -108,6 +108,11 @@ public class SwarmGenericContainer implements TestRule {
         return this;
     }
 
+    public SwarmGenericContainer withCommands(String... commands) {
+        container.withCommand(commands);
+        return this;
+    }
+
     public void start() {
         container.start();
     }

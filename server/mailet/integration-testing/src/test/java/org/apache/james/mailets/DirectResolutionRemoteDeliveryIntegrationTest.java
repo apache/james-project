@@ -21,15 +21,13 @@ package org.apache.james.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
-import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
-import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
-import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
-import static org.apache.james.mailets.configuration.Constants.PASSWORD;
-import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
-import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.apache.james.mailets.configuration.Constants.*;
+import static org.apache.james.mailets.configuration.MailetConfiguration.LOCAL_DELIVERY;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+
+import java.net.InetAddress;
+import java.util.List;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -49,11 +47,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class GatewayRemoteDeliveryIntegrationTest {
+import com.google.common.collect.ImmutableList;
+
+public class DirectResolutionRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
+    private static final String JAMES_ANOTHER_MX_DOMAIN_1 = "mx1.james.com";
+    private static final String JAMES_ANOTHER_MX_DOMAIN_2 = "mx2.james.com";
+    private static final List<String> JAMES_ANOTHER_MX_DOMAINS = ImmutableList.of(JAMES_ANOTHER_MX_DOMAIN_1, JAMES_ANOTHER_MX_DOMAIN_2);
 
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
+
+    private static final ImmutableList<InetAddress> ADDRESS_EMPTY_LIST = ImmutableList.of();
+    private static final ImmutableList<String> RECORD_EMPTY_LIST = ImmutableList.of();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -63,17 +69,16 @@ public class GatewayRemoteDeliveryIntegrationTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @Rule
     public FakeSmtp fakeSmtp = new FakeSmtp();
+    @Rule
+    public FakeSmtp fakeSmtpOnPort26 = FakeSmtp.withSmtpPort(26);
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
-    private InMemoryDNSService inMemoryDNSService;
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-
-        inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
+        fakeSmtpOnPort26.awaitStarted(awaitAtMostOneMinute);
     }
 
     @After
@@ -84,12 +89,18 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenNoPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainer().getContainerIp();
+    public void directResolutionShouldBeWellPerformed() throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.simpleRoot())
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(directResolutionTransport())
+                .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -103,12 +114,20 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenPort() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ":25";
+    public void directResolutionShouldFailoverOnSecondMxWhenFirstMxFailed() throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, JAMES_ANOTHER_MX_DOMAINS, RECORD_EMPTY_LIST)
+            .registerMxRecord(JAMES_ANOTHER_MX_DOMAIN_1, fakeSmtpOnPort26.getContainer().getContainerIp())
+            .registerMxRecord(JAMES_ANOTHER_MX_DOMAIN_2, fakeSmtp.getContainer().getContainerIp());
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.simpleRoot())
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(directResolutionTransport())
+                .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -122,77 +141,18 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void outgoingMailShouldTransitThroughGatewayWhenSeveralIps() throws Exception {
-        String gatewayProperty = fakeSmtp.getContainer().getContainerIp() + ",invalid.domain";
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder);
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT);
-
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
-    }
-
-    @Test
-    public void outgoingMailShouldFallbackToSecondGatewayWhenFirstInvalid() throws Exception {
-        String gatewayProperty = "invalid.domain," + fakeSmtp.getContainer().getContainerIp();
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder);
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT);
-
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
-    }
-
-    @Test
-    public void outgoingMailShouldNotBeSentDirectlyToTheHostWhenGatewayFails() throws Exception {
-        String gatewayProperty = "invalid.domain";
+    public void directResolutionShouldBounceUponUnreachableMxRecords() throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, ImmutableList.of("unknown"), RECORD_EMPTY_LIST);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
-            .build(temporaryFolder);
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FROM, RECIPIENT);
-
-        // Wait for bounce being sent before checking no email is sent
-        imapMessageReader.connect(LOCALHOST_IP, IMAP_PORT)
-            .login(FROM, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
-            .awaitMessage(awaitAtMostOneMinute);
-        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
-            .isTrue();
-    }
-
-    @Test
-    public void remoteDeliveryShouldBounceUponFailure() throws Exception {
-        String gatewayProperty = "invalid.domain";
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_AND_IMAP_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(generateMailetContainerConfiguration(gatewayProperty))
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.simpleRoot())
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(transport())
+                .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -209,19 +169,18 @@ public class GatewayRemoteDeliveryIntegrationTest {
     }
 
     @Test
-    public void remoteDeliveryShouldBounceUponFailureWhenNoBounceProcessor() throws Exception {
-        String gatewayProperty = "invalid.domain";
+    public void directResolutionShouldBounceWhenNoMxRecord() throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerRecord(JAMES_ANOTHER_DOMAIN, ADDRESS_EMPTY_LIST, RECORD_EMPTY_LIST, RECORD_EMPTY_LIST);
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(ProcessorConfiguration.transport()
-                    .addMailet(MailetConfiguration.BCC_STRIPPER)
-                    .addMailet(MailetConfiguration.LOCAL_DELIVERY)
-                    .addMailet(MailetConfiguration.remoteDeliveryBuilderNoBounces()
-                        .matcher(All.class)
-                        .addProperty("gateway", gatewayProperty))))
+            .withMailetContainer(MailetContainer.builder()
+                .putProcessor(CommonProcessors.simpleRoot())
+                .putProcessor(CommonProcessors.error())
+                .putProcessor(transport())
+                .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
@@ -244,16 +203,19 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .body("[0].subject", equalTo("test")));
     }
 
-    private MailetContainer.Builder generateMailetContainerConfiguration(String gatewayProperty) {
-        return TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-            .putProcessor(relayAndLocalDeliveryTransport(gatewayProperty));
-    }
-
-    private ProcessorConfiguration.Builder relayAndLocalDeliveryTransport(String gatewayProperty) {
+    private ProcessorConfiguration.Builder directResolutionTransport() {
         return ProcessorConfiguration.transport()
-            .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
             .addMailet(MailetConfiguration.remoteDeliveryBuilder()
-                .addProperty("gateway", gatewayProperty)
                 .matcher(All.class));
     }
+
+    private ProcessorConfiguration.Builder transport() {
+        return ProcessorConfiguration.transport()
+            .addMailet(MailetConfiguration.BCC_STRIPPER)
+            .addMailet(LOCAL_DELIVERY)
+            .addMailet(MailetConfiguration.remoteDeliveryBuilder()
+                .matcher(All.class));
+    }
+
 }

@@ -42,15 +42,32 @@ import com.jayway.restassured.specification.RequestSpecification;
 import com.jayway.restassured.specification.ResponseSpecification;
 
 public class FakeSmtp implements TestRule {
+
+    public static FakeSmtp withSmtpPort(Integer smtpPort) {
+        SwarmGenericContainer container = fakeSmtpContainer()
+            .withCommands("node", "cli", "--listen", "80", "--smtp", smtpPort.toString());
+
+        return new FakeSmtp(container, smtpPort);
+    }
+
+    private static SwarmGenericContainer fakeSmtpContainer() {
+        return new SwarmGenericContainer(Images.FAKE_SMTP)
+            .withAffinityToContainer()
+            .waitingFor(new HostPortWaitStrategy());
+    }
+
     private static final int SMTP_PORT = 25;
     private static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
     private final SwarmGenericContainer container;
+    private final Integer smtpPort;
 
     public FakeSmtp() {
-        container = new SwarmGenericContainer(Images.FAKE_SMTP)
-            .withExposedPorts(SMTP_PORT)
-            .withAffinityToContainer()
-            .waitingFor(new HostPortWaitStrategy());
+        this(fakeSmtpContainer().withExposedPorts(SMTP_PORT), SMTP_PORT);
+    }
+
+    public FakeSmtp(SwarmGenericContainer container, Integer smtpPort) {
+        this.smtpPort = smtpPort;
+        this.container = container;
     }
 
     @Override
@@ -59,7 +76,7 @@ public class FakeSmtp implements TestRule {
     }
 
     public void awaitStarted(ConditionFactory calmyAwait) {
-        calmyAwait.until(() -> container.tryConnect(SMTP_PORT));
+        calmyAwait.until(() -> container.tryConnect(smtpPort));
     }
 
     public boolean isReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
