@@ -19,9 +19,9 @@
 
 package org.apache.james;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
+import org.apache.james.util.Host;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.runner.Description;
@@ -29,34 +29,16 @@ import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
 
-
 public class DockerElasticSearchRule implements GuiceModuleTestRule {
 
     private static final int ELASTIC_SEARCH_PORT = 9300;
     public static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
     public ElasticSearchConfiguration getElasticSearchConfigurationForDocker() {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-
-        configuration.addProperty("elasticsearch.masterHost", getIp());
-        configuration.addProperty("elasticsearch.port", elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_PORT));
-
-        configuration.addProperty("elasticsearch.nb.shards", 1);
-        configuration.addProperty("elasticsearch.nb.replica", 0);
-        configuration.addProperty("elasticsearch.retryConnection.maxRetries", 7);
-        configuration.addProperty("elasticsearch.retryConnection.minDelay", 3000);
-        configuration.addProperty("elasticsearch.indexAttachments", false);
-        configuration.addProperty("elasticsearch.http.host", getIp());
-        configuration.addProperty("elasticsearch.http.port", elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_HTTP_PORT));
-        configuration.addProperty("elasticsearch.metrics.reports.enabled", true);
-        configuration.addProperty("elasticsearch.metrics.reports.period", 30);
-        configuration.addProperty("elasticsearch.metrics.reports.index", "james-metrics");
-
-        try {
-            return ElasticSearchConfiguration.fromProperties(configuration);
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
+        return ElasticSearchConfiguration.builder()
+            .addHost(Host.from(getIp(), elasticSearchContainer.getMappedPort(ELASTIC_SEARCH_PORT)))
+            .indexAttachment(IndexAttachments.NO)
+            .build();
     }
 
     private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)

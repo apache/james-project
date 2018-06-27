@@ -20,6 +20,7 @@
 package org.apache.james.modules.mailbox;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,9 +38,153 @@ import org.apache.james.util.OptionalUtils;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchConfiguration {
+
+    public static class Builder {
+
+        private final ImmutableList.Builder<Host> hosts;
+        private Optional<IndexName> indexMailboxName;
+        private Optional<ReadAliasName> readAliasMailboxName;
+        private Optional<WriteAliasName> writeAliasMailboxName;
+        private Optional<IndexName> indexQuotaRatioName;
+        private Optional<ReadAliasName> readAliasQuotaRatioName;
+        private Optional<WriteAliasName> writeAliasQuotaRatioName;
+        private Optional<Integer> nbShards;
+        private Optional<Integer> nbReplica;
+        private Optional<Integer> minDelay;
+        private Optional<Integer> maxRetries;
+        private Optional<IndexAttachments> indexAttachment;
+
+        public Builder() {
+            hosts = ImmutableList.builder();
+            indexMailboxName = Optional.empty();
+            readAliasMailboxName = Optional.empty();
+            writeAliasMailboxName = Optional.empty();
+            indexQuotaRatioName = Optional.empty();
+            readAliasQuotaRatioName = Optional.empty();
+            writeAliasQuotaRatioName = Optional.empty();
+            nbShards = Optional.empty();
+            nbReplica = Optional.empty();
+            minDelay = Optional.empty();
+            maxRetries = Optional.empty();
+            indexAttachment = Optional.empty();
+        }
+
+        public Builder addHost(Host host) {
+            this.hosts.add(host);
+            return this;
+        }
+
+        public Builder addHosts(Collection<Host> hosts) {
+            this.hosts.addAll(hosts);
+            return this;
+        }
+
+        public Builder indexMailboxName(IndexName indexMailboxName) {
+            return indexMailboxName(Optional.of(indexMailboxName));
+        }
+
+        public Builder indexMailboxName(Optional<IndexName> indexMailboxName) {
+            this.indexMailboxName = indexMailboxName;
+            return this;
+        }
+
+        public Builder readAliasMailboxName(ReadAliasName readAliasMailboxName) {
+            return readAliasMailboxName(Optional.of(readAliasMailboxName));
+        }
+
+        public Builder readAliasMailboxName(Optional<ReadAliasName> readAliasMailboxName) {
+            this.readAliasMailboxName = readAliasMailboxName;
+            return this;
+        }
+
+        public Builder writeAliasMailboxName(WriteAliasName writeAliasMailboxName) {
+            return writeAliasMailboxName(Optional.of(writeAliasMailboxName));
+        }
+
+        public Builder writeAliasMailboxName(Optional<WriteAliasName> writeAliasMailboxName) {
+            this.writeAliasMailboxName = writeAliasMailboxName;
+            return this;
+        }
+
+        public Builder indexQuotaRatioName(IndexName indexQuotaRatioName) {
+            return indexQuotaRatioName(Optional.of(indexQuotaRatioName));
+        }
+
+        public Builder indexQuotaRatioName(Optional<IndexName> indexQuotaRatioName) {
+            this.indexQuotaRatioName = indexQuotaRatioName;
+            return this;
+        }
+
+        public Builder readAliasQuotaRatioName(ReadAliasName readAliasQuotaRatioName) {
+            return readAliasQuotaRatioName(Optional.of(readAliasQuotaRatioName));
+        }
+
+        public Builder readAliasQuotaRatioName(Optional<ReadAliasName> readAliasQuotaRatioName) {
+            this.readAliasQuotaRatioName = readAliasQuotaRatioName;
+            return this;
+        }
+
+        public Builder writeAliasQuotaRatioName(WriteAliasName writeAliasQuotaRatioName) {
+            return writeAliasQuotaRatioName(Optional.of(writeAliasQuotaRatioName));
+        }
+
+        public Builder writeAliasQuotaRatioName(Optional<WriteAliasName> writeAliasQuotaRatioName) {
+            this.writeAliasQuotaRatioName = writeAliasQuotaRatioName;
+            return this;
+        }
+
+        public Builder indexAttachment(IndexAttachments indexAttachment) {
+            this.indexAttachment = Optional.of(indexAttachment);
+            return this;
+        }
+
+        public Builder nbShards(Optional<Integer> nbShards) {
+            this.nbShards = nbShards;
+            return this;
+        }
+
+        public Builder nbReplica(Optional<Integer> nbReplica) {
+            this.nbReplica = nbReplica;
+            return this;
+        }
+
+        public Builder minDelay(Optional<Integer> minDelay) {
+            this.minDelay = minDelay;
+            return this;
+        }
+
+        public Builder maxRetries(Optional<Integer> maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
+        public ElasticSearchConfiguration build() {
+            ImmutableList<Host> hosts = this.hosts.build();
+            Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
+            return new ElasticSearchConfiguration(
+                hosts,
+                indexMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX),
+                readAliasMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
+                writeAliasMailboxName.orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
+                indexQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX),
+                readAliasQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
+                writeAliasQuotaRatioName.orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
+                nbShards.orElse(DEFAULT_NB_SHARDS),
+                nbReplica.orElse(DEFAULT_NB_REPLICA),
+                minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
+                maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
+                indexAttachment.orElse(IndexAttachments.YES));
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
@@ -67,94 +212,64 @@ public class ElasticSearchConfiguration {
     private static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
 
-    public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = new ElasticSearchConfiguration(
-        ImmutableList.of(Host.from(LOCALHOST, DEFAULT_PORT)),
-        MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX,
-        MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
-        MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
-        QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX,
-        QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS,
-        QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
-        DEFAULT_NB_SHARDS,
-        DEFAULT_NB_REPLICA,
-        DEFAULT_CONNECTION_MIN_DELAY,
-        DEFAULT_CONNECTION_MAX_RETRIES,
-        IndexAttachments.YES);
+    public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = builder()
+        .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
+        .build();
 
     public static ElasticSearchConfiguration fromProperties(PropertiesConfiguration configuration) throws ConfigurationException {
-        int nbShards = configuration.getInt(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS);
-        int nbReplica = configuration.getInt(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA);
-        int maxRetries = configuration.getInt(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, DEFAULT_CONNECTION_MAX_RETRIES);
-        int minDelay = configuration.getInt(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, DEFAULT_CONNECTION_MIN_DELAY);
-        IndexAttachments indexAttachments = provideIndexAttachments(configuration);
-        ImmutableList<Host> hosts = getHosts(configuration);
-
-        ReadAliasName readAlias = computeMailboxReadAlias(configuration);
-        WriteAliasName writeAlias = computeMailboxWriteAlias(configuration);
-        IndexName indexName = computeMailboxIndexName(configuration);
-
-        IndexName quotaRatioIndexName = computeQuotaSearchIndexName(configuration);
-        ReadAliasName quotaSearchReadAlias = computeQuotaSearchReadAlias(configuration);
-        WriteAliasName quotaSearchWriteAlias = computeQuotaSearchWriteAlias(configuration);
-
-        return new ElasticSearchConfiguration(
-            hosts,
-            indexName,
-            readAlias,
-            writeAlias,
-            quotaRatioIndexName,
-            quotaSearchReadAlias,
-            quotaSearchWriteAlias,
-            nbShards,
-            nbReplica,
-            minDelay,
-            maxRetries,
-            indexAttachments);
+        return builder()
+            .addHosts(getHosts(configuration))
+            .indexMailboxName(computeMailboxIndexName(configuration))
+            .readAliasMailboxName(computeMailboxReadAlias(configuration))
+            .writeAliasMailboxName(computeMailboxWriteAlias(configuration))
+            .indexQuotaRatioName(computeQuotaSearchIndexName(configuration))
+            .readAliasQuotaRatioName(computeQuotaSearchReadAlias(configuration))
+            .writeAliasQuotaRatioName(computeQuotaSearchWriteAlias(configuration))
+            .nbShards(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, null)))
+            .nbReplica(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, null)))
+            .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
+            .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
+            .indexAttachment(provideIndexAttachments(configuration))
+            .build();
     }
 
-    public static IndexName computeMailboxIndexName(PropertiesConfiguration configuration) {
+    public static Optional<IndexName> computeMailboxIndexName(PropertiesConfiguration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
                 .map(IndexName::new),
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_NAME))
-                .map(IndexName::new))
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+                .map(IndexName::new));
     }
 
-    public static WriteAliasName computeMailboxWriteAlias(PropertiesConfiguration configuration) {
+    public static Optional<WriteAliasName> computeMailboxWriteAlias(PropertiesConfiguration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
                 .map(WriteAliasName::new),
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_NAME))
-                .map(WriteAliasName::new))
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
+                .map(WriteAliasName::new));
     }
 
-    public static ReadAliasName computeMailboxReadAlias(PropertiesConfiguration configuration) {
+    public static Optional<ReadAliasName> computeMailboxReadAlias(PropertiesConfiguration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
                 .map(ReadAliasName::new),
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_NAME))
-                .map(ReadAliasName::new))
-            .orElse(MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
+                .map(ReadAliasName::new));
     }
 
-    public static IndexName computeQuotaSearchIndexName(PropertiesConfiguration configuration) {
+    public static Optional<IndexName> computeQuotaSearchIndexName(PropertiesConfiguration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME))
-            .map(IndexName::new)
-            .orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
+            .map(IndexName::new);
     }
 
-    public static WriteAliasName computeQuotaSearchWriteAlias(PropertiesConfiguration configuration) {
+    public static Optional<WriteAliasName> computeQuotaSearchWriteAlias(PropertiesConfiguration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME))
-            .map(WriteAliasName::new)
-            .orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS);
+            .map(WriteAliasName::new);
     }
 
-    public static ReadAliasName computeQuotaSearchReadAlias(PropertiesConfiguration configuration) {
+    public static Optional<ReadAliasName> computeQuotaSearchReadAlias(PropertiesConfiguration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME))
-                .map(ReadAliasName::new)
-            .orElse(QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS);
+                .map(ReadAliasName::new);
     }
 
     private static IndexAttachments provideIndexAttachments(PropertiesConfiguration configuration) {
