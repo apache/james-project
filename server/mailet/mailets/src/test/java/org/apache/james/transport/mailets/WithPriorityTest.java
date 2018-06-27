@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.apache.james.queue.api.MailPrioritySupport;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetConfig;
@@ -26,8 +30,6 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 public class WithPriorityTest {
 
