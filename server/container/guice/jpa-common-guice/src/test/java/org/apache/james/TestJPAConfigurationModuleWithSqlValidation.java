@@ -19,11 +19,8 @@
 
 package org.apache.james;
 
-import java.io.FileNotFoundException;
-
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.modules.data.JPAConfiguration;
 
 import com.google.inject.AbstractModule;
@@ -41,7 +38,7 @@ public class TestJPAConfigurationModuleWithSqlValidation extends AbstractModule 
 
     @Provides
     @Singleton
-    JPAConfiguration provideConfiguration() throws FileNotFoundException, ConfigurationException {
+    JPAConfiguration provideConfiguration() {
         return JPAConfiguration.builder()
                 .driverName(JDBC_EMBEDDED_DRIVER)
                 .driverURL(JDBC_EMBEDDED_URL)
