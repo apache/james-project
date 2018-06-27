@@ -61,8 +61,12 @@
            This should always be <strong>false</strong> unless you understand the implications.</dd>
         <dt><strong>maxcachesize</strong></dt>
         <dd>Maximum number of entries to maintain in the DNS cache (typically 50000)</dd>
+        <dt><strong>negativeCacheTTL</strong></dt>
+        <dd>Sets the maximum length of time that negative records will be stored in the DNS negative cache in seconds (a negative record means the name has not been found in the DNS). Values for this cache can be positive meaning the time in seconds before retrying to resolve the name, zero meaning no cache or a negative value meaning infinite caching.</dd>
         <dt><strong>singleIPperMX</strong></dt>
         <dd>true or false (default) - Specifies if Apache James Server must try a single server for each multihomed mx host</dd>
+        <dt><strong>verbose</strong></dt>
+        <dd>Turn on general debugging statements</dd>
       </dl>
       
     </subsection>
