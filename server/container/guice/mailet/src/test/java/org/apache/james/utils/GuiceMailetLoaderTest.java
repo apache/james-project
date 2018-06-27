@@ -35,11 +35,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 public class GuiceMailetLoaderTest {
 
+    public static final ImmutableSet<MailetConfigurationOverride> NO_MAILET_CONFIG_OVERRIDES = ImmutableSet.of();
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
     private Injector injector = Guice.createInjector();
@@ -47,7 +49,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldLoadClass() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+            new ExtendedClassLoader(THROWING_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
             .mailetName("AddFooter")
@@ -60,7 +63,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+            new ExtendedClassLoader(THROWING_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
             .mailetName("sub.TestMailet")
@@ -73,7 +77,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldThrowOnBadType() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+            new ExtendedClassLoader(THROWING_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         expectedException.expect(MessagingException.class);
 
@@ -86,7 +91,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldLoadClassWhenInExtensionsJars() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
             .mailetName("CustomMailet")
@@ -100,7 +106,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldBrowseRecursivelyExtensionsJars() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
+            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
             .mailetName("CustomMailet")
@@ -114,7 +121,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailedShouldAllowCustomPackages() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
             .mailetName("com.custom.mailets.AnotherMailet")
@@ -128,7 +136,8 @@ public class GuiceMailetLoaderTest {
     @Test
     public void getMailetShouldThrowOnUnknownMailet() throws Exception {
         GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
-            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
 
         expectedException.expect(MessagingException.class);
 

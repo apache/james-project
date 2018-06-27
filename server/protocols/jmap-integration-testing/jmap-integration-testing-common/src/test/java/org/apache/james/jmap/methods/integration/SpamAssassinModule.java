@@ -22,15 +22,17 @@ import java.util.Optional;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
-import org.apache.james.mailetcontainer.api.MailetLoader;
+import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.util.Host;
 import org.apache.james.util.scanner.SpamAssassinExtension;
 import org.apache.james.util.scanner.SpamAssassinExtension.SpamAssassin;
+import org.apache.james.utils.MailetConfigurationOverride;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class SpamAssassinModule extends AbstractModule {
 
@@ -42,8 +44,12 @@ public class SpamAssassinModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(SpamAssassinGuiceMailetLoader.class).in(Scopes.SINGLETON);
-        bind(MailetLoader.class).to(SpamAssassinGuiceMailetLoader.class);
+        Multibinder.newSetBinder(binder(), MailetConfigurationOverride.class)
+            .addBinding()
+            .toInstance(
+                new MailetConfigurationOverride(
+                    org.apache.james.transport.mailets.SpamAssassin.class,
+                    spamAssassinMailetConfig()));
     }
 
     @Provides
@@ -51,6 +57,17 @@ public class SpamAssassinModule extends AbstractModule {
     private SpamAssassinConfiguration getSpamAssassinConfiguration() {
         SpamAssassin spamAssassin = spamAssassinExtension.getSpamAssassin();
         return new SpamAssassinConfiguration(Optional.of(Host.from(spamAssassin.getIp(), spamAssassin.getBindingPort())));
+    }
+
+    private MailetConfigImpl spamAssassinMailetConfig() {
+        BaseConfiguration baseConfiguration = new BaseConfiguration();
+        Host host = Host.from(spamAssassinExtension.getSpamAssassin().getIp(), spamAssassinExtension.getSpamAssassin().getBindingPort());
+        baseConfiguration.addProperty(org.apache.james.transport.mailets.SpamAssassin.SPAMD_HOST, host.getHostName());
+        baseConfiguration.addProperty(org.apache.james.transport.mailets.SpamAssassin.SPAMD_PORT, host.getPort());
+
+        MailetConfigImpl mailetConfig = new MailetConfigImpl();
+        mailetConfig.setConfiguration(baseConfiguration);
+        return mailetConfig;
     }
 
 }
