@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -59,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Strings;
 
 /**
  * <p>
@@ -251,96 +251,16 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     public static final String SUPPORTS_VIRTUAL_HOSTING = "supportsVirtualHosting";
 
     /**
-     * The URL of the LDAP server against which users are to be authenticated.
-     * Note that users are actually authenticated by binding against the LDAP
-     * server using the users &quot;dn&quot; and &quot;credentials&quot;.The
-     * value of this field is taken from the value of the configuration
-     * attribute &quot;ldapHost&quot;.
-     */
-    private String ldapHost;
-
-    /**
-     * The value of this field is taken from the configuration attribute
-     * &quot;userIdAttribute&quot;. This is the LDAP attribute type which holds
-     * the userId value. Note that this is not the same as the email address
-     * attribute.
-     */
-    private String userIdAttribute;
-
-    /**
-     * The value of this field is taken from the configuration attribute
-     * &quot;userObjectClass&quot;. This is the LDAP object class to use in the
-     * search filter for user nodes under the userBase value.
-     */
-    private String userObjectClass;
-
-    /**
-     * The value of this field is taken from the configuration attribute &quot;filter&quot;.
-     * This is the search filter to use to find the desired user. 
-     */
-    private String filter;
-    
-    /**
-     * This is the LDAP context/sub-context within which to search for user
-     * entities. The value of this field is taken from the configuration
-     * attribute &quot;userBase&quot;.
-     */
-    private String userBase;
-
-    /**
-     * The user with which to initially bind to the LDAP server. The value of
-     * this field is taken from the configuration attribute
-     * &quot;principal&quot;.
-     */
-    private String principal;
-
-    /**
-     * The password/credentials with which to initially bind to the LDAP server.
-     * The value of this field is taken from the configuration attribute
-     * &quot;credentials&quot;.
-     */
-    private String credentials;
-
-    /**
-     * Encapsulates the information required to restrict users to LDAP groups or
-     * roles. This object is populated from the contents of the configuration
-     * element &lt;restriction&gt;.
-     */
-    private ReadOnlyLDAPGroupRestriction restriction;
-
-    /**
      * The context for the LDAP server. This is the connection that is built
      * from the configuration attributes &quot;ldapHost&quot;,
      * &quot;principal&quot; and &quot;credentials&quot;.
      */
     private LdapContext ldapContext;
-    private boolean supportsVirtualHosting;
-    
-    /**
-     * UserId of the administrator
-     * The administrator is allowed to log in as other users
-     */
-    private Optional<String> administratorId;
-
-    // Use a connection pool. Default is true.
-    private boolean useConnectionPool = true;
-
-    // The connection timeout in milliseconds.
-    // A value of less than or equal to zero means to use the network protocol's
-    // (i.e., TCP's) timeout value.
-    private int connectionTimeout = -1;
-
-    // The LDAP read timeout in milliseconds.
-    private int readTimeout = -1;
-
     // The schedule for retry attempts
     private RetrySchedule schedule = null;
 
-    // Maximum number of times to retry a connection attempts. Default is no
-    // retries.
-    private int maxRetries = 0;
-
     private final DomainList domainList;
+    private LdapRepositoryConfiguration ldapConfiguration;
 
     @Inject
     public ReadOnlyUsersLDAPRepository(DomainList domainList) {
@@ -351,61 +271,24 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     /**
      * Extracts the parameters required by the repository instance from the
      * James server configuration data. The fields extracted include
-     * {@link #ldapHost}, {@link #userIdAttribute}, {@link #userBase},
-     * {@link #principal}, {@link #credentials} and {@link #restriction}.
+     * {@link LdapRepositoryConfiguration#ldapHost}, {@link LdapRepositoryConfiguration#userIdAttribute}, {@link LdapRepositoryConfiguration#userBase},
+     * {@link LdapRepositoryConfiguration#principal}, {@link LdapRepositoryConfiguration#credentials} and {@link LdapRepositoryConfiguration#restriction}.
      *
      * @param configuration
      *            An encapsulation of the James server configuration data.
      */
     @Override
     public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
-        ldapHost = configuration.getString("[@ldapHost]", "");
-        principal = configuration.getString("[@principal]", "");
-        credentials = configuration.getString("[@credentials]", "");
-        userBase = configuration.getString("[@userBase]");
-        userIdAttribute = configuration.getString("[@userIdAttribute]");
-        userObjectClass = configuration.getString("[@userObjectClass]");
-        // Default is to use connection pooling
-        useConnectionPool = configuration.getBoolean("[@useConnectionPool]", true);
-        connectionTimeout = configuration.getInt("[@connectionTimeout]", -1);
-        readTimeout = configuration.getInt("[@readTimeout]", -1);
-        // Default maximum retries is 1, which allows an alternate connection to
-        // be found in a multi-homed environment
-        maxRetries = configuration.getInt("[@maxRetries]", 1);
-        supportsVirtualHosting = configuration.getBoolean(SUPPORTS_VIRTUAL_HOSTING, false);
-        // Default retry start interval is 0 second
-        long retryStartInterval = configuration.getLong("[@retryStartInterval]", 0);
-        // Default maximum retry interval is 60 seconds
-        long retryMaxInterval = configuration.getLong("[@retryMaxInterval]", 60);
-        int scale = configuration.getInt("[@retryIntervalScale]", 1000); // seconds
-        schedule = new DoublingRetrySchedule(retryStartInterval, retryMaxInterval, scale);
-
-        HierarchicalConfiguration restrictionConfig = null;
-        // Check if we have a restriction we can use
-        // See JAMES-1204
-        if (configuration.containsKey("restriction[@memberAttribute]")) {
-            restrictionConfig = configuration.configurationAt("restriction");
-        }
-        restriction = new ReadOnlyLDAPGroupRestriction(restrictionConfig);
-
-        //see if there is a filter argument
-        filter = configuration.getString("[@filter]");
-
-        administratorId = Optional.ofNullable(configuration.getString("[@administratorId]"));
-
-        checkState();
+        configure(LdapRepositoryConfiguration.from(configuration));
     }
 
-    private void checkState() throws ConfigurationException {
-        if (userBase == null) {
-            throw new ConfigurationException("[@userBase] is mandatory");
-        }
-        if (userIdAttribute == null) {
-            throw new ConfigurationException("[@userIdAttribute] is mandatory");
-        }
-        if (userObjectClass == null) {
-            throw new ConfigurationException("[@userObjectClass] is mandatory");
-        }
+    public void configure(LdapRepositoryConfiguration configuration) {
+        ldapConfiguration = configuration;
+
+        schedule = new DoublingRetrySchedule(
+            configuration.getRetryStartInterval(),
+            configuration.getRetryMaxInterval(),
+            configuration.getScale());
     }
 
     /**
@@ -419,7 +302,12 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     @PostConstruct
     public void init() throws Exception {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP host: " + ldapHost + '\n' + "User baseDN: " + userBase + '\n' + "userIdAttribute: " + userIdAttribute + '\n' + "Group restriction: " + restriction + '\n' + "UseConnectionPool: " + useConnectionPool + '\n' + "connectionTimeout: " + connectionTimeout + '\n' + "readTimeout: " + readTimeout + '\n' + "retrySchedule: " + schedule + '\n' + "maxRetries: " + maxRetries + '\n');
+            LOGGER.debug(this.getClass().getName() + ".init()" + '\n' + "LDAP host: " + ldapConfiguration.getLdapHost()
+                + '\n' + "User baseDN: " + ldapConfiguration.getUserBase() + '\n' + "userIdAttribute: "
+                + ldapConfiguration.getUserIdAttribute() + '\n' + "Group restriction: " + ldapConfiguration.getRestriction()
+                + '\n' + "UseConnectionPool: " + ldapConfiguration.useConnectionPool() + '\n' + "connectionTimeout: "
+                + ldapConfiguration.getConnectionTimeout() + '\n' + "readTimeout: " + ldapConfiguration.getReadTimeout()
+                + '\n' + "retrySchedule: " + schedule + '\n' + "maxRetries: " + ldapConfiguration.getMaxRetries() + '\n');
         }
         // Setup the initial LDAP context
         updateLdapContext();
@@ -450,7 +338,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *             Propagated from underlying LDAP communication API.
      */
     protected LdapContext computeLdapContext() throws NamingException {
-        return new RetryingLdapContext(schedule, maxRetries) {
+        return new RetryingLdapContext(schedule, ldapConfiguration.getMaxRetries()) {
 
             @Override
             public Context newDelegate() throws NamingException {
@@ -462,21 +350,21 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     protected Properties getContextEnvironment() {
         final Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        props.put(Context.PROVIDER_URL, null == ldapHost ? "" : ldapHost);
-        if (null == credentials || credentials.isEmpty()) {
+        props.put(Context.PROVIDER_URL, null == ldapConfiguration.getLdapHost() ? "" : ldapConfiguration.getLdapHost());
+        if (Strings.isNullOrEmpty(ldapConfiguration.getCredentials())) {
             props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_NONE);
         } else {
             props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_SIMPLE);
-            props.put(Context.SECURITY_PRINCIPAL, null == principal ? "" : principal);
-            props.put(Context.SECURITY_CREDENTIALS, credentials);
+            props.put(Context.SECURITY_PRINCIPAL, null == ldapConfiguration.getPrincipal() ? "" : ldapConfiguration.getPrincipal());
+            props.put(Context.SECURITY_CREDENTIALS, ldapConfiguration.getCredentials());
         }
         // The following properties are specific to com.sun.jndi.ldap.LdapCtxFactory
-        props.put(PROPERTY_NAME_CONNECTION_POOL, Boolean.toString(useConnectionPool));
-        if (connectionTimeout > -1) {
-            props.put(PROPERTY_NAME_CONNECT_TIMEOUT, Integer.toString(connectionTimeout));
+        props.put(PROPERTY_NAME_CONNECTION_POOL, String.valueOf(ldapConfiguration.useConnectionPool()));
+        if (ldapConfiguration.getConnectionTimeout() > -1) {
+            props.put(PROPERTY_NAME_CONNECT_TIMEOUT, String.valueOf(ldapConfiguration.getConnectionTimeout()));
         }
-        if (readTimeout > -1) {
-            props.put(PROPERTY_NAME_READ_TIMEOUT, Integer.toString(readTimeout));
+        if (ldapConfiguration.getReadTimeout() > -1) {
+            props.put(PROPERTY_NAME_READ_TIMEOUT, Integer.toString(ldapConfiguration.getReadTimeout()));
         }
         return props;
     }
@@ -515,7 +403,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
     /**
      * Gets all the user entities taken from the LDAP server, as taken from the
-     * search-context given by the value of the attribute {@link #userBase}.
+     * search-context given by the value of the attribute {@link LdapRepositoryConfiguration#userBase}.
      *
      * @return A set containing all the relevant users found in the LDAP
      *         directory.
@@ -528,8 +416,8 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         sc.setReturningAttributes(new String[] { "distinguishedName" });
-        NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, "(objectClass="
-                + userObjectClass + ")", sc);
+        NamingEnumeration<SearchResult> sr = ldapContext.search(ldapConfiguration.getUserBase(), "(objectClass="
+                + ldapConfiguration.getUserObjectClass() + ")", sc);
         while (sr.hasMore()) {
             SearchResult r = sr.next();
             result.add(r.getNameInNamespace());
@@ -565,11 +453,11 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     /**
-     * For a given name, this method makes ldap search in userBase with filter {@link #userIdAttribute}=name and objectClass={@link #userObjectClass}
-     * and builds {@link User} based on search result.
+     * For a given name, this method makes ldap search in userBase with filter {@link LdapRepositoryConfiguration#userIdAttribute}=name
+     * and objectClass={@link LdapRepositoryConfiguration#userObjectClass} and builds {@link User} based on search result.
      *
      * @param name
-     *            The userId which should be value of the field {@link #userIdAttribute}
+     *            The userId which should be value of the field {@link LdapRepositoryConfiguration#userIdAttribute}
      * @return A {@link ReadOnlyLDAPUser} instance which is initialized with the
      *         userId of this user and ldap connection information with which
      *         the user was searched. Return null if such a user was not found.
@@ -579,30 +467,30 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     private ReadOnlyLDAPUser searchAndBuildUser(String name) throws NamingException {
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
-        sc.setReturningAttributes(new String[] { userIdAttribute });
+        sc.setReturningAttributes(new String[] { ldapConfiguration.getUserIdAttribute() });
         sc.setCountLimit(1);
 
         String filterTemplate = "(&({0}={1})(objectClass={2})" +
-            StringUtils.defaultString(filter, "") +
+            StringUtils.defaultString(ldapConfiguration.getFilter(), "") +
             ")";
 
         String sanitizedFilter = FilterEncoder.format(
             filterTemplate,
-            userIdAttribute,
+            ldapConfiguration.getUserIdAttribute(),
             name,
-            userObjectClass);
+            ldapConfiguration.getUserObjectClass());
 
-        NamingEnumeration<SearchResult> sr = ldapContext.search(userBase, sanitizedFilter, sc);
+        NamingEnumeration<SearchResult> sr = ldapContext.search(ldapConfiguration.getUserBase(), sanitizedFilter, sc);
 
         if (!sr.hasMore()) {
             return null;
         }
 
         SearchResult r = sr.next();
-        Attribute userName = r.getAttributes().get(userIdAttribute);
+        Attribute userName = r.getAttributes().get(ldapConfiguration.getUserIdAttribute());
 
-        if (!restriction.isActivated()
-            || userInGroupsMembershipList(r.getNameInNamespace(), restriction.getGroupMembershipLists(ldapContext))) {
+        if (!ldapConfiguration.getRestriction().isActivated()
+            || userInGroupsMembershipList(r.getNameInNamespace(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapContext))) {
             return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
         }
 
@@ -614,7 +502,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * server, so as to extract the items that are of interest to James.
      * Specifically it extracts the userId, which is extracted from the LDAP
      * attribute whose name is given by the value of the field
-     * {@link #userIdAttribute}.
+     * {@link LdapRepositoryConfiguration#userIdAttribute}.
      *
      * @param userDN
      *            The distinguished-name of the user whose details are to be
@@ -627,7 +515,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     private ReadOnlyLDAPUser buildUser(String userDN) throws NamingException {
       Attributes userAttributes = ldapContext.getAttributes(userDN);
-      Attribute userName = userAttributes.get(userIdAttribute);
+      Attribute userName = userAttributes.get(ldapConfiguration.getUserIdAttribute());
       return new ReadOnlyLDAPUser(userName.get().toString(), userDN, ldapContext);
     }
 
@@ -709,8 +597,8 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         Set<String> userDNs = getAllUsersFromLDAP();
         Collection<String> validUserDNs;
 
-        if (restriction.isActivated()) {
-            Map<String, Collection<String>> groupMembershipList = restriction
+        if (ldapConfiguration.getRestriction().isActivated()) {
+            Map<String, Collection<String>> groupMembershipList = ldapConfiguration.getRestriction()
                     .getGroupMembershipLists(ldapContext);
             validUserDNs = new ArrayList<>();
 
@@ -761,12 +649,12 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      */
     @Override
     public boolean supportVirtualHosting() {
-        return supportsVirtualHosting;
+        return ldapConfiguration.supportsVirtualHosting();
     }
 
 
     @Override
-    public String getUser(MailAddress mailAddress) throws UsersRepositoryException {
+    public String getUser(MailAddress mailAddress) {
         if (supportVirtualHosting()) {
             return mailAddress.asString();
         } else {
@@ -775,9 +663,9 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
-    public boolean isAdministrator(String username) throws UsersRepositoryException {
-        if (administratorId.isPresent()) {
-            return administratorId.get().equals(username);
+    public boolean isAdministrator(String username) {
+        if (ldapConfiguration.getAdministratorId().isPresent()) {
+            return ldapConfiguration.getAdministratorId().get().equals(username);
         }
         return false;
     }
