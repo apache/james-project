@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 
@@ -348,14 +349,16 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     protected Properties getContextEnvironment() {
-        final Properties props = new Properties();
+        Properties props = new Properties();
         props.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        props.put(Context.PROVIDER_URL, null == ldapConfiguration.getLdapHost() ? "" : ldapConfiguration.getLdapHost());
+        props.put(Context.PROVIDER_URL, Optional.ofNullable(ldapConfiguration.getLdapHost())
+            .orElse(""));
         if (Strings.isNullOrEmpty(ldapConfiguration.getCredentials())) {
             props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_NONE);
         } else {
             props.put(Context.SECURITY_AUTHENTICATION, LdapConstants.SECURITY_AUTHENTICATION_SIMPLE);
-            props.put(Context.SECURITY_PRINCIPAL, null == ldapConfiguration.getPrincipal() ? "" : ldapConfiguration.getPrincipal());
+            props.put(Context.SECURITY_PRINCIPAL, Optional.ofNullable(ldapConfiguration.getPrincipal())
+                .orElse(""));
             props.put(Context.SECURITY_CREDENTIALS, ldapConfiguration.getCredentials());
         }
         // The following properties are specific to com.sun.jndi.ldap.LdapCtxFactory
