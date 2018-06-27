@@ -24,25 +24,21 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 
 @Singleton
 public class SessionWithInitializedTablesFactory implements Provider<Session> {
-    
-    private static final String DEFAULT_KEYSPACE_NAME = "apache_james";
-
     private final CassandraModule module;
     private final Session session;
 
     @Inject
-    public SessionWithInitializedTablesFactory(CassandraSessionConfiguration configuration, Cluster cluster, CassandraModule module) throws ConfigurationException {
-        String keyspace = configuration.getConfiguration().getString("cassandra.keyspace", DEFAULT_KEYSPACE_NAME);
+    public SessionWithInitializedTablesFactory(ClusterConfiguration clusterConfiguration, Cluster cluster, CassandraModule module) {
         this.module = module;
-        this.session = createSession(cluster, keyspace);
+        this.session = createSession(cluster, clusterConfiguration.getKeyspace());
     }
 
     public Session createSession(Cluster cluster, String keyspace) {
@@ -68,6 +64,5 @@ public class SessionWithInitializedTablesFactory implements Provider<Session> {
     public synchronized void destroy() {
         session.close();
     }
-
 
 }

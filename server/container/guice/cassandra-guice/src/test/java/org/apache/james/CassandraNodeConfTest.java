@@ -26,15 +26,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.util.Host;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.DockerClientFactory;
-
-import com.google.common.base.Joiner;
 
 public class CassandraNodeConfTest {
 
@@ -77,22 +75,24 @@ public class CassandraNodeConfTest {
     @Test
     public void serverShouldStartWhenOneCassandraNodeIsUnreachable() throws Exception {
         String unreachableNode = "10.2.3.42";
-        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(
-                Joiner.on(',')
-                    .join(unreachableNode, 
-                          dockerCassandraRule.getIp() + ":" + dockerCassandraRule.getMappedPort(CASSANDRA_PORT)));
+
 
         jamesServer = cassandraJmapTestRule.jmapServer(
-                (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> configuration));
+            (binder) -> binder.bind(ClusterConfiguration.class)
+                .toInstance(clusterWithHosts(
+                    Host.from(unreachableNode, 9042),
+                    dockerCassandraRule.getHost())));
 
         assertThatServerStartCorrectly();
     }
 
+
     @Test
     public void configShouldWorkWithNonDefaultPort() throws Exception {
-        PropertiesConfiguration configuration = getCassandraConfigurationForDocker(getDockerHostIp() + ":" + dockerCassandraRule.getMappedPort(CASSANDRA_PORT));
         jamesServer = cassandraJmapTestRule.jmapServer(
-                (binder) -> binder.bind(CassandraSessionConfiguration.class).toInstance(() -> configuration));
+            (binder) -> binder.bind(ClusterConfiguration.class)
+                .toInstance(clusterWithHosts(
+                    Host.from(getDockerHostIp(), dockerCassandraRule.getMappedPort(CASSANDRA_PORT)))));
 
         assertThatServerStartCorrectly();
     }
@@ -103,16 +103,14 @@ public class CassandraNodeConfTest {
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
     }
 
-    private PropertiesConfiguration getCassandraConfigurationForDocker(String confIps) {
-        PropertiesConfiguration configuration = new PropertiesConfiguration();
-
-        configuration.addProperty("cassandra.nodes", confIps);
-        configuration.addProperty("cassandra.keyspace", "apache_james");
-        configuration.addProperty("cassandra.replication.factor", 1);
-        configuration.addProperty("cassandra.retryConnection.maxRetries", 10);
-        configuration.addProperty("cassandra.retryConnection", 5000);
-
-        return configuration;
+    private ClusterConfiguration clusterWithHosts(Host... hosts) {
+        return ClusterConfiguration.builder()
+            .hosts(hosts)
+            .keyspace("apache_james")
+            .replicationFactor(1)
+            .maxRetry(10)
+            .minDelay(5000)
+            .build();
     }
 
     private String getServerConnectionResponse(SocketChannel socketChannel) throws IOException {

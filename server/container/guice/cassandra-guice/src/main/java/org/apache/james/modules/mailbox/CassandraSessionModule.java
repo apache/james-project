@@ -20,18 +20,17 @@ package org.apache.james.modules.mailbox;
 
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -64,18 +63,6 @@ public class CassandraSessionModule extends AbstractModule {
 
     private static final String LOCALHOST = "127.0.0.1";
     private static final String BATCHSIZES_FILE_NAME = "batchsizes";
-    private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
-    private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
-    private static final String MAILBOX_MAX_RETRY_UID = "mailbox.max.retry.uid";
-    private static final String MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE = "mailbox.max.retry.message.flags.update";
-    private static final String MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE = "mailbox.max.retry.message.id.flags.update";
-    private static final String FETCH_ADVANCE_ROW_COUNT = "fetch.advance.row.count";
-    private static final String CHUNK_SIZE_FLAGS_UPDATE = "chunk.size.flags.update";
-    private static final String CHUNK_SIZE_MESSAGE_READ = "chunk.size.message.read";
-    private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
-    private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
-    private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
-    private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
     private static final String CASSANDRA_NODES = "cassandra.nodes";
 
     @Override
@@ -101,12 +88,6 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
         return new CassandraModuleComposite(modules.toArray(new CassandraModule[0]));
-    }
-
-    @Provides
-    @Singleton
-    CassandraSessionConfiguration getCassandraSessionConfiguration(PropertiesProvider propertiesProvider) {
-        return () -> getConfiguration(propertiesProvider);
     }
 
     @Provides
@@ -139,35 +120,14 @@ public class CassandraSessionModule extends AbstractModule {
     @VisibleForTesting
     @Provides
     @Singleton
-    CassandraConfiguration provideCassandraConfiguration(CassandraSessionConfiguration sessionConfiguration) throws ConfigurationException {
-        PropertiesConfiguration propertiesConfiguration = sessionConfiguration.getConfiguration();
+    CassandraConfiguration provideCassandraConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        return CassandraConfiguration.from(getConfiguration(propertiesProvider));
+    }
 
-        return CassandraConfiguration.builder()
-            .aclMaxRetry(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_ACL, null)))
-            .modSeqMaxRetry(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MODSEQ, null)))
-            .uidMaxRetry(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_UID, null)))
-            .flagsUpdateMessageMaxRetry(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE, null)))
-            .flagsUpdateMessageIdMaxRetry(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE, null)))
-            .fetchNextPageInAdvanceRow(Optional.ofNullable(
-                propertiesConfiguration.getInteger(FETCH_ADVANCE_ROW_COUNT, null)))
-            .flagsUpdateChunkSize(Optional.ofNullable(
-                propertiesConfiguration.getInteger(CHUNK_SIZE_FLAGS_UPDATE, null)))
-            .messageReadChunkSize(Optional.ofNullable(
-                propertiesConfiguration.getInteger(CHUNK_SIZE_MESSAGE_READ, null)))
-            .expungeChunkSize(Optional.ofNullable(
-                propertiesConfiguration.getInteger(CHUNK_SIZE_EXPUNGE, null)))
-            .blobPartSize(Optional.ofNullable(
-                propertiesConfiguration.getInteger(BLOB_PART_SIZE, null)))
-            .attachmentV2MigrationReadTimeout(Optional.ofNullable(
-                propertiesConfiguration.getInteger(ATTACHMENT_V2_MIGRATION_READ_TIMEOUT, null)))
-            .messageAttachmentIdsReadTimeout(Optional.ofNullable(
-                propertiesConfiguration.getInteger(MESSAGE_ATTACHMENTID_READ_TIMEOUT, null)))
-            .build();
+    @Provides
+    @Singleton
+    ClusterConfiguration provideClusterConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+        return ClusterConfiguration.from(getConfiguration(propertiesProvider));
     }
 
     private PropertiesConfiguration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {

@@ -17,13 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.init;
+package org.apache.james.backends.cassandra.init.configuration;
 
 import static java.lang.Math.toIntExact;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -42,6 +44,21 @@ public class CassandraConfiguration {
     public static final int DEFAULT_BLOB_PART_SIZE = 100 * 1024;
     public static final int DEFAULT_ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
     public static final int DEFAULT_MESSAGE_ATTACHMENT_ID_MIGRATION_READ_TIMEOUT = toIntExact(TimeUnit.HOURS.toMillis(1));
+
+
+    private static final String MAILBOX_MAX_RETRY_ACL = "mailbox.max.retry.acl";
+    private static final String MAILBOX_MAX_RETRY_MODSEQ = "mailbox.max.retry.modseq";
+    private static final String MAILBOX_MAX_RETRY_UID = "mailbox.max.retry.uid";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE = "mailbox.max.retry.message.flags.update";
+    private static final String MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE = "mailbox.max.retry.message.id.flags.update";
+    private static final String FETCH_ADVANCE_ROW_COUNT = "fetch.advance.row.count";
+    private static final String CHUNK_SIZE_FLAGS_UPDATE = "chunk.size.flags.update";
+    private static final String CHUNK_SIZE_MESSAGE_READ = "chunk.size.message.read";
+    private static final String CHUNK_SIZE_EXPUNGE = "chunk.size.expunge";
+    private static final String BLOB_PART_SIZE = "mailbox.blob.part.size";
+    private static final String ATTACHMENT_V2_MIGRATION_READ_TIMEOUT = "attachment.v2.migration.read.timeout";
+    private static final String MESSAGE_ATTACHMENTID_READ_TIMEOUT = "message.attachmentids.read.timeout";
+
     public static final CassandraConfiguration DEFAULT_CONFIGURATION = builder().build();
 
     public static class Builder {
@@ -208,6 +225,35 @@ public class CassandraConfiguration {
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public static CassandraConfiguration from(PropertiesConfiguration propertiesConfiguration) {
+        return builder()
+            .aclMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_ACL, null)))
+            .modSeqMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MODSEQ, null)))
+            .uidMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_UID, null)))
+            .flagsUpdateMessageMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_FLAGS_UPDATE, null)))
+            .flagsUpdateMessageIdMaxRetry(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MAILBOX_MAX_RETRY_MESSAGE_ID_FLAGS_UPDATE, null)))
+            .fetchNextPageInAdvanceRow(Optional.ofNullable(
+                propertiesConfiguration.getInteger(FETCH_ADVANCE_ROW_COUNT, null)))
+            .flagsUpdateChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_FLAGS_UPDATE, null)))
+            .messageReadChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_MESSAGE_READ, null)))
+            .expungeChunkSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(CHUNK_SIZE_EXPUNGE, null)))
+            .blobPartSize(Optional.ofNullable(
+                propertiesConfiguration.getInteger(BLOB_PART_SIZE, null)))
+            .attachmentV2MigrationReadTimeout(Optional.ofNullable(
+                propertiesConfiguration.getInteger(ATTACHMENT_V2_MIGRATION_READ_TIMEOUT, null)))
+            .messageAttachmentIdsReadTimeout(Optional.ofNullable(
+                propertiesConfiguration.getInteger(MESSAGE_ATTACHMENTID_READ_TIMEOUT, null)))
+            .build();
     }
 
     private final int messageReadChunkSize;

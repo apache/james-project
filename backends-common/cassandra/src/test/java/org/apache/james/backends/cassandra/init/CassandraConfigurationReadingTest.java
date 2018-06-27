@@ -17,36 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
-import org.junit.Before;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.junit.Test;
 
-public class CassandraSessionModuleTest {
-
-    private CassandraSessionModule cassandraSessionModule;
-
-    @Before
-    public void setUp() {
-        cassandraSessionModule = new CassandraSessionModule();
-    }
+public class CassandraConfigurationReadingTest {
 
     @Test
-    public void provideCassandraConfigurationShouldReturnDefaultOnEmptyConfigurationFile() throws ConfigurationException {
-        CassandraConfiguration configuration = cassandraSessionModule.provideCassandraConfiguration(PropertiesConfiguration::new);
+    public void provideCassandraConfigurationShouldReturnDefaultOnEmptyConfigurationFile() {
+        CassandraConfiguration configuration = CassandraConfiguration.from(new PropertiesConfiguration());
 
         assertThat(configuration).isEqualTo(CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
     public void provideCassandraConfigurationShouldReturnRightConfigurationFile() throws ConfigurationException {
-        CassandraConfiguration configuration = cassandraSessionModule.provideCassandraConfiguration(
-            () -> new PropertiesConfiguration(ClassLoader.getSystemResource("modules/mailbox/cassandra.properties")));
+        CassandraConfiguration configuration = CassandraConfiguration.from(new PropertiesConfiguration(
+            ClassLoader.getSystemResource("cassandra.properties")));
 
         assertThat(configuration)
             .isEqualTo(CassandraConfiguration.builder()

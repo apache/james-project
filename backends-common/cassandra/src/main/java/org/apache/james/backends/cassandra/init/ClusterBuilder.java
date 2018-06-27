@@ -22,6 +22,7 @@ package org.apache.james.backends.cassandra.init;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.apache.james.backends.cassandra.init.configuration.QueryLoggerConfiguration;
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -23,15 +23,13 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraSessionConfiguration;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.util.Host;
 
@@ -51,7 +49,7 @@ public final class CassandraCluster implements AutoCloseable {
     private CassandraTypesProvider typesProvider;
     private Cluster cluster;
     private String keyspace;
-    private CassandraSessionConfiguration cassandraSessionConfiguration;
+    private ClusterConfiguration clusterConfiguration;
 
     public static CassandraCluster create(CassandraModule module, String host, int port) {
         return new CassandraCluster(module, host, port);
@@ -70,15 +68,13 @@ public final class CassandraCluster implements AutoCloseable {
                 .port(port)
                 .build();
             keyspace = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
-            cassandraSessionConfiguration = () -> {
-                PropertiesConfiguration conf = new PropertiesConfiguration();
-                conf.addProperty("cassandra.nodes", host + ":" + port);
-                conf.addProperty("cassandra.keyspace", keyspace);
-                conf.addProperty("cassandra.replication.factor", 1);
-                conf.addProperty("cassandra.retryConnection.maxRetries", 10);
-                conf.addProperty("cassandra.retryConnection", 5000);
-                return conf;
-            };
+            clusterConfiguration = ClusterConfiguration.builder()
+                .host(Host.from(host, port))
+                .keyspace(keyspace)
+                .replicationFactor(1)
+                .maxRetry(10)
+                .minDelay(5000)
+                .build();
             session = new FunctionRunnerWithRetry(MAX_RETRY).executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {
@@ -97,12 +93,10 @@ public final class CassandraCluster implements AutoCloseable {
                 .replicationFactor(REPLICATION_FACTOR)
                 .disableDurableWrites()
                 .clusterWithInitializedKeyspace();
-            return Optional.of(new SessionWithInitializedTablesFactory(cassandraSessionConfiguration, clusterWithInitializedKeyspace, module).createSession(clusterWithInitializedKeyspace, keyspace));
+            return Optional.of(new SessionWithInitializedTablesFactory(clusterConfiguration, clusterWithInitializedKeyspace, module).createSession(clusterWithInitializedKeyspace, keyspace));
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);
             return Optional.empty();
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
         }
     }
 

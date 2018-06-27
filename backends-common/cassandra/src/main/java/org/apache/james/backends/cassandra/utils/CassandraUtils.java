@@ -24,7 +24,7 @@ import java.util.stream.StreamSupport;
 
 import javax.inject.Inject;
 
-import org.apache.james.backends.cassandra.init.CassandraConfiguration;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;

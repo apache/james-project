@@ -17,21 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.cassandra.init;
+package org.apache.james.backends.cassandra.init.configuration;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.configuration.PropertiesConfiguration;
 
 import com.datastax.driver.core.PerHostPercentileTracker;
 import com.datastax.driver.core.QueryLogger;
 import com.google.common.base.Preconditions;
 
 public class QueryLoggerConfiguration {
-    private final Optional<Long> constantThreshold;
-    private final Optional<PerHostPercentileTracker> percentileTracker;
-    private final Optional<Double> slowQueryLatencyThresholdPercentile;
-    private final Optional<Integer> maxLoggedParameters;
-    private final Optional<Integer> maxParameterValueLength;
-    private final Optional<Integer> maxQueryStringLength;
 
     public static class Builder {
         private Optional<Long> constantThreshold;
@@ -97,17 +94,75 @@ public class QueryLoggerConfiguration {
         }
     }
 
+    private static final long CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS = TimeUnit.SECONDS.toMillis(10);
+
+    public static final QueryLoggerConfiguration DEFAULT = QueryLoggerConfiguration.builder()
+        .withDynamicThreshold(PerHostPercentileTracker
+            .builder(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
+            .build(),
+            QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE)
+        .build();
+
+
     public static Builder builder() {
         return new Builder();
     }
 
-    private QueryLoggerConfiguration(
-        Optional<Long> constantThreshold,
-        Optional<PerHostPercentileTracker> percentileTracker,
-        Optional<Double> slowQueryLatencyThresholdPercentile,
-        Optional<Integer> maxLoggedParameters,
-        Optional<Integer> maxParameterValueLength,
-        Optional<Integer> maxQueryStringLength) {
+    public static QueryLoggerConfiguration from(PropertiesConfiguration configuration) {
+        QueryLoggerConfiguration.Builder builder = QueryLoggerConfiguration.builder();
+
+        Optional<Long> constantThreshold = getOptionalIntegerFromConf(configuration, "cassandra.query.logger.constant.threshold")
+            .map(Long::valueOf);
+
+        constantThreshold.ifPresent(builder::withConstantThreshold);
+
+        getOptionalIntegerFromConf(configuration, "cassandra.query.logger.max.logged.parameters")
+            .ifPresent(builder::withMaxLoggedParameters);
+
+        getOptionalIntegerFromConf(configuration, "cassandra.query.logger.max.query.string.length")
+            .ifPresent(builder::withMaxQueryStringLength);
+
+        getOptionalIntegerFromConf(configuration, "cassandra.query.logger.max.parameter.value.length")
+            .ifPresent(builder::withMaxParameterValueLength);
+
+        Optional<Double> percentileLatencyConf = getOptionalDoubleFromConf(configuration, "cassandra.query.slow.query.latency.threshold.percentile");
+
+        if (!percentileLatencyConf.isPresent() && !constantThreshold.isPresent()) {
+            percentileLatencyConf = Optional.of(QueryLogger.DEFAULT_SLOW_QUERY_THRESHOLD_PERCENTILE);
+        }
+
+        percentileLatencyConf.ifPresent(slowQueryLatencyThresholdPercentile -> {
+            PerHostPercentileTracker tracker = PerHostPercentileTracker
+                .builder(CASSANDRA_HIGHEST_TRACKABLE_LATENCY_MILLIS)
+                .build();
+
+            builder.withDynamicThreshold(tracker, slowQueryLatencyThresholdPercentile);
+        });
+
+        return builder.build();
+    }
+
+    private static Optional<Integer> getOptionalIntegerFromConf(PropertiesConfiguration configuration, String key) {
+        return Optional.ofNullable(configuration.getInteger(key, null));
+    }
+
+    private static Optional<Double> getOptionalDoubleFromConf(PropertiesConfiguration configuration, String key) {
+        return Optional.ofNullable(configuration.getDouble(key, null));
+    }
+
+    private final Optional<Long> constantThreshold;
+    private final Optional<PerHostPercentileTracker> percentileTracker;
+    private final Optional<Double> slowQueryLatencyThresholdPercentile;
+    private final Optional<Integer> maxLoggedParameters;
+    private final Optional<Integer> maxParameterValueLength;
+    private final Optional<Integer> maxQueryStringLength;
+
+    private QueryLoggerConfiguration(Optional<Long> constantThreshold,
+                                     Optional<PerHostPercentileTracker> percentileTracker,
+                                     Optional<Double> slowQueryLatencyThresholdPercentile,
+                                     Optional<Integer> maxLoggedParameters,
+                                     Optional<Integer> maxParameterValueLength,
+                                     Optional<Integer> maxQueryStringLength) {
         this.constantThreshold = constantThreshold;
         this.percentileTracker = percentileTracker;
         this.slowQueryLatencyThresholdPercentile = slowQueryLatencyThresholdPercentile;
