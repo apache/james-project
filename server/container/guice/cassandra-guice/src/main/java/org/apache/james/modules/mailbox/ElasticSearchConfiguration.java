@@ -227,8 +227,8 @@ public class ElasticSearchConfiguration {
             .writeAliasQuotaRatioName(computeQuotaSearchWriteAlias(configuration))
             .nbShards(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, null)))
             .nbReplica(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, null)))
-            .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
-            .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
+            .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
+            .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .indexAttachment(provideIndexAttachments(configuration))
             .build();
     }

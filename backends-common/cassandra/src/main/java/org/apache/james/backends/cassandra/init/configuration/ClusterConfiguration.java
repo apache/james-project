@@ -176,6 +176,7 @@ public class ClusterConfiguration {
     }
 
     public static ClusterConfiguration from(PropertiesConfiguration configuration) {
+        configuration.setListDelimiter(',');
         return ClusterConfiguration.builder()
             .hosts(listCassandraServers(configuration))
             .keyspace(Optional.ofNullable(configuration.getString(CASSANDRA_KEYSPACE, null)))

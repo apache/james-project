@@ -41,13 +41,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
-import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathTable;
+import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -110,8 +107,6 @@ public class FixingGhostMailboxTest {
     private MailboxProbeImpl mailboxProbe;
     private ACLProbe aclProbe;
     private Session session;
-    private CassandraTypesProvider cassandraTypesProvider;
-    private MailboxBaseTupleUtil mailboxBaseTupleUtil;
     private ComposedMessageId message1;
     private MailboxId aliceGhostInboxId;
     private MailboxPath aliceInboxPath;
@@ -155,8 +150,6 @@ public class FixingGhostMailboxTest {
             .withPort(cassandra.getMappedPort(9042))
             .build()
             .connect(jmapServer.getProbe(CassandraProbe.class).getKeyspace());
-        cassandraTypesProvider = new CassandraTypesProvider(new CassandraMailboxModule(), session);
-        mailboxBaseTupleUtil = new MailboxBaseTupleUtil(cassandraTypesProvider);
 
         simulateGhostMailboxBug();
     }
@@ -171,9 +164,10 @@ public class FixingGhostMailboxTest {
         rule.await();
 
         // Simulate ghost mailbox bug
-        session.execute(delete().from(CassandraMailboxPathTable.TABLE_NAME)
-            .where(eq(CassandraMailboxPathTable.NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(MailboxConstants.USER_NAMESPACE, alice)))
-            .and(eq(CassandraMailboxPathTable.MAILBOX_NAME, MailboxConstants.INBOX)));
+        session.execute(delete().from(CassandraMailboxPathV2Table.TABLE_NAME)
+            .where(eq(CassandraMailboxPathV2Table.NAMESPACE, MailboxConstants.USER_NAMESPACE))
+            .and(eq(CassandraMailboxPathV2Table.USER, alice))
+            .and(eq(CassandraMailboxPathV2Table.MAILBOX_NAME, MailboxConstants.INBOX)));
 
         // trigger provisioning
         given()
