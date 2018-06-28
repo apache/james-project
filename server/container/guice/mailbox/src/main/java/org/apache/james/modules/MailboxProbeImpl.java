@@ -62,11 +62,15 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
     @Override
     public MailboxId createMailbox(String namespace, String user, String name) {
+        return createMailbox(new MailboxPath(namespace, user, name));
+    }
+
+    public MailboxId createMailbox(MailboxPath mailboxPath) {
         MailboxSession mailboxSession = null;
         try {
-            mailboxSession = mailboxManager.createSystemSession(user);
+            mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
             mailboxManager.startProcessingRequest(mailboxSession);
-            return mailboxManager.createMailbox(new MailboxPath(namespace, user, name), mailboxSession)
+            return mailboxManager.createMailbox(mailboxPath, mailboxSession)
                     .orElseThrow(() -> new MailboxException("mailbox name is probably empty"));
         } catch (MailboxException e) {
             throw new RuntimeException(e);
@@ -74,7 +78,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
             closeSession(mailboxSession);
         }
     }
-
 
     @Override
     public Mailbox getMailbox(String namespace, String user, String name) {
