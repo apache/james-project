@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.exceptions.NoHostAvailableException;
+import com.google.common.collect.ImmutableList;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.nurkiewicz.asyncretry.function.RetryCallable;
 
@@ -53,7 +54,8 @@ public class ResilientClusterProvider implements Provider<Cluster> {
     }
 
     private RetryCallable<Cluster> getClusterRetryCallable(ClusterConfiguration configuration) {
-        LOGGER.info("Trying to connect to Cassandra service at {} (list {})", LocalDateTime.now(), configuration.getHosts());
+        LOGGER.info("Trying to connect to Cassandra service at {} (list {})", LocalDateTime.now(),
+            ImmutableList.copyOf(configuration.getHosts()).toString());
 
         return context -> {
             Cluster cluster = ClusterBuilder.builder()
