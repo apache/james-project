@@ -41,8 +41,8 @@ public final class CassandraCluster implements AutoCloseable {
 
     private static final int REPLICATION_FACTOR = 1;
 
-    private static final long SLEEP_BEFORE_RETRY = 200;
-    private static final int MAX_RETRY = 2000;
+    private static final long SLEEP_BEFORE_RETRY = 20;
+    private static final int MAX_RETRY = 20000;
 
     private final CassandraModule module;
     private Session session;
