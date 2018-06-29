@@ -37,6 +37,8 @@ public class SMTPServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new JSPFModule());
+
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(SMTPModuleConfigurationPerformer.class);
     }
 
