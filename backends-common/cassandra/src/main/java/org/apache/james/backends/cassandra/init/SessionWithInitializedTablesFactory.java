@@ -41,7 +41,7 @@ public class SessionWithInitializedTablesFactory implements Provider<Session> {
         this.session = createSession(cluster, clusterConfiguration.getKeyspace());
     }
 
-    public Session createSession(Cluster cluster, String keyspace) {
+    private Session createSession(Cluster cluster, String keyspace) {
         Session session = cluster.connect(keyspace);
         try {
             new CassandraTypesCreator(module, session)

@@ -93,7 +93,9 @@ public final class CassandraCluster implements AutoCloseable {
                 .replicationFactor(REPLICATION_FACTOR)
                 .disableDurableWrites()
                 .clusterWithInitializedKeyspace();
-            return Optional.of(new SessionWithInitializedTablesFactory(clusterConfiguration, clusterWithInitializedKeyspace, module).createSession(clusterWithInitializedKeyspace, keyspace));
+
+            return Optional.of(new SessionWithInitializedTablesFactory(clusterConfiguration, clusterWithInitializedKeyspace, module)
+                .get());
         } catch (NoHostAvailableException exception) {
             sleep(SLEEP_BEFORE_RETRY);
             return Optional.empty();
