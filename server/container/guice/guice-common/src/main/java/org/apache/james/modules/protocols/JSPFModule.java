@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 
 public class JSPFModule extends AbstractModule {
 
@@ -36,6 +37,7 @@ public class JSPFModule extends AbstractModule {
 
     }
 
+    @Singleton
     @Provides
     public DNSServiceXBillImpl provideJSPFDNSService() {
         return new DNSServiceXBillImpl(new SPFHandler.SPFLogger(LOGGER));
