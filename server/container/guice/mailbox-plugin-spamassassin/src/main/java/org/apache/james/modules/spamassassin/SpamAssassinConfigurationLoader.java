@@ -21,7 +21,6 @@ package org.apache.james.modules.spamassassin;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.util.Host;
@@ -37,12 +36,12 @@ public class SpamAssassinConfigurationLoader {
         return new SpamAssassinConfiguration(Optional.empty());
     }
 
-    public static SpamAssassinConfiguration fromProperties(PropertiesConfiguration configuration) throws ConfigurationException {
+    public static SpamAssassinConfiguration fromProperties(PropertiesConfiguration configuration) {
         Host host = getHost(configuration);
         return new SpamAssassinConfiguration(Optional.of(host));
     }
 
-    private static Host getHost(PropertiesConfiguration propertiesReader) throws ConfigurationException {
+    private static Host getHost(PropertiesConfiguration propertiesReader) {
         return Host.from(propertiesReader.getString(SPAMASSASSIN_HOST, DEFAULT_HOST), 
                 propertiesReader.getInteger(SPAMASSASSIN_PORT, DEFAULT_PORT));
     }

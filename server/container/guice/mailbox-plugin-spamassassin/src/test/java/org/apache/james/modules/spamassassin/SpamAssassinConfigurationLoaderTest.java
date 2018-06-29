@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
-import org.apache.james.modules.spamassassin.SpamAssassinConfigurationLoader;
 import org.apache.james.util.Host;
 import org.junit.Test;
 
@@ -35,19 +34,19 @@ public class SpamAssassinConfigurationLoaderTest {
     }
 
     @Test
-    public void isEnableShouldReturnTrueWhenEnable() throws Exception {
+    public void isEnableShouldReturnTrueWhenEnable() {
         SpamAssassinConfiguration configuration = SpamAssassinConfigurationLoader.fromProperties(new PropertiesConfiguration());
         assertThat(configuration.isEnable()).isTrue();
     }
 
     @Test
-    public void hostShouldReturnDefaultWhenConfigurationIsEmpty() throws Exception {
+    public void hostShouldReturnDefaultWhenConfigurationIsEmpty() {
         SpamAssassinConfiguration configuration = SpamAssassinConfigurationLoader.fromProperties(new PropertiesConfiguration());
         assertThat(configuration.getHost().get()).isEqualTo(Host.from(SpamAssassinConfigurationLoader.DEFAULT_HOST, SpamAssassinConfigurationLoader.DEFAULT_PORT));
     }
 
     @Test
-    public void hostShouldReturnCustomWhenConfigurationIsProvided() throws Exception {
+    public void hostShouldReturnCustomWhenConfigurationIsProvided() {
         PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
         String host = "10.69.1.123";
         propertiesConfiguration.addProperty("spamassassin.host", host);
