@@ -383,7 +383,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * Mailet which protect us to not fall into an endless loop caused by an
      * configuration error
      */
-    public final class TerminatingMailet extends GenericMailet {
+    public static class TerminatingMailet extends GenericMailet {
         /**
          * The name of the mailet used to terminate the mailet chain. The end of
          * the matcher/mailet chain must be a matcher that matches all mails and

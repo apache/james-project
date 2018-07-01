@@ -32,6 +32,7 @@ import org.apache.camel.Body;
 import org.apache.camel.Handler;
 import org.apache.camel.InOnly;
 import org.apache.james.core.MailAddress;
+import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.metrics.api.MetricFactory;
@@ -61,11 +62,11 @@ public class MatcherSplitter {
     private final Matcher matcher;
     private final String onMatchException;
 
-    public MatcherSplitter(MetricFactory metricFactory, CamelMailetProcessor container, Matcher matcher, String onMatchException) {
+    public MatcherSplitter(MetricFactory metricFactory, CamelMailetProcessor container, MatcherMailetPair pair) {
         this.metricFactory = metricFactory;
         this.container = container;
-        this.matcher = matcher;
-        this.onMatchException = Optional.ofNullable(onMatchException)
+        this.matcher = pair.getMatcher();
+        this.onMatchException = Optional.ofNullable(pair.getOnMatchException())
             .map(s -> s.trim().toLowerCase(Locale.US))
             .orElse(Mail.ERROR);
     }

@@ -51,4 +51,9 @@ public class MatcherMailetPair {
         return mailet;
     }
 
+    public String getOnMatchException() {
+        return mailet.getMailetConfig()
+            .getInitParameter("onMatchException");
+    }
+
 }

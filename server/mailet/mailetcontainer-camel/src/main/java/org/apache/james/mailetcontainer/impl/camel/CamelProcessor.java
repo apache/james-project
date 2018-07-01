@@ -22,8 +22,6 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.mailetcontainer.impl.ProcessorUtil;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
@@ -42,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * Mailet wrapper which execute a Mailet in a Processor
  */
-public class CamelProcessor implements Processor {
+public class CamelProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(CamelProcessor.class);
 
     private final MetricFactory metricFactory;
@@ -51,22 +49,20 @@ public class CamelProcessor implements Processor {
 
     /**
      * Mailet to call on process
-     *
-     * @param metricFactory
+     *  @param metricFactory
+     * @param processor
      * @param mailet
      */
-    public CamelProcessor(MetricFactory metricFactory, Mailet mailet, CamelMailetProcessor processor) {
+    public CamelProcessor(MetricFactory metricFactory, CamelMailetProcessor processor, Mailet mailet) {
         this.metricFactory = metricFactory;
-        this.mailet = mailet;
         this.processor = processor;
+        this.mailet = mailet;
     }
 
     /**
      * Call the wrapped mailet for the exchange
      */
-    @Override
-    public void process(Exchange exchange) throws Exception {
-        Mail mail = exchange.getIn().getBody(Mail.class);
+    public void process(Mail mail) throws Exception {
         long start = System.currentTimeMillis();
         TimeMetric timeMetric = metricFactory.timer(mailet.getClass().getSimpleName());
         Exception ex = null;
