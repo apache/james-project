@@ -133,18 +133,16 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
         }
 
         @Override
-        public void configure() throws Exception {
+        public void configure() {
             Processor disposeProcessor = new DisposeProcessor();
-            Processor removePropsProcessor = new RemovePropertiesProcessor();
             Processor completeProcessor = new CompleteProcessor();
             Processor stateChangedProcessor = new StateChangedProcessor();
 
             String state = getState();
 
-            RouteDefinition processorDef = from(getEndpoint()).routeId(state).setExchangePattern(ExchangePattern.InOnly)
-                    // store the logger in properties
-                    .setProperty(MatcherSplitter.LOGGER_PROPERTY, constant(LOGGER))
-                    .setProperty(MatcherSplitter.METRIC_FACTORY, constant(metricFactory));
+            RouteDefinition processorDef = from(getEndpoint())
+                .routeId(state)
+                .setExchangePattern(ExchangePattern.InOnly);
 
             for (MatcherMailetPair pair : pairs) {
                 Matcher matcher = pair.getMatcher();
@@ -155,14 +153,15 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
                 CamelProcessor mailetProccessor = new CamelProcessor(metricFactory, mailet, CamelMailetProcessor.this);
                 // Store the matcher to use for splitter in properties
-                processorDef.setProperty(MatcherSplitter.MATCHER_PROPERTY, constant(matcher)).setProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY, constant(onMatchException)).setProperty(MatcherSplitter.MAILETCONTAINER_PROPERTY, constant(CamelMailetProcessor.this))
+                MatcherSplitter matcherSplitter = new MatcherSplitter(metricFactory, CamelMailetProcessor.this, matcher, onMatchException);
 
+                processorDef
                         // do splitting of the mail based on the stored matcher
-                        .split().method(MatcherSplitter.class).aggregationStrategy(aggr)
+                        .split().method(matcherSplitter).aggregationStrategy(aggr)
 
                         .choice().when(new MatcherMatch()).process(mailetProccessor).end()
 
-                        .choice().when(new MailStateEquals(Mail.GHOST)).process(disposeProcessor).stop().otherwise().process(removePropsProcessor).end()
+                        .choice().when(new MailStateEquals(Mail.GHOST)).process(disposeProcessor).stop().end()
 
                         .choice().when(new MailStateNotEquals(state)).process(stateChangedProcessor).process(completeProcessor).stop().end();
             }
@@ -186,19 +185,10 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
 
         }
 
-        private final class RemovePropertiesProcessor implements Processor {
-
-            @Override
-            public void process(Exchange exchange) throws Exception {
-                exchange.removeProperty(MatcherSplitter.ON_MATCH_EXCEPTION_PROPERTY);
-                exchange.removeProperty(MatcherSplitter.MATCHER_PROPERTY);
-            }
-        }
-
         private final class CompleteProcessor implements Processor {
 
             @Override
-            public void process(Exchange ex) throws Exception {
+            public void process(Exchange ex) {
                 LOGGER.debug("End of mailetprocessor for state {} reached", getState());
                 ex.setProperty(Exchange.ROUTE_STOP, true);
             }
@@ -210,7 +200,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
             public void process(Exchange arg0) throws Exception {
                 Mail mail = arg0.getIn().getBody(Mail.class);
                 toProcessor(mail);
-
             }
 
         }
