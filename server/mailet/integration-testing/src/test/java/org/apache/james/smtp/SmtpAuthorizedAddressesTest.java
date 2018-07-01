@@ -50,6 +50,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.jayway.awaitility.Duration;
+
 public class SmtpAuthorizedAddressesTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
@@ -134,10 +136,12 @@ public class SmtpAuthorizedAddressesTest {
             .authenticate(FROM, PASSWORD)
             .sendMessage(FROM, TO);
 
-        awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
-            .body("", hasSize(1))
-            .body("[0].from", equalTo(FROM))
-            .body("[0].subject", equalTo("test"))));
+        awaitAtMostOneMinute
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .until(() -> fakeSmtp.isReceived(response -> response
+                .body("", hasSize(1))
+                .body("[0].from", equalTo(FROM))
+                .body("[0].subject", equalTo("test"))));
     }
 
     @Test

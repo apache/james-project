@@ -23,6 +23,7 @@ import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
 import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeUnit;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
@@ -31,12 +32,13 @@ import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
 
 public interface TestingConstants {
-    Duration slowPacedPollInterval = Duration.FIVE_HUNDRED_MILLISECONDS;
+    Duration slowPacedPollInterval = Duration.ONE_HUNDRED_MILLISECONDS;
+    Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
 
     ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and().with()
-        .pollDelay(slowPacedPollInterval)
+        .pollDelay(ONE_MILLISECOND)
         .await();
 
     RequestSpecBuilder jmapRequestSpecBuilder = new RequestSpecBuilder()

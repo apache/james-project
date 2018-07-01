@@ -19,20 +19,24 @@
 
 package org.apache.james.mailets.configuration;
 
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static com.jayway.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static com.jayway.awaitility.Duration.ONE_MINUTE;
+
+import java.util.concurrent.TimeUnit;
 
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class Constants {
-    public static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+    public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
+    public static Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
+
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
         .with()
-        .pollDelay(slowPacedPollInterval)
+        .pollDelay(ONE_MILLISECOND)
         .await();
     public static ConditionFactory awaitAtMostOneMinute = calmlyAwait.atMost(ONE_MINUTE);
 

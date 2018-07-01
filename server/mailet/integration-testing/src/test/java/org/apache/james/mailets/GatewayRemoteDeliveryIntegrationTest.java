@@ -49,6 +49,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import com.jayway.awaitility.Duration;
+
 public class GatewayRemoteDeliveryIntegrationTest {
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
 
@@ -99,7 +101,9 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -137,7 +141,9 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test
@@ -156,7 +162,9 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .until(this::messageIsReceivedByTheSmtpServer);
     }
 
     @Test

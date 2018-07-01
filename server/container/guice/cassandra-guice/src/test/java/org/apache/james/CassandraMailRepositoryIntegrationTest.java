@@ -21,6 +21,8 @@ package org.apache.james;
 
 import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
@@ -32,11 +34,13 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.jayway.awaitility.Awaitility;
+import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
 
 public class CassandraMailRepositoryIntegrationTest {
 
     private static final MailRepositoryUrl SENDER_DENIED_URL = MailRepositoryUrl.from("cassandra://var/mail/sender-denied/");
+    private static final Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
@@ -57,7 +61,7 @@ public class CassandraMailRepositoryIntegrationTest {
             .pollInterval(FIVE_HUNDRED_MILLISECONDS)
             .and()
             .with()
-            .pollDelay(FIVE_HUNDRED_MILLISECONDS)
+            .pollDelay(ONE_MILLISECOND)
             .await();
     }
 
