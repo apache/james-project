@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
+import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -141,6 +142,17 @@ class GroupsRoutesTest {
         }
 
         @Test
+        void putShouldBeIdempotent() {
+            with()
+                .put(GROUP1 + SEPARATOR + USER_A);
+
+            given()
+                .put(GROUP1 + SEPARATOR + USER_A)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
         void getNotRegisteredGroupShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
@@ -159,19 +171,19 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void putUserInGroupShouldReturnCreated() {
+        void putUserInGroupShouldReturnNoContent() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
-        void putUserWithSlashInGroupShouldReturnCreated() {
+        void putUserWithSlashInGroupShouldReturnNoContent() {
             when()
                 .put(GROUP1 + SEPARATOR + USER_WITH_ENCODED_SLASH)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -211,11 +223,11 @@ class GroupsRoutesTest {
         }
 
         @Test
-        void putUserInGroupWithEncodedSlashShouldReturnCreated() {
+        void putUserInGroupWithEncodedSlashShouldReturnNoContent() {
             when()
                 .put(GROUP_WITH_ENCODED_SLASH + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.CREATED_201);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test
@@ -344,7 +356,7 @@ class GroupsRoutesTest {
             when()
                 .delete(GROUP1 + SEPARATOR + USER_A)
             .then()
-                .statusCode(HttpStatus.OK_200);
+                .statusCode(HttpStatus.NO_CONTENT_204);
         }
 
         @Test

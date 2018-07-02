@@ -43,6 +43,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
@@ -55,7 +56,6 @@ import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSortedSet;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -149,22 +150,30 @@ public class GroupsRoutes implements Routes {
                 MAILADDRESS_ASCII_DISCLAIMER)
     })
     @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK", response = List.class),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = GROUP_ADDRESS + " or group structure format is not valid"),
         @ApiResponse(code = HttpStatus.FORBIDDEN_403, message = "server doesn't own the domain"),
         @ApiResponse(code = HttpStatus.CONFLICT_409, message = "requested group address is already used for another purpose"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addToGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException, UsersRepositoryException, DomainListException {
+    public HaltException addToGroup(Request request, Response response) throws RecipientRewriteTableException, UsersRepositoryException, DomainListException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
         Domain domain = groupAddress.getDomain();
         ensureRegisteredDomain(domain);
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
         MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
-        recipientRewriteTable.addGroupMapping(source, userAddress.asString());
-        return halt(HttpStatus.CREATED_201);
+        addGroupMember(source, userAddress);
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    private void addGroupMember(MappingSource source, MailAddress userAddress) throws RecipientRewriteTableException {
+        try {
+            recipientRewriteTable.addGroupMapping(source, userAddress.asString());
+        } catch (MappingAlreadyExistsException e) {
+            // do nothing
+        }
     }
 
     private void ensureRegisteredDomain(Domain domain) throws DomainListException {
@@ -202,14 +211,14 @@ public class GroupsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException removeFromGroup(Request request, Response response) throws JsonExtractException, AddressException, RecipientRewriteTableException {
+    public HaltException removeFromGroup(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
         MailAddress userAddress = parseMailAddress(request.params(USER_ADDRESS));
         MappingSource source = MappingSource
             .fromUser(
                 User.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
         recipientRewriteTable.removeGroupMapping(source, userAddress.asString());
-        return halt(HttpStatus.OK_200);
+        return halt(HttpStatus.NO_CONTENT_204);
     }
 
     @GET

@@ -23,6 +23,7 @@ import static com.jayway.restassured.RestAssured.delete;
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.put;
 import static com.jayway.restassured.RestAssured.when;
+import static com.jayway.restassured.RestAssured.with;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -96,6 +97,21 @@ class DomainMappingsRoutesTest {
 
         @Test
         void addDomainMappingShouldRespondWithNoContent() {
+            given()
+                .body("to.com")
+            .when()
+                .put("from.com")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204)
+                .body(isEmptyString());
+        }
+
+        @Test
+        void addDomainMappingShouldBeIdempotent() {
+            with()
+                .body("to.com")
+                .put("from.com");
+
             given()
                 .body("to.com")
             .when()

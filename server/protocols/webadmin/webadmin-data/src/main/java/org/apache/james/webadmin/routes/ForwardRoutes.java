@@ -41,6 +41,7 @@ import javax.ws.rs.Produces;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
@@ -167,8 +168,16 @@ public class ForwardRoutes implements Routes {
         ensureUserExist(forwardBaseAddress);
         MailAddress destinationAddress = parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS));
         MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain()));
-        recipientRewriteTable.addForwardMapping(source, destinationAddress.asString());
-        return halt(HttpStatus.CREATED_201);
+        addForward(source, destinationAddress);
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    private void addForward(MappingSource source, MailAddress destinationAddress) throws RecipientRewriteTableException {
+        try {
+            recipientRewriteTable.addForwardMapping(source, destinationAddress.asString());
+        } catch (MappingAlreadyExistsException e) {
+            // ignore
+        }
     }
 
     private void ensureUserExist(MailAddress mailAddress) throws UsersRepositoryException {
@@ -201,7 +210,7 @@ public class ForwardRoutes implements Routes {
         MailAddress destinationAddressToBeRemoved = parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS));
         MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(baseAddress.getLocalPart(), baseAddress.getDomain()));
         recipientRewriteTable.removeForwardMapping(source, destinationAddressToBeRemoved.asString());
-        return halt(HttpStatus.OK_200);
+        return halt(HttpStatus.NO_CONTENT_204);
     }
 
     @GET

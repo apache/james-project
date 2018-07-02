@@ -34,6 +34,7 @@ import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
+import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping.Type;
@@ -313,7 +314,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getUserDomainMappings(source);
         if (mappings != null && mappings.contains(mapping)) {
-            throw new RecipientRewriteTableException("Mapping " + mapping + " for " + source.asString() + " already exist!");
+            throw new MappingAlreadyExistsException("Mapping " + mapping + " for " + source.asString() + " already exist!");
         }
     }
 

@@ -1100,7 +1100,7 @@ Will add member@domain.com to group@domain.com, creating the group if needed
 
 Response codes:
 
- - 200: Success
+ - 204: Success
  - 400: Group structure or member is not valid
  - 403: Server does not own the requested domain
  - 409: Requested group address is already used for another purpose
@@ -1115,7 +1115,7 @@ Will remove member@domain.com from group@domain.com, removing the group if group
 
 Response codes:
 
- - 200: Success
+ - 204: Success
  - 400: Group structure or member is not valid
 
 ## Creating address forwards
@@ -1187,7 +1187,7 @@ Will add destination@domain.com to user@domain.com, creating the forward if need
 
 Response codes:
 
- - 200: Success
+ - 204: Success
  - 400: Forward structure or member is not valid
  - 403: Server does not own the requested domain
  - 404: Requested forward address does not match an existing user
@@ -1202,7 +1202,7 @@ Will remove destination@domain.com from user@domain.com, removing the forward if
 
 Response codes:
 
- - 200: Success
+ - 204: Success
  - 400: Forward structure or member is not valid
 
 ## Administrating mail repositories
