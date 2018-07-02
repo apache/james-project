@@ -72,14 +72,12 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
     @Override
     @PostConstruct
     public void init() throws Exception {
-        super.init();
-
         // Make sure the camel context get started
         // See https://issues.apache.org/jira/browse/JAMES-1069
         if (getCamelContext().getStatus().isStopped()) {
             getCamelContext().start();
         }
-
+        super.init();
     }
 
     @PreDestroy
