@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import static com.jayway.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static com.jayway.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
     private static final String PASSWORD = "secret";
     private static final String DOMAIN = "james.org";
     private static final String ADMIN_PASSWORD = "mysecretpassword";
-    private static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+    private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
