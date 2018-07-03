@@ -17,35 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.model;
+package org.apache.james.jmap;
 
-import org.apache.james.jmap.JmapFieldNotSupportedException;
-import org.apache.james.jmap.methods.JmapRequest;
+import org.apache.commons.lang.NotImplementedException;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+public class JmapFieldNotSupportedException extends NotImplementedException {
+    private final String issuer;
+    private final String field;
 
-@JsonDeserialize(builder = GetVacationRequest.Builder.class)
-public class GetVacationRequest implements JmapRequest {
-    private static final String ISSUER = "GetVacationRequest";
-
-    public static Builder builder() {
-        return new Builder();
+    public JmapFieldNotSupportedException(String issuer, String field) {
+        super();
+        this.issuer = issuer;
+        this.field = field;
     }
 
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class Builder {
-
-        public Builder accountId(String accountId) {
-            throw new JmapFieldNotSupportedException(ISSUER, "accountId");
-        }
-
-        public GetVacationRequest build() {
-            return new GetVacationRequest();
-        }
+    public String getField() {
+        return field;
     }
 
-    private GetVacationRequest() {
-
+    public String getIssuer() {
+        return issuer;
     }
 }

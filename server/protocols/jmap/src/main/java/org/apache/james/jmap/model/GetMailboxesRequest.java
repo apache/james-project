@@ -21,7 +21,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.mailbox.model.MailboxId;
 
@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableSet;
 
 @JsonDeserialize(builder = GetMailboxesRequest.Builder.class)
 public class GetMailboxesRequest implements JmapRequest {
+    private static final String ISSUER = "GetMailboxesRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -52,7 +53,7 @@ public class GetMailboxesRequest implements JmapRequest {
 
         public Builder accountId(String accountId) {
             if (accountId != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
             }
             return this;
         }

@@ -36,7 +36,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving messages with a non null accountId should return a NotSupported error
     When "alice@domain.tld" ask for messages using its accountId
-    Then an error "Not yet implemented" is returned
+    Then an error "The field 'accountId' of 'GetMessagesMethod' is not supported" with type "invalidArguments" is returned
 
   Scenario: Unknown arguments should be ignored when retrieving messages
     When "alice@domain.tld" ask for messages using unknown arguments
@@ -46,7 +46,7 @@ Feature: GetMessages method
 
   Scenario: Retrieving messages with invalid argument should return an InvalidArguments error
     When "alice@domain.tld" ask for messages using invalid argument
-    Then an error "invalidArguments" is returned
+    Then an error of type "invalidArguments" is returned
     And the description is "N/A (through reference chain: org.apache.james.jmap.model.Builder["ids"])"
 
   Scenario: Retrieving messages should return empty list when no message

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.methods.UpdateMessagePatchConverter;
 import org.apache.james.jmap.methods.ValueWithId.CreationMessageEntry;
@@ -43,6 +43,7 @@ import com.google.common.collect.Maps;
 
 @JsonDeserialize(builder = SetMessagesRequest.Builder.class)
 public class SetMessagesRequest implements JmapRequest {
+    private static final String ISSUER = "SetMessagesRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -68,14 +69,14 @@ public class SetMessagesRequest implements JmapRequest {
 
         public Builder accountId(String accountId) {
             if (accountId != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "accountId");
             }
             return this;
         }
 
         public Builder ifInState(String ifInState) {
             if (ifInState != null) {
-                throw new NotImplementedException();
+                throw new JmapFieldNotSupportedException(ISSUER, "ifInState");
             }
             return this;
         }

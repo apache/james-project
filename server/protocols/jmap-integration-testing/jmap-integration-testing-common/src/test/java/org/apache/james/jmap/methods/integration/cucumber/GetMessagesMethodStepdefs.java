@@ -505,8 +505,16 @@ public class GetMessagesMethodStepdefs {
         return Joiner.on(": ").join(pair);
     }
 
-    @Then("^an error \"([^\"]*)\" is returned$")
-    public void error(String type) {
+    @Then("^an error \"([^\"]*)\" with type \"([^\"]*)\" is returned$")
+    public void error(String description, String type) {
+        assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
+        assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("error");
+        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);
+        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
+    }
+
+    @Then("^an error of type \"([^\"]*)\" is returned$")
+    public void errorType(String type) {
         assertThat(httpClient.response.getStatusLine().getStatusCode()).isEqualTo(200);
         assertThat(httpClient.jsonPath.<String>read(NAME)).isEqualTo("error");
         assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".type")).isEqualTo(type);

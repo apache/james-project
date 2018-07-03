@@ -22,7 +22,7 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.mailbox.Role;
 
@@ -35,6 +35,7 @@ import com.google.common.base.Strings;
 
 @JsonDeserialize(builder = MailboxCreateRequest.Builder.class)
 public class MailboxCreateRequest {
+    private static final String ISSUER = "MailboxCreateRequest";
 
     public static Builder builder() {
         return new Builder();
@@ -76,12 +77,12 @@ public class MailboxCreateRequest {
 
         public Builder role(Role role) {
             Preconditions.checkNotNull(role);
-            throw new NotImplementedException();
+            throw new JmapFieldNotSupportedException(ISSUER, "role");
         }
 
         public Builder sortOrder(SortOrder sortOrder) {
             Preconditions.checkNotNull(sortOrder);
-            throw new NotImplementedException();
+            throw new JmapFieldNotSupportedException(ISSUER, "sortOrder");
         }
 
 

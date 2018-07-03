@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
@@ -61,6 +61,7 @@ import com.google.common.collect.ImmutableSet;
 public class GetMessagesMethod implements Method {
 
     public static final String HEADERS_FILTER = "headersFilter";
+    private static final String ISSUER = "GetMessagesMethod";
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
@@ -128,7 +129,7 @@ public class GetMessagesMethod implements Method {
     }
 
     private GetMessagesResponse getMessagesResponse(MailboxSession mailboxSession, GetMessagesRequest getMessagesRequest) {
-        getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented());
+        getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented("accountId"));
 
         try {
             return GetMessagesResponse.builder()
@@ -187,7 +188,7 @@ public class GetMessagesMethod implements Method {
         };
     }
 
-    private static void notImplemented() {
-        throw new NotImplementedException();
+    private static void notImplemented(String field) {
+        throw new JmapFieldNotSupportedException(ISSUER, field);
     }
 }

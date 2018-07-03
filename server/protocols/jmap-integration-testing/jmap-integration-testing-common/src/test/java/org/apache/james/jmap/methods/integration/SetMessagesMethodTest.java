@@ -198,7 +198,8 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("error"))
-            .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("The field 'accountId' of 'SetMessagesRequest' is not supported"));
     }
 
     @Test
@@ -212,7 +213,8 @@ public abstract class SetMessagesMethodTest {
             .log().ifValidationFails()
             .statusCode(200)
             .body(NAME, equalTo("error"))
-            .body(ARGUMENTS + ".type", equalTo("Not yet implemented"));
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("The field 'ifInState' of 'SetMessagesRequest' is not supported"));
     }
 
     @Test
