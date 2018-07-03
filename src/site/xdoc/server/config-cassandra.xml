@@ -110,7 +110,7 @@
         <dt><strong>chunk.size.message.read</strong></dt>
         <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be retrieved in parallel.</dd>
         <dt><strong>chunk.size.expunge</strong></dt>
-        <dd>Optional. Defaults to 100.<br/> Controls the number of messages to be expunged in parallel.</dd>
+        <dd>Optional. Defaults to 50.<br/> Controls the number of messages to be expunged in parallel.</dd>
         <dt><strong>mailbox.blob.part.size</strong></dt>
         <dd>Optional. Defaults to 102400 (100KB).<br/> Controls the size of blob parts used to store messages.</dd>
       </dl>

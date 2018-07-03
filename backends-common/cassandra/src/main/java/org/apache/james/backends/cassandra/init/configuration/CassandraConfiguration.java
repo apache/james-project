@@ -33,7 +33,7 @@ import com.google.common.base.Preconditions;
 
 public class CassandraConfiguration {
     public static final int DEFAULT_MESSAGE_CHUNK_SIZE_ON_READ = 100;
-    public static final int DEFAULT_EXPUNGE_BATCH_SIZE = 100;
+    public static final int DEFAULT_EXPUNGE_BATCH_SIZE = 50;
     public static final int DEFAULT_UPDATE_FLAGS_BATCH_SIZE = 20;
     public static final int DEFAULT_FLAGS_UPDATE_MESSAGE_MAX_RETRY = 1000;
     public static final int DEFAULT_FLAGS_UPDATE_MESSAGE_ID_MAX_RETRY = 1000;
