@@ -226,26 +226,6 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     }
 
     @Test
-    default void concurrentEnqueueShouldNotAlterBrowsing() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name3")
-            .build());
-
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name1", "name2");
-    }
-
-    @Test
     default void concurrentFlushShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
         getManageableMailQueue().enQueue(defaultMail()
             .name("name1")

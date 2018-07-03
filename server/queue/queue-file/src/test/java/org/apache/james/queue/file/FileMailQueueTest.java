@@ -94,13 +94,6 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Test
     @Override
     @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentEnqueueShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
     public void concurrentDequeueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
 
     }
