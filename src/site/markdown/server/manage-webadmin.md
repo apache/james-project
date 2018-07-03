@@ -545,7 +545,30 @@ Resource name domainToBeUsed should be an existing domain. For example:
 curl -XGET http://ip:port/quota/domains/james.org
 ```
 
-The answer can contain a fixed value, an empty value (null) or an unlimited value (-1):
+The answer will detail the default quota applied to users belonging to that domain:
+
+```
+{
+  "global": {
+    "count":252,
+    "size":null
+  },
+  "domain": {
+    "count":null,
+    "size":142
+  },
+  "computed": {
+    "count":252,
+    "size":142
+  }
+}
+```
+
+ - The `global` entry represents the quota limit defined on this James server by default.
+ - The `domain` entry represents the quota limit allowed for the user of that domain by default.
+ - The `computed` entry represents the quota limit applied for the users of that domain, by default, resolved from the upper values.
+
+Note that `quota` object can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
 ```
 {"count":52,"size":42}

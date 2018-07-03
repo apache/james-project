@@ -39,6 +39,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
+import org.apache.james.webadmin.dto.QuotaDomainDTO;
 import org.apache.james.webadmin.service.DomainQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -137,7 +138,7 @@ public class DomainQuotaRoutes implements Routes {
         notes = "If there is no limitation for count and/or size, the returned value will be -1"
     )
     @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDTO.class),
+            @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = QuotaDomainDTO.class),
             @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
             @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")

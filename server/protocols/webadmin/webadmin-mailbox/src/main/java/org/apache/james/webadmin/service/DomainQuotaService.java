@@ -29,6 +29,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.QuotaDTO;
+import org.apache.james.webadmin.dto.QuotaDomainDTO;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -65,11 +66,20 @@ public class DomainQuotaService {
         maxQuotaManager.removeDomainMaxStorage(domain);
     }
 
-    public QuotaDTO getQuota(Domain domain) {
-        return QuotaDTO
-            .builder()
-            .count(maxQuotaManager.getDomainMaxMessage(domain))
-            .size(maxQuotaManager.getDomainMaxStorage(domain))
+    public QuotaDomainDTO getQuota(Domain domain) throws MailboxException {
+        return QuotaDomainDTO.builder()
+            .domain(QuotaDTO
+                .builder()
+                .count(maxQuotaManager.getDomainMaxMessage(domain))
+                .size(maxQuotaManager.getDomainMaxStorage(domain)))
+            .global(QuotaDTO
+                .builder()
+                .count(maxQuotaManager.getGlobalMaxMessage())
+                .size(maxQuotaManager.getGlobalMaxStorage()))
+            .computed(QuotaDTO
+                .builder()
+                .count(maxQuotaManager.getComputedMaxMessage(domain))
+                .size(maxQuotaManager.getComputedMaxStorage(domain)))
             .build();
     }
 

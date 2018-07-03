@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
+import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
@@ -338,17 +339,21 @@ class DomainQuotaRoutesTest {
         int maxStorage = 42;
         maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(maxStorage));
 
-        JsonPath jsonPath =
+        String json =
             given()
                 .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .extract()
-                .jsonPath();
+                .asString();
 
-        assertThat(jsonPath.getLong(SIZE)).isEqualTo(maxStorage);
-        assertThat(jsonPath.getObject(COUNT, Long.class)).isNull();
+        assertThatJson(json)
+            .isEqualTo("{" +
+                "\"global\":{\"count\":null,\"size\":null}," +
+                "\"domain\":{\"count\":null,\"size\":42}," +
+                "\"computed\":{\"count\":null,\"size\":42}" +
+            "}");
     }
 
     @Test
@@ -356,18 +361,70 @@ class DomainQuotaRoutesTest {
         int maxMessage = 42;
         maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(maxMessage));
 
-
-        JsonPath jsonPath =
+        String json =
             given()
                 .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
                 .extract()
-                .jsonPath();
+                .asString();
 
-        assertThat(jsonPath.getObject(SIZE, Long.class)).isNull();
-        assertThat(jsonPath.getLong(COUNT)).isEqualTo(maxMessage);
+        assertThatJson(json)
+            .isEqualTo("{" +
+                "\"global\":{\"count\":null,\"size\":null}," +
+                "\"domain\":{\"count\":42,\"size\":null}," +
+                "\"computed\":{\"count\":42,\"size\":null}" +
+            "}");
+    }
+
+    @Test
+    void getQuotaShouldDisplayScopesWhenUnlimited() throws Exception {
+        int maxMessage = 42;
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.unlimited());
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(maxMessage));
+        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.unlimited());
+
+        String json =
+            given()
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .asString();
+
+        assertThatJson(json)
+            .isEqualTo("{" +
+                "\"global\":{\"count\":-1,\"size\":42}," +
+                "\"domain\":{\"count\":42,\"size\":-1}," +
+                "\"computed\":{\"count\":42,\"size\":-1}" +
+            "}");
+    }
+
+    @Test
+    void getQuotaShouldDisplayScopedInformation() throws Exception {
+        int maxMessage = 42;
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(maxMessage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(32));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(36));
+
+        String json =
+            given()
+                .get(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .extract()
+                .asString();
+
+        assertThatJson(json)
+            .isEqualTo("{" +
+                "\"global\":{\"count\":32,\"size\":36}," +
+                "\"domain\":{\"count\":42,\"size\":null}," +
+                "\"computed\":{\"count\":42,\"size\":36}" +
+            "}");
     }
 
     @Test

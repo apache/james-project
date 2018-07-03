@@ -28,6 +28,9 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.util.OptionalUtils;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * This interface describe how to set the max quotas for users
@@ -136,4 +139,16 @@ public interface MaxQuotaManager {
     Optional<QuotaSize> getDomainMaxStorage(Domain domain);
 
     void removeDomainMaxStorage(Domain domain) throws MailboxException;
+
+    default Optional<QuotaCount> getComputedMaxMessage(Domain domain) throws MailboxException {
+        return OptionalUtils.orSuppliers(
+            Throwing.supplier(() -> getDomainMaxMessage(domain)).sneakyThrow(),
+            Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow());
+    }
+
+    default Optional<QuotaSize> getComputedMaxStorage(Domain domain) throws MailboxException {
+        return OptionalUtils.orSuppliers(
+            Throwing.supplier(() -> getDomainMaxStorage(domain)).sneakyThrow(),
+            Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow());
+    }
 }
