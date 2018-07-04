@@ -19,6 +19,7 @@
 package org.apache.james.queue.rabbitmq;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.Network;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 import com.rabbitmq.client.Address;
 
@@ -39,7 +41,7 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
     private Network network;
 
     @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
+    public void beforeEach(ExtensionContext context) {
         String cookie = DigestUtils.sha1Hex("secret cookie here");
 
         network = Network.NetworkImpl.builder()
@@ -51,15 +53,20 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
         DockerRabbitMQ rabbitMQ2 = DockerRabbitMQ.withCookieAndNodeName(RABBIT_2, cookie, "rabbit@rabbit2", network);
         DockerRabbitMQ rabbitMQ3 = DockerRabbitMQ.withCookieAndNodeName(RABBIT_3, cookie, "rabbit@rabbit3", network);
 
-        rabbitMQ1.start();
-        rabbitMQ2.start();
-        rabbitMQ3.start();
+        Runnables.runParallel(
+            rabbitMQ1::start,
+            rabbitMQ2::start,
+            rabbitMQ3::start);
 
-        rabbitMQ2.join(rabbitMQ1);
-        rabbitMQ3.join(rabbitMQ1);
+        Runnables.runParallel(
+            Throwing.runnable(() -> rabbitMQ2.join(rabbitMQ1)),
+            Throwing.runnable(() -> rabbitMQ3.join(rabbitMQ1)));
 
-        rabbitMQ2.startApp();
-        rabbitMQ3.startApp();
+
+
+        Runnables.runParallel(
+            Throwing.runnable(rabbitMQ2::startApp),
+            Throwing.runnable(rabbitMQ3::startApp));
 
         cluster = new DockerRabbitMQCluster(rabbitMQ1, rabbitMQ2, rabbitMQ3);
     }
@@ -93,9 +100,10 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
         }
 
         public void stop() {
-            rabbitMQ1.stop();
-            rabbitMQ2.stop();
-            rabbitMQ3.stop();
+            Runnables.runParallel(
+                rabbitMQ1::stop,
+                rabbitMQ2::stop,
+                rabbitMQ3::stop);
         }
 
         public DockerRabbitMQ getRabbitMQ1() {

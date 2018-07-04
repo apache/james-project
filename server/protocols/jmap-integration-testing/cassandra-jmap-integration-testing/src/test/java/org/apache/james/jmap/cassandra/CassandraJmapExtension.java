@@ -34,6 +34,7 @@ import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.util.Runnables;
 import org.apache.james.util.scanner.SpamAssassinExtension;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -44,6 +45,8 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.rules.TemporaryFolder;
+
+import com.github.fge.lambdas.Throwing;
 
 public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallback,
     BeforeEachCallback, AfterEachCallback, ParameterResolver {
@@ -83,15 +86,19 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         temporaryFolder.create();
-        cassandra.start();
-        elasticSearch.before();
+
+        Runnables.runParallel(
+            cassandra::start,
+            elasticSearch::before);
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
         elasticSearch.after();
-        cassandra.stop();
-        temporaryFolder.delete();
+
+        Runnables.runParallel(
+            cassandra::stop,
+            elasticSearch::after);
     }
 
     @Override

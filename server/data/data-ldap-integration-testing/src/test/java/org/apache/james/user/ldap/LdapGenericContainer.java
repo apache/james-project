@@ -78,6 +78,16 @@ public class LdapGenericContainer extends ExternalResource {
         this.container = container;
     }
 
+    @Override
+    protected void before() {
+        start();
+    }
+
+    @Override
+    protected void after() {
+        stop();
+    }
+
     public void start() {
         container.start();
     }

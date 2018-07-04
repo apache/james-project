@@ -25,8 +25,8 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.commons.configuration.plist.PropertyListConfiguration;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,22 +42,18 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     private static final String PASSWORD = "secret";
     private static final String BAD_PASSWORD = "badpassword";
 
-    private LdapGenericContainer ldapContainer;
+    @ClassRule
+    public static LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
+        .domain(DOMAIN)
+        .password(ADMIN_PASSWORD)
+        .build();
+
     private ReadOnlyUsersLDAPRepository ldapRepository;
     private DomainList domainList;
 
     @Before
     public void setup() {
-        startLdapContainer();
         domainList = mock(DomainList.class);
-    }
-
-    private void startLdapContainer() {
-        ldapContainer = LdapGenericContainer.builder()
-                .domain(DOMAIN)
-                .password(ADMIN_PASSWORD)
-                .build();
-        ldapContainer.start();
     }
 
     private void startUsersRepository(HierarchicalConfiguration ldapRepositoryConfiguration) throws Exception {
@@ -95,13 +91,6 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@retryIntervalScale]", "1000");
         configuration.addProperty("supportsVirtualHosting", true);
         return configuration;
-    }
-
-    @After
-    public void tearDown() {
-        if (ldapContainer != null) {
-            ldapContainer.stop();
-        }
     }
 
     @Test

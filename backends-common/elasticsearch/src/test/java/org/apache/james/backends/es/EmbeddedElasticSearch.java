@@ -69,7 +69,7 @@ public class EmbeddedElasticSearch extends ExternalResource {
     }
 
     @Override
-    public void before() throws IOException {
+    public void before() {
         node = nodeBuilder().local(true)
             .settings(Settings.builder()
                 .put("path.home", folder.get().toAbsolutePath())
