@@ -24,7 +24,6 @@ import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 public abstract class SmtpStarttlsCommandTest {
@@ -34,10 +33,8 @@ public abstract class SmtpStarttlsCommandTest {
     public static final String USER_AT_DOMAIN = USER + "@" + DOMAIN;
     public static final String PASSWORD = "secret";
 
-    private final TemporaryFolder folder = new TemporaryFolder();
-    
     @Rule
-    public final RuleChain chain = RuleChain.outerRule(folder);
+    public final TemporaryFolder folder = new TemporaryFolder();
 
     protected abstract SmtpHostSystem createSmtpHostSystem();
     
