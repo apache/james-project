@@ -72,6 +72,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>james-server-data-ldap-integration-testing</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
