@@ -36,6 +36,7 @@ import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -48,15 +49,16 @@ public class JamesCapabilitiesServerTest {
     private GuiceJamesServer server;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
-    private DockerCassandraRule cassandraServer = new DockerCassandraRule();
+
+    @ClassRule
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
     @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch).around(cassandraServer);
+    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @After
     public void teardown() {
         server.stop();
-        
     }
     
     private GuiceJamesServer createCassandraJamesServer(final MailboxManager mailboxManager) throws IOException {

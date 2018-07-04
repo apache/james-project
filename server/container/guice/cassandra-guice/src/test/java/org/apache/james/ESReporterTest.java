@@ -41,6 +41,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -63,19 +64,22 @@ public class ESReporterTest {
     private static final String USERNAME = "user1@" + DOMAIN;
     private static final String PASSWORD = "secret";
 
+    @ClassRule
+    public static final DockerCassandraRule cassandra = new DockerCassandraRule();
+
     private EmbeddedElasticSearchRule embeddedElasticSearchRule = new EmbeddedElasticSearchRule();
 
     private Timer timer;
 
     @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule, new DockerCassandraRule());
+    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(embeddedElasticSearchRule);
 
     private GuiceJamesServer server;
     private AccessToken accessToken;
 
     @Before
     public void setup() throws Exception {
-        server = cassandraJmap.jmapServer();
+        server = cassandraJmap.jmapServer(cassandra.getModule());
         server.start();
         server.getProbe(DataProbeImpl.class)
             .fluent()

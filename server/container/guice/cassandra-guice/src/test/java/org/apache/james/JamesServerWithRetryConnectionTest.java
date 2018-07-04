@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.base.Throwables;
@@ -40,12 +41,12 @@ public class JamesServerWithRetryConnectionTest {
     private static final int IMAP_PORT = 1143;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
-    private final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
+    @ClassRule
+    public static DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
     private final DockerElasticSearchRule dockerElasticSearchRule = new DockerElasticSearchRule();
 
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule(dockerCassandraRule,
-            dockerElasticSearchRule);
+    public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule(dockerElasticSearchRule);
 
     private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
@@ -68,7 +69,7 @@ public class JamesServerWithRetryConnectionTest {
 
     @Test
     public void serverShouldStartAtDefault() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer();
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
         assertThatServerStartCorrectly();
     }
 

@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import org.apache.james.util.Host;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.testcontainers.DockerClientFactory;
@@ -43,11 +44,11 @@ public class CassandraNodeConfTest {
         return DockerClientFactory.instance().dockerHostIpAddress();
     }
 
-    private final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
+    @ClassRule
+    public static final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
 
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = new CassandraJmapTestRule(dockerCassandraRule,
-            new EmbeddedElasticSearchRule());
+    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
 
     private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
@@ -67,7 +68,7 @@ public class CassandraNodeConfTest {
 
     @Test
     public void serverShouldStartServiceWhenNodeIsReachable() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer();
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
 
         assertThatServerStartCorrectly();
     }
@@ -77,11 +78,12 @@ public class CassandraNodeConfTest {
         String unreachableNode = "10.2.3.42";
 
 
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            (binder) -> binder.bind(ClusterConfiguration.class)
-                .toInstance(clusterWithHosts(
-                    Host.from(unreachableNode, 9042),
-                    dockerCassandraRule.getHost())));
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule())
+            .overrideWith(
+                (binder) -> binder.bind(ClusterConfiguration.class)
+                    .toInstance(clusterWithHosts(
+                        Host.from(unreachableNode, 9042),
+                        dockerCassandraRule.getHost())));
 
         assertThatServerStartCorrectly();
     }
@@ -89,10 +91,11 @@ public class CassandraNodeConfTest {
 
     @Test
     public void configShouldWorkWithNonDefaultPort() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer(
-            (binder) -> binder.bind(ClusterConfiguration.class)
-                .toInstance(clusterWithHosts(
-                    Host.from(getDockerHostIp(), dockerCassandraRule.getMappedPort(CASSANDRA_PORT)))));
+        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule())
+            .overrideWith(
+                (binder) -> binder.bind(ClusterConfiguration.class)
+                    .toInstance(clusterWithHosts(
+                        Host.from(getDockerHostIp(), dockerCassandraRule.getMappedPort(CASSANDRA_PORT)))));
 
         assertThatServerStartCorrectly();
     }

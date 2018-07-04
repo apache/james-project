@@ -21,22 +21,22 @@ package org.apache.james;
 
 import java.io.IOException;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 public class CassandraWithTikaTest extends AbstractJmapJamesServerTest {
 
-    private final GuiceTikaRule guiceTikaRule = new GuiceTikaRule();
+    @ClassRule
+    public static final DockerCassandraRule cassandra = new DockerCassandraRule();
+    @ClassRule
+    public static final GuiceTikaRule guiceTikaRule = new GuiceTikaRule();
 
     @Rule
-    public CassandraJmapTestRule cassandraJmap = new CassandraJmapTestRule(
-        AggregateGuiceModuleTestRule.of(
-            new EmbeddedElasticSearchRule(),
-            new DockerCassandraRule(),
-            guiceTikaRule));
+    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
 
     @Override
     protected GuiceJamesServer createJamesServer() throws IOException {
-        return cassandraJmap.jmapServer(binder -> guiceTikaRule.getModule());
+        return cassandraJmap.jmapServer(guiceTikaRule.getModule(), cassandra.getModule());
     }
 
     @Override
