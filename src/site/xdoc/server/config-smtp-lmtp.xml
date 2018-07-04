@@ -61,7 +61,9 @@
       <dd>Set to true to support STARTTLS or SSL for the Socket.
          To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
         keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore. The algorithm is optional and only needs to be specified when using something other
-        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime.</dd>
+        than the Sun JCE provider - You could use IbmX509 with IBM Java runtime.<br/>
+          Please note that each SMTP/LMTP server exposed on different port can specify its own keystore, independently from any other
+          TLS based protocols.</dd>
       <dt><strong>handler.helloName</strong></dt>
       <dd>This is a required tag with an optional body that defines the server name 
       used in the initial service greeting.  The tag may have an optional attribute - <strong>autodetect</strong>.  If 

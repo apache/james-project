@@ -58,7 +58,9 @@
         <dt><strong>tls</strong></dt>
         <dd>Set to true to support STARTTLS or SSL for the Socket.
          To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:
-             keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore</dd>
+             keytool -genkey -alias james -keyalg RSA -keystore /path/to/james/conf/keystore<br/>
+        Please note that each IMAP server exposed on different port can specify its own keystore, independently from any other
+        TLS based protocols.</dd>
         <dt><strong>handler.helloName</strong></dt>
         <dd>This is the name used by the server to identify itself in the IMAP4 
         protocol.  If autodetect is TRUE, the server will discover its 
