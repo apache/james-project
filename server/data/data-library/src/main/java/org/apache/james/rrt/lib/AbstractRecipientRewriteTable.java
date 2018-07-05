@@ -284,7 +284,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
 
-        LOGGER.info("Add forward mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Add group mapping => {} for source: {}", mapping, source.asString());
         addMapping(source, mapping);
     }
 
@@ -293,7 +293,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.group(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove forward mapping => {} for source: {}", mapping, source.asString());
+        LOGGER.info("Remove group mapping => {} for source: {}", mapping, source.asString());
         removeMapping(source, mapping);
     }
 
