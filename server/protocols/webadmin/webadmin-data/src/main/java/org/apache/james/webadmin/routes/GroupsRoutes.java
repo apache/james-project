@@ -236,11 +236,12 @@ public class GroupsRoutes implements Routes {
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), groupAddress.getDomain());
+        Mappings mappings = recipientRewriteTable.getMappings(groupAddress.getLocalPart(), groupAddress.getDomain())
+            .select(Mapping.Type.Group);
 
         ensureNonEmptyMappings(mappings);
 
-        return mappings.select(Mapping.Type.Group)
+        return mappings
                 .asStream()
                 .map(Mapping::asMailAddress)
                 .flatMap(OptionalUtils::toStream)

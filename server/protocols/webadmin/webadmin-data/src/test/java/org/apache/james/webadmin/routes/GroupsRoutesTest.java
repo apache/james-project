@@ -41,6 +41,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
@@ -156,6 +157,46 @@ class GroupsRoutesTest {
         void getNotRegisteredGroupShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group does not exist");
+        }
+
+        @Test
+        void getGroupShouldReturnNotFoundWhenNonGroupMappings() {
+            memoryRecipientRewriteTable.addMapping(
+                MappingSource.fromDomain(DOMAIN),
+                Mapping.domain(Domain.of("target.tld")));
+
+            Map<String, Object> errors = when()
+                .get(GROUP1)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The group does not exist");
+        }
+
+        @Test
+        void getGroupShouldReturnNotFoundWhenNoGroupMappings() {
+            Map<String, Object> errors = when()
+                .get(GROUP1)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)
