@@ -48,6 +48,10 @@ public class MappingSource implements Serializable {
         return new MappingSource(Optional.of(domain), Optional.empty(), Optional.empty());
     }
 
+    public static MappingSource fromMailAddress(MailAddress address) {
+        return fromUser(User.fromMailAddress(address));
+    }
+
     public static MappingSource fromUser(String localPart, String domain) {
         return fromUser(localPart, Domain.of(domain));
     }

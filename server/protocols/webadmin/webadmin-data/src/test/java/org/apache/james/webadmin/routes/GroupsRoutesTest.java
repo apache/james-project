@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.User;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -119,6 +120,27 @@ class GroupsRoutesTest {
                 .contentType(ContentType.JSON)
                 .statusCode(HttpStatus.OK_200)
                 .body(is("[]"));
+        }
+
+
+        @Test
+        void getShouldNotResolveRecurseGroups() throws Exception {
+            when().put(GROUP1 + SEPARATOR + USER_A);
+
+            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(User.fromUsername(USER_A)),
+                "b@" + DOMAIN.name());
+
+            List<String> addresses =
+                when()
+                    .get(GROUP1)
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).containsExactly(USER_A);
         }
 
         @Test
@@ -686,7 +708,7 @@ class GroupsRoutesTest {
         void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(GROUP1)
@@ -698,7 +720,7 @@ class GroupsRoutesTest {
         void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(GROUP1)
@@ -710,7 +732,7 @@ class GroupsRoutesTest {
         void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(GROUP1)
