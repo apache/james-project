@@ -26,9 +26,12 @@ import java.net.URISyntaxException;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TikaHttpClientImpl implements TikaHttpClient {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TikaHttpClientImpl.class);
     private static final String RECURSIVE_METADATA_AS_TEXT_ENDPOINT = "/rmeta/text";
 
     private final TikaConfiguration tikaConfiguration;
@@ -57,6 +60,7 @@ public class TikaHttpClientImpl implements TikaHttpClient {
                     .returnContent()
                     .asStream();
         } catch (IOException e) {
+            LOGGER.error("Failing to call Tika", e);
             throw new TikaException(e);
         }
     }
