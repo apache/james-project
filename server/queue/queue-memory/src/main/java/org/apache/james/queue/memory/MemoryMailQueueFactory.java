@@ -19,6 +19,8 @@
 
 package org.apache.james.queue.memory;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Iterator;
 import java.util.Optional;
@@ -98,12 +100,24 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-            ZonedDateTime nextDelivery = ZonedDateTime.now().plus(delay, Temporals.chronoUnit(unit));
+            ZonedDateTime nextDelivery = calculateNextDelivery(delay, unit);
             try {
                 mailItems.put(new MemoryMailQueueItem(cloneMail(mail), this, nextDelivery));
             } catch (MessagingException e) {
                 throw new MailQueueException("Error while copying mail " + mail.getName(), e);
             }
+        }
+
+        private ZonedDateTime calculateNextDelivery(long delay, TimeUnit unit) {
+            if (delay > 0) {
+                try {
+                    return ZonedDateTime.now().plus(delay, Temporals.chronoUnit(unit));
+                } catch (ArithmeticException e) {
+                    return Instant.ofEpochMilli(Long.MAX_VALUE).atZone(ZoneId.of("UTC"));
+                }
+            }
+
+            return ZonedDateTime.now();
         }
 
         @Override
@@ -256,7 +270,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
         @Override
         public long getDelay(TimeUnit unit) {
-            return ZonedDateTime.now().until(delivery, Temporals.chronoUnit(unit));
+            try {
+                return ZonedDateTime.now().until(delivery, Temporals.chronoUnit(unit));
+            } catch (ArithmeticException e) {
+                return Long.MAX_VALUE;
+            }
         }
 
         @Override

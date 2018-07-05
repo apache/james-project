@@ -79,7 +79,7 @@ public interface DelayedMailQueueContract {
     default void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) throws Exception {
         getMailQueue().enQueue(defaultMail()
             .build(),
-            100 * 365,
+            Long.MAX_VALUE,
             TimeUnit.DAYS);
 
         Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
