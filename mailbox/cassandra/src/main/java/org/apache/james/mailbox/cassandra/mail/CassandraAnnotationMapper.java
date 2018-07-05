@@ -33,6 +33,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.table.CassandraAnnotationTable;
@@ -54,6 +56,7 @@ public class CassandraAnnotationMapper extends NonTransactionalMapper implements
     private final Session session;
     private final CassandraUtils cassandraUtils;
 
+    @Inject
     public CassandraAnnotationMapper(Session session, CassandraUtils cassandraUtils) {
         this.session = session;
         this.cassandraUtils = cassandraUtils;
