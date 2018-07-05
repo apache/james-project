@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +51,9 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.iterators.EnumerationIterator;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Metric;
@@ -63,10 +66,13 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.threeten.extra.Temporals;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 
 /**
@@ -297,27 +303,20 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         props.put(JAMES_MAIL_MESSAGE_SIZE, mail.getMessageSize());
         props.put(JAMES_MAIL_NAME, mail.getName());
 
-        StringBuilder recipientsBuilder = new StringBuilder();
-
-        Iterator<MailAddress> recipients = mail.getRecipients().iterator();
-        while (recipients.hasNext()) {
-            String recipient = recipients.next().toString();
-            recipientsBuilder.append(recipient.trim());
-            if (recipients.hasNext()) {
-                recipientsBuilder.append(JAMES_MAIL_SEPARATOR);
-            }
+        // won't serialize the empty headers so it is mandatory
+        // to handle nulls when reconstructing mail from message
+        if (!mail.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
+            byte[] serialize = SerializationUtils.serialize(mail.getPerRecipientSpecificHeaders());
+            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, Hex.encodeHexString(serialize));
         }
-        props.put(JAMES_MAIL_RECIPIENTS, recipientsBuilder.toString());
+
+        String recipientsBuilder = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls().join(mail.getRecipients());
+
+        props.put(JAMES_MAIL_RECIPIENTS, recipientsBuilder);
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
-        String sender;
-        MailAddress s = mail.getSender();
-        if (s == null) {
-            sender = "";
-        } else {
-            sender = mail.getSender().toString();
-        }
+        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::toString).orElse("");
 
         StringBuilder attrsBuilder = new StringBuilder();
         Iterator<String> attrs = mail.getAttributeNames();
@@ -385,6 +384,12 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setErrorMessage(message.getStringProperty(JAMES_MAIL_ERROR_MESSAGE));
         mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
+
+        Optional.ofNullable(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS))
+                .map(String::toCharArray)
+                .map(Throwing.function(Hex::decodeHex))
+                .<PerRecipientHeaders>map(SerializationUtils::deserialize)
+                .ifPresent(mail::addAllSpecificHeaderForRecipient);
 
         List<MailAddress> rcpts = new ArrayList<>();
         String recipients = message.getStringProperty(JAMES_MAIL_RECIPIENTS);
@@ -462,7 +467,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     /**
      * Create a {@link org.apache.james.queue.api.MailQueue.MailQueueItem} for the given parameters
      *
-     * @param connection
      * @param session
      * @param consumer
      * @param message
