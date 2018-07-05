@@ -27,8 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
-import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -55,19 +54,10 @@ public class CassandraMailboxMapperConcurrencyTest {
     @Before
     public void setUp() {
         CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
-        CassandraMailboxDAO mailboxDAO = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathDAOImpl mailboxPathDAO = new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
-        CassandraMailboxPathV2DAO mailboxPathV2DAO = new CassandraMailboxPathV2DAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        CassandraUserMailboxRightsDAO userMailboxRightsDAO = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-        testee = new CassandraMailboxMapper(
-            mailboxDAO,
-            mailboxPathDAO,
-            mailboxPathV2DAO,
-            userMailboxRightsDAO,
-            new CassandraACLMapper(cassandra.getConf(),
-                userMailboxRightsDAO,
-                CassandraConfiguration.DEFAULT_CONFIGURATION));
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+
+        testee = GuiceUtils.testInjector(cassandra)
+            .getInstance(CassandraMailboxMapper.class);
     }
 
     @After
