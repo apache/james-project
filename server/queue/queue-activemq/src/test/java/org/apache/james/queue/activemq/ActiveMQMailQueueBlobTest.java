@@ -56,7 +56,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     MyFileSystem fileSystem;
 
     @BeforeEach
-    public void setUp(BrokerService broker) throws Exception {
+    public void setUp(BrokerService broker) {
         fileSystem = new MyFileSystem();
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
         FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
@@ -71,7 +71,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         mailQueue.dispose();
         fileSystem.destroy();
     }
@@ -97,13 +97,6 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     @Override
     @Disabled("JAMES-2295 Disabled as test was dead-locking")
     public void dequeueCouldBeInterleavingWithOutOfOrderAck() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
-    public void queueShouldPreservePerRecipientHeaders() {
 
     }
 
@@ -145,7 +138,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
         private static final Logger LOGGER = LoggerFactory.getLogger(MyFileSystem.class);
 
         @Override
-        public InputStream getResource(String url) throws IOException {
+        public InputStream getResource(String url) {
             return null;
         }
 
@@ -166,7 +159,7 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
             throw new FileNotFoundException();
         }
 
-        public void destroy() throws FileNotFoundException {
+        public void destroy() {
             try {
                 FileUtils.forceDelete(getFile(BASE_DIR));
             } catch (FileNotFoundException e) {
