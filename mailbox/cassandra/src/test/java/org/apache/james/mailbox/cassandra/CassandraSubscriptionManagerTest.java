@@ -47,9 +47,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.junit.After;
 import org.junit.Before;
@@ -68,10 +66,8 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
     public void init() {
         CassandraModuleComposite modules = new CassandraModuleComposite(
             new CassandraSubscriptionModule(),
-            new CassandraMailboxCounterModule(),
-            new CassandraUidModule(),
-            new CassandraModSeqModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+            new CassandraMailboxCounterModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
         super.setup();
     }
 
@@ -101,10 +97,12 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraACLMapper aclMapper = null;
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = null;
         ObjectStore objectStore = null;
+        CassandraUidProvider uidProvider = null;
+        CassandraModSeqProvider modSeqProvider = null;
         return new CassandraSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
-                new CassandraUidProvider(cassandra.getConf()),
-                new CassandraModSeqProvider(cassandra.getConf()),
+                uidProvider,
+                modSeqProvider,
                 cassandra.getConf(),
                 messageDAO,
                 messageIdDAO,
