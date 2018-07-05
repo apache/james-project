@@ -47,6 +47,7 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.OptionalUtils;
@@ -226,9 +227,10 @@ public class ForwardRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public ImmutableSet<ForwardDestinationResponse> listForwardDestinations(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
+    public ImmutableSet<ForwardDestinationResponse> listForwardDestinations(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress baseAddress = parseMailAddress(request.params(FORWARD_BASE_ADDRESS));
-        Mappings mappings = recipientRewriteTable.getMappings(baseAddress.getLocalPart(), baseAddress.getDomain())
+        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(MappingSource.fromMailAddress(baseAddress)))
+            .orElse(MappingsImpl.empty())
             .select(Mapping.Type.Forward);
 
         ensureNonEmptyMappings(mappings);

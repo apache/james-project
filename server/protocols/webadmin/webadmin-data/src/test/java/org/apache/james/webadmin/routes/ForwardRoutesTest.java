@@ -157,6 +157,23 @@ class ForwardRoutesTest {
         }
 
         @Test
+        void getShouldNotResolveRecurseForwards() {
+            with()
+                .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB);
+
+            with()
+                .put(BOB + SEPARATOR + "targets" + SEPARATOR + CEDRIC);
+
+
+            when()
+                .get(ALICE)
+                .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("mailAddress", hasItems(BOB));
+        }
+
+        @Test
         void getNotRegisteredForwardShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
@@ -683,7 +700,7 @@ class ForwardRoutesTest {
         void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(ALICE)
@@ -695,7 +712,7 @@ class ForwardRoutesTest {
         void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(ALICE)
@@ -707,7 +724,7 @@ class ForwardRoutesTest {
         void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getMappings(anyString(), any());
+                .getUserDomainMappings(any());
 
             when()
                 .get(ALICE)
