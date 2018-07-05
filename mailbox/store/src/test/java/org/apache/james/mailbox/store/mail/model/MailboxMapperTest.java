@@ -32,7 +32,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.junit.Assume;
 import org.junit.Test;
 
 /**
@@ -76,15 +75,13 @@ public abstract class MailboxMapperTest {
     private Mailbox bobDifferentNamespaceMailbox;
 
     private MailboxMapper mailboxMapper;
-    private MapperProvider mapperProvider;
 
-    protected abstract MapperProvider createMapperProvider();
+    protected abstract MailboxMapper createMailboxMapper();
+
+    protected abstract MailboxId generateId();
 
     public void setUp() throws Exception {
-        this.mapperProvider = createMapperProvider();
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.MAILBOX));
-
-        this.mailboxMapper = mapperProvider.createMailboxMapper();
+        this.mailboxMapper = createMailboxMapper();
         
         initData();
     }
@@ -300,7 +297,7 @@ public abstract class MailboxMapperTest {
 
     private SimpleMailbox createMailbox(MailboxPath mailboxPath) {
         SimpleMailbox mailbox = new SimpleMailbox(mailboxPath, UID_VALIDITY);
-        mailbox.setMailboxId(mapperProvider.generateId());
+        mailbox.setMailboxId(generateId());
         return mailbox;
     }
 
