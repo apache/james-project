@@ -44,6 +44,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
@@ -159,6 +160,46 @@ class ForwardRoutesTest {
         void getNotRegisteredForwardShouldReturnNotFound() {
             Map<String, Object> errors = when()
                 .get("unknown@domain.travel")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The forward does not exist");
+        }
+
+        @Test
+        void getForwardShouldReturnNotFoundWhenNonForwardMappings() {
+            memoryRecipientRewriteTable.addMapping(
+                MappingSource.fromDomain(DOMAIN),
+                Mapping.domain(Domain.of("target.tld")));
+
+            Map<String, Object> errors = when()
+                .get(ALICE)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.NOT_FOUND_404)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The forward does not exist");
+        }
+
+        @Test
+        void getForwardShouldReturnNotFoundWhenNoForwardMappings() {
+            Map<String, Object> errors = when()
+                .get(ALICE)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .contentType(ContentType.JSON)

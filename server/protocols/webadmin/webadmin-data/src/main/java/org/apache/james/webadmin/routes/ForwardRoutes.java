@@ -228,12 +228,12 @@ public class ForwardRoutes implements Routes {
     })
     public ImmutableSet<ForwardDestinationResponse> listForwardDestinations(Request request, Response response) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         MailAddress baseAddress = parseMailAddress(request.params(FORWARD_BASE_ADDRESS));
-        Mappings mappings = recipientRewriteTable.getMappings(baseAddress.getLocalPart(), baseAddress.getDomain());
+        Mappings mappings = recipientRewriteTable.getMappings(baseAddress.getLocalPart(), baseAddress.getDomain())
+            .select(Mapping.Type.Forward);
 
         ensureNonEmptyMappings(mappings);
 
-        return mappings.select(Mapping.Type.Forward)
-                .asStream()
+        return mappings.asStream()
                 .map(mapping -> mapping.asMailAddress()
                         .orElseThrow(() -> new IllegalStateException(String.format("Can not compute address for mapping %s", mapping.asString()))))
                 .map(MailAddress::asString)
