@@ -36,13 +36,22 @@ import com.google.inject.util.Modules;
 
 public class GuiceUtils {
     public static Injector testInjector(CassandraCluster cluster) {
+        Session session = cluster.getConf();
+        CassandraTypesProvider typesProvider = cluster.getTypesProvider();
+        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+        CassandraConfiguration configuration = CassandraConfiguration.DEFAULT_CONFIGURATION;
+
+        return testInjector(session, typesProvider, messageIdFactory, configuration);
+    }
+
+    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider, CassandraMessageId.Factory messageIdFactory, CassandraConfiguration configuration) {
         return Guice.createInjector(
             Modules.combine(
-                binder -> binder.bind(MessageId.Factory.class).toInstance(new CassandraMessageId.Factory()),
+                binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
                 binder -> binder.bind(BlobId.Factory.class).toInstance(new CassandraBlobId.Factory()),
                 binder -> binder.bind(ObjectStore.class).to(CassandraBlobsDAO.class),
-                binder -> binder.bind(Session.class).toInstance(cluster.getConf()),
-                binder -> binder.bind(CassandraTypesProvider.class).toInstance(cluster.getTypesProvider()),
-                binder -> binder.bind(CassandraConfiguration.class).toInstance(CassandraConfiguration.DEFAULT_CONFIGURATION)));
+                binder -> binder.bind(Session.class).toInstance(session),
+                binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
+                binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration)));
     }
 }
