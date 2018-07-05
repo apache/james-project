@@ -31,7 +31,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -48,14 +47,12 @@ public abstract class AttachmentMapperTest {
     @Rule
     public ExpectedException expected = ExpectedException.none();
 
-    protected abstract MapperProvider createMapperProvider();
+    protected abstract AttachmentMapper createAttachmentMapper();
 
     protected abstract MessageId generateMessageId();
 
     public void setUp() throws MailboxException {
-        MapperProvider mapperProvider = createMapperProvider();
-        Assume.assumeTrue(mapperProvider.getSupportedCapabilities().contains(MapperProvider.Capabilities.ATTACHMENT));
-        this.attachmentMapper = mapperProvider.createAttachmentMapper();
+        this.attachmentMapper = createAttachmentMapper();
     }
 
     @Test

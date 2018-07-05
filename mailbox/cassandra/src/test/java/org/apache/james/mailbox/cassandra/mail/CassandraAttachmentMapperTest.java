@@ -24,22 +24,12 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
+import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
-import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -54,20 +44,9 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
     @Before
     public void setUp() throws MailboxException {
         CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraAclModule(),
-                new CassandraMailboxModule(),
-                new CassandraMessageModule(),
-                new CassandraMailboxCounterModule(),
-                new CassandraMailboxRecentsModule(),
-                new CassandraModSeqModule(),
-                new CassandraUidModule(),
                 new CassandraAttachmentModule(),
-                new CassandraAnnotationModule(),
-                new CassandraFirstUnseenModule(),
-                new CassandraApplicableFlagsModule(),
-                new CassandraDeletedMessageModule(),
                 new CassandraBlobModule());
-        this.cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        this.cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
         super.setUp();
     }
     
@@ -75,10 +54,11 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
     public void tearDown() {
         cassandra.close();
     }
-    
+
     @Override
-    protected MapperProvider createMapperProvider() {
-        return new CassandraMapperProvider(cassandra);
+    protected AttachmentMapper createAttachmentMapper() {
+        return GuiceUtils.testInjector(cassandra)
+            .getInstance(CassandraAttachmentMapper.class);
     }
 
     @Override
