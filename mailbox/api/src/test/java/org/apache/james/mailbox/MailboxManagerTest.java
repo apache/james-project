@@ -32,7 +32,7 @@ import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxManager;
+import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -97,7 +97,7 @@ public abstract class MailboxManagerTest {
     protected abstract MailboxManager provideMailboxManager() throws MailboxException;
 
     public void setUp() throws Exception {
-        this.mailboxManager = new MockMailboxManager(provideMailboxManager()).getMockMailboxManager();
+        this.mailboxManager = provideMailboxManager();
 
         this.message = Message.Builder.of()
             .setSubject("test")
@@ -230,8 +230,10 @@ public abstract class MailboxManagerTest {
     public void listShouldReturnMailboxes() throws MailboxException, UnsupportedEncodingException {
         session = mailboxManager.createSystemSession("manager");
         mailboxManager.startProcessingRequest(session);
-        
-        assertThat(mailboxManager.list(session)).hasSize(MockMailboxManager.EXPECTED_MAILBOXES_COUNT);
+
+        DataProvisioner.feedMailboxManager(mailboxManager);
+
+        assertThat(mailboxManager.list(session)).hasSize(DataProvisioner.EXPECTED_MAILBOXES_COUNT);
     }
 
     @Test

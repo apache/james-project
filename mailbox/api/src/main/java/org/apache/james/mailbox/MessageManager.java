@@ -22,6 +22,7 @@ package org.apache.james.mailbox;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.Iterator;
@@ -207,6 +208,10 @@ public interface MessageManager {
 
             public AppendCommand build(byte[] msgIn) {
                 return build(new ByteArrayInputStream(msgIn));
+            }
+
+            public AppendCommand build(String msgIn) {
+                return build(msgIn.getBytes(StandardCharsets.UTF_8));
             }
 
             public AppendCommand build(Message message) throws IOException {

@@ -31,7 +31,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxManager;
+import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.Before;
@@ -97,8 +97,8 @@ public class MailboxCopierTest {
          if (dstMemMailboxManager instanceof StoreMailboxManager) {
              ((StoreMailboxManager) dstMemMailboxManager).init();
          }
-    
-        srcMemMailboxManager = new MockMailboxManager(srcMemMailboxManager).getMockMailboxManager();
+
+        DataProvisioner.feedMailboxManager(srcMemMailboxManager);
        
         assertMailboxManagerSize(srcMemMailboxManager, 1);
         
@@ -124,13 +124,13 @@ public class MailboxCopierTest {
 
         List<MailboxPath> mailboxPathList = mailboxManager.list(mailboxSession);
         
-        assertThat(mailboxPathList).hasSize(MockMailboxManager.EXPECTED_MAILBOXES_COUNT);
+        assertThat(mailboxPathList).hasSize(DataProvisioner.EXPECTED_MAILBOXES_COUNT);
         
         for (MailboxPath mailboxPath: mailboxPathList) {
             MailboxSession userSession = mailboxManager.createSystemSession(mailboxPath.getUser());
             mailboxManager.startProcessingRequest(mailboxSession);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, userSession);
-            assertThat(messageManager.getMetaData(false, userSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(MockMailboxManager.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
+            assertThat(messageManager.getMetaData(false, userSession, FetchGroup.NO_UNSEEN).getMessageCount()).isEqualTo(DataProvisioner.MESSAGE_PER_MAILBOX_COUNT * multiplicationFactor);
         }
         
         mailboxManager.endProcessingRequest(mailboxSession);
