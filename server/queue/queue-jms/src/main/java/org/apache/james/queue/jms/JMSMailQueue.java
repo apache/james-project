@@ -462,7 +462,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     /**
      * Create a {@link org.apache.james.queue.api.MailQueue.MailQueueItem} for the given parameters
      *
-     * @param connection
      * @param session
      * @param consumer
      * @param message
@@ -624,7 +623,9 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             case Sender:
                 return count(removeWithSelector(JAMES_MAIL_SENDER + " = '" + value + "'"));
             case Recipient:
-                return count(removeWithSelector(JAMES_MAIL_RECIPIENTS + " = '" + value + "' or " + JAMES_MAIL_RECIPIENTS + " = '%," + value + "' or " + JAMES_MAIL_RECIPIENTS + " = '%," + value + "%'"));
+                return count(removeWithSelector(JAMES_MAIL_RECIPIENTS + " = '" + value + "' or " + JAMES_MAIL_RECIPIENTS
+                        + " LIKE '%" + JAMES_MAIL_SEPARATOR + value + "' or " + JAMES_MAIL_RECIPIENTS + " LIKE '%"
+                        + JAMES_MAIL_SEPARATOR + value + "%'"));
             default:
                 break;
         }
