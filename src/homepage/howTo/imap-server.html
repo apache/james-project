@@ -76,7 +76,7 @@ layout: default
                     </header>
 
                     <p>
-                        Someone willing to send you an email will first have to discover which IP your mail server have.
+                        Someone willing to send you an email will first have to discover which IP your mail server has.
                         The way this is achieved is through MX (means Mail eXchange) DNS record.
                     </p>
 
@@ -88,7 +88,7 @@ layout: default
                         <li>Ask <code>company.com</code> DNS server its MX entries</li>
                         <li><code>company.com</code> respond that it is <code>mx.company.com</code></li>
                         <li>Bob resolves <code>mx.company.com</code> ip address...</li>
-                        <li>And can establish a connection to <code>mx.company.com</code> to send an email to Alice</li>
+                        <li>...and can establish a connection to <code>mx.company.com</code> to send an email to Alice</li>
                     </ol>
 
                     <p>All is needed is a MX entry in domain name resolution pointing to the future IP of your James server.</p>
@@ -97,7 +97,7 @@ layout: default
                         <h2><b>JAMES architecture</b></h2>
                     </header>
 
-                    <p>JPA guice docker image relies on an embedded derby database for storing data. Note that Apache Lucene library
+                    <p>JPA guice docker image relies on an embedded Derby database for storing data. Note that Apache Lucene library
                         is used for email search. A mail queue is implemented on top of an embedded Apache ActiveMQ. Hence James do not need
                         any external service for being running.
                     </p>
@@ -176,7 +176,7 @@ linagora/james-jpa-guice:latest</code></pre>
                     <pre><code>docker exec james_run java -jar /root/james-cli.jar AddDomain domain.tld
 docker exec james_run java -jar /root/james-cli.jar AddUser user@domain.tld secretPassword</code></pre>
 
-                    <p>The command line client can be used for several other purposes like managing quota, setting addresses redirections, etc..</p>
+                    <p>The command line client can be used for several other purposes like managing quota, setting addresses redirections, etc.</p>
 
                     <header class="major">
                         <h2><b>Additional features</b></h2>

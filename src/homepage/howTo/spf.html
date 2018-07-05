@@ -60,7 +60,7 @@ layout: default
 
                     <p>
                         The Sender Policy Framework (SPF) is an open standard specifying a technical method to prevent
-                        sender address forgery, might help you to do this.
+                        sender address forgery. It might help you to do this.
                     </p>
 
                     <p>
@@ -88,7 +88,7 @@ layout: default
                     <pre><code>@ IN TXT “v=spf1 +a:james.test-domain.com -all”
 @ IN SPF “v=spf1 +a:james.test-domain.com -all”</code></pre>
 
-                    <p>That way other mail servers knows only <i>james.test-domain.com</i> can send mails for <i>test-domain.com</i>.</p>
+                    <p>That way other mail servers know only <i>james.test-domain.com</i> can send mails for <i>test-domain.com</i>.</p>
 
 
                     <header class="major">
@@ -98,7 +98,7 @@ layout: default
                     <p>
                         Now we will see how to verify SPF records of incoming emails. For this we can customize mail processing,
                         and specify actions upon SPF record validity. For introducing these components, James relies on the
-                        <a href="https://james.apache.org/jspf/">JSPF</a>library.
+                        <a href="https://james.apache.org/jspf/">JSPF</a> library.
                     </p>
 
                     <p>We just need to edit the <code>mailetcontainer.xml</code> configuration file as follow:</p>
