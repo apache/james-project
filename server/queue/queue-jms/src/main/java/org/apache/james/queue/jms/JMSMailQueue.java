@@ -255,8 +255,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
                     .toInstant()
                     .toEpochMilli();
             } catch (ArithmeticException e) {
-                LOGGER.warn("The {} was caused by conversation {}({}) followed by addition to current timestamp. Falling back to Long.MAX_VALUE.",
-                        e.getMessage(), delay, unit.name());
+                LOGGER.warn("Exception encountered  while computed JMS next delivery (delay {} {}). Fallback to {} (Long.MAX_VALUE) ms",
+                        delay, unit.name(), Long.MAX_VALUE, e);
 
                 return Long.MAX_VALUE;
             }
