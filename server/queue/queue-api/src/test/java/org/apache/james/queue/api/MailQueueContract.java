@@ -28,7 +28,9 @@ import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -203,6 +205,20 @@ public interface MailQueueContract {
     }
 
     @Test
+    default void queueShouldPreserveNonStringMailAttribute() throws Exception {
+        String attributeName = "any";
+        SerializableAttribute attributeValue = new SerializableAttribute("value");
+        getMailQueue().enQueue(defaultMail()
+                .attribute(attributeName, attributeValue)
+                .build());
+
+        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        assertThat(mailQueueItem.getMail().getAttribute(attributeName))
+                .isInstanceOf(SerializableAttribute.class)
+                .isEqualTo(attributeValue);
+    }
+
+    @Test
     default void dequeueShouldBeFifo() throws Exception {
         String firstExpectedName = "name1";
         getMailQueue().enQueue(defaultMail()
@@ -305,4 +321,33 @@ public interface MailQueueContract {
         assertThat(tryDequeue.get().getMail().getName()).isEqualTo("name");
     }
 
+    class SerializableAttribute implements Serializable {
+        private final String value;
+
+        public SerializableAttribute(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SerializableAttribute) {
+                SerializableAttribute toto = (SerializableAttribute) o;
+
+                return Objects.equals(this.value, toto.value);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(value);
+        }
+
+        @Override
+        public String toString() {
+            return "SerializableAttribute{" +
+                    "value='" + value + '\'' +
+                    '}';
+        }
+    }
 }

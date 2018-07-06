@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -51,9 +50,8 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.iterators.EnumerationIterator;
-import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.lang3.SerializationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Metric;
@@ -73,6 +71,7 @@ import org.threeten.extra.Temporals;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterators;
 
 /**
@@ -153,6 +152,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     protected final Queue queue;
     protected final MessageProducer producer;
 
+    private final Joiner joiner;
+    private final Splitter splitter;
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory) {
         try {
             connection = connectionFactory.createConnection();
@@ -166,6 +167,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
         this.mailQueueSize = metricFactory.generate("mailQueueSize:" + queueName);
 
+        this.joiner = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls();
+        this.splitter = Splitter.on(JAMES_MAIL_SEPARATOR)
+                .omitEmptyStrings() // ignore null values. See JAMES-1294
+                .trimResults();
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             queue = session.createQueue(queueName);
@@ -313,11 +318,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         // won't serialize the empty headers so it is mandatory
         // to handle nulls when reconstructing mail from message
         if (!mail.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
-            byte[] serialize = SerializationUtils.serialize(mail.getPerRecipientSpecificHeaders());
-            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, Base64.encodeBase64String(serialize));
+            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, JMSSerializationUtils.trySerialize(mail.getPerRecipientSpecificHeaders()));
         }
 
-        String recipientsAsString = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls().join(mail.getRecipients());
+        String recipientsAsString = joiner.join(mail.getRecipients());
 
         props.put(JAMES_MAIL_RECIPIENTS, recipientsAsString);
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
@@ -325,22 +329,13 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
 
-        StringBuilder attrsBuilder = new StringBuilder();
-        Iterator<String> attrs = mail.getAttributeNames();
-        while (attrs.hasNext()) {
-            String attrName = attrs.next();
-            attrsBuilder.append(attrName);
+        org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
+                .forEach(attrName -> props.put(attrName, JMSSerializationUtils.trySerialize(mail.getAttribute(attrName))));
 
-            Object value = convertAttributeValue(mail.getAttribute(attrName));
-            props.put(attrName, value);
-
-            if (attrs.hasNext()) {
-                attrsBuilder.append(JAMES_MAIL_SEPARATOR);
-            }
-        }
-        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, attrsBuilder.toString());
+        props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(mail.getAttributeNames()));
         props.put(JAMES_MAIL_SENDER, sender);
         props.put(JAMES_MAIL_STATE, mail.getState());
+
         return props;
     }
 
@@ -392,10 +387,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
 
-        Optional.ofNullable(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS))
-                .map(String::getBytes)
-                .map(Throwing.function(Base64::decodeBase64))
-                .<PerRecipientHeaders>map(SerializationUtils::deserialize)
+        JMSSerializationUtils.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS))
                 .ifPresent(mail::addAllSpecificHeaderForRecipient);
 
         List<MailAddress> rcpts = new ArrayList<>();
@@ -417,23 +409,29 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setRemoteHost(message.getStringProperty(JAMES_MAIL_REMOTEHOST));
 
         String attributeNames = message.getStringProperty(JAMES_MAIL_ATTRIBUTE_NAMES);
-        StringTokenizer namesTokenizer = new StringTokenizer(attributeNames, JAMES_MAIL_SEPARATOR);
-        while (namesTokenizer.hasMoreTokens()) {
-            String name = namesTokenizer.nextToken();
 
-            // Now cast the property back to Serializable and set it as attribute.
-            // See JAMES-1241
-            Object attrValue = message.getObjectProperty(name);
+        splitter.split(attributeNames)
+                .forEach(name -> {
+                    // Now cast the property back to Serializable and set it as attribute.
+                    // See JAMES-1241
+                    Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
-            // ignore null values. See JAMES-1294
-            if (attrValue != null) {
-                if (attrValue instanceof Serializable) {
-                    mail.setAttribute(name, (Serializable) attrValue);
-                } else {
-                    LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
-                }
-            }
-        }
+                    // can be a base64 representation of serialized object try decode and deserialize. See JAMES-2167.
+                    if (attrValue instanceof String) {
+                        Serializable val;
+                        try {
+                            val = JMSSerializationUtils.deserialize((String) attrValue).orElse(null);
+                        } catch (SerializationException e) {
+                            val = (String) attrValue;
+                        }
+
+                        mail.setAttribute(name, val);
+                    } else if (attrValue instanceof Serializable) {
+                        mail.setAttribute(name, (Serializable) attrValue);
+                    } else {
+                        LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
+                    }
+                });
 
         String sender = message.getStringProperty(JAMES_MAIL_SENDER);
         if (sender == null || sender.trim().length() <= 0) {
@@ -451,19 +449,6 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
 
-    }
-
-    /**
-     * Convert the attribute value if necessary.
-     *
-     * @param value
-     * @return convertedValue
-     */
-    protected Object convertAttributeValue(Object value) {
-        if (value == null || value instanceof String || value instanceof Byte || value instanceof Long || value instanceof Double || value instanceof Boolean || value instanceof Integer || value instanceof Short || value instanceof Float) {
-            return value;
-        }
-        return value.toString();
     }
 
     @Override
