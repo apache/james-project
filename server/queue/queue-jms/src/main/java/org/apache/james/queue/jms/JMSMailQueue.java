@@ -52,7 +52,6 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
