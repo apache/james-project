@@ -3324,5 +3324,25 @@
                 </pluginManagement>
             </build>
         </profile>
+        <profile>
+            <id>partial-build</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.lesfurets</groupId>
+                        <artifactId>partial-build-plugin</artifactId>
+                        <version>2.6</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <referenceBranch>${env.JAMES_PARTIAL_BUILD_BASE_BRANCH}</referenceBranch>
+                            <buildAll>true</buildAll>
+                            <skipTestsForNotImpactedModules>true</skipTestsForNotImpactedModules>
+                            <impacted>true</impacted>
+                            <ignoreAllReactorProjects>false</ignoreAllReactorProjects>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
