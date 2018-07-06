@@ -46,8 +46,6 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.rules.TemporaryFolder;
 
-import com.github.fge.lambdas.Throwing;
-
 public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallback,
     BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
