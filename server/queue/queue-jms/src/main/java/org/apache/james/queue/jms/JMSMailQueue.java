@@ -51,6 +51,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.commons.lang3.SerializationUtils;
@@ -307,16 +308,16 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         // to handle nulls when reconstructing mail from message
         if (!mail.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
             byte[] serialize = SerializationUtils.serialize(mail.getPerRecipientSpecificHeaders());
-            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, Hex.encodeHexString(serialize));
+            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, Base64.encodeBase64String(serialize));
         }
 
-        String recipientsBuilder = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls().join(mail.getRecipients());
+        String recipientsAsString = Joiner.on(JAMES_MAIL_SEPARATOR).skipNulls().join(mail.getRecipients());
 
-        props.put(JAMES_MAIL_RECIPIENTS, recipientsBuilder);
+        props.put(JAMES_MAIL_RECIPIENTS, recipientsAsString);
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
-        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::toString).orElse("");
+        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
 
         StringBuilder attrsBuilder = new StringBuilder();
         Iterator<String> attrs = mail.getAttributeNames();
@@ -386,8 +387,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
 
         Optional.ofNullable(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS))
-                .map(String::toCharArray)
-                .map(Throwing.function(Hex::decodeHex))
+                .map(String::getBytes)
+                .map(Throwing.function(Base64::decodeBase64))
                 .<PerRecipientHeaders>map(SerializationUtils::deserialize)
                 .ifPresent(mail::addAllSpecificHeaderForRecipient);
 
