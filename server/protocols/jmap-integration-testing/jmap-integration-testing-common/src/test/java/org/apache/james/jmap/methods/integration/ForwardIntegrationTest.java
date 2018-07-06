@@ -55,6 +55,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.jayway.awaitility.Duration;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.specification.RequestSpecification;
 
@@ -126,7 +127,9 @@ public abstract class ForwardIntegrationTest {
         .post("/jmap");
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
@@ -173,7 +176,9 @@ public abstract class ForwardIntegrationTest {
         .post("/jmap");
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
@@ -230,7 +235,9 @@ public abstract class ForwardIntegrationTest {
         .post("/jmap");
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         given()
             .header("Authorization", bobAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
@@ -277,7 +284,9 @@ public abstract class ForwardIntegrationTest {
             .body(requestBody)
         .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(aliceAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(aliceAccessToken));
         given()
             .header("Authorization", aliceAccessToken.serialize())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
@@ -323,7 +332,9 @@ public abstract class ForwardIntegrationTest {
         .post("/jmap");
 
         AccessToken bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
 
         given()
             .header("Authorization", aliceAccessToken.serialize())

@@ -122,6 +122,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
+import com.jayway.awaitility.Duration;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.builder.RequestSpecBuilder;
 import com.jayway.restassured.http.ContentType;
@@ -2069,7 +2070,9 @@ public abstract class SetMessagesMethodTest {
             .body(moveDraftToOutBox)
             .post("/jmap");
 
-        calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
     }
 
     @Test
