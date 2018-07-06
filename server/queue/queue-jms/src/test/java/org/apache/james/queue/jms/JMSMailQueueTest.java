@@ -19,8 +19,6 @@
 
 package org.apache.james.queue.jms;
 
-import java.util.concurrent.ExecutorService;
-
 import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -44,7 +42,7 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     private JMSMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp(BrokerService broker) throws Exception {
+    void setUp(BrokerService broker) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
         NoopMetricFactory metricFactory = new NoopMetricFactory();
@@ -53,7 +51,7 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() {
         mailQueue.dispose();
     }
 
@@ -83,30 +81,9 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
 
     @Test
     @Override
-    @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
-    public void queueShouldPreservePerRecipientHeaders() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
-    public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
-
-    }
-
-    @Test
-    @Override
     @Disabled("JAMES-2308 Flushing JMS mail queue randomly re-order them" +
         "Random test failing around 1% of the time")
     public void flushShouldPreserveBrowseOrder() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2309 Long overflow in JMS delays")
-    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
 
     }
 
