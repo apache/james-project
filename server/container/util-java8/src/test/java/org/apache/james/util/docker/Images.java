@@ -24,6 +24,6 @@ public interface Images {
     String RABBITMQ = "rabbitmq:3.7.5";
     String ELASTICSEARCH = "elasticsearch:2.2.2";
     String NGINX = "nginx:1.7.1";
-    String TIKA = "logicalspark/docker-tikaserver:1.15rc2";
+    String TIKA = "linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520";
     String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
 }

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
@@ -51,17 +52,18 @@ public class TikaHttpClientImpl implements TikaHttpClient {
     }
 
     @Override
-    public InputStream recursiveMetaDataAsJson(InputStream inputStream, String contentType) throws TikaException {
+    public Optional<InputStream> recursiveMetaDataAsJson(InputStream inputStream, String contentType) {
         try {
-            return Request.Put(recursiveMetaData)
-                    .socketTimeout(tikaConfiguration.getTimeoutInMillis())
-                    .bodyStream(inputStream, ContentType.create(contentType))
-                    .execute()
-                    .returnContent()
-                    .asStream();
+            return Optional.ofNullable(
+                    Request.Put(recursiveMetaData)
+                        .socketTimeout(tikaConfiguration.getTimeoutInMillis())
+                        .bodyStream(inputStream, ContentType.create(contentType))
+                        .execute()
+                        .returnContent()
+                        .asStream());
         } catch (IOException e) {
-            LOGGER.error("Failing to call Tika", e);
-            throw new TikaException(e);
+            LOGGER.warn("Failing to call Tika", e);
+            return Optional.empty();
         }
     }
 

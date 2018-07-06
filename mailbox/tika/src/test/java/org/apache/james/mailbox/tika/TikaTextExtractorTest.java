@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -157,8 +158,10 @@ public class TikaTextExtractorTest {
     @Test
     public void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
-                "{\"Chroma BlackIsZero\": \"true\"}]").getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
+                                                            "{\"Chroma BlackIsZero\": \"true\"}]")
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");
@@ -168,8 +171,10 @@ public class TikaTextExtractorTest {
     public void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
         String expectedExtractedContent = "content A";
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), (inputStream, contentType) -> new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
-                "{\"X-TIKA:content\": \"content B\"}]").getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
+                                                            "{\"X-TIKA:content\": \"content B\"}]")
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         ParsedContent parsedContent = textExtractor.extractContent(inputStream, "text/plain");
@@ -183,7 +188,9 @@ public class TikaTextExtractorTest {
         expectedException.expectMessage("The element should be a Json object");
 
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), (inputStream, contentType) -> new ByteArrayInputStream("[\"value1\"]".getBytes(StandardCharsets.UTF_8)));
+            new NoopMetricFactory(), 
+            (inputStream, contentType) -> Optional.of(new ByteArrayInputStream("[\"value1\"]"
+                                                        .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = null;
         textExtractor.extractContent(inputStream, "text/plain");

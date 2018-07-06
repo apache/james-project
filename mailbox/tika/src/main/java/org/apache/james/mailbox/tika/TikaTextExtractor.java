@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import javax.inject.Inject;
@@ -51,6 +52,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class TikaTextExtractor implements TextExtractor {
 
@@ -82,11 +84,13 @@ public class TikaTextExtractor implements TextExtractor {
 
     public ParsedContent performContentExtraction(InputStream inputStream, String contentType) throws IOException {
         ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
-        return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
+        return new ParsedContent(contentAndMetadata.getContent().orElse(null), contentAndMetadata.getMetadata());
     }
 
-    private ContentAndMetadata convert(InputStream json) throws IOException, JsonParseException, JsonMappingException {
-        return objectMapper.readValue(json, ContentAndMetadata.class);
+    private ContentAndMetadata convert(Optional<InputStream> maybeInputStream) throws IOException, JsonParseException, JsonMappingException {
+        return maybeInputStream
+                .map(Throwing.function(inputStream -> objectMapper.readValue(inputStream, ContentAndMetadata.class)))
+                .orElse(ContentAndMetadata.empty());
     }
 
     @VisibleForTesting
@@ -119,8 +123,12 @@ public class TikaTextExtractor implements TextExtractor {
         private static final String TIKA_HEADER = "X-TIKA";
         private static final String CONTENT_METADATA_HEADER_NAME = TIKA_HEADER + ":content";
 
+        public static ContentAndMetadata empty() {
+            return new ContentAndMetadata();
+        }
+
         public static ContentAndMetadata from(Map<String, List<String>> contentAndMetadataMap) {
-            return new ContentAndMetadata(content(contentAndMetadataMap),
+            return new ContentAndMetadata(Optional.ofNullable(content(contentAndMetadataMap)),
                     contentAndMetadataMap.entrySet().stream()
                         .filter(allHeadersButTika())
                         .collect(Guavate.toImmutableMap(Entry::getKey, Entry::getValue)));
@@ -139,15 +147,19 @@ public class TikaTextExtractor implements TextExtractor {
             return StringUtils.stripStart(content.get(0), onlySpaces);
         }
 
-        private final String content;
+        private final Optional<String> content;
         private final Map<String, List<String>> metadata;
 
-        private ContentAndMetadata(String content, Map<String, List<String>> metadata) {
+        private ContentAndMetadata() {
+            this(Optional.empty(), ImmutableMap.of());
+        }
+
+        private ContentAndMetadata(Optional<String> content, Map<String, List<String>> metadata) {
             this.content = content;
             this.metadata = metadata;
         }
 
-        public String getContent() {
+        public Optional<String> getContent() {
             return content;
         }
 
