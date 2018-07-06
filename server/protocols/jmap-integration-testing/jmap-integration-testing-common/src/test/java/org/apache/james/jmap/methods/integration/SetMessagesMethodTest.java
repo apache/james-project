@@ -120,6 +120,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -136,6 +137,7 @@ public abstract class SetMessagesMethodTest {
     private static final String PASSWORD = "password";
     private static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
+    private static final int BIG_MESSAGE_SIZE = 20 * 1024 * 1024;
 
     private AccessToken bobAccessToken;
 
@@ -1350,6 +1352,75 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
             .body(ARGUMENTS + ".created", aMapWithSize(0))
             .body(ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"].type", equalTo("maxQuotaReached"));
+    }
+
+    @Test
+    public void setMessagesWithABigBodyShouldReturnCreatedMessageWhenSendingMessage() {
+        String messageCreationId = "creationId1337";
+        String fromAddress = USERNAME;
+        String body = Strings.repeat("d", BIG_MESSAGE_SIZE);
+        {
+            String requestBody = "[" +
+                "  [" +
+                "    \"setMessages\"," +
+                "    {" +
+                "      \"create\": { \"" + messageCreationId  + "\" : {" +
+                "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
+                "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
+                "        \"subject\": \"Thank you for joining example.com!\"," +
+                "        \"textBody\": \"" + body + "\"," +
+                "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+                "      }}" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+            given()
+                .header("Authorization", accessToken.serialize())
+                .body(requestBody)
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messagesSet"))
+                .body(ARGUMENTS + ".notCreated", aMapWithSize(0))
+                .body(ARGUMENTS + ".created", aMapWithSize(1))
+                .body(ARGUMENTS + ".created", hasEntry(equalTo(messageCreationId), hasEntry(equalTo("textBody"), equalTo(body))));
+        }
+
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> hasANewMailWithBody(accessToken, body));
+    }
+
+    private boolean hasANewMailWithBody(AccessToken recipientToken, String body) {
+        try {
+            String inboxId = getMailboxId(accessToken, Role.INBOX);
+            String receivedMessageId =
+                with()
+                    .header("Authorization", accessToken.serialize())
+                    .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
+                    .post("/jmap")
+                .then()
+                    .extract()
+                    .path(ARGUMENTS + ".messageIds[0]");
+
+            given()
+                .header("Authorization", accessToken.serialize())
+                .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messages"))
+                .body(ARGUMENTS + ".list", hasSize(1))
+                .body(ARGUMENTS + ".list[0].textBody", equalTo(body));
+            return true;
+
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 
     @Test
