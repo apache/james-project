@@ -46,6 +46,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 
 @ExtendWith(ExecutorExtension.class)
@@ -345,9 +346,9 @@ public interface MailQueueContract {
 
         @Override
         public String toString() {
-            return "SerializableAttribute{" +
-                    "value='" + value + '\'' +
-                    '}';
+            return MoreObjects.toStringHelper(this)
+                    .add("value", value)
+                    .toString();
         }
     }
 }

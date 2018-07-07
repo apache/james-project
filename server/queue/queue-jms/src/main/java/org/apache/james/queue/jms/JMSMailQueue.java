@@ -154,6 +154,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     private final Joiner joiner;
     private final Splitter splitter;
+
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, MetricFactory metricFactory) {
         try {
             connection = connectionFactory.createConnection();
@@ -411,27 +412,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         String attributeNames = message.getStringProperty(JAMES_MAIL_ATTRIBUTE_NAMES);
 
         splitter.split(attributeNames)
-                .forEach(name -> {
-                    // Now cast the property back to Serializable and set it as attribute.
-                    // See JAMES-1241
-                    Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
-
-                    // can be a base64 representation of serialized object try decode and deserialize. See JAMES-2167.
-                    if (attrValue instanceof String) {
-                        Serializable val;
-                        try {
-                            val = JMSSerializationUtils.deserialize((String) attrValue).orElse(null);
-                        } catch (SerializationException e) {
-                            val = (String) attrValue;
-                        }
-
-                        mail.setAttribute(name, val);
-                    } else if (attrValue instanceof Serializable) {
-                        mail.setAttribute(name, (Serializable) attrValue);
-                    } else {
-                        LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
-                    }
-                });
+                .forEach(name -> setMailAttribute(message, mail, name));
 
         String sender = message.getStringProperty(JAMES_MAIL_SENDER);
         if (sender == null || sender.trim().length() <= 0) {
@@ -449,6 +430,42 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
         mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
 
+    }
+
+    /**
+     * Retrieves the attribute by {@code name} form {@code message} and tries to add it on {@code mail}.
+     *
+     * @param message The attribute source.
+     * @param mail    The mail on which attribute should be set.
+     * @param name    The attribute name.
+     */
+    private void setMailAttribute(Message message, Mail mail, String name) {
+        // Now cast the property back to Serializable and set it as attribute.
+        // See JAMES-1241
+        Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
+
+        // can be a base64 representation of serialized object try decode and deserialize. See JAMES-2167.
+        if (attrValue instanceof String) {
+            mail.setAttribute(name, tryDeserialize((String) attrValue));
+        } else if (attrValue instanceof Serializable) {
+            mail.setAttribute(name, (Serializable) attrValue);
+        } else {
+            LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
+        }
+    }
+
+    /**
+     * Tries to deserialize given argument and when fails returns itself.
+     *
+     * @param attrValue The input string.
+     * @return The deserialized object or itself.
+     */
+    private Serializable tryDeserialize(String attrValue) {
+        try {
+            return JMSSerializationUtils.deserialize(attrValue).orElse(null);
+        } catch (SerializationException e) {
+            return attrValue;
+        }
     }
 
     @Override
