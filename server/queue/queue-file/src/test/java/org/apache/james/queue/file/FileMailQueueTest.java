@@ -23,7 +23,7 @@ import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -54,20 +54,6 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2300 No Order")
-    public void browseShouldReturnElementsInOrder() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2300 No Order")
-    public void flushShouldPreserveBrowseOrder() {
-
     }
 
     @Test

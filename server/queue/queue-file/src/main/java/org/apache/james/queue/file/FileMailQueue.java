@@ -30,12 +30,13 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map.Entry;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -57,6 +58,8 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
  * <p/>
@@ -66,7 +69,7 @@ import org.slf4j.LoggerFactory;
 public class FileMailQueue implements ManageableMailQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
 
-    private final ConcurrentHashMap<String, FileItem> keyMappings = new ConcurrentHashMap<>();
+    private final Map<String, FileItem> keyMappings = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private static final AtomicLong COUNTER = new AtomicLong();
@@ -219,27 +222,9 @@ public class FileMailQueue implements ManageableMailQueue {
         } catch (IOException | MessagingException | InterruptedException e) {
             throw new MailQueueException("Unable to enqueue mail", e);
         } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
-            if (oout != null) {
-                try {
-                    oout.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
-            if (foout != null) {
-                try {
-                    foout.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
+            IOUtils.closeQuietly(out);
+            IOUtils.closeQuietly(oout);
+            IOUtils.closeQuietly(foout);
         }
 
     }
@@ -299,13 +284,7 @@ public class FileMailQueue implements ManageableMailQueue {
             } catch (IOException | ClassNotFoundException | MessagingException e) {
                 throw new MailQueueException("Unable to dequeue", e);
             } finally {
-                if (oin != null) {
-                    try {
-                        oin.close();
-                    } catch (IOException e) {
-                        // ignore on close
-                    }
-                }
+                IOUtils.closeQuietly(oin);
             }
 
         } catch (InterruptedException e) {
@@ -408,18 +387,12 @@ public class FileMailQueue implements ManageableMailQueue {
 
     @Override
     public long clear() throws MailQueueException {
-        final Iterator<Entry<String, FileItem>> items = keyMappings.entrySet().iterator();
-        long count = 0;
-        while (items.hasNext()) {
-            Entry<String, FileItem> entry = items.next();
-            FileItem item = entry.getValue();
-            String key = entry.getKey();
+        long count = getSize();
 
-            item.delete();
-            keyMappings.remove(key);
-            count++;
+        keyMappings.values().forEach(Throwing.consumer(FileItem::delete));
+        keyMappings.clear();
+        inmemoryQueue.clear();
 
-        }
         return count;
     }
 
@@ -448,8 +421,9 @@ public class FileMailQueue implements ManageableMailQueue {
     @Override
     public MailQueueIterator browse() throws MailQueueException {
         final Iterator<FileItem> items = keyMappings.values().iterator();
+
         return new MailQueueIterator() {
-            private MailQueueItemView item = null;
+            private MailQueueItemView item;
 
             @Override
             public void remove() {
@@ -459,41 +433,31 @@ public class FileMailQueue implements ManageableMailQueue {
             @Override
             public MailQueueItemView next() {
                 if (hasNext()) {
-                    MailQueueItemView vitem = item;
+                    MailQueueItemView itemView = item;
                     item = null;
-                    return vitem;
-                } else {
-
-                    throw new NoSuchElementException();
+                    return itemView;
                 }
+
+                throw new NoSuchElementException();
             }
 
             @Override
             public boolean hasNext() {
-                if (item == null) {
-                    while (items.hasNext()) {
-                        ObjectInputStream in = null;
-                        try {
-                            in = new ObjectInputStream(new FileInputStream(items.next().getObjectFile()));
-                            final Mail mail = (Mail) in.readObject();
-                            item = new MailQueueItemView(mail, getNextDelivery(mail));
-                            return true;
-                        } catch (IOException | ClassNotFoundException e) {
-                            LOGGER.info("Unable to load mail", e);
-                        } finally {
-                            if (in != null) {
-                                try {
-                                    in.close();
-                                } catch (IOException e) {
-                                    // ignore on close
-                                }
-                            }
-                        }
-                    }
-                    return false;
-                } else {
+                if (item != null) {
                     return true;
                 }
+
+                while (items.hasNext()) {
+                    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(items.next().getObjectFile()))) {
+                        final Mail mail = (Mail) in.readObject();
+                        item = new MailQueueItemView(mail, getNextDelivery(mail));
+                        return true;
+                    } catch (IOException | ClassNotFoundException e) {
+                        LOGGER.info("Unable to load mail", e);
+                    }
+                }
+
+                return false;
             }
 
             @Override
