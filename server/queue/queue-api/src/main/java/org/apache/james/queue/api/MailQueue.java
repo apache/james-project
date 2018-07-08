@@ -134,4 +134,24 @@ public interface MailQueue {
          */
         void done(boolean success) throws MailQueueException;
     }
+
+    /**
+     * Provides additional options when creating consumers.
+     */
+    interface ConsumerOptions {
+        /**
+         * The empty consumer options.
+         */
+        static ConsumerOptions empty() {
+            return EmptyConsumerOptions.instance();
+        }
+
+        /**
+         * The queue name with options for performing {@link MailQueue#deQueue()} operation. The implementation may
+         * return {@code queueName} itself if it does not support any options.
+         *
+         * @return The queue name maybe with additional options.
+         */
+        String applyForDequeue(String queueName);
+    }
 }

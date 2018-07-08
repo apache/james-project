@@ -58,7 +58,8 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
         MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, !USE_BLOB, metricFactory, gaugeRegistry);
+        ActiveMQConsumerOptions consumerOptions = ActiveMQConsumerOptions.builder().prefetchSize(0).build();
+        mailQueue = new ActiveMQMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, consumerOptions, !USE_BLOB, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
@@ -74,20 +75,6 @@ public class ActiveMQMailQueueTest implements DelayedManageableMailQueueContract
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2295 Disabled as test was dead-locking")
-    public void dequeueCanBeChainedBeforeAck() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2295 Disabled as test was dead-locking")
-    public void dequeueCouldBeInterleavingWithOutOfOrderAck() {
-
     }
 
     @Test

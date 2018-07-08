@@ -40,4 +40,45 @@ public interface ActiveMQSupport extends JMSSupport {
      */
     String JAMES_REUSE_BLOB_URL = " JAMES_REUSE_BLOB_URL";
 
+    /**
+     * Should the broker dispatch messages asynchronously to the consumer.
+     */
+    String CONSUMER_DISPATCH_ASYNC = "consumer.dispatchAsync";
+
+    /**
+     * The broker will pick a single MessageConsumer to get all the messages for a queue to ensure ordering.
+     */
+    String CONSUMER_EXCLUSIVE = "consumer.exclusive";
+
+    /**
+     * Use to control if messages for non-durable topics are dropped if a slow consumer situation exists.
+     */
+    String CONSUMER_MAXIMUM_PENDING_MESSAGE_LIMIT = "consumer.maximumPendingMessageLimit";
+
+    /**
+     * Same as the noLocal flag on a Topic consumer. Exposed here so that it can be used with a queue.
+     */
+    String CONSUMER_NO_LOCAL = "consumer.noLocal";
+
+    /**
+     * The number of message the consumer will prefetch.
+     */
+    String CONSUMER_PREFETCH_SIZE = "consumer.prefetchSize";
+
+    /**
+     * This allows us to weight consumers to optimize network hops.
+     */
+    String CONSUMER_PRIORITY = "consumer.priority";
+
+    /**
+     * A retroactive consumer is just a regular JMS Topic consumer who indicates that at the start of a subscription
+     * every attempt should be used to go back in time and send any old messages (or the last message sent on that
+     * topic) that the consumer may have missed.
+     */
+    String CONSUMER_RETROACTIVE = "consumer.retroactive";
+
+    /**
+     * JMS Selector used with the consumer.
+     */
+    String CONSUMER_SELECTOR = "consumer.selector";
 }
