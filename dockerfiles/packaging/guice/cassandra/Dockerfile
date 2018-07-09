@@ -21,6 +21,9 @@ COPY --from=source /root/james-server-cassandra-guice.lib/ /packages/package/usr
 COPY --from=sourceLdap /root/james-server-cassandra-ldap-guice.lib/ /packages/package/usr/share/james/james-server-cassandra-ldap-guice.lib/
 COPY --from=source /root/james-server-cli.lib/ /packages/package/usr/share/james/james-server-cli.lib/
 
+RUN mkdir -p /packages/package/var/lib/james
+RUN mkdir -p /packages/package/var/log/james
+
 ARG RELEASE
 ENV RELEASE $RELEASE
 ARG ITERATION
