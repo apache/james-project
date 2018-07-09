@@ -127,7 +127,7 @@ or
 </p>
 <p>
 1c. Place a jar file containing the custom class files in
-/path/to/james/conf/lib/ subdirectory.
+/path/to/james/conf/lib/ subdirectory with JAMES-Spring or /path/to/james/conf/extensions-jars/ subdirectory with JAMES-Guice.
 </p>
 <p>
 2. After this is done get sure you add the matcher package to the mailetcontainer.xml. For example: 
