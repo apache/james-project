@@ -213,13 +213,19 @@ If you haven't already:
 
 
 ==== How to ?
-You need a running *cassandra* in docker. To achieve this run :
+You need a running *cassandra* in docker. To achieve this run:
 
     $ docker run -d --name=cassandra cassandra:2.2.3
 
-You need a running *ElasticSearch* in docker. To achieve this run :
+You need a running *ElasticSearch* in docker. To achieve this run:
 
     $ docker run -d --name=elasticsearch elasticsearch:2.2.1
+
+If you want to use all the JMAP search capabilities, you may also need to start Tika:
+
+    $ docker run -d --name=tika linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520
+
+You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
@@ -233,7 +239,7 @@ Then we need to build james container :
 
 To run this container :
 
-    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --name james_run -t james_run
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
 Where :
 
