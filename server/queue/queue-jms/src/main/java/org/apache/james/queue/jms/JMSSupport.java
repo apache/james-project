@@ -41,6 +41,9 @@ public interface JMSSupport {
     /** JMS Property which holds the mail name as String */
     String JAMES_MAIL_NAME = "JAMES_MAIL_NAME";
 
+    /** JMS Property which holds the association between recipients and specific headers*/
+    String JAMES_MAIL_PER_RECIPIENT_HEADERS = "JAMES_MAIL_PER_RECIPIENT_HEADERS";
+
     /**
      * Separator which is used for separate an array of String values in the JMS
      * Property value

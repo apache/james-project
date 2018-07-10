@@ -102,13 +102,6 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @Test
     @Override
-    @Disabled("JAMES-2301 Per recipients headers are not attached to the message.")
-    public void queueShouldPreservePerRecipientHeaders() {
-
-    }
-
-    @Test
-    @Override
     @Disabled("JAMES-2296 Not handled by JMS mailqueue. Only single recipient per-recipient removal works")
     public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
 
