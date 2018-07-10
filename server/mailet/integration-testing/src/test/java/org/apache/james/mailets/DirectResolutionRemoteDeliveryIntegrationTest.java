@@ -21,7 +21,12 @@ package org.apache.james.mailets;
 
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.MemoryJamesServerMain.SMTP_ONLY_MODULE;
-import static org.apache.james.mailets.configuration.Constants.*;
+import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
+import static org.apache.james.mailets.configuration.Constants.IMAP_PORT;
+import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
+import static org.apache.james.mailets.configuration.Constants.PASSWORD;
+import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
+import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.apache.james.mailets.configuration.MailetConfiguration.LOCAL_DELIVERY;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
