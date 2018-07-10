@@ -37,7 +37,7 @@
           <dt><strong>elasticsearch.masterHost</strong></dt>
           <dd>Is the IP (or host) of the ElasticSearch master</dd>
           <dt><strong>elasticsearch.port</strong></dt>
-          <dd>Is the IP (or host) of the port of ElasticSearch master</dd>
+          <dd>Is the port of ElasticSearch master</dd>
       </dl>
 
       Or you can connect a cluster by :
@@ -55,7 +55,7 @@
           <dt><strong>elasticsearch.nb.shards</strong></dt>
           <dd>Number of shards for index provisionned by James</dd>
           <dt><strong>elasticsearch.nb.replica</strong></dt>
-          <dd>Number of replica for index provisionned by James</dd>
+          <dd>Number of replica for index provisionned by James (default: 0)</dd>
           <dt><strong>elasticsearch.index.mailbox.name</strong></dt>
           <dd>Name of the mailbox index backed by the alias. It will be created if missing.</dd>
           <dt><strong>elasticsearch.index.name</strong></dt>
@@ -81,6 +81,12 @@
           <dd>Minimum delay between connection attempts</dd>
           <dt><strong>elasticsearch.indexAttachments</strong></dt>
           <dd>Indicates if you wish to index attachments or not (default: true).</dd>
+          <dt><strong>elasticsearch.index.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for quotas</dd>
+          <dt><strong>elasticsearch.alias.read.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for reading quotas</dd>
+          <dt><strong>elasticsearch.alias.write.quota.ratio.name</strong></dt>
+          <dd>Specify the ElasticSearch alias name used for writing quotas</dd>
       </dl>
 
       For configuring the metric reporting on ElasticSearch :

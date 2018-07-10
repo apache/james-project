@@ -84,7 +84,7 @@ activemq
   +-spool
 </source>
           
-          <p>The activemq component is configured to use this folder
+          <p>The <a href="dev-activemq.html">activemq component</a> is configured to use this folder
              for queue (and topics if any) processing.</p>
      
 <source>

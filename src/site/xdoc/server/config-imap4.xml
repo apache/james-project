@@ -47,7 +47,7 @@
       port 143 is the well-known/IANA registered port for IMAP 
      port 993 is the well-known/IANA registered port for IMAPS  ie over SSL/TLS</dd>
         <dt><strong>connectionBacklog</strong></dt>
-        <dd></dd>
+        <dd>Number of connection backlog of the server (maximum number of queued connection requests)</dd>
         <dt><strong>compress</strong></dt>
         <dd>true or false - Use or don't use COMPRESS extension.</dd>
         <dt><strong>maxLineLength</strong></dt>
@@ -55,6 +55,8 @@
             This should be set with caution as a to high value can make the server a target for DOS (Denial of Service)!</dd>
         <dt><strong>inMemorySizeLimit</strong></dt>
         <dd>10MB size limit before we will start to stream to a temporary file</dd>
+        <dt><strong>jmxName</strong></dt>
+        <dd>The name given to the configuration</dd>
         <dt><strong>tls</strong></dt>
         <dd>Set to true to support STARTTLS or SSL for the Socket.
          To use this you need to copy sunjce_provider.jar to /path/james/lib directory. To create a new keystore execute:

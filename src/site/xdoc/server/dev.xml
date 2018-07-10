@@ -51,12 +51,12 @@
     <p>The mail protocol services use the mailbox librairies to fetch/store mails.</p>
     
     <p>When a mail arrives via SMTP, it gets processed by the SMTP services and is placed
-       in a Apache ActiveMQ queue (ActiveMQ  is the Java Messaging Service JMS implementation at Apache)</p>
+       in a <a href="dev-activemq.xml">Apache ActiveMQ</a> queue (ActiveMQ  is the Java Messaging Service JMS implementation at Apache)</p>
        
     <p>This allow to decouple mail spooling from the rest of the incoming traffic.</p>
     
     <p>After being the put in the queue, the mailetcontainer is responsible to get the 
-       next mail to process from the ActiveMQ queue.</p>
+       next mail to process from the <a href="dev-activemq.xml">ActiveMQ queue</a>.</p>
        
     <p>The mailets defined in mailetcontainer.xml are applied to define if the mail is to be 
        treated as a Local or Remote delivery.</p>
