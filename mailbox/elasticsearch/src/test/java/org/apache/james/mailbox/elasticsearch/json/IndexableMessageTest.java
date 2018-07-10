@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.ZoneId;
+import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -457,9 +458,9 @@ public class IndexableMessageTest {
 
         TextExtractor textExtractor = mock(TextExtractor.class);
         when(textExtractor.extractContent(any(), any()))
-            .thenReturn(new ParsedContent("first attachment content", ImmutableMap.of()))
+            .thenReturn(new ParsedContent(Optional.of("first attachment content"), ImmutableMap.of()))
             .thenThrow(new RuntimeException("second cannot be parsed"))
-            .thenReturn(new ParsedContent("third attachment content", ImmutableMap.of()));
+            .thenReturn(new ParsedContent(Optional.of("third attachment content"), ImmutableMap.of()));
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()

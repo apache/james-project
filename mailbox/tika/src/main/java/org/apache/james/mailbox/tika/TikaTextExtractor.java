@@ -84,7 +84,7 @@ public class TikaTextExtractor implements TextExtractor {
 
     public ParsedContent performContentExtraction(InputStream inputStream, String contentType) throws IOException {
         ContentAndMetadata contentAndMetadata = convert(tikaHttpClient.recursiveMetaDataAsJson(inputStream, contentType));
-        return new ParsedContent(contentAndMetadata.getContent().orElse(null), contentAndMetadata.getMetadata());
+        return new ParsedContent(contentAndMetadata.getContent(), contentAndMetadata.getMetadata());
     }
 
     private ContentAndMetadata convert(Optional<InputStream> maybeInputStream) throws IOException, JsonParseException, JsonMappingException {

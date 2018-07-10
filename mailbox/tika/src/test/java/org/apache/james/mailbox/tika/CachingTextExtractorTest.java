@@ -34,6 +34,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -54,9 +55,9 @@ import com.google.common.collect.ImmutableMap;
 
 public class CachingTextExtractorTest {
 
-    private static final ParsedContent RESULT = new ParsedContent("content", ImmutableMap.of());
+    private static final ParsedContent RESULT = new ParsedContent(Optional.of("content"), ImmutableMap.of());
     public static final String BIG_STRING = Strings.repeat("0123456789", 103 * 1024);
-    private static final ParsedContent _2MiB_RESULT = new ParsedContent(BIG_STRING, ImmutableMap.of());
+    private static final ParsedContent _2MiB_RESULT = new ParsedContent(Optional.of(BIG_STRING), ImmutableMap.of());
     private static final Function<Integer, InputStream> STREAM_GENERATOR =
         i -> new ByteArrayInputStream(String.format("content%d", i).getBytes(StandardCharsets.UTF_8));
     private static final Supplier<InputStream> INPUT_STREAM = () -> STREAM_GENERATOR.apply(1);

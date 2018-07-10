@@ -154,8 +154,8 @@ public class MimePart {
         private ParsedContent extractText(TextExtractor textExtractor, InputStream bodyContent) throws Exception {
             if (isTextBody()) {
                 return new ParsedContent(
-                    IOUtils.toString(bodyContent, charset.orElse(StandardCharsets.UTF_8)),
-                    ImmutableMap.of());
+                        Optional.ofNullable(IOUtils.toString(bodyContent, charset.orElse(StandardCharsets.UTF_8))),
+                        ImmutableMap.of());
             }
             return textExtractor.extractContent(
                 bodyContent,

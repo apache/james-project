@@ -28,8 +28,8 @@ public class ParsedContent {
     private final Optional<String> textualContent;
     private final Map<String, List<String>> metadata;
 
-    public ParsedContent(String textualContent, Map<String, List<String>> metadata) {
-        this.textualContent = Optional.ofNullable(textualContent);
+    public ParsedContent(Optional<String> textualContent, Map<String, List<String>> metadata) {
+        this.textualContent = textualContent;
         this.metadata = metadata;
     }
 
