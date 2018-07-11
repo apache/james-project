@@ -10,7 +10,7 @@ public interface ConsumerOptions {
      * The empty consumer options.
      */
     static ConsumerOptions empty() {
-        return EmptyConsumerOptions.instance();
+        return queueName -> queueName;
     }
 
     /**
@@ -20,23 +20,4 @@ public interface ConsumerOptions {
      * @return The queue name maybe with additional options.
      */
     String applyForDequeue(String queueName);
-
-    /**
-     * The stub implementation for {@code ConsumerOptions}. Simply returns given argument.
-     */
-    final class EmptyConsumerOptions implements ConsumerOptions {
-        private static final EmptyConsumerOptions INSTANCE = new EmptyConsumerOptions();
-
-        private EmptyConsumerOptions() {
-        }
-
-        static EmptyConsumerOptions instance() {
-            return INSTANCE;
-        }
-
-        @Override
-        public String applyForDequeue(String queueName) {
-            return queueName;
-        }
-    }
 }
