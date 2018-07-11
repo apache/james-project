@@ -365,14 +365,15 @@ public class UidMsnConverterTest {
 
     @Test
     public void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
-        final int initialCount = 1000;
+        int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
             testee.addUid(MessageUid.of(i));
         }
 
-        int threadCount = 2;
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, initialCount,
-            (threadNumber, step) -> {
+        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .threadCount(2)
+            .operationCount(initialCount)
+            .build((threadNumber, step) -> {
                 if (threadNumber == 0) {
                     testee.remove(MessageUid.of(step + 1));
                 } else {
@@ -392,11 +393,13 @@ public class UidMsnConverterTest {
 
     @Test
     public void addShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
-        final int operationCount = 1000;
+        int operationCount = 1000;
         int threadCount = 2;
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))));
+        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .build((threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 
@@ -410,14 +413,16 @@ public class UidMsnConverterTest {
 
     @Test
     public void removeShouldLeadToMonoticMSNToUIDConversionWhenConcurrent() throws Exception {
-        final int operationCount = 1000;
+        int operationCount = 1000;
         int threadCount = 2;
         for (int i = 1; i <= operationCount * (threadCount + 1); i++) {
             testee.addUid(MessageUid.of(i));
         }
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))));
+        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .build((threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))));
         concurrentTestRunner.run();
         concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
 

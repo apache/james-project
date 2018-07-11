@@ -89,10 +89,9 @@ public class DefaultMailboxesProvisioningFilterTest {
 
     @Test
     public void createMailboxesIfNeededShouldNotGenerateExceptionsInConcurrentEnvironment() throws Exception {
-        int threadCount = 10;
-        int operationCount = 1;
-        new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNumber, step) -> testee.createMailboxesIfNeeded(session))
+        ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .build((threadNumber, step) -> testee.createMailboxesIfNeeded(session))
             .run()
             .assertNoException()
             .awaitTermination(10, TimeUnit.SECONDS);

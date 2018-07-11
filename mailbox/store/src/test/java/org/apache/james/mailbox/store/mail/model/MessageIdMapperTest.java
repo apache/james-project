@@ -677,8 +677,10 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
-            (threadNumber, step) -> sut.setFlags(message1.getMessageId(),
+        assertThat(ConcurrentTestRunner.builder()
+            .threadCount(threadCount)
+            .operationCount(updateCount)
+            .build((threadNumber, step) -> sut.setFlags(message1.getMessageId(),
                 ImmutableList.of(message1.getMailboxId()),
                 new Flags("custom-" + threadNumber + "-" + step),
                 FlagsUpdateMode.ADD)).run()
@@ -697,10 +699,12 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
 
-        final int threadCount = 4;
-        final int updateCount = 20;
-        assertThat(new ConcurrentTestRunner(threadCount, updateCount,
-            (threadNumber, step) -> {
+        int threadCount = 4;
+        int updateCount = 20;
+        assertThat(ConcurrentTestRunner.builder()
+            .threadCount(threadCount)
+            .operationCount(updateCount)
+            .build((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
                         ImmutableList.of(message1.getMailboxId()),
