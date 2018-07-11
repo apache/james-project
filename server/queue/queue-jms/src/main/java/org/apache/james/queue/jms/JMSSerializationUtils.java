@@ -35,10 +35,6 @@ import com.github.fge.lambdas.Throwing;
  * data can be safely transmitted over the wire.
  */
 final class JMSSerializationUtils {
-    private JMSSerializationUtils() {
-        throw new AssertionError("No instances!");
-    }
-
     /**
      * Checks {@code value} is native supported by the JMS spec.
      * <p>
