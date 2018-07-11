@@ -78,8 +78,9 @@ public abstract class ProvisioningTest {
     public void provisionMailboxesShouldNotDuplicateMailboxByName() throws Exception {
         String token = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD).serialize();
 
-        boolean termination = new ConcurrentTestRunner(10, 1,
-            (a, b) -> with()
+        boolean termination = ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .build((a, b) -> with()
                 .header("Authorization", token)
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap"))

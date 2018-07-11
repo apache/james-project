@@ -99,13 +99,14 @@ public abstract class AbstractSMTPServerTest {
             server = createServer(createProtocol(hook));
             server.bind();
 
-            final ProtocolServer finalServer = server;
-            final InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
-            final String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
-            int threadCount = 4;
-            int updateCount = 1;
-            assertThat(new ConcurrentTestRunner(threadCount, updateCount,
-                (threadNumber, step) -> send(finalServer, bindedAddress, mailContent)).run()
+            ProtocolServer finalServer = server;
+            InetSocketAddress bindedAddress = new ProtocolServerUtils(server).retrieveBindedAddress();
+            String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
+
+            assertThat(ConcurrentTestRunner.builder()
+                .threadCount(4)
+                .build((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
+                .run()
                 .awaitTermination(1, TimeUnit.MINUTES))
                 .isTrue();
 

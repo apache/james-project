@@ -74,8 +74,10 @@ public interface MailRepositoryUrlStoreContract {
     default void addShouldWorkInConcurrentEnvironment(MailRepositoryUrlStore store) throws Exception {
         int operationCount = 10;
         int threadCount = 10;
-        ConcurrentTestRunner testRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (a, b) -> store.add(MailRepositoryUrl.from("proto://" + a + "/" + b)))
+        ConcurrentTestRunner testRunner = ConcurrentTestRunner.builder()
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .build((a, b) -> store.add(MailRepositoryUrl.from("proto://" + a + "/" + b)))
             .run();
         testRunner.awaitTermination(1, TimeUnit.MINUTES);
         testRunner.assertNoException();
@@ -86,9 +88,10 @@ public interface MailRepositoryUrlStoreContract {
     @Test
     default void addShouldNotAddDuplicatesInConcurrentEnvironment(MailRepositoryUrlStore store) throws Exception {
         int operationCount = 10;
-        int threadCount = 10;
-        ConcurrentTestRunner testRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (a, b) -> store.add(MailRepositoryUrl.from("proto://" + b)))
+        ConcurrentTestRunner testRunner = ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .operationCount(operationCount)
+            .build((a, b) -> store.add(MailRepositoryUrl.from("proto://" + b)))
             .run();
         testRunner.awaitTermination(1, TimeUnit.MINUTES);
         testRunner.assertNoException();

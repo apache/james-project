@@ -211,8 +211,9 @@ public interface QuotaThresholdMailingIntegrationTest {
                 .gracePeriod(GRACE_PERIOD)
                 .build());
 
-        new ConcurrentTestRunner(10, 1, (threadNb, step) ->
-            testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
+        ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .build((threadNb, step) -> testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 
