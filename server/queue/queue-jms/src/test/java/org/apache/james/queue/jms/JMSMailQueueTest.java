@@ -52,7 +52,7 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
         MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
         GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        MailQueue.ConsumerOptions consumerOptions = name -> name + "?consumer.prefetchSize=0";
+        ConsumerOptions consumerOptions = name -> name + "?consumer.prefetchSize=0";
         mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, consumerOptions, metricFactory, gaugeRegistry);
     }
 

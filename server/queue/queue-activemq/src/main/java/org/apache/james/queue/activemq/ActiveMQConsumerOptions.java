@@ -22,10 +22,10 @@ package org.apache.james.queue.activemq;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.queue.api.MailQueue;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import org.apache.james.queue.jms.ConsumerOptions;
 
 /**
  * The ActiveMQ specific consumer options.
@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableMap;
  * See <a href="http://activemq.apache.org/destination-options.html">http://activemq.apache.org/destination-options.html</>
  * for more details.
  */
-public final class ActiveMQConsumerOptions implements MailQueue.ConsumerOptions {
+public final class ActiveMQConsumerOptions implements ConsumerOptions {
     private final Optional<String> dequeueParams;
 
     private ActiveMQConsumerOptions(Optional<String> dequeueParams) {
