@@ -18,11 +18,13 @@
  ****************************************************************/
 package org.apache.james.queue.activemq;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -110,17 +112,17 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
 
     @Test
     @Override
-    @Disabled("JAMES-2309 Long overflow in JMS delays")
-    public void enqueueWithVeryLongDelayShouldDelayMail(ExecutorService executorService) {
-
-    }
-
-    @Test
-    @Override
     @Disabled("JAMES-2312 JMS clear mailqueue can ommit some messages" +
         "Random test failing around 1% of the time")
     public void clearShouldRemoveAllElements() {
 
+    }
+
+    @Test
+    void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
+        long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(Long.MAX_VALUE, TimeUnit.DAYS);
+
+        assertThat(deliveryTimestamp).isEqualTo(Long.MAX_VALUE);
     }
 
     protected ActiveMQConnectionFactory createConnectionFactory() {

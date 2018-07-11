@@ -255,10 +255,17 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     public long computeNextDeliveryTimestamp(long delay, TimeUnit unit) {
         if (delay > 0) {
-            return ZonedDateTime.now()
-                .plus(delay, Temporals.chronoUnit(unit))
-                .toInstant()
-                .toEpochMilli();
+            try {
+                return ZonedDateTime.now()
+                    .plus(delay, Temporals.chronoUnit(unit))
+                    .toInstant()
+                    .toEpochMilli();
+            } catch (ArithmeticException e) {
+                LOGGER.warn("Exception encountered  while computed JMS next delivery (delay {} {}). Fallback to {} (Long.MAX_VALUE) ms",
+                        delay, unit.name(), Long.MAX_VALUE, e);
+
+                return Long.MAX_VALUE;
+            }
         }
         return NO_DELAY;
     }
