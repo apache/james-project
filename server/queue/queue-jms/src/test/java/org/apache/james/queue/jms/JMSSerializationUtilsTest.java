@@ -18,20 +18,18 @@
  ****************************************************************/
 package org.apache.james.queue.jms;
 
-import static org.apache.james.queue.jms.JMSSerializationUtils.deserialize;
-import static org.apache.james.queue.jms.JMSSerializationUtils.hasJMSNativeSupport;
-import static org.apache.james.queue.jms.JMSSerializationUtils.trySerialize;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.SerializationException;
+import org.junit.jupiter.api.Test;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang3.SerializationException;
-import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.Test;
+import static org.apache.james.queue.jms.JMSSerializationUtils.deserialize;
+import static org.apache.james.queue.jms.JMSSerializationUtils.serialize;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 class JMSSerializationUtilsTest {
     /**
@@ -44,46 +42,22 @@ class JMSSerializationUtilsTest {
      */
     private static <T extends Serializable> T roundtrip(T obj) {
         return Optional.ofNullable(obj)
-                .flatMap(JMSSerializationUtils::serialize)
-                .<T>flatMap(JMSSerializationUtils::deserialize)
+                .map(JMSSerializationUtils::serialize)
+                .<T>map(JMSSerializationUtils::deserialize)
                 .orElseThrow(() -> new IllegalArgumentException("Cannot serialize/deserialize: " + obj));
-    }
-
-    @Test
-    @SuppressWarnings("ConstantConditions")
-    void hasJMSNativeSupportSpec() {
-        SoftAssertions softly = new SoftAssertions();
-
-        softly.assertThat(hasJMSNativeSupport(null)).as("null support").isTrue();
-        softly.assertThat(hasJMSNativeSupport("")).as("String support").isTrue();
-        softly.assertThat(hasJMSNativeSupport((byte) 0)).as("Byte support").isTrue();
-        softly.assertThat(hasJMSNativeSupport((long) 0)).as("Long support").isTrue();
-        softly.assertThat(hasJMSNativeSupport((double) 0)).as("Double support").isTrue();
-        softly.assertThat(hasJMSNativeSupport(0)).as("Integer support").isTrue();
-        softly.assertThat(hasJMSNativeSupport((short) 0)).as("Short support").isTrue();
-        softly.assertThat(hasJMSNativeSupport((float) 0)).as("Float support").isTrue();
-        softly.assertThat(hasJMSNativeSupport(true)).as("Boolean support").isTrue();
-
-        softly.assertAll();
-    }
-
-    @Test
-    void trySerializeShouldReturnItselfWhenJMSSupported() {
-        Integer expected = 41;
-
-        Object actual = trySerialize(expected);
-
-        assertThat(actual).isSameAs(expected);
     }
 
     @Test
     void trySerializeShouldReturnString() {
         SerializableStringHolder value = new SerializableStringHolder("value");
 
-        Object actual = trySerialize(value);
+        String expected = "rO0ABXNyAE1vcmcuYXBhY2hlLmphbWVzLnF1ZXVlLmptcy5KTVNTZXJpYWxp" +
+                "emF0aW9uVXRpbHNUZXN0JFNlcmlhbGl6YWJsZVN0cmluZ0hvbGRlcsy4/DEA" +
+                "8nRZAgABTAAFdmFsdWV0ABJMamF2YS9sYW5nL1N0cmluZzt4cHQABXZhbHVl";
 
-        assertThat(actual)
-                .isInstanceOf(String.class);
+        String actual = serialize(value);
+
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test

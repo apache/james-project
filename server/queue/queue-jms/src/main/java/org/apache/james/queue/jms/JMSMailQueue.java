@@ -319,7 +319,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         // won't serialize the empty headers so it is mandatory
         // to handle nulls when reconstructing mail from message
         if (!mail.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
-            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, JMSSerializationUtils.trySerialize(mail.getPerRecipientSpecificHeaders()));
+            props.put(JAMES_MAIL_PER_RECIPIENT_HEADERS, JMSSerializationUtils.serialize(mail.getPerRecipientSpecificHeaders()));
         }
 
         String recipientsAsString = joiner.join(mail.getRecipients());
@@ -331,7 +331,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
 
         org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
-                .forEach(attrName -> props.put(attrName, JMSSerializationUtils.trySerialize(mail.getAttribute(attrName))));
+                .forEach(attrName -> props.put(attrName, JMSSerializationUtils.serialize(mail.getAttribute(attrName))));
 
         props.put(JAMES_MAIL_ATTRIBUTE_NAMES, joiner.join(mail.getAttributeNames()));
         props.put(JAMES_MAIL_SENDER, sender);
@@ -388,7 +388,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         mail.setLastUpdated(new Date(message.getLongProperty(JAMES_MAIL_LAST_UPDATED)));
         mail.setName(message.getStringProperty(JAMES_MAIL_NAME));
 
-        JMSSerializationUtils.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS))
+        Optional.ofNullable(JMSSerializationUtils.<PerRecipientHeaders>deserialize(message.getStringProperty(JAMES_MAIL_PER_RECIPIENT_HEADERS)))
                 .ifPresent(mail::addAllSpecificHeaderForRecipient);
 
         List<MailAddress> rcpts = new ArrayList<>();
@@ -444,27 +444,10 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         // See JAMES-1241
         Object attrValue = Throwing.function(message::getObjectProperty).apply(name);
 
-        // can be a base64 representation of serialized object try decode and deserialize. See JAMES-2167.
         if (attrValue instanceof String) {
-            mail.setAttribute(name, tryDeserialize((String) attrValue));
-        } else if (attrValue instanceof Serializable) {
-            mail.setAttribute(name, (Serializable) attrValue);
+            mail.setAttribute(name, JMSSerializationUtils.deserialize((String) attrValue));
         } else {
             LOGGER.error("Not supported mail attribute {} of type {} for mail {}", name, attrValue, mail.getName());
-        }
-    }
-
-    /**
-     * Tries to deserialize given argument and when fails returns itself.
-     *
-     * @param attrValue The input string.
-     * @return The deserialized object or itself.
-     */
-    private Serializable tryDeserialize(String attrValue) {
-        try {
-            return JMSSerializationUtils.deserialize(attrValue).orElse(null);
-        } catch (SerializationException e) {
-            return attrValue;
         }
     }
 
