@@ -36,9 +36,10 @@ import org.junit.Test;
 public abstract class AbstractNotificationRegistryTest {
 
     public static final ZonedDateTime ZONED_DATE_TIME = ZonedDateTime.parse("2016-04-03T02:01:01+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime ZONED_DATE_TIME_PLUS_1_SECONDS = ZonedDateTime.parse("2016-04-03T02:01:02+07:00[Asia/Vientiane]");
-    public static final ZonedDateTime ZONED_DATE_TIME_PLUS_10_SECONDS = ZonedDateTime.parse("2016-04-03T02:01:11+07:00[Asia/Vientiane]");
+    public static final ZonedDateTime ZONED_DATE_TIME_PLUS_4_SECONDS = ZonedDateTime.parse("2016-04-03T02:01:05+07:00[Asia/Vientiane]");
+    public static final ZonedDateTime ZONED_DATE_TIME_PLUS_8_SECONDS = ZonedDateTime.parse("2016-04-03T02:01:09+07:00[Asia/Vientiane]");
     public static final AccountId ACCOUNT_ID = AccountId.fromString("id");
+
     private NotificationRegistry notificationRegistry;
     private ZonedDateTimeProvider zonedDateTimeProvider;
     private RecipientId recipientId;
@@ -53,38 +54,38 @@ public abstract class AbstractNotificationRegistryTest {
     }
 
     @Test
-    public void isRegisterShouldReturnFalseByDefault() throws Exception {
+    public void isRegisterShouldReturnFalseByDefault() {
         assertThat(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId).join()).isFalse();
     }
 
     @Test
-    public void registerShouldWork() throws Exception {
+    public void registerShouldWork() {
         notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.empty()).join();
 
         assertThat(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId).join()).isTrue();
     }
 
     @Test
-    public void registerShouldWorkWithExpiracyDate() throws Exception {
+    public void registerShouldWorkWithExpiracyDate() {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
-        notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_1_SECONDS)).join();
+        notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).join();
 
         assertThat(notificationRegistry.isRegistered(ACCOUNT_ID, recipientId).join()).isTrue();
     }
 
     @Test
-    public void registerShouldExpireAfterExpiracyDate() throws Exception {
+    public void registerShouldExpireAfterExpiracyDate() {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
 
-        notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_1_SECONDS)).join();
+        notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME_PLUS_4_SECONDS)).join();
 
-        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_10_SECONDS);
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_8_SECONDS);
 
-        await().atMost(2, TimeUnit.SECONDS).until(() -> !notificationRegistry.isRegistered(ACCOUNT_ID, recipientId).join());
+        await().atMost(20, TimeUnit.SECONDS).until(() -> !notificationRegistry.isRegistered(ACCOUNT_ID, recipientId).join());
     }
 
     @Test
-    public void flushShouldWork() throws Exception {
+    public void flushShouldWork() {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
         notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.empty()).join();
 
@@ -94,8 +95,8 @@ public abstract class AbstractNotificationRegistryTest {
     }
 
     @Test
-    public void registerShouldNotPersistWhenExpiryDateIsPast() throws Exception {
-        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_1_SECONDS);
+    public void registerShouldNotPersistWhenExpiryDateIsPast() {
+        when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME_PLUS_4_SECONDS);
 
         notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME)).join();
 
@@ -103,7 +104,7 @@ public abstract class AbstractNotificationRegistryTest {
     }
 
     @Test
-    public void registerShouldNotPersistWhenExpiryDateIsPresent() throws Exception {
+    public void registerShouldNotPersistWhenExpiryDateIsPresent() {
         when(zonedDateTimeProvider.get()).thenReturn(ZONED_DATE_TIME);
 
         notificationRegistry.register(ACCOUNT_ID, recipientId, Optional.of(ZONED_DATE_TIME)).join();

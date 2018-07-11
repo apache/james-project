@@ -37,7 +37,7 @@ public class CassandraNotificationRegistryTest extends AbstractNotificationRegis
     @Override
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraNotificationRegistryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(new CassandraNotificationRegistryModule(), cassandraServer.getHost());
         super.setUp();
     }
 
