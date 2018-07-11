@@ -33,15 +33,15 @@ import com.google.common.collect.ImmutableMap;
  * See <a href="http://activemq.apache.org/destination-options.html">http://activemq.apache.org/destination-options.html</>
  * for more details.
  */
-public class ActiveMQConsumerOptions implements MailQueue.ConsumerOptions {
+public final class ActiveMQConsumerOptions implements MailQueue.ConsumerOptions {
     private final Optional<String> dequeueParams;
 
-    private ActiveMQConsumerOptions(String dequeueParams) {
-        this.dequeueParams = java.util.Optional.ofNullable(dequeueParams).map(StringUtils::stripToNull);
+    private ActiveMQConsumerOptions(Optional<String> dequeueParams) {
+        this.dequeueParams = dequeueParams.map(StringUtils::stripToNull);
     }
 
-    public static ActiveMQConsumerOptionsBuilder builder() {
-        return new ActiveMQConsumerOptionsBuilder();
+    public static Builder builder() {
+        return Builder.builder();
     }
 
     @Override
@@ -51,45 +51,52 @@ public class ActiveMQConsumerOptions implements MailQueue.ConsumerOptions {
                 .orElse(name);
     }
 
-    public static class ActiveMQConsumerOptionsBuilder {
+    public static class Builder {
         private ImmutableMap.Builder<String, String> optionsMap = ImmutableMap.builder();
 
-        public ActiveMQConsumerOptionsBuilder dispatchAsync(boolean dispatchAsync) {
+        private Builder() {
+        }
+
+        public static Builder builder() {
+            return new Builder();
+        }
+
+        public Builder dispatchAsync(boolean dispatchAsync) {
             optionsMap.put(ActiveMQSupport.CONSUMER_DISPATCH_ASYNC, String.valueOf(dispatchAsync));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder exclusive(boolean exclusive) {
+        public Builder exclusive(boolean exclusive) {
             optionsMap.put(ActiveMQSupport.CONSUMER_EXCLUSIVE, String.valueOf(exclusive));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder maximumPendingMessageLimit(int limit) {
+        public Builder maximumPendingMessageLimit(int limit) {
             optionsMap.put(ActiveMQSupport.CONSUMER_MAXIMUM_PENDING_MESSAGE_LIMIT, String.valueOf(limit));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder noLocal(boolean noLocal) {
+        public Builder noLocal(boolean noLocal) {
             optionsMap.put(ActiveMQSupport.CONSUMER_NO_LOCAL, String.valueOf(noLocal));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder prefetchSize(int size) {
+        public Builder prefetchSize(int size) {
             optionsMap.put(ActiveMQSupport.CONSUMER_PREFETCH_SIZE, String.valueOf(size));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder priority(int priority) {
+        public Builder priority(int priority) {
             optionsMap.put(ActiveMQSupport.CONSUMER_PRIORITY, String.valueOf(priority));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder retroactive(boolean retroactive) {
+        public Builder retroactive(boolean retroactive) {
             optionsMap.put(ActiveMQSupport.CONSUMER_RETROACTIVE, String.valueOf(retroactive));
             return this;
         }
 
-        public ActiveMQConsumerOptionsBuilder selector(String selector) {
+        public Builder selector(String selector) {
             optionsMap.put(ActiveMQSupport.CONSUMER_SELECTOR, selector);
             return this;
         }
@@ -98,12 +105,12 @@ public class ActiveMQConsumerOptions implements MailQueue.ConsumerOptions {
             ImmutableMap<String, String> options = optionsMap.build();
 
             if (options.isEmpty()) {
-                return new ActiveMQConsumerOptions(null);
+                return new ActiveMQConsumerOptions(Optional.empty());
             }
 
-            return new ActiveMQConsumerOptions(Joiner.on('&')
+            return new ActiveMQConsumerOptions(Optional.of(Joiner.on('&')
                     .withKeyValueSeparator("=")
-                    .join(options)
+                    .join(options))
             );
         }
     }
