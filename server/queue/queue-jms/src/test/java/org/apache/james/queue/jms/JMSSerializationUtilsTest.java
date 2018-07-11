@@ -20,13 +20,13 @@ package org.apache.james.queue.jms;
 
 import static org.apache.james.queue.jms.JMSSerializationUtils.deserialize;
 import static org.apache.james.queue.jms.JMSSerializationUtils.hasJMSNativeSupport;
-import static org.apache.james.queue.jms.JMSSerializationUtils.roundtrip;
 import static org.apache.james.queue.jms.JMSSerializationUtils.trySerialize;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationException;
@@ -34,6 +34,21 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
 class JMSSerializationUtilsTest {
+    /**
+     * Serializes and deserializes the provided object.
+     *
+     * @param obj The object that needs to be serialized.
+     * @param <T> The type of the provided object.
+     *
+     * @return The provided object.
+     */
+    private static <T extends Serializable> T roundtrip(T obj) {
+        return Optional.ofNullable(obj)
+                .flatMap(JMSSerializationUtils::serialize)
+                .<T>flatMap(JMSSerializationUtils::deserialize)
+                .orElseThrow(() -> new IllegalArgumentException("Cannot serialize/deserialize: " + obj));
+    }
+
     @Test
     @SuppressWarnings("ConstantConditions")
     void hasJMSNativeSupportSpec() {
@@ -75,9 +90,7 @@ class JMSSerializationUtilsTest {
     void roundTripShouldReturnEqualObject() {
         SerializableStringHolder expected = new SerializableStringHolder("value");
 
-        assertThat(roundtrip(expected))
-                .isPresent()
-                .hasValue(expected);
+        assertThat(roundtrip(expected)).isEqualTo(expected);
     }
 
     @Test

@@ -34,7 +34,7 @@ import com.github.fge.lambdas.Throwing;
  * deserialization. The operation consists in encoding/decoding the serialized/deserialized data in Base64, so that
  * data can be safely transmitted over the wire.
  */
-final class JMSSerializationUtils {
+public final class JMSSerializationUtils {
     /**
      * Checks {@code value} is native supported by the JMS spec.
      * <p>
@@ -43,7 +43,7 @@ final class JMSSerializationUtils {
      * <p>
      * Note that neither {@link java.util.Map} nor {@link java.util.List} is not supported by default.
      */
-    static boolean hasJMSNativeSupport(Object value) {
+    public static boolean hasJMSNativeSupport(Object value) {
         return value == null || value instanceof String || value instanceof Boolean ||
                 value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long ||
                 value instanceof Double || value instanceof Float;
@@ -57,7 +57,7 @@ final class JMSSerializationUtils {
      *
      * @return The serialized base64 string or {@code value} itself.
      */
-    static Object trySerialize(Serializable value) {
+    public static Object trySerialize(Serializable value) {
         return hasJMSNativeSupport(value) ? value : serialize(value).orElse(null);
     }
 
@@ -68,7 +68,7 @@ final class JMSSerializationUtils {
      *
      * @return The base64 representation of {@code obj}.
      */
-    static Optional<String> serialize(Serializable obj) {
+    public static Optional<String> serialize(Serializable obj) {
         return Optional.ofNullable(obj)
                 .map(SerializationUtils::serialize)
                 .map(Base64::encodeBase64String);
@@ -82,24 +82,10 @@ final class JMSSerializationUtils {
      *
      * @return The deserialized object.
      */
-    static <T extends Serializable> Optional<T> deserialize(String object) {
+    public static <T extends Serializable> Optional<T> deserialize(String object) {
         return Optional.ofNullable(object)
                 .map(String::getBytes)
                 .map(Throwing.function(Base64::decodeBase64))
                 .map(SerializationUtils::deserialize);
-    }
-
-    /**
-     * Serializes and deserializes the provided object.
-     *
-     * @param obj The object that needs to be serialized.
-     * @param <T> The type of the provided object.
-     *
-     * @return The provided object.
-     */
-    static <T extends Serializable> Optional<T> roundtrip(T obj) {
-        return Optional.ofNullable(obj)
-                .flatMap(JMSSerializationUtils::serialize)
-                .flatMap(JMSSerializationUtils::deserialize);
     }
 }
