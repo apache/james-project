@@ -17,7 +17,7 @@
         </root>
 
         <logger name="org.testcontainers" level="ERROR"/>
-        <logger name="org.apache.james" level="DEBUG"/>
-        <logger name="org.apache.james.queue.rabbitmq.DockerRabbitMQ" level="DEBUG"/>
+        <logger name="org.apache.james" level="WARN"/>
+        <logger name="org.apache.james.queue.rabbitmq.DockerRabbitMQ" level="WARN"/>
 
 </configuration>
