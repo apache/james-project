@@ -27,13 +27,17 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.server.core.MimeMessageInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
 
 public class MailboxAppender {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MailboxAppender.class);
 
     private final MailboxManager mailboxManager;
 
@@ -83,7 +87,11 @@ public class MailboxAppender {
 
     private void createMailboxIfNotExist(MailboxSession session, MailboxPath path) throws MailboxException {
         if (!mailboxManager.mailboxExists(path, session)) {
-            mailboxManager.createMailbox(path, session);
+            try {
+                mailboxManager.createMailbox(path, session);
+            } catch (MailboxExistsException e) {
+                LOGGER.info("Mailbox {} have been created concurrently", path);
+            }
         }
     }
 
