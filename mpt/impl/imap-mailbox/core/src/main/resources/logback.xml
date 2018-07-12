@@ -16,7 +16,7 @@
                 <appender-ref ref="CONSOLE" />
         </root>
 
-        <logger name="org.apache.james" level="DEBUG">
+        <logger name="org.apache.james" level="WARN">
                 <appender-ref ref="CONSOLE" />
         </logger>
 
