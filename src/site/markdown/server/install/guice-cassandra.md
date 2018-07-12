@@ -5,7 +5,7 @@
 ### Requirements
 
  - Java 8 SDK
- - Docker ∕ ElasticSearch 2.2.1 and Cassandra 2.2.3
+ - Docker ∕ ElasticSearch 2.2.1 and Cassandra 2.2.12
  - Maven 3
 
 ### Building the artifacts
@@ -45,7 +45,7 @@ $ keytool -genkey -alias james -keyalg RSA -keystore conf/keystore
 You need to have a Cassandra and an ElasticSearch instance running. You can either install the servers or launch them via docker:
 
 ```bash
-$ docker run -d --port 9042:9042 --name=cassandra cassandra:2.2.3
+$ docker run -d --port 9042:9042 --name=cassandra cassandra:2.2.12
 $ docker run -d --port 9200:9200 --port 9300:9300 --name=elasticsearch elasticsearch:2.2.1
 ```
 
