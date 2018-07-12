@@ -35,8 +35,10 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 public class MailboxAppenderTest {
@@ -119,5 +121,14 @@ public class MailboxAppenderTest {
             .getMessages(MessageRange.all(), new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT), session);
 
         assertThat(messages).hasSize(1);
+    }
+
+    @RepeatedTest(20)
+    void appendShouldNotFailInConcurrentEnvironment() throws Exception {
+        ConcurrentTestRunner.builder()
+            .threadCount(100)
+            .build((a, b) -> testee.append(mimeMessage, USER, FOLDER + "/any"))
+            .run()
+            .assertNoException();
     }
 }
