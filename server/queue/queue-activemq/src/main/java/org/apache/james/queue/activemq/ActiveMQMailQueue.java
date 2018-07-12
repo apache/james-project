@@ -180,10 +180,6 @@ public class ActiveMQMailQueue extends JMSMailQueue implements ActiveMQSupport {
                     // MimeMessage implementation
                     blobMessage = amqSession.createBlobMessage(new MimeMessageInputStream(mail.getMessage()));
                 }
-                 
-                    
-                // store the queue name in the props
-                props.put(JAMES_QUEUE_NAME, queueName);
 
                 for (Map.Entry<String, Object> entry : props.entrySet()) {
                     blobMessage.setObjectProperty(entry.getKey(), entry.getValue());
