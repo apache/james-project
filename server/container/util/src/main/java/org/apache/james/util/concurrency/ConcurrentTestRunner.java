@@ -21,6 +21,7 @@ package org.apache.james.util.concurrency;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -35,7 +36,39 @@ import com.google.common.base.Preconditions;
 
 public class ConcurrentTestRunner {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentTestRunner.class);
+    public static final int DEFAULT_OPERATION_COUNT = 1;
+
+    public static class Builder {
+        private Optional<Integer> threadCount;
+        private Optional<Integer>  operationCount;
+
+        public Builder() {
+            threadCount = Optional.empty();
+            operationCount = Optional.empty();
+        }
+
+        public Builder threadCount(int threadCount) {
+            Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
+            this.threadCount = Optional.of(threadCount);
+            return this;
+        }
+
+        public Builder operationCount(int operationCount) {
+            Preconditions.checkArgument(operationCount > 0, "Operation count should be strictly positive");
+            this.operationCount = Optional.of(operationCount);
+            return this;
+        }
+
+        public ConcurrentTestRunner build(BiConsumer operation) {
+            Preconditions.checkState(threadCount.isPresent(), "'threadCount' is compulsory");
+            Preconditions.checkNotNull(operation);
+
+            return new ConcurrentTestRunner(
+                threadCount.get(),
+                operationCount.orElse(DEFAULT_OPERATION_COUNT),
+                operation);
+        }
+    }
 
     public interface BiConsumer {
         void consume(int threadNumber, int step) throws Exception;
@@ -69,6 +102,12 @@ public class ConcurrentTestRunner {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentTestRunner.class);
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final int threadCount;
     private final int operationCount;
     private final CountDownLatch countDownLatch;
@@ -76,10 +115,7 @@ public class ConcurrentTestRunner {
     private final ExecutorService executorService;
     private final List<Future<?>> futures;
 
-    public ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
-        Preconditions.checkArgument(threadCount > 0, "Thread count should be strictly positive");
-        Preconditions.checkArgument(operationCount > 0, "Operation count should be strictly positive");
-        Preconditions.checkNotNull(biConsumer);
+    private ConcurrentTestRunner(int threadCount, int operationCount, BiConsumer biConsumer) {
         this.threadCount = threadCount;
         this.operationCount = operationCount;
         this.countDownLatch = new CountDownLatch(threadCount);

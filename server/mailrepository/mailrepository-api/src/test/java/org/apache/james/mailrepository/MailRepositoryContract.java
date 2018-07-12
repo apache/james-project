@@ -381,8 +381,6 @@ public interface MailRepositoryContract {
     default void storingAndRemovingMessagesConcurrentlyShouldLeadToConsistentResult() throws Exception {
         MailRepository testee = retrieveRepository();
         int nbKeys = 20;
-        int nbIterations = 10;
-        int threadCount = 10;
         ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
         List<Object> locks = IntStream.range(0, 10)
             .boxed()
@@ -412,8 +410,10 @@ public interface MailRepositoryContract {
                 new DistributionEntry<>(add, 0.25),
                 new DistributionEntry<>(remove, 0.75)));
 
-        new ConcurrentTestRunner(threadCount, nbIterations,
-            (a, b) -> distribution.sample().run())
+        ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .operationCount(10)
+            .build((a, b) -> distribution.sample().run())
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 

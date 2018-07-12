@@ -240,10 +240,10 @@ public class InMemoryMailRepositoryStoreTest {
     public void selectShouldNotReturnDifferentResultsWhenUsedInAConcurrentEnvironment() throws Exception {
         MailRepositoryUrl url = MailRepositoryUrl.from("memory://repo");
         int threadCount = 10;
-        int operationCount = 1;
 
-        ConcurrentTestRunner concurrentTestRunner = new ConcurrentTestRunner(threadCount, operationCount,
-            (threadNb, operationNb) -> repositoryStore.select(url)
+        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .threadCount(10)
+            .build((threadNb, operationNb) -> repositoryStore.select(url)
                 .store(FakeMail.builder()
                     .name("name" + threadNb)
                     .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
