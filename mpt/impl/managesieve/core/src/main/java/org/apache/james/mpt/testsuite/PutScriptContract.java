@@ -21,40 +21,27 @@ package org.apache.james.mpt.testsuite;
 
 import java.util.Locale;
 
+import org.apache.james.mpt.HostSystemProvider;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public abstract class SetActiveTest {
+public interface PutScriptContract extends HostSystemProvider {
+    String USER = "user";
+    String PASSWORD = "password";
 
-    public static final String USER = "user";
-    public static final String PASSWORD = "password";
-    
-    protected abstract ManageSieveHostSystem createManageSieveHostSystem();
-    
-    private ManageSieveHostSystem hostSystem;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
+    ManageSieveHostSystem hostSystem();
 
-    @Before
-    public void setUp() throws Exception {
-        hostSystem = createManageSieveHostSystem();
-        hostSystem.beforeTest();
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem)
+    default SimpleScriptedTestProtocol putScriptContractProtocol() throws Exception {
+        return new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem())
                 .withUser(USER, PASSWORD)
                 .withLocale(Locale.US);
     }
-    
-    @After
-    public void tearDown() throws Exception {
-        hostSystem.afterTest();
-    }
 
     @Test
-    public void setActiveShouldWork() throws Exception {
-        simpleScriptedTestProtocol
+    default void putScriptShouldWork() throws Exception {
+        putScriptContractProtocol()
             .withLocale(Locale.US)
-            .run("setactive");
+            .run("putscript");
     }
 }

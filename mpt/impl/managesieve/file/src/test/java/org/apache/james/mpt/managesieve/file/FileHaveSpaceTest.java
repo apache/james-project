@@ -20,34 +20,30 @@
 package org.apache.james.mpt.managesieve.file;
 
 import org.apache.james.mpt.host.ManageSieveHostSystem;
-import org.apache.james.mpt.testsuite.HaveSpaceTest;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.james.mpt.testsuite.HaveSpaceContract;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class FileHaveSpaceTest extends HaveSpaceTest {
-
+public class FileHaveSpaceTest implements HaveSpaceContract {
     private ManageSieveHostSystem system;
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         Injector injector = Guice.createInjector(new FileModule());
         system = injector.getInstance(ManageSieveHostSystem.class);
         system.beforeTest();
-        super.setUp();
-    }
-    
-    @Override
-    protected ManageSieveHostSystem createManageSieveHostSystem() {
-        return system;
     }
 
     @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
+    public ManageSieveHostSystem hostSystem() {
+        return system;
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        hostSystem().afterTest();
     }
 }

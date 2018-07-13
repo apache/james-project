@@ -49,6 +49,11 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-cassandra</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-launcher</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

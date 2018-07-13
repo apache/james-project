@@ -35,14 +35,13 @@ import org.apache.james.user.cassandra.CassandraUsersRepositoryModule;
 import org.apache.james.util.Host;
 
 public class CassandraHostSystem extends JamesManageSieveHostSystem {
-    
     private final Host cassandraHost;
     private CassandraCluster cassandra;
 
     public CassandraHostSystem(Host cassandraHost) {
         this.cassandraHost = cassandraHost;
     }
-    
+
     @Override
     public void beforeTest() throws Exception {
         CassandraModuleComposite modules = new CassandraModuleComposite(
@@ -53,7 +52,7 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
     }
 
     @Override
-    protected SieveRepository createSieveRepository() throws Exception {
+    protected SieveRepository createSieveRepository() {
         return new CassandraSieveRepository(
             new CassandraSieveDAO(cassandra.getConf()),
             new CassandraSieveQuotaDAO(cassandra.getConf()),
@@ -67,4 +66,8 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
         return cassandraUsersRepository;
     }
 
+    @Override
+    public void afterTest() {
+        cassandra.close();
+    }
 }

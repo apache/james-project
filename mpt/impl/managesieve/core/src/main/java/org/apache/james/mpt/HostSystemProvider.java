@@ -17,38 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.managesieve.cassandra;
+package org.apache.james.mpt;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
-import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
-import org.apache.james.mpt.testsuite.SetActiveTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
 
-public class CassandraSetActiveTest extends SetActiveTest {
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private ManageSieveHostSystem system;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        system = new CassandraHostSystem(cassandraServer.getHost());
-        system.beforeTest();
-        super.setUp();
-    }
-    
-    @Override
-    protected ManageSieveHostSystem createManageSieveHostSystem() {
-        return system;
-    }
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
+public interface HostSystemProvider {
+    ManageSieveHostSystem hostSystem();
 }

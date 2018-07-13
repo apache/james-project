@@ -17,38 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.managesieve.cassandra;
+package org.apache.james.mpt.testsuite;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import java.util.Locale;
+
+import org.apache.james.mpt.HostSystemProvider;
 import org.apache.james.mpt.host.ManageSieveHostSystem;
-import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
-import org.apache.james.mpt.testsuite.PutScriptTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.junit.jupiter.api.Test;
 
-public class CassandraPutScriptTest extends PutScriptTest {
+public interface LogoutContract extends HostSystemProvider {
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    String USER = "user";
+    String PASSWORD = "password";
     
-    private ManageSieveHostSystem system;
+    ManageSieveHostSystem hostSystem();
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        system = new CassandraHostSystem(cassandraServer.getHost());
-        system.beforeTest();
-        super.setUp();
-    }
-    
-    @Override
-    protected ManageSieveHostSystem createManageSieveHostSystem() {
-        return system;
+    default SimpleScriptedTestProtocol logoutContractProtocol() throws Exception {
+        return new SimpleScriptedTestProtocol("/org/apache/james/managesieve/scripts/", hostSystem())
+                .withUser(USER, PASSWORD)
+                .withLocale(Locale.US);
     }
 
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
+    @Test
+    default void logoutShouldWork() throws Exception {
+        logoutContractProtocol()
+            .withLocale(Locale.US)
+            .run("logout");
     }
 }
