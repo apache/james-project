@@ -106,7 +106,7 @@ public class MailetConfiguration implements SerializableAsXml {
 
     public static MailetConfiguration.Builder remoteDeliveryBuilder() {
         return remoteDeliveryBuilderNoBounces()
-            .addProperty("bounceProcessor", ProcessorConfiguration.STATE_BOUNCES);
+            .addProperty("bounceProcessor", ProcessorConfiguration.STATE_ERROR);
     }
 
     public static MailetConfiguration.Builder remoteDeliveryBuilderNoBounces() {

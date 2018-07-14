@@ -54,20 +54,12 @@ public class TemporaryJamesServer {
     public static final MailetContainer.Builder DEFAULT_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
         .putProcessor(CommonProcessors.root())
         .putProcessor(CommonProcessors.error())
-        .putProcessor(CommonProcessors.transport())
-        .putProcessor(CommonProcessors.spam())
-        .putProcessor(CommonProcessors.localAddressError())
-        .putProcessor(CommonProcessors.relayDenied())
-        .putProcessor(CommonProcessors.bounces())
-        .putProcessor(CommonProcessors.sieveManagerCheck());
+        .putProcessor(CommonProcessors.transport());
 
     public static final MailetContainer.Builder SIMPLE_MAILET_CONTAINER_CONFIGURATION = MailetContainer.builder()
         .putProcessor(CommonProcessors.simpleRoot())
         .putProcessor(CommonProcessors.error())
-        .putProcessor(CommonProcessors.transport())
-        .putProcessor(CommonProcessors.localAddressError())
-        .putProcessor(CommonProcessors.relayDenied())
-        .putProcessor(CommonProcessors.bounces());
+        .putProcessor(CommonProcessors.transport());
 
     public static class Builder {
         private ImmutableList.Builder<Module> overrideModules;

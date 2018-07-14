@@ -86,11 +86,6 @@ public class SMIMESignIntegrationTest {
                     .addProperty("keyStoreType", "PKCS12")
                     .addProperty("debug", "true"))
                 .addMailet(MailetConfiguration.LOCAL_DELIVERY))
-            .putProcessor(CommonProcessors.spam())
-            .putProcessor(CommonProcessors.localAddressError())
-            .putProcessor(CommonProcessors.relayDenied())
-            .putProcessor(CommonProcessors.bounces())
-            .putProcessor(CommonProcessors.sieveManagerCheck())
             .build();
 
         jamesServer = TemporaryJamesServer.builder()

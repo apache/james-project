@@ -76,36 +76,6 @@
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
         </handlerchain>
     </smtpserver>
-    <smtpserver enabled="true">
-        <jmxName>smtpserver-authenticated</jmxName>
-        <bind>0.0.0.0:1587</bind>
-        <connectionBacklog>200</connectionBacklog>
-        <tls socketTLS="false" startTLS="false">
-            <keystore>file://conf/keystore</keystore>
-            <secret>james72laBalle</secret>
-            <provider>org.bouncycastle.jce.provider.BouncyCastleProvider</provider>
-            <algorithm>SunX509</algorithm>
-        </tls>
-        <connectiontimeout>360</connectiontimeout>
-        <connectionLimit>0</connectionLimit>
-        <connectionLimitPerIP>0</connectionLimitPerIP>
-        <!--
-           Authorize only local users
-        -->
-        <authRequired>true</authRequired>
-        {{#hasAuthorizedAddresses}}
-        <authorizedAddresses>{{authorizedAddresses}}</authorizedAddresses>
-        {{/hasAuthorizedAddresses}}
-        <!-- Trust authenticated users -->
-        <verifyIdentity>false</verifyIdentity>
-        <maxmessagesize>{{maxmessagesize}}</maxmessagesize>
-        <addressBracketsEnforcement>{{bracketEnforcement}}</addressBracketsEnforcement>
-        <smtpGreeting>JAMES Linagora's SMTP awesome Server</smtpGreeting>
-        <handlerchain>
-            <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
-            <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
-        </handlerchain>
-    </smtpserver>
 </smtpservers>
 
 
