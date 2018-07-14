@@ -176,10 +176,6 @@ public abstract class SetMessagesMethodTest {
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
 
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.OUTBOX);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.DRAFTS);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.SENT);
         await();
     }
 
@@ -1986,8 +1982,8 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldNotAllowDraftCreationInADelegatedMailbox() throws Exception {
         String messageCreationId = "creationId1337";
 
-        jmapServer.getProbe(ACLProbeImpl.class)
-            .addRights(
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.DRAFTS);
+        aclProbe.addRights(
                 MailboxPath.forUser(USERNAME, DefaultMailboxes.DRAFTS),
                 BOB,
                 MailboxACL.FULL_RIGHTS);
@@ -3210,7 +3206,6 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void mailboxIdsShouldBeInDestinationWhenUsingForMoveWithoutTrashFolder() throws Exception {
-        mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH);
         String newMailboxName = "heartFolder";
         String heartFolderId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, newMailboxName).serialize();
 
@@ -3530,7 +3525,7 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesShouldWorkForMoveToTrash() throws Exception {
-        String trashId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH).getMailboxId().serialize();
+        String trashId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH).serialize();
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
@@ -3566,7 +3561,7 @@ public abstract class SetMessagesMethodTest {
     public void copyToTrashShouldWork() throws Exception {
         String newMailboxName = "heartFolder";
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, newMailboxName);
-        String trashId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH).getMailboxId().serialize();
+        String trashId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, DefaultMailboxes.TRASH).serialize();
 
         ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
         ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
