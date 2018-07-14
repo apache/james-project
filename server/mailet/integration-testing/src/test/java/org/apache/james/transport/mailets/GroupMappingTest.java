@@ -27,7 +27,6 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.SMTP_PORT;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.equalTo;
 
 import javax.mail.internet.MimeMessage;
 
@@ -46,7 +45,6 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.IsSenderInRRTLoop;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.SMTPMessageSender;
@@ -85,8 +83,6 @@ public class GroupMappingTest {
     private RequestSpecification webAdminApi;
 
     @Rule
-    public final FakeSmtp fakeSmtp = new FakeSmtp();
-    @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
@@ -104,10 +100,7 @@ public class GroupMappingTest {
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RecipientIsLocal.class)
                     .mailet(VacationMailet.class))
-                .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
-                .addMailet(MailetConfiguration.remoteDeliveryBuilder()
-                    .matcher(All.class)
-                    .addProperty("gateway", fakeSmtp.getContainer().getContainerIp())))
+                .addMailetsFrom(CommonProcessors.deliverOnlyTransport()))
             .putProcessor(ProcessorConfiguration.builder()
                 .state(RRT_ERROR)
                 .addMailet(MailetConfiguration.builder()
@@ -125,8 +118,6 @@ public class GroupMappingTest {
         jamesServer = TemporaryJamesServer.builder()
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
-
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
 
         dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);
@@ -491,24 +482,5 @@ public class GroupMappingTest {
             .login(USER_DOMAIN1, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-    }
-
-    @Test
-    public void sendMessageShouldSendAMessageToAnExternalGroupMember() throws Exception {
-        String externalMail = "ray@yopmail.com";
-        webAdminApi.put(GroupsRoutes.ROOT_PATH + "/" + GROUP_ON_DOMAIN1 + "/" + externalMail);
-
-        messageSender.connect(LOCALHOST_IP, SMTP_PORT)
-            .sendMessage(FakeMail.builder()
-                .mimeMessage(message)
-                .sender(SENDER)
-                .recipient(GROUP_ON_DOMAIN1));
-
-        awaitAtMostOneMinute
-            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
-            .until(() -> fakeSmtp.isReceived(response -> response
-                .body("[0].from", equalTo(SENDER))
-                .body("[0].to[0]", equalTo(externalMail))
-                .body("[0].text", equalTo(MESSAGE_CONTENT))));
     }
 }
