@@ -505,10 +505,13 @@ public class StoreMailboxManager implements MailboxManager {
                     if (!mailboxExists(mailbox, mailboxSession)) {
                         Mailbox m = doCreateMailbox(mailbox, mailboxSession);
                         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-                        mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
-
-                        // notify listeners
-                        dispatcher.mailboxAdded(mailboxSession, m);
+                        try {
+                            mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
+                            // notify listeners
+                            dispatcher.mailboxAdded(mailboxSession, m);
+                        } catch (MailboxExistsException e) {
+                            LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
+                        }
                     }
                     return null;
 

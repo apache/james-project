@@ -27,6 +27,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class JPAMailboxManagerTest extends MailboxManagerTest {
 
@@ -51,6 +53,13 @@ public class JPAMailboxManagerTest extends MailboxManagerTest {
     @After
     public void tearDown() throws MailboxException {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
+    }
+
+    @Ignore("MAILBOX-343")
+    @Test
+    @Override
+    public void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() {
+
     }
 
 }
