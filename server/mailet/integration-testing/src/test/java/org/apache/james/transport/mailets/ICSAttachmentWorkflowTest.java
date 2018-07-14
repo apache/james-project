@@ -52,9 +52,9 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.collect.ImmutableList;
@@ -426,13 +426,14 @@ public class ICSAttachmentWorkflowTest {
             "END:VCALENDAR\r\n" +
             "";
 
-    public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
+    @ClassRule
+    public static SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
             .withAffinityToContainer();
+    @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);
 
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder).around(rabbitMqContainer).around(amqpRule);
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
@@ -550,6 +551,7 @@ public class ICSAttachmentWorkflowTest {
     @After
     public void tearDown() throws Exception {
         jamesServer.shutdown();
+        amqpRule.readAll();
     }
 
     @Test

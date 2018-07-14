@@ -37,6 +37,8 @@ import com.rabbitmq.client.GetResponse;
 
 public class AmqpRule extends ExternalResource {
 
+    private static final boolean AUTO_ACK = true;
+
     private final SwarmGenericContainer rabbitMqContainer;
     private final String exchangeName;
     private final String routingKey;
@@ -68,14 +70,19 @@ public class AmqpRule extends ExternalResource {
         return amqpUri;
     }
 
+    public void readAll() throws IOException {
+        while (channel.basicGet(queueName, AUTO_ACK) != null) {
+
+        }
+    }
+
     public Optional<String> readContent() throws IOException {
         return readContentAsBytes()
             .map(value -> new String(value, StandardCharsets.UTF_8));
     }
 
     public Optional<byte[]> readContentAsBytes() throws IOException {
-        boolean autoAck = true;
-        return Optional.ofNullable(channel.basicGet(queueName, autoAck))
+        return Optional.ofNullable(channel.basicGet(queueName, AUTO_ACK))
             .map(GetResponse::getBody);
     }
 
