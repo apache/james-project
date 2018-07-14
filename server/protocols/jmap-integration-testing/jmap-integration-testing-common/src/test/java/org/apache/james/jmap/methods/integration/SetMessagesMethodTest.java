@@ -175,8 +175,6 @@ public abstract class SetMessagesMethodTest {
         mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
-
-        await();
     }
 
     @After

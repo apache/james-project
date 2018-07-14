@@ -106,8 +106,6 @@ public abstract class SetMailboxesMethodTest {
         dataProbe.addUser(username, password);
         inboxId = mailboxProbe.createMailbox("#private", username, DefaultMailboxes.INBOX);
         accessToken = authenticateJamesUser(baseUri(jmapServer), username, password);
-
-        await();
     }
 
     @After

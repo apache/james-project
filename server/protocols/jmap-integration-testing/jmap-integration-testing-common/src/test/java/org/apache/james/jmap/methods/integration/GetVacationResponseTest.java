@@ -83,8 +83,6 @@ public abstract class GetVacationResponseTest {
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(ALICE, ALICE_PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
-
-        await();
     }
 
     @After

@@ -76,8 +76,6 @@ public abstract class SetVacationResponseTest {
             .addDomain(DOMAIN)
             .addUser(USER, PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
-
-        await();
     }
 
     @After
