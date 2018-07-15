@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushAction;
 import org.elasticsearch.action.admin.indices.flush.FlushRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -34,17 +33,11 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.jayway.awaitility.Duration;
 
 public class EmbeddedElasticSearch extends ExternalResource {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(EmbeddedElasticSearch.class);
-
     private final Supplier<Path> folder;
-    private final IndexName indexName;
     private Node node;
 
     private static Path createTempDir(TemporaryFolder temporaryFolder) {
@@ -55,17 +48,16 @@ public class EmbeddedElasticSearch extends ExternalResource {
         }
     }
 
-    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder, IndexName indexName) {
-        this(() -> EmbeddedElasticSearch.createTempDir(temporaryFolder), indexName);
+    public EmbeddedElasticSearch(TemporaryFolder temporaryFolder) {
+        this(() -> EmbeddedElasticSearch.createTempDir(temporaryFolder));
     }
 
-    public EmbeddedElasticSearch(Path folder, IndexName indexName) {
-        this(() -> folder, indexName);
+    public EmbeddedElasticSearch(Path folder) {
+        this(() -> folder);
     }
 
-    private EmbeddedElasticSearch(Supplier<Path> folder, IndexName indexName) {
+    private EmbeddedElasticSearch(Supplier<Path> folder) {
         this.folder = folder;
-        this.indexName = indexName;
     }
 
     @Override
@@ -76,20 +68,10 @@ public class EmbeddedElasticSearch extends ExternalResource {
                 .build())
             .node();
         node.start();
-        awaitForElasticSearch();
     }
 
     @Override
     public void after() {
-        awaitForElasticSearch();
-        try (Client client = node.client()) {
-            client.admin()
-                .indices()
-                .delete(new DeleteIndexRequest(indexName.getValue()))
-                .actionGet();
-        } catch (Exception e) {
-            LOGGER.warn("Error while closing ES connection", e);
-        }
         node.close();
     }
 
@@ -102,7 +84,8 @@ public class EmbeddedElasticSearch extends ExternalResource {
      * This method ensure that ElasticSearch service is up and indices are updated
      */
     public void awaitForElasticSearch() {
-        await().atMost(Duration.TEN_SECONDS).until(this::flush);
+        await().atMost(Duration.TEN_SECONDS)
+            .until(this::flush);
     }
 
     private boolean flush() {

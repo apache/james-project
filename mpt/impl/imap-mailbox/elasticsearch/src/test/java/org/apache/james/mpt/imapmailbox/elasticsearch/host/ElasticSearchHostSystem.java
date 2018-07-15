@@ -76,7 +76,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
     public void beforeTest() throws Exception {
         super.beforeTest();
         this.tempDirectory = Files.createTempDirectory("elasticsearch");
-        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+        this.embeddedElasticSearch = new EmbeddedElasticSearch(tempDirectory);
         embeddedElasticSearch.before();
         initFields();
     }

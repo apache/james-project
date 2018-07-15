@@ -34,7 +34,6 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
@@ -57,7 +56,7 @@ public class CassandraStepdefs {
     private final MainStepdefs mainStepdefs;
     private final ImapStepdefs imapStepdefs;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
     private DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
 
     @Inject

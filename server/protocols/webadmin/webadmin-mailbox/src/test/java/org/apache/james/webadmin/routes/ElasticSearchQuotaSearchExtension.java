@@ -51,7 +51,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
 
     private WebAdminQuotaSearchTestSystem restQuotaSearchTestSystem;
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_INDEX);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Override
     public void beforeEach(ExtensionContext context) {

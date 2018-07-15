@@ -27,7 +27,6 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.JamesWithSpamAssassin;
 import org.apache.james.jmap.methods.integration.SpamAssassinModule;
-import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestESMetricReporterModule;
@@ -60,7 +59,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     public CassandraJmapExtension() {
         this.temporaryFolder = new TemporaryFolder();
         this.cassandra = new DockerCassandraRule();
-        this.elasticSearch = new EmbeddedElasticSearch(temporaryFolder, MailboxElasticSearchConstants.DEFAULT_MAILBOX_INDEX);
+        this.elasticSearch = new EmbeddedElasticSearch(temporaryFolder);
         this.spamAssassinExtension = new SpamAssassinExtension();
     }
 

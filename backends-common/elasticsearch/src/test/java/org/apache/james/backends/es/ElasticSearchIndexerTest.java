@@ -45,7 +45,7 @@ public class ElasticSearchIndexerTest {
     private static final WriteAliasName ALIAS_NAME = new WriteAliasName("alias_name");
     private static final TypeName TYPE_NAME = new TypeName("type_name");
     private TemporaryFolder temporaryFolder = new TemporaryFolder();
-    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder, INDEX_NAME);
+    private EmbeddedElasticSearch embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder);
 
     @Rule
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
