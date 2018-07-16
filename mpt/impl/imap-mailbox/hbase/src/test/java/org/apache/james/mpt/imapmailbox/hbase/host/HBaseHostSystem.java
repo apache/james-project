@@ -61,7 +61,8 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 public class HBaseHostSystem extends JamesImapHostSystem {
 
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     public static HBaseHostSystem host = null;
     /** Set this to false if you wish to test it against a real cluster.

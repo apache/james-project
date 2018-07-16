@@ -76,7 +76,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
         Feature.ANNOTATION_SUPPORT,
-        Feature.QUOTA_SUPPORT);
+        Feature.QUOTA_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     public static JamesImapHostSystem build() throws Exception {
         return new JPAHostSystem();

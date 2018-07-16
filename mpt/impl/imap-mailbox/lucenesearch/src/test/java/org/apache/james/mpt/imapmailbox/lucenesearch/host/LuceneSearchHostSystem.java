@@ -70,7 +70,8 @@ import com.google.common.io.Files;
 
 public class LuceneSearchHostSystem extends JamesImapHostSystem {
     public static final String META_DATA_DIRECTORY = "target/user-meta-data";
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
 

@@ -64,7 +64,8 @@ import org.elasticsearch.client.Client;
 
 public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
-    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT);
+    private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     private EmbeddedElasticSearch embeddedElasticSearch;
     private Path tempDirectory;

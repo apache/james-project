@@ -77,7 +77,8 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.MOVE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
         Feature.QUOTA_SUPPORT,
-        Feature.ANNOTATION_SUPPORT);
+        Feature.ANNOTATION_SUPPORT,
+        Feature.MOD_SEQ_SEARCH);
 
     private final CassandraModule mailboxModule = new CassandraModuleComposite(
             new CassandraAclModule(),
