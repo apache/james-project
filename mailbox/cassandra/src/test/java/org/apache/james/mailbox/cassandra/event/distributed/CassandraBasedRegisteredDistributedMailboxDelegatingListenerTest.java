@@ -40,7 +40,7 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.distributed.DistantMailboxPathRegister;
 import org.apache.james.mailbox.store.event.distributed.PublisherReceiver;
 import org.apache.james.mailbox.store.event.distributed.RegisteredDelegatingMailboxListener;
-import org.apache.james.mailbox.store.json.MessagePackEventSerializer;
+import org.apache.james.mailbox.store.json.JsonEventSerializer;
 import org.apache.james.mailbox.store.json.event.EventConverter;
 import org.apache.james.mailbox.store.json.event.MailboxConverter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -98,11 +98,11 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION,
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
+        JsonEventSerializer eventSerializer = new JsonEventSerializer(
+            new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+            new TestMessageId.Factory());
         registeredDelegatingMailboxListener1 = new RegisteredDelegatingMailboxListener(
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             publisherReceiver,
             publisherReceiver,
             mailboxPathRegister1);
@@ -114,10 +114,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener2 = new RegisteredDelegatingMailboxListener(
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             publisherReceiver,
             publisherReceiver,
             mailboxPathRegister2);
@@ -129,10 +126,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
                 CASSANDRA_TIME_OUT_IN_S),
             SCHEDULER_PERIOD_IN_S);
         registeredDelegatingMailboxListener3 = new RegisteredDelegatingMailboxListener(
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             publisherReceiver,
             publisherReceiver,
             mailboxPathRegister3);

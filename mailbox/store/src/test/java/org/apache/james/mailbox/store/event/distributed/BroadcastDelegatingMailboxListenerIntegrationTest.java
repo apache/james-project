@@ -32,7 +32,7 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.TestIdDeserializer;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.json.MessagePackEventSerializer;
+import org.apache.james.mailbox.store.json.JsonEventSerializer;
 import org.apache.james.mailbox.store.json.event.EventConverter;
 import org.apache.james.mailbox.store.json.event.MailboxConverter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -71,26 +71,20 @@ public class BroadcastDelegatingMailboxListenerIntegrationTest {
     @Before
     public void setUp() throws Exception {
         PublisherReceiver publisherReceiver = new PublisherReceiver();
+        JsonEventSerializer eventSerializer = new JsonEventSerializer(
+            new EventConverter(new MailboxConverter(new TestIdDeserializer())),
+            new TestMessageId.Factory());
         broadcastDelegatingMailboxListener1 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             TOPIC);
         broadcastDelegatingMailboxListener2 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             TOPIC);
         broadcastDelegatingMailboxListener3 = new BroadcastDelegatingMailboxListener(publisherReceiver,
             publisherReceiver,
-            new MessagePackEventSerializer(
-                new EventConverter(new MailboxConverter(new TestIdDeserializer())),
-                new TestMessageId.Factory()
-            ),
+            eventSerializer,
             TOPIC);
         eventCollectorMailbox1 = new EventCollector(MailboxListener.ListenerType.MAILBOX);
         eventCollectorMailbox2 = new EventCollector(MailboxListener.ListenerType.MAILBOX);
