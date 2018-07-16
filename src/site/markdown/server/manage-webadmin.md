@@ -831,10 +831,8 @@ Response codes:
 ### Deleting the global quota count
 
 ```
-curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/count
+curl -XDELETE http://ip:port/quota/count
 ```
-
-Resource name usernameToBeUsed should be an existing user
 
 Response codes:
 
