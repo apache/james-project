@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.imapmailbox.suite;
+package org.apache.james.mpt.imapmailbox.external.james;
 
 import java.util.Locale;
 

@@ -20,7 +20,6 @@
 package org.apache.james.mpt.imapmailbox.external.james;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.suite.DeploymentValidation;
 import org.junit.After;
 import org.junit.Before;
 

@@ -19,7 +19,7 @@
 
 package org.apache.james.mpt.host;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -94,7 +94,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
 
     @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
     
     public void beforeTests() throws Exception {
@@ -118,11 +118,11 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 
     @Override
     public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("Not implemented");
     }
 }

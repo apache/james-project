@@ -25,8 +25,8 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.commons.lang.mutable.MutableInt;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.Session;
 
