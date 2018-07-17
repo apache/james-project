@@ -55,16 +55,6 @@
                 <matcher match="SentByMailet"/>
             </matcher>
 
-            <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
-                <name>X-UserIsAuth</name>
-                <value>true</value>
-                <onMailetException>ignore</onMailetException>
-            </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
-                <name>X-WasSigned</name>
-                <value>true</value>
-                <onMailetException>ignore</onMailetException>
-            </mailet>
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
                 <onMailetException>ignore</onMailetException>

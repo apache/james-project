@@ -53,10 +53,6 @@
                 <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
             </matcher>
 
-            <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
-                <name>X-UserIsAuth</name>
-                <value>true</value>
-            </mailet>
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>

@@ -53,27 +53,12 @@
 
 
         <processor state="transport" enableJmx="true">
-            <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
-                <name>X-UserIsAuth</name>
-                <value>true</value>
-            </mailet>
-            <mailet match="All" class="RemoveMimeHeader">
-                <name>bcc</name>
-            </mailet>
-            <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
-                <name>X-WasSigned</name>
-                <value>true</value>
-            </mailet>
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
-            <!-- <mailet match="HostIsLocal" class="ToProcessor">
-                <processor>local-address-error</processor>
-                <notice>550 - Requested action not taken: no such user here</notice>
-            </mailet> -->
             <mailet match="All" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5 minutes</delayTime>
@@ -88,9 +73,6 @@
                 <sendpartial>false</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
             </mailet>
-            <!-- mailet match="All" class="ToProcessor">
-                <processor>relay-denied</processor>
-            </mailet-->
         </processor>
 
         <processor state="local-address-error" enableJmx="true">
