@@ -121,7 +121,6 @@ public class WebAdminServerIntegrationTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error/",
                 "var/mail/relay-denied/",
-                "var/mail/spam/",
                 "var/mail/address-error/"));
     }
 
@@ -137,7 +136,6 @@ public class WebAdminServerIntegrationTest {
             .body("repository", containsInAnyOrder(
                 "var/mail/error/",
                 "var/mail/relay-denied/",
-                "var/mail/spam/",
                 "var/mail/address-error/"));
     }
 

@@ -33,31 +33,6 @@
         <processor state="root" enableJmx="true">
             <mailet match="All" class="PostmasterAlias"/>
             <mailet match="RelayLimit=30" class="Null"/>
-            <!-- Hook on sievemanager@james.linagora.com
-                 Mail send to this address will get interpreted with SIEVE Manage -->
-            <mailet match="RecipientIs=sievemanager@james.linagora.com" class="ToProcessor">
-                <processor>sieve-manager-check</processor>
-            </mailet>
-            <mailet match="HasMailAttribute=spamChecked" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="All" class="SetMailAttribute">
-                <spamChecked>true</spamChecked>
-            </mailet>
-            <mailet match="SMTPAuthSuccessful" class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <mailet match="InSpammerBlacklist=query.bondedsender.org." class="ToProcessor">
-                <processor>transport</processor>
-            </mailet>
-            <!-- Check for delivery from a known spam server -->
-            <!-- This set of matchers/mailets redirect all emails from known -->
-            <!-- black holes, open relays, and spam servers to the spam processor -->
-            <!-- For this set to function properly, the spam processor must be configured. -->
-            <mailet match="InSpammerBlacklist=dnsbl.njabl.org." class="ToProcessor">
-                <processor>spam</processor>
-                <notice>550 Requested action not taken: rejected - see http://njabl.org/</notice>
-            </mailet>
             <mailet match="All" class="ToProcessor">
                 <processor>transport</processor>
             </mailet>
@@ -104,12 +79,6 @@
             </mailet>
             <mailet match="All" class="ToProcessor">
                 <processor>relay-denied</processor>
-            </mailet>
-        </processor>
-
-        <processor state="spam" enableJmx="true">
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
             </mailet>
         </processor>
 

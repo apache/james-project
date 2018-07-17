@@ -93,12 +93,6 @@
             </mailet>
         </processor>
 
-        <processor state="spam" enableJmx="false">
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
-            </mailet>
-        </processor>
-
         <processor state="local-address-error" enableJmx="false">
             <mailet match="All" class="Bounce">
                 <attachment>none</attachment>

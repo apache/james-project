@@ -101,15 +101,6 @@
             </mailet>
         </processor>
 
-        <processor state="spam" enableJmx="true">
-            <mailet match="All" class="MetricsMailet">
-                <metricName>mailetContainerSpam</metricName>
-            </mailet>
-            <mailet match="All" class="ToRepository">
-                <repositoryPath>file://var/mail/spam/</repositoryPath>
-            </mailet>
-        </processor>
-
         <processor state="local-address-error" enableJmx="true">
             <mailet match="All" class="MetricsMailet">
                 <metricName>mailetContainerLocalAddressError</metricName>
