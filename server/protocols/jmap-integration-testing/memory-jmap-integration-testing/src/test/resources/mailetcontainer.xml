@@ -26,7 +26,7 @@
     </context>
 
     <spooler>
-        <threads>20</threads>
+        <threads>2</threads>
     </spooler>
 
     <processors>
