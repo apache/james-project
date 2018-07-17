@@ -46,12 +46,16 @@
         </processor>
 
         <processor state="transport" enableJmx="true">
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SMTPIsAuthNetwork"/>
+                <matcher match="SentByMailet"/>
+                <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+            </matcher>
+
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
-            </mailet>
-            <mailet match="org.apache.james.jmap.mailet.SentByJmap" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
             </mailet>
             <mailet match="HasMailAttribute=org.apache.james.SMIMECheckSignature" class="SetMimeHeader">
                 <name>X-WasSigned</name>
@@ -65,13 +69,7 @@
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
 
-            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="SentByMailet" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
+            <mailet match="relay-allowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>

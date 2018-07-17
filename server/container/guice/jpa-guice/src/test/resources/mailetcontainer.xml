@@ -47,6 +47,11 @@
 
 
         <processor state="transport" enableJmx="false">
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SentByMailet"/>
+            </matcher>
+
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
                 <value>true</value>
@@ -62,13 +67,8 @@
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
-            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="SentByMailet" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
+
+            <mailet match="relay-allowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>

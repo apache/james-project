@@ -48,6 +48,12 @@
                 <matcher match="HasMimeType=multipart/report"/>
                 <matcher match="HasMimeTypeParameter=report-type=disposition-notification"/>
             </matcher>
+            <matcher name="relay-allowed" match="org.apache.james.mailetcontainer.impl.matchers.Or">
+                <matcher match="SMTPAuthSuccessful"/>
+                <matcher match="SMTPIsAuthNetwork"/>
+                <matcher match="SentByMailet"/>
+                <matcher match="org.apache.james.jmap.mailet.SentByJmap"/>
+            </matcher>
 
             <mailet match="SMTPAuthSuccessful" class="SetMimeHeader">
                 <name>X-UserIsAuth</name>
@@ -76,16 +82,8 @@
                 <processor>local-address-error</processor>
                 <notice>550 - Requested action not taken: no such user here</notice>
             </mailet>
-            <mailet match="SMTPAuthSuccessful" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="SMTPIsAuthNetwork" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="SentByMailet" class="SetMailAttribute">
-                <RelayAllowed>true</RelayAllowed>
-            </mailet>
-            <mailet match="HasMailAttribute=RelayAllowed" class="RemoteDelivery">
+
+            <mailet match="relay-allowed" class="RemoteDelivery">
                 <outgoingQueue>outgoing</outgoingQueue>
                 <delayTime>5000, 100000, 500000</delayTime>
                 <maxRetries>25</maxRetries>
@@ -94,6 +92,7 @@
                 <sendpartial>true</sendpartial>
                 <bounceProcessor>bounces</bounceProcessor>
             </mailet>
+
             <mailet match="All" class="ToProcessor">
                 <processor>relay-denied</processor>
             </mailet>
