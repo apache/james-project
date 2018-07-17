@@ -31,6 +31,8 @@ import javax.persistence.Version;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.james.user.api.model.User;
 
+import com.google.common.annotations.VisibleForTesting;
+
 @Entity(name = "JamesUser")
 @Table(name = "JAMES_USER")
 @NamedQueries({ 
@@ -44,13 +46,12 @@ public class JPAUser implements User {
     /**
      * Hash password.
      * 
-     * @param username
-     *            not null
      * @param password
      *            not null
      * @return not null
      */
-    private static String hashPassword(String username, String password, String alg) {
+    @VisibleForTesting
+    static String hashPassword(String password, String alg) {
         String newPass;
         if (alg == null || alg.equals("MD5")) {
             newPass = DigestUtils.md5Hex(password);
@@ -91,7 +92,7 @@ public class JPAUser implements User {
         super();
         this.name = userName;
         this.alg = alg;
-        this.password = hashPassword(userName, password, alg);
+        this.password = hashPassword(password, alg);
     }
 
     @Override
@@ -105,7 +106,7 @@ public class JPAUser implements User {
         if (newPass == null) {
             result = false;
         } else {
-            password = hashPassword(name, newPass, alg);
+            password = hashPassword(newPass, alg);
             result = true;
         }
         return result;
@@ -117,7 +118,7 @@ public class JPAUser implements User {
         if (pass == null) {
             result = password == null;
         } else {
-            result = password != null && password.equals(hashPassword(name, pass, alg));
+            result = password != null && password.equals(hashPassword(pass, alg));
         }
         return result;
     }
