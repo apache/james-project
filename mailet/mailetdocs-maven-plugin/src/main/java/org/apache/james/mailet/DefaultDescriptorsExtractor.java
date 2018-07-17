@@ -25,11 +25,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.apache.james.mailet.MailetMatcherDescriptor.Type;
 import org.apache.mailet.Experimental;
@@ -40,7 +39,8 @@ import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.project.MavenProject;
 
-import com.thoughtworks.qdox.JavaDocBuilder;
+import com.thoughtworks.qdox.JavaProjectBuilder;
+import com.thoughtworks.qdox.model.JavaAnnotation;
 import com.thoughtworks.qdox.model.JavaClass;
 
 /**
@@ -67,7 +67,7 @@ public class DefaultDescriptorsExtractor {
     }
 
     public DefaultDescriptorsExtractor extract(MavenProject project, Log log) {
-        final JavaClass[] classes = javaClasses(project);
+        final Collection<JavaClass> classes = javaClasses(project);
 
         final URLClassLoader classLoader = classLoader(project, log);
         logProjectDependencies(project, log);
@@ -182,8 +182,9 @@ public class DefaultDescriptorsExtractor {
 
 
     private boolean isExperimental(JavaClass javaClass) {
-        return Stream.of(javaClass.getAnnotations())
-            .anyMatch(annotation -> annotation.getType().getValue()
+        return javaClass.getAnnotations()
+            .stream()
+            .anyMatch((JavaAnnotation annotation) -> annotation.getType().getCanonicalName()
                     .equals(Experimental.class.getName()));
     }
 
@@ -252,8 +253,8 @@ public class DefaultDescriptorsExtractor {
 
 
     @SuppressWarnings("unchecked")
-    private JavaClass[] javaClasses(MavenProject project) {
-        JavaDocBuilder builder = new JavaDocBuilder();
+    private Collection<JavaClass> javaClasses(MavenProject project) {
+        JavaProjectBuilder builder = new JavaProjectBuilder();
         for (String s : (Iterable<String>) project.getCompileSourceRoots()) {
             builder.addSourceTree(new File(s));
         }
@@ -286,9 +287,8 @@ public class DefaultDescriptorsExtractor {
 
     private List<JavaClass> getAllInterfacesQdox(JavaClass javaClass) {
         List<JavaClass> res = new LinkedList<>();
-        if (javaClass.getImplementedInterfaces() != null) {
-            JavaClass[] interfaces = javaClass.getImplementedInterfaces();
-            Collections.addAll(res, interfaces);
+        if (javaClass.getInterfaces() != null) {
+            res.addAll(javaClass.getInterfaces());
         }
         if (javaClass.getSuperJavaClass() != null) {
             res.addAll(getAllInterfacesQdox(javaClass.getSuperJavaClass()));
