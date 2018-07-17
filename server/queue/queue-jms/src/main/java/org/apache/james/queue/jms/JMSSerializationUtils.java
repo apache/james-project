@@ -19,12 +19,10 @@
 package org.apache.james.queue.jms;
 
 import java.io.Serializable;
+import java.util.Base64;
 import java.util.Optional;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationUtils;
-
-import com.github.fge.lambdas.Throwing;
 
 /**
  * This class is similar to {@link SerializationUtils}. Unlike {@link SerializationUtils} this class operates with
@@ -45,7 +43,7 @@ public class JMSSerializationUtils {
     public static String serialize(Serializable obj) {
         return Optional.ofNullable(obj)
                 .map(SerializationUtils::serialize)
-                .map(Base64::encodeBase64String)
+                .map(Base64.getEncoder()::encodeToString)
                 .orElse(null);
     }
 
@@ -59,7 +57,7 @@ public class JMSSerializationUtils {
      */
     public static <T extends Serializable> T deserialize(String object) {
         return Optional.ofNullable(object)
-                .map(Throwing.function(Base64::decodeBase64))
+                .map(Base64.getDecoder()::decode)
                 .<T>map(SerializationUtils::deserialize)
                 .orElse(null);
     }

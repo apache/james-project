@@ -30,11 +30,11 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
+import java.util.Base64;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.slf4j.Logger;
@@ -89,7 +89,7 @@ public class JamesSignatureHandler implements SignatureHandler {
             Signature javaSignature = Signature.getInstance(ALGORITHM);
             javaSignature.initSign(privateKey);
             javaSignature.update(source.getBytes());
-            return new Base64().encodeAsString(javaSignature.sign());
+            return Base64.getEncoder().encodeToString(javaSignature.sign());
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             throw new RuntimeException(e);
         }
@@ -103,7 +103,7 @@ public class JamesSignatureHandler implements SignatureHandler {
             Signature javaSignature = Signature.getInstance(ALGORITHM);
             javaSignature.initVerify(publicKey);
             javaSignature.update(source.getBytes());
-            return javaSignature.verify(new Base64().decode(signature));
+            return javaSignature.verify(Base64.getDecoder().decode(signature));
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             throw new RuntimeException(e);
         } catch (SignatureException e) {

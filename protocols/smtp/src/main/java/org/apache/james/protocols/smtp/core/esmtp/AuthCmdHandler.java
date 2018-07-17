@@ -23,7 +23,9 @@ package org.apache.james.protocols.smtp.core.esmtp;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +33,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.protocols.api.Request;
@@ -246,13 +247,11 @@ public class AuthCmdHandler
      * @param session SMTP session object
      * @param initialResponse the initial response line passed in with the AUTH command
      */
-    private Response doPlainAuthPass(SMTPSession session, String userpass) {
+    private Response doPlainAuthPass(SMTPSession session, String line) {
         String user = null;
         String pass = null;
         try {
-            if (userpass != null) {
-                userpass = new String(Base64.decodeBase64(userpass));
-            }
+            String userpass = decodeBase64(line);
             if (userpass != null) {
                 /*  See: RFC 2595, Section 6
                     The mechanism consists of a single message from the client to the
@@ -307,6 +306,14 @@ public class AuthCmdHandler
         return response;
     }
 
+    private String decodeBase64(String line) {
+        if (line != null) {
+            String lineWithoutTrailingCrLf = line.replace("\r\n", "");
+            return new String(Base64.getDecoder().decode(lineWithoutTrailingCrLf), StandardCharsets.UTF_8);
+        }
+        return null;
+    }
+
     /**
      * Carries out the Login AUTH SASL exchange.
      *
@@ -316,7 +323,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPass(SMTPSession session, String user) {
         if (user != null) {
             try {
-                user = new String(Base64.decodeBase64(user));
+                user = new String(Base64.getDecoder().decode(user), StandardCharsets.UTF_8);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below
@@ -356,7 +363,7 @@ public class AuthCmdHandler
     private Response doLoginAuthPassCheck(SMTPSession session, String user, String pass) {
         if (pass != null) {
             try {
-                pass = new String(Base64.decodeBase64(pass));
+                pass = new String(Base64.getDecoder().decode(pass), StandardCharsets.UTF_8);
             } catch (Exception e) {
                 // Ignored - this parse error will be
                 // addressed in the if clause below

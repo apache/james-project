@@ -22,10 +22,10 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -107,8 +107,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     private AuthenticationAttempt parseDelegationAttempt(String initialClientResponse) {
         String token2;
         try {
-
-            String userpass = new String(Base64.decodeBase64(initialClientResponse));
+            String userpass = new String(Base64.getDecoder().decode(initialClientResponse));
             StringTokenizer authTokenizer = new StringTokenizer(userpass, "\0");
             String token1 = authTokenizer.nextToken();  // Authorization Identity
             token2 = authTokenizer.nextToken();                 // Authentication Identity

@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-
 import net.fortuna.ical4j.data.CalendarBuilder;
 import net.fortuna.ical4j.data.ParserException;
 import net.fortuna.ical4j.model.Calendar;
@@ -137,23 +135,15 @@ public class ICalendarParser extends GenericMailet {
             return Stream.of(Pair.of(key, builder.build(inputStream)));
         } catch (IOException e) {
             if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error while reading input: " + icsContentToString(icsContent), e);
+                LOGGER.error("Error while reading input: " + new String(icsContent, StandardCharsets.UTF_8), e);
             }
             return Stream.of();
         } catch (ParserException e) {
             if (LOGGER.isErrorEnabled()) {
-                LOGGER.error("Error while parsing ICal object: " + icsContentToString(icsContent), e);
+                LOGGER.error("Error while parsing ICal object: " + new String(icsContent, StandardCharsets.UTF_8), e);
             }
             return Stream.of();
         }
     }
 
-    private static String icsContentToString(byte[] icsContent) {
-        try {
-            return new String(icsContent, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            LOGGER.error("Error while decoding ics content", e);
-        }
-        return new String(Hex.encodeHex(icsContent));
-    }
 }

@@ -21,7 +21,9 @@ package org.apache.james.jmap.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStoreException;
+import java.util.Base64;
 
 import org.apache.james.jmap.JMAPConfiguration;
 import org.junit.Before;
@@ -64,7 +66,7 @@ public class JamesSignatureHandlerTest {
 
     @Test
     public void incorrectLengthSignatureShouldReturnFalse() throws Exception {
-        assertThat(signatureHandler.verify(SOURCE, "signature")).isFalse();
+        assertThat(signatureHandler.verify(SOURCE, "c2lnbmF0dXJl")).isFalse();
     }
 
     @Test(expected = NullPointerException.class)
