@@ -1419,12 +1419,12 @@ All rights reserved.
                 <resource name='bcprov-jdk15-1.45.jar'/>
             </by-organisation>
         </with-license>
-        <with-license id='BSD3Clause'>
+        <with-license id='BSD2Clause'>
             <copyright-notice>
 dnsjava is placed under the BSD license.  Several files are also under
 additional licenses; see the individual files for details.
 
-Copyright (c) 1999-2005, Brian Wellington
+Copyright (c) 1999-2011, Brian Wellington
 All rights reserved.
             </copyright-notice>
             <license-parameters>
@@ -1434,7 +1434,7 @@ All rights reserved.
                 </parameter>
             </license-parameters>
             <by-organisation id='person:Brian.Wellington'>
-                <resource name='dnsjava-2.1.1.jar'/>
+                <resource name='dnsjava-2.1.8.jar'/>
             </by-organisation>
         </with-license>
         <with-license id='BSD3Clause'>

@@ -74,14 +74,14 @@
         <feature version="${spring.version}">spring31</feature>
     </feature>
 
-    <feature name="dnsjava-2.1.1" version="2.1.1">
+    <feature name="dnsjava-2.1.8" version="2.1.8">
         <bundle dependency="true">mvn:dnsjava/dnsjava/${dnsjava.version}</bundle>
         <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.junit/4.11_1</bundle>
     </feature>
 
     <feature name="james-server-dnsservice-dnsjava" version="${project.version}">
         <feature>commons-configuration</feature>
-        <feature>dnsjava-2.1.1</feature>
+        <feature>dnsjava-2.1.8</feature>
         <feature>james-server-dnsservice-library</feature>
         <bundle dependency="true">mvn:org.apache.james/james-server-dnsservice-api/${project.version}</bundle>
         <bundle dependency="true">mvn:org.apache.james/james-server-dnsservice-dnsjava/${project.version}</bundle>
@@ -93,7 +93,7 @@
     </feature>
 
     <feature name="james-server-dnsservice-library" version="${project.version}">
-        <feature>dnsjava-2.1.1</feature>
+        <feature>dnsjava-2.1.8</feature>
         <bundle dependency="true">mvn:org.apache.james/james-server-dnsservice-library/${project.version}</bundle>
         <bundle dependency="true">mvn:org.apache.james/james-server-dnsservice-api/${project.version}</bundle>
         <bundle dependency="true">mvn:org.apache.james/apache-mailet-api/${mailet.version}</bundle>

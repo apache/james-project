@@ -608,7 +608,7 @@
         <servlet-api.version>2.4</servlet-api.version>
         <commons-logging.version>1.1.1</commons-logging.version>
 
-        <dnsjava.version>2.1.1</dnsjava.version>
+        <dnsjava.version>2.1.8</dnsjava.version>
         <junit.version>4.12</junit.version>
         <junit.jupiter.version>5.0.2</junit.jupiter.version>
         <junit.plateform.version>1.0.2</junit.plateform.version>
