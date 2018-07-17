@@ -19,7 +19,6 @@
 
 package org.apache.james.blob.cassandra;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.james.blob.api.BlobId;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -27,6 +26,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.hash.Hashing;
 
 public class CassandraBlobId implements BlobId {
 
@@ -34,7 +34,7 @@ public class CassandraBlobId implements BlobId {
         @Override
         public CassandraBlobId forPayload(byte[] payload) {
             Preconditions.checkArgument(payload != null);
-            return new CassandraBlobId(DigestUtils.sha256Hex(payload));
+            return new CassandraBlobId(Hashing.sha256().hashBytes(payload).toString());
         }
 
         @Override

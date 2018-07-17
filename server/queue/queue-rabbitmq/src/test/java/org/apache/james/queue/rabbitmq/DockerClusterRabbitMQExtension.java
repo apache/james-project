@@ -18,7 +18,8 @@
  ****************************************************************/
 package org.apache.james.queue.rabbitmq;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -30,6 +31,7 @@ import org.testcontainers.containers.Network;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
+import com.google.common.hash.Hashing;
 import com.rabbitmq.client.Address;
 
 public class DockerClusterRabbitMQExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
@@ -42,7 +44,7 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        String cookie = DigestUtils.sha1Hex("secret cookie here");
+        String cookie = Hashing.sha1().hashString("secret cookie here", StandardCharsets.UTF_8).toString();
 
         network = Network.NetworkImpl.builder()
             .enableIpv6(false)

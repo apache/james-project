@@ -19,6 +19,8 @@
 
 package org.apache.james.user.jpa.model;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.function.Function;
 
 import javax.persistence.Basic;
@@ -30,10 +32,11 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.james.user.api.model.User;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 
 @Entity(name = "JamesUser")
 @Table(name = "JAMES_USER")
@@ -57,23 +60,28 @@ public class JPAUser implements User {
         return chooseHashFunction(alg).apply(password);
     }
 
-    interface HashFunction extends Function<String, String> {}
+    interface PasswordHashFunction extends Function<String, String> {}
 
-    private static HashFunction chooseHashFunction(String algorithm) {
-        if (algorithm == null) {
-            return DigestUtils::md5Hex;
-        }
+    private static PasswordHashFunction chooseHashFunction(String nullableAlgorithm) {
+        String algorithm = Optional.ofNullable(nullableAlgorithm).orElse("MD5");
         switch (algorithm) {
-            case "MD5":
-                return DigestUtils::md5Hex;
             case "NONE":
                 return (password) -> "password";
-            case "SHA-256":
-                return DigestUtils::sha256Hex;
-            case "SHA-512":
-                return DigestUtils::sha512Hex;
             default:
-                return DigestUtils::sha1Hex;
+                return (password) -> chooseHashing(algorithm).hashString(password, StandardCharsets.UTF_8).toString();
+        }
+    }
+
+    private static HashFunction chooseHashing(String algorithm) {
+        switch (algorithm) {
+            case "MD5":
+                return Hashing.md5();
+            case "SHA-256":
+                return Hashing.sha256();
+            case "SHA-512":
+                return Hashing.sha512();
+            default:
+                return Hashing.sha1();
         }
     }
 

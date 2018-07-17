@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -39,6 +38,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.google.common.cache.Weigher;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 
 public class CachingTextExtractor implements TextExtractor {
@@ -110,7 +110,7 @@ public class CachingTextExtractor implements TextExtractor {
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
         byte[] bytes = IOUtils.toByteArray(inputStream);
-        String key = DigestUtils.sha256Hex(bytes);
+        String key = Hashing.sha256().hashBytes(bytes).toString();
 
         try {
             return cache.get(key, () -> retrieveAndUpdateWeight(bytes, contentType));

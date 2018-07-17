@@ -21,16 +21,15 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.hash.Hashing;
 
 public class BlobId {
     public static BlobId fromBytes(byte[] bytes) {
         Preconditions.checkNotNull(bytes);
-        return new BlobId(DigestUtils.sha256Hex(bytes));
+        return new BlobId(Hashing.sha256().hashBytes(bytes).toString());
     }
 
     public static BlobId fromString(String raw) {
