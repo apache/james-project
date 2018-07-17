@@ -19,6 +19,8 @@
 
 package org.apache.james.user.jpa.model;
 
+import java.util.function.Function;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -52,19 +54,27 @@ public class JPAUser implements User {
      */
     @VisibleForTesting
     static String hashPassword(String password, String alg) {
-        String newPass;
-        if (alg == null || alg.equals("MD5")) {
-            newPass = DigestUtils.md5Hex(password);
-        } else if (alg.equals("NONE")) {
-            newPass = "password";
-        } else if (alg.equals("SHA-256")) {
-            newPass = DigestUtils.sha256Hex(password);
-        } else if (alg.equals("SHA-512")) {
-            newPass = DigestUtils.sha512Hex(password);
-        } else {
-            newPass = DigestUtils.sha1Hex(password);
+        return chooseHashFunction(alg).apply(password);
+    }
+
+    interface HashFunction extends Function<String, String> {}
+
+    private static HashFunction chooseHashFunction(String algorithm) {
+        if (algorithm == null) {
+            return DigestUtils::md5Hex;
         }
-        return newPass;
+        switch (algorithm) {
+            case "MD5":
+                return DigestUtils::md5Hex;
+            case "NONE":
+                return (password) -> "password";
+            case "SHA-256":
+                return DigestUtils::sha256Hex;
+            case "SHA-512":
+                return DigestUtils::sha512Hex;
+            default:
+                return DigestUtils::sha1Hex;
+        }
     }
 
     /** Prevents concurrent modification */
