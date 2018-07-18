@@ -583,7 +583,7 @@
 
         <activemq.version>5.15.4</activemq.version>
         <apache-mime4j.version>0.8.2</apache-mime4j.version>
-        <camel.version>2.21.1</camel.version>
+        <camel.version>2.22.0</camel.version>
         <derby.version>10.9.1.0</derby.version>
         <hadoop.version>1.1.1</hadoop.version>
         <hbase.version>0.94.27</hbase.version>
