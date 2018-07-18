@@ -126,6 +126,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <!-- Force Memory JMAP integration tests to be played before Cassandra ones -->
+            <groupId>${project.groupId}</groupId>
+            <artifactId>memory-jmap-integration-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>javax-mail-extension</artifactId>
             <type>test-jar</type>
