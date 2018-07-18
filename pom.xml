@@ -606,7 +606,6 @@
         <commons-daemon.version>1.1.0</commons-daemon.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-cli.version>1.4</commons-cli.version>
-        <commons-pool.version>1.6</commons-pool.version>
         <commons-configuration.version>1.9</commons-configuration.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <commons-net.version>3.6</commons-net.version>
@@ -1825,25 +1824,6 @@
                 <groupId>commons-net</groupId>
                 <artifactId>commons-net</artifactId>
                 <version>${commons-net.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-pool</groupId>
-                <artifactId>commons-pool</artifactId>
-                <version>${commons-pool.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>xerces</groupId>
-                        <artifactId>xercesImpl</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>xerces</groupId>
-                        <artifactId>xerces</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>xml-apis</groupId>
-                        <artifactId>xml-apis</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>concurrent</groupId>
