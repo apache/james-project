@@ -592,7 +592,7 @@
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jackrabbit.version>2.5.2</jackrabbit.version>
         <jsieve.version>0.7</jsieve.version>
-        <spring.version>3.2.14.RELEASE</spring.version>
+        <spring.version>3.2.18.RELEASE</spring.version>
         <geronimo-jms-spec.version>1.1.1</geronimo-jms-spec.version>
         <activmq-artemis.version>2.6.2</activmq-artemis.version>
         <h2.version>1.3.170</h2.version>
@@ -625,7 +625,7 @@
         <concurrent.version>1.3.4</concurrent.version>
         <log4j.version>1.2.17</log4j.version>
         <jcr.version>2.0</jcr.version>
-        <xbean-spring.version>3.12</xbean-spring.version>
+        <xbean-spring.version>4.9</xbean-spring.version>
         <netty.version>3.10.6.Final</netty.version>
         <geronimo-annotation-spec.version>1.0.1</geronimo-annotation-spec.version>
         <spring-osgi-extender.version>1.2.1</spring-osgi-extender.version>
