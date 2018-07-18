@@ -609,7 +609,6 @@
         <commons-configuration.version>1.9</commons-configuration.version>
         <commons-dbcp.version>1.4</commons-dbcp.version>
         <commons-net.version>3.6</commons-net.version>
-        <commons-beanutils-core.version>1.8.3</commons-beanutils-core.version>
         <commons-io.version>2.6</commons-io.version>
         <commons-logging.version>1.1.1</commons-logging.version>
 
@@ -1734,11 +1733,6 @@
                 <groupId>com.thoughtworks.qdox</groupId>
                 <artifactId>qdox</artifactId>
                 <version>${qdox.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils-core</artifactId>
-                <version>${commons-beanutils-core.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
