@@ -26,6 +26,7 @@ import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -239,7 +240,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("JSON payload of the request is not valid"))
-                .body("details", is("Instantiation of [simple type, class org.apache.james.webadmin.dto.DLPConfigurationItemDTO] value failed: 'id' is mandatory (through reference chain: org.apache.james.webadmin.dto.DLPConfigurationDTO[\"rules\"])"));
+                .body("details", containsString("'id' is mandatory"));
         }
 
         @Test
@@ -263,7 +264,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("JSON payload of the request is not valid"))
-                .body("details", is("Instantiation of [simple type, class org.apache.james.webadmin.dto.DLPConfigurationItemDTO] value failed: 'expression' is mandatory (through reference chain: org.apache.james.webadmin.dto.DLPConfigurationDTO[\"rules\"])"));
+                .body("details", containsString("'expression' is mandatory"));
         }
 
         @Test

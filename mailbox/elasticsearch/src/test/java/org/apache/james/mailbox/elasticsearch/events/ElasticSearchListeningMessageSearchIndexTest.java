@@ -53,6 +53,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -146,9 +147,10 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         
         when(messageToElasticSearchJson.convertToJson(eq(message), eq(users)))
             .thenThrow(JsonProcessingException.class);
-        
+
+        JsonGenerator jsonGenerator = null;
         when(messageToElasticSearchJson.convertToJsonWithoutAttachment(eq(message), eq(users)))
-            .thenThrow(new JsonGenerationException("expected error"));
+            .thenThrow(new JsonGenerationException("expected error", jsonGenerator));
         
         //When
         testee.add(session, mailbox, message);

@@ -34,6 +34,7 @@ import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.SECOND_MAILBOX;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasEntry;
@@ -339,8 +340,8 @@ public abstract class GetMailboxesMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
-            .body(ARGUMENTS + ".description", equalTo("Can not deserialize instance of java.util.ArrayList out of VALUE_TRUE token\n"
-                    + " at [Source: {\"ids\":true}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"ids\"])"));
+            .body(ARGUMENTS + ".description", containsString("Cannot deserialize instance of `java.util.ArrayList` out of VALUE_TRUE token"))
+            .body(ARGUMENTS + ".description", containsString("{\"ids\":true}"));
     }
 
     @Test

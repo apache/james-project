@@ -47,7 +47,6 @@ Feature: GetMessages method
   Scenario: Retrieving messages with invalid argument should return an InvalidArguments error
     When "alice@domain.tld" ask for messages using invalid argument
     Then an error of type "invalidArguments" is returned
-    And the description is "N/A (through reference chain: org.apache.james.jmap.model.Builder["ids"])"
 
   Scenario: Retrieving messages should return empty list when no message
     When "alice@domain.tld" ask for messages

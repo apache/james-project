@@ -536,11 +536,6 @@ public class GetMessagesMethodStepdefs {
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list")).isEmpty();
     }
 
-    @Then("^the description is \"(.*?)\"$")
-    public void assertDescription(String description) {
-        assertThat(httpClient.jsonPath.<String>read(ARGUMENTS + ".description")).isEqualTo(description);
-    }
-
     @Then("^the notFound list should contain \"([^\"]*)\"$")
     public void assertNotFoundListContains(String id) {
         MessageId messageId = messageIdStepdefs.getMessageId(id);

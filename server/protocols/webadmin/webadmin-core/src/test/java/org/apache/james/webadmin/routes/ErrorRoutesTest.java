@@ -28,6 +28,7 @@ import static org.apache.james.webadmin.utils.ErrorResponder.ErrorType.SERVER_ER
 import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -95,6 +96,6 @@ public class ErrorRoutesTest {
             .body("statusCode", equalTo(BAD_REQUEST_400))
             .body("type", equalTo(INVALID_ARGUMENT.getType()))
             .body("message", equalTo("JSON payload of the request is not valid"))
-            .body("details", equalTo("Unrecognized token 'a': was expecting ('true', 'false' or 'null')\n at [Source: a non valid JSON; line: 1, column: 2]"));
+            .body("details", containsString("Unrecognized token 'a': was expecting ('true', 'false' or 'null')"));
     }
 }

@@ -830,8 +830,8 @@ public abstract class SetMessagesMethodTest {
             .body(NOT_UPDATED, hasKey(messageId))
             .body(NOT_UPDATED + "[\"" + messageId + "\"].type", equalTo("invalidProperties"))
             .body(NOT_UPDATED + "[\"" + messageId + "\"].properties[0]", equalTo("isUnread"))
-            .body(NOT_UPDATED + "[\"" + messageId + "\"].description", equalTo("isUnread: Can not construct instance of java.lang.Boolean from String value '123': only \"true\" or \"false\" recognized\n" +
-                    " at [Source: {\"isUnread\":\"123\"}; line: 1, column: 2] (through reference chain: org.apache.james.jmap.model.Builder[\"isUnread\"])"))
+            .body(NOT_UPDATED + "[\"" + messageId + "\"].description", containsString("isUnread: Cannot deserialize value of type `java.lang.Boolean` from String \"123\": only \"true\" or \"false\" recognized"))
+            .body(NOT_UPDATED + "[\"" + messageId + "\"].description", containsString("{\"isUnread\":\"123\"}"))
             .body(ARGUMENTS + ".updated", hasSize(0));
     }
 

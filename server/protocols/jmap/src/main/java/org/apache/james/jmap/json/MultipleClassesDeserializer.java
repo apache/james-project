@@ -48,7 +48,7 @@ public class MultipleClassesDeserializer extends StdDeserializer<Object> {
                 .filter(req -> ! (root.at(req.getKey()).isMissingNode()))
                 .map(x -> readValue(mapper, root, x.getValue()))
                 .findFirst()
-                .orElseThrow(() -> new JsonMappingException("Can't map request to a known registered class"));
+                .orElseThrow(() -> JsonMappingException.from(ctxt, "Can't map request to a known registered class"));
     }
 
     private Object readValue(ObjectMapper mapper, JsonNode root, Class<?> clazz) {
