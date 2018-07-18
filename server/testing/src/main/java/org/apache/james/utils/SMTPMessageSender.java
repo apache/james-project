@@ -40,16 +40,8 @@ import com.github.fge.lambdas.Throwing;
 
 public class SMTPMessageSender extends ExternalResource implements Closeable {
 
-    private static AuthenticatingSMTPClient createClient() {
-        try {
-            return new AuthenticatingSMTPClient();
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static SMTPMessageSender noAuthentication(String ip, int port, String senderDomain) throws IOException {
-        AuthenticatingSMTPClient smtpClient = createClient();
+        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient();
         smtpClient.connect(ip, port);
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
@@ -73,7 +65,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
     }
 
     public SMTPMessageSender(String senderDomain) {
-        this(createClient(), senderDomain);
+        this(new AuthenticatingSMTPClient(), senderDomain);
     }
 
     public SMTPMessageSender connect(String ip, int port) throws IOException {
