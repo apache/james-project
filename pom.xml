@@ -604,7 +604,6 @@
         <slf4j.version>1.7.25</slf4j.version>
         <servlet-api.version>2.4</servlet-api.version>
         <commons-daemon.version>1.0.10</commons-daemon.version>
-        <commons-collections.version>3.2.2</commons-collections.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-cli.version>1.4</commons-cli.version>
         <commons-pool.version>1.6</commons-pool.version>
@@ -1748,11 +1747,6 @@
                 <version>${commons-cli.version}</version>
             </dependency>
             <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>${commons-collections.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-configuration</groupId>
                 <artifactId>commons-configuration</artifactId>
                 <version>${commons-configuration.version}</version>
@@ -2011,7 +2005,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-collections4</artifactId>
-                <version>4.1</version>
+                <version>4.2</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.commons</groupId>

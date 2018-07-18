@@ -23,8 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.maven.doxia.siterenderer.Renderer;
 import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -32,6 +30,7 @@ import org.apache.maven.project.MavenProject;
 import org.apache.maven.reporting.AbstractMavenReport;
 import org.apache.maven.reporting.MavenReportException;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;
 
 /**
@@ -57,23 +56,6 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
 
     @Component
     private Renderer siteRenderer;
-
-    /**
-     * Extracts only a given type from a list.
-     */
-    private static final class TypePredicate implements Predicate {
-        
-        private final MailetMatcherDescriptor.Type type;
-
-        public TypePredicate(MailetMatcherDescriptor.Type typeMatcher) {
-            this.type = typeMatcher;
-        }
-
-        @Override
-        public boolean evaluate(Object subject) {
-            return ((MailetMatcherDescriptor) subject).getType() == type;
-        }
-    }
 
     @Override
     protected void executeReport(Locale locale) throws MavenReportException {
@@ -106,13 +88,14 @@ public abstract class AbstractMailetdocsReport extends AbstractMavenReport {
     private void writeDescriptions() {
         
         final List<MailetMatcherDescriptor> descriptors = buildSortedDescriptors();
-        
-        @SuppressWarnings("unchecked")
-        final List<MailetMatcherDescriptor> matchers = (List<MailetMatcherDescriptor>) CollectionUtils.select(descriptors,
-                new TypePredicate(MailetMatcherDescriptor.Type.MATCHER));
-        @SuppressWarnings("unchecked")
-        final List<MailetMatcherDescriptor> mailets = (List<MailetMatcherDescriptor>) CollectionUtils.select(descriptors,
-                new TypePredicate(MailetMatcherDescriptor.Type.MAILET));
+
+        final List<MailetMatcherDescriptor> matchers = descriptors.stream()
+            .filter(descriptor -> descriptor.getType() == MailetMatcherDescriptor.Type.MATCHER)
+            .collect(Guavate.toImmutableList());
+
+        final List<MailetMatcherDescriptor> mailets = descriptors.stream()
+            .filter(descriptor -> descriptor.getType() == MailetMatcherDescriptor.Type.MAILET)
+            .collect(Guavate.toImmutableList());
         
         final boolean matchersExist = matchers.size() > 0;
         final boolean mailetsExist = mailets.size() > 0;
