@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.Session;
@@ -198,16 +197,11 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
         fileName = scriptDirectory + fileName;
         
         // Need to find local resource.
-        InputStream is = this.getClass().getResourceAsStream(fileName);
-
-        if (is == null) {
-            throw new Exception("Test Resource '" + fileName + "' not found.");
-        }
-
-        try {
+        try (InputStream is = this.getClass().getResourceAsStream(fileName)) {
+            if (is == null) {
+                throw new Exception("Test Resource '" + fileName + "' not found.");
+            }
             builder.addProtocolLinesFromStream(is, session, fileName);
-        } finally {
-            IOUtils.closeQuietly(is);
         }
         
     }

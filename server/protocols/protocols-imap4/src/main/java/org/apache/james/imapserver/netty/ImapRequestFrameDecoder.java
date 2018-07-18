@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.process.ImapSession;
@@ -117,12 +116,20 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
                         buffer.readBytes(out, amount);
                         written += amount;
                     } catch (Exception e) {
-                        IOUtils.closeQuietly(out);
+                        try {
+                            out.close();
+                        } catch (IOException ignored) {
+                            //ignore exception during close
+                        }
                         throw e;
                     }
                     // Check if all needed data was streamed to the file.
                     if (written == size) {
-                        IOUtils.closeQuietly(out);
+                        try {
+                            out.close();
+                        } catch (IOException ignored) {
+                            //ignore exception during close
+                        }
 
                         reader = new NettyStreamImapRequestLineReader(channel, new FileInputStream(f) {
                             /**

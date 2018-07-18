@@ -28,7 +28,6 @@ import java.util.HashSet;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -141,18 +140,13 @@ public class HeadersToHTTP extends GenericMailet {
 
     private String httpPost(HashSet<NameValuePair> pairs) throws IOException {
 
-        CloseableHttpClient client = null;
-        CloseableHttpResponse clientResponse = null;
-        try {
-            client = HttpClientBuilder.create().build();
+        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
             HttpUriRequest request = RequestBuilder.post(url).addParameters(pairs.toArray(new NameValuePair[0])).build();
-            clientResponse = client.execute(request);
-            String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
-            LOGGER.debug("HeadersToHTTP: {}", result);
-            return result;
-        } finally {
-            IOUtils.closeQuietly(clientResponse);
-            IOUtils.closeQuietly(client);
+            try (CloseableHttpResponse clientResponse = client.execute(request)) {
+                String result = clientResponse.getStatusLine().getStatusCode() + ": " + clientResponse.getStatusLine();
+                LOGGER.debug("HeadersToHTTP: {}", result);
+                return result;
+            }
         }
     }
 

@@ -66,15 +66,14 @@ public class MockSpamd implements Runnable {
 
     @Override
     public void run() {
-        try (Socket spamd = socket.accept();
+        try (ServerSocket serverSocket = socket;
+            Socket spamd = serverSocket.accept();
              BufferedReader in = new BufferedReader(new InputStreamReader(spamd.getInputStream()));
              OutputStream out = spamd.getOutputStream()) {
 
             handleRequest(in, out);
         } catch (IOException e) {
             LOGGER.error("Exception while handling answer", e);
-        } finally {
-            IOUtils.closeQuietly(socket);
         }
     }
 

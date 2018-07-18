@@ -159,11 +159,19 @@ public class MimeMessageInputStreamSource extends MimeMessageSource implements D
     public void dispose() {
         // explicit close all streams
         for (InputStream stream : streams) {
-            IOUtils.closeQuietly(stream);
+            try {
+                stream.close();
+            } catch (IOException e) {
+                //ignore exception during close
+            }
         }
 
         if (out != null) {
-            IOUtils.closeQuietly(out);
+            try {
+                out.close();
+            } catch (IOException e) {
+                //ignore exception during close
+            }
             File file = out.getFile();
             if (file != null) {
                 FileUtils.deleteQuietly(file);

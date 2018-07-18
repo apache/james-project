@@ -21,9 +21,7 @@ package org.apache.james.jmap.crypto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.StandardCharsets;
 import java.security.KeyStoreException;
-import java.util.Base64;
 
 import org.apache.james.jmap.JMAPConfiguration;
 import org.junit.Before;

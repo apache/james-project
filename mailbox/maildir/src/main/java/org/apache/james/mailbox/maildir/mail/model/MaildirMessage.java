@@ -120,22 +120,16 @@ public class MaildirMessage implements Message {
             }
             if ("text".equalsIgnoreCase(mediaType)) {
                 long lines = -1;
-                final CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream());
-                try {
+                try (CountingInputStream bodyStream = new CountingInputStream(parser.getInputStream())) {
                     bodyStream.readAll();
                     lines = bodyStream.getLineCount();
-                } finally {
-                    IOUtils.closeQuietly(bodyStream);
                 }
 
                 next = parser.next();
                 if (next == EntityState.T_EPILOGUE) {
-                    final CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream());
-                    try {
+                    try (CountingInputStream epilogueStream = new CountingInputStream(parser.getInputStream())) {
                         epilogueStream.readAll();
                         lines += epilogueStream.getLineCount();
-                    } finally {
-                        IOUtils.closeQuietly(epilogueStream);
                     }
                 }
                 propertyBuilder.setTextualLineCount(lines);

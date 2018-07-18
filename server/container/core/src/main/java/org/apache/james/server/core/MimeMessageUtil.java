@@ -161,10 +161,8 @@ public class MimeMessageUtil {
             }
         }
 
-        try {
-            IOUtils.copy(bis, bos);
-        } finally {
-            IOUtils.closeQuietly(bis);
+        try (InputStream input = bis) {
+            IOUtils.copy(input, bos);
         }
     }
 

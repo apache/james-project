@@ -35,7 +35,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -277,24 +276,20 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         // billion years...
         MaildirMessageName messageName = MaildirMessageName.createUniqueName(folder, message.getFullContentOctets());
         File messageFile = new File(tmpFolder, messageName.getFullName());
-        FileOutputStream fos = null;
-        InputStream input = null;
         try {
             if (!messageFile.createNewFile()) {
                 throw new IOException("Could not create file " + messageFile);
             }
-            fos = new FileOutputStream(messageFile);
-            input = message.getFullContent();
-            byte[] b = new byte[BUF_SIZE];
-            int len = 0;
-            while ((len = input.read(b)) != -1) {
-                fos.write(b, 0, len);
+            try (FileOutputStream fos = new FileOutputStream(messageFile);
+                InputStream input = message.getFullContent()) {
+                byte[] b = new byte[BUF_SIZE];
+                int len = 0;
+                while ((len = input.read(b)) != -1) {
+                    fos.write(b, 0, len);
+                }
             }
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);
-        } finally {
-            IOUtils.closeQuietly(fos);
-            IOUtils.closeQuietly(input);
         }
         File newMessageFile = null;
         // delivered via SMTP, goes to ./new without flags

@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.net.imap.IMAPClient;
 import org.junit.rules.ExternalResource;
 
@@ -183,7 +182,11 @@ public class IMAPMessageReader extends ExternalResource implements Closeable {
 
     @Override
     protected void after() {
-        IOUtils.closeQuietly(this);
+        try {
+            this.close();
+        } catch (IOException e) {
+            //ignore exception during close
+        }
     }
 
     public void copyFirstMessage(String destMailbox) throws IOException {

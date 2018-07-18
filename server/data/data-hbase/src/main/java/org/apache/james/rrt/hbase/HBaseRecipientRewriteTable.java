@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -73,17 +72,13 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public Mappings getUserDomainMappings(MappingSource source) throws
             RecipientRewriteTableException {
-        HTableInterface table = null;
         Mappings list = MappingsImpl.empty();
-        try {
-            table = TablePool.getInstance().getRecipientRewriteTable();
+        try (HTableInterface table = TablePool.getInstance().getRecipientRewriteTable()) {
             // Optimize this to only make one call.
             return feedUserDomainMappingsList(table, source, list);
         } catch (IOException e) {
             log.error("Error while getting user domain mapping in HBase", e);
             throw new RecipientRewriteTableException("Error while getting user domain mapping in HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
@@ -102,40 +97,33 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException {
-        HTableInterface table = null;
-        ResultScanner resultScanner = null;
         Map<MappingSource, Mappings> map = new HashMap<>();
-        try {
-            table = TablePool.getInstance().getRecipientRewriteTable();
+        try (HTableInterface table = TablePool.getInstance().getRecipientRewriteTable()) {
             Scan scan = new Scan();
             scan.addFamily(HRecipientRewriteTable.COLUMN_FAMILY_NAME);
             scan.setCaching(table.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
-            resultScanner = table.getScanner(scan);
-            Result result;
-            while ((result = resultScanner.next()) != null) {
-                List<KeyValue> keyValues = result.list();
-                if (keyValues != null) {
-                    for (KeyValue keyValue : keyValues) {
-                        MappingSource email = MappingSource.parse(Bytes.toString(keyValue.getRow()));
-                        Mappings mappings = 
+            try (ResultScanner resultScanner = table.getScanner(scan)) {
+                Result result;
+                while ((result = resultScanner.next()) != null) {
+                    List<KeyValue> keyValues = result.list();
+                    if (keyValues != null) {
+                        for (KeyValue keyValue : keyValues) {
+                            MappingSource email = MappingSource.parse(Bytes.toString(keyValue.getRow()));
+                            Mappings mappings =
                                 MappingsImpl.from(
                                     Optional.ofNullable(
                                         map.get(email))
                                         .orElse(MappingsImpl.empty()))
-                                .addAll(Splitter.on(COLUMN_SEPARATOR).split(Bytes.toString(keyValue.getValue())))
-                                .build();
-                        map.put(email, mappings);
+                                    .addAll(Splitter.on(COLUMN_SEPARATOR).split(Bytes.toString(keyValue.getValue())))
+                                    .build();
+                            map.put(email, mappings);
+                        }
                     }
                 }
             }
         } catch (IOException e) {
             log.error("Error while getting all mapping from HBase", e);
             throw new RecipientRewriteTableException("Error while getting all mappings from HBase", e);
-        } finally {
-            if (resultScanner != null) {
-                resultScanner.close();
-            }
-            IOUtils.closeQuietly(table);
         }
         return map;
     }
@@ -148,9 +136,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     private Optional<String> getApplicableMappingRow(String user, Domain domain) throws RecipientRewriteTableException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getRecipientRewriteTable();
+        try (HTableInterface table = TablePool.getInstance().getRecipientRewriteTable()) {
             HTableInterface tableCopy = table;
             return OptionalUtils.orSuppliers(
                 Throwing.supplier(() -> Optional.ofNullable(getMapping(tableCopy, MappingSource.fromUser(user, domain)))).sneakyThrow(),
@@ -159,8 +145,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         } catch (IOException e) {
             log.error("Error while mapping address in HBase", e);
             throw new RecipientRewriteTableException("Error while mapping address in HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
@@ -209,17 +193,13 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @throws RecipientRewriteTableException
      */
     private void doRemoveMapping(MappingSource source) throws RecipientRewriteTableException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getRecipientRewriteTable();
+        try (HTableInterface table = TablePool.getInstance().getRecipientRewriteTable()) {
             Delete delete = new Delete(Bytes.toBytes(getRowKey(source)));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {
             log.error("Error while removing mapping from HBase", e);
             throw new RecipientRewriteTableException("Error while removing mapping from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
@@ -232,9 +212,7 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
      * @throws RecipientRewriteTableException
      */
     private void doAddMapping(MappingSource source, String mapping) throws RecipientRewriteTableException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getRecipientRewriteTable();
+        try (HTableInterface table = TablePool.getInstance().getRecipientRewriteTable()) {
             Put put = new Put(Bytes.toBytes(getRowKey(source)));
             put.add(HRecipientRewriteTable.COLUMN_FAMILY_NAME, HRecipientRewriteTable.COLUMN.MAPPING, Bytes.toBytes(
                     mapping));
@@ -243,8 +221,6 @@ public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
         } catch (IOException e) {
             log.error("Error while adding mapping in HBase", e);
             throw new RecipientRewriteTableException("Error while adding mapping in HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 

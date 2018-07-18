@@ -47,7 +47,6 @@ import javax.mail.MessagingException;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -173,9 +172,6 @@ public class FileMailQueue implements ManageableMailQueue {
     @Override
     public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
         final String key = mail.getName() + "-" + COUNTER.incrementAndGet();
-        FileOutputStream out = null;
-        FileOutputStream foout = null;
-        ObjectOutputStream oout = null;
         try {
             int i = RANDOM.nextInt(SPLITCOUNT) + 1;
 
@@ -185,19 +181,20 @@ public class FileMailQueue implements ManageableMailQueue {
             if (delay > 0) {
                 mail.setAttribute(NEXT_DELIVERY, System.currentTimeMillis() + unit.toMillis(delay));
             }
-            foout = new FileOutputStream(item.getObjectFile());
-            oout = new ObjectOutputStream(foout);
-            oout.writeObject(mail);
-            oout.flush();
-            if (sync) {
-                foout.getFD().sync();
+            try (FileOutputStream foout = new FileOutputStream(item.getObjectFile());
+                ObjectOutputStream oout = new ObjectOutputStream(foout)) {
+                oout.writeObject(mail);
+                oout.flush();
+                if (sync) {
+                    foout.getFD().sync();
+                }
             }
-            out = new FileOutputStream(item.getMessageFile());
-
-            mail.getMessage().writeTo(out);
-            out.flush();
-            if (sync) {
-                out.getFD().sync();
+            try (FileOutputStream out = new FileOutputStream(item.getMessageFile())) {
+                mail.getMessage().writeTo(out);
+                out.flush();
+                if (sync) {
+                    out.getFD().sync();
+                }
             }
 
             keyMappings.put(key, item);
@@ -221,10 +218,6 @@ public class FileMailQueue implements ManageableMailQueue {
             //TODO: Think about exception handling in detail
         } catch (IOException | MessagingException | InterruptedException e) {
             throw new MailQueueException("Unable to enqueue mail", e);
-        } finally {
-            IOUtils.closeQuietly(out);
-            IOUtils.closeQuietly(oout);
-            IOUtils.closeQuietly(foout);
         }
 
     }
@@ -247,44 +240,41 @@ public class FileMailQueue implements ManageableMailQueue {
             }
             final String key = k;
             final FileItem fitem = item;
-            ObjectInputStream oin = null;
             try {
                 final File objectFile = new File(fitem.getObjectFile());
                 final File msgFile = new File(fitem.getMessageFile());
-                oin = new ObjectInputStream(new FileInputStream(objectFile));
-                final Mail mail = (Mail) oin.readObject();
-                mail.setMessage(new MimeMessageCopyOnWriteProxy(new FileMimeMessageSource(msgFile)));
-                MailQueueItem fileMailQueueItem = new MailQueueItem() {
+                try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(objectFile))) {
+                    final Mail mail = (Mail) oin.readObject();
+                    mail.setMessage(new MimeMessageCopyOnWriteProxy(new FileMimeMessageSource(msgFile)));
+                    MailQueueItem fileMailQueueItem = new MailQueueItem() {
 
-                    @Override
-                    public Mail getMail() {
-                        return mail;
-                    }
-
-                    @Override
-                    public void done(boolean success) throws MailQueueException {
-                        if (!success) {
-                            try {
-                                inmemoryQueue.put(key);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                throw new MailQueueException("Unable to rollback", e);
-                            }
-                        } else {
-                            fitem.delete();
-                            keyMappings.remove(key);
+                        @Override
+                        public Mail getMail() {
+                            return mail;
                         }
 
-                        LifecycleUtil.dispose(mail);
-                    }
-                };
-                return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
+                        @Override
+                        public void done(boolean success) throws MailQueueException {
+                            if (!success) {
+                                try {
+                                    inmemoryQueue.put(key);
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    throw new MailQueueException("Unable to rollback", e);
+                                }
+                            } else {
+                                fitem.delete();
+                                keyMappings.remove(key);
+                            }
 
+                            LifecycleUtil.dispose(mail);
+                        }
+                    };
+                    return mailQueueItemDecoratorFactory.decorate(fileMailQueueItem);
+                }
                 // TODO: Think about exception handling in detail
             } catch (IOException | ClassNotFoundException | MessagingException e) {
                 throw new MailQueueException("Unable to dequeue", e);
-            } finally {
-                IOUtils.closeQuietly(oin);
             }
 
         } catch (InterruptedException e) {
@@ -325,7 +315,11 @@ public class FileMailQueue implements ManageableMailQueue {
 
         @Override
         public void dispose() {
-            IOUtils.closeQuietly(in);
+            try {
+                in.close();
+            } catch (IOException e) {
+                //ignore exception during close
+            }
             file = null;
         }
 

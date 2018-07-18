@@ -38,7 +38,6 @@ import java.util.Scanner;
 import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.filesystem.api.FileSystem;
@@ -100,17 +99,16 @@ public class SieveFileRepository implements SieveRepository {
         // Create a temporary file
         int bufferSize = content.length() > MAX_BUFF_SIZE ? MAX_BUFF_SIZE : content.length();
         File tmpFile = null;
-        Writer out = null;
+
         try {
             tmpFile = File.createTempFile(file.getName(), ".tmp", file.getParentFile());
-            out = new OutputStreamWriter(new BufferedOutputStream(
-                    new FileOutputStream(tmpFile), bufferSize), UTF_8);
-            out.write(content);
+            try (Writer out = new OutputStreamWriter(new BufferedOutputStream(
+                    new FileOutputStream(tmpFile), bufferSize), UTF_8)) {
+                out.write(content);
+            }
         } catch (IOException ex) {
             FileUtils.deleteQuietly(tmpFile);
             throw new StorageException(ex);
-        } finally {
-            IOUtils.closeQuietly(out);
         }
 
         // Does the file exist?

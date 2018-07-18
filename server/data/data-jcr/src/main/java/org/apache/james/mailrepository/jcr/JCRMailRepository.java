@@ -54,7 +54,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.util.ISO9075;
 import org.apache.jackrabbit.util.Text;
@@ -520,14 +519,12 @@ public class JCRMailRepository extends AbstractMailRepository implements MailRep
         }
 
         PipedInputStream input = new PipedInputStream();
-        final PipedOutputStream output = new PipedOutputStream(input);
+        PipedOutputStream output = new PipedOutputStream(input);
         new Thread(() -> {
-            try {
-                message.writeTo(output);
+            try (PipedOutputStream stream = output) {
+                message.writeTo(stream);
             } catch (Exception e) {
                 LOGGER.info("Exception ignored", e);
-            } finally {
-                IOUtils.closeQuietly(output);
             }
         }).start();
         node.setProperty("jcr:data", input);

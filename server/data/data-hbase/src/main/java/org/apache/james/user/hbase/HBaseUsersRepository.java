@@ -26,7 +26,6 @@ import java.util.Locale;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
@@ -92,17 +91,13 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void removeUser(String name) throws UsersRepositoryException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getUsersRepositoryTable();
+        try (HTableInterface table = TablePool.getInstance().getUsersRepositoryTable()) {
             Delete delete = new Delete(Bytes.toBytes(name));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {
             log.error("Error while deleting user from HBase", e);
             throw new UsersRepositoryException("Error while deleting user from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
@@ -125,49 +120,39 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
 
     @Override
     public int countUsers() throws UsersRepositoryException {
-        HTableInterface table = null;
-        ResultScanner resultScanner = null;
-        try {
-            table = TablePool.getInstance().getUsersRepositoryTable();
+        try (HTableInterface table = TablePool.getInstance().getUsersRepositoryTable()) {
             Scan scan = new Scan();
             scan.addFamily(HUsersRepository.COLUMN_FAMILY_NAME);
             scan.setCaching(table.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
-            resultScanner = table.getScanner(scan);
-            int resultCount = 0;
-            while (resultScanner.next() != null) {
-                resultCount++;
+            try (ResultScanner resultScanner = table.getScanner(scan)) {
+                int resultCount = 0;
+                while (resultScanner.next() != null) {
+                    resultCount++;
+                }
+                return resultCount;
             }
-            return resultCount;
         } catch (IOException e) {
             log.error("Error while counting users from HBase", e);
             throw new UsersRepositoryException("Error while counting users from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(resultScanner);
-            IOUtils.closeQuietly(table);
         }
     }
 
     @Override
     public Iterator<String> list() throws UsersRepositoryException {
         List<String> list = new ArrayList<>();
-        HTableInterface table = null;
-        ResultScanner resultScanner = null;
-        try {
-            table = TablePool.getInstance().getUsersRepositoryTable();
+        try (HTableInterface table = TablePool.getInstance().getUsersRepositoryTable()) {
             Scan scan = new Scan();
             scan.addFamily(HUsersRepository.COLUMN_FAMILY_NAME);
             scan.setCaching(table.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
-            resultScanner = table.getScanner(scan);
-            Result result;
-            while ((result = resultScanner.next()) != null) {
-                list.add(Bytes.toString(result.getRow()));
+            try (ResultScanner resultScanner = table.getScanner(scan)) {
+                Result result;
+                while ((result = resultScanner.next()) != null) {
+                    list.add(Bytes.toString(result.getRow()));
+                }
             }
         } catch (IOException e) {
             log.error("Error while scanning users from HBase", e);
             throw new UsersRepositoryException("Error while scanning users from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(resultScanner);
-            IOUtils.closeQuietly(table);
         }
         return list.iterator();
     }
@@ -187,9 +172,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
      * @throws UsersRepositoryException
      */
     private KeyValue getKeyValue(String username) throws UsersRepositoryException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getUsersRepositoryTable();
+        try (HTableInterface table = TablePool.getInstance().getUsersRepositoryTable()) {
             Get get = new Get(Bytes.toBytes(username));
             Result result = table.get(get);
             KeyValue keyValue = result.getColumnLatest(HUsersRepository.COLUMN_FAMILY_NAME, HUsersRepository.COLUMN.PWD);
@@ -197,8 +180,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         } catch (IOException e) {
             log.error("Error while counting users from HBase", e);
             throw new UsersRepositoryException("Error while counting users from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
@@ -216,9 +197,7 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
                 throw new UsersRepositoryException(username + " already exists.");
             }
         }
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getUsersRepositoryTable();
+        try (HTableInterface table = TablePool.getInstance().getUsersRepositoryTable()) {
             Put put = new Put(Bytes.toBytes(username));
             put.add(HUsersRepository.COLUMN_FAMILY_NAME, HUsersRepository.COLUMN.PWD, 
                     Bytes.toBytes(user.getHashedPassword()));
@@ -227,8 +206,6 @@ public class HBaseUsersRepository extends AbstractUsersRepository {
         } catch (IOException e) {
             log.error("Error while adding user in HBase", e);
             throw new UsersRepositoryException("Error while adding user in HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 }

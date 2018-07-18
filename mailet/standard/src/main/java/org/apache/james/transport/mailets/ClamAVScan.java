@@ -39,7 +39,6 @@ import java.util.Set;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -603,18 +602,11 @@ public class ClamAVScan extends GenericMailet {
             return;
         }
 
-        // get the socket
-        Socket socket = getClamdSocket();
-        BufferedReader reader = null;
-        PrintWriter writer = null;
-        Socket streamSocket = null;
-        BufferedOutputStream bos = null;
+        Socket clamdSocket = getClamdSocket();
 
-        try {
-
-            // prepare the reader and writer for the commands
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "ASCII"));
-            writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+        try (Socket socket = clamdSocket;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "ASCII"));
+            PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true)) {
 
             // write a request for a port to use for streaming out the data to scan
             writer.println("STREAM");
@@ -624,86 +616,80 @@ public class ClamAVScan extends GenericMailet {
             int streamPort = getStreamPortFromAnswer(reader.readLine());
 
             // get the "stream" socket and the related (buffered) output stream
-            streamSocket = new Socket(socket.getInetAddress(), streamPort);
-            bos = new BufferedOutputStream(streamSocket.getOutputStream(), getStreamBufferSize());
+            try (Socket streamSocket = new Socket(socket.getInetAddress(), streamPort);
+                 BufferedOutputStream bos = new BufferedOutputStream(streamSocket.getOutputStream(), getStreamBufferSize())) {
 
-            // stream out the message to the scanner
-            mimeMessage.writeTo(bos);
-            bos.flush();
-            bos.close();
-            streamSocket.close();
+                // stream out the message to the scanner
+                mimeMessage.writeTo(bos);
+                bos.flush();
+                bos.close();
+                streamSocket.close();
 
-            String answer;
-            boolean virusFound = false;
-            String logMessage = "";
-            for (; ; ) {
-                answer = reader.readLine();
-                if (answer != null) {
-                    answer = answer.trim();
+                String answer;
+                boolean virusFound = false;
+                String logMessage = "";
+                for (; ; ) {
+                    answer = reader.readLine();
+                    if (answer != null) {
+                        answer = answer.trim();
 
-                    // if a virus is found the answer will be '... FOUND'
-                    if (answer.substring(answer.length() - FOUND_STRING.length()).equals(FOUND_STRING)) {
-                        virusFound = true;
-                        logMessage = answer + " (by CLAMD on " + socket.getInetAddress() + ")";
-                        LOGGER.debug(logMessage);
+                        // if a virus is found the answer will be '... FOUND'
+                        if (answer.substring(answer.length() - FOUND_STRING.length()).equals(FOUND_STRING)) {
+                            virusFound = true;
+                            logMessage = answer + " (by CLAMD on " + socket.getInetAddress() + ")";
+                            LOGGER.debug(logMessage);
+                        }
+                    } else {
+                        break;
                     }
+                }
+
+                reader.close();
+                writer.close();
+
+                if (virusFound) {
+                    String errorMessage = mail.getErrorMessage();
+                    if (errorMessage == null) {
+                        errorMessage = "";
+                    } else {
+                        errorMessage += "\r\n";
+                    }
+                    StringBuilder sb = new StringBuilder(errorMessage);
+                    sb.append(logMessage).append("\r\n");
+
+                    // write mail and message info to log
+                    logMailInfo(mail);
+                    logMessageInfo(mimeMessage);
+
+                    // mark the mail with a mail attribute to check later on by other matchers/mailets
+                    mail.setAttribute(MAIL_ATTRIBUTE_NAME, "true");
+
+                    // sets the error message to be shown in any "notifyXxx" message
+                    mail.setErrorMessage(sb.toString());
+
+                    // mark the message with a header string
+                    mimeMessage.setHeader(HEADER_NAME, "true");
+
                 } else {
-                    break;
+                    if (isDebug()) {
+                        LOGGER.debug("OK (by CLAMD on {})", socket.getInetAddress());
+                    }
+                    mail.setAttribute(MAIL_ATTRIBUTE_NAME, "false");
+
+                    // mark the message with a header string
+                    mimeMessage.setHeader(HEADER_NAME, "false");
+
+                }
+
+                try {
+                    saveChanges(mimeMessage);
+                } catch (Exception ex) {
+                    LOGGER.error("Exception caught while saving changes (header) to the MimeMessage. Ignoring ...", ex);
                 }
             }
-
-            reader.close();
-            writer.close();
-
-            if (virusFound) {
-                String errorMessage = mail.getErrorMessage();
-                if (errorMessage == null) {
-                    errorMessage = "";
-                } else {
-                    errorMessage += "\r\n";
-                }
-                StringBuilder sb = new StringBuilder(errorMessage);
-                sb.append(logMessage).append("\r\n");
-
-                // write mail and message info to log
-                logMailInfo(mail);
-                logMessageInfo(mimeMessage);
-
-                // mark the mail with a mail attribute to check later on by other matchers/mailets
-                mail.setAttribute(MAIL_ATTRIBUTE_NAME, "true");
-
-                // sets the error message to be shown in any "notifyXxx" message
-                mail.setErrorMessage(sb.toString());
-
-                // mark the message with a header string
-                mimeMessage.setHeader(HEADER_NAME, "true");
-
-            } else {
-                if (isDebug()) {
-                    LOGGER.debug("OK (by CLAMD on {})", socket.getInetAddress());
-                }
-                mail.setAttribute(MAIL_ATTRIBUTE_NAME, "false");
-
-                // mark the message with a header string
-                mimeMessage.setHeader(HEADER_NAME, "false");
-
-            }
-
-            try {
-                saveChanges(mimeMessage);
-            } catch (Exception ex) {
-                LOGGER.error("Exception caught while saving changes (header) to the MimeMessage. Ignoring ...", ex);
-            }
-
         } catch (Exception ex) {
-            LOGGER.error("Exception caught calling CLAMD on {}: {}", socket.getInetAddress(), ex.getMessage(), ex);
+            LOGGER.error("Exception caught calling CLAMD on {}: {}", clamdSocket.getInetAddress(), ex.getMessage(), ex);
             throw new MessagingException("Exception caught", ex);
-        } finally {
-            IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(writer);
-            IOUtils.closeQuietly(bos);
-            IOUtils.closeQuietly(streamSocket);
-            IOUtils.closeQuietly(socket);
         }
 
     }

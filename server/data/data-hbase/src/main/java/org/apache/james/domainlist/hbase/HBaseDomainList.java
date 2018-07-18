@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HTableInterface;
@@ -59,9 +58,7 @@ public class HBaseDomainList extends AbstractDomainList {
 
     @Override
     protected boolean containsDomainInternal(Domain domain) throws DomainListException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getDomainlistTable();
+        try (HTableInterface table = TablePool.getInstance().getDomainlistTable()) {
             Get get = new Get(Bytes.toBytes(domain.asString()));
             Result result = table.get(get);
             if (!result.isEmpty()) {
@@ -70,8 +67,6 @@ public class HBaseDomainList extends AbstractDomainList {
         } catch (IOException e) {
             log.error("Error while counting domains from HBase", e);
             throw new DomainListException("Error while counting domains from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
         return false;
     }
@@ -81,9 +76,7 @@ public class HBaseDomainList extends AbstractDomainList {
         if (containsDomain(domain)) {
             throw new DomainListException(domain.name() + " already exists.");
         }
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getDomainlistTable();
+        try (HTableInterface table = TablePool.getInstance().getDomainlistTable()) {
             Put put = new Put(Bytes.toBytes(domain.asString()));
             put.add(HDomainList.COLUMN_FAMILY_NAME, HDomainList.COLUMN.DOMAIN, null);
             table.put(put);
@@ -91,48 +84,37 @@ public class HBaseDomainList extends AbstractDomainList {
         } catch (IOException e) {
             log.error("Error while adding domain in HBase", e);
             throw new DomainListException("Error while adding domain in HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
     @Override
     public void removeDomain(Domain domain) throws DomainListException {
-        HTableInterface table = null;
-        try {
-            table = TablePool.getInstance().getDomainlistTable();
+        try (HTableInterface table = TablePool.getInstance().getDomainlistTable()) {
             Delete delete = new Delete(Bytes.toBytes(domain.asString()));
             table.delete(delete);
             table.flushCommits();
         } catch (IOException e) {
             log.error("Error while deleting user from HBase", e);
             throw new DomainListException("Error while deleting domain from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(table);
         }
     }
 
     @Override
     protected List<Domain> getDomainListInternal() throws DomainListException {
         List<Domain> list = new ArrayList<>();
-        HTableInterface table = null;
-        ResultScanner resultScanner = null;
-        try {
-            table = TablePool.getInstance().getDomainlistTable();
+        try (HTableInterface table = TablePool.getInstance().getDomainlistTable()) {
             Scan scan = new Scan();
             scan.addFamily(HDomainList.COLUMN_FAMILY_NAME);
             scan.setCaching(table.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
-            resultScanner = table.getScanner(scan);
-            Result result;
-            while ((result = resultScanner.next()) != null) {
-                list.add(Domain.of(Bytes.toString(result.getRow())));
+            try (ResultScanner resultScanner = table.getScanner(scan)) {
+                Result result;
+                while ((result = resultScanner.next()) != null) {
+                    list.add(Domain.of(Bytes.toString(result.getRow())));
+                }
             }
         } catch (IOException e) {
             log.error("Error while counting domains from HBase", e);
             throw new DomainListException("Error while counting domains from HBase", e);
-        } finally {
-            IOUtils.closeQuietly(resultScanner);
-            IOUtils.closeQuietly(table);
         }
         return list;
     }

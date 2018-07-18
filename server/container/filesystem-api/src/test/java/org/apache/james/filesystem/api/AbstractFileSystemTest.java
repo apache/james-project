@@ -185,11 +185,8 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = AvailableStreamsProvider.class)
     public final void availableInputStreamShouldReturnANonEmptyStream(String url) throws Exception {
         url = replacePort(url);
-        InputStream inputStream = fileSystem.getResource(url);
-        try {
+        try (InputStream inputStream = fileSystem.getResource(url)) {
             assertThat(IOUtils.toByteArray(inputStream).length).isGreaterThan(0);
-        } finally {
-            IOUtils.closeQuietly(inputStream);
         }
     }
 
@@ -234,12 +231,9 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailable(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
-        InputStream inputStream = null;
-        try {
-            inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath());
+        try (InputStream inputStream = fileSystem.getResource("file:" + temp.getAbsolutePath())) {
             assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
-            IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }
@@ -248,12 +242,9 @@ public abstract class AbstractFileSystemTest {
     @Parameters(source = FileToCreateProvider.class)
     public final void createdFilesAsInputStreamShouldBeAvailableWhenAccessedWithTwoSlashes(String name, String extension) throws Exception {
         File temp = createTempFile(name, extension);
-        InputStream inputStream = null;
-        try {
-            inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath());
+        try (InputStream inputStream = fileSystem.getResource("file://" + temp.getAbsolutePath())) {
             assertThat(IOUtils.toString(inputStream, StandardCharsets.UTF_8)).isEqualTo("content");
         } finally {
-            IOUtils.closeQuietly(inputStream);
             temp.delete();
         }
     }

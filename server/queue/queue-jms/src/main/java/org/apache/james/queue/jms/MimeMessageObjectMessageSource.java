@@ -25,7 +25,6 @@ import javax.jms.JMSException;
 import javax.jms.ObjectMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.server.core.MimeMessageSource;
@@ -70,7 +69,11 @@ public class MimeMessageObjectMessageSource extends MimeMessageSource implements
 
     @Override
     public void dispose() {
-        IOUtils.closeQuietly(in);
+        try {
+            in.close();
+        } catch (IOException e) {
+            //ignore exception during close
+        }
         LifecycleUtil.dispose(in);
 
         try {
