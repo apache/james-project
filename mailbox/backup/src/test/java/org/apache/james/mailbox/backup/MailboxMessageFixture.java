@@ -28,10 +28,10 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;

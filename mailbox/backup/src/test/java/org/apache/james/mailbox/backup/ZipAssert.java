@@ -95,7 +95,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> {
 
     public ZipAssert containsOnlyEntriesMatching(EntryChecks... entryChecks) throws Exception {
         isNotNull();
-        List<EntryChecks> sortedEntryChecks= Arrays.stream(entryChecks)
+        List<EntryChecks> sortedEntryChecks = Arrays.stream(entryChecks)
             .sorted(Comparator.comparing(checks -> checks.name))
             .collect(Guavate.toImmutableList());
         List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries())
