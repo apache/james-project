@@ -24,26 +24,19 @@ import java.io.IOException;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.rules.TestRule;
 
 public class CassandraSendMDNMethodTest extends SendMDNMethodTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart().container(cassandra.getRawContainer()).build();
-
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-
-    @Rule
-    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {

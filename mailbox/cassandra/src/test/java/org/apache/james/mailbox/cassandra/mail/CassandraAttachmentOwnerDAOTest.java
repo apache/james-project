@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -51,6 +52,11 @@ public class CassandraAttachmentOwnerDAOTest {
             cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraAttachmentOwnerDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION);
+    }
+
+    @After
+    public void tearDown() {
+        cassandra.close();
     }
 
     @Test

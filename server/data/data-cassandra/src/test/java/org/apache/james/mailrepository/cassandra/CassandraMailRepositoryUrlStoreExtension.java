@@ -24,14 +24,17 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
+public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback, AfterEachCallback, BeforeEachCallback {
     private final DockerCassandraRule cassandra;
+    private CassandraCluster cassandraCluster;
 
     public CassandraMailRepositoryUrlStoreExtension() {
         this.cassandra = new DockerCassandraRule();
@@ -40,6 +43,18 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
     @Override
     public void beforeAll(ExtensionContext context) {
         cassandra.start();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) {
+        cassandraCluster = CassandraCluster.create(
+            new CassandraMailRepositoryUrlModule(),
+            cassandra.getHost());
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        cassandraCluster.close();
     }
 
     @Override
@@ -54,9 +69,7 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
 
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        CassandraCluster cassandraCluster = CassandraCluster.create(
-            new CassandraMailRepositoryUrlModule(),
-            cassandra.getHost());
+
 
         return new CassandraMailRepositoryUrlStore(
             new UrlsDao(

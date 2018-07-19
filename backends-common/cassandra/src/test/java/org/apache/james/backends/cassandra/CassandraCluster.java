@@ -22,6 +22,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
@@ -85,6 +86,7 @@ public final class CassandraCluster implements AutoCloseable {
 
     @Override
     public void close() {
+        new CassandraTableManager(module, session).clearAllTables();
         cluster.closeAsync();
     }
 }

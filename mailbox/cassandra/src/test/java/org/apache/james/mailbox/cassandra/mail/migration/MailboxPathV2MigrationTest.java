@@ -39,6 +39,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.assertj.core.api.SoftAssertions;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -50,6 +51,7 @@ public class MailboxPathV2MigrationTest {
     private static final int UID_VALIDITY_1 = 452;
     private static final SimpleMailbox MAILBOX_1 = new SimpleMailbox(MAILBOX_PATH_1, UID_VALIDITY_1);
     private static final CassandraId MAILBOX_ID_1 = CassandraId.timeBased();
+    private CassandraCluster cassandra;
 
     @BeforeClass
     public static void setUpClass() {
@@ -66,7 +68,7 @@ public class MailboxPathV2MigrationTest {
 
     @Before
     public void setUp() {
-        CassandraCluster cassandra = CassandraCluster.create(
+        cassandra = CassandraCluster.create(
             new CassandraModuleComposite(
                 new CassandraMailboxModule(),
                 new CassandraAclModule()),
@@ -89,6 +91,11 @@ public class MailboxPathV2MigrationTest {
             daoV2,
             userMailboxRightsDAO,
             new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION));
+    }
+
+    @After
+    public void tearDown() {
+        cassandra.close();
     }
 
     @Test

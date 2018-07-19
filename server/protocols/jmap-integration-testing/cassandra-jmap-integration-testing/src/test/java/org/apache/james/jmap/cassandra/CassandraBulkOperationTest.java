@@ -38,7 +38,6 @@ import java.util.stream.IntStream;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.ContainerLifecycleConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -55,7 +54,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestRule;
 
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.parsing.Parser;
@@ -66,13 +64,8 @@ public class CassandraBulkOperationTest {
     @ClassRule
     public static DockerCassandraRule cassandra =  new DockerCassandraRule();
 
-    public static ContainerLifecycleConfiguration cassandraLifecycleConfiguration = ContainerLifecycleConfiguration.withDefaultIterationsBetweenRestart().container(cassandra.getRawContainer()).build();
-
     @Rule
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
-
-    @Rule
-    public TestRule cassandraLifecycleTestRule = cassandraLifecycleConfiguration.asTestRule();
 
     private static final String USERNAME = "username@" + DOMAIN;
     private static final MailboxPath TRASH_PATH = MailboxPath.forUser(USERNAME, DefaultMailboxes.TRASH);

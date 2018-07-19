@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.jmap.cassandra.cucumber;
 
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.DockerCassandraRule;
 
 public class CucumberCassandraSingleton {
 

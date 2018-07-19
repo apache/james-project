@@ -17,33 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.server;
 
-import org.apache.james.backends.es.EmbeddedElasticSearch;
-import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
-import org.apache.james.util.Host;
+import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
-import com.google.inject.AbstractModule;
+import org.apache.james.backends.cassandra.init.CassandraTableManager;
+import org.apache.james.utils.GuiceProbe;
 
-public class CassandraJmapServerModule extends AbstractModule {
+public class CassandraCleanupProbe implements GuiceProbe {
+    private final CassandraTableManager tableManager;
 
-    private static final int LIMIT_TO_3_MESSAGES = 3;
-    private final EmbeddedElasticSearch embeddedElasticSearch;
-    private final Host cassandraHost;
-
-    public CassandraJmapServerModule(EmbeddedElasticSearch embeddedElasticSearch, Host cassandraHost) {
-        this.embeddedElasticSearch = embeddedElasticSearch;
-        this.cassandraHost = cassandraHost;
+    @Inject
+    public CassandraCleanupProbe(CassandraTableManager tableManager) {
+        this.tableManager = tableManager;
     }
 
-    @Override
-    protected void configure() {
-        install(new CassandraTestModule(cassandraHost));
-        install(new TestElasticSearchModule(embeddedElasticSearch));
-        install(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
-
-        install(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class));
+    @PreDestroy
+    public void clearAllTables() {
+        tableManager.clearAllTables();
     }
-
 }

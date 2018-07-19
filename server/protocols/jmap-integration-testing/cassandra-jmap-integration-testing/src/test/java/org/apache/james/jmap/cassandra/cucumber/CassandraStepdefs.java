@@ -27,18 +27,26 @@ import javax.inject.Inject;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.jmap.methods.integration.cucumber.ImapStepdefs;
 import org.apache.james.jmap.methods.integration.cucumber.MainStepdefs;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
-import org.apache.james.modules.CassandraJmapServerModule;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestESMetricReporterModule;
+import org.apache.james.modules.TestElasticSearchModule;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.server.CassandraCleanupProbe;
 import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.utils.GuiceProbe;
 import org.junit.rules.TemporaryFolder;
 
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
+import com.google.inject.multibindings.Multibinder;
 
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
@@ -70,9 +78,15 @@ public class CassandraStepdefs {
             .build();
 
         mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(new CassandraJmapServerModule(embeddedElasticSearch, cassandraServer.getHost()))
-                .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class));
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(10))
+            .overrideWith(new TestESMetricReporterModule())
+            .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
+            .overrideWith(cassandraServer.getModule())
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))
+            .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(CassandraCleanupProbe.class));
         mainStepdefs.awaitMethod = () -> embeddedElasticSearch.awaitForElasticSearch();
         mainStepdefs.init();
     }
