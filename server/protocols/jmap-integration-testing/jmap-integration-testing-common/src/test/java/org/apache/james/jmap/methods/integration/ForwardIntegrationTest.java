@@ -39,6 +39,9 @@ import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
+import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
@@ -50,14 +53,11 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import com.jayway.awaitility.Duration;
-import io.restassured.RestAssured;
-import io.restassured.specification.RequestSpecification;
 
 public abstract class ForwardIntegrationTest {
 

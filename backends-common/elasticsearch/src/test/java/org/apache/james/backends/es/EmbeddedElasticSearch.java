@@ -19,13 +19,15 @@
 
 package org.apache.james.backends.es;
 
-import static com.jayway.awaitility.Awaitility.await;
+import static org.awaitility.Awaitility.await;
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
+import org.awaitility.Duration;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushAction;
 import org.elasticsearch.action.admin.indices.flush.FlushRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -33,8 +35,6 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.node.Node;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
-
-import com.jayway.awaitility.Duration;
 
 public class EmbeddedElasticSearch extends ExternalResource {
     private final Supplier<Path> folder;

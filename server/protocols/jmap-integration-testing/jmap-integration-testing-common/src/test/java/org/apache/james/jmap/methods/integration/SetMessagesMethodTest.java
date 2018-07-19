@@ -112,6 +112,7 @@ import org.apache.james.utils.MessageIdProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
+import org.awaitility.Duration;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -122,7 +123,6 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
-import com.jayway.awaitility.Duration;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;

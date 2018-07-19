@@ -22,14 +22,15 @@ package org.apache.james.jmap;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
-import com.jayway.awaitility.Awaitility;
-import com.jayway.awaitility.Duration;
-import com.jayway.awaitility.core.ConditionFactory;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.http.ContentType;
+import org.awaitility.Awaitility;
+import org.awaitility.Duration;
+import org.awaitility.core.ConditionFactory;
 
 public interface TestingConstants {
     Duration slowPacedPollInterval = Duration.ONE_HUNDRED_MILLISECONDS;
