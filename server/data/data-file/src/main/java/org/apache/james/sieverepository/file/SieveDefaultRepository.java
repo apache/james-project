@@ -24,6 +24,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -41,7 +44,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.joda.time.DateTime;
 
 /**
  * <code>SieveFileRepository</code> manages sieve scripts stored on the file system.
@@ -83,8 +85,8 @@ public class SieveDefaultRepository implements SieveRepository {
     }
 
     @Override
-    public DateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException {
-        return new DateTime(retrieveUserFile(user).lastModified());
+    public ZonedDateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException {
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(retrieveUserFile(user).lastModified()), ZoneOffset.UTC);
     }
 
     public File retrieveUserFile(User user) throws ScriptNotFoundException {

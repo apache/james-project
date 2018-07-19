@@ -19,32 +19,32 @@
 package org.apache.james.transport.mailets.jsieve;
 
 import java.io.InputStream;
+import java.time.ZonedDateTime;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.joda.time.DateTime;
 
 public class ResourceLocator {
 
     public static class UserSieveInformation {
-        private DateTime scriptActivationDate;
-        private DateTime scriptInterpretationDate;
+        private ZonedDateTime scriptActivationDate;
+        private ZonedDateTime scriptInterpretationDate;
         private InputStream scriptContent;
 
-        public UserSieveInformation(DateTime scriptActivationDate, DateTime scriptInterpretationDate, InputStream scriptContent) {
+        public UserSieveInformation(ZonedDateTime scriptActivationDate, ZonedDateTime scriptInterpretationDate, InputStream scriptContent) {
             this.scriptActivationDate = scriptActivationDate;
             this.scriptInterpretationDate = scriptInterpretationDate;
             this.scriptContent = scriptContent;
         }
 
-        public DateTime getScriptActivationDate() {
+        public ZonedDateTime getScriptActivationDate() {
             return scriptActivationDate;
         }
 
-        public DateTime getScriptInterpretationDate() {
+        public ZonedDateTime getScriptInterpretationDate() {
             return scriptInterpretationDate;
         }
 
@@ -63,7 +63,7 @@ public class ResourceLocator {
 
     public UserSieveInformation get(MailAddress mailAddress) throws Exception {
         User username = retrieveUsername(mailAddress);
-        return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), DateTime.now(), sieveRepository.getActive(username));
+        return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), ZonedDateTime.now(), sieveRepository.getActive(username));
     }
 
     private User retrieveUsername(MailAddress mailAddress) {

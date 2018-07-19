@@ -21,6 +21,7 @@
 package org.apache.james.sieverepository.api;
 
 import java.io.InputStream;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.apache.james.core.User;
@@ -29,7 +30,6 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
-import org.joda.time.DateTime;
 
 
 /**
@@ -56,7 +56,7 @@ public interface SieveRepository extends SieveQuotaRepository {
     
     List<ScriptSummary> listScripts(User user) throws StorageException;
 
-    DateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException;
+    ZonedDateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException;
 
     InputStream getActive(User user) throws ScriptNotFoundException, StorageException;
     

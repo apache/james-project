@@ -21,6 +21,7 @@ package org.apache.james.sieve.cassandra;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -43,7 +44,6 @@ import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.util.CompletableFutureUtil;
-import org.joda.time.DateTime;
 
 public class CassandraSieveRepository implements SieveRepository {
 
@@ -59,7 +59,7 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public DateTime getActivationDateForActiveScript(User user) throws ScriptNotFoundException {
+    public ZonedDateTime getActivationDateForActiveScript(User user) throws ScriptNotFoundException {
         return cassandraActiveScriptDAO.getActiveSctiptInfo(user).join()
             .orElseThrow(ScriptNotFoundException::new)
             .getActivationDate();

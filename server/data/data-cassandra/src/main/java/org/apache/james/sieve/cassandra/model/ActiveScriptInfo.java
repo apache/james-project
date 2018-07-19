@@ -19,26 +19,25 @@
 
 package org.apache.james.sieve.cassandra.model;
 
-import java.util.Date;
+import java.time.ZonedDateTime;
 
 import org.apache.james.sieverepository.api.ScriptName;
-import org.joda.time.DateTime;
 
 public class ActiveScriptInfo {
 
     private final ScriptName name;
-    private final DateTime activationDate;
+    private final ZonedDateTime activationDate;
 
-    public ActiveScriptInfo(ScriptName name, Date date) {
+    public ActiveScriptInfo(ScriptName name, ZonedDateTime activationDate) {
         this.name = name;
-        this.activationDate = new DateTime(date);
+        this.activationDate = activationDate;
     }
 
     public ScriptName getName() {
         return name;
     }
 
-    public DateTime getActivationDate() {
+    public ZonedDateTime getActivationDate() {
         return activationDate;
     }
 }

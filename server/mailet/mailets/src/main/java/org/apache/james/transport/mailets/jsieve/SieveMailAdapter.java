@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,7 +52,6 @@ import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.mail.optional.EnvelopeAccessors;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,8 +82,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     private final ActionDispatcher dispatcher;
     
     private final Poster poster;
-    private final DateTime scriptActivationDate;
-    private final DateTime scriptInterpretationDate;
+    private final ZonedDateTime scriptActivationDate;
+    private final ZonedDateTime scriptInterpretationDate;
     private final MailAddress recipient;
 
     /**
@@ -93,7 +93,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      * @param aMailetContext
      */
     public SieveMailAdapter(final Mail aMail, final MailetContext aMailetContext, final ActionDispatcher dispatcher, final Poster poster,
-                            DateTime scriptActivationDate, DateTime scriptInterpretationDate, MailAddress recipient) {
+                            ZonedDateTime scriptActivationDate, ZonedDateTime scriptInterpretationDate, MailAddress recipient) {
         this.poster = poster;
         this.dispatcher = dispatcher;
         this.scriptInterpretationDate = scriptInterpretationDate;
@@ -104,12 +104,12 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     }
 
     @Override
-    public DateTime getScriptActivationDate() {
+    public ZonedDateTime getScriptActivationDate() {
         return scriptActivationDate;
     }
 
     @Override
-    public DateTime getScriptInterpretationDate() {
+    public ZonedDateTime getScriptInterpretationDate() {
         return scriptInterpretationDate;
     }
 

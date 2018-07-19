@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
@@ -41,9 +42,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -53,11 +51,10 @@ public class SieveIntegrationTest {
     public static final String LOCAL_PART = "receiver";
     public static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
 
-    public static DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-mm-dd HH:mm:ss");
-    public static final DateTime DATE_CLOSE = formatter.parseDateTime("2016-01-16 00:00:00");
-    public static final DateTime DATE_DEFAULT = formatter.parseDateTime("2016-01-14 00:00:00");
-    public static final DateTime DATE_NEW = formatter.parseDateTime("2016-01-18 00:00:00");
-    public static final DateTime DATE_OLD = formatter.parseDateTime("2011-01-18 00:00:00");
+    public static final ZonedDateTime DATE_CLOSE = ZonedDateTime.parse("2016-01-16T00:00:00Z");
+    public static final ZonedDateTime DATE_DEFAULT = ZonedDateTime.parse("2016-01-14T00:00:00Z");
+    public static final ZonedDateTime DATE_NEW = ZonedDateTime.parse("2016-01-18T00:00:00Z");
+    public static final ZonedDateTime DATE_OLD = ZonedDateTime.parse("2011-01-18T00:00:00Z");
     public static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.not.selected");
     public static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.select");
     public static final MailboxPath INBOX = MailboxPath.forUser(LOCAL_PART, "INBOX");
@@ -932,7 +929,7 @@ public class SieveIntegrationTest {
         prepareTestUsingScriptAndDates(script, DATE_DEFAULT, DATE_DEFAULT);
     }
 
-    private void prepareTestUsingScriptAndDates(String script, DateTime scriptCreationDate, DateTime scriptExecutionDate) throws Exception {
+    private void prepareTestUsingScriptAndDates(String script, ZonedDateTime scriptCreationDate, ZonedDateTime scriptExecutionDate) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(LOCAL_PART);
         when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(LOCAL_PART);

@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets.jsieve;
 
+import java.time.temporal.ChronoUnit;
 import java.util.Enumeration;
 import java.util.Set;
 
@@ -29,7 +30,6 @@ import org.apache.james.core.MailAddress;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
-import org.joda.time.Days;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,11 @@ public class VacationAction implements MailAction {
     @Override
     public void execute(Action action, Mail mail, ActionContext context) throws MessagingException {
         ActionVacation actionVacation = (ActionVacation) action;
-        int dayDifference = Days.daysBetween(context.getScriptActivationDate(), context.getScriptInterpretationDate()).getDays();
+        int dayDifference = Long.valueOf(
+            ChronoUnit.DAYS.between(
+                context.getScriptActivationDate().toLocalDate(),
+                context.getScriptInterpretationDate().toLocalDate()))
+            .intValue();
         if (isStillInVacation(actionVacation, dayDifference)) {
             if (isValidForReply(mail, actionVacation, context)) {
                 if (!isMailingList(mail)) {

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.transport.mailets.jsieve;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
 
 import javax.mail.MessagingException;
@@ -25,7 +26,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
-import org.joda.time.DateTime;
 
 /**
  * Provides context for action execution.
@@ -35,12 +35,12 @@ public interface ActionContext {
     /**
      * @return Date the script was activated
      */
-    DateTime getScriptActivationDate();
+    ZonedDateTime getScriptActivationDate();
 
     /**
      * @return Date the script is currently interpreted
      */
-    DateTime getScriptInterpretationDate();
+    ZonedDateTime getScriptInterpretationDate();
 
     /**
      * @return Recipient receiving the given eMail

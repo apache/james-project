@@ -634,7 +634,6 @@
         <jetty.version>9.4.7.v20170914</jetty.version>
         <testcontainers.version>1.8.1</testcontainers.version>
         <metrics.version>3.2.6</metrics.version>
-        <joda.version>2.9.4</joda.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>2.2.0</es-reporter.version>
@@ -1947,11 +1946,6 @@
                 <groupId>jmock</groupId>
                 <artifactId>jmock</artifactId>
                 <version>1.1.0</version>
-            </dependency>
-            <dependency>
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>${joda.version}</version>
             </dependency>
             <dependency>
                 <groupId>junit</groupId>

@@ -23,6 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
@@ -36,7 +39,6 @@ import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
-import org.joda.time.DateTime;
 import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
@@ -72,7 +74,7 @@ public abstract class AbstractSieveRepositoryTest {
         sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setActive(USER, SCRIPT_NAME);
         assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotNull();
-        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(new DateTime(0L));
+        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC));
     }
 
     @Test(expected = ScriptNotFoundException.class)
