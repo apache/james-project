@@ -24,8 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.transport.mailets.ICal4JConfigurator;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.mailet.base.MailAddressFixture;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -35,6 +37,11 @@ import net.fortuna.ical4j.model.Calendar;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class ICALTest {
+
+    @BeforeClass
+    public static void setUpIcal4J() {
+        ICal4JConfigurator.configure();
+    }
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();

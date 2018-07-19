@@ -32,6 +32,10 @@
 
     <name>Apache James :: Server :: JMAP</name>
 
+    <properties>
+        <zalando.version>1.9.0</zalando.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -299,12 +303,12 @@
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>logbook-core</artifactId>
-            <version>1.2.1</version>
+            <version>${zalando.version}</version>
         </dependency>
         <dependency>
             <groupId>org.zalando</groupId>
             <artifactId>logbook-servlet</artifactId>
-            <version>1.2.1</version>
+            <version>${zalando.version}</version>
         </dependency>
     </dependencies>
 

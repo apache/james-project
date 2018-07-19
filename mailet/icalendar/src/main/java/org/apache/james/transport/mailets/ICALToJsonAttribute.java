@@ -91,6 +91,10 @@ public class ICALToJsonAttribute extends GenericMailet {
     public static final String DEFAULT_RAW_SOURCE_ATTRIBUTE_NAME = "attachments";
     public static final String DEFAULT_DESTINATION_ATTRIBUTE_NAME = "icalendarJson";
 
+    static {
+        ICal4JConfigurator.configure();
+    }
+
     private final ObjectMapper objectMapper;
     private String sourceAttributeName;
     private String rawSourceAttributeName;
