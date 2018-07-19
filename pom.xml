@@ -644,6 +644,7 @@
         <jutf7.version>1.0.0</jutf7.version>
         <plugin.mailetdocs.version>0.1</plugin.mailetdocs.version>
         <httpclient-osgi.version>4.5.1</httpclient-osgi.version>
+        <apache.httpcomponents.version>4.5.6</apache.httpcomponents.version>
         <!-- maven-mailetdocs-plugin artifacts -->
         <maven-artifact.version>3.0-alpha-1</maven-artifact.version>
         <maven-plugin-annotations.version>3.4</maven-plugin-annotations.version>
@@ -2026,7 +2027,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient-osgi</artifactId>
-                <version>${httpclient-osgi.version}</version>
+                <version>${apache.httpcomponents.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
