@@ -60,6 +60,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new AsyncTasksExecutorModule());
         install(new DropWizardMetricsModule());
         install(new TaskManagerModule());
+        install(new CleanupTaskModule());
 
         bind(FileSystem.class).toInstance(fileSystem);
 
