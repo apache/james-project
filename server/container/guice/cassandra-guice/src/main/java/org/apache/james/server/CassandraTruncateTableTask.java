@@ -19,22 +19,22 @@
 
 package org.apache.james.server;
 
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
-import org.apache.james.utils.GuiceProbe;
 
-public class CassandraCleanupProbe implements GuiceProbe {
+public class CassandraTruncateTableTask implements CleanupTasksPerformer.CleanupTask {
     private final CassandraTableManager tableManager;
 
     @Inject
-    public CassandraCleanupProbe(CassandraTableManager tableManager) {
+    public CassandraTruncateTableTask(CassandraTableManager tableManager) {
         this.tableManager = tableManager;
     }
 
-    @PreDestroy
-    public void clearAllTables() {
+    @Override
+    public Result run() {
         tableManager.clearAllTables();
+        return Result.COMPLETED;
     }
 }

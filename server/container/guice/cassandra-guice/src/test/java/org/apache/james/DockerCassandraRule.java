@@ -20,9 +20,8 @@
 package org.apache.james;
 
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.server.CassandraCleanupProbe;
+import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.util.Host;
-import org.apache.james.utils.GuiceProbe;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.testcontainers.containers.GenericContainer;
@@ -54,9 +53,9 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
                 .maxRetry(20)
                 .minDelay(5000)
                 .build()),
-            binder -> Multibinder.newSetBinder(binder, GuiceProbe.class)
+            binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                 .addBinding()
-                .to(CassandraCleanupProbe.class));
+                .to(CassandraTruncateTableTask.class));
     }
 
     public String getIp() {
