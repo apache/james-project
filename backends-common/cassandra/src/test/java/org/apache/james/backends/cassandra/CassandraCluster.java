@@ -18,38 +18,27 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra;
 
-import java.util.Optional;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
-import org.apache.james.backends.cassandra.utils.FunctionRunnerWithRetry;
 import org.apache.james.util.Host;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
-import com.datastax.driver.core.exceptions.NoHostAvailableException;
 
 public final class CassandraCluster implements AutoCloseable {
-
-    private static final int REPLICATION_FACTOR = 1;
-
-    private static final long SLEEP_BEFORE_RETRY = 20;
-    private static final int MAX_RETRY = 20000;
+    public static final String KEYSPACE = "testing";
 
     private final CassandraModule module;
     private Session session;
     private CassandraTypesProvider typesProvider;
     private Cluster cluster;
-    private String keyspace;
-    private ClusterConfiguration clusterConfiguration;
 
     public static CassandraCluster create(CassandraModule module, String host, int port) {
         return new CassandraCluster(module, host, port);
@@ -67,15 +56,19 @@ public final class CassandraCluster implements AutoCloseable {
                 .host(host)
                 .port(port)
                 .build();
-            keyspace = new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
-            clusterConfiguration = ClusterConfiguration.builder()
-                .host(Host.from(host, port))
-                .keyspace(keyspace)
-                .replicationFactor(1)
-                .maxRetry(10)
-                .minDelay(5000)
-                .build();
-            session = new FunctionRunnerWithRetry(MAX_RETRY).executeAndRetrieveObject(CassandraCluster.this::tryInitializeSession);
+            session = new SessionWithInitializedTablesFactory(
+                ClusterConfiguration.builder()
+                    .host(Host.from(host, port))
+                    .keyspace(KEYSPACE)
+                    .replicationFactor(1)
+                    .build(),
+                ClusterWithKeyspaceCreatedFactory
+                    .config(cluster, KEYSPACE)
+                    .replicationFactor(1)
+                    .disableDurableWrites()
+                    .clusterWithInitializedKeyspace(),
+                module)
+                .get();
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {
             throw new RuntimeException(exception);
@@ -84,34 +77,6 @@ public final class CassandraCluster implements AutoCloseable {
 
     public Session getConf() {
         return session;
-    }
-    
-    private Optional<Session> tryInitializeSession() {
-        try {
-            Cluster clusterWithInitializedKeyspace = ClusterWithKeyspaceCreatedFactory
-                .config(getCluster(), keyspace)
-                .replicationFactor(REPLICATION_FACTOR)
-                .disableDurableWrites()
-                .clusterWithInitializedKeyspace();
-
-            return Optional.of(new SessionWithInitializedTablesFactory(clusterConfiguration, clusterWithInitializedKeyspace, module)
-                .get());
-        } catch (NoHostAvailableException exception) {
-            sleep(SLEEP_BEFORE_RETRY);
-            return Optional.empty();
-        }
-    }
-
-    public Cluster getCluster() {
-        return cluster;
-    }
-
-    private void sleep(long sleepMs) {
-        try {
-            Thread.sleep(sleepMs);
-        } catch (InterruptedException interruptedException) {
-            throw new RuntimeException(interruptedException);
-        }
     }
 
     public CassandraTypesProvider getTypesProvider() {
