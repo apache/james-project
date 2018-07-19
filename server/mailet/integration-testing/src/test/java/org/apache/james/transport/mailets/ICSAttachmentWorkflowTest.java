@@ -785,6 +785,6 @@ public class ICSAttachmentWorkflowTest {
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage())
-            .containsSequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
+            .containsSubsequence("Content-Type: multipart/mixed", "Content-Disposition: attachment");
     }
 }

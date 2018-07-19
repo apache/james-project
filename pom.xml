@@ -629,8 +629,8 @@
         <karaf.version>2.3.0</karaf.version>
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
+        <jackson.version>2.9.6</jackson.version>
         <jetty.version>9.4.11.v20180605</jetty.version>
-        <assertj-guava.version>3.1.0</assertj-guava.version>
         <testcontainers.version>1.8.1</testcontainers.version>
         <metrics.version>3.2.6</metrics.version>
         <joda.version>2.9.4</joda.version>
@@ -2247,12 +2247,12 @@
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
-                <version>3.8.0</version>
+                <version>3.10.0</version>
             </dependency>
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-guava</artifactId>
-                <version>${assertj-guava.version}</version>
+                <version>3.2.0</version>
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
