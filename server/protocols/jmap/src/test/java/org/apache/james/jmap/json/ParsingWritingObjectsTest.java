@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.json;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import static org.apache.james.jmap.json.ParsingWritingObjects.MESSAGE;
 import static org.apache.james.jmap.json.ParsingWritingObjects.SUB_MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;

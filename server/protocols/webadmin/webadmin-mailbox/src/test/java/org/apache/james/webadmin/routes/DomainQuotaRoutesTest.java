@@ -21,7 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;

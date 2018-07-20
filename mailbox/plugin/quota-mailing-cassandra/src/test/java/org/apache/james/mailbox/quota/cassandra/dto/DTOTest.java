@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.cassandra.dto;
 
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._75;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
 import static org.assertj.core.api.Assertions.assertThat;

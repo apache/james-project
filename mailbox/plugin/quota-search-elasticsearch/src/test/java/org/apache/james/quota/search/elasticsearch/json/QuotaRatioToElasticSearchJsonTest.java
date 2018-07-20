@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.quota.search.elasticsearch.json;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 
 import java.io.IOException;
 import java.time.Instant;
