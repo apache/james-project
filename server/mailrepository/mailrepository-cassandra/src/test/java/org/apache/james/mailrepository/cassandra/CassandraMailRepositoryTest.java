@@ -29,7 +29,9 @@ import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -41,16 +43,18 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
     static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
 
     CassandraMailRepository cassandraMailRepository;
-    CassandraCluster cassandra;
+    static CassandraCluster cassandra;
+
+    @BeforeAll
+    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
+            new CassandraMailRepositoryModule(),
+            new CassandraBlobModule());
+        cassandra = CassandraCluster.create(modules, dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    }
 
     @BeforeEach
-    void setup(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-            new CassandraModuleComposite(
-                new CassandraMailRepositoryModule(),
-                new CassandraBlobModule()),
-            dockerCassandra.getIp(), dockerCassandra.getBindingPort());
-
+    void setup() {
         CassandraMailRepositoryMailDAO mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
         CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
@@ -61,8 +65,13 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
     }
 
     @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override

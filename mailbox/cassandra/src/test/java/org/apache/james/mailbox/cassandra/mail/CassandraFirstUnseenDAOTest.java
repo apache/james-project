@@ -27,7 +27,9 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -38,20 +40,28 @@ public class CassandraFirstUnseenDAOTest {
     public static final MessageUid UID_2 = MessageUid.of(2);
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
     private CassandraFirstUnseenDAO testee;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraFirstUnseenModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(
-            new CassandraFirstUnseenModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraFirstUnseenDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

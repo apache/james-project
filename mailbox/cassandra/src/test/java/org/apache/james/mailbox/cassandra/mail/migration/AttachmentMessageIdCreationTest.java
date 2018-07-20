@@ -55,7 +55,10 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -65,6 +68,7 @@ import com.google.common.collect.ImmutableSet;
 public class AttachmentMessageIdCreationTest {
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static CassandraCluster cassandra;
 
     private CassandraBlobsDAO blobsDAO;
     private CassandraMessageDAO cassandraMessageDAO;
@@ -75,15 +79,17 @@ public class AttachmentMessageIdCreationTest {
     private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
 
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
+            new CassandraMessageModule(),
+            new CassandraAttachmentModule(),
+            new CassandraBlobModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() {
-        CassandraCluster cassandra = CassandraCluster.create(
-            new CassandraModuleComposite(
-                new CassandraMessageModule(),
-                new CassandraAttachmentModule(),
-                new CassandraBlobModule()),
-            cassandraServer.getIp(),
-            cassandraServer.getBindingPort());
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -96,6 +102,16 @@ public class AttachmentMessageIdCreationTest {
         migration = new AttachmentMessageIdCreation(cassandraMessageDAO, attachmentMessageIdDAO);
 
         messageId = messageIdFactory.generate();
+    }
+
+    @After
+    public void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

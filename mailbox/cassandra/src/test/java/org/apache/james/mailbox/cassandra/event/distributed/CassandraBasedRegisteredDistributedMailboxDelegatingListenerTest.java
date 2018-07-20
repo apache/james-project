@@ -47,7 +47,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -68,7 +70,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    private static CassandraCluster cassandra;
+
     private RegisteredDelegatingMailboxListener registeredDelegatingMailboxListener1;
     private RegisteredDelegatingMailboxListener registeredDelegatingMailboxListener2;
     private RegisteredDelegatingMailboxListener registeredDelegatingMailboxListener3;
@@ -79,6 +82,11 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
     private EventCollector eventCollectorOnce2;
     private EventCollector eventCollectorOnce3;
     private MailboxSession mailboxSession;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -145,7 +153,12 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

@@ -29,7 +29,9 @@ import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -38,14 +40,17 @@ public class CassandraMailboxCounterDAOTest {
     public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
     private CassandraMailboxCounterDAO testee;
     private SimpleMailbox mailbox;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraMailboxCounterModule(), cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxCounterModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraMailboxCounterDAO(cassandra.getConf());
 
         mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, MAILBOX_ID);
@@ -53,7 +58,12 @@ public class CassandraMailboxCounterDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

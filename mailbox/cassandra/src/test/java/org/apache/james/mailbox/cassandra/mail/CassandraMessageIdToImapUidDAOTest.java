@@ -36,7 +36,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -46,22 +48,32 @@ import com.github.steveash.guavate.Guavate;
 public class CassandraMessageIdToImapUidDAOTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
+
     private CassandraMessageId.Factory messageIdFactory;
 
     private CassandraMessageIdToImapUidDAO testee;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraMessageModule(), cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMessageModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         messageIdFactory = new CassandraMessageId.Factory();
         testee = new CassandraMessageIdToImapUidDAO(cassandra.getConf(), messageIdFactory);
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

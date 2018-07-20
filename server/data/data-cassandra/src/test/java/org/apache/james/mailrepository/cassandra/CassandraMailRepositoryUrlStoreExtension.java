@@ -26,13 +26,12 @@ import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback, AfterEachCallback, BeforeEachCallback {
+public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback, AfterEachCallback {
     private final DockerCassandraRule cassandra;
     private CassandraCluster cassandraCluster;
 
@@ -43,10 +42,6 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
     @Override
     public void beforeAll(ExtensionContext context) {
         cassandra.start();
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext context) {
         cassandraCluster = CassandraCluster.create(
             new CassandraMailRepositoryUrlModule(),
             cassandra.getHost());
@@ -54,11 +49,12 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cassandraCluster.close();
+        cassandraCluster.clearTables();
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
+        cassandraCluster.closeCluster();
         cassandra.stop();
     }
 

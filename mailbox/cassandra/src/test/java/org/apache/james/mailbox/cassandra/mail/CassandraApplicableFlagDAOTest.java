@@ -29,7 +29,9 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -43,19 +45,28 @@ public class CassandraApplicableFlagDAOTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
     private CassandraApplicableFlagDAO testee;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    }
+
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraApplicableFlagDAO(cassandra.getConf());
     }
 
     @After
-    public void tearDown() throws Exception {
-        cassandra.close();
+    public void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

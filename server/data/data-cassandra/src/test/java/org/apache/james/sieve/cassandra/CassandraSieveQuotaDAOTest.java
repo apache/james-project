@@ -26,7 +26,9 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -36,19 +38,28 @@ public class CassandraSieveQuotaDAOTest {
     public static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
     private CassandraSieveQuotaDAO sieveQuotaDAO;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraSieveRepositoryModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         sieveQuotaDAO = new CassandraSieveQuotaDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

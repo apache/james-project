@@ -29,7 +29,9 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -41,19 +43,29 @@ public class CassandraMailboxRecentDAOTest {
     public static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
+
     private CassandraMailboxRecentsDAO testee;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraMailboxRecentsModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMailboxRecentsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraMailboxRecentsDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

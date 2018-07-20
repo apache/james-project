@@ -32,7 +32,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -45,22 +47,30 @@ public class CassandraAttachmentDAOTest {
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
     private CassandraAttachmentDAO testee;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraAttachmentModule(), cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraAttachmentModule(),
-            cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @After
-    public void tearDown() throws Exception {
-        cassandra.close();
+    public void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

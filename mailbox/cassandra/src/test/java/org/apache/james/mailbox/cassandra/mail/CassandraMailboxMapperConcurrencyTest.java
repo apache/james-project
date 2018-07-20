@@ -35,7 +35,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -47,22 +49,31 @@ public class CassandraMailboxMapperConcurrencyTest {
     private static final int OPERATION_COUNT = 10;
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
+
     private CassandraMailboxMapper testee;
+
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-
         testee = GuiceUtils.testInjector(cassandra)
             .getInstance(CassandraMailboxMapper.class);
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

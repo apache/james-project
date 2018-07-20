@@ -26,7 +26,9 @@ import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,20 +42,27 @@ public class CassandraMailRepositoryKeysDAOTest {
     static final MailKey KEY_2 = new MailKey("key2");
     static final MailKey KEY_3 = new MailKey("key3");
 
-    CassandraCluster cassandra;
+    static CassandraCluster cassandra;
     CassandraMailRepositoryKeysDAO testee;
 
-    @BeforeEach
-    public void setUp(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-            new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    @BeforeAll
+    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
+        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    }
 
+    @BeforeEach
+    public void setUp() {
         testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
     @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

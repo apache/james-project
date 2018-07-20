@@ -24,26 +24,36 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.AccessTokenRepositoryTest;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraAccessTokenRepositoryTest extends AccessTokenRepositoryTest {
-    
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraAccessModule(), cassandraServer.getHost());
+    }
 
     @Override
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraAccessModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
     
     @After
-    public void tearDown() throws Exception {
-        cassandra.close();
+    public void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
     
     @Override

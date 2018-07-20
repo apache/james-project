@@ -41,22 +41,29 @@ import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraACLMapperTest {
 
     public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
-    private CassandraACLMapper cassandraACLMapper;
-    private CassandraCluster cassandra;
-    private ExecutorService executor;
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static CassandraCluster cassandra;
+
+    private CassandraACLMapper cassandraACLMapper;
+    private ExecutorService executor;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         cassandraACLMapper = GuiceUtils.testInjector(cassandra)
             .getInstance(CassandraACLMapper.class);
         executor = Executors.newFixedThreadPool(2);
@@ -65,7 +72,12 @@ public class CassandraACLMapperTest {
     @After
     public void tearDown() {
         executor.shutdownNow();
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

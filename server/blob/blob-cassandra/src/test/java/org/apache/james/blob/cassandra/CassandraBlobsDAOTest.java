@@ -31,7 +31,9 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.blob.api.ObjectStoreContract;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,14 +46,16 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
     private CassandraBlobsDAO testee;
 
+    @BeforeAll
+    static void setUpClass(DockerCassandra dockerCassandra) {
+        cassandra = CassandraCluster.create(new CassandraBlobModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    }
+
     @BeforeEach
-    public void setUp(DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-                new CassandraBlobModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
-        
+    void setUp() {
         testee = new CassandraBlobsDAO(cassandra.getConf(),
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
@@ -60,8 +64,13 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
     }
 
     @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterAll
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override

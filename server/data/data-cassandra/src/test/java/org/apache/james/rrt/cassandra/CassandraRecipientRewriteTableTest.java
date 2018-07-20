@@ -25,19 +25,25 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTableTest;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewriteTableTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraRRTModule(), cassandraServer.getHost());
+    }
 
     @Override
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraRRTModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
 
@@ -45,9 +51,13 @@ public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewrite
     @After
     public void tearDown() throws Exception {
         super.tearDown();
-        cassandra.close();
+        cassandra.clearTables();
     }
 
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
+    }
 
     @Override
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {

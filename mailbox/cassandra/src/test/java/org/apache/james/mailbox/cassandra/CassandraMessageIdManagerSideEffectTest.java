@@ -40,39 +40,50 @@ import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
+            new CassandraAclModule(),
+            new CassandraMailboxModule(),
+            new CassandraMessageModule(),
+            new CassandraMailboxCounterModule(),
+            new CassandraMailboxRecentsModule(),
+            new CassandraFirstUnseenModule(),
+            new CassandraDeletedMessageModule(),
+            new CassandraUidModule(),
+            new CassandraModSeqModule(),
+            new CassandraAttachmentModule(),
+            new CassandraAnnotationModule(),
+            new CassandraApplicableFlagsModule(),
+            new CassandraBlobModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
 
     @Override
     @Before
     public void setUp() throws Exception {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraAclModule(),
-                new CassandraMailboxModule(),
-                new CassandraMessageModule(),
-                new CassandraMailboxCounterModule(),
-                new CassandraMailboxRecentsModule(),
-                new CassandraFirstUnseenModule(),
-                new CassandraDeletedMessageModule(),
-                new CassandraUidModule(),
-                new CassandraModSeqModule(),
-                new CassandraAttachmentModule(),
-                new CassandraAnnotationModule(),
-                new CassandraApplicableFlagsModule(),
-                new CassandraBlobModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         super.setUp();
     }
     
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override

@@ -32,7 +32,9 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,20 +47,27 @@ public class CassandraMailRepositoryMailDAOTest {
     static final MailKey KEY_1 = new MailKey("key1");
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
-    CassandraCluster cassandra;
+    static CassandraCluster cassandra;
     CassandraMailRepositoryMailDAO testee;
 
-    @BeforeEach
-    public void setUp(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-            new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    @BeforeAll
+    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
+        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    }
 
+    @BeforeEach
+    public void setUp() {
         testee = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
     }
 
     @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

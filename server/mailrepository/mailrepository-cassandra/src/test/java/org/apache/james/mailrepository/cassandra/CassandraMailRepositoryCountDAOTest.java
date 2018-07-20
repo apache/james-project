@@ -24,7 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,20 +36,28 @@ public class CassandraMailRepositoryCountDAOTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
 
-    CassandraCluster cassandra;
+    static CassandraCluster cassandra;
     CassandraMailRepositoryCountDAO testee;
 
+    @BeforeAll
+    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
+        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    }
+
     @BeforeEach
-    public void setUp(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(
-            new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+    public void setUp() {
 
         testee = new CassandraMailRepositoryCountDAO(cassandra.getConf());
     }
 
     @AfterEach
-    public void tearDown() {
-        cassandra.close();
+    void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

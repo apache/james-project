@@ -31,7 +31,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -41,14 +43,19 @@ public class CassandraUidProviderTest {
     private static final CassandraId CASSANDRA_ID = new CassandraId.Factory().fromString("e22b3ac0-a80b-11e7-bb00-777268d65503");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraUidModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
-    
+
+    private static CassandraCluster cassandra;
+
     private CassandraUidProvider uidProvider;
     private SimpleMailbox mailbox;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraUidModule(), cassandraServer.getHost());
+    }
+
     @Before
-    public void setUpClass() throws Exception {
+    public void setUp() {
         uidProvider = new CassandraUidProvider(cassandra.getConf());
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
@@ -57,7 +64,12 @@ public class CassandraUidProviderTest {
     
     @After
     public void cleanUp() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

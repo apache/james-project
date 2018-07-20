@@ -25,14 +25,21 @@ import org.apache.james.jmap.api.vacation.AbstractNotificationRegistryTest;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraNotificationRegistryTest extends AbstractNotificationRegistryTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraNotificationRegistryModule(), cassandraServer.getHost());
+    }
 
     @Override
     @Before
@@ -43,7 +50,12 @@ public class CassandraNotificationRegistryTest extends AbstractNotificationRegis
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
     
     @Override

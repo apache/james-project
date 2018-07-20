@@ -26,24 +26,35 @@ import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getHost());
+    }
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {
-        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         return GuiceUtils.testInjector(cassandra)
             .getInstance(CassandraPerUserMaxQuotaManager.class);
     }
 
     @After
     public void cleanUp() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
 }

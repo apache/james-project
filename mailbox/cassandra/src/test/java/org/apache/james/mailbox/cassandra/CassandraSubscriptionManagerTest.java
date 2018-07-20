@@ -50,7 +50,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 /**
@@ -59,22 +61,31 @@ import org.junit.ClassRule;
 public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
 
-    @Before
-    public void init() {
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
         CassandraModuleComposite modules = new CassandraModuleComposite(
             new CassandraSubscriptionModule(),
             new CassandraMailboxCounterModule());
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
+    @Before
+    public void init() {
         super.setup();
     }
 
     @After
     public void close() throws SubscriptionException {
         super.teardown();
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Override

@@ -48,7 +48,9 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -63,8 +65,8 @@ public class CassandraIndexTableHandlerTest {
     public static final long MODSEQ = 17;
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
     private CassandraMailboxCounterDAO mailboxCounterDAO;
     private CassandraMailboxRecentsDAO mailboxRecentsDAO;
     private CassandraApplicableFlagDAO applicableFlagDAO;
@@ -73,15 +75,19 @@ public class CassandraIndexTableHandlerTest {
     private CassandraDeletedMessageDAO deletedMessageDAO;
     private Mailbox mailbox;
 
-    @Before
-    public void setUp() {
-        cassandra = CassandraCluster.create(
-            new CassandraModuleComposite(
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
                 new CassandraMailboxCounterModule(),
                 new CassandraMailboxRecentsModule(),
                 new CassandraFirstUnseenModule(),
                 new CassandraApplicableFlagsModule(),
-                new CassandraDeletedMessageModule()), cassandraServer.getIp(), cassandraServer.getBindingPort());
+                new CassandraDeletedMessageModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
+    @Before
+    public void setUp() {
         mailboxCounterDAO = new CassandraMailboxCounterDAO(cassandra.getConf());
         mailboxRecentsDAO = new CassandraMailboxRecentsDAO(cassandra.getConf());
         firstUnseenDAO = new CassandraFirstUnseenDAO(cassandra.getConf());
@@ -101,7 +107,12 @@ public class CassandraIndexTableHandlerTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

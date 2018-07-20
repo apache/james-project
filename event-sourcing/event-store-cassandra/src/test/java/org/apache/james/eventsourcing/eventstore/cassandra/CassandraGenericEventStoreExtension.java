@@ -52,18 +52,18 @@ public class CassandraGenericEventStoreExtension implements BeforeAllCallback, A
     public void beforeAll(ExtensionContext context) throws Exception {
         dockerCassandraExtension.beforeAll(context);
         dockerCassandra = dockerCassandraExtension.getDockerCassandra();
+        cassandra = CassandraCluster.create(
+            new CassandraEventStoreModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
     }
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
+        cassandra.closeCluster();
         dockerCassandraExtension.afterAll(context);
     }
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        cassandra = CassandraCluster.create(
-                new CassandraEventStoreModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
-
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules);
 
         eventStoreDao = new EventStoreDao(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION,
@@ -72,7 +72,7 @@ public class CassandraGenericEventStoreExtension implements BeforeAllCallback, A
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cassandra.close();
+        cassandra.clearTables();
     }
 
     @Override

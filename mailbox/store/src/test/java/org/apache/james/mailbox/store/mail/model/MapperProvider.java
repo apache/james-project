@@ -64,8 +64,6 @@ public interface MapperProvider {
 
     long highestModSeq(Mailbox mailbox) throws MailboxException;
 
-    void clearMapper() throws MailboxException;
-
     boolean supportPartialAttachmentFetch();
     
     MessageId generateMessageId();

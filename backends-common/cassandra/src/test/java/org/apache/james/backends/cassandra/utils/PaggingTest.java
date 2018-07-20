@@ -35,7 +35,9 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.util.CompletableFutureUtil;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -53,11 +55,12 @@ public class PaggingTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
     private CassandraAsyncExecutor executor;
 
-    @Before
-    public void setUp() {
+
+    @BeforeClass
+    public static void setUpClass() {
         CassandraModule modules = new CassandraModule() {
             @Override
             public List<CassandraTable> moduleTables() {
@@ -73,13 +76,22 @@ public class PaggingTest {
                 return ImmutableList.of();
             }
         };
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
+    @Before
+    public void setUp() {
         executor = new CassandraAsyncExecutor(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

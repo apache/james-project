@@ -56,7 +56,9 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -74,8 +76,7 @@ public class CassandraMessageDAOTest {
     private static final List<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
     private CassandraMessageDAO testee;
     private CassandraMessageId.Factory messageIdFactory;
@@ -84,9 +85,14 @@ public class CassandraMessageDAOTest {
     private CassandraMessageId messageId;
     private List<ComposedMessageIdWithMetaData> messageIds;
 
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule()), cassandraServer.getIp(), cassandraServer.getBindingPort());
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -103,7 +109,12 @@ public class CassandraMessageDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

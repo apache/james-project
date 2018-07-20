@@ -31,14 +31,13 @@ import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
-public class CassandraEventSourcingDLPConfigurationStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+public class CassandraEventSourcingDLPConfigurationStoreExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private final DockerCassandraExtension dockerCassandraExtension;
     private CassandraCluster cassandra;
@@ -50,15 +49,6 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         dockerCassandraExtension.beforeAll(context);
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        dockerCassandraExtension.afterAll(context);
-    }
-
-    @Override
-    public void beforeEach(ExtensionContext context) {
         cassandra = CassandraCluster.create(
             new CassandraEventStoreModule(),
             dockerCassandraExtension.getDockerCassandra().getIp(),
@@ -67,7 +57,13 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) throws Exception {
+        cassandra.closeCluster();
+        dockerCassandraExtension.afterAll(context);
     }
 
     @Override

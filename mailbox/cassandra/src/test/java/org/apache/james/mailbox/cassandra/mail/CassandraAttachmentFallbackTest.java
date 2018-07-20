@@ -39,7 +39,9 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
@@ -52,7 +54,7 @@ public class CassandraAttachmentFallbackTest {
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
 
     private CassandraAttachmentDAOV2 attachmentDAOV2;
     private CassandraAttachmentDAO attachmentDAO;
@@ -60,17 +62,16 @@ public class CassandraAttachmentFallbackTest {
     private CassandraBlobsDAO blobsDAO;
     private CassandraAttachmentMessageIdDAO attachmentMessageIdDAO;
 
-    @Before
-    public void setUp() throws Exception {
-        CassandraModuleComposite compositeModule = new CassandraModuleComposite(
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(
             new CassandraAttachmentModule(),
             new CassandraBlobModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
 
-        cassandra = CassandraCluster.create(
-            compositeModule,
-            cassandraServer.getIp(),
-            cassandraServer.getBindingPort());
-
+    @Before
+    public void setUp() throws Exception {
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
@@ -82,8 +83,13 @@ public class CassandraAttachmentFallbackTest {
     }
 
     @After
-    public void tearDown() throws Exception {
-        cassandra.close();
+    public void tearDown() {
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

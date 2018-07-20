@@ -31,7 +31,9 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.model.MessageRange;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -48,20 +50,28 @@ public class CassandraDeletedMessageDAOTest {
     public static final MessageUid UID_8 = MessageUid.of(8);
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
     private CassandraDeletedMessageDAO testee;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraDeletedMessageModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(
-            new CassandraDeletedMessageModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = new CassandraDeletedMessageDAO(cassandra.getConf());
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

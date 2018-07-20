@@ -90,11 +90,6 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public void clearMapper() throws MailboxException {
-        inMemoryMailboxSessionMapperFactory.deleteAll();
-    }
-
-    @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
     }

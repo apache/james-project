@@ -29,7 +29,9 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -50,22 +52,30 @@ public abstract class CassandraMailboxPathDAOTest {
     public static final MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    protected CassandraCluster cassandra;
+
+    protected static CassandraCluster cassandra;
 
     protected CassandraMailboxPathDAO testee;
 
     abstract CassandraMailboxPathDAO testee();
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraMailboxModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraMailboxModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         testee = testee();
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

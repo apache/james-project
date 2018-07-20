@@ -30,7 +30,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -38,7 +40,8 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    private static CassandraCluster cassandra;
+
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("namespace2", "user2", "name2");
     private static final Topic TOPIC = new Topic("topic");
@@ -46,6 +49,11 @@ public class CassandraMailboxPathRegistrerMapperTest {
     private static final Topic TOPIC_2 = new Topic("topic2");
 
     private CassandraMailboxPathRegisterMapper mapper;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
@@ -57,7 +65,12 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

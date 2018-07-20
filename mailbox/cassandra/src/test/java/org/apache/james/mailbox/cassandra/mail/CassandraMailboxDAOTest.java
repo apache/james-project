@@ -33,7 +33,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -48,17 +50,20 @@ public class CassandraMailboxDAOTest {
     public static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
+
     private CassandraMailboxDAO testee;
     private SimpleMailbox mailbox1;
     private SimpleMailbox mailbox2;
 
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
-
         testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
 
         mailbox1 = new SimpleMailbox(MailboxPath.forUser("user", "abcd"),
@@ -71,7 +76,12 @@ public class CassandraMailboxDAOTest {
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

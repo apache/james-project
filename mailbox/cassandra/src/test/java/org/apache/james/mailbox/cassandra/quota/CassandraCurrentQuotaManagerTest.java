@@ -25,13 +25,20 @@ import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
 import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private final CassandraCluster cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+
+    private static CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+    }
 
     @Override
     protected StoreCurrentQuotaManager provideTestee() {
@@ -40,7 +47,12 @@ public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTe
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
 }

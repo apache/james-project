@@ -30,7 +30,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
@@ -41,17 +43,18 @@ public class CassandraModSeqProviderTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
-    private CassandraCluster cassandra;
+    private static CassandraCluster cassandra;
     
     private CassandraModSeqProvider modSeqProvider;
     private SimpleMailbox mailbox;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraModSeqModule(), cassandraServer.getHost());
+    }
+
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(
-            new CassandraModSeqModule(),
-            cassandraServer.getIp(),
-            cassandraServer.getBindingPort());
         modSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
@@ -60,7 +63,12 @@ public class CassandraModSeqProviderTest {
     
     @After
     public void cleanUp() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

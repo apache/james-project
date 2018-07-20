@@ -38,30 +38,40 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 public class CassandraMessageIdDAOTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private CassandraCluster cassandra;
+
+    private static CassandraCluster cassandra;
 
     private CassandraMessageId.Factory messageIdFactory;
     private CassandraMessageIdDAO testee;
 
+    @BeforeClass
+    public static void setUpClass() {
+        cassandra = CassandraCluster.create(new CassandraMessageModule(), cassandraServer.getHost());
+    }
 
     @Before
     public void setUp() {
-        cassandra = CassandraCluster.create(new CassandraMessageModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
         messageIdFactory = new CassandraMessageId.Factory();
         testee = new CassandraMessageIdDAO(cassandra.getConf(), messageIdFactory);
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
     }
 
     @Test

@@ -96,11 +96,6 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     @Override
-    public void clearMapper() {
-        cassandra.close();
-    }
-
-    @Override
     public boolean supportPartialAttachmentFetch() {
         return true;
     }

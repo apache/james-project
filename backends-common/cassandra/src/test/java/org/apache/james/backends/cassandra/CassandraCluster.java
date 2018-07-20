@@ -86,7 +86,15 @@ public final class CassandraCluster implements AutoCloseable {
 
     @Override
     public void close() {
-        new CassandraTableManager(module, session).clearAllTables();
+        clearTables();
+        closeCluster();
+    }
+
+    public void closeCluster() {
         cluster.closeAsync();
+    }
+
+    public void clearTables() {
+        new CassandraTableManager(module, session).clearAllTables();
     }
 }

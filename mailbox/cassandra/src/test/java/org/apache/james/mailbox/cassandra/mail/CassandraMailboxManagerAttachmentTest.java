@@ -56,46 +56,55 @@ import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 
 public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    private static CassandraCluster cassandra;
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
     private CassandraMailboxManager parseFailingMailboxManager;
-    private CassandraCluster cassandra;
+
+    @BeforeClass
+    public static void setUpClass() {
+        CassandraModuleComposite modules =
+            new CassandraModuleComposite(
+                new CassandraAclModule(),
+                new CassandraMailboxModule(),
+                new CassandraMessageModule(),
+                new CassandraBlobModule(),
+                new CassandraMailboxCounterModule(),
+                new CassandraMailboxRecentsModule(),
+                new CassandraFirstUnseenModule(),
+                new CassandraDeletedMessageModule(),
+                new CassandraModSeqModule(),
+                new CassandraUidModule(),
+                new CassandraAttachmentModule(),
+                new CassandraApplicableFlagsModule());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
+    }
 
     @Before
     public void init() throws Exception {
-        
-        CassandraModuleComposite modules = 
-                new CassandraModuleComposite(
-                    new CassandraAclModule(),
-                    new CassandraMailboxModule(),
-                    new CassandraMessageModule(),
-                    new CassandraBlobModule(),
-                    new CassandraMailboxCounterModule(),
-                    new CassandraMailboxRecentsModule(),
-                    new CassandraFirstUnseenModule(),
-                    new CassandraDeletedMessageModule(),
-                    new CassandraModSeqModule(),
-                    new CassandraUidModule(),
-                    new CassandraAttachmentModule(),
-                    new CassandraApplicableFlagsModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
         initSystemUnderTest();
         super.setUp();
     }
 
     @After
     public void tearDown() {
-        cassandra.close();
+        cassandra.clearTables();
     }
 
-    
+    @AfterClass
+    public static void tearDownClass() {
+        cassandra.closeCluster();
+    }
+
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
