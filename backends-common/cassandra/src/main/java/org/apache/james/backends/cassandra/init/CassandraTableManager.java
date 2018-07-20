@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.components.CassandraTable;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.util.FluentFutureStream;
 
+import com.datastax.driver.core.KeyspaceMetadata;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
@@ -45,8 +46,15 @@ public class CassandraTableManager {
     }
 
     public CassandraTableManager ensureAllTables() {
+        KeyspaceMetadata keyspaceMetadata = session.getCluster()
+            .getMetadata()
+            .getKeyspace(session.getLoggedKeyspace());
+
         module.moduleTables()
+            .stream()
+            .filter(table -> keyspaceMetadata.getTable(table.getName()) == null)
             .forEach(table -> session.execute(table.getCreateStatement()));
+
         return this;
     }
 
