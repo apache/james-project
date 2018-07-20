@@ -70,7 +70,10 @@ public class CassandraTableManager {
 
     private CompletableFuture<?> truncate(CassandraAsyncExecutor executor, String name) {
         return executor.execute(
-            QueryBuilder.select().from(name).limit(1))
+            QueryBuilder.select()
+                .from(name)
+                .limit(1)
+                .setFetchSize(1))
             .thenCompose(resultSet -> truncateIfNeeded(executor, name, resultSet));
     }
 
