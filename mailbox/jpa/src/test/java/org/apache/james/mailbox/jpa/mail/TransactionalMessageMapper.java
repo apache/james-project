@@ -26,7 +26,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -48,7 +48,7 @@ public class TransactionalMessageMapper implements MessageMapper {
     
     @Override
     public void endRequest() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -66,7 +66,7 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public <T> T execute(Transaction<T> transaction) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.apache.openjpa</groupId>
             <artifactId>openjpa</artifactId>
-            <version>2.4.2</version>
+            <version>${apache.openjpa.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -147,7 +147,7 @@
             <plugin>
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
-                <version>2.4.2</version>
+                <version>${apache.openjpa.version}</version>
                 <configuration>
                     <includes>org/apache/james/user/jpa/model/JPAUser.class,
                         org/apache/james/rrt/jpa/model/JPARecipientRewrite.class,

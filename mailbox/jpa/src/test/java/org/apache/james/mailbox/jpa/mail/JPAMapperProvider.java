@@ -24,7 +24,7 @@ import java.util.Random;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -73,7 +73,7 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public AttachmentMapper createAttachmentMapper() throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -108,22 +108,22 @@ public class JPAMapperProvider implements MapperProvider {
 
     @Override
     public MessageIdMapper createMessageIdMapper() throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public MessageUid generateMessageUid() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public long generateModSeq(Mailbox mailbox) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public long highestModSeq(Mailbox mailbox) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
 }

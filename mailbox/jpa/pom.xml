@@ -111,7 +111,7 @@
             <plugin>
                 <groupId>org.apache.openjpa</groupId>
                 <artifactId>openjpa-maven-plugin</artifactId>
-                <version>2.4.2</version>
+                <version>${apache.openjpa.version}</version>
                 <configuration>
                     <includes>org/apache/james/mailbox/jpa/*/model/**/*.class</includes>
                     <excludes>org/apache/james/mailbox/jpa/mail/model/openjpa/EncryptDecryptHelper.class</excludes>
