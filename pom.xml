@@ -3329,6 +3329,27 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>enforce-environment-variable-is-set</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireEnvironmentVariable>
+                                            <variableName>JAMES_PARTIAL_BUILD_BASE_BRANCH</variableName>
+                                            <message>When using 'partial-build' profile, you need to define the 'JAMES_PARTIAL_BUILD_BASE_BRANCH'
+                                            environment variable defining which branch should be taken as a reference to detect changes.</message>
+                                        </requireEnvironmentVariable>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>com.lesfurets</groupId>
                         <artifactId>partial-build-plugin</artifactId>
                         <version>2.6</version>
