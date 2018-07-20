@@ -29,6 +29,8 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.store.mail.model.Username;
+import org.apache.james.util.FluentFutureStream;
+import org.apache.james.util.streams.JamesCollectors;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -85,9 +87,14 @@ public class CassandraAttachmentOwnerDAOTest {
     @Test
     public void retrieveOwnersShouldNotThrowWhenMoreReferencesThanPaging() {
         int referenceCountExceedingPaging = 5050;
+
         IntStream.range(0, referenceCountExceedingPaging)
             .boxed()
-            .forEach(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)).join());
+            .collect(JamesCollectors.chunker(128))
+            .forEach(chunk -> FluentFutureStream.of(
+                chunk.stream()
+                    .map(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i))))
+                .join());
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).join())
             .hasSize(referenceCountExceedingPaging);
