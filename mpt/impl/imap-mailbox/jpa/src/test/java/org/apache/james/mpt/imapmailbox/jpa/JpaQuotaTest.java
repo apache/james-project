@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.jpa;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.After;
 import org.junit.Before;
 
 public class JpaQuotaTest extends QuotaTest {
@@ -42,10 +41,5 @@ public class JpaQuotaTest extends QuotaTest {
         return system;
     }
 
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
     
 }

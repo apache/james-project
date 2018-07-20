@@ -158,7 +158,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         super.afterTest();
         cassandra.close();
     }
-    
+
     @Override
     public boolean supports(Feature... features) {
         return IMAP_FEATURES.supports(features);

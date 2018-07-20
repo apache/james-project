@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.hbase;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.hbase.host.HBaseHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 
@@ -42,12 +41,6 @@ public class HBaseQuotaTest extends QuotaTest {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
-    }
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }

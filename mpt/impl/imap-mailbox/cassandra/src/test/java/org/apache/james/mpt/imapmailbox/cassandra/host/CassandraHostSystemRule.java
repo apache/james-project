@@ -19,17 +19,10 @@
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.junit.rules.ExternalResource;
 
-import com.github.fge.lambdas.Throwing;
-
 public class CassandraHostSystemRule extends ExternalResource {
-
-    private static final String USERNAME = "mpt";
-
     private final DockerCassandraRule cassandraServer;
     private CassandraHostSystem system;
 
@@ -46,20 +39,10 @@ public class CassandraHostSystemRule extends ExternalResource {
     @Override
     protected void after() {
         try {
-            clean();
+            system.afterTest();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public void clean() throws Exception {
-        MailboxManager mailboxManager = system.getMailboxManager();
-        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
-        mailboxManager.list(systemSession)
-            .forEach(Throwing.consumer(
-                mailboxPath -> mailboxManager.deleteMailbox(
-                        mailboxPath, 
-                        mailboxManager.createSystemSession(mailboxPath.getUser()))));
     }
 
     public JamesImapHostSystem getImapHostSystem() {

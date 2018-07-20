@@ -23,29 +23,18 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
 
 public class CassandraCondstoreTest extends Condstore {
-
-    private static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
-
-    /**
-     * The underlying tests are playing with capabilities, which are configured when starting James.
-     * Hence, we can't use the RuleChain as a @ClassRule in this implementation.
-     */
+    @ClassRule
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
     @Rule
-    public RuleChain ruleChaine = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+    public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
 
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
         return cassandraHostSystemRule.getImapHostSystem();
     }
 
-    @After
-    public void tearDown() throws Exception {
-        cassandraHostSystemRule.clean();
-    }
 }

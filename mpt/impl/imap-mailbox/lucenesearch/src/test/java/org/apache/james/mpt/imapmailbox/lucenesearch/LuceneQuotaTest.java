@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.lucenesearch;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.After;
 import org.junit.Before;
 
 public class LuceneQuotaTest extends QuotaTest {
@@ -42,10 +41,4 @@ public class LuceneQuotaTest extends QuotaTest {
         return system;
     }
 
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-    
 }

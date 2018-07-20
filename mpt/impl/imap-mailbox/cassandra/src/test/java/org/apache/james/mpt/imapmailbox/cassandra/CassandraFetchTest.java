@@ -24,15 +24,13 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.Fetch;
 import org.junit.ClassRule;
-import org.junit.rules.RuleChain;
+import org.junit.Rule;
 
 public class CassandraFetchTest extends Fetch {
-
-    private static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
-
     @ClassRule
-    public static RuleChain ruleChaine = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule
+    public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
 
     @Override
     protected ImapHostSystem createImapHostSystem() {

@@ -23,25 +23,17 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.cassandra.host.CassandraHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatePlain;
-import org.junit.After;
 import org.junit.ClassRule;
-import org.junit.rules.RuleChain;
+import org.junit.Rule;
 
 public class CassandraAuthenticatePlainTest extends AuthenticatePlain {
-
-    private static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
-
     @ClassRule
-    public static RuleChain ruleChaine = RuleChain.outerRule(cassandraServer).around(cassandraHostSystemRule);
+    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    @Rule
+    public CassandraHostSystemRule cassandraHostSystemRule = new CassandraHostSystemRule(cassandraServer);
 
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return cassandraHostSystemRule.getImapHostSystem();
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        cassandraHostSystemRule.clean();
     }
 }

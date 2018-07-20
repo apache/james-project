@@ -28,7 +28,6 @@ import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
 import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
 import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,11 +52,6 @@ public abstract class QuotaTest implements ImapTestConstants {
         BasicImapCommands.welcome(simpleScriptedTestProtocol);
         BasicImapCommands.authenticate(simpleScriptedTestProtocol);
         BasicImapCommands.prepareMailbox(simpleScriptedTestProtocol);
-    }
-    
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
 
     @Test
