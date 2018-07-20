@@ -33,7 +33,7 @@
     <description>High performance distribuited sequence provider based on ZooKeepr</description>
 
     <properties>
-        <curator.version>1.3.2</curator.version>
+        <curator.version>4.0.1</curator.version>
     </properties>
 
     <dependencies>
@@ -55,22 +55,22 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.netflix.curator</groupId>
+            <groupId>org.apache.curator</groupId>
             <artifactId>curator-client</artifactId>
             <version>${curator.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.netflix.curator</groupId>
+            <groupId>org.apache.curator</groupId>
             <artifactId>curator-framework</artifactId>
             <version>${curator.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.netflix.curator</groupId>
+            <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
             <version>${curator.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.netflix.curator</groupId>
+            <groupId>org.apache.curator</groupId>
             <artifactId>curator-test</artifactId>
             <version>${curator.version}</version>
             <scope>test</scope>
