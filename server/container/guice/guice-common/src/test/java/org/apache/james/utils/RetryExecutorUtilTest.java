@@ -39,7 +39,7 @@ import com.nurkiewicz.asyncretry.RetryExecutor;
 
 public class RetryExecutorUtilTest {
     private static final int MAX_RETRIES = 3;
-    private static final int MIN_DELAY = 3000;
+    private static final int MIN_DELAY = 100;
     @Mock
     protected FaultyService serviceMock;
 
@@ -109,7 +109,7 @@ public class RetryExecutorUtilTest {
 
         retryExecutor = RetryExecutorUtil.retryOnExceptions(new AsyncRetryExecutor(scheduledExecutor), MAX_RETRIES, MIN_DELAY, IllegalStateException.class);
 
-        final CompletableFuture<String> future = retryExecutor.getWithRetry(serviceMock::faultyService);
+        CompletableFuture<String> future = retryExecutor.getWithRetry(serviceMock::faultyService);
 
         assertThat(future.get()).isEqualTo("Foo");
     }
