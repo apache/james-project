@@ -4,7 +4,7 @@ ARG TAG=latest
 FROM ${BASE}:${TAG} as source
 FROM ${BASE_LDAP}:${TAG} as sourceLdap
 
-FROM debian:8.1
+FROM debian:8.11
 
 RUN apt-get update
 RUN apt-get install -y ruby-dev ruby build-essential

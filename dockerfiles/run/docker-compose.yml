@@ -21,7 +21,7 @@ services:
       - "993:993"
 
   elasticsearch:
-    image: elasticsearch:2.2.1
+    image: elasticsearch:2.4.6
 
   cassandra:
     image: cassandra:2.2.12
