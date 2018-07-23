@@ -22,13 +22,6 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <alias name="default-delegating-listener" alias="delegating-listener"/>
-    <alias name="synchronous-event-delivery" alias="event-delivery"/>
-
-    <bean id="dispatcher" class="org.apache.james.mailbox.store.event.MailboxEventDispatcher">
-        <constructor-arg index="0" ref="delegating-listener"/>
-    </bean>
-
     <bean id="metricFactory" class="org.apache.james.metrics.api.NoopMetricFactory"/>
 
 </beans>

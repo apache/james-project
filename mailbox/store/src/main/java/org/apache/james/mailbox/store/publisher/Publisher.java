@@ -24,7 +24,7 @@ import java.io.Closeable;
 /**
  * The Publisher can be used to send information outside James.
  *
- * For instance you can send information to a message queue like Kafka or perform a POST on a restful API
+ * For instance you can send information to a message queue or perform a POST on a restful API
  */
 public interface Publisher extends Closeable {
 

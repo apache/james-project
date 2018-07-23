@@ -23,11 +23,6 @@
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="ignoreUnresolvablePlaceholders" value="true"/>
-        <property name ="location" value="classpath:events.properties"/>
-    </bean>
-
     <bean id="default-delegating-listener" class="org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener" lazy-init="true">
         <constructor-arg index="0" ref="event-delivery"/>
         <constructor-arg index="1" ref="event-registry"/>

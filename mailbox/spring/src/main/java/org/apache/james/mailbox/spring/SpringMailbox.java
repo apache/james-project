@@ -28,7 +28,7 @@ public class SpringMailbox {
     public SpringMailbox() {
         applicationContext = new ClassPathXmlApplicationContext("META-INF/spring/spring-mailbox.xml",
             "META-INF/spring/mailbox-authenticator-anonymous.xml", "META-INF/spring/mailbox-no-authorizator.xml", "META-INF/spring/quota.xml",
-            "META-INF/spring/quota-alias.xml", "META-INF/spring/event-system.xml", "META-INF/spring/event-alias.xml");
+            "META-INF/spring/quota-alias.xml", "META-INF/spring/event-system.xml", "META-INF/spring/metrics.xml");
     }
     
     public Object getBean(String beanName) {

@@ -43,7 +43,6 @@
         <module>hbase</module>
         <module>jcr</module>
         <module>jpa</module>
-        <module>kafka</module>
         <module>lucene</module>
         <module>maildir</module>
         <module>memory</module>

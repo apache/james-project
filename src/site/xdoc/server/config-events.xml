@@ -110,34 +110,9 @@
                 <li>The default implementation might not deliver some events on server stop.</li>
             </ul>
 
-            <ul>
-                Broadcast implementation :
-                <li>The broadcast implementation might not deliver some events on server stop.</li>
-                <li>The broadcast implementation is tight to limitation of the underlying publisher.</li>
-            </ul>
-
-            <ul>
-                Registered implementation :
-                <li>The registered implementation might not deliver some events on server stop.</li>
-                <li>The registered implementation is tight to limitation of the underlying publisher, and underlying registration system.</li>
-            </ul>
-
-            <h2>Publisher</h2>
-
-            <p>
-                Available implementation is Kafka based. Kafka ensure at least one delivery. This means some messages might be
-                delivered two times. You need to compile and run James using Java 8 in order to use the Kafka messaging system.
-            </p>
-
             <h2>Event serializer</h2>
 
-            <p>There are two types of event serialization systems :
-                <ul>
-                    <li>Json : events are converted to JSON</li>
-                    <li>Message Pack : a binary representation of JSON. 2 times smaller in average but two times longer to compute. It allows you to trade
-                    bandwidth and data readability against CPU time.</li>
-                </ul>
-            </p>
+            <p>Json is the only serialization system currently supported.</p>
 
             <h2>Registration systems</h2>
 
