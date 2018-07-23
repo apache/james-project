@@ -662,7 +662,7 @@
         <mockito-core.version>1.9.0</mockito-core.version>
         <jasypt.version>1.9.0</jasypt.version>
         <jackson-databinding.version>2.6.3</jackson-databinding.version>
-        <guice.version>4.0</guice.version>
+        <guice.version>4.1.0</guice.version>
         <jackrabbit-core.version>2.5.2</jackrabbit-core.version>
 
         <logback.version>1.1.11</logback.version>
