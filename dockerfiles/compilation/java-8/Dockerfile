@@ -4,13 +4,13 @@
 
 FROM openjdk:8u171-jdk
 
-ENV GIT_VERSION 1:2.1.4-2.1
+ENV GIT_VERSION 1:2.11.0-3
 
 # Install Maven
 WORKDIR /root
-RUN wget https://archive.apache.org/dist/maven/maven-3/3.5.3/binaries/apache-maven-3.5.3-bin.tar.gz
-RUN tar -xvf apache-maven-3.5.3-bin.tar.gz
-RUN ln -s /root/apache-maven-3.5.3/bin/mvn /usr/bin/mvn
+RUN wget https://archive.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz
+RUN tar -xvf apache-maven-3.5.4-bin.tar.gz
+RUN ln -s /root/apache-maven-3.5.4/bin/mvn /usr/bin/mvn
 
 # Install git
 RUN apt-get update
