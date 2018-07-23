@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.cassandra;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.DOMAIN;
@@ -55,8 +55,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.parsing.Parser;
+import io.restassured.RestAssured;
+import io.restassured.parsing.Parser;
 
 public class CassandraBulkOperationTest {
     private static final Integer NUMBER_OF_MAIL_TO_CREATE = 250;

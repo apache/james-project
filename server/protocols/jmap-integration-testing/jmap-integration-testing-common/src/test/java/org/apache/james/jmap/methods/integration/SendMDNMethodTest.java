@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.methods.integration;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
@@ -65,8 +65,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Iterables;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.parsing.Parser;
+import io.restassured.RestAssured;
+import io.restassured.parsing.Parser;
 
 public abstract class SendMDNMethodTest {
     private static final String HOMER = "homer@" + DOMAIN;

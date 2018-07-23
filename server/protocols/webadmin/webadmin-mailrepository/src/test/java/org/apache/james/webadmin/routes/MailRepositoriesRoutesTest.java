@@ -19,9 +19,9 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.when;
+import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
@@ -91,10 +91,10 @@ import org.mockito.stubbing.Answer;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.parsing.Parser;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.parsing.Parser;
 
 public class MailRepositoriesRoutesTest {
 
@@ -151,7 +151,7 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void putMailRepositoryShouldReturnOkWhenRepositoryIsCreated() throws Exception {
         given()
-            .parameters("protocol", "url")
+            .params("protocol", "url")
         .when()
             .put(PATH_ESCAPED_MY_REPO)
         .then()
@@ -164,14 +164,14 @@ public class MailRepositoriesRoutesTest {
     @Test
     public void putMailRepositoryShouldReturnOkWhenRepositoryAlreadyExists() throws Exception {
         given()
-            .parameters("protocol", "url")
+            .params("protocol", "url")
         .when()
             .put(PATH_ESCAPED_MY_REPO)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         given()
-            .parameters("protocol", "url")
+            .params("protocol", "url")
         .when()
             .put(PATH_ESCAPED_MY_REPO)
         .then()
@@ -187,7 +187,7 @@ public class MailRepositoriesRoutesTest {
             .thenThrow(new MailRepositoryStore.MailRepositoryStoreException("Error while selecting repository url://myRepo"));
 
         given()
-            .parameters("protocol", "url")
+            .params("protocol", "url")
         .when()
             .put(PATH_ESCAPED_MY_REPO)
         .then()
@@ -584,7 +584,7 @@ public class MailRepositoriesRoutesTest {
 
         String jsonAsString =
             given()
-                .parameters("additionalFields", "attributes,headers,textBody,htmlBody,messageSize,perRecipientsHeaders")
+                .params("additionalFields", "attributes,headers,textBody,htmlBody,messageSize,perRecipientsHeaders")
             .when()
             .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
             .then()
@@ -651,7 +651,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         given()
-            .parameters("additionalFields", ",,,messageSize")
+            .params("additionalFields", ",,,messageSize")
         .when()
             .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
@@ -684,7 +684,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         given()
-            .parameters("additionalFields", "headers")
+            .params("additionalFields", "headers")
         .when()
             .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
@@ -709,7 +709,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         given()
-            .parameters("additionalFields", "messageSize,messageSize")
+            .params("additionalFields", "messageSize,messageSize")
         .when()
             .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()
@@ -739,7 +739,7 @@ public class MailRepositoriesRoutesTest {
             .build());
 
         given()
-            .parameters("additionalFields", "nonExistingField")
+            .params("additionalFields", "nonExistingField")
         .when()
             .get(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
         .then()

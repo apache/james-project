@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 
 import org.apache.james.core.Domain;
@@ -40,7 +40,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import com.google.common.collect.ImmutableSet;
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
 
 class DomainQuotaRoutesNoVirtualHostingTest {
 

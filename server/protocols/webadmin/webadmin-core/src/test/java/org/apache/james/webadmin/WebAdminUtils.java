@@ -19,8 +19,8 @@
 
 package org.apache.james.webadmin;
 
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 
@@ -29,8 +29,8 @@ import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
 import com.google.common.collect.ImmutableSet;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
 
 public class WebAdminUtils {
 

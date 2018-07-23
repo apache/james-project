@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.methods.integration;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.isAnyMessageFoundInRecipientsMailboxes;
@@ -56,8 +56,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.jayway.awaitility.Duration;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.specification.RequestSpecification;
+import io.restassured.RestAssured;
+import io.restassured.specification.RequestSpecification;
 
 public abstract class ForwardIntegrationTest {
 

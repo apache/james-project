@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.methods.integration;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ALICE;
@@ -83,7 +83,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
 
 public abstract class GetMailboxesMethodTest {
     public static final String READ = String.valueOf(Right.Read.asCharacter());

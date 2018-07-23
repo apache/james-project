@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap;
 
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +28,8 @@ import java.util.concurrent.TimeUnit;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
 import com.jayway.awaitility.core.ConditionFactory;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
 
 public interface TestingConstants {
     Duration slowPacedPollInterval = Duration.ONE_HUNDRED_MILLISECONDS;

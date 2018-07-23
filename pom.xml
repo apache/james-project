@@ -1682,9 +1682,9 @@
                 <version>2.1.0</version>
             </dependency>
             <dependency>
-                <groupId>com.jayway.restassured</groupId>
+                <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
-                <version>2.9.0</version>
+                <version>3.1.0</version>
             </dependency>
             <dependency>
                 <groupId>com.nurkiewicz.asyncretry</groupId>

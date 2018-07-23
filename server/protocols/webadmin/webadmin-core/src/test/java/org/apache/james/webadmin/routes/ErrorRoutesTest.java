@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.routes;
 
-import static com.jayway.restassured.RestAssured.when;
+import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.apache.james.webadmin.routes.ErrorRoutes.INTERNAL_SERVER_ERROR;
 import static org.apache.james.webadmin.routes.ErrorRoutes.JSON_EXTRACT_EXCEPTION;
@@ -38,7 +38,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
 
 public class ErrorRoutesTest {
     private static final String NOT_FOUND = "notFound";

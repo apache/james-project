@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap;
 
-import static com.jayway.restassured.RestAssured.with;
+import static io.restassured.RestAssured.with;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
@@ -33,8 +33,8 @@ import java.util.Map;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 
-import com.jayway.restassured.builder.ResponseSpecBuilder;
-import com.jayway.restassured.specification.ResponseSpecification;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.specification.ResponseSpecification;
 
 public class JmapCommonRequests {
     private static final String NAME = "[0][0]";

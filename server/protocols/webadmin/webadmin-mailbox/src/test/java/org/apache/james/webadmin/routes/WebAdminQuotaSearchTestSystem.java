@@ -32,7 +32,7 @@ import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
 import com.google.common.collect.ImmutableSet;
-import com.jayway.restassured.specification.RequestSpecification;
+import io.restassured.specification.RequestSpecification;
 
 public class WebAdminQuotaSearchTestSystem {
     private final QuotaSearchTestSystem quotaSearchTestSystem;

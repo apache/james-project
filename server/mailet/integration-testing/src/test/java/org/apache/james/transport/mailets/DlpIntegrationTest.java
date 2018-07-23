@@ -19,7 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
-import static com.jayway.restassured.RestAssured.given;
+import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.FROM;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -57,7 +57,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.inject.util.Modules;
-import com.jayway.restassured.specification.RequestSpecification;
+import io.restassured.specification.RequestSpecification;
 
 public class DlpIntegrationTest {
     public static final String REPOSITORY_PREFIX = "file://var/mail/dlp/quarantine/";

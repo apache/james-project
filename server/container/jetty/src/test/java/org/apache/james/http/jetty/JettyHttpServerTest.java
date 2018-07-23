@@ -19,7 +19,7 @@
 
 package org.apache.james.http.jetty;
 
-import static com.jayway.restassured.RestAssured.when;
+import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.io.Closeables;
-import com.jayway.restassured.RestAssured;
+import io.restassured.RestAssured;
 
 public class JettyHttpServerTest {
 

@@ -19,10 +19,10 @@
 
 package org.apache.james.jmap.methods.integration;
 
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.with;
-import static com.jayway.restassured.config.EncoderConfig.encoderConfig;
-import static com.jayway.restassured.config.RestAssuredConfig.newConfig;
+import static io.restassured.RestAssured.given;
+import static io.restassured.RestAssured.with;
+import static io.restassured.config.EncoderConfig.encoderConfig;
+import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
 import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getMailboxId;
@@ -123,10 +123,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Duration;
-import com.jayway.restassured.RestAssured;
-import com.jayway.restassured.builder.RequestSpecBuilder;
-import com.jayway.restassured.http.ContentType;
-import com.jayway.restassured.parsing.Parser;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.http.ContentType;
+import io.restassured.parsing.Parser;
 
 public abstract class SetMessagesMethodTest {
     private static final String FORWARDED = "$Forwarded";
@@ -3913,7 +3913,7 @@ public abstract class SetMessagesMethodTest {
         return with()
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
-            .content(attachment.getStream())
+            .body(attachment.getStream())
             .post("/upload")
         .then()
             .extract()
@@ -3926,7 +3926,7 @@ public abstract class SetMessagesMethodTest {
         return with()
             .header("Authorization", accessToken.serialize())
             .contentType(attachment.getType())
-            .content(new String(IOUtils.toByteArray(attachment.getStream()), StandardCharsets.UTF_8))
+            .body(new String(IOUtils.toByteArray(attachment.getStream()), StandardCharsets.UTF_8))
             .post("/upload")
         .then()
             .extract()
