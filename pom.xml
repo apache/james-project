@@ -604,7 +604,6 @@
         <geronimo-activation-spec.version>1.1</geronimo-activation-spec.version>
         <geronimo-javamail.version>1.8.3</geronimo-javamail.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <servlet-api.version>2.4</servlet-api.version>
         <commons-logging.version>1.1.1</commons-logging.version>
 
         <dnsjava.version>2.1.1</dnsjava.version>
@@ -1785,10 +1784,6 @@
                         <groupId>log4j</groupId>
                         <artifactId>log4j</artifactId>
                     </exclusion>
-                    <exclusion>
-                        <groupId>javax.servlet</groupId>
-                        <artifactId>servlet-api</artifactId>
-                    </exclusion>
                 </exclusions>
             </dependency>
             <dependency>
@@ -1864,12 +1859,7 @@
             <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
-                <version>3.1.0</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>servlet-api</artifactId>
-                <version>${servlet-api.version}</version>
+                <version>4.0.1</version>
             </dependency>
             <dependency>
                 <groupId>jmock</groupId>
