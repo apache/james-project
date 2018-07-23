@@ -189,7 +189,7 @@
             <dependency>
                 <groupId>com.internetitem</groupId>
                 <artifactId>logback-elasticsearch-appender</artifactId>
-                <version>1.5</version>
+                <version>1.6</version>
                 <exclusions>
                     <exclusion>
                         <groupId>com.fasterxml.jackson.core</groupId>
