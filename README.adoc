@@ -107,7 +107,7 @@ You need to build the homepage by:
 
 In order to test the homepage, you can use this command:
 
-    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.5 jekyll serve
+    $ docker run --rm -v $PWD/site:/srv/jekyll  -p 4000:4000 -it jekyll/minimal:3.8.3 jekyll serve
 
 the site will be available at http://localhost:4000/
 
@@ -219,7 +219,7 @@ You need a running *cassandra* in docker. To achieve this run:
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 
-    $ docker run -d --name=elasticsearch elasticsearch:2.2.1
+    $ docker run -d --name=elasticsearch elasticsearch:2.4.6
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 
@@ -255,7 +255,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika logicalspark/docker-tikaserver:1.15rc2
+    $ docker run --name tika linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520
 
 Add a link for the tika container in the above command line:
 
