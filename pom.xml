@@ -2094,28 +2094,6 @@
                 <version>${jackrabbit.version}</version>
             </dependency>
             <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-karaf-distribution</artifactId>
-                <version>${project.version}</version>
-                <type>tar.gz</type>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.karaf</groupId>
-                        <artifactId>org.apache.karaf.client</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.eclipse.osgi</groupId>
-                        <artifactId>org.eclipse.osgi</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-karaf-features</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.james.jspf</groupId>
                 <artifactId>apache-jspf-resolver</artifactId>
                 <version>${apache-jspf-resolver.version}</version>

@@ -73,9 +73,6 @@
         <module>dns-service/dnsservice-dnsjava</module>
         <module>dns-service/dnsservice-library</module>
 
-        <module>karaf/distribution</module>
-        <module>karaf/features</module>
-        <module>karaf/integration</module>
         <module>mailet/integration-testing</module>
 
         <module>mailet/mailetcontainer-api</module>
