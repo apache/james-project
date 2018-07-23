@@ -6,6 +6,9 @@ printUsage() {
    echo "./compile.sh [-s | --skipTests] SHA1"
    echo "    -s: Skip test"
    echo "    SHA1: SHA1 to build (optional)"
+   echo ""
+   echo "Environment:"
+   echo " - MVN_ADDITIONAL_ARG_LINE: Allow passing additional command arguments to the maven command"
    exit 1
 }
 
@@ -47,9 +50,9 @@ git checkout $SHA1
 # Compilation
 
 if [ "$SKIPTESTS" = "skipTests" ]; then
-   mvn package -DskipTests
+   mvn package -DskipTests ${MVN_ADDITIONAL_ARG_LINE}
 else
-   mvn package
+   mvn package ${MVN_ADDITIONAL_ARG_LINE}
 fi
 
 # Retrieve result
