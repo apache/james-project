@@ -53,7 +53,7 @@
 
     <properties>
         <commons-lang.version>2.6</commons-lang.version>
-        <derby.version>10.9.1.0</derby.version>
+        <derby.version>10.14.2.0</derby.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>1.0.1</hadoop.version>
         <hbase.version>0.94.27</hbase.version>

@@ -1269,7 +1269,7 @@ All rights reserved.
                 <resource name='commons-logging-1.0.3.jar'/>
                 <resource name='commons-logging-api-1.1.jar'/>
                 <resource name='commons-pool-1.5.5.jar'/>
-                <resource name='derby-10.7.1.1.jar'/>
+                <resource name='derby-10.14.2.0.jar'/>
                 <resource name='geronimo-annotation_1.0_spec-1.1.1.jar'/>
                 <resource name='geronimo-annotation_1.1_spec-1.0.1.jar'/>
                 <resource name='geronimo-j2ee-management_1.1_spec-1.0.1.jar'/>
