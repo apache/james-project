@@ -22,49 +22,27 @@ package org.apache.james.jmap.cassandra.vacation;
 import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.jmap.cassandra.vacation.tables.CassandraVacationTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraVacationModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraVacationModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraVacationTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraVacationTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraVacationTable.ACCOUNT_ID, text())
-                    .addColumn(CassandraVacationTable.IS_ENABLED, cboolean())
-                    .addUDTColumn(CassandraVacationTable.FROM_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-                    .addUDTColumn(CassandraVacationTable.TO_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
-                    .addColumn(CassandraVacationTable.TEXT, text())
-                    .addColumn(CassandraVacationTable.SUBJECT, text())
-                    .addColumn(CassandraVacationTable.HTML, text())
-                    .withOptions()
-                    .comment("Holds vacation definition. Allow one to automatically respond to emails with a custom message.")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public class CassandraVacationModule {
+    public static final CassandraModule MODULE = CassandraModule.table(CassandraVacationTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraVacationTable.ACCOUNT_ID, text())
+            .addColumn(CassandraVacationTable.IS_ENABLED, cboolean())
+            .addUDTColumn(CassandraVacationTable.FROM_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+            .addUDTColumn(CassandraVacationTable.TO_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+            .addColumn(CassandraVacationTable.TEXT, text())
+            .addColumn(CassandraVacationTable.SUBJECT, text())
+            .addColumn(CassandraVacationTable.HTML, text())
+            .withOptions()
+            .comment("Holds vacation definition. Allow one to automatically respond to emails with a custom message.")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

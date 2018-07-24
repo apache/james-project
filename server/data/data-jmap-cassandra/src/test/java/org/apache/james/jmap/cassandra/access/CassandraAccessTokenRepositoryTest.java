@@ -37,7 +37,7 @@ public class CassandraAccessTokenRepositoryTest extends AccessTokenRepositoryTes
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraAccessModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraAccessModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

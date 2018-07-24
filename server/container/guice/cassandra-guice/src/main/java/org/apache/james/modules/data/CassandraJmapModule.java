@@ -32,7 +32,6 @@ import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraJmapModule extends AbstractModule {
@@ -49,8 +48,8 @@ public class CassandraJmapModule extends AbstractModule {
         bind(NotificationRegistry.class).to(CassandraNotificationRegistry.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraAccessModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraVacationModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraNotificationRegistryModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraVacationModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraNotificationRegistryModule.MODULE);
     }
 }

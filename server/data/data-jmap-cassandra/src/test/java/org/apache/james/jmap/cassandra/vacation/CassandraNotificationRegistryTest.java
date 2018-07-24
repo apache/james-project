@@ -38,13 +38,12 @@ public class CassandraNotificationRegistryTest extends AbstractNotificationRegis
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraNotificationRegistryModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraNotificationRegistryModule.MODULE, cassandraServer.getHost());
     }
 
     @Override
     @Before
     public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(new CassandraNotificationRegistryModule(), cassandraServer.getHost());
         super.setUp();
     }
 

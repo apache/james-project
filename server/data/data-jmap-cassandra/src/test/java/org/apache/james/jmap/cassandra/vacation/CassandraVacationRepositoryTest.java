@@ -21,7 +21,7 @@ package org.apache.james.jmap.cassandra.vacation;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.jmap.api.vacation.AbstractVacationRepositoryTest;
 import org.apache.james.jmap.api.vacation.VacationRepository;
@@ -39,7 +39,7 @@ public class CassandraVacationRepositoryTest extends AbstractVacationRepositoryT
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite module = new CassandraModuleComposite(new CassandraVacationModule(), new CassandraZonedDateTimeModule());
+        CassandraModule module = CassandraModule.aggregateModules(CassandraVacationModule.MODULE, CassandraZonedDateTimeModule.MODULE);
         cassandra = CassandraCluster.create(module, cassandraServer.getHost());
     }
 
