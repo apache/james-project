@@ -19,50 +19,29 @@
 
 package org.apache.james.blob.cassandra;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraBlobModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraBlobModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(BlobTable.TABLE_NAME,
-                SchemaBuilder.createTable(BlobTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(BlobTable.ID, DataType.text())
-                    .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint())
-                    .withOptions()
-                    .comment("Holds information for retrieving all blob parts composing this blob. " +
-                        "Messages` headers and bodies are stored as blobparts.")),
-            new CassandraTable(BlobTable.BlobParts.TABLE_NAME,
-                SchemaBuilder.createTable(BlobTable.BlobParts.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(BlobTable.ID, DataType.text())
-                    .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
-                    .addColumn(BlobTable.BlobParts.DATA, DataType.blob())
-                    .withOptions()
-                    .comment("Holds blob parts composing blobs ." +
-                        "Messages` headers and bodies are stored, chunked in blobparts.")));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public interface CassandraBlobModule {
+    CassandraModule MODULE = CassandraModule
+        .builder()
+        .table(BlobTable.BlobParts.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(BlobTable.ID, DataType.text())
+            .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
+            .addColumn(BlobTable.BlobParts.DATA, DataType.blob())
+            .withOptions()
+            .comment("Holds blob parts composing blobs ." +
+                "Messages` headers and bodies are stored, chunked in blobparts."))
+        .table(BlobTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(BlobTable.ID, DataType.text())
+            .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint())
+            .withOptions()
+            .comment("Holds information for retrieving all blob parts composing this blob. " +
+                "Messages` headers and bodies are stored as blobparts."))
+        .build();
 }

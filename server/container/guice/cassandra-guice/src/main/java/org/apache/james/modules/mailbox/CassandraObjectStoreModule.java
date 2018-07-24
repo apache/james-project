@@ -23,6 +23,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 
 import com.google.inject.AbstractModule;
@@ -39,6 +40,6 @@ public class CassandraObjectStoreModule extends AbstractModule {
         bind(BlobId.Factory.class).to(CassandraBlobId.Factory.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(org.apache.james.blob.cassandra.CassandraBlobModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
     }
 }
