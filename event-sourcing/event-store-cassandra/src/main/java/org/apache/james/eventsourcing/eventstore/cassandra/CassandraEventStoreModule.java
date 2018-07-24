@@ -19,44 +19,22 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraEventStoreModule implements CassandraModule {
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraEventStoreModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraEventStoreTable.EVENTS_TABLE,
-                SchemaBuilder.createTable(CassandraEventStoreTable.EVENTS_TABLE)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar())
-                    .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint())
-                    .addColumn(CassandraEventStoreTable.EVENT, DataType.text())
-                    .withOptions()
-                    .comment("Store events of a EventSourcing aggregate")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                            SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
-
+public interface CassandraEventStoreModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar())
+            .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint())
+            .addColumn(CassandraEventStoreTable.EVENT, DataType.text())
+            .withOptions()
+            .comment("Store events of a EventSourcing aggregate")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }
