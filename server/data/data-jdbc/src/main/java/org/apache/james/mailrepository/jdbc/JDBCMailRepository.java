@@ -33,6 +33,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -51,6 +52,7 @@ import javax.sql.DataSource;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailKey;
@@ -99,6 +101,11 @@ public class JDBCMailRepository extends AbstractMailRepository {
      * The table name parsed from the destination URL
      */
     protected String tableName;
+
+    @Override
+    public long size() throws MessagingException {
+        return super.size();
+    }
 
     /**
      * The repository name parsed from the destination URL
@@ -528,7 +535,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(3, mc.getState());
                     insertMessage.setString(4, mc.getErrorMessage());
                     if (mc.getSender() == null) {
-                        insertMessage.setNull(5, java.sql.Types.VARCHAR);
+                        insertMessage.setNull(5, Types.VARCHAR);
                     } else {
                         insertMessage.setString(5, mc.getSender().toString());
                     }
@@ -542,12 +549,18 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(6, recipients.toString());
                     insertMessage.setString(7, mc.getRemoteHost());
                     insertMessage.setString(8, mc.getRemoteAddr());
-                    insertMessage.setTimestamp(9, new java.sql.Timestamp(mc.getLastUpdated().getTime()));
+                    if (mc.getPerRecipientSpecificHeaders().getHeadersByRecipient().isEmpty()) {
+                        insertMessage.setNull(9, Types.BLOB);
+                    } else {
+                        byte[] bytes = SerializationUtils.serialize(mc.getPerRecipientSpecificHeaders());
+                        insertMessage.setBinaryStream(9, new ByteArrayInputStream(bytes), bytes.length);
+                    }
+                    insertMessage.setTimestamp(10, new java.sql.Timestamp(mc.getLastUpdated().getTime()));
 
-                    insertMessage.setBinaryStream(10, is, (int) is.getSize());
+                    insertMessage.setBinaryStream(11, is, (int) is.getSize());
 
                     // Store attributes
-                    if (numberOfParameters > 10) {
+                    if (numberOfParameters > 11) {
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         ObjectOutputStream oos = new ObjectOutputStream(baos);
                         try {
@@ -563,7 +576,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
                             }
                             oos.flush();
                             ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
-                            insertMessage.setBinaryStream(11, attrInputStream, baos.size());
+                            insertMessage.setBinaryStream(12, attrInputStream, baos.size());
                         } finally {
                             try {
                                 if (oos != null) {
@@ -680,7 +693,13 @@ public class JDBCMailRepository extends AbstractMailRepository {
             mc.setRecipients(recipients);
             mc.setRemoteHost(rsMessage.getString(5));
             mc.setRemoteAddr(rsMessage.getString(6));
-            mc.setLastUpdated(rsMessage.getTimestamp(7));
+            try (InputStream is = rsMessage.getBinaryStream(7)) {
+                if (is != null) {
+                    mc.addAllSpecificHeaderForRecipient(SerializationUtils.deserialize(is));
+                }
+            }
+
+            mc.setLastUpdated(rsMessage.getTimestamp(8));
 
             MimeMessageJDBCSource source = new MimeMessageJDBCSource(this, key.asString(), sr);
             MimeMessageCopyOnWriteProxy message = new MimeMessageCopyOnWriteProxy(source);
@@ -723,7 +742,6 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
     @Override
     public Iterator<MailKey> list() throws MessagingException {
-        // System.err.println("listing messages");
         Connection conn = null;
         PreparedStatement listMessages = null;
         ResultSet rsListMessages = null;
