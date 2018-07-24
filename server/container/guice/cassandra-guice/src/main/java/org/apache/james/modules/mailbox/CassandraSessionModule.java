@@ -73,8 +73,8 @@ public class CassandraSessionModule extends AbstractModule {
         bind(Cluster.class).toProvider(ResilientClusterProvider.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraZonedDateTimeModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraSchemaVersionModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraZonedDateTimeModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraSchemaVersionModule.MODULE);
 
         bind(CassandraSchemaVersionManager.class).in(Scopes.SINGLETON);
         bind(CassandraSchemaVersionDAO.class).in(Scopes.SINGLETON);

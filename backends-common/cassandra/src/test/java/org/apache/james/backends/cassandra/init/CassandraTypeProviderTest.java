@@ -22,21 +22,15 @@ package org.apache.james.backends.cassandra.init;
 import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
 public class CassandraTypeProviderTest {
 
@@ -50,18 +44,11 @@ public class CassandraTypeProviderTest {
 
     @Before
     public void setUp() {
-        module = new CassandraModule() {
-            @Override public List<CassandraTable> moduleTables() {
-                return ImmutableList.of();
-            }
-
-            @Override public List<CassandraType> moduleTypes() {
-                return ImmutableList.copyOf(
-                    Arrays.asList(new CassandraType(TYPE_NAME, SchemaBuilder.createType(TYPE_NAME)
-                        .ifNotExists()
-                        .addColumn(PROPERTY, text()))));
-            }
-        };
+        module = CassandraModule.type(TYPE_NAME)
+            .statement(statement -> statement
+                .ifNotExists()
+                .addColumn(PROPERTY, text()))
+            .build();
         cassandra = CassandraCluster.create(module, cassandraServer.getHost());
         cassandra.getTypesProvider();
     }

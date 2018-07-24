@@ -43,7 +43,7 @@ public class CassandraSchemaVersionDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraSchemaVersionModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraSchemaVersionModule.MODULE, cassandraServer.getHost());
     }
 
     @Before
