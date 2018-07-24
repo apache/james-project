@@ -47,7 +47,7 @@ public class CassandraMailRepositoryKeysDAOTest {
 
     @BeforeAll
     static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getHost());
+        cassandra = CassandraCluster.create(CassandraMailRepositoryModule.MODULE, dockerCassandra.getHost());
     }
 
     @BeforeEach

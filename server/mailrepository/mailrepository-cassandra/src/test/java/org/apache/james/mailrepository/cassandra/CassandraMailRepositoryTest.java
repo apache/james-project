@@ -21,7 +21,7 @@ package org.apache.james.mailrepository.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -47,9 +47,9 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
 
     @BeforeAll
     static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraMailRepositoryModule(),
-            new CassandraBlobModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraMailRepositoryModule.MODULE,
+            CassandraBlobModule.MODULE);
         cassandra = CassandraCluster.create(modules, dockerCassandra.getHost());
     }
 
