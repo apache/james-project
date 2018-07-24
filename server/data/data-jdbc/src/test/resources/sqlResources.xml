@@ -287,6 +287,9 @@
     <!-- Statements used to list all messages stored in this repository. -->
     <sql name="listMessagesSQL">SELECT message_name, message_state, last_updated FROM ${table} WHERE repository_name = ? ORDER BY last_updated ASC</sql>
 
+    <!-- Statements used to count messages stored in this repository. -->
+    <sql name="countMessagesSQL">SELECT COUNT(*) FROM ${table}</sql>
+
     <!-- Statements used to create the table associated with this class. -->
     <sql name="createTable" db="mysql">
         CREATE TABLE ${table} (
