@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
@@ -44,9 +44,9 @@ public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraAttachmentModule(),
-            new CassandraBlobModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraAttachmentModule.MODULE,
+            CassandraBlobModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

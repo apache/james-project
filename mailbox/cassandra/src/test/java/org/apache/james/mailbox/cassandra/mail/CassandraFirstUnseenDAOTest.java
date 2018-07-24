@@ -46,7 +46,7 @@ public class CassandraFirstUnseenDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraFirstUnseenModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraFirstUnseenModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

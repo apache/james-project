@@ -37,7 +37,7 @@ public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTe
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraQuotaModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

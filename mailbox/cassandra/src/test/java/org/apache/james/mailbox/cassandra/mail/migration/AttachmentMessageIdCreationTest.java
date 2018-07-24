@@ -36,7 +36,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.cassandra.CassandraBlobId;
@@ -81,10 +81,10 @@ public class AttachmentMessageIdCreationTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraMessageModule(),
-            new CassandraAttachmentModule(),
-            new CassandraBlobModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraMessageModule.MODULE,
+            CassandraAttachmentModule.MODULE,
+            CassandraBlobModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

@@ -54,7 +54,7 @@ public class CassandraUserMailboxRightsDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraAclModule.MODULE, cassandraServer.getHost());
     }
 
     @Before
@@ -73,7 +73,7 @@ public class CassandraUserMailboxRightsDAOTest {
     }
 
     @Test
-    public void saveShouldInsertNewEntry() throws Exception {
+    public void saveShouldInsertNewEntry() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
@@ -84,7 +84,7 @@ public class CassandraUserMailboxRightsDAOTest {
     }
 
     @Test
-    public void saveOnSecondShouldOverwrite() throws Exception {
+    public void saveOnSecondShouldOverwrite() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
@@ -100,13 +100,13 @@ public class CassandraUserMailboxRightsDAOTest {
     }
 
     @Test
-    public void listRightsForUserShouldReturnEmptyWhenEmptyData() throws Exception {
+    public void listRightsForUserShouldReturnEmptyWhenEmptyData() {
         assertThat(testee.listRightsForUser(USER_NAME).join())
             .isEmpty();
     }
 
     @Test
-    public void deleteShouldDeleteWhenExisting() throws Exception {
+    public void deleteShouldDeleteWhenExisting() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))

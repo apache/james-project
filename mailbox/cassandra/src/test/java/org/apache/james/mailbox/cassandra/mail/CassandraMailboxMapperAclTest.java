@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -43,9 +43,9 @@ public class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-            new CassandraAclModule(),
-            new CassandraMailboxModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraAclModule.MODULE,
+            CassandraMailboxModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

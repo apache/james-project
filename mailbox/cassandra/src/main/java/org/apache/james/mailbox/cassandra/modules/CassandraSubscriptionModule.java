@@ -21,43 +21,23 @@ package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraSubscriptionTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraSubscriptionModule implements CassandraModule {
+public interface CassandraSubscriptionModule {
 
-    public static final int PER_USER_CACHED_SUBSCRIPTIONS = 100;
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
+    int PER_USER_CACHED_SUBSCRIPTIONS = 100;
 
-    public CassandraSubscriptionModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraSubscriptionTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraSubscriptionTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraSubscriptionTable.USER, text())
-                    .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
-                    .withOptions()
-                    .comment("Holds per user list of IMAP subscriptions")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+    CassandraModule MODULE = CassandraModule.table(CassandraSubscriptionTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraSubscriptionTable.USER, text())
+            .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
+            .withOptions()
+            .comment("Holds per user list of IMAP subscriptions")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS)))
+        .build();
 }

@@ -46,7 +46,7 @@ public class CassandraMailboxCounterDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraMailboxCounterModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraMailboxCounterModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

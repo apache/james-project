@@ -55,7 +55,7 @@ public class CassandraMessageIdDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraMessageModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraMessageModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

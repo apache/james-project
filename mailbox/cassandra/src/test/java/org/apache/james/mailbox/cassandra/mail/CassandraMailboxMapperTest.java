@@ -27,7 +27,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -71,7 +71,7 @@ public class CassandraMailboxMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
+        CassandraModule modules = CassandraModule.aggregateModules(CassandraMailboxModule.MODULE, CassandraAclModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

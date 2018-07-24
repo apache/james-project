@@ -40,7 +40,7 @@ public class CassandraAnnotationMapperTest extends AnnotationMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraAnnotationModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraAnnotationModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

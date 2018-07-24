@@ -50,7 +50,7 @@ public class CassandraModSeqProviderTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraModSeqModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraModSeqModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

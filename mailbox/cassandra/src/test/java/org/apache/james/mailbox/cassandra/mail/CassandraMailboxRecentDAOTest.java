@@ -50,7 +50,7 @@ public class CassandraMailboxRecentDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraMailboxRecentsModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraMailboxRecentsModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

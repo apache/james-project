@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -67,9 +67,9 @@ public class MailboxPathV2MigrationTest {
         MAILBOX_1.setMailboxId(MAILBOX_ID_1);
 
         cassandra = CassandraCluster.create(
-            new CassandraModuleComposite(
-                new CassandraMailboxModule(),
-                new CassandraAclModule()),
+            CassandraModule.aggregateModules(
+                CassandraMailboxModule.MODULE,
+                CassandraAclModule.MODULE),
             cassandraServer.getHost());
     }
 

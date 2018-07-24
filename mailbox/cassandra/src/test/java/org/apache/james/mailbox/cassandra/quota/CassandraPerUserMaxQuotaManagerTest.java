@@ -38,7 +38,7 @@ public class CassandraPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerT
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraQuotaModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraQuotaModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

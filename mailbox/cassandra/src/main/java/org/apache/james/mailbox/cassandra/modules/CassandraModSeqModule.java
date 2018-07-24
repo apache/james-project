@@ -22,44 +22,22 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.bigint;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageModseqTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraModSeqModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraModSeqModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraMessageModseqTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMessageModseqTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
-                    .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())
-                    .withOptions()
-                    .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
-                    .compactionOptions(SchemaBuilder.leveledStrategy())
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public interface CassandraModSeqModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraMessageModseqTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
+            .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())
+            .withOptions()
+            .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
+            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

@@ -60,7 +60,7 @@ public abstract class CassandraMailboxPathDAOTest {
     abstract CassandraMailboxPathDAO testee();
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraMailboxModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraMailboxModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

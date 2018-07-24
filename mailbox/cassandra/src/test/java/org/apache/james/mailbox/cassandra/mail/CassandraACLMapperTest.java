@@ -59,7 +59,7 @@ public class CassandraACLMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraAclModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraAclModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

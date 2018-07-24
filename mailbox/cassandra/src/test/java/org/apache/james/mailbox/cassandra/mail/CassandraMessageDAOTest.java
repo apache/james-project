@@ -36,7 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.cassandra.CassandraBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
@@ -87,7 +87,7 @@ public class CassandraMessageDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMessageModule(), new CassandraBlobModule());
+        CassandraModule modules = CassandraModule.aggregateModules(CassandraMessageModule.MODULE, CassandraBlobModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

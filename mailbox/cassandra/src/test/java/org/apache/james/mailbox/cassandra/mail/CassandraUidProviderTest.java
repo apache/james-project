@@ -51,7 +51,7 @@ public class CassandraUidProviderTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraUidModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraUidModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

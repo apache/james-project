@@ -21,46 +21,25 @@ package org.apache.james.mailbox.cassandra.modules;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathRegisterTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraRegistrationModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraRegistrationModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraMailboxPathRegisterTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMailboxPathRegisterTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
-                    .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
-                    .withOptions()
-                    .compactionOptions(SchemaBuilder.dateTieredStrategy())));
-        types = ImmutableList.of(
-            new CassandraType(CassandraMailboxPathRegisterTable.MAILBOX_PATH,
-                SchemaBuilder.createType(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
-                    .ifNotExists()
-                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAMESPACE, text())
-                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAME, text())
-                    .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.USER, text())));
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public interface CassandraRegistrationModule {
+    CassandraModule MODULE = CassandraModule.builder()
+        .type(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAMESPACE, text())
+            .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAME, text())
+            .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.USER, text()))
+        .table(CassandraMailboxPathRegisterTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
+            .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
+            .withOptions()
+            .compactionOptions(SchemaBuilder.dateTieredStrategy()))
+        .build();
 }

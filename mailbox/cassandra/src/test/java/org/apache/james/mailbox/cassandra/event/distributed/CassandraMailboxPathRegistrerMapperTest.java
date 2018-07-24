@@ -39,7 +39,7 @@ import org.junit.Test;
 public class CassandraMailboxPathRegistrerMapperTest {
 
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
+
     private static CassandraCluster cassandra;
 
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
@@ -52,7 +52,7 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraRegistrationModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

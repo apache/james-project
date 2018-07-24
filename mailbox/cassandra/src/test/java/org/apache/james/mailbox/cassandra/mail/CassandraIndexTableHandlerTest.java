@@ -29,7 +29,7 @@ import javax.mail.Flags;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -77,12 +77,12 @@ public class CassandraIndexTableHandlerTest {
 
     @BeforeClass
     public static void setUpClass() {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraMailboxCounterModule(),
-                new CassandraMailboxRecentsModule(),
-                new CassandraFirstUnseenModule(),
-                new CassandraApplicableFlagsModule(),
-                new CassandraDeletedMessageModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraMailboxCounterModule.MODULE,
+            CassandraMailboxRecentsModule.MODULE,
+            CassandraFirstUnseenModule.MODULE,
+            CassandraApplicableFlagsModule.MODULE,
+            CassandraDeletedMessageModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 

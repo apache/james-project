@@ -53,7 +53,7 @@ public class CassandraAttachmentDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraAttachmentModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraAttachmentModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

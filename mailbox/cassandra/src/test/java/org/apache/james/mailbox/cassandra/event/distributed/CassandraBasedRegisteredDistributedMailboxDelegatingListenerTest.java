@@ -85,7 +85,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraRegistrationModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraRegistrationModule.MODULE, cassandraServer.getHost());
     }
 
     @Before

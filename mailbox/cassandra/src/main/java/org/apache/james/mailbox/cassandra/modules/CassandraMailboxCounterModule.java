@@ -22,45 +22,23 @@ package org.apache.james.mailbox.cassandra.modules;
 import static com.datastax.driver.core.DataType.counter;
 import static com.datastax.driver.core.DataType.timeuuid;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxCountersTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraMailboxCounterModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraMailboxCounterModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraMailboxCountersTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraMailboxCountersTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
-                    .addColumn(CassandraMailboxCountersTable.COUNT, counter())
-                    .addColumn(CassandraMailboxCountersTable.UNSEEN, counter())
-                    .withOptions()
-                    .comment("Holds messages count and unseen message count for each mailbox.")
-                    .compactionOptions(SchemaBuilder.leveledStrategy())
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public interface CassandraMailboxCounterModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraMailboxCountersTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
+            .addColumn(CassandraMailboxCountersTable.COUNT, counter())
+            .addColumn(CassandraMailboxCountersTable.UNSEEN, counter())
+            .withOptions()
+            .comment("Holds messages count and unseen message count for each mailbox.")
+            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

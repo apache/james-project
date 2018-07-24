@@ -58,6 +58,6 @@ public class CassandraQuotaModule extends AbstractModule {
         bind(UserQuotaRootResolver.class).to(DefaultUserQuotaRootResolver.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule.MODULE);
     }
 }
