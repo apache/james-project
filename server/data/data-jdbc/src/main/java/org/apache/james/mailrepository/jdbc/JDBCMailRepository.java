@@ -722,6 +722,18 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
+    public long size() throws MessagingException {
+        try (Connection conn = datasource.getConnection();
+             PreparedStatement count = conn.prepareStatement(sqlQueries.getSqlString("countMessagesSQL", true));
+             ResultSet resultSet = count.executeQuery()) {
+
+            return resultSet.next() ? resultSet.getLong(1) : 0;
+        } catch (Exception e) {
+            throw new MessagingException("Exception while fetching size: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
     public Iterator<MailKey> list() throws MessagingException {
         // System.err.println("listing messages");
         Connection conn = null;
