@@ -52,7 +52,7 @@ public class CassandraMailRepositoryMailDAOTest {
 
     @BeforeAll
     static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+        cassandra = CassandraCluster.create(new CassandraMailRepositoryModule(), dockerCassandra.getHost());
     }
 
     @BeforeEach

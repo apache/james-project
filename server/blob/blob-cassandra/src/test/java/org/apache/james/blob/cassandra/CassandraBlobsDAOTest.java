@@ -51,7 +51,7 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
 
     @BeforeAll
     static void setUpClass(DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(new CassandraBlobModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+        cassandra = CassandraCluster.create(new CassandraBlobModule(), dockerCassandra.getHost());
     }
 
     @BeforeEach

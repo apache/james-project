@@ -70,8 +70,7 @@ public class MailboxPathV2MigrationTest {
             new CassandraModuleComposite(
                 new CassandraMailboxModule(),
                 new CassandraAclModule()),
-            cassandraServer.getIp(),
-            cassandraServer.getBindingPort());
+            cassandraServer.getHost());
     }
 
     @Before

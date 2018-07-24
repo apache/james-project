@@ -32,7 +32,7 @@ public class CassandraHostSystemRule extends ExternalResource {
 
     @Override
     protected void before() throws Throwable {
-        system = new CassandraHostSystem(cassandraServer.getIp(), cassandraServer.getBindingPort());
+        system = new CassandraHostSystem(cassandraServer.getHost());
         system.beforeTest();
     }
 

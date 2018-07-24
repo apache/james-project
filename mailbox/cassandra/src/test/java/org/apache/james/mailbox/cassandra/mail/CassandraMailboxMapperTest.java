@@ -72,7 +72,7 @@ public class CassandraMailboxMapperTest {
     @BeforeClass
     public static void setUpClass() {
         CassandraModuleComposite modules = new CassandraModuleComposite(new CassandraMailboxModule(), new CassandraAclModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 
     @Before

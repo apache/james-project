@@ -68,7 +68,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest {
             new CassandraAnnotationModule(),
             new CassandraApplicableFlagsModule(),
             new CassandraQuotaModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 
     @Before

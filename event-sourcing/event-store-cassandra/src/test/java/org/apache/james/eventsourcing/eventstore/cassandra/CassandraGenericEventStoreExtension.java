@@ -53,7 +53,7 @@ public class CassandraGenericEventStoreExtension implements BeforeAllCallback, A
         dockerCassandraExtension.beforeAll(context);
         dockerCassandra = dockerCassandraExtension.getDockerCassandra();
         cassandra = CassandraCluster.create(
-            new CassandraEventStoreModule(), dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+            new CassandraEventStoreModule(), dockerCassandra.getHost());
     }
 
     @Override

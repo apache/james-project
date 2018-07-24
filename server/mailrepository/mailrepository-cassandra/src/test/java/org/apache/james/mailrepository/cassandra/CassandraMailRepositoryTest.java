@@ -50,7 +50,7 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
         CassandraModuleComposite modules = new CassandraModuleComposite(
             new CassandraMailRepositoryModule(),
             new CassandraBlobModule());
-        cassandra = CassandraCluster.create(modules, dockerCassandra.getIp(), dockerCassandra.getBindingPort());
+        cassandra = CassandraCluster.create(modules, dockerCassandra.getHost());
     }
 
     @BeforeEach

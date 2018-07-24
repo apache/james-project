@@ -51,7 +51,7 @@ public class CassandraApplicableFlagDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(new CassandraApplicableFlagsModule(), cassandraServer.getHost());
     }
 
     @Before

@@ -62,7 +62,7 @@ public class CassandraTypeProviderTest {
                         .addColumn(PROPERTY, text()))));
             }
         };
-        cassandra = CassandraCluster.create(module, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(module, cassandraServer.getHost());
         cassandra.getTypesProvider();
     }
 

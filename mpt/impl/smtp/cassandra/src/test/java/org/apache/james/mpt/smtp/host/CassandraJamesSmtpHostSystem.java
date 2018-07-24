@@ -24,9 +24,9 @@ import java.util.Iterator;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
-import org.apache.james.modules.CassandraTestModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
 import org.apache.james.modules.server.CamelMailetContainerModule;
@@ -120,7 +120,13 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
                 binder -> binder.bind(MailQueueItemDecoratorFactory.class).to(RawMailQueueItemDecoratorFactory.class),
                 binder -> binder.bind(CamelMailetContainerModule.DefaultProcessorsConfigurationSupplier.class)
                     .toInstance(DefaultConfigurationBuilder::new))
-            .overrideWith(new CassandraTestModule(cassandraHost),
-                (binder) -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+            .overrideWith(
+                binder -> binder.bind(ClusterConfiguration.class).toInstance(
+                    ClusterConfiguration.builder()
+                        .host(cassandraHost)
+                        .keyspace("testing")
+                        .replicationFactor(1)
+                        .build()),
+                binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
     }
 }

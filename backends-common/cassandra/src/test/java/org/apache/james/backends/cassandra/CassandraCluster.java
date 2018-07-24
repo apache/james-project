@@ -18,9 +18,6 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
@@ -41,25 +38,20 @@ public final class CassandraCluster implements AutoCloseable {
     private CassandraTypesProvider typesProvider;
     private Cluster cluster;
 
-    public static CassandraCluster create(CassandraModule module, String host, int port) {
-        return new CassandraCluster(module, host, port);
+    public static CassandraCluster create(CassandraModule module, Host host) {
+        return new CassandraCluster(module, host);
     }
 
-    public static CassandraCluster create(CassandraModule module, Host host) {
-        return new CassandraCluster(module, host.getHostName(), host.getPort());
-    }
-    
-    @Inject
-    private CassandraCluster(CassandraModule module, @Named("cassandraHost") String host, @Named("cassandraPort") int port) throws RuntimeException {
+    private CassandraCluster(CassandraModule module, Host host) throws RuntimeException {
         this.module = module;
         try {
             cluster = ClusterBuilder.builder()
-                .host(host)
-                .port(port)
+                .host(host.getHostName())
+                .port(host.getPort())
                 .build();
             session = new SessionWithInitializedTablesFactory(
                 ClusterConfiguration.builder()
-                    .host(Host.from(host, port))
+                    .host(host)
                     .keyspace(KEYSPACE)
                     .replicationFactor(1)
                     .build(),

@@ -65,7 +65,7 @@ public class CassandraMessageMapperTest extends MessageMapperTest {
             new CassandraApplicableFlagsModule(),
             new CassandraDeletedMessageModule(),
             new CassandraBlobModule());
-        cassandra = CassandraCluster.create(modules, cassandraServer.getIp(), cassandraServer.getBindingPort());
+        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
     }
 
     @Override

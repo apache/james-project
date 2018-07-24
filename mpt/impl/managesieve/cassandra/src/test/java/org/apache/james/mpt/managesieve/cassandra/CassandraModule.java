@@ -21,6 +21,7 @@ package org.apache.james.mpt.managesieve.cassandra;
 
 import org.apache.james.mpt.host.ManageSieveHostSystem;
 import org.apache.james.mpt.managesieve.cassandra.host.CassandraHostSystem;
+import org.apache.james.util.Host;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -28,12 +29,10 @@ import com.google.inject.Singleton;
 
 public class CassandraModule extends AbstractModule {
 
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
 
-    public CassandraModule(String cassandraHost, int cassandraPort) {
+    public CassandraModule(Host cassandraHost) {
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
     
     @Override
@@ -43,6 +42,6 @@ public class CassandraModule extends AbstractModule {
     @Provides
     @Singleton
     public ManageSieveHostSystem provideHostSystem() throws Exception {
-        return new CassandraHostSystem(cassandraHost, cassandraPort);
+        return new CassandraHostSystem(cassandraHost);
     }
 }

@@ -70,6 +70,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.apache.james.util.Host;
 
 public class CassandraHostSystem extends JamesImapHostSystem {
 
@@ -97,21 +98,19 @@ public class CassandraHostSystem extends JamesImapHostSystem {
             new CassandraAnnotationModule(),
             new CassandraApplicableFlagsModule());
 
-    private final String cassandraHost;
-    private final int cassandraPort;
+    private final Host cassandraHost;
     private CassandraMailboxManager mailboxManager;
     private CassandraCluster cassandra;
     private CassandraPerUserMaxQuotaManager perUserMaxQuotaManager;
     
-    public CassandraHostSystem(String cassandraHost, int cassandraPort) {
+    public CassandraHostSystem(Host cassandraHost) {
         this.cassandraHost = cassandraHost;
-        this.cassandraPort = cassandraPort;
     }
 
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        cassandra = CassandraCluster.create(mailboxModule, cassandraHost, cassandraPort);
+        cassandra = CassandraCluster.create(mailboxModule, cassandraHost);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
