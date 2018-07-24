@@ -41,7 +41,7 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         bind(CassandraUsersRepository.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(CassandraUsersRepository.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraUsersRepositoryConfigurationPerformer.class);
     }

@@ -21,41 +21,19 @@ package org.apache.james.mailrepository.cassandra;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraMailRepositoryUrlModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraMailRepositoryUrlModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(UrlsTable.TABLE_NAME,
-                SchemaBuilder.createTable(UrlsTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(UrlsTable.URL, text())
-                    .withOptions()
-                    .comment("Holds the list of available mail repository")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public class CassandraMailRepositoryUrlModule {
+    public static final CassandraModule MODULE = CassandraModule.table(UrlsTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(UrlsTable.URL, text())
+            .withOptions()
+            .comment("Holds the list of available mail repository")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

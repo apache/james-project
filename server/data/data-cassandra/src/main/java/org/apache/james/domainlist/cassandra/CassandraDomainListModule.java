@@ -21,41 +21,20 @@ package org.apache.james.domainlist.cassandra;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.domainlist.cassandra.tables.CassandraDomainsTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraDomainListModule implements CassandraModule {
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraDomainListModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraDomainsTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraDomainsTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraDomainsTable.DOMAIN, text())
-                    .withOptions()
-                    .comment("Holds domains this James server is operating on.")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public class CassandraDomainListModule {
+    public static final CassandraModule MODULE = CassandraModule.table(CassandraDomainsTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraDomainsTable.DOMAIN, text())
+            .withOptions()
+            .comment("Holds domains this James server is operating on.")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

@@ -41,7 +41,7 @@ public class CassandraDomainListModule extends AbstractModule {
     public void configure() {
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(CassandraDomainList.class);
-        Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().to(org.apache.james.domainlist.cassandra.CassandraDomainListModule.class);
+        Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(org.apache.james.domainlist.cassandra.CassandraDomainListModule.MODULE);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraDomainListConfigurationPerformer.class);
     }
     

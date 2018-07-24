@@ -38,7 +38,7 @@ public class CassandraRecipientRewriteTableTest extends AbstractRecipientRewrite
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraRRTModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraRRTModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

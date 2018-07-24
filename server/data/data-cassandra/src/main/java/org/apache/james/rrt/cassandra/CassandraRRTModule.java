@@ -21,44 +21,22 @@ package org.apache.james.rrt.cassandra;
 
 import static com.datastax.driver.core.DataType.text;
 
-import java.util.List;
-
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.components.CassandraTable;
-import org.apache.james.backends.cassandra.components.CassandraType;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
 import org.apache.james.rrt.cassandra.tables.CassandraRecipientRewriteTableTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-import com.google.common.collect.ImmutableList;
 
-public class CassandraRRTModule implements CassandraModule {
-
-    private final List<CassandraTable> tables;
-    private final List<CassandraType> types;
-
-    public CassandraRRTModule() {
-        tables = ImmutableList.of(
-            new CassandraTable(CassandraRecipientRewriteTableTable.TABLE_NAME,
-                SchemaBuilder.createTable(CassandraRecipientRewriteTableTable.TABLE_NAME)
-                    .ifNotExists()
-                    .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
-                    .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
-                    .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())
-                    .withOptions()
-                    .comment("Holds address re-writing rules.")
-                    .caching(SchemaBuilder.KeyCaching.ALL,
-                        SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))));
-        types = ImmutableList.of();
-    }
-
-    @Override
-    public List<CassandraTable> moduleTables() {
-        return tables;
-    }
-
-    @Override
-    public List<CassandraType> moduleTypes() {
-        return types;
-    }
+public class CassandraRRTModule {
+    public static final CassandraModule MODULE = CassandraModule.table(CassandraRecipientRewriteTableTable.TABLE_NAME)
+        .statement(statement -> statement
+            .ifNotExists()
+            .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
+            .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
+            .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())
+            .withOptions()
+            .comment("Holds address re-writing rules.")
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .build();
 }

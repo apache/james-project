@@ -52,7 +52,7 @@ public class CassandraMailRepositoryModule extends AbstractModule {
 
         Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraModuleBinder.addBinding().to(org.apache.james.mailrepository.cassandra.CassandraMailRepositoryModule.class);
-        cassandraModuleBinder.addBinding().to(CassandraMailRepositoryUrlModule.class);
+        cassandraModuleBinder.addBinding().toInstance(CassandraMailRepositoryUrlModule.MODULE);
     }
 
     public static class CassandraMailRepositoryProvider implements MailRepositoryProvider {

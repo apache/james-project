@@ -37,7 +37,7 @@ public class CassandraDomainListTest extends AbstractDomainListTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraDomainListModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraDomainListModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

@@ -43,7 +43,7 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(CassandraRecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().to(CassandraRRTModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
     }
 

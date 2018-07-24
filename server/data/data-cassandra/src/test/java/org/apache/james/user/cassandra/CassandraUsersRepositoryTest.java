@@ -38,7 +38,7 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @BeforeClass
     public static void setUpClass() {
-        cassandra = CassandraCluster.create(new CassandraUsersRepositoryModule(), cassandraServer.getHost());
+        cassandra = CassandraCluster.create(CassandraUsersRepositoryModule.MODULE, cassandraServer.getHost());
     }
 
     @Override

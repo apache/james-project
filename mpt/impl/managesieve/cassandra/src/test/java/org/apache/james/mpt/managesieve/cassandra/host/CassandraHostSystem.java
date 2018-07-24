@@ -20,7 +20,7 @@
 package org.apache.james.mpt.managesieve.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieve.cassandra.CassandraActiveScriptDAO;
@@ -44,9 +44,9 @@ public class CassandraHostSystem extends JamesManageSieveHostSystem {
 
     @Override
     public void beforeTest() throws Exception {
-        CassandraModuleComposite modules = new CassandraModuleComposite(
-                new CassandraSieveRepositoryModule(),
-                new CassandraUsersRepositoryModule());
+        CassandraModule modules = CassandraModule.aggregateModules(
+            CassandraSieveRepositoryModule.MODULE,
+            CassandraUsersRepositoryModule.MODULE);
         cassandra = CassandraCluster.create(modules, cassandraHost);
         super.beforeTest();
     }
