@@ -29,6 +29,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.DockerCassandraSingleton;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -57,6 +58,7 @@ public class CassandraMessageIdToImapUidDAOTest {
 
     @BeforeClass
     public static void setUpClass() {
+        DockerCassandraSingleton.restart();
         cassandra = CassandraCluster.create(CassandraMessageModule.MODULE, cassandraServer.getHost());
     }
 

@@ -19,50 +19,18 @@
 
 package org.apache.james.backends.cassandra;
 
-import org.apache.james.util.Host;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
-import org.testcontainers.containers.GenericContainer;
+public class DockerCassandraSingleton {
 
+    public static final DockerCassandra singleton = new DockerCassandra();
 
-public class DockerCassandraRule implements TestRule {
-
-    @Override
-    public Statement apply(Statement base, Description description) {
-        return base;
+    static {
+        singleton.start();
     }
 
-    public void start() {
-
+    public static void restart() {
+        singleton.stop();
+        singleton.start();
     }
 
-    public void stop() {
-
-    }
-
-    public Host getHost() {
-        return DockerCassandraSingleton.singleton.getHost();
-    }
-    
-    public String getIp() {
-        return DockerCassandraSingleton.singleton.getIp();
-    }
-
-    public int getBindingPort() {
-        return DockerCassandraSingleton.singleton.getBindingPort();
-    }
-
-    public GenericContainer<?> getRawContainer() {
-        return DockerCassandraSingleton.singleton.getRawContainer();
-    }
-
-    public void pause() {
-        DockerCassandraSingleton.singleton.pause();
-    }
-
-    public void unpause() {
-        DockerCassandraSingleton.singleton.unpause();
-    }
-
+    // Cleanup will be performed by test container resource reaper
 }
