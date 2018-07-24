@@ -24,7 +24,6 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskManager;
 
 public class CleanupTasksPerformer {
 
@@ -32,12 +31,10 @@ public class CleanupTasksPerformer {
 
     }
 
-    private final TaskManager taskManager;
     private final Set<CleanupTask> cleanupTasks;
 
     @Inject
-    public CleanupTasksPerformer(TaskManager taskManager, Set<CleanupTask> cleanupTasks) {
-        this.taskManager = taskManager;
+    public CleanupTasksPerformer(Set<CleanupTask> cleanupTasks) {
         this.cleanupTasks = cleanupTasks;
     }
 

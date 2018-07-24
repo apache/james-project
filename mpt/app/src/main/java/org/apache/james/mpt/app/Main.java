@@ -98,7 +98,6 @@ public class Main {
         return options;
     }
 
-    @SuppressWarnings("static-access")
     private static void addRunScriptOptions(Options options) {
         // -f <file> runs this script
         options.addOption(Option.builder(FILE_OPTION)
