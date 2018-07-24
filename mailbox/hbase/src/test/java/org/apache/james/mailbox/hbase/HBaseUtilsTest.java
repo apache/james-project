@@ -76,7 +76,6 @@ public class HBaseUtilsTest {
      */
     @Test
     public void testRowKey_All() {
-        System.out.println("getRowKey and UUIDFromRowKey");
         final HBaseMailbox mailbox = new HBaseMailbox(new MailboxPath("gsoc", "ieugen", "INBOX"), 1234);
         HBaseId uuid = mailbox.getMailboxId();
         byte[] expResult = uuid.toBytes();
@@ -95,7 +94,6 @@ public class HBaseUtilsTest {
      */
     @Test
     public void testMailboxToPut() {
-        System.out.println("mailboxToPut");
         final HBaseMailbox instance = new HBaseMailbox(new MailboxPath("gsoc", "ieugen", "INBOX"), 1234);
 
         Put result = toPut(instance);
@@ -115,7 +113,6 @@ public class HBaseUtilsTest {
     @Ignore
     @Test
     public void testMessageToPut() {
-        System.out.println("messageToPut");
         // left to implement
     }
 
@@ -131,7 +128,6 @@ public class HBaseUtilsTest {
 
     @Test
     public void testSubscriptionToPut() {
-        System.out.println("subscription toPut");
         Subscription subscription = new SimpleSubscription("ieugen", "INBOX");
         Put put = toPut(subscription);
         assertArrayEquals(Bytes.toBytes(subscription.getUser()), put.getRow());
@@ -140,8 +136,6 @@ public class HBaseUtilsTest {
 
     @Test
     public void testFlagsToPut() {
-        System.out.println("flagsToPut");
-
         final Flags flags = new Flags();
         flags.add(Flags.Flag.SEEN);
         flags.add(Flags.Flag.DRAFT);

@@ -36,7 +36,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testGetSetMailboxId() {
-        System.out.println("getSetMailboxId");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 10);
 
@@ -51,7 +50,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testGetSetNamespace() {
-        System.out.println("getSetNamespace");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 124566);
         String result = instance.getNamespace();
@@ -67,7 +65,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testGetSetUser() {
-        System.out.println("getUser");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 12);
         String result = instance.getUser();
@@ -82,7 +79,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testGetSetName() {
-        System.out.println("getSetName");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 1677);
         String result = instance.getName();
@@ -97,7 +93,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testGetUidValidity() {
-        System.out.println("getUidValidity");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 123345);
         long expResult = 123345L;
@@ -111,7 +106,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testHashCode() {
-        System.out.println("hashCode");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 1234);
         // from the hashCode()
@@ -128,7 +122,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testEquals() {
-        System.out.println("equals");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 12345);
         final HBaseMailbox instance2 = new HBaseMailbox(mailboxPath, 12345);
@@ -141,7 +134,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testConsumeUid() {
-        System.out.println("consumeUid");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 10);
         long expResult = instance.getLastUid() + 1;
@@ -154,7 +146,6 @@ public class HBaseMailboxTest {
      */
     @Test
     public void testConsumeModSeq() {
-        System.out.println("consumeModSeq");
         final MailboxPath mailboxPath = new MailboxPath("gsoc", "ieugen", "INBOX");
         final HBaseMailbox instance = new HBaseMailbox(mailboxPath, 10);
         long expResult = instance.getHighestModSeq() + 1;
