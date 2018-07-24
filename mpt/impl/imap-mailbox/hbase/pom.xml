@@ -32,11 +32,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-hbase</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mpt-imapmailbox-core</artifactId>
         </dependency>
         <dependency>
@@ -61,7 +61,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.james.protocols</groupId>
+            <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-imap</artifactId>
             <scope>test</scope>
         </dependency>

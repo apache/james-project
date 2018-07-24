@@ -33,11 +33,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-pojo</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-pojo</artifactId>
             <type>test-jar</type>
             <scope>test</scope>

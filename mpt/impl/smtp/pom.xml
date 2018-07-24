@@ -38,13 +38,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-smtp-cassandra</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-smtp-core</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>

@@ -16,7 +16,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-karaf-features</artifactId>
             <type>pom</type>
         </dependency>

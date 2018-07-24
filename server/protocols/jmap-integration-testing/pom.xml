@@ -41,7 +41,7 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>${project.groupId}</groupId>
+                <groupId>${james.groupId}</groupId>
                 <artifactId>memory-jmap-integration-testing</artifactId>
                 <version>${project.version}</version>
             </dependency>

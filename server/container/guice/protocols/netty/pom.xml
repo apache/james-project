@@ -33,11 +33,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-guice-configuration</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}.protocols</groupId>
+            <groupId>${james.groupId}.protocols</groupId>
             <artifactId>protocols-netty</artifactId>
         </dependency>
         <dependency>
