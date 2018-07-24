@@ -102,11 +102,6 @@ public class JDBCMailRepository extends AbstractMailRepository {
      */
     protected String tableName;
 
-    @Override
-    public long size() throws MessagingException {
-        return super.size();
-    }
-
     /**
      * The repository name parsed from the destination URL
      */
