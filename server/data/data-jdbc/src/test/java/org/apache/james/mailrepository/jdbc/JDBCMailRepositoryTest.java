@@ -79,12 +79,6 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
         return ds;
     }
 
-    @Test
-    @Disabled("JAMES-2304 JDBC doesn't update the message Content")
-    @Override
-    public void storingMessageWithSameKeyTwiceShouldUpdateMessageContent() {
-    }
-
     /**
      * JAMES-2303 JDBC doesn't store PerRecipientSpecificHeaders
      */
