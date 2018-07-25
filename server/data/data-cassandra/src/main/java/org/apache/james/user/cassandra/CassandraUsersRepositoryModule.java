@@ -28,7 +28,6 @@ public class CassandraUsersRepositoryModule {
 
     public static final CassandraModule MODULE = CassandraModule.table(CassandraUserTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraUserTable.NAME, text())
             .addColumn(CassandraUserTable.REALNAME, text())
             .addColumn(CassandraUserTable.PASSWORD, text())

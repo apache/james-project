@@ -36,7 +36,6 @@ public interface CassandraQuotaModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraCurrentQuota.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraCurrentQuota.QUOTA_ROOT, text())
             .addColumn(CassandraCurrentQuota.MESSAGE_COUNT, counter())
             .addColumn(CassandraCurrentQuota.STORAGE, counter())
@@ -46,7 +45,6 @@ public interface CassandraQuotaModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraMaxQuota.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMaxQuota.QUOTA_ROOT, text())
             .addColumn(CassandraMaxQuota.MESSAGE_COUNT, bigint())
             .addColumn(CassandraMaxQuota.STORAGE, bigint())
@@ -56,7 +54,6 @@ public interface CassandraQuotaModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraDomainMaxQuota.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraDomainMaxQuota.DOMAIN, text())
             .addColumn(CassandraDomainMaxQuota.MESSAGE_COUNT, bigint())
             .addColumn(CassandraDomainMaxQuota.STORAGE, bigint())
@@ -66,7 +63,6 @@ public interface CassandraQuotaModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraGlobalMaxQuota.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraGlobalMaxQuota.TYPE, text())
             .addColumn(CassandraGlobalMaxQuota.VALUE, bigint())
             .withOptions()

@@ -29,7 +29,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraMailRepositoryUrlModule {
     public static final CassandraModule MODULE = CassandraModule.table(UrlsTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(UrlsTable.URL, text())
             .withOptions()
             .comment("Holds the list of available mail repository")

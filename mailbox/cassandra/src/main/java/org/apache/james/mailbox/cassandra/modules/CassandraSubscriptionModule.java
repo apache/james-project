@@ -32,7 +32,6 @@ public interface CassandraSubscriptionModule {
 
     CassandraModule MODULE = CassandraModule.table(CassandraSubscriptionTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraSubscriptionTable.USER, text())
             .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
             .withOptions()

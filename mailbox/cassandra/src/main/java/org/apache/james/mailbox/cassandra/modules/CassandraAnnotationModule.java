@@ -31,7 +31,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraAnnotationModule {
     CassandraModule MODULE = CassandraModule.table(CassandraAnnotationTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraAnnotationTable.MAILBOX_ID, timeuuid())
             .addClusteringColumn(CassandraAnnotationTable.KEY, text())
             .addColumn(CassandraAnnotationTable.VALUE, text())

@@ -35,7 +35,6 @@ public interface CassandraAclModule {
         .builder()
         .table(CassandraACLTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraACLTable.ID, timeuuid())
             .addColumn(CassandraACLTable.ACL, text())
             .addColumn(CassandraACLTable.VERSION, bigint())
@@ -45,7 +44,6 @@ public interface CassandraAclModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraUserMailboxRightsTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraUserMailboxRightsTable.USER_NAME, text())
             .addClusteringColumn(CassandraUserMailboxRightsTable.MAILBOX_ID, timeuuid())
             .addColumn(CassandraUserMailboxRightsTable.RIGHTS, text())

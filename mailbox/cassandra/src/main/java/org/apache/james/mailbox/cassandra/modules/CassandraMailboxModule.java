@@ -35,12 +35,10 @@ public interface CassandraMailboxModule {
     CassandraModule MODULE = CassandraModule.builder()
         .type(CassandraMailboxTable.MAILBOX_BASE)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(CassandraMailboxTable.MailboxBase.NAMESPACE, text())
             .addColumn(CassandraMailboxTable.MailboxBase.USER, text()))
         .table(CassandraMailboxTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
             .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
             .addColumn(CassandraMailboxTable.NAME, text())
@@ -51,7 +49,6 @@ public interface CassandraMailboxModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraMailboxPathTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addUDTPartitionKey(CassandraMailboxPathTable.NAMESPACE_AND_USER, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
             .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
             .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())
@@ -62,7 +59,6 @@ public interface CassandraMailboxModule {
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .table(CassandraMailboxPathV2Table.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMailboxPathV2Table.NAMESPACE, text())
             .addPartitionKey(CassandraMailboxPathV2Table.USER, text())
             .addClusteringColumn(CassandraMailboxPathV2Table.MAILBOX_NAME, text())

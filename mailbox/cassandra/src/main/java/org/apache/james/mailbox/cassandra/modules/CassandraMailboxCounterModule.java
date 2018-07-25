@@ -31,7 +31,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraMailboxCounterModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxCountersTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
             .addColumn(CassandraMailboxCountersTable.COUNT, counter())
             .addColumn(CassandraMailboxCountersTable.UNSEEN, counter())

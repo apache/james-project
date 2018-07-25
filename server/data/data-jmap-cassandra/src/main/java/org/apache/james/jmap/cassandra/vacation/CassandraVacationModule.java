@@ -32,7 +32,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraVacationModule {
     public static final CassandraModule MODULE = CassandraModule.table(CassandraVacationTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraVacationTable.ACCOUNT_ID, text())
             .addColumn(CassandraVacationTable.IS_ENABLED, cboolean())
             .addUDTColumn(CassandraVacationTable.FROM_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))

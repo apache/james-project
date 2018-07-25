@@ -32,7 +32,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraDeletedMessageModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
             .addClusteringColumn(UID, DataType.bigint())
             .withOptions()

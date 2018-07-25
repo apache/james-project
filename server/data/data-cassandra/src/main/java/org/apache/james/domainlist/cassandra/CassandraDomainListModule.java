@@ -30,7 +30,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraDomainListModule {
     public static final CassandraModule MODULE = CassandraModule.table(CassandraDomainsTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraDomainsTable.DOMAIN, text())
             .withOptions()
             .comment("Holds domains this James server is operating on.")

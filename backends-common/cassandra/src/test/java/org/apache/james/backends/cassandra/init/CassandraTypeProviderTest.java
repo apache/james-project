@@ -45,9 +45,7 @@ public class CassandraTypeProviderTest {
     @Before
     public void setUp() {
         module = CassandraModule.type(TYPE_NAME)
-            .statement(statement -> statement
-                .ifNotExists()
-                .addColumn(PROPERTY, text()))
+            .statement(statement -> statement.addColumn(PROPERTY, text()))
             .build();
         cassandra = CassandraCluster.create(module, cassandraServer.getHost());
         cassandra.getTypesProvider();

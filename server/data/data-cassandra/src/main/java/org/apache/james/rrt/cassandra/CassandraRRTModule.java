@@ -30,7 +30,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraRRTModule {
     public static final CassandraModule MODULE = CassandraModule.table(CassandraRecipientRewriteTableTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraRecipientRewriteTableTable.USER, text())
             .addClusteringColumn(CassandraRecipientRewriteTableTable.DOMAIN, text())
             .addClusteringColumn(CassandraRecipientRewriteTableTable.MAPPING, text())

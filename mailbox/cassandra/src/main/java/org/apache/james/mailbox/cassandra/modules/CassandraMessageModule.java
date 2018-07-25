@@ -44,7 +44,6 @@ public interface CassandraMessageModule {
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraMessageIdTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMessageIds.MAILBOX_ID, timeuuid())
             .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
             .addColumn(CassandraMessageIds.MESSAGE_ID, timeuuid())
@@ -64,7 +63,6 @@ public interface CassandraMessageModule {
                 SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS)))
         .table(MessageIdToImapUid.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
             .addClusteringColumn(CassandraMessageIds.MAILBOX_ID, timeuuid())
             .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
@@ -84,7 +82,6 @@ public interface CassandraMessageModule {
                 SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
         .table(CassandraMessageV2Table.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
             .addColumn(CassandraMessageV2Table.INTERNAL_DATE, timestamp())
             .addColumn(CassandraMessageV2Table.BODY_START_OCTET, cint())
@@ -100,13 +97,11 @@ public interface CassandraMessageModule {
                 "in `blobs` and `blobparts` tables."))
         .type(CassandraMessageV2Table.PROPERTIES)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())
             .addColumn(CassandraMessageV2Table.Properties.NAME, text())
             .addColumn(CassandraMessageV2Table.Properties.VALUE, text()))
         .type(CassandraMessageV2Table.ATTACHMENTS)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(CassandraMessageV2Table.Attachments.ID, text())
             .addColumn(CassandraMessageV2Table.Attachments.NAME, text())
             .addColumn(CassandraMessageV2Table.Attachments.CID, text())

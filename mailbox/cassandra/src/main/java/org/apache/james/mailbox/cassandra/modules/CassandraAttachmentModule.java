@@ -37,7 +37,6 @@ public interface CassandraAttachmentModule {
 
     CassandraModule MODULE = CassandraModule.table(CassandraAttachmentTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraAttachmentTable.ID, text())
             .addColumn(CassandraAttachmentTable.PAYLOAD, blob())
             .addColumn(CassandraAttachmentTable.TYPE, text())
@@ -46,7 +45,6 @@ public interface CassandraAttachmentModule {
             .comment("Holds attachment for fast attachment retrieval"))
         .table(CassandraAttachmentV2Table.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraAttachmentV2Table.ID_AS_UUID, uuid())
             .addColumn(CassandraAttachmentV2Table.ID, text())
             .addColumn(CassandraAttachmentV2Table.BLOB_ID, text())
@@ -60,7 +58,6 @@ public interface CassandraAttachmentModule {
                 "in `blobs` and `blobparts` tables."))
         .table(CassandraAttachmentMessageIdTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraAttachmentMessageIdTable.ATTACHMENT_ID_AS_UUID, uuid())
             .addColumn(CassandraAttachmentMessageIdTable.ATTACHMENT_ID, text())
             .addClusteringColumn(CassandraAttachmentMessageIdTable.MESSAGE_ID, text())
@@ -71,7 +68,6 @@ public interface CassandraAttachmentModule {
             .comment("Holds ids of messages owning the attachment"))
         .table(CassandraAttachmentOwnerTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraAttachmentOwnerTable.ID, uuid())
             .addClusteringColumn(CassandraAttachmentOwnerTable.OWNER, text())
             .withOptions()

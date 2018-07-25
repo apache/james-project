@@ -95,7 +95,9 @@ public interface CassandraModule {
 
         public Builder statement(Function<Create, Statement> createStatement) {
             return originalBuilderReference.addTable(
-                new CassandraTable(tableName, createStatement.apply(SchemaBuilder.createTable(tableName))));
+                new CassandraTable(tableName, createStatement.apply(
+                        SchemaBuilder.createTable(tableName)
+                            .ifNotExists())));
         }
     }
 
@@ -111,7 +113,8 @@ public interface CassandraModule {
         public Builder statement(Function<CreateType, CreateType> createStatement) {
             return originalBuilderReference.addType(
                 new CassandraType(typeName, createStatement.apply(
-                    SchemaBuilder.createType(typeName))));
+                    SchemaBuilder.createType(typeName)
+                        .ifNotExists())));
         }
     }
 

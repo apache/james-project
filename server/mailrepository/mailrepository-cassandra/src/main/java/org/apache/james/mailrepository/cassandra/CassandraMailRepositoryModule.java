@@ -34,22 +34,18 @@ public interface CassandraMailRepositoryModule {
     CassandraModule MODULE = CassandraModule.builder()
         .type(MailRepositoryTable.HEADER_TYPE)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(MailRepositoryTable.HEADER_NAME, text())
             .addColumn(MailRepositoryTable.HEADER_VALUE, text()))
         .table(MailRepositoryTable.COUNT_TABLE)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addColumn(MailRepositoryTable.COUNT, counter()))
         .table(MailRepositoryTable.KEYS_TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addClusteringColumn(MailRepositoryTable.MAIL_KEY, text()))
         .table(MailRepositoryTable.CONTENT_TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addPartitionKey(MailRepositoryTable.MAIL_KEY, text())
             .addColumn(MailRepositoryTable.MESSAGE_SIZE, bigint())

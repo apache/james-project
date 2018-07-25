@@ -29,7 +29,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraFirstUnseenModule {
     CassandraModule MODULE = CassandraModule.table(CassandraFirstUnseenTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraFirstUnseenTable.MAILBOX_ID, DataType.timeuuid())
             .addClusteringColumn(CassandraFirstUnseenTable.UID, DataType.bigint())
             .withOptions()

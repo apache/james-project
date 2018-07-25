@@ -31,7 +31,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraMailboxRecentsModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxRecentsTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, timeuuid())
             .addClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bigint())
             .withOptions()

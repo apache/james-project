@@ -30,7 +30,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public class CassandraNotificationRegistryModule {
     public static final CassandraModule MODULE = CassandraModule.table(CassandraNotificationTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraNotificationTable.ACCOUNT_ID, text())
             .addClusteringColumn(CassandraNotificationTable.RECIPIENT_ID, text())
             .withOptions()

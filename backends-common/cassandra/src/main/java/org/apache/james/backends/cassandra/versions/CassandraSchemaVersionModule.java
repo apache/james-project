@@ -28,7 +28,6 @@ import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersion
 public interface CassandraSchemaVersionModule {
     CassandraModule MODULE = CassandraModule.table(CassandraSchemaVersionTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraSchemaVersionTable.KEY, timeuuid())
             .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint())
             .withOptions()

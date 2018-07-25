@@ -31,7 +31,6 @@ public interface CassandraZonedDateTimeModule {
 
     CassandraModule MODULE = CassandraModule.type(ZONED_DATE_TIME)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(DATE, timestamp())
             .addColumn(TIME_ZONE, text()))
         .build();

@@ -31,7 +31,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraUidModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMessageUidTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraMessageUidTable.MAILBOX_ID, timeuuid())
             .addColumn(CassandraMessageUidTable.NEXT_UID, bigint())
             .withOptions()

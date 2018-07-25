@@ -28,7 +28,6 @@ public interface CassandraBlobModule {
         .builder()
         .table(BlobTable.BlobParts.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(BlobTable.ID, DataType.text())
             .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
             .addColumn(BlobTable.BlobParts.DATA, DataType.blob())
@@ -37,7 +36,6 @@ public interface CassandraBlobModule {
                 "Messages` headers and bodies are stored, chunked in blobparts."))
         .table(BlobTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(BlobTable.ID, DataType.text())
             .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint())
             .withOptions()

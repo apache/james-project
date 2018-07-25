@@ -30,13 +30,11 @@ public interface CassandraRegistrationModule {
     CassandraModule MODULE = CassandraModule.builder()
         .type(CassandraMailboxPathRegisterTable.MAILBOX_PATH)
         .statement(statement -> statement
-            .ifNotExists()
             .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAMESPACE, text())
             .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAME, text())
             .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.USER, text()))
         .table(CassandraMailboxPathRegisterTable.TABLE_NAME)
         .statement(statement -> statement
-            .ifNotExists()
             .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
             .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
             .withOptions()

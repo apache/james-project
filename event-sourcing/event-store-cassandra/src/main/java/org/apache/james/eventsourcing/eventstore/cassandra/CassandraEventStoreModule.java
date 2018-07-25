@@ -28,7 +28,6 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 public interface CassandraEventStoreModule {
     CassandraModule MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
         .statement(statement -> statement
-            .ifNotExists()
             .addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar())
             .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint())
             .addColumn(CassandraEventStoreTable.EVENT, DataType.text())
