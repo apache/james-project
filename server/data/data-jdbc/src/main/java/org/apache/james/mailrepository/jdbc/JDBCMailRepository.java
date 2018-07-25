@@ -723,22 +723,13 @@ public class JDBCMailRepository extends AbstractMailRepository {
 
     @Override
     public long size() throws MessagingException {
-        Connection conn = null;
-        PreparedStatement count = null;
-        ResultSet resultSet = null;
-
-        try {
-            conn = datasource.getConnection();
-            count = conn.prepareStatement(sqlQueries.getSqlString("countMessagesSQL", true));
-            resultSet = count.executeQuery();
+        try (Connection conn = datasource.getConnection();
+             PreparedStatement count = conn.prepareStatement(sqlQueries.getSqlString("countMessagesSQL", true));
+             ResultSet resultSet = count.executeQuery()) {
 
             return resultSet.next() ? resultSet.getLong(1) : 0;
         } catch (Exception e) {
-            throw new MessagingException("Exception while removing mail: " + e.getMessage(), e);
-        } finally {
-            theJDBCUtil.closeJDBCResultSet(resultSet);
-            theJDBCUtil.closeJDBCStatement(count);
-            theJDBCUtil.closeJDBCConnection(conn);
+            throw new MessagingException("Exception while fetching size: " + e.getMessage(), e);
         }
     }
 
