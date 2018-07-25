@@ -37,7 +37,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>${groupId}</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>james-core</artifactId>
         </dependency>
         <dependency>
