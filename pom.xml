@@ -633,7 +633,7 @@
         <jackson-data.version>2.6.3</jackson-data.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
-        <testcontainers-version>1.7.3</testcontainers-version>
+        <testcontainers.version>1.8.1</testcontainers.version>
         <metrics.version>3.2.6</metrics.version>
         <joda.version>2.9.4</joda.version>
         <assertj.version>3.3.0</assertj.version>
@@ -2453,7 +2453,7 @@
             <dependency>
                 <groupId>org.testcontainers</groupId>
                 <artifactId>testcontainers</artifactId>
-                <version>${testcontainers-version}</version>
+                <version>${testcontainers.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.threeten</groupId>
