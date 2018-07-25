@@ -123,6 +123,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.jayway.awaitility.Duration;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -3161,49 +3162,6 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void mailboxIdsShouldBeInDestinationWhenUsingForMove() throws Exception {
-        String newMailboxName = "heartFolder";
-        String heartFolderId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, newMailboxName).serialize();
-
-        ZonedDateTime dateTime = ZonedDateTime.parse("2014-10-30T14:12:00Z");
-        ComposedMessageId message = mailboxProbe.appendMessage(USERNAME, MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
-            new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
-
-        String messageToMoveId = message.getMessageId().serialize();
-        String requestBody = "[" +
-            "  [" +
-            "    \"setMessages\"," +
-            "    {" +
-            "      \"update\": { \"" + messageToMoveId + "\" : {" +
-            "        \"mailboxIds\": [\"" + heartFolderId + "\"]" +
-            "      }}" +
-            "    }," +
-            "    \"#0\"" +
-            "  ]" +
-            "]";
-
-        given()
-            .header("Authorization", accessToken.serialize())
-            .body(requestBody)
-        .when()
-            .post("/jmap");
-
-        String firstMessage = ARGUMENTS + ".list[0]";
-        given()
-            .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .log().ifValidationFails()
-            .body(NAME, equalTo("messages"))
-            .body(ARGUMENTS + ".list", hasSize(1))
-            .body(firstMessage + ".mailboxIds", contains(heartFolderId));
-    }
-
-
-    @Test
-    public void mailboxIdsShouldBeInDestinationWhenUsingForMoveWithoutTrashFolder() throws Exception {
         String newMailboxName = "heartFolder";
         String heartFolderId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, newMailboxName).serialize();
 
