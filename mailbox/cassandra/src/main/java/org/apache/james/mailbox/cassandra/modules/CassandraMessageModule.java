@@ -43,6 +43,11 @@ public interface CassandraMessageModule {
 
     CassandraModule MODULE = CassandraModule.builder()
         .table(CassandraMessageIdTable.TABLE_NAME)
+        .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.leveledStrategy())
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS)))
         .statement(statement -> statement
             .addPartitionKey(CassandraMessageIds.MAILBOX_ID, timeuuid())
             .addClusteringColumn(CassandraMessageIds.IMAP_UID, bigint())
@@ -55,13 +60,13 @@ public interface CassandraMessageModule {
             .addColumn(Flag.RECENT, cboolean())
             .addColumn(Flag.SEEN, cboolean())
             .addColumn(Flag.USER, cboolean())
-            .addColumn(Flag.USER_FLAGS, set(text()))
-            .withOptions()
-            .comment("Holds mailbox and flags for each message, lookup by mailbox ID + UID")
+            .addColumn(Flag.USER_FLAGS, set(text())))
+        .table(MessageIdToImapUid.TABLE_NAME)
+        .comment("Holds mailbox and flags for each message, lookup by message ID")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CACHED_MESSAGE_ID_ROWS)))
-        .table(MessageIdToImapUid.TABLE_NAME)
+                SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
         .statement(statement -> statement
             .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
             .addClusteringColumn(CassandraMessageIds.MAILBOX_ID, timeuuid())
@@ -74,13 +79,10 @@ public interface CassandraMessageModule {
             .addColumn(Flag.RECENT, cboolean())
             .addColumn(Flag.SEEN, cboolean())
             .addColumn(Flag.USER, cboolean())
-            .addColumn(Flag.USER_FLAGS, set(text()))
-            .withOptions()
-            .comment("Holds mailbox and flags for each message, lookup by message ID")
-            .compactionOptions(SchemaBuilder.leveledStrategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CACHED_IMAP_UID_ROWS)))
+            .addColumn(Flag.USER_FLAGS, set(text())))
         .table(CassandraMessageV2Table.TABLE_NAME)
+        .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
+            "in `blobs` and `blobparts` tables.")
         .statement(statement -> statement
             .addPartitionKey(CassandraMessageIds.MESSAGE_ID, timeuuid())
             .addColumn(CassandraMessageV2Table.INTERNAL_DATE, timestamp())
@@ -91,10 +93,7 @@ public interface CassandraMessageModule {
             .addColumn(CassandraMessageV2Table.BODY_CONTENT, text())
             .addColumn(CassandraMessageV2Table.HEADER_CONTENT, text())
             .addUDTListColumn(CassandraMessageV2Table.ATTACHMENTS, SchemaBuilder.frozen(CassandraMessageV2Table.ATTACHMENTS))
-            .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES))
-            .withOptions()
-            .comment("Holds message metadata, independently of any mailboxes. Content of messages is stored " +
-                "in `blobs` and `blobparts` tables."))
+            .addUDTListColumn(CassandraMessageV2Table.PROPERTIES, SchemaBuilder.frozen(CassandraMessageV2Table.PROPERTIES)))
         .type(CassandraMessageV2Table.PROPERTIES)
         .statement(statement -> statement
             .addColumn(CassandraMessageV2Table.Properties.NAMESPACE, text())

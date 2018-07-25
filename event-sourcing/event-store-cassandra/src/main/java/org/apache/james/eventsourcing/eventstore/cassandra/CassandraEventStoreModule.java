@@ -27,13 +27,13 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraEventStoreModule {
     CassandraModule MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
+        .comment("Store events of a EventSourcing aggregate")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
             .addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar())
             .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint())
-            .addColumn(CassandraEventStoreTable.EVENT, DataType.text())
-            .withOptions()
-            .comment("Store events of a EventSourcing aggregate")
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+            .addColumn(CassandraEventStoreTable.EVENT, DataType.text()))
         .build();
 }

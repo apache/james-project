@@ -30,14 +30,14 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailboxRecentsModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxRecentsTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bigint())
-            .withOptions()
-            .comment("Denormalisation table. This table holds for each mailbox the messages marked as RECENT. This" +
-                " is a SELECT optimisation.")
+        .comment("Denormalisation table. This table holds for each mailbox the messages marked as RECENT. This" +
+            " is a SELECT optimisation.")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMailboxRecentsTable.MAILBOX_ID, timeuuid())
+            .addClusteringColumn(CassandraMailboxRecentsTable.RECENT_MESSAGE_UID, bigint()))
         .build();
 }

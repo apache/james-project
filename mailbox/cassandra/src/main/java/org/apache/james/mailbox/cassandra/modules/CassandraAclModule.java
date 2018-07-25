@@ -34,23 +34,23 @@ public interface CassandraAclModule {
     CassandraModule MODULE = CassandraModule
         .builder()
         .table(CassandraACLTable.TABLE_NAME)
+        .comment("Holds mailbox ACLs")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
             .addPartitionKey(CassandraACLTable.ID, timeuuid())
             .addColumn(CassandraACLTable.ACL, text())
-            .addColumn(CassandraACLTable.VERSION, bigint())
-            .withOptions()
-            .comment("Holds mailbox ACLs")
+            .addColumn(CassandraACLTable.VERSION, bigint()))
+        .table(CassandraUserMailboxRightsTable.TABLE_NAME)
+        .comment("Denormalisation table. Allow to retrieve non personal mailboxIds a user has right on")
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .table(CassandraUserMailboxRightsTable.TABLE_NAME)
         .statement(statement -> statement
             .addPartitionKey(CassandraUserMailboxRightsTable.USER_NAME, text())
             .addClusteringColumn(CassandraUserMailboxRightsTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraUserMailboxRightsTable.RIGHTS, text())
-            .withOptions()
-            .compactionOptions(SchemaBuilder.leveledStrategy())
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION))
-            .comment("Denormalisation table. Allow to retrieve non personal mailboxIds a user has right on"))
+            .addColumn(CassandraUserMailboxRightsTable.RIGHTS, text()))
         .build();
 }

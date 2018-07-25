@@ -38,35 +38,35 @@ public interface CassandraMailboxModule {
             .addColumn(CassandraMailboxTable.MailboxBase.NAMESPACE, text())
             .addColumn(CassandraMailboxTable.MailboxBase.USER, text()))
         .table(CassandraMailboxTable.TABLE_NAME)
+        .comment("Holds the mailboxes information.")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
             .addPartitionKey(CassandraMailboxTable.ID, timeuuid())
             .addUDTColumn(CassandraMailboxTable.MAILBOX_BASE, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
             .addColumn(CassandraMailboxTable.NAME, text())
-            .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint())
-            .withOptions()
-            .comment("Holds the mailboxes information.")
+            .addColumn(CassandraMailboxTable.UIDVALIDITY, bigint()))
+        .table(CassandraMailboxPathTable.TABLE_NAME)
+        .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
+            "LIST optimisation.")
+        .options(options -> options
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .table(CassandraMailboxPathTable.TABLE_NAME)
         .statement(statement -> statement
             .addUDTPartitionKey(CassandraMailboxPathTable.NAMESPACE_AND_USER, SchemaBuilder.frozen(CassandraMailboxTable.MAILBOX_BASE))
             .addClusteringColumn(CassandraMailboxPathTable.MAILBOX_NAME, text())
-            .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid())
-            .withOptions()
-            .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
-                "LIST optimisation.")
+            .addColumn(CassandraMailboxPathTable.MAILBOX_ID, timeuuid()))
+        .table(CassandraMailboxPathV2Table.TABLE_NAME)
+        .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
+            "LIST optimisation.")
+        .options(options -> options
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .table(CassandraMailboxPathV2Table.TABLE_NAME)
         .statement(statement -> statement
             .addPartitionKey(CassandraMailboxPathV2Table.NAMESPACE, text())
             .addPartitionKey(CassandraMailboxPathV2Table.USER, text())
             .addClusteringColumn(CassandraMailboxPathV2Table.MAILBOX_NAME, text())
-            .addColumn(CassandraMailboxPathV2Table.MAILBOX_ID, timeuuid())
-            .withOptions()
-            .comment("Denormalisation table. Allow to retrieve mailboxes belonging to a certain user. This is a " +
-                "LIST optimisation.")
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+            .addColumn(CassandraMailboxPathV2Table.MAILBOX_ID, timeuuid()))
         .build();
 }

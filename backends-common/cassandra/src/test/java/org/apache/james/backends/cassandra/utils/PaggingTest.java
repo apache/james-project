@@ -56,6 +56,7 @@ public class PaggingTest {
     @BeforeClass
     public static void setUpClass() {
         CassandraModule modules = CassandraModule.table(TABLE_NAME)
+            .comment("Testing table")
             .statement(statement -> statement
                 .addPartitionKey(ID, DataType.timeuuid())
                 .addClusteringColumn(CLUSTERING, DataType.bigint()))

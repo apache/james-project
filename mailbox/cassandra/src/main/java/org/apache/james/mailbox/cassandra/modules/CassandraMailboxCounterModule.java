@@ -30,14 +30,14 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMailboxCounterModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMailboxCountersTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraMailboxCountersTable.COUNT, counter())
-            .addColumn(CassandraMailboxCountersTable.UNSEEN, counter())
-            .withOptions()
-            .comment("Holds messages count and unseen message count for each mailbox.")
+        .comment("Holds messages count and unseen message count for each mailbox.")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMailboxCountersTable.MAILBOX_ID, timeuuid())
+            .addColumn(CassandraMailboxCountersTable.COUNT, counter())
+            .addColumn(CassandraMailboxCountersTable.UNSEEN, counter()))
         .build();
 }

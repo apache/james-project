@@ -27,19 +27,17 @@ public interface CassandraBlobModule {
     CassandraModule MODULE = CassandraModule
         .builder()
         .table(BlobTable.BlobParts.TABLE_NAME)
+        .comment("Holds blob parts composing blobs ." +
+            "Messages` headers and bodies are stored, chunked in blobparts.")
         .statement(statement -> statement
             .addPartitionKey(BlobTable.ID, DataType.text())
             .addClusteringColumn(BlobTable.BlobParts.CHUNK_NUMBER, DataType.cint())
-            .addColumn(BlobTable.BlobParts.DATA, DataType.blob())
-            .withOptions()
-            .comment("Holds blob parts composing blobs ." +
-                "Messages` headers and bodies are stored, chunked in blobparts."))
+            .addColumn(BlobTable.BlobParts.DATA, DataType.blob()))
         .table(BlobTable.TABLE_NAME)
+        .comment("Holds information for retrieving all blob parts composing this blob. " +
+            "Messages` headers and bodies are stored as blobparts.")
         .statement(statement -> statement
             .addPartitionKey(BlobTable.ID, DataType.text())
-            .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint())
-            .withOptions()
-            .comment("Holds information for retrieving all blob parts composing this blob. " +
-                "Messages` headers and bodies are stored as blobparts."))
+            .addClusteringColumn(BlobTable.NUMBER_OF_CHUNK, DataType.cint()))
         .build();
 }

@@ -37,14 +37,18 @@ public interface CassandraMailRepositoryModule {
             .addColumn(MailRepositoryTable.HEADER_NAME, text())
             .addColumn(MailRepositoryTable.HEADER_VALUE, text()))
         .table(MailRepositoryTable.COUNT_TABLE)
+        .comment("Projection maintaining per mail repository mail counter")
         .statement(statement -> statement
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addColumn(MailRepositoryTable.COUNT, counter()))
         .table(MailRepositoryTable.KEYS_TABLE_NAME)
+        .comment("Per-mailRepository mail key list")
         .statement(statement -> statement
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addClusteringColumn(MailRepositoryTable.MAIL_KEY, text()))
         .table(MailRepositoryTable.CONTENT_TABLE_NAME)
+        .comment("Stores the mails for a given repository. " +
+            "Content is stored with other blobs")
         .statement(statement -> statement
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addPartitionKey(MailRepositoryTable.MAIL_KEY, text())
@@ -59,9 +63,6 @@ public interface CassandraMailRepositoryModule {
             .addColumn(MailRepositoryTable.REMOTE_HOST, text())
             .addColumn(MailRepositoryTable.REMOTE_ADDR, text())
             .addColumn(MailRepositoryTable.LAST_UPDATED, timestamp())
-            .addUDTMapColumn(MailRepositoryTable.PER_RECIPIENT_SPECIFIC_HEADERS, text(), frozen(MailRepositoryTable.HEADER_TYPE))
-            .withOptions()
-            .comment("Stores the mails for a given repository. " +
-                "Content is stored with other blobs"))
+            .addUDTMapColumn(MailRepositoryTable.PER_RECIPIENT_SPECIFIC_HEADERS, text(), frozen(MailRepositoryTable.HEADER_TYPE)))
         .build();
 }

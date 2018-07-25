@@ -31,12 +31,12 @@ public interface CassandraSubscriptionModule {
     int PER_USER_CACHED_SUBSCRIPTIONS = 100;
 
     CassandraModule MODULE = CassandraModule.table(CassandraSubscriptionTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraSubscriptionTable.USER, text())
-            .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text())
-            .withOptions()
-            .comment("Holds per user list of IMAP subscriptions")
+        .comment("Holds per user list of IMAP subscriptions")
+        .options(options -> options
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(PER_USER_CACHED_SUBSCRIPTIONS)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraSubscriptionTable.USER, text())
+            .addClusteringColumn(CassandraSubscriptionTable.MAILBOX, text()))
         .build();
 }

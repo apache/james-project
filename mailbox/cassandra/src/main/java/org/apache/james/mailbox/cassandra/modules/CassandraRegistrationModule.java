@@ -34,10 +34,11 @@ public interface CassandraRegistrationModule {
             .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.NAME, text())
             .addColumn(CassandraMailboxPathRegisterTable.MailboxPath.USER, text()))
         .table(CassandraMailboxPathRegisterTable.TABLE_NAME)
+        .comment("Holds node mailboxPath registration for distributed events")
+        .options(options -> options
+            .compactionOptions(SchemaBuilder.dateTieredStrategy()))
         .statement(statement -> statement
             .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
-            .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text())
-            .withOptions()
-            .compactionOptions(SchemaBuilder.dateTieredStrategy()))
+            .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text()))
         .build();
 }

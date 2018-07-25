@@ -20,12 +20,14 @@
 package org.apache.james.backends.cassandra.components;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
-import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.schemabuilder.Create;
 import com.datastax.driver.core.schemabuilder.CreateType;
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public interface CassandraModule {
@@ -87,17 +89,38 @@ public interface CassandraModule {
     class TableBuilder {
         private final Builder originalBuilderReference;
         private final String tableName;
+        private Optional<String> comment;
+        private Optional<Function<Create.Options, Create.Options>> options;
 
         private TableBuilder(Builder originalBuilderReference, String tableName) {
             this.originalBuilderReference = originalBuilderReference;
             this.tableName = tableName;
+            comment = Optional.empty();
         }
 
-        public Builder statement(Function<Create, Statement> createStatement) {
+        public TableBuilder comment(String comment) {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(comment), "`comment` can not be null or empty");
+
+            this.comment = Optional.of(comment);
+            return this;
+        }
+
+        public TableBuilder options(Function<Create.Options, Create.Options> options) {
+            this.options = Optional.of(options);
+            return this;
+        }
+
+        public Builder statement(Function<Create, Create> toCreateStatement) {
+            Preconditions.checkState(comment.isPresent(), "`comment` is compulsory");
+
+            Create createStatement = toCreateStatement.apply(
+                SchemaBuilder.createTable(tableName)
+                    .ifNotExists());
+
             return originalBuilderReference.addTable(
-                new CassandraTable(tableName, createStatement.apply(
-                        SchemaBuilder.createTable(tableName)
-                            .ifNotExists())));
+                new CassandraTable(tableName,
+                    options.orElse(Function.identity())
+                        .apply(createStatement.withOptions().comment(comment.get()))));
         }
     }
 

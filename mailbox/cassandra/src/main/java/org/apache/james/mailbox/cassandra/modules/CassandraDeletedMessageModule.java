@@ -31,13 +31,13 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraDeletedMessageModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
-            .addClusteringColumn(UID, DataType.bigint())
-            .withOptions()
-            .comment("Denormalisation table. Allows to retrieve UID marked as DELETED in specific mailboxes.")
+        .comment("Denormalisation table. Allows to retrieve UID marked as DELETED in specific mailboxes.")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(MAILBOX_ID, DataType.timeuuid())
+            .addClusteringColumn(UID, DataType.bigint()))
         .build();
 }

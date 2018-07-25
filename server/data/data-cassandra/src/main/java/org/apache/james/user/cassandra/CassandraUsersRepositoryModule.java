@@ -24,16 +24,13 @@ import static com.datastax.driver.core.DataType.text;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.user.cassandra.tables.CassandraUserTable;
 
-public class CassandraUsersRepositoryModule {
-
-    public static final CassandraModule MODULE = CassandraModule.table(CassandraUserTable.TABLE_NAME)
+public interface CassandraUsersRepositoryModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraUserTable.TABLE_NAME)
+        .comment("Holds users of this James server.")
         .statement(statement -> statement
             .addPartitionKey(CassandraUserTable.NAME, text())
             .addColumn(CassandraUserTable.REALNAME, text())
             .addColumn(CassandraUserTable.PASSWORD, text())
-            .addColumn(CassandraUserTable.ALGORITHM, text())
-            .withOptions()
-            .comment("Holds users of this James server."))
+            .addColumn(CassandraUserTable.ALGORITHM, text()))
         .build();
-
 }

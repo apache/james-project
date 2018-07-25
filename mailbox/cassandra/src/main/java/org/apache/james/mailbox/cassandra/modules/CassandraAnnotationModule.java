@@ -30,14 +30,14 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraAnnotationModule {
     CassandraModule MODULE = CassandraModule.table(CassandraAnnotationTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraAnnotationTable.MAILBOX_ID, timeuuid())
-            .addClusteringColumn(CassandraAnnotationTable.KEY, text())
-            .addColumn(CassandraAnnotationTable.VALUE, text())
-            .withOptions()
-            .comment("Holds Cassandra mailbox annotations")
+        .comment("Holds Cassandra mailbox annotations")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraAnnotationTable.MAILBOX_ID, timeuuid())
+            .addClusteringColumn(CassandraAnnotationTable.KEY, text())
+            .addColumn(CassandraAnnotationTable.VALUE, text()))
         .build();
 }

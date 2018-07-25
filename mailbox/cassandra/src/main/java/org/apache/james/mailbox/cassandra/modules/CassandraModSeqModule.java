@@ -30,13 +30,13 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraModSeqModule {
     CassandraModule MODULE = CassandraModule.table(CassandraMessageModseqTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
-            .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint())
-            .withOptions()
-            .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
+        .comment("Holds and is used to generate MODSEQ. A monotic counter is implemented on top of this table.")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMessageModseqTable.MAILBOX_ID, timeuuid())
+            .addColumn(CassandraMessageModseqTable.NEXT_MODSEQ, bigint()))
         .build();
 }

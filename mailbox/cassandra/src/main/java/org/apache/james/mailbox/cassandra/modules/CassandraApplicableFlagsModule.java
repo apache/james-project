@@ -32,14 +32,14 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraApplicableFlagsModule {
     CassandraModule MODULE = CassandraModule.table(CassandraApplicableFlagTable.TABLE_NAME)
-        .statement(statement -> statement
-            .addPartitionKey(CassandraApplicableFlagTable.MAILBOX_ID, timeuuid())
-            .addColumn(Flag.USER_FLAGS, set(text()))
-            .withOptions()
-            .comment("Holds flags being used on specific mailboxes. As system flags are implicit, this table " +
-                "stores user flags.")
+        .comment("Holds flags being used on specific mailboxes. As system flags are implicit, this table " +
+            "stores user flags.")
+        .options(options -> options
             .compactionOptions(SchemaBuilder.leveledStrategy())
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraApplicableFlagTable.MAILBOX_ID, timeuuid())
+            .addColumn(Flag.USER_FLAGS, set(text())))
         .build();
 }
