@@ -17,33 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.managesieve.file;
+package org.apache.james.mpt;
 
-import org.apache.james.mpt.host.ManageSieveHostSystem;
+import org.apache.james.mpt.testsuite.AuthenticateContract;
+import org.apache.james.mpt.testsuite.CapabilityContract;
+import org.apache.james.mpt.testsuite.CheckScriptContract;
+import org.apache.james.mpt.testsuite.DeleteScriptContract;
+import org.apache.james.mpt.testsuite.GetScriptContract;
+import org.apache.james.mpt.testsuite.HaveSpaceContract;
+import org.apache.james.mpt.testsuite.ListScriptsContract;
+import org.apache.james.mpt.testsuite.LogoutContract;
+import org.apache.james.mpt.testsuite.NoopContract;
 import org.apache.james.mpt.testsuite.PutScriptContract;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.mpt.testsuite.RenameScriptContract;
+import org.apache.james.mpt.testsuite.SetActiveContract;
+import org.apache.james.mpt.testsuite.StartTlsContract;
+import org.apache.james.mpt.testsuite.UnauthenticatedContract;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+public interface ManageSieveMPTContract extends AuthenticateContract,
+    CapabilityContract,
+    CheckScriptContract,
+    DeleteScriptContract,
+    GetScriptContract,
+    HaveSpaceContract,
+    ListScriptsContract,
+    LogoutContract,
+    NoopContract,
+    PutScriptContract,
+    RenameScriptContract,
+    SetActiveContract,
+    StartTlsContract,
+    UnauthenticatedContract {
 
-public class FilePutScriptTest implements PutScriptContract {
-    private ManageSieveHostSystem system;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        Injector injector = Guice.createInjector(new FileModule());
-        system = injector.getInstance(ManageSieveHostSystem.class);
-        system.beforeTest();
-    }
-
-    @Override
-    public ManageSieveHostSystem hostSystem() {
-        return system;
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        hostSystem().afterTest();
-    }
 }
