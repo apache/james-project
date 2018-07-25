@@ -30,9 +30,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.james.util.Port;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple <a href='http://tools.ietf.org/html/rfc863'>RFC 863</a> implementation.
@@ -45,7 +45,7 @@ public class DiscardProtocol {
     
     private static final int IDLE_TIMEOUT = 120000;
 
-    private static final Log LOG = LogFactory.getLog(DiscardProtocol.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DiscardProtocol.class);
     
     /** Serve on this port */
     private Port port;
@@ -162,7 +162,7 @@ public class DiscardProtocol {
                     }
                 }
             } catch (Exception e) {
-                LOG.fatal("Cannot accept connection", e);
+                LOG.error("Cannot accept connection", e);
                 abort();
             }
         }
@@ -215,7 +215,7 @@ public class DiscardProtocol {
         public void run() {
             try {
                 if (socketChannel == null) {
-                    LOG.fatal("Socket channel must be set before instance is run.");
+                    LOG.error("Socket channel must be set before instance is run.");
                 } else {
                     try {
                         while (!socketChannel.finishConnect()) {
@@ -231,7 +231,7 @@ public class DiscardProtocol {
                         }
                         
                     } catch (Exception e) {
-                        LOG.fatal("Socket communication failed", e);
+                        LOG.error("Socket communication failed", e);
                         aborted = true;
                         
                     // Tidy up

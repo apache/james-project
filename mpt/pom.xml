@@ -59,7 +59,6 @@
         <hbase.version>0.94.27</hbase.version>
         <jmock.version>2.6.0</jmock.version>
         <junit.version>4.11</junit.version>
-        <log4j.version>1.2.16</log4j.version>
         <lucene-core.version>3.6.0</lucene-core.version>
         <slf4j.version>1.7.25</slf4j.version>
     </properties>
