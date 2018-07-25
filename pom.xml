@@ -930,6 +930,12 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-jsieve-core</artifactId>
                 <version>${jsieve.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -986,6 +992,12 @@
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-mime4j-core</artifactId>
                 <version>${apache-mime4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -1724,6 +1736,12 @@
                 <groupId>com.jayway.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>1.6.5</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -1734,6 +1752,12 @@
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>3.1.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.nurkiewicz.asyncretry</groupId>
@@ -1799,6 +1823,10 @@
                     <exclusion>
                         <groupId>commons-beanutils</groupId>
                         <artifactId>commons-beanutils-bean-collections</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1981,6 +2009,12 @@
                 <groupId>org.apache.activemq</groupId>
                 <artifactId>artemis-jms-client</artifactId>
                 <version>${activmq-artemis.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.ant</groupId>
@@ -2072,12 +2106,24 @@
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase</artifactId>
                 <version>${hbase.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase</artifactId>
                 <version>${hbase.version}</version>
                 <type>test-jar</type>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
@@ -2232,12 +2278,22 @@
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>pdfbox</artifactId>
                 <version>2.0.11</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.xbean</groupId>
                 <artifactId>xbean-spring</artifactId>
                 <version>${xbean-spring.version}</version>
                 <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
                     <exclusion>
                         <groupId>org.springframework</groupId>
                         <artifactId>spring-web</artifactId>
@@ -2428,6 +2484,12 @@
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-core</artifactId>
                 <version>${spring.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.springframework</groupId>
