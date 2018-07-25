@@ -632,7 +632,6 @@
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson-data.version>2.6.3</jackson-data.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
-        <cassandra-unit.version>2.1.9.2</cassandra-unit.version>
         <assertj-guava.version>3.1.0</assertj-guava.version>
         <testcontainers-version>1.7.3</testcontainers-version>
         <metrics.version>3.2.6</metrics.version>
@@ -2240,11 +2239,6 @@
                 <groupId>org.bouncycastle</groupId>
                 <artifactId>bcprov-jdk15on</artifactId>
                 <version>1.60</version>
-            </dependency>
-            <dependency>
-                <groupId>org.cassandraunit</groupId>
-                <artifactId>cassandra-unit</artifactId>
-                <version>2.1.9.2</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
