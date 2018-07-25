@@ -78,7 +78,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mime4j-core</artifactId>
-            <version>${apache-mime4j.version}</version>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
