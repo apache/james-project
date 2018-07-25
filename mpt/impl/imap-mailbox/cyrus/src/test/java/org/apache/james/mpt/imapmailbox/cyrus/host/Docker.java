@@ -27,9 +27,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.jayway.awaitility.Awaitility;
 import com.spotify.docker.client.DefaultDockerClient;
-import com.spotify.docker.client.DockerException;
+import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ExecCreation;
 import com.spotify.docker.client.messages.HostConfig;
 
 public class Docker {
@@ -114,7 +115,7 @@ public class Docker {
     
     public void createUser(ContainerCreation container, String user, String password) throws DockerException, InterruptedException {
         String createUserCommand = String.format("echo %s | saslpasswd2 -u test -c %s -p", password, user);
-        String execId = dockerClient.execCreate(container.id(), new String[] {"/bin/bash", "-c", createUserCommand});
-        dockerClient.execStart(execId);
+        ExecCreation execCreation = dockerClient.execCreate(container.id(), new String[]{"/bin/bash", "-c", createUserCommand});
+        dockerClient.execStart(execCreation.id());
     }
 }
