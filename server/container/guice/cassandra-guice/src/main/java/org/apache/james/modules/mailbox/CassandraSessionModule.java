@@ -26,7 +26,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -87,7 +86,7 @@ public class CassandraSessionModule extends AbstractModule {
     @Provides
     @Singleton
     CassandraModule composeDataDefinitions(Set<CassandraModule> modules) {
-        return new CassandraModuleComposite(modules.toArray(new CassandraModule[0]));
+        return CassandraModule.aggregateModules(modules);
     }
 
     @Provides

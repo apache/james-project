@@ -19,8 +19,6 @@
 package org.apache.james.mpt.imapmailbox.cassandra.host;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -35,7 +33,6 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
-import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
@@ -68,10 +65,6 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         Feature.ANNOTATION_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-    private final CassandraModule mailboxModule = new CassandraModuleComposite(
-            CassandraQuotaModule.MODULE,
-            MailboxAggregateModule.MODULE);
-
     private final Host cassandraHost;
     private CassandraMailboxManager mailboxManager;
     private CassandraCluster cassandra;
@@ -84,7 +77,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        cassandra = CassandraCluster.create(mailboxModule, cassandraHost);
+        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE_WITH_QUOTA, cassandraHost);
         com.datastax.driver.core.Session session = cassandra.getConf();
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(

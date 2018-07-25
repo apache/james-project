@@ -27,10 +27,9 @@ import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersion
 
 public interface CassandraSchemaVersionModule {
     CassandraModule MODULE = CassandraModule.table(CassandraSchemaVersionTable.TABLE_NAME)
+        .comment("Holds the history of the versions of the schema used.")
         .statement(statement -> statement
             .addPartitionKey(CassandraSchemaVersionTable.KEY, timeuuid())
-            .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint())
-            .withOptions()
-            .comment("Holds the history of the versions of the schema used."))
+            .addClusteringColumn(CassandraSchemaVersionTable.VALUE, cint()))
         .build();
 }

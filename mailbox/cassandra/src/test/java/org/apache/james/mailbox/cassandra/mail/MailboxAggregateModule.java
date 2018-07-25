@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraModuleComposite;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
@@ -33,23 +32,26 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMessageModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
+import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 
-public class MailboxAggregateModule {
-    public static CassandraModule MODULE = new CassandraModuleComposite(
-        CassandraAclModule.MODULE,
-        CassandraMailboxModule.MODULE,
-        CassandraMessageModule.MODULE,
-        CassandraBlobModule.MODULE,
-        CassandraAttachmentModule.MODULE,
-        CassandraMailboxCounterModule.MODULE,
-        CassandraMailboxRecentsModule.MODULE,
-        CassandraFirstUnseenModule.MODULE,
-        CassandraUidModule.MODULE,
-        CassandraModSeqModule.MODULE,
-        CassandraSubscriptionModule.MODULE,
-        CassandraDeletedMessageModule.MODULE,
-        CassandraAnnotationModule.MODULE,
-        CassandraApplicableFlagsModule.MODULE);
+public interface MailboxAggregateModule {
+    CassandraModule MODULE = CassandraModule.aggregateModules(
+            CassandraAclModule.MODULE,
+            CassandraMailboxModule.MODULE,
+            CassandraMessageModule.MODULE,
+            CassandraBlobModule.MODULE,
+            CassandraAttachmentModule.MODULE,
+            CassandraMailboxCounterModule.MODULE,
+            CassandraMailboxRecentsModule.MODULE,
+            CassandraFirstUnseenModule.MODULE,
+            CassandraUidModule.MODULE,
+            CassandraModSeqModule.MODULE,
+            CassandraSubscriptionModule.MODULE,
+            CassandraDeletedMessageModule.MODULE,
+            CassandraAnnotationModule.MODULE,
+            CassandraApplicableFlagsModule.MODULE);
+
+    CassandraModule MODULE_WITH_QUOTA = CassandraModule.aggregateModules(CassandraQuotaModule.MODULE, MODULE);
 }
