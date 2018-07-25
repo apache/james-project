@@ -333,6 +333,9 @@ public class ServerCmd {
         case REMOVESIEVEUSERQUOTA:
             sieveProbe.removeSieveQuota(arguments[1]);
             break;
+        case ADDSIEVESCRIPT:
+            sieveProbe.addActiveSieveScript(arguments[1], arguments[2], arguments[3]);
+            break;
         default:
             throw new UnrecognizedCommandException(cmdType.getCommand());
         }

@@ -26,6 +26,8 @@ import javax.management.StandardMBean;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.sieverepository.api.ScriptContent;
+import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 import org.apache.james.sieverepository.api.exception.SieveRepositoryException;
@@ -71,5 +73,13 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
     @Override
     public void removeQuota(String user) throws SieveRepositoryException {
         sieveRepository.removeQuota(User.fromUsername(user));
+    }
+
+    @Override
+    public void addActiveSieveScript(String username, String name, String script) throws SieveRepositoryException {
+        User user = User.fromUsername(username);
+        ScriptName scriptName = new ScriptName(name);
+        sieveRepository.putScript(user, scriptName, new ScriptContent(script));
+        sieveRepository.setActive(user, scriptName);
     }
 }

@@ -705,6 +705,25 @@ public class ServerCmdTest {
         control.verify();
     }
 
+    @Test
+    public void addSieveScriptCommandShouldWork() throws Exception {
+        String username = "user@domain";
+        String name = "myscript.sieve";
+        String script = "require \"fileinto\";\n" +
+                "\n" +
+                "fileinto \"INBOX.any\";";
+
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDSIEVESCRIPT.getCommand(), username, name, script};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        sieveProbe.addActiveSieveScript(username, name, script);
+        expectLastCall();
+
+        control.replay();
+        testee.executeCommandLine(commandLine);
+        control.verify();
+    }
+
     @Test(expected = InvalidArgumentNumberException.class)
     public void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
@@ -1342,6 +1361,36 @@ public class ServerCmdTest {
     public void setSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "64K", ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void addSieveScriptCommandShouldThrowOnMissingArguments() throws Exception {
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDSIEVESCRIPT.getCommand()};
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        control.replay();
+        try {
+            testee.executeCommandLine(commandLine);
+        } finally {
+            control.verify();
+        }
+    }
+
+    @Test(expected = InvalidArgumentNumberException.class)
+    public void addSieveScriptCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String name = "script.name";
+        String script = "script";
+
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDSIEVESCRIPT.getCommand(), user, name, script, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         control.replay();
