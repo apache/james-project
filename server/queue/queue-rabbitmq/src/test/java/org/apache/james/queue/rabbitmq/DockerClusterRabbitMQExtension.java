@@ -103,9 +103,9 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
 
         public void stop() {
             Runnables.runParallel(
-                rabbitMQ1::stop,
-                rabbitMQ2::stop,
-                rabbitMQ3::stop);
+                Throwing.runnable(rabbitMQ1::stop).orDoNothing(),
+                Throwing.runnable(rabbitMQ2::stop).orDoNothing(),
+                Throwing.runnable(rabbitMQ3::stop).orDoNothing());
         }
 
         public DockerRabbitMQ getRabbitMQ1() {
