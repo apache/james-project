@@ -173,10 +173,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <forkMode>pertest</forkMode>
-                    <argLine>-Xms256m -Xmx512m</argLine>
-                    <testFailureIgnore>false</testFailureIgnore>
-                    <skip>false</skip>
+                    <reuseForks>true</reuseForks>
                 </configuration>
             </plugin>
             <plugin>
