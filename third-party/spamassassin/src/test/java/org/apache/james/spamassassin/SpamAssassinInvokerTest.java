@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.util.scanner;
+package org.apache.james.spamassassin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,8 +26,8 @@ import java.nio.charset.StandardCharsets;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
-import org.apache.james.util.scanner.SpamAssassinExtension.SpamAssassin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

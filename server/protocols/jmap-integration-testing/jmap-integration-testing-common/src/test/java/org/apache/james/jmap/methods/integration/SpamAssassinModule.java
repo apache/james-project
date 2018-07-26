@@ -25,9 +25,9 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
+import org.apache.james.spamassassin.SpamAssassinExtension;
+import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.Host;
-import org.apache.james.util.scanner.SpamAssassinExtension;
-import org.apache.james.util.scanner.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.utils.MailetConfigurationOverride;
 
 import com.google.inject.AbstractModule;

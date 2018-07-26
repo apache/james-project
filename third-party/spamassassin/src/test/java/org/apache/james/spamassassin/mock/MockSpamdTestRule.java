@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.spamassassin.mock;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

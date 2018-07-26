@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.scanner;
+package org.apache.james.spamassassin;
 
 import java.io.IOException;
 import java.net.URISyntaxException;

@@ -25,7 +25,7 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.util.scanner.SpamAssassinResult;
+import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 

@@ -19,7 +19,7 @@
 package org.apache.james.jmap.methods.integration;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.util.scanner.SpamAssassinExtension;
+import org.apache.james.spamassassin.SpamAssassinExtension;
 
 public class JamesWithSpamAssassin {
 

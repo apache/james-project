@@ -27,11 +27,11 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.spamassassin.SpamAssassinInvoker;
+import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.Port;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
-import org.apache.james.util.scanner.SpamAssassinResult;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.GenericMailet;

@@ -24,8 +24,8 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.spamassassin.SpamAssassinInvoker;
 import org.apache.james.util.Host;
-import org.apache.james.util.scanner.SpamAssassinInvoker;
 
 import com.github.fge.lambdas.Throwing;
 

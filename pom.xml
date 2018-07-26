@@ -536,6 +536,7 @@
         <module>mpt</module>
         <module>protocols</module>
         <module>server</module>
+        <module>third-party</module>
     </modules>
 
     <scm>
@@ -699,6 +700,17 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-backends-jpa</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-spamassassin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>apache-james-spamassassin</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
