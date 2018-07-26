@@ -33,6 +33,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
+import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -44,7 +45,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.apache.james.mailbox.tika.TikaContainer;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -61,7 +61,7 @@ public class IndexableMessageTest {
     public static final MessageUid MESSAGE_UID = MessageUid.of(154);
 
     @ClassRule
-    public static TikaContainer tika = new TikaContainer();
+    public static TikaContainerSingletonRule tika = TikaContainerSingletonRule.rule;
 
     private TikaTextExtractor textExtractor;
 

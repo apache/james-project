@@ -16,59 +16,41 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.tika;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.SwarmGenericContainer;
-import org.junit.rules.ExternalResource;
-import org.testcontainers.containers.wait.strategy.Wait;
+public class TikaContainerSingletonRule implements TestRule {
 
-import com.google.common.primitives.Ints;
+    public static final TikaContainerSingletonRule rule = new TikaContainerSingletonRule(new TikaContainer());
 
-public class TikaContainer extends ExternalResource {
-    
-    private static final int DEFAULT_TIKA_PORT = 9998;
-    private static final int DEFAULT_TIMEOUT_IN_MS = Ints.checkedCast(TimeUnit.MINUTES.toMillis(3));
+    private final TikaContainer tikaContainer;
 
-    private final SwarmGenericContainer tika;
-
-    public TikaContainer() {
-        tika = new SwarmGenericContainer(Images.TIKA)
-                .withExposedPorts(DEFAULT_TIKA_PORT)
-                .waitingFor(Wait.forHttp("/tika"))
-                .withStartupTimeout(Duration.ofSeconds(30));
+    private TikaContainerSingletonRule(TikaContainer tikaContainer) {
+        this.tikaContainer = tikaContainer;
+        this.tikaContainer.start();
     }
 
     @Override
-    protected void before() throws Throwable {
-        start();
-    }
-
-    public void start() {
-        tika.start();
-    }
-
-    @Override
-    protected void after() {
-        stop();
-    }
-
-    public void stop() {
-        tika.stop();
+    public Statement apply(Statement statement, Description description) {
+        return statement;
     }
 
     public String getIp() {
-        return tika.getHostIp();
+        return tikaContainer.getIp();
     }
 
     public int getPort() {
-        return tika.getMappedPort(DEFAULT_TIKA_PORT);
+        return tikaContainer.getPort();
     }
 
     public int getTimeoutInMillis() {
-        return DEFAULT_TIMEOUT_IN_MS;
+        return tikaContainer.getTimeoutInMillis();
     }
+    
+    // Cleanup will be performed by test container resource reaper
+
 }

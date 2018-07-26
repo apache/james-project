@@ -44,7 +44,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.apache.james.mailbox.tika.TikaContainer;
+import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -70,7 +70,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     public RuleChain ruleChain = RuleChain.outerRule(temporaryFolder).around(embeddedElasticSearch);
 
     @ClassRule
-    public static TikaContainer tika = new TikaContainer();
+    public static TikaContainerSingletonRule tika = TikaContainerSingletonRule.rule;
     private TikaTextExtractor textExtractor;
 
     @Override
