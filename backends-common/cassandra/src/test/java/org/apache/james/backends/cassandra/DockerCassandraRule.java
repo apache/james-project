@@ -19,7 +19,6 @@
 
 package org.apache.james.backends.cassandra;
 
-import org.apache.commons.text.RandomStringGenerator;
 import org.apache.james.util.Host;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -33,11 +32,6 @@ import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateVolumeCmd;
-import com.github.dockerjava.api.command.RemoveVolumeCmd;
-import com.github.dockerjava.api.model.Bind;
-import com.github.dockerjava.api.model.Binds;
-import com.github.dockerjava.api.model.Volume;
 
 
 public class DockerCassandraRule implements TestRule {
@@ -52,22 +46,10 @@ public class DockerCassandraRule implements TestRule {
 
     private final GenericContainer<?> cassandraContainer;
     private final DockerClient client;
-    private final CreateVolumeCmd createTmpsFsCmd;
-    private final RemoveVolumeCmd deleteTmpsFsCmd;
 
     @SuppressWarnings("resource")
     public DockerCassandraRule() {
-        String tmpFsName = "cassandraData" + new RandomStringGenerator.Builder().withinRange('a', 'z').build().generate(10);
         client = DockerClientFactory.instance().client();
-        createTmpsFsCmd = client.createVolumeCmd()
-            .withName(tmpFsName)
-            .withDriver("local")
-            .withDriverOpts(
-                ImmutableMap.of(
-                    "type", "tmpfs",
-                    "device", "tmpfs",
-                    "o", "size=100m"));
-        deleteTmpsFsCmd = client.removeVolumeCmd(tmpFsName);
         boolean deleteOnExit = false;
         cassandraContainer = new GenericContainer<>(
             new ImageFromDockerfile("cassandra_2_2_12", deleteOnExit)
@@ -92,8 +74,8 @@ public class DockerCassandraRule implements TestRule {
                         .run("sed -i -e \"s/key_cache_size_in_mb:/key_cache_size_in_mb: 256/\" " + CASSANDRA_YAML)
                         .run("sed -i -e \"s/row_cache_size_in_mb: 0/row_cache_size_in_mb: 512/\" " + CASSANDRA_YAML)
                         .build()))
-            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withBinds(new Binds(new Bind(tmpFsName, new Volume("/var/lib/cassandra")))))
             .withCreateContainerCmdModifier(cmd -> cmd.withMemory(2000 * 1024 * 1024L))
+            .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=100m")))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(this::displayDockerLog);
         cassandraContainer
@@ -109,27 +91,17 @@ public class DockerCassandraRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                try {
-                    createTmpsFsCmd.exec();
-                    cassandraContainer.apply(base, description).evaluate();
-                } finally {
-                    deleteTmpsFsCmd.exec();
-                }
+                cassandraContainer.apply(base, description).evaluate();
             }
         };
     }
 
     public void start() {
-        createTmpsFsCmd.exec();
         cassandraContainer.start();
     }
 
     public void stop() {
-        try {
-            cassandraContainer.stop();
-        } finally {
-            deleteTmpsFsCmd.exec();
-        }
+        cassandraContainer.stop();
     }
 
     public Host getHost() {
