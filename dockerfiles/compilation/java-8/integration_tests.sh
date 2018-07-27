@@ -52,4 +52,6 @@ export JAMES_IMAP_PORT=$JAMES_IMAP_PORT
 git clone $ORIGIN/.
 git checkout $SHA1
 
-mvn -Dtest=ExternalJamesTest -DfailIfNoTests=false -pl org.apache.james:apache-james-mpt-external-james -am test
+
+mvn -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am compile
+mvn -Dtest=JamesDeploymentValidation -pl org.apache.james:apache-james-mpt-external-james test
