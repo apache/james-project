@@ -637,7 +637,7 @@
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>2.2.0</es-reporter.version>
-        <guava.version>19.0</guava.version>
+        <guava.version>25.1-jre</guava.version>
 
         <jutf7.version>1.0.0</jutf7.version>
         <plugin.mailetdocs.version>0.1</plugin.mailetdocs.version>
