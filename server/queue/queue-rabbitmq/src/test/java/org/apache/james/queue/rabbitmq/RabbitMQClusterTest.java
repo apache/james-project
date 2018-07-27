@@ -217,10 +217,10 @@ class RabbitMQClusterTest {
         @Test
         void connectingToAClusterWithAFailedRabbit(DockerRabbitMQCluster cluster) throws Exception {
             ConnectionFactory node3ConnectionFactory = cluster.getRabbitMQ3().connectionFactory();
-            try (Connection connection = node3ConnectionFactory.newConnection(cluster.getAddresses());
-                    Channel channel = connection.createChannel()) {
+            cluster.getRabbitMQ3().stop();
 
-                cluster.getRabbitMQ3().stop();
+            try (Connection connection = node3ConnectionFactory.newConnection(cluster.getAddresses());
+                 Channel channel = connection.createChannel()) {
 
                 channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
                 channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
