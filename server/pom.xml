@@ -71,6 +71,7 @@
         <module>dns-service/dnsservice-api</module>
         <module>dns-service/dnsservice-dnsjava</module>
         <module>dns-service/dnsservice-library</module>
+        <module>dns-service/dnsservice-test</module>
 
         <module>mailet/integration-testing</module>
 
