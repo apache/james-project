@@ -27,15 +27,11 @@
         <relativePath>../</relativePath>
     </parent>
 
-    <artifactId>apache-mailet-base</artifactId>
+    <artifactId>apache-mailet-test</artifactId>
     <packaging>bundle</packaging>
 
-    <name>Apache James :: Basic Mailet Toolkit</name>
-    <description>Apache James Basic Mailet Toolkit is a collection of utilities and lightweight framework
-        aimed at developers and testers of mailets. This toolkit is extensively used elsewhere in
-        James.</description>
-    <url>http://james.apache.org/mailet/base/</url>
-    <inceptionYear>2008</inceptionYear>
+    <name>Apache James :: Test helpers for Mailet</name>
+    <description>Apache James Mailet Test is a collection of utilities to help testing mailets.</description>
 
     <dependencies>
         <dependency>
@@ -44,21 +40,15 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-mime4j-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>javax-mail-extension</artifactId>
+            <artifactId>james-server-util</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-util</artifactId>
-            <scope>test</scope>
+            <artifactId>javax-mail-extension</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.steveash.guavate</groupId>
