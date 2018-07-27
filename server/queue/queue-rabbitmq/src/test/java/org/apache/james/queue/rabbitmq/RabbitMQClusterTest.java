@@ -49,8 +49,10 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.jayway.awaitility.Awaitility;
 import com.jayway.awaitility.Duration;
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -217,9 +219,10 @@ class RabbitMQClusterTest {
         @Test
         void connectingToAClusterWithAFailedRabbit(DockerRabbitMQCluster cluster) throws Exception {
             ConnectionFactory node3ConnectionFactory = cluster.getRabbitMQ3().connectionFactory();
+            ImmutableList<Address> clusterAddresses = cluster.getAddresses();
             cluster.getRabbitMQ3().stop();
 
-            try (Connection connection = node3ConnectionFactory.newConnection(cluster.getAddresses());
+            try (Connection connection = node3ConnectionFactory.newConnection(clusterAddresses);
                  Channel channel = connection.createChannel()) {
 
                 channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
