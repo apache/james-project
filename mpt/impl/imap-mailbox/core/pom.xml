@@ -84,14 +84,6 @@
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-imap</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.jmock</groupId>
-            <artifactId>jmock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jmock</groupId>
-            <artifactId>jmock-junit4</artifactId>
-        </dependency>
         <!-- As mime4j use commons-logging we need to specify the binding here -->
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -51,11 +51,6 @@ to the library requiring no extra coding.</description>
             <artifactId>commons-logging</artifactId>
         </dependency>
         <dependency>
-            <groupId>jmock</groupId>
-            <artifactId>jmock</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>

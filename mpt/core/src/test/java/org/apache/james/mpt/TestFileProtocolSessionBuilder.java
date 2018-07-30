@@ -19,14 +19,19 @@
 
 package org.apache.james.mpt;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+
 import java.io.StringReader;
 
 import org.apache.james.mpt.api.ProtocolInteractor;
 import org.apache.james.mpt.protocol.ProtocolSessionBuilder;
-import org.jmock.Mock;
-import org.jmock.MockObjectTestCase;
+import org.junit.Before;
+import org.junit.Test;
 
-public class TestFileProtocolSessionBuilder extends MockObjectTestCase {
+public class TestFileProtocolSessionBuilder {
 
     private static final String SCRIPT_WITH_VARIABLES = "HELLO ${not} ${foo} WORLD ${bar}";
     private static final String SCRIPT_WITH_FOO_REPLACED_BY_WHATEVER = "HELLO ${not} whatever WORLD ${bar}";
@@ -35,54 +40,56 @@ public class TestFileProtocolSessionBuilder extends MockObjectTestCase {
     ProtocolSessionBuilder builder;
     ProtocolInteractor session;
 
-    private Mock mockSession;
-    
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         builder = new ProtocolSessionBuilder();
-        mockSession = mock(ProtocolInteractor.class);
-        session = (ProtocolInteractor) mockSession.proxy();
+        session = mock(ProtocolInteractor.class);
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    private void addLines() throws Exception {
-        builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
-    }
-    
+    @Test
     public void testShouldPreserveContentsWhenNoVariablesSet() throws Exception {
-        mockSession.expects(once()).method("cl").with(eq(-1), eq(SCRIPT_WITH_VARIABLES));
-        addLines();
+        builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
+
+        verify(session, times(1)).cl(-1, SCRIPT_WITH_VARIABLES);
+        verifyNoMoreInteractions(session);
     }
 
+    @Test
     public void testShouldReplaceVariableWhenSet() throws Exception {
-        mockSession.expects(once()).method("cl").with(eq(-1), eq(SCRIPT_WITH_FOO_REPLACED_BY_WHATEVER));
         builder.setVariable("foo", "whatever");
-        addLines();
+        builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
+
+        verify(session, times(1)).cl(-1, SCRIPT_WITH_FOO_REPLACED_BY_WHATEVER);
+        verifyNoMoreInteractions(session);
     }
-    
+
+    @Test
     public void testShouldReplaceAllVariablesWhenSet() throws Exception {
-        mockSession.expects(once()).method("cl").with(eq(-1), eq(SCRIPT_WITH_VARIABLES_INLINED));
         builder.setVariable("bar", "bar");
         builder.setVariable("foo", "foo");
         builder.setVariable("not", "not");
-        addLines();
+        builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + SCRIPT_WITH_VARIABLES), session);
+
+        verify(session, times(1)).cl(-1, SCRIPT_WITH_VARIABLES_INLINED);
+        verifyNoMoreInteractions(session);
     }
-    
+
+    @Test
     public void testShouldReplaceVariableAtBeginningAndEnd() throws Exception {
-        mockSession.expects(once()).method("cl").with(eq(-1), eq("whatever Some Other Scriptwhateverwhatever"));
         builder.setVariable("foo", "whatever");
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + "${foo} Some Other Script${foo}${foo}"), session);
+
+        verify(session, times(1)).cl(-1, "whatever Some Other Scriptwhateverwhatever");
+        verifyNoMoreInteractions(session);
     }
-    
+
+    @Test
     public void testShouldIgnoreNotQuiteVariables() throws Exception {
         final String NEARLY = "{foo}${}${foo Some Other Script${foo}";
-        mockSession.expects(once()).method("cl").with(eq(-1), eq(NEARLY));
         builder.setVariable("foo", "whatever");
         builder.addProtocolLines("A Script", new StringReader(ProtocolSessionBuilder.CLIENT_TAG + " " + NEARLY), session);
+
+        verify(session, times(1)).cl(-1, NEARLY);
+        verifyNoMoreInteractions(session);
     }
 }
