@@ -27,9 +27,9 @@ import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -601,18 +601,6 @@ class ForwardRoutesTest {
         }
 
         @Test
-        void putShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
-                .when(memoryRecipientRewriteTable)
-                .addForwardMapping(any(), anyString());
-
-            when()
-                .put(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
         void putShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
@@ -627,18 +615,6 @@ class ForwardRoutesTest {
         @Test
         void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getAllMappings();
-
-            when()
-                .get()
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
-        void getAllShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .getAllMappings();
 
@@ -673,18 +649,6 @@ class ForwardRoutesTest {
         }
 
         @Test
-        void deleteShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
-                .when(memoryRecipientRewriteTable)
-                .removeForwardMapping(any(), anyString());
-
-            when()
-                .delete(ALICE + SEPARATOR + "targets" + SEPARATOR + BOB)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
         void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
@@ -699,18 +663,6 @@ class ForwardRoutesTest {
         @Test
         void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
-                .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
-
-            when()
-                .get(ALICE)
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        }
-
-        @Test
-        void getShouldReturnErrorWhenErrorMappingExceptionIsThrown() throws Exception {
-            doThrow(RecipientRewriteTable.ErrorMappingException.class)
                 .when(memoryRecipientRewriteTable)
                 .getUserDomainMappings(any());
 

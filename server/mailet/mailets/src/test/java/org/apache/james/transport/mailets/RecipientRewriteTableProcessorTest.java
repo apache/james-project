@@ -20,8 +20,8 @@
 package org.apache.james.transport.mailets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -279,31 +279,6 @@ public class RecipientRewriteTableProcessorTest {
                 .message(message)
                 .state(Mail.ERROR)
                 .fromMailet()
-                .build();
-
-        assertThat(mailetContext.getSentMails()).containsOnly(expected);
-        assertThat(mail.getRecipients()).containsOnly(MailAddressFixture.ANY_AT_LOCAL);
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Test
-    public void processShouldSendMailToAllErrorRecipientsWhenMessagingException() throws Exception {
-        when(virtualTableStore.getMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(MessagingException.class);
-
-        mail = FakeMail.builder()
-            .sender(MailAddressFixture.ANY_AT_JAMES)
-            .mimeMessage(message)
-            .recipients(MailAddressFixture.OTHER_AT_LOCAL, MailAddressFixture.ANY_AT_LOCAL)
-            .build();
-
-        processor.processMail(mail);
-
-        FakeMailContext.SentMail expected = FakeMailContext.sentMailBuilder()
-                .sender(MailAddressFixture.ANY_AT_JAMES)
-                .recipient(MailAddressFixture.OTHER_AT_LOCAL)
-                .message(message)
-                .fromMailet()
-                .state(Mail.ERROR)
                 .build();
 
         assertThat(mailetContext.getSentMails()).containsOnly(expected);

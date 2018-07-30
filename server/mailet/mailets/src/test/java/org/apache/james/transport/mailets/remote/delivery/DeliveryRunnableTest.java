@@ -19,9 +19,9 @@
 
 package org.apache.james.transport.mailets.remote.delivery;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -36,12 +36,6 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.transport.mailets.remote.delivery.Bouncer;
-import org.apache.james.transport.mailets.remote.delivery.DeliveryRetriesHelper;
-import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
-import org.apache.james.transport.mailets.remote.delivery.ExecutionResult;
-import org.apache.james.transport.mailets.remote.delivery.MailDelivrer;
-import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;

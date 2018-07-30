@@ -21,8 +21,9 @@ package org.apache.james.jmap.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,6 +37,7 @@ import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.model.CreationMessageId;
+import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
 import org.apache.james.jmap.model.SetMessagesRequest;
@@ -67,6 +69,7 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -118,6 +121,7 @@ public class SetMessagesCreationProcessorTest {
     private MessageAppender messageAppender;
     private MessageSender messageSender;
     private ReferenceUpdater referenceUpdater;
+    private MailFactory mockedMailFactory;
 
     @Before
     public void setUp() throws MailboxException {
@@ -129,7 +133,7 @@ public class SetMessagesCreationProcessorTest {
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
         messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         mockedMailSpool = mock(MailSpool.class);
-        MailFactory mockedMailFactory = mock(MailFactory.class);
+        mockedMailFactory = mock(MailFactory.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
         mockedMailboxManager = mock(MailboxManager.class);
         mockedMailboxIdFactory = mock(Factory.class);
@@ -272,11 +276,15 @@ public class SetMessagesCreationProcessorTest {
 
     @Test
     public void processShouldSendMailWhenRequestHasNonEmptyCreate() throws Exception {
+        FakeMail fakeMail = FakeMail.builder().sender(USER).build();
+        when(mockedMailFactory.build(any(MessageFactory.MetaDataWithContent.class), any(Envelope.class)))
+            .thenReturn(fakeMail);
+
         // When
         sut.process(createMessageInOutbox, session);
 
         // Then
-        verify(mockedMailSpool).send(any(Mail.class), any(MailMetadata.class));
+        verify(mockedMailSpool).send(eq(fakeMail), any(MailMetadata.class));
     }
 
     @Test

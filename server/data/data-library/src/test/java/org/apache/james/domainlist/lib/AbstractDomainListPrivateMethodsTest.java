@@ -20,11 +20,12 @@
 package org.apache.james.domainlist.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.util.List;
 
@@ -167,6 +168,7 @@ public class AbstractDomainListPrivateMethodsTest {
         domainList.configure(configuration);
 
         String detected = "detected.tld";
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
         assertThat(domainList.getDomains()).contains(Domain.of(detected));
@@ -182,6 +184,7 @@ public class AbstractDomainListPrivateMethodsTest {
 
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
         InetAddress detectedAddress = mock(InetAddress.class);
         when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
@@ -202,6 +205,7 @@ public class AbstractDomainListPrivateMethodsTest {
         String detected = "detected.tld";
         String detectedIp1 = "148.25.32.1";
         String detectedIp2 = "148.25.32.2";
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
         InetAddress detectedAddress1 = mock(InetAddress.class);
         InetAddress detectedAddress2 = mock(InetAddress.class);
@@ -235,6 +239,7 @@ public class AbstractDomainListPrivateMethodsTest {
     public void containsDomainShouldReturnDetectedIp() throws Exception {
         String detected = "detected.tld";
         String detectedIp = "148.25.32.1";
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
         InetAddress detectedAddress = mock(InetAddress.class);
         when(detectedAddress.getHostAddress()).thenReturn(detectedIp);
@@ -289,6 +294,7 @@ public class AbstractDomainListPrivateMethodsTest {
         domainList.configure(configuration);
 
         String detected = "detected.tld";
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
         assertThat(domainList.containsDomain(Domain.of(detected))).isTrue();

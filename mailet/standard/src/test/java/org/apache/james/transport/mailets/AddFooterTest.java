@@ -367,17 +367,4 @@ class AddFooterTest {
         assertThat(MailUtil.toString(mail, javaCharset)).endsWith(expectedFooter);
     }
     
-    @SuppressWarnings("unchecked")
-    @Test
-    void shouldThrowMessagingExceptionWhenIOExceptionReadingMessage() throws MessagingException {
-        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
-                .mailetName("Test")
-                .setProperty("text", "------ " + MY_FOOTER + " à/€ ------")
-                .build();
-        mailet.init(mailetConfig);
-        
-        Mail mail = mock(Mail.class);
-        when(mail.getMessage()).thenThrow(IOException.class);
-        assertThatThrownBy(() -> mailet.service(mail)).isInstanceOf(MessagingException.class);
-    }
 }
