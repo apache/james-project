@@ -29,13 +29,11 @@
 
   <subsection name="Java Virtual Machine">
   
-    <p>James 3.0 requires a Java Runtime Environment. Java version 1.6 or higher is required to run the
+    <p>James 3.1 requires a Java Runtime Environment. Java version 1.8 is required to run the
        James application. The exact JREs available depends on the platform. In addition, the environment variable JAVA_HOME should be set to
        the JRE home directory before running James.</p>
-
-    <p>After James 3.0 release, James requires Java version 1.8 or higher.</p>
     
-    <p>James 3.0 has been successfully tested on OpenJDK, Sun JDK and IBM JDK</p>
+    <p>James 3.1 has been successfully tested on OpenJDK</p>
   
   </subsection>
   
@@ -74,8 +72,8 @@
   </section>
 
   <section name="Build instructions">
-      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7">
-          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/README.adoc">README instructions</a> about compilation.</p>
+      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/james-project-3.1.0">
+          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/james-project-3.1.0/README.adoc">README instructions</a> about compilation.</p>
 
       <ul>Using these instructions, you can build the following images:
           <li>Guice + JPA + Lucene</li>
@@ -91,7 +89,7 @@
           <a href="install/jpa-guice.html">JPA-Guice</a> and <a href="install/jpa-smtp-guice.html">JPA-SMTP-Guice</a>.
       </p>
 
-      <p>A <a href="https://github.com/apache/james-project/blob/9502cfebfd9a4eaebbba7dda802d1fe0ad3589b7/dockerfiles/run/docker-compose.yml">
+      <p>A <a href="https://github.com/apache/james-project/blob/james-project-3.1.0/dockerfiles/run/docker-compose.yml">
           docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
   </section>
 
