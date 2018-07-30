@@ -27,17 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,10 +36,11 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 
-import com.google.common.base.Strings;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+import spark.Request;
+import spark.Response;
+import spark.Service;
 
 @RunWith(JUnitParamsRunner.class)
 public abstract class AbstractFileSystemTest {
@@ -62,45 +54,22 @@ public abstract class AbstractFileSystemTest {
 
     protected FileSystem fileSystem;
     
-    private Server httpServer;
+    private Service httpServer;
     private File rootDirectory;
     
     protected abstract FileSystem buildFileSystem(String configurationRootDirectory);
 
     @Before
     public void setUp() throws Exception {
-        httpServer = new Server(RANDOM_PORT);
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setContextPath("/");
-        httpServer.setHandler(context);
-        context.addServlet(new ServletHolder(new ContentServlet()), "/*");
-
-        httpServer.start();
-
+        httpServer = Service.ignite().port(RANDOM_PORT);
+        httpServer.get("/", (Request request, Response response) -> "content");
+        httpServer.awaitInitialization();
+        
         rootDirectory = tmpFolder.getRoot();
         createSubFolderWithAFileIn("conf", "conf.txt", "confcontent");
         createSubFolderWithAFileIn("var", "var.txt", "varcontent");
-
+        
         fileSystem = buildFileSystem(rootDirectory.getAbsolutePath());
-    }
-
-    private static class ContentServlet extends HttpServlet {
-
-        @Override
-        protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-            if (isRootPath(request.getPathInfo())) {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().println("content");
-            } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            }
-        }
-
-        private boolean isRootPath(String pathInfo) {
-            return Strings.isNullOrEmpty(pathInfo)
-                || pathInfo == "/";
-        }
     }
 
     private void createSubFolderWithAFileIn(String folderName, String fileName, String fileContent) throws IOException {
@@ -158,7 +127,9 @@ public abstract class AbstractFileSystemTest {
     @Test(expected = FileNotFoundException.class)
     @Parameters(source = UrlsAsFileThrowingFileNotFoundExceptionProvider.class)
     public final void urlAsFileThrowingFileNotFoundException(String url) throws Exception {
-        fileSystem.getFile(replacePort(url));
+        url = replacePort(url);
+        
+        fileSystem.getFile(url);
     }
 
     public static class NonExistingFilesProvider {
@@ -192,7 +163,9 @@ public abstract class AbstractFileSystemTest {
     @Test(expected = FileNotFoundException.class)
     @Parameters(source = NonAvailableStreamsProvider.class)
     public final void getFakeHttpResourceAsInputStreamShouldThrow(String url) throws Exception {
-        fileSystem.getResource(replacePort(url));
+        url = replacePort(url);
+        
+        fileSystem.getResource(url);
     }
 
     public static class AvailableStreamsProvider {
@@ -211,14 +184,14 @@ public abstract class AbstractFileSystemTest {
     @Test
     @Parameters(source = AvailableStreamsProvider.class)
     public final void availableInputStreamShouldReturnANonEmptyStream(String url) throws Exception {
-        try (InputStream inputStream = fileSystem.getResource(replacePort(url))) {
+        url = replacePort(url);
+        try (InputStream inputStream = fileSystem.getResource(url)) {
             assertThat(IOUtils.toByteArray(inputStream).length).isGreaterThan(0);
         }
     }
 
     private String replacePort(String url) {
-        int port = ((ServerConnector) httpServer.getConnectors()[0]).getLocalPort();
-        return url.replace("$PORT$", String.valueOf(port));
+        return url.replace("$PORT$", String.valueOf(httpServer.port()));
     }
 
     public static class FileToCreateProvider {
