@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.mockito.Mockito.mock;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
@@ -30,22 +32,14 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
 public class StoreCommandParserTest {
 
     StoreCommandParser parser;
-
-
     ImapCommand command;
-
     ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
-
 
     private ImapSession session;
 
@@ -53,9 +47,7 @@ public class StoreCommandParserTest {
     public void setUp() throws Exception {
         parser = new StoreCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
-        session = mockery.mock(ImapSession.class);
-
+        session = mock(ImapSession.class);
     }
 
     @Test

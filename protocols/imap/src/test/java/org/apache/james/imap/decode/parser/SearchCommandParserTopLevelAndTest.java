@@ -29,7 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
@@ -38,8 +37,6 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,18 +133,12 @@ public class SearchCommandParserTopLevelAndTest {
     }
 
     SearchCommandParser parser;
-
     ImapCommand command;
 
-    ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
     }
 
     @Test

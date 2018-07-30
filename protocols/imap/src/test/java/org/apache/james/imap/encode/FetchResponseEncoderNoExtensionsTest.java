@@ -22,6 +22,8 @@ package org.apache.james.imap.encode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,41 +37,34 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MessageUid;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
-public class FetchResponseEncoderNoExtensionsTest  {
+public class FetchResponseEncoderNoExtensionsTest {
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
     private Flags flags;
 
     private FetchResponse.Structure stubStructure;
-
     private ImapEncoder mockNextEncoder;
-
     private FetchResponseEncoder encoder;
 
-    private Mockery context = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
+        mockNextEncoder = mock(ImapEncoder.class);
         encoder = new FetchResponseEncoder(mockNextEncoder, true);
         flags = new Flags(Flags.Flag.DELETED);
-        stubStructure = context.mock(FetchResponse.Structure.class);
+        stubStructure = mock(FetchResponse.Structure.class);
     }
 
 
     @Test
-    public void testShouldNotAcceptUnknownResponse() throws Exception {
-        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
+    public void testShouldNotAcceptUnknownResponse() {
+        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
     }
 
     @Test
-    public void testShouldAcceptFetchResponse() throws Exception {
+    public void testShouldAcceptFetchResponse() {
         assertTrue(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
                 null, null, null, null, null)));
     }
@@ -99,7 +94,7 @@ public class FetchResponseEncoderNoExtensionsTest  {
         assertEquals("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n",writer.getString());
 
     }
-    
+
     @Test
     public void testShouldNotAddExtensionsWithEncodingBodyStructure() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
@@ -109,20 +104,16 @@ public class FetchResponseEncoderNoExtensionsTest  {
         final List<String> parameterList = new ArrayList<>();
         parameterList.add("CHARSET");
         parameterList.add("US-ASCII");
-        
-        context.checking(new Expectations() {{
-                    final long octets = 2279L;
-                    final long lines = 48L;
-                    allowing(stubStructure).getMediaType(); will(returnValue("TEXT"));
-                    allowing(stubStructure).getSubType(); will(returnValue("HTML"));
-                    allowing(stubStructure).getOctets();will(returnValue(octets));
-                    allowing(stubStructure).getLines();will(returnValue(lines));
-                    allowing(stubStructure).getParameters(); will(returnValue(parameterList));
-                    allowing(stubStructure).getEncoding(); will(returnValue("7BIT"));
-                    ignoring(stubStructure);
-                }
-            }
-        );
+
+        when(stubStructure.getMediaType()).thenReturn("TEXT");
+        when(stubStructure.getSubType()).thenReturn("HTML");
+        when(stubStructure.getOctets()).thenReturn(2279L);
+        when(stubStructure.getLines()).thenReturn(48L);
+        when(stubStructure.getParameters()).thenReturn(parameterList);
+        when(stubStructure.getEncoding()).thenReturn("7BIT");
+        when(stubStructure.getId()).thenReturn("");
+        when(stubStructure.getDescription()).thenReturn("");
+
         final FakeImapSession fakeImapSession = new FakeImapSession();
         encoder.doEncode(message, composer, fakeImapSession);
         assertEquals("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n", writer.getString());

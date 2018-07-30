@@ -19,6 +19,12 @@
 
 package org.apache.james.imap.processor;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -38,9 +44,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -90,45 +93,32 @@ public class LSubProcessorTest {
     };
 
     LSubProcessor processor;
-
     ImapProcessor next;
-
     SubscriptionManager manager;
-
     ImapProcessor.Responder responder;
-
     MailboxMetaData result;
-
     ImapSession session;
-    
     MailboxSession mailboxSession;
-
     StatusResponseFactory serverResponseFactory;
-
     StatusResponse statusResponse;
-
     Collection<String> subscriptions;
-
     ImapCommand command;
-
     private ImapProcessor.Responder responderImpl;
 
-    private Mockery mockery = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
         subscriptions = new ArrayList<>();
-        serverResponseFactory = mockery.mock(StatusResponseFactory.class);
-        session = mockery.mock(ImapSession.class);
+        serverResponseFactory = mock(StatusResponseFactory.class);
+        session = mock(ImapSession.class);
         command = ImapCommand.anyStateCommand("Command");
-        next = mockery.mock(ImapProcessor.class);
-        responder = mockery.mock(ImapProcessor.Responder.class);
-        result = mockery.mock(MailboxMetaData.class);
-        statusResponse = mockery.mock(StatusResponse.class);
+        next = mock(ImapProcessor.class);
+        responder = mock(ImapProcessor.Responder.class);
+        result = mock(MailboxMetaData.class);
+        statusResponse = mock(StatusResponse.class);
         responderImpl = responder;
-        manager = mockery. mock(SubscriptionManager.class);
-        mailboxSession = mockery.mock(MailboxSession.class);
-        processor = new LSubProcessor(next, mockery.mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
+        manager =  mock(SubscriptionManager.class);
+        mailboxSession = mock(MailboxSession.class);
+        processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
     }
 
     @Test
@@ -140,23 +130,19 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
 
-        mockery.checking(new Expectations() {{
-                    oneOf(mailboxSession).getUser(); will(returnValue(USER));
-                    oneOf(responder).respond(with(
-                            equal(new LSubResponse(CHILD_ONE, false, HIERARCHY_DELIMITER))));
-                    oneOf(responder).respond(with(
-                            equal(new LSubResponse(CHILD_TWO, false, HIERARCHY_DELIMITER))));
-                }
-            }
-        );
-        
+        when(mailboxSession.getUser()).thenReturn(USER);
+
         expectSubscriptions();
-        expectOk();
+        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+            .thenReturn(statusResponse);
 
         LsubRequest request = new LsubRequest(command, "", PARENT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, TAG, command, responderImpl);
 
+        verify(responder).respond(new LSubResponse(CHILD_ONE, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(CHILD_TWO, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(statusResponse);
     }
 
     @Test
@@ -168,21 +154,18 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
 
-        mockery.checking(new Expectations() {{
-                    oneOf(mailboxSession).getUser(); will(returnValue(USER));
-                    oneOf(responder).respond(with(
-                            equal(new LSubResponse(PARENT, true, HIERARCHY_DELIMITER))));
-                }
-            }
-        );
+        when(mailboxSession.getUser()).thenReturn(USER);
 
         expectSubscriptions();
-        expectOk();
+        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+            .thenReturn(statusResponse);
 
         LsubRequest request = new LsubRequest(command, "", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, TAG, command, responderImpl);
 
+        verify(responder).respond(new LSubResponse(PARENT, true, HIERARCHY_DELIMITER));
+        verify(responder).respond(statusResponse);
     }
 
     @Test
@@ -195,70 +178,43 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
 
-        mockery.checking(new Expectations() {{
-                    oneOf(mailboxSession).getUser(); will(returnValue(USER));
-                    oneOf(responder).respond(with(
-                            equal(new LSubResponse(PARENT, false, HIERARCHY_DELIMITER))));
-                }
-            }
-        );
+        when(mailboxSession.getUser()).thenReturn(USER);
 
         expectSubscriptions();
-        expectOk();
+        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+            .thenReturn(statusResponse);
 
         LsubRequest request = new LsubRequest(command, "", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, TAG, command, responderImpl);
 
+        verify(responder).respond(new LSubResponse(PARENT, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(statusResponse);
     }
 
     @Test
     public void testSelectAll() throws Exception {
-        mockery.checking(new Expectations() {{
-                    oneOf(mailboxSession).getUser(); will(returnValue(USER));
-                    oneOf(responder).respond(with(equal(
-                            new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER))));
-                    oneOf(responder).respond(with(equal(
-                            new LSubResponse(MAILBOX_B, false, HIERARCHY_DELIMITER))));
-                    oneOf(responder).respond(with(equal(
-                            new LSubResponse(MAILBOX_C, false, HIERARCHY_DELIMITER))));
-                }
-            }
-        );
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
         subscriptions.add(MAILBOX_C);
 
+        when(mailboxSession.getUser()).thenReturn(USER);
         expectSubscriptions();
-        expectOk();
+        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+            .thenReturn(statusResponse);
 
         LsubRequest request = new LsubRequest(command, "", "*", TAG);
         processor.doProcessRequest(request, session, TAG, command, responderImpl);
 
-    }
-
-    
-    private void expectOk() {
-        mockery.checking(new Expectations() {{
-                    oneOf(serverResponseFactory).taggedOk(
-                            with(equal(TAG)),
-                            with(same(command)),
-                            with(equal(HumanReadableText.COMPLETED)));will(returnValue(statusResponse));
-                    oneOf(responder).respond(with(same(statusResponse)));          
-                }
-            }
-        );
+        verify(responder).respond(new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(MAILBOX_B, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(new LSubResponse(MAILBOX_C, false, HIERARCHY_DELIMITER));
+        verify(responder).respond(statusResponse);
     }
 
     private void expectSubscriptions() throws Exception {
-        mockery.checking(new Expectations() {{
-                    exactly(2).of(session).getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
-                            will(returnValue(mailboxSession));
-                            allowing(mailboxSession).getPathDelimiter(); will(returnValue(HIERARCHY_DELIMITER));
-                    oneOf(mailboxSession).getUser(); will(returnValue(USER));
-                    oneOf(manager).subscriptions(with(same(mailboxSession)));will(returnValue(subscriptions));     
-                }
-            }
-        );
+        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mailboxSession.getPathDelimiter()).thenReturn(HIERARCHY_DELIMITER);
+        when(manager.subscriptions(mailboxSession)).thenReturn(subscriptions);
     }
 }

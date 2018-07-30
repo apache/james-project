@@ -19,6 +19,12 @@
 
 package org.apache.james.imap.processor;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -27,6 +33,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.TimeZone;
+
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
@@ -56,10 +63,7 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.metrics.api.NoopMetricFactory;
-
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -97,55 +101,42 @@ public class SearchProcessorTest {
     private static final MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
 
     SearchProcessor processor;
-
     ImapProcessor next;
-
     ImapProcessor.Responder responder;
-
     ImapSession session;
-
     ImapCommand command;
-
     StatusResponseFactory serverResponseFactory;
-
     StatusResponse statusResponse;
-
     MessageManager mailbox;
-    
     MailboxManager mailboxManager;
-    
     MailboxSession mailboxSession;
-
     SelectedMailbox selectedMailbox;
-
-    private Mockery mockery = new JUnit4Mockery();
 
     @Before
     public void setUp() throws Exception {
-        serverResponseFactory = mockery.mock(StatusResponseFactory.class);
-        session = mockery.mock(ImapSession.class);
+        serverResponseFactory = mock(StatusResponseFactory.class);
+        session = mock(ImapSession.class);
         command = ImapCommand.anyStateCommand("Command");
-        next = mockery.mock(ImapProcessor.class);
-        responder = mockery.mock(ImapProcessor.Responder.class);
-        statusResponse = mockery.mock(StatusResponse.class);
-        mailbox = mockery.mock(MessageManager.class);
-        mailboxManager = mockery.mock(MailboxManager.class);
-        mailboxSession = mockery.mock(MailboxSession.class);
-        selectedMailbox = mockery.mock(SelectedMailbox.class);
+        next = mock(ImapProcessor.class);
+        responder = mock(ImapProcessor.Responder.class);
+        statusResponse = mock(StatusResponse.class);
+        mailbox = mock(MessageManager.class);
+        mailboxManager = mock(MailboxManager.class);
+        mailboxSession = mock(MailboxSession.class);
+        selectedMailbox = mock(SelectedMailbox.class);
         
         processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());
         expectOk();
     }
 
+    @After
+    public void afterEach() {
+        verifyCalls();
+    }
+
     private void allowUnsolicitedResponses() {
-        mockery.checking(new Expectations() {{
-                    atMost(1).of(session).getAttribute(
-                            with(equal(ImapSessionUtils.MAILBOX_USER_ATTRIBUTE_SESSION_KEY)));will(returnValue("user"));
-                    atMost(1).of(session).getAttribute(
-                            with(equal(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)));will(returnValue(mailboxSession));
-                }
-            }
-        );
+        when(session.getAttribute(ImapSessionUtils.MAILBOX_USER_ATTRIBUTE_SESSION_KEY)).thenReturn("user");
+        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
     }
 
     @Test
@@ -153,14 +144,12 @@ public class SearchProcessorTest {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1, Long.MAX_VALUE) };
         final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(100)) };
-        mockery.checking(new Expectations() {{
-                    allowing(selectedMailbox).existsCount();will(returnValue(100L));
-                    oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42))));
-                    allowing(selectedMailbox).getFirstUid(); will(returnValue(Optional.of(MessageUid.of(1))));
-                    allowing(selectedMailbox).getLastUid(); will(returnValue(Optional.of(MessageUid.of(100))));
-                }
-            }
-        );
+
+        when(selectedMailbox.existsCount()).thenReturn(100L);
+        when(selectedMailbox.uid(1)).thenReturn(Optional.of(MessageUid.of(42L)));
+        when(selectedMailbox.getFirstUid()).thenReturn(Optional.of(MessageUid.of(1L)));
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(100L)));
+
         allowUnsolicitedResponses();
         check(SearchKey.buildSequenceSet(ids), SearchQuery.uid(ranges));
     }
@@ -170,15 +159,13 @@ public class SearchProcessorTest {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1, 5) };
         final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1729)) };
-        mockery.checking(new Expectations() {{
-                    allowing(selectedMailbox).existsCount();will(returnValue(2L));
-                    oneOf(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42L))));
-                    oneOf(selectedMailbox).uid(with(equal(5)));will(returnValue(Optional.of(MessageUid.of(1729L))));
-                    allowing(selectedMailbox).getFirstUid(); will(returnValue(Optional.of(MessageUid.of(1L))));
-                    allowing(selectedMailbox).getLastUid(); will(returnValue(Optional.of(MessageUid.MAX_VALUE)));
-                }
-            }
-        );
+
+        when(selectedMailbox.existsCount()).thenReturn(100L);
+        when(selectedMailbox.uid(1)).thenReturn(Optional.of(MessageUid.of(42L)));
+        when(selectedMailbox.uid(5)).thenReturn(Optional.of(MessageUid.of(1729L)));
+        when(selectedMailbox.getFirstUid()).thenReturn(Optional.of(MessageUid.of(1L)));
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.MAX_VALUE));
+
         allowUnsolicitedResponses();
         check(SearchKey.buildSequenceSet(ids), SearchQuery.uid(ranges));
     }
@@ -188,12 +175,10 @@ public class SearchProcessorTest {
         expectsGetSelectedMailbox();
         final IdRange[] ids = { new IdRange(1) };
         final SearchQuery.UidRange[] ranges = { new SearchQuery.UidRange(MessageUid.of(42)) };
-        mockery.checking(new Expectations() {{
-                    allowing(selectedMailbox).existsCount();will(returnValue(1L));
-                    exactly(2).of(selectedMailbox).uid(with(equal(1)));will(returnValue(Optional.of(MessageUid.of(42L))));
-                }
-            }
-        );
+
+        when(selectedMailbox.existsCount()).thenReturn(1L);
+        when(selectedMailbox.uid(1)).thenReturn(Optional.of(MessageUid.of(42L)));
+
         allowUnsolicitedResponses();
         check(SearchKey.buildSequenceSet(ids), SearchQuery.uid(ranges));
     }
@@ -205,22 +190,14 @@ public class SearchProcessorTest {
     }
 
     private void expectsGetSelectedMailbox() throws Exception {
-        mockery.checking(new Expectations() {{
-                    atMost(1).of(mailboxManager).getMailbox(with(equal(mailboxPath)),  with(same(mailboxSession)));will(returnValue(mailbox));
-                    atMost(1).of(mailboxManager).getMailbox(with(equal(mailboxPath)), with(same(mailboxSession)));will(returnValue(mailbox));
-                    allowing(session).getSelected();will(returnValue(selectedMailbox));
-                    atMost(1).of(selectedMailbox).isRecentUidRemoved();will(returnValue(false));
-                    atLeast(1).of(selectedMailbox).isSizeChanged();will(returnValue(false));
-                    atLeast(1).of(selectedMailbox).getPath();will(returnValue(mailboxPath));
-                    atMost(1).of(selectedMailbox).flagUpdateUids();will(returnValue(Collections.EMPTY_LIST));
-                    atMost(1).of(selectedMailbox).resetEvents();
-                    
-                    oneOf(selectedMailbox).getRecent();will(returnValue(new ArrayList<MessageUid>()));
-                }
-            }
-        );
+        when(mailboxManager.getMailbox(mailboxPath, mailboxSession)).thenReturn(mailbox, mailbox);
+        when(session.getSelected()).thenReturn(selectedMailbox);
+        when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
+        when(selectedMailbox.isSizeChanged()).thenReturn(false);
+        when(selectedMailbox.getPath()).thenReturn(mailboxPath);
+        when(selectedMailbox.flagUpdateUids()).thenReturn(Collections.EMPTY_LIST);
+        when(selectedMailbox.getRecent()).thenReturn(new ArrayList<>());
     }
-
 
     private Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.UK);
@@ -428,14 +405,11 @@ public class SearchProcessorTest {
 
     @Test
     public void testUID() throws Exception {
-        mockery.checking(new Expectations() {{
-                    allowing(selectedMailbox).getFirstUid();will(returnValue(Optional.of(MessageUid.of(1))));
-                    allowing(selectedMailbox).getLastUid();will(returnValue(Optional.of(MessageUid.of(1048))));
-                    allowing(selectedMailbox).existsCount();will(returnValue(1L));
-                }
-            }
-        );
-        expectsGetSelectedMailbox();            
+        when(selectedMailbox.getFirstUid()).thenReturn(Optional.of(MessageUid.of(1)));
+        when(selectedMailbox.getLastUid()).thenReturn(Optional.of(MessageUid.of(1048)));
+        when(selectedMailbox.existsCount()).thenReturn(1L);
+
+        expectsGetSelectedMailbox();
 
         check(SearchKey.buildUidSet(IDS), SearchQuery.uid(RANGES));
     }
@@ -486,37 +460,29 @@ public class SearchProcessorTest {
         check(key, query);
     }
 
-    private void check(SearchKey key, final SearchQuery query) throws Exception {        
-        mockery.checking(new Expectations() {{
-                    allowing(session).getAttribute(
-                            with(equal(SearchProcessor.SEARCH_MODSEQ))); will(returnValue(null));
-                    allowing(session).setAttribute(SearchProcessor.SEARCH_MODSEQ, null);
-                    allowing(session).getAttribute(
-                            with(equal(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))); will(returnValue((MailboxSession) mailboxSession));
-                    oneOf(mailbox).search(
-                            with(equal(query)),
-                            with(equal(mailboxSession)));will(
-                                    returnValue(new ArrayList<MessageUid>().iterator()));
-                    oneOf(responder).respond(with(equal(new SearchResponse(EMPTY, null))));
-                    allowing(selectedMailbox).getApplicableFlags(); will(returnValue(new Flags()));
-                    allowing(selectedMailbox).hasNewApplicableFlags(); will(returnValue(false));
-                  
-                }
-            }
-        );
+    private void check(SearchKey key, final SearchQuery query) throws Exception {
+        when(session.getAttribute(SearchProcessor.SEARCH_MODSEQ)).thenReturn(null);
+        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mailbox.search(query, mailboxSession)).thenReturn(new ArrayList<MessageUid>().iterator());
+        when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
+        when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
+
         SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<>()), false, TAG);
         processor.doProcess(message, session, TAG, command, responder);
     }
 
     private void expectOk() {
-        mockery.checking(new Expectations() {{
-                    oneOf(serverResponseFactory).taggedOk(
-                            with(equal(TAG)),
-                            with(same(command)), 
-                            with(equal(HumanReadableText.COMPLETED)));will(returnValue(statusResponse));    
-                    oneOf(responder).respond(with(same(statusResponse)));
-                }
-            }
-        );
+        when(serverResponseFactory
+                .taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+            .thenReturn(statusResponse);
+    }
+
+    private void verifyCalls() {
+        verify(selectedMailbox).resetEvents();
+
+        verify(session).setAttribute(SearchProcessor.SEARCH_MODSEQ, null);
+        verify(responder).respond(new SearchResponse(EMPTY, null));
+
+        verify(responder).respond(same(statusResponse));
     }
 }

@@ -19,11 +19,13 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
@@ -31,31 +33,21 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
 public class FetchCommandParserPartialFetchTest  {
 
-    Mockery context = new JUnit4Mockery();
-    
     FetchCommandParser parser;
-
     ImapCommand command;
-
-    ImapMessage message;
     ImapSession session;
 
     @Before
     public void setUp() throws Exception {
         parser = new FetchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = context.mock(ImapMessage.class);
-        session = context.mock(ImapSession.class);
-        
+        session = mock(ImapSession.class);
     }
-
 
     @Test
     public void testShouldParseZeroAndLength() throws Exception {
@@ -77,16 +69,12 @@ public class FetchCommandParserPartialFetchTest  {
 
     @Test
     public void testShouldNotParseZeroLength() throws Exception {
-        try {
-            ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                    new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
-                            .getBytes("US-ASCII")), new ByteArrayOutputStream());
-            parser.decode(command, reader, "A01", false, session);                
-            throw new Exception("Number of octets must be non-zero");
+        ImapRequestLineReader reader = new ImapRequestStreamLineReader(
+                new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
+                        .getBytes("US-ASCII")), new ByteArrayOutputStream());
 
-        } catch (DecodingException e) {
-            // expected
-        }
+        assertThatThrownBy(() -> parser.decode(command, reader, "A01", false, session))
+            .isInstanceOf(DecodingException.class);
     }
 
     private void check(String input, IdRange[] idSet,

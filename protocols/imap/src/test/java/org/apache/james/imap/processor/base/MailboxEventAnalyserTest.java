@@ -119,7 +119,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnOtherEvent() throws Exception {
+    public void testShouldBeNoSizeChangeOnOtherEvent() {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION, MAILBOX_PATH) {};
       
         testee.event(event);
@@ -128,13 +128,13 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldBeNoSizeChangeOnAdded() throws Exception {
+    public void testShouldBeNoSizeChangeOnAdded() {
         testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
-    public void testShouldNoSizeChangeAfterReset() throws Exception {
+    public void testShouldNoSizeChangeAfterReset() {
         testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
         testee.resetEvents();
 
@@ -142,7 +142,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenNoSystemFlagChange() throws Exception {
+    public void testShouldNotSetUidWhenNoSystemFlagChange() {
         FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
             ImmutableList.of(MessageUid.of(90L)),
             ImmutableList.of(UpdatedFlags.builder()
@@ -158,7 +158,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChange() throws Exception {
+    public void testShouldSetUidWhenSystemFlagChange() {
         MessageUid uid = MessageUid.of(900);
         
         FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(OTHER_MAILBOX_SESSION,
@@ -176,7 +176,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldClearFlagUidsUponReset() throws Exception {
+    public void testShouldClearFlagUidsUponReset() {
         MessageUid uid = MessageUid.of(900);
         SelectedMailboxImpl analyser = this.testee;
         
@@ -197,7 +197,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() throws Exception {
+    public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
         MessageUid uid = MessageUid.of(900);
 
         FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(OTHER_MAILBOX_SESSION,
@@ -217,7 +217,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() throws Exception {
+    public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
         FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
             ImmutableList.of(MessageUid.of(345)),
             ImmutableList.of(UpdatedFlags.builder()
@@ -235,7 +235,7 @@ public class MailboxEventAnalyserTest {
     }
 
     @Test
-    public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() throws Exception {
+    public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
         FakeMailboxListenerFlagsUpdate update = new FakeMailboxListenerFlagsUpdate(MAILBOX_SESSION,
             ImmutableList.of(MessageUid.of(886)),
             ImmutableList.of(UpdatedFlags.builder()

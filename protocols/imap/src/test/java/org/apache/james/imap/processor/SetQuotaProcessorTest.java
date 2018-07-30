@@ -60,7 +60,7 @@ public class SetQuotaProcessorTest {
     }
 
     @Test
-    public void processorShouldWorkOnNoRights() throws Exception {
+    public void processorShouldWorkOnNoRights() {
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);

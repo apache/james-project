@@ -128,8 +128,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldThrowProtocolExceptionWhenSpecifierBogus()
-            throws Exception {
+    public void testShouldThrowProtocolExceptionWhenSpecifierBogus() {
         try {
             decoder.decode("1.34.BOGUS");
             fail("Expected protocol exception to be thrown");
@@ -139,8 +138,7 @@ public class FetchPartPathDecoderTest {
     }
 
     @Test
-    public void testShouldThrowProtocolExceptionWhenPathBogus()
-            throws Exception {
+    public void testShouldThrowProtocolExceptionWhenPathBogus() {
         try {
             decoder.decode("1.34.BOGUS.44.34234.324");
             fail("Expected protocol exception to be thrown");

@@ -18,6 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,7 +36,6 @@ import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
@@ -39,9 +46,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -56,92 +60,74 @@ public class NamespaceProcessorTest {
     StatusResponseFactory statusResponseStub;
     ImapSession imapSessionStub;
     MailboxSession mailboxSessionStub;
-    String personalSpaceStub;
-    String usersSpaceStub;
-    String sharedSpaceStub;
     NamespaceRequest namespaceRequest;
     Collection<String> sharedSpaces;
     MailboxManager mailboxManagerStub;
-    Mockery mockery = new JUnit4Mockery();
-    
+
     @Before
     public void setUp() throws Exception {
         sharedSpaces = new ArrayList<>();
-        statusResponseStub = mockery.mock(StatusResponseFactory.class);
-        mailboxManagerStub = mockery.mock(MailboxManager.class);
-        subject = new NamespaceProcessor(mockery.mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
-        imapSessionStub = mockery.mock(ImapSession.class);
-        mailboxSessionStub = mockery.mock(MailboxSession.class);
+        statusResponseStub = mock(StatusResponseFactory.class);
+        mailboxManagerStub = mock(MailboxManager.class);
+        subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
+        imapSessionStub = mock(ImapSession.class);
+        mailboxSessionStub = mock(MailboxSession.class);
      
         namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), "TAG");
        
     }
-    
 
-    
     @Test
-    public void testNamespaceResponseShouldContainPersonalAndUserSpaces() throws Exception {
-        mockery.checking(new Expectations() {{
-                    allowing(imapSessionStub).supportMultipleNamespaces(); will(returnValue(true));
-                    allowing(imapSessionStub).getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY); will(returnValue(mailboxSessionStub));
-                    allowing(imapSessionStub).getAttribute(EnableProcessor.ENABLED_CAPABILITIES); will(returnValue(null));
-                    allowing(any(ImapSession.class)).method("setAttribute");
-        
-                    allowing(mailboxSessionStub).getPersonalSpace(); will(returnValue(PERSONAL_PREFIX));
-                    allowing(mailboxSessionStub).getOtherUsersSpace(); will(returnValue(USERS_PREFIX));
-                    allowing(mailboxSessionStub).getSharedSpaces();will(returnValue(new ArrayList<String>()));
-                    allowing(mailboxSessionStub).getPathDelimiter();will(returnValue(MailboxConstants.DEFAULT_DELIMITER));
-                    allowing(imapSessionStub).getState();will(returnValue(ImapSessionState.AUTHENTICATED));
-                    allowing(statusResponseStub).taggedOk(
-                            with(any(String.class)), with(any(ImapCommand.class)), 
-                            with(any(HumanReadableText.class)), with(any(ResponseCode.class))); will(returnValue(mockery.mock(StatusResponse.class)));
-                    ignoring(imapSessionStub);
-                    ignoring(mailboxSessionStub);
-                    ignoring(mailboxManagerStub);
-                    ignoring(statusResponseStub);
-                }
-            }
-        );
-        
+    public void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
+        when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
+        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSessionStub);
+        when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
+
+        when(mailboxSessionStub.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
+        when(mailboxSessionStub.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
+        when(mailboxSessionStub.getSharedSpaces()).thenReturn(new ArrayList<>());
+        when(mailboxSessionStub.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
+
+        when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))
+            .thenReturn(mock(StatusResponse.class));
+
         final NamespaceResponse response = buildResponse(null);
-        
-        final Responder responderMock = expectResponse(response);
-        
+        final Responder responderMock = mock(Responder.class);
+
         subject.doProcess(namespaceRequest, responderMock, imapSessionStub);
+
+        verify(responderMock, times(1)).respond(response);
+        verify(responderMock, times(1)).respond(any(StatusResponse.class));
+        verifyNoMoreInteractions(responderMock);
     }
     
     @Test
-    public void testNamespaceResponseShouldContainSharedSpaces() throws Exception {
-        mockery.checking(new Expectations() {{
-                    allowing(imapSessionStub).supportMultipleNamespaces(); will(returnValue(true));
-                    allowing(imapSessionStub).getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY); will(returnValue(mailboxSessionStub));
-                    allowing(imapSessionStub).getAttribute(EnableProcessor.ENABLED_CAPABILITIES); will(returnValue(null));
-                    allowing(any(ImapSession.class)).method("setAttribute");
-                    allowing(mailboxSessionStub).getPersonalSpace(); will(returnValue(PERSONAL_PREFIX));
-                    allowing(mailboxSessionStub).getOtherUsersSpace(); will(returnValue(USERS_PREFIX));
-                    allowing(mailboxSessionStub).getSharedSpaces();will(returnValue(Arrays.asList(SHARED_PREFIX)));
-                    allowing(mailboxSessionStub).getPathDelimiter();will(returnValue(MailboxConstants.DEFAULT_DELIMITER));
-                    allowing(imapSessionStub).getState();will(returnValue(ImapSessionState.AUTHENTICATED));
-                    allowing(statusResponseStub).taggedOk(
-                            with(any(String.class)), with(any(ImapCommand.class)), 
-                            with(any(HumanReadableText.class)), with(any(ResponseCode.class))); will(returnValue(mockery.mock(StatusResponse.class)));
-                    ignoring(imapSessionStub);
-                    ignoring(mailboxSessionStub);
-                    ignoring(mailboxManagerStub);
-                    ignoring(statusResponseStub);
-                }
-            }
-        );
-        this.sharedSpaces.add(sharedSpaceStub);
-        
+    public void testNamespaceResponseShouldContainSharedSpaces() {
+        when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
+        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSessionStub);
+        when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
+
+        when(mailboxSessionStub.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
+        when(mailboxSessionStub.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
+        when(mailboxSessionStub.getSharedSpaces()).thenReturn(Arrays.asList(SHARED_PREFIX));
+        when(mailboxSessionStub.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
+
+        when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))
+            .thenReturn(mock(StatusResponse.class));
         
         final List<NamespaceResponse.Namespace> sharedSpaces = new ArrayList<>();
         sharedSpaces.add(new NamespaceResponse.Namespace(SHARED_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
         final NamespaceResponse response = buildResponse(sharedSpaces);
         
-        final Responder responderMock = expectResponse(response);
-        
+        final Responder responderMock = mock(Responder.class);
+
         subject.doProcess(namespaceRequest, responderMock, imapSessionStub);
+
+        verify(responderMock, times(1)).respond(response);
+        verify(responderMock, times(1)).respond(any(StatusResponse.class));
+        verifyNoMoreInteractions(responderMock);
     }
 
     private NamespaceResponse buildResponse(List<NamespaceResponse.Namespace> sharedSpaces) {
@@ -152,17 +138,6 @@ public class NamespaceProcessorTest {
         otherUsersSpaces.add(new NamespaceResponse.Namespace(USERS_PREFIX, MailboxConstants.DEFAULT_DELIMITER));
 
         return new NamespaceResponse(personalSpaces, otherUsersSpaces, sharedSpaces);
-    }
-
-    private Responder expectResponse(final NamespaceResponse response) {
-        final Responder responderMock = mockery.mock(Responder.class);
-        mockery.checking(new Expectations() {{
-                    oneOf(responderMock).respond(with(equal(response)));
-                    oneOf(responderMock).respond(with(any(StatusResponse.class)));
-                }
-            }
-        );
-        return responderMock;
     }
 }
 

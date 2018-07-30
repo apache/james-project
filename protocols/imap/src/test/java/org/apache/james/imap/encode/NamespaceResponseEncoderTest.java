@@ -20,6 +20,8 @@ package org.apache.james.imap.encode;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +30,10 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.NamespaceResponse;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.Sequence;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 public class NamespaceResponseEncoderTest {
 
@@ -43,14 +43,12 @@ public class NamespaceResponseEncoderTest {
 
     NamespaceResponseEncoder subject;
 
-    private Mockery context = new JUnit4Mockery();
-    
     @Before
     public void setUp() throws Exception {
-        dummySession = context.mock(ImapSession.class);
-        final ImapEncoder stubNextEncoderInChain = context.mock(ImapEncoder.class);
+        dummySession = mock(ImapSession.class);
+        final ImapEncoder stubNextEncoderInChain = mock(ImapEncoder.class);
         subject = new NamespaceResponseEncoder(stubNextEncoderInChain);
-        mockComposer = context.mock(ImapResponseComposer.class);
+        mockComposer = mock(ImapResponseComposer.class);
     }
 
     @Test
@@ -58,27 +56,22 @@ public class NamespaceResponseEncoderTest {
             throws Exception {
         final String aPrefix = "A Prefix";
         final String aDeliminator = "@";
-        context.checking(new Expectations() {
-            {
-                final Sequence sequence = context.sequence("Composition order");
-                oneOf(mockComposer).untagged(); inSequence(sequence);
-                oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).openParen();  inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(aPrefix + aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).quote(aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).end(); inSequence(sequence);
-            }
-        });
+
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(null, null, namespaces),
                 mockComposer, dummySession);
+
+        InOrder inOrder = Mockito.inOrder(mockComposer);
+        inOrder.verify(mockComposer, times(1)).untagged();
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
+        inOrder.verify(mockComposer, times(2)).nil();
+        inOrder.verify(mockComposer, times(2)).openParen();
+        inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
+        inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
+        inOrder.verify(mockComposer, times(2)).closeParen();
+        inOrder.verify(mockComposer, times(1)).end();
     }
 
     @Test
@@ -86,27 +79,23 @@ public class NamespaceResponseEncoderTest {
             throws Exception {
         final String aPrefix = "A Prefix";
         final String aDeliminator = "@";
-        context.checking(new Expectations() {
-            {
-                final Sequence sequence = context.sequence("Composition order");
-                oneOf(mockComposer).untagged(); inSequence(sequence);
-                oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(aPrefix + aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).quote(aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).end(); inSequence(sequence);
-            }
-        });
+
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(null, namespaces, null),
                 mockComposer, dummySession);
+
+        InOrder inOrder = Mockito.inOrder(mockComposer);
+        inOrder.verify(mockComposer, times(1)).untagged();
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
+        inOrder.verify(mockComposer, times(1)).nil();
+        inOrder.verify(mockComposer, times(2)).openParen();
+        inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
+        inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
+        inOrder.verify(mockComposer, times(2)).closeParen();
+        inOrder.verify(mockComposer, times(1)).nil();
+        inOrder.verify(mockComposer, times(1)).end();
     }
 
     @Test
@@ -114,27 +103,22 @@ public class NamespaceResponseEncoderTest {
             throws Exception {
         final String aPrefix = "A Prefix";
         final String aDeliminator = "@";
-        context.checking(new Expectations() {
-            {
-                final Sequence sequence = context.sequence("Composition order");
-                oneOf(mockComposer).untagged(); inSequence(sequence);
-                oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(aPrefix + aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).quote(aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).end(); inSequence(sequence);
-            }
-        });
+
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
         subject.doEncode(new NamespaceResponse(namespaces, null, null),
                 mockComposer, dummySession);
+
+        InOrder inOrder = Mockito.inOrder(mockComposer);
+        inOrder.verify(mockComposer, times(1)).untagged();
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
+        inOrder.verify(mockComposer, times(2)).openParen();
+        inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
+        inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
+        inOrder.verify(mockComposer, times(2)).closeParen();
+        inOrder.verify(mockComposer, times(2)).nil();
+        inOrder.verify(mockComposer, times(1)).end();
     }
 
     @Test
@@ -144,26 +128,7 @@ public class NamespaceResponseEncoderTest {
         final String aDeliminator = "@";
         final String anotherPrefix = "Another Prefix";
         final String anotherDeliminator = "^";
-        context.checking(new Expectations() {
-            {
-                final Sequence sequence = context.sequence("Composition order");
-                oneOf(mockComposer).untagged(); inSequence(sequence);
-                oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(aPrefix + aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).quote(aDeliminator); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).openParen(); inSequence(sequence);
-                oneOf(mockComposer).quote(anotherPrefix + anotherDeliminator); inSequence(sequence);
-                oneOf(mockComposer).quote(anotherDeliminator); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).closeParen(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).end(); inSequence(sequence);
-            }
-        });
+
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
@@ -171,28 +136,38 @@ public class NamespaceResponseEncoderTest {
                 anotherDeliminator.charAt(0)));
         subject.doEncode(new NamespaceResponse(namespaces, null, null),
                 mockComposer, dummySession);
+
+        InOrder inOrder = Mockito.inOrder(mockComposer);
+        inOrder.verify(mockComposer, times(1)).untagged();
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
+        inOrder.verify(mockComposer, times(2)).openParen();
+        inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
+        inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
+        inOrder.verify(mockComposer, times(1)).closeParen();
+        inOrder.verify(mockComposer, times(1)).openParen();
+        inOrder.verify(mockComposer, times(1)).quote(anotherPrefix + anotherDeliminator);
+        inOrder.verify(mockComposer, times(1)).quote(anotherDeliminator);
+        inOrder.verify(mockComposer, times(2)).closeParen();
+        inOrder.verify(mockComposer, times(2)).nil();
+        inOrder.verify(mockComposer, times(1)).end();
     }
 
     @Test
     public void testAllNullShouldWriteAllNIL() throws Exception {
-        context.checking(new Expectations() {
-            {
-                final Sequence sequence = context.sequence("Composition order");
-                oneOf(mockComposer).untagged(); inSequence(sequence);
-                oneOf(mockComposer).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).nil(); inSequence(sequence);
-                oneOf(mockComposer).end(); inSequence(sequence);
-            }
-        });
+
         subject.doEncode(new NamespaceResponse(null, null, null), mockComposer,
                 dummySession);
+
+        InOrder inOrder = Mockito.inOrder(mockComposer);
+        inOrder.verify(mockComposer, times(1)).untagged();
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
+        inOrder.verify(mockComposer, times(3)).nil();
+        inOrder.verify(mockComposer, times(1)).end();
     }
 
     @Test
-    public void testNamespaceResponseIsAcceptable() throws Exception {
-        assertFalse(subject.isAcceptable(context.mock(ImapMessage.class)));
+    public void testNamespaceResponseIsAcceptable() {
+        assertFalse(subject.isAcceptable(mock(ImapMessage.class)));
         assertTrue(subject
                 .isAcceptable(new NamespaceResponse(null, null, null)));
     }

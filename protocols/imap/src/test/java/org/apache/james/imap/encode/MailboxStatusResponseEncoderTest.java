@@ -22,14 +22,13 @@ package org.apache.james.imap.encode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,21 +40,18 @@ public class MailboxStatusResponseEncoderTest  {
 
     ByteImapResponseWriter writer = new ByteImapResponseWriter();
     ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
-    
-    private Mockery context = new JUnit4Mockery();
-    
+
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
+        mockNextEncoder = mock(ImapEncoder.class);
         encoder = new MailboxStatusResponseEncoder(mockNextEncoder);
     }
-    
 
     @Test
-    public void testIsAcceptable() throws Exception {
+    public void testIsAcceptable() {
         assertTrue(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
                 null, null, null, "mailbox")));
-        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
+        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
         assertFalse(encoder.isAcceptable(null));
     }
 

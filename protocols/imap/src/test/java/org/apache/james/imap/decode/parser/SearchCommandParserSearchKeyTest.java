@@ -35,8 +35,6 @@ import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.protocols.imap.DecodingException;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,21 +43,14 @@ public class SearchCommandParserSearchKeyTest {
     private static final DayMonthYear DATE = new DayMonthYear(1, 1, 2000);
 
     SearchCommandParser parser;
-    
     ImapCommand command;
-
     ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
 
     @Before
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
     }
-
-    
 
     @Test
     public void testShouldParseAll() throws Exception {

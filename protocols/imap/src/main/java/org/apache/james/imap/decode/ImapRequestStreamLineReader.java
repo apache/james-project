@@ -73,7 +73,7 @@ public class ImapRequestStreamLineReader extends ImapRequestLineReader {
     }
 
     @Override
-    public InputStream read(int size, boolean extraCRLF) throws DecodingException {
+    public InputStream read(int size, boolean extraCRLF) {
 
         // Unset the next char.
         nextSeen = false;

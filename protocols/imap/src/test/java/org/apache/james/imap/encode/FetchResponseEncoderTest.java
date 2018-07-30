@@ -22,6 +22,7 @@ package org.apache.james.imap.encode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import javax.mail.Flags;
 
@@ -30,8 +31,6 @@ import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MessageUid;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,22 +44,20 @@ public class FetchResponseEncoderTest  {
 
     private FetchResponseEncoder encoder;
 
-    private Mockery context = new JUnit4Mockery();
-
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = context.mock(ImapEncoder.class);
+        mockNextEncoder = mock(ImapEncoder.class);
         encoder = new FetchResponseEncoder(mockNextEncoder, false);
         flags = new Flags(Flags.Flag.DELETED);
     }
 
     @Test
-    public void testShouldNotAcceptUnknownResponse() throws Exception {
-        assertFalse(encoder.isAcceptable(context.mock(ImapMessage.class)));
+    public void testShouldNotAcceptUnknownResponse() {
+        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
     }
 
     @Test
-    public void testShouldAcceptFetchResponse() throws Exception {
+    public void testShouldAcceptFetchResponse() {
         assertTrue(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
                 null, null, null, null, null)));
     }

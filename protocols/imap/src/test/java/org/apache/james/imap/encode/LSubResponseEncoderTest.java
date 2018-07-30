@@ -20,6 +20,7 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
@@ -27,8 +28,6 @@ import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -38,11 +37,9 @@ public class LSubResponseEncoderTest  {
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
-    private Mockery context = new JUnit4Mockery();
-
     @Before
     public void setUp() throws Exception {
-        encoder = new LSubResponseEncoder(context.mock(ImapEncoder.class));
+        encoder = new LSubResponseEncoder(mock(ImapEncoder.class));
     }
 
     @Test
@@ -58,7 +55,7 @@ public class LSubResponseEncoderTest  {
 
     @Test
     public void encoderShouldNotAcceptImapMessage() {
-        assertThat(encoder.isAcceptable(context.mock(ImapMessage.class))).isFalse();
+        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
     }
 
     @Test

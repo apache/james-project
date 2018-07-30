@@ -28,7 +28,7 @@ import org.junit.Test;
 public class StatusResponseTest  {
 
     @Test
-    public void testResponseCodeExtension() throws Exception {
+    public void testResponseCodeExtension() {
         assertEquals("Preserve names beginning with X", "XEXTENSION",
                 StatusResponse.ResponseCode.createExtension("XEXTENSION")
                         .getCode());
@@ -38,7 +38,7 @@ public class StatusResponseTest  {
     }
 
     @Test
-    public void responseCodeShouldBuildTheLongestEntryForMetadata() throws Exception {
+    public void responseCodeShouldBuildTheLongestEntryForMetadata() {
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getCode()).isEqualTo("METADATA LONGENTRIES");
         assertThat(StatusResponse.ResponseCode.longestMetadataEntry(1024).getNumber()).isEqualTo(1024);
     }

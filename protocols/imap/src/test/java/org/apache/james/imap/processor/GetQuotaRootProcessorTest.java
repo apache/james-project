@@ -19,6 +19,15 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.api.message.response.StatusResponse.Type.OK;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.only;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCount;
@@ -26,6 +35,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -44,11 +54,9 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 public class GetQuotaRootProcessorTest {
 
@@ -60,7 +68,6 @@ public class GetQuotaRootProcessorTest {
         Quota.<QuotaSize>builder().used(QuotaSize.size(240)).computedLimit(QuotaSize.size(15890)).build();
 
     private GetQuotaRootProcessor testee;
-    private Mockery mockery;
     private ImapSession mockedImapSession;
     private ImapProcessor.Responder mockedResponder;
     private QuotaManager mockedQuotaManager;
@@ -71,122 +78,86 @@ public class GetQuotaRootProcessorTest {
     @Before
     public void setUp() {
         mailboxSession = new MockMailboxSession("plop");
-        mockery = new JUnit4Mockery();
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
-        mockedImapSession = mockery.mock(ImapSession.class);
-        mockedQuotaManager = mockery.mock(QuotaManager.class);
-        mockedQuotaRootResolver = mockery.mock(QuotaRootResolver.class);
-        mockedResponder = mockery.mock(ImapProcessor.Responder.class);
-        mockedMailboxManager = mockery.mock(MailboxManager.class);
-        testee = new GetQuotaRootProcessor(mockery.mock(ImapProcessor.class), mockedMailboxManager,
+        mockedImapSession = mock(ImapSession.class);
+        mockedQuotaManager = mock(QuotaManager.class);
+        mockedQuotaRootResolver = mock(QuotaRootResolver.class);
+        mockedResponder = mock(ImapProcessor.Responder.class);
+        mockedMailboxManager = mock(MailboxManager.class);
+        testee = new GetQuotaRootProcessor(mock(ImapProcessor.class), mockedMailboxManager,
             statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new NoopMetricFactory());
     }
 
     @Test
     public void processorShouldWorkOnValidRights() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest("A004", ImapCommand.anyStateCommand("Name"), "INBOX");
-        Expectations expectations = new Expectations();
 
-        expectations.allowing(mockedImapSession).getState();
-        expectations.will(Expectations.returnValue(ImapSessionState.AUTHENTICATED));
-
-        expectations.allowing(mockedImapSession).getAttribute(expectations.with(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY));
-        expectations.will(Expectations.returnValue(mailboxSession));
-
-        expectations.allowing(mockedQuotaRootResolver).getQuotaRoot(expectations.with(MAILBOX_PATH));
-        expectations.will(Expectations.returnValue(QUOTA_ROOT));
-
-        expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
-        expectations.will(Expectations.returnValue(true));
-
-        expectations.allowing(mockedQuotaManager).getMessageQuota(expectations.with(QUOTA_ROOT));
-        expectations.will(Expectations.returnValue(MESSAGE_QUOTA));
-
-        expectations.allowing(mockedQuotaManager).getStorageQuota(expectations.with(QUOTA_ROOT));
-        expectations.will(Expectations.returnValue(STORAGE_QUOTA));
-
-        expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).endProcessingRequest(expectations.with(mailboxSession));
+        when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession)).thenReturn(true);
+        when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(MESSAGE_QUOTA);
+        when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(STORAGE_QUOTA);
 
         final QuotaResponse storageQuotaResponse = new QuotaResponse("STORAGE", "plop", STORAGE_QUOTA);
         final QuotaResponse messageQuotaResponse = new QuotaResponse("MESSAGE", "plop", MESSAGE_QUOTA);
         final QuotaRootResponse quotaRootResponse = new QuotaRootResponse("INBOX", "plop");
 
-        mockery.checking(expectations);
-
-        mockery.checking(new Expectations() {
-            {
-                oneOf(mockedResponder).respond(with(equal(quotaRootResponse)));
-                oneOf(mockedResponder).respond(with(equal(storageQuotaResponse)));
-                oneOf(mockedResponder).respond(with(equal(messageQuotaResponse)));
-                oneOf(mockedResponder).respond(with(new StatusResponseTypeMatcher(StatusResponse.Type.OK)));
-            }
-        });
-
         testee.doProcess(getQuotaRootRequest, mockedResponder, mockedImapSession);
+
+        verify(mockedMailboxManager, times(1)).startProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager, times(1)).endProcessingRequest(mailboxSession);
+
+        ArgumentCaptor<ImapResponseMessage> responseCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
+        verify(mockedResponder, times(4)).respond(responseCaptor.capture());
+
+        List<ImapResponseMessage> captorValues = responseCaptor.getAllValues();
+        assertThat(captorValues).contains(quotaRootResponse, storageQuotaResponse, messageQuotaResponse);
+        assertThat(captorValues).anySatisfy(response -> assertThat(response).isInstanceOfSatisfying(
+            StatusResponse.class,
+            st -> assertThat(st.getServerResponseType()).isEqualTo(OK)));
     }
 
     @Test
     public void processorShouldWorkOnErrorThrown() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest("A004", ImapCommand.anyStateCommand("Name"), "INBOX");
-        Expectations expectations = new Expectations();
 
-        expectations.allowing(mockedImapSession).getState();
-        expectations.will(Expectations.returnValue(ImapSessionState.AUTHENTICATED));
-
-        expectations.allowing(mockedImapSession).getAttribute(expectations.with(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY));
-        expectations.will(Expectations.returnValue(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
-        expectations.will(Expectations.throwException(new MailboxException()));
-
-        expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).endProcessingRequest(expectations.with(mailboxSession));
-
-
-        mockery.checking(expectations);
-
-        mockery.checking(new Expectations() {
-            {
-                oneOf(mockedResponder).respond(with(new StatusResponseTypeMatcher(StatusResponse.Type.BAD)));
-            }
-        });
+        when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession)).thenThrow(new MailboxException());
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, mockedImapSession);
+
+        verify(mockedMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager).endProcessingRequest(mailboxSession);
+
+        ArgumentCaptor<StatusResponse> responseCaptor = ArgumentCaptor.forClass(StatusResponse.class);
+        verify(mockedResponder, only()).respond(responseCaptor.capture());
+
+        assertThat(responseCaptor.getValue())
+            .extracting(StatusResponse::getServerResponseType)
+            .containsOnlyOnce(StatusResponse.Type.BAD);
     }
 
     @Test
     public void processorShouldWorkOnNonValidRights() throws Exception {
         GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest("A004", ImapCommand.anyStateCommand("Name"), "INBOX");
-        Expectations expectations = new Expectations();
 
-        expectations.allowing(mockedImapSession).getState();
-        expectations.will(Expectations.returnValue(ImapSessionState.AUTHENTICATED));
-
-        expectations.allowing(mockedImapSession).getAttribute(expectations.with(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY));
-        expectations.will(Expectations.returnValue(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).hasRight(expectations.with(MAILBOX_PATH),
-            expectations.with(MailboxACL.Right.Read), expectations.with(mailboxSession));
-        expectations.will(Expectations.returnValue(false));
-
-        expectations.allowing(mockedMailboxManager).startProcessingRequest(expectations.with(mailboxSession));
-
-        expectations.allowing(mockedMailboxManager).endProcessingRequest(expectations.with(mailboxSession));
-
-        mockery.checking(expectations);
-
-        mockery.checking(new Expectations() {
-            {
-                oneOf(mockedResponder).respond(with(new StatusResponseTypeMatcher(StatusResponse.Type.NO)));
-            }
-        });
+        when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mockedMailboxManager.hasRight(MAILBOX_PATH, MailboxACL.Right.Read, mailboxSession)).thenReturn(false);
 
         testee.doProcess(getQuotaRootRequest, mockedResponder, mockedImapSession);
+
+        verify(mockedMailboxManager).startProcessingRequest(mailboxSession);
+        verify(mockedMailboxManager).endProcessingRequest(mailboxSession);
+
+        ArgumentCaptor<StatusResponse> responseCaptor = ArgumentCaptor.forClass(StatusResponse.class);
+        verify(mockedResponder, only()).respond(responseCaptor.capture());
+
+        assertThat(responseCaptor.getValue())
+            .extracting(StatusResponse::getServerResponseType)
+            .containsOnlyOnce(StatusResponse.Type.NO);
     }
 
 }

@@ -105,7 +105,7 @@ public class DecoderUtilsTest {
         checkDateTime("123456789012345678901234567");
     }
 
-    private void checkDateTime(String datetime) throws Exception {
+    private void checkDateTime(String datetime) {
         try {
             DecoderUtils.decodeDateTime(datetime);
             fail("Bad date-time" + datetime);
@@ -325,7 +325,7 @@ public class DecoderUtilsTest {
     }
 
     @Test
-    public void testRejectBogusMonths() throws Exception {
+    public void testRejectBogusMonths() {
         checkReject('N', 'O', 'C');
         checkReject('A', 'N', 'T');
         checkReject('Z', 'Z', 'Z');
@@ -357,7 +357,7 @@ public class DecoderUtilsTest {
     }
 
     @Test
-    public void testRejectBogusYear() throws Exception {
+    public void testRejectBogusYear() {
         checkRejectYear('D', '0', '2', '3');
         checkRejectYear('1', 'A', '2', '3');
         checkRejectYear('1', '5', 'B', '3');
@@ -432,7 +432,7 @@ public class DecoderUtilsTest {
     }
 
     @Test
-    public void testBogusZones() throws Exception {
+    public void testBogusZones() {
         checkRejectZone(" 0000");
         checkRejectZone(" GMT ");
         checkRejectZone("DANG!");
@@ -457,7 +457,7 @@ public class DecoderUtilsTest {
     }
 
     @Test
-    public void testIsSimpleDigit() throws Exception {
+    public void testIsSimpleDigit() {
         assertTrue(DecoderUtils.isSimpleDigit('0'));
         assertTrue(DecoderUtils.isSimpleDigit('1'));
         assertTrue(DecoderUtils.isSimpleDigit('2'));
@@ -507,7 +507,7 @@ public class DecoderUtilsTest {
     }
 
     @Test
-    public void testRejectNumber() throws Exception {
+    public void testRejectNumber() {
         checkRejectNumber("A1");
         checkRejectNumber("1A");
         checkRejectNumber("AA");

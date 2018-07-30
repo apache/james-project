@@ -21,6 +21,12 @@ package org.apache.james.imap.decode.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,9 +43,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.protocols.imap.DecodingException;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JUnit4Mockery;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -129,14 +132,9 @@ public class SearchCommandParserQuotedCharsetTest {
     }
 
     SearchCommandParser parser;
-
     StatusResponseFactory mockStatusResponseFactory;
-
     ImapCommand command;
-
     ImapMessage message;
-
-    private Mockery mockery = new JUnit4Mockery();
 
     private ImapSession session;
     
@@ -144,9 +142,9 @@ public class SearchCommandParserQuotedCharsetTest {
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        message = mockery.mock(ImapMessage.class);
-        mockStatusResponseFactory = mockery.mock(StatusResponseFactory.class);
-        session = mockery.mock(ImapSession.class);
+        message = mock(ImapMessage.class);
+        mockStatusResponseFactory = mock(StatusResponseFactory.class);
+        session = mock(ImapSession.class);
 
         parser.setStatusResponseFactory(mockStatusResponseFactory);
     }
@@ -177,19 +175,17 @@ public class SearchCommandParserQuotedCharsetTest {
 
     @Test
     public void testBadCharset() throws Exception {      
-        mockery.checking(new Expectations() {{
-                oneOf(mockStatusResponseFactory).taggedNo(
-                        with(equal(TAG)), 
-                        with(same(command)), 
-                        with(equal(HumanReadableText.BAD_CHARSET)),
-                        with(equal(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames()))));
-                }
-            }
-        );
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
         parser.decode(command, reader, TAG, false, session);
+
+        verify(mockStatusResponseFactory, times(1)).taggedNo(
+            eq(TAG),
+            same(command),
+            eq(HumanReadableText.BAD_CHARSET),
+            eq(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames())));
+        verifyNoMoreInteractions(mockStatusResponseFactory);
     }
 
     @Test

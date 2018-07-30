@@ -216,7 +216,7 @@ public class CopyProcessorTest {
     }
 
     @Test
-    public void processShouldNotHandleMoveRequests() throws Exception {
+    public void processShouldNotHandleMoveRequests() {
         MoveRequest moveRequest = new MoveRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         testee.process(moveRequest, mockResponder, mockImapSession);

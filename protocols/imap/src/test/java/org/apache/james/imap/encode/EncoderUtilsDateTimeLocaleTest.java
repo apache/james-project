@@ -37,52 +37,52 @@ public class EncoderUtilsDateTimeLocaleTest  {
     }
 
     @Test
-    public void testUS() throws Exception {
+    public void testUS() {
         runTests(Locale.US);
     }
     
     @Test
-    public void testUK() throws Exception {
+    public void testUK() {
         runTests(Locale.UK);
     }
 
     @Test
-    public void testITALY() throws Exception {
+    public void testITALY() {
         runTests(Locale.ITALY);
     }
 
     @Test
-    public void testGERMANY() throws Exception {
+    public void testGERMANY() {
         runTests(Locale.GERMANY);
     }
 
     @Test
-    public void testFRANCE() throws Exception {
+    public void testFRANCE() {
         runTests(Locale.FRANCE);
     }
 
     @Test
-    public void testCANADA() throws Exception {
+    public void testCANADA() {
         runTests(Locale.CANADA);
     }
 
     @Test
-    public void testCHINA() throws Exception {
+    public void testCHINA() {
         runTests(Locale.CHINA);
     }
 
     @Test
-    public void testJAPAN() throws Exception {
+    public void testJAPAN() {
         runTests(Locale.JAPAN);
     }
 
     @Test
-    public void testKOREA() throws Exception {
+    public void testKOREA() {
         runTests(Locale.KOREA);
     }
 
     @Test
-    public void testTAIWAN() throws Exception {
+    public void testTAIWAN() {
         runTests(Locale.TAIWAN);
     }
 

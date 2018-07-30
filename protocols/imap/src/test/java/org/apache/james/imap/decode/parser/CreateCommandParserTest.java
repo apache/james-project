@@ -60,7 +60,7 @@ public class CreateCommandParserTest {
     }
 
     @Test
-    public void decodeShouldThrowWhenCommandHasEmptyMailbox() throws DecodingException {
+    public void decodeShouldThrowWhenCommandHasEmptyMailbox() {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
@@ -69,7 +69,7 @@ public class CreateCommandParserTest {
     }
 
     @Test
-    public void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() throws DecodingException {
+    public void decodeShouldThrowWhenCommandHasOnlySeparatorMailbox() {
         InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
