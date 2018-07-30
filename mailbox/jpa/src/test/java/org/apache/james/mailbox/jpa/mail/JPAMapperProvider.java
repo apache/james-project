@@ -29,7 +29,6 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;

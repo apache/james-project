@@ -39,6 +39,7 @@ public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
     public static void setUpClass() {
         cassandra = CassandraCluster.create(CassandraSubscriptionModule.MODULE, cassandraServer.getHost());
     }
+
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
         return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);

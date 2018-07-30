@@ -19,7 +19,6 @@
 
 package org.apache.james.transport.mailets;
 
-
 import static io.restassured.RestAssured.given;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;

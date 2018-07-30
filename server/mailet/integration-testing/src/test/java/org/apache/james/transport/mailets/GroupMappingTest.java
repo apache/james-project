@@ -58,8 +58,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import com.jayway.awaitility.Duration;
-
 import io.restassured.specification.RequestSpecification;
 
 public class GroupMappingTest {
