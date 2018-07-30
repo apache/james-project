@@ -631,7 +631,7 @@
         <karaf.tooling.exam.container.version>2.3.0</karaf.tooling.exam.container.version>
         <pax-logging-api.version>1.6.4</pax-logging-api.version>
         <jackson.version>2.9.6</jackson.version>
-        <jetty.version>9.4.11.v20180605</jetty.version>
+        <jetty.version>9.4.7.v20170914</jetty.version>
         <testcontainers.version>1.8.1</testcontainers.version>
         <metrics.version>3.2.6</metrics.version>
         <joda.version>2.9.4</joda.version>
