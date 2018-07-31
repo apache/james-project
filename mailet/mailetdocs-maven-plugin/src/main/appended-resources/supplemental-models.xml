@@ -86,21 +86,4 @@
       </licenses>
     </project>
   </supplement>
-  <supplement>
-    <project>
-      <groupId>jmock</groupId>
-      <artifactId>jmock</artifactId>
-      <name>JMock</name>
-      <organization>
-        <name>jMock.org</name>
-        <url>http://jmock.org</url>
-      </organization>
-      <licenses>
-        <license>
-          <name>jMock Project License</name>
-          <url>http://www.jmock.org/license.html</url>
-        </license>
-      </licenses>
-    </project>
-  </supplement>
 </supplementalDataModels>
