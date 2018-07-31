@@ -90,7 +90,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             try {
                 session.close();
             } catch (JMSException e) {
-                LOGGER.error("Error while closing session", e);
+                // Ignore. See JAMES-2509
             }
         }
     }
@@ -100,7 +100,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             try {
                 producer.close();
             } catch (JMSException e) {
-                LOGGER.error("Error while closing producer", e);
+                // Ignore. See JAMES-2509
             }
         }
     }
@@ -110,7 +110,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             try {
                 consumer.close();
             } catch (JMSException e) {
-                LOGGER.error("Error while closing consumer", e);
+                // Ignore. See JAMES-2509
             }
         }
     }
@@ -130,7 +130,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
             try {
                 browser.close();
             } catch (JMSException e) {
-                LOGGER.error("Error while closing browser", e);
+                // Ignore. See JAMES-2509
             }
         }
     }
