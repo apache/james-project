@@ -420,13 +420,13 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
   <section name="Apache Mailet">
   
-    <p>Apache Mailet 3.0.1 is the latest stable version. </p>
+    <p>Apache Mailet 3.1.0 is the latest stable version. </p>
 
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-api-sources-3.0.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-api-3.1.0-sources.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-api-3.1.0-sources.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-api-3.1.0-sources.jar.asc">PGP</a>]
     </p>
 
     <p>You can use the mailet API using this maven dependency:</p>
@@ -436,57 +436,57 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mailet-api&lt;/artifactId&gt;
-    &lt;version&gt;3.0.1&lt;/version&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-api-3.0.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-api-3.1.0.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-api-3.1.0.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-api-3.1.0.jar.asc">PGP</a>]
     </p>
     
   </section>
 
   <section name="Apache Mailet Base">
 
-    <p>Apache Mailet Base 3.0.1 is the latest stable version.</p>
+    <p>Apache Mailet Base 3.1.0 is the latest stable version.</p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-base-sources-3.0.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-base-3.1.0-sources.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-base-3.1.0-sources.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-base-3.1.0-sources.jar.asc">PGP</a>]
     </p>
 
-    <p>You can use the mailet API using this maven dependency:</p>
+    <p>You can use the mailet Base using this maven dependency:</p>
 
     <pre>
       <code>
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mailet-base&lt;/artifactId&gt;
-    &lt;version&gt;3.0.1&lt;/version&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-base-3.0.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-base-3.1.0.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-base-3.1.0.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-base-3.1.0.jar.asc">PGP</a>]
     </p>
 
   </section>
 
   <section name="Apache Mailet Standard">
 
-    <p>Apache Mailet Standard 3.0.1 is the latest stable version. </p>
+    <p>Apache Mailet Standard 3.1.0 is the latest stable version. </p>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-standard-sources-3.0.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-standard-3.1.0-sources.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-standard-3.1.0-sources.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-standard-3.1.0-sources.jar.asc">PGP</a>]
     </p>
 
     <p>You can use mailet Standard content using this maven dependency:</p>
@@ -496,22 +496,22 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mailet-standard&lt;/artifactId&gt;
-    &lt;version&gt;3.0.1&lt;/version&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-standard-3.0.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-standard-3.1.0.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-standard-3.1.0.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-standard-3.1.0.jar.asc">PGP</a>]
     </p>
 
   </section>
 
   <section name="Apache Crypto Mailets">
   
-    <p>Apache Crypto Mailets 3.0.1 is the latest stable version.</p>
+    <p>Apache Crypto Mailets 3.1.0 is the latest stable version.</p>
     
   <div class="ui-widget">
     <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -528,27 +528,27 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
   </div>
 
     <p>Sources:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip">(Zip)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-james-mailet-crypto-sources-3.0.1.zip.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-crypto-3.1.0-sources.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-crypto-3.1.0-sources.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-crypto-3.1.0-sources.jar.asc">PGP</a>]
     </p>
 
-    <p>You can use Mailet AI content using this maven dependency:</p>
+    <p>You can use Mailet Crypto content using this maven dependency:</p>
 
     <pre>
       <code>
   &lt;dependency&gt;
     &lt;groupId&gt;org.apache.james&lt;/groupId&gt;
     &lt;artifactId&gt;apache-mailet-crypto&lt;/artifactId&gt;
-    &lt;version&gt;3.0.1&lt;/version&gt;
+    &lt;version&gt;3.1.0&lt;/version&gt;
   &lt;/dependency&gt;
       </code>
     </pre>
 
     <p>Direct download link:
-      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar">(Jar)</a>
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.sha1">SHA-1</a>]
-      [<a href="https://apache.org/dist/james/mailets/3.0.1/apache-mailet-crypto-3.0.1.jar.asc">PGP</a>]
+      <a href="https://www.apache.org/dyn/closer.lua/james/mailets/3.1.0/apache-mailet-crypto-3.1.0.jar">(Jar)</a>
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-crypto-3.1.0.jar.sha1">SHA-1</a>]
+      [<a href="https://apache.org/dist/james/mailets/3.1.0/apache-mailet-crypto-3.1.0.jar.asc">PGP</a>]
     </p>
     
   </section>
