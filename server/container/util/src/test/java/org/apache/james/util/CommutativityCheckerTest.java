@@ -27,7 +27,8 @@ import java.util.function.BinaryOperator;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
+
+import com.google.common.collect.ImmutableSet;
 
 public class CommutativityCheckerTest {
     @Test

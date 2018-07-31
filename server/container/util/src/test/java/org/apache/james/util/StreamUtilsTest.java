@@ -25,9 +25,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.stream.Stream;
 
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 public class StreamUtilsTest {
 

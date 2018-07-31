@@ -33,7 +33,7 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-util-java8</artifactId>
+            <artifactId>james-server-util</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

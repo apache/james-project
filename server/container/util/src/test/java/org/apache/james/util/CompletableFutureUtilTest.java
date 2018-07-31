@@ -34,9 +34,9 @@ import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.base.Throwables;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class CompletableFutureUtilTest {

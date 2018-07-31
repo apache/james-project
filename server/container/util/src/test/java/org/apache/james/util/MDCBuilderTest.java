@@ -27,7 +27,8 @@ import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class MDCBuilderTest {
 
