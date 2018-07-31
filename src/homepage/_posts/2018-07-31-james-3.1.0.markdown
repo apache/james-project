@@ -1,0 +1,39 @@
+---
+layout: post
+title:  "Apache James Server 3.1.0"
+date:   2018-07-31 16:13:22 +0200
+categories: james update
+---
+
+James server 3.1.0 has been releases.
+
+Here are some points we worked on:
+
+### Added
+
+- Introduce an object store
+- Configurable listeners
+- MDN (Message Disposition notification) parsing and handling
+- SpamAssassin support with per user reports
+- Search in attachments
+- Data Leak Prevention
+- JPA SMTP Guice product
+- Cassandra migration process
+- Structured logging
+- RPM packaging (in addition to deb packaging)
+- Delegating folders
+
+### Changed
+
+- Move to Java 8
+- Improve Mail Repositories handling, including a nice web API
+- Improve Mail Queues handling, including a nice web API
+- Improve RRT (Recipient Rewrite Table) implementation
+- Quota handling improvements, and in particular users can receive an email when they are near the limit of their quota
+- Many performances enhancement, in particular on Cassandra backend
+- Documentation updates
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
