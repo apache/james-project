@@ -27,6 +27,7 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 
+import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DockerRabbitMQ {
@@ -58,7 +59,9 @@ public class DockerRabbitMQ {
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT)
                 .waitingFor(RabbitMQWaitStrategy.withDefaultTimeout(this))
-                .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()));
+                .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
+                .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
+                    .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m")));
         net.ifPresent(container::withNetwork);
         erlangCookie.ifPresent(cookie -> container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
         nodeName.ifPresent(name -> container.withEnv(RABBITMQ_NODENAME, name));
