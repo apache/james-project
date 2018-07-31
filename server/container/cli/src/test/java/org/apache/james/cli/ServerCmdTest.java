@@ -21,9 +21,9 @@ package org.apache.james.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.easymock.EasyMock.createControl;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.expectLastCall;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +44,6 @@ import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.mailbox.store.probe.SieveProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.lib.MappingsImpl;
-import org.easymock.IMocksControl;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,8 +51,7 @@ import com.google.common.collect.ImmutableList;
 
 public class ServerCmdTest {
 
-    public static final String ADDITIONAL_ARGUMENT = "additionalArgument";
-    private IMocksControl control;
+    private static final String ADDITIONAL_ARGUMENT = "additionalArgument";
 
     private DataProbe dataProbe;
     private MailboxProbe mailboxProbe;
@@ -64,11 +62,10 @@ public class ServerCmdTest {
 
     @Before
     public void setup() {
-        control = createControl();
-        dataProbe = control.createMock(DataProbe.class);
-        mailboxProbe = control.createMock(MailboxProbe.class);
-        quotaProbe = control.createMock(QuotaProbe.class);
-        sieveProbe = control.createMock(SieveProbe.class);
+        dataProbe = mock(DataProbe.class);
+        mailboxProbe = mock(MailboxProbe.class);
+        quotaProbe = mock(QuotaProbe.class);
+        sieveProbe = mock(SieveProbe.class);
         testee = new ServerCmd(dataProbe, mailboxProbe, quotaProbe, sieveProbe);
     }
 
@@ -78,12 +75,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.addDomain(domain);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).addDomain(domain);
     }
 
     @Test
@@ -92,12 +86,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.removeDomain(domain);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).removeDomain(domain);
     }
 
     @Test
@@ -106,11 +97,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand(), domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.containsDomain(domain)).andReturn(true);
+        when(dataProbe.containsDomain(domain)).thenReturn(true);
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -118,11 +107,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listDomains()).andReturn(ImmutableList.<String>of());
+        when(dataProbe.listDomains()).thenReturn(ImmutableList.of());
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -132,12 +119,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user, password};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.addUser(user, password);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).addUser(user, password);
     }
 
     @Test
@@ -146,12 +130,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.removeUser(user);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).removeUser(user);
     }
 
     @Test
@@ -160,11 +141,9 @@ public class ServerCmdTest {
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
         String[] res = {};
-        expect(dataProbe.listUsers()).andReturn(res);
+        when(dataProbe.listUsers()).thenReturn(res);
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -172,11 +151,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listMappings()).andReturn(new HashMap<>());
+        when(dataProbe.listMappings()).thenReturn(new HashMap<>());
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -186,11 +163,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(dataProbe.listUserDomainMappings(user, domain)).andReturn(MappingsImpl.empty());
+        when(dataProbe.listUserDomainMappings(user, domain)).thenReturn(MappingsImpl.empty());
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -201,12 +176,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDADDRESSMAPPING.getCommand(), user, domain, address};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.addAddressMapping(user, domain, address);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).addAddressMapping(user, domain, address);
     }
 
     @Test
@@ -217,12 +189,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEADDRESSMAPPING.getCommand(), user, domain, address};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.removeAddressMapping(user, domain, address);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).removeAddressMapping(user, domain, address);
     }
 
     @Test
@@ -233,12 +202,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDREGEXMAPPING.getCommand(), user, domain, regex};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.addRegexMapping(user, domain, regex);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).addRegexMapping(user, domain, regex);
     }
 
     @Test
@@ -249,12 +215,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEREGEXMAPPING.getCommand(), user, domain, regex};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.removeRegexMapping(user, domain, regex);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).removeRegexMapping(user, domain, regex);
     }
 
     @Test
@@ -264,12 +227,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user, password};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        dataProbe.setPassword(user, password);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(dataProbe).setPassword(user, password);
     }
 
     @Test
@@ -279,12 +239,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean, dstBean};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.copyMailbox(srcBean, dstBean);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).copyMailbox(srcBean, dstBean);
     }
 
     @Test
@@ -293,12 +250,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.deleteUserMailboxesNames(user);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).deleteUserMailboxesNames(user);
     }
 
     @Test
@@ -309,11 +263,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(mailboxProbe.createMailbox(namespace, user, name)).andReturn(control.createMock(MailboxId.class));
+        when(mailboxProbe.createMailbox(namespace, user, name)).thenReturn(mock(MailboxId.class));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -324,12 +276,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.deleteMailbox(namespace, user, name);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).deleteMailbox(namespace, user, name);
     }
     
     @Test
@@ -341,12 +290,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.importEmlFileToMailbox(namespace, user, name, emlpath);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).importEmlFileToMailbox(namespace, user, name, emlpath);
     }
 
     @Test
@@ -355,11 +301,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(mailboxProbe.listUserMailboxes(user)).andReturn(new ArrayList<>());
+        when(mailboxProbe.listUserMailboxes(user)).thenReturn(new ArrayList<>());
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -370,11 +314,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETQUOTAROOT.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getQuotaRoot(namespace, user, name)).andReturn(namespace + "&" + user);
+        when(quotaProbe.getQuotaRoot(namespace, user, name)).thenReturn(namespace + "&" + user);
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -382,11 +324,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETGLOBALMAXMESSAGECOUNTQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getGlobalMaxMessageCount()).andReturn(new SerializableQuotaValue<>(QuotaCount.count(1024L * 1024L)));
+        when(quotaProbe.getGlobalMaxMessageCount()).thenReturn(new SerializableQuotaValue<>(QuotaCount.count(1024L * 1024L)));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -394,11 +334,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETGLOBALMAXSTORAGEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getGlobalMaxStorage()).andReturn(new SerializableQuotaValue<>(QuotaSize.size(1024L * 1024L * 1024L)));
+        when(quotaProbe.getGlobalMaxStorage()).thenReturn(new SerializableQuotaValue<>(QuotaSize.size(1024L * 1024L * 1024L)));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -406,12 +344,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "1054"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setGlobalMaxMessageCount(new SerializableQuotaValue<>(QuotaCount.count(1054)));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setGlobalMaxMessageCount(new SerializableQuotaValue<>(QuotaCount.count(1054)));
     }
 
     @Test
@@ -419,20 +354,18 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setGlobalMaxMessageCount(new SerializableQuotaValue<>(QuotaCount.unlimited()));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setGlobalMaxMessageCount(new SerializableQuotaValue<>(QuotaCount.unlimited()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setGlobalMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXMESSAGECOUNTQUOTA.getCommand(), "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        testee.executeCommandLine(commandLine);
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -440,12 +373,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "1G"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(1024 * 1024 * 1024)));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(1024 * 1024 * 1024)));
     }
 
     @Test
@@ -453,20 +383,18 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.unlimited()));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.unlimited()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setGlobalMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETGLOBALMAXSTORAGEQUOTA.getCommand(), "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        testee.executeCommandLine(commandLine);
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -475,12 +403,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "1000"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxMessageCount(quotaroot, new SerializableQuotaValue<>(QuotaCount.count(1000)));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setMaxMessageCount(quotaroot, new SerializableQuotaValue<>(QuotaCount.count(1000)));
     }
 
     @Test
@@ -489,21 +414,19 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxMessageCount(quotaroot, new SerializableQuotaValue<>(QuotaCount.unlimited()));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setMaxMessageCount(quotaroot, new SerializableQuotaValue<>(QuotaCount.unlimited()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setMaxMessageCountCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot, "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        testee.executeCommandLine(commandLine);
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -512,12 +435,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "5M"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxStorage(quotaroot, new SerializableQuotaValue<>(QuotaSize.size(5 * 1024 * 1024)));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setMaxStorage(quotaroot, new SerializableQuotaValue<>(QuotaSize.size(5 * 1024 * 1024)));
     }
 
     @Test
@@ -526,21 +446,19 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "-1"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        quotaProbe.setMaxStorage(quotaroot, new SerializableQuotaValue<>(QuotaSize.unlimited()));
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(quotaProbe).setMaxStorage(quotaroot, new SerializableQuotaValue<>(QuotaSize.unlimited()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void setMaxStorageCommandShouldThrowWhenNegativeAndNotUnlimited() throws Exception {
         String quotaroot = "#private&user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "--", CmdType.SETMAXSTORAGEQUOTA.getCommand(), quotaroot, "-2"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        testee.executeCommandLine(commandLine);
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -549,11 +467,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMaxMessageCount(quotaroot)).andReturn(new SerializableQuotaValue<>(QuotaCount.unlimited()));
+        when(quotaProbe.getMaxMessageCount(quotaroot)).thenReturn(new SerializableQuotaValue<>(QuotaCount.unlimited()));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -562,11 +478,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMAXSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMaxStorage(quotaroot)).andReturn(new SerializableQuotaValue<>(QuotaSize.unlimited()));
+        when(quotaProbe.getMaxStorage(quotaroot)).thenReturn(new SerializableQuotaValue<>(QuotaSize.unlimited()));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -575,11 +489,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getStorageQuota(quotaroot)).andReturn(SerializableQuota.newInstance(QuotaSize.unlimited(), QuotaSize.size(12)));
+        when(quotaProbe.getStorageQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaSize.unlimited(), QuotaSize.size(12)));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -588,11 +500,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(quotaProbe.getMessageCountQuota(quotaroot)).andReturn(SerializableQuota.newInstance(QuotaCount.unlimited(), QuotaCount.count(12)));
+        when(quotaProbe.getMessageCountQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaCount.unlimited(), QuotaCount.count(12)));
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
     }
 
     @Test
@@ -600,12 +510,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.reIndexAll();
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).reIndexAll();
     }
 
     @Test
@@ -616,12 +523,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        mailboxProbe.reIndexMailbox(namespace, user, name);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(mailboxProbe).reIndexMailbox(namespace, user, name);
     }
 
     @Test
@@ -629,12 +533,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "2K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        sieveProbe.setSieveQuota(2048);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).setSieveQuota(2048);
     }
 
     @Test
@@ -643,12 +544,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "1K"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        sieveProbe.setSieveQuota(user, 1024);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).setSieveQuota(user, 1024);
     }
 
     @Test
@@ -656,12 +554,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(sieveProbe.getSieveQuota()).andReturn(18L);
-        expectLastCall();
+        when(sieveProbe.getSieveQuota()).thenReturn(18L);
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).getSieveQuota();
     }
 
     @Test
@@ -670,12 +567,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        expect(sieveProbe.getSieveQuota(user)).andReturn(18L);
-        expectLastCall();
+        when(sieveProbe.getSieveQuota(user)).thenReturn(18L);
 
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).getSieveQuota(user);
     }
 
     @Test
@@ -683,12 +579,9 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        sieveProbe.removeSieveQuota();
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).removeSieveQuota();
     }
 
     @Test
@@ -697,227 +590,164 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        sieveProbe.removeSieveQuota(user);
-        expectLastCall();
-
-        control.replay();
         testee.executeCommandLine(commandLine);
-        control.verify();
+
+        verify(sieveProbe).removeSieveQuota(user);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
-
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void containsDomainCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addUserCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeUserCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listUserDomainMappingsCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addAddressCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDADDRESSMAPPING.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeAddressCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEADDRESSMAPPING.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDREGEXMAPPING.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeRegexMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEREGEXMAPPING.getCommand(), user, domain};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void setPasswordMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void copyMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String srcBean = "srcBean";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void deleteUserMailboxesMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void createMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void deleteMailboxMappingCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEMAILBOX.getCommand(), namespace, user};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void importEmlFileToMailboxCommandShouldThrowOnMissingArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
@@ -925,153 +755,109 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listUserMailboxesMappingsCommandShouldThrowOnMissingArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand()};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void containsDomainCommandShouldThrowOnAdditionalArguments() throws Exception {
         String domain = "example.com";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CONTAINSDOMAIN.getCommand(), domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listDomainsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTDOMAINS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addUserCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String password = "password";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDUSER.getCommand(), user, password, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeUserCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEUSER.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listUsersCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTMAPPINGS.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listUserDomainMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERDOMAINMAPPINGS.getCommand(), user, domain, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
@@ -1079,15 +865,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDADDRESSMAPPING.getCommand(), user, domain, address, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeAddressCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
@@ -1095,15 +877,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEADDRESSMAPPING.getCommand(), user, domain, address, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void addRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
@@ -1111,15 +889,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDREGEXMAPPING.getCommand(), user, domain, regex, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeRegexMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String domain = "domain";
@@ -1127,59 +901,43 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVEREGEXMAPPING.getCommand(), user, domain, regex, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void setPasswordMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String password = "pass";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETPASSWORD.getCommand(), user, password, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void copyMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String srcBean = "srcBean";
         String dstBean = "dstBean";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.COPYMAILBOX.getCommand(), srcBean, dstBean, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void deleteUserMailboxesMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void createMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
@@ -1187,15 +945,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.CREATEMAILBOX.getCommand(), namespace, user, name, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void deleteMailboxMappingCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
@@ -1203,15 +957,11 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.DELETEMAILBOX.getCommand(), namespace, user, name, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void importEmlFileToMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
@@ -1220,42 +970,30 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.IMPORTEML.getCommand(), namespace, user, name, emlpath, ADDITIONAL_ARGUMENT};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void listUserMailboxesMappingsCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.LISTUSERMAILBOXES.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void reIndexAllCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXALL.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void reIndexMailboxCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String namespace = "#private";
@@ -1263,124 +1001,98 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REINDEXMAILBOX.getCommand(), namespace, user, name, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void removeSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.REMOVESIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void getSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEQUOTA.getCommand(), ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void setSieveQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEQUOTA.getCommand(), "64K", ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void getSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSIEVEUSERQUOTA.getCommand(), user, ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = InvalidArgumentNumberException.class)
+    @Test
     public void setSieveUserQuotaCommandShouldThrowOnAdditionalArguments() throws Exception {
         String user = "user@domain";
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.SETSIEVEUSERQUOTA.getCommand(), user, "64K", ADDITIONAL_ARGUMENT };
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(InvalidArgumentNumberException.class);
     }
 
-    @Test(expected = UnrecognizedCommandException.class)
+    @Test
     public void executeCommandLineShouldThrowOnUnrecognizedCommands() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "wrongCommand"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        control.replay();
-        try {
-            testee.executeCommandLine(commandLine);
-        } finally {
-            control.verify();
-        }
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+            .isInstanceOf(UnrecognizedCommandException.class);
     }
 
-    @Test(expected = MissingCommandException.class)
+    @Test
     public void parseCommandLineShouldThrowWhenOnlyOptionAreProvided() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999" };
-        ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
+            .isInstanceOf(MissingCommandException.class);
     }
 
-    @Test(expected = ParseException.class)
+    @Test
     public void parseCommandLineShouldThrowWhenInvalidOptionIsProvided() throws Exception {
         String[] arguments = { "-v", "-h", "127.0.0.1", "-p", "9999" };
-        ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
+            .isInstanceOf(ParseException.class);
     }
 
-    @Test(expected = ParseException.class)
+    @Test
     public void parseCommandLineShouldThrowWhenMandatoryOptionIsMissing() throws Exception {
         String[] arguments = { "-v", "-h", "127.0.0.1", "-p", "9999" };
-        ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> ServerCmd.parseCommandLine(arguments))
+            .isInstanceOf(ParseException.class);
     }
 
     @Test

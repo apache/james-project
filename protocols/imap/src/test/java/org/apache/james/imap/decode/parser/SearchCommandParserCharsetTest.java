@@ -85,7 +85,7 @@ public class SearchCommandParserCharsetTest {
     }
 
     @Test
-    public void testBadCharsetMockito() throws Exception {
+    public void testBadCharset() throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
