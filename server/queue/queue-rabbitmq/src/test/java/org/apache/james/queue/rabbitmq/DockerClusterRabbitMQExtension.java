@@ -44,7 +44,7 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        String cookie = Hashing.sha1().hashString("secret cookie here", StandardCharsets.UTF_8).toString();
+        String cookie = Hashing.sha256().hashString("secret cookie here", StandardCharsets.UTF_8).toString();
 
         network = Network.NetworkImpl.builder()
             .enableIpv6(false)
