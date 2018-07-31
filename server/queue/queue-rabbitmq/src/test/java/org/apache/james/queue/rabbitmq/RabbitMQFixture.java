@@ -19,12 +19,13 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.ONE_MINUTE;
 
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
+
 import com.rabbitmq.client.AMQP;
 
 public class RabbitMQFixture {
@@ -38,7 +39,7 @@ public class RabbitMQFixture {
     public static final boolean AUTO_DELETE = true;
     public static final String WORK_QUEUE = "workQueue";
 
-    public static Duration slowPacedPollInterval = FIVE_HUNDRED_MILLISECONDS;
+    public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
         .and()
