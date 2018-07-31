@@ -36,7 +36,7 @@
 Step 0: Requirements
 ####################
 
-  * JRE 1.8+
+  * JRE 1.8
   * root (linux/unix) or Administrator (Windows)
   * libc6 (linux)
   * 512MB RAM (launches with -Xmx512M - can use less, can need more, depending on load)
