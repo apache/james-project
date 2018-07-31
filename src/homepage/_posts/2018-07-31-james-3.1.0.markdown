@@ -5,9 +5,9 @@ date:   2018-07-31 16:13:22 +0200
 categories: james update
 ---
 
-James server 3.1.0 had been releases.
+James server 3.1.0 has been releases.
 
-Here are some points w worked on:
+Here are some points we worked on:
 
 ### Added
 
