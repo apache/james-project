@@ -139,7 +139,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
   <section name='Apache James Server'>
 
-    <subsection name="Apache James 3.0.1 is the stable version">
+    <subsection name="Apache James 3.1.0 is the stable version">
 
       <div class="ui-widget">
         <div class="ui-priority-secondary ui-corner-all apache-james-crypto-notice">
@@ -159,14 +159,26 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
 
       <ul>
         <li>Source code (ZIP Format):
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-server-sources-3.0.1.zip">apache-james-3.0.1-app.zip</a>
-          [<a href="https://apache.org/dist/james/server/james-server-sources-3.0.1.zip.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-server-sources-3.0.1.zip.asc">PGP</a>]</li>
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-server-sources-3.1.0.zip">apache-james-3.1.0-app.zip</a>
+          [<a href="https://apache.org/dist/james/server/james-server-sources-3.1.0.zip.sha1">SHA-1</a>]
+          [<a href="https://apache.org/dist/james/server/james-server-sources-3.1.0.zip.asc">PGP</a>]</li>
 
-        <li>Binary (ZIP Format):
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-server-app-3.0.1-app.zip">apache-james-3.0.1-app.zip</a>
-          [<a href="https://apache.org/dist/james/server/james-server-app-3.0.1-app.zip.sha1">SHA-1</a>]
-          [<a href="https://apache.org/dist/james/server/james-server-app-3.0.1-app.zip.sig">PGP</a>]
+        <li>Binary (ZIP Format) for Spring wiring:
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-server-app-3.1.0-app.zip">apache-james-3.1.0-app.zip</a>
+          [<a href="https://apache.org/dist/james/server/james-server-app-3.1.0-app.zip.sha1">SHA-1</a>]
+          [<a href="https://apache.org/dist/james/server/james-server-app-3.1.0-app.zip.asc">PGP</a>]
+        </li>
+
+        <li>Binary (ZIP Format) for JPA guice wiring:
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-jpa-guice-3.1.0.zip">james-jpa-guice-3.1.0.zip</a>
+          [<a href="https://apache.org/dist/james/server/james-jpa-guice-3.1.0.zip.sha1">SHA-1</a>]
+          [<a href="https://apache.org/dist/james/server/james-jpa-guice-3.1.0.zip.asc">PGP</a>]
+        </li>
+
+        <li>Binary (ZIP Format) for JPA SMTP guice wiring:
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-jpa-smtp-guice-3.1.0.zip">james-jpa-smtp-guice-3.1.0.zip</a>
+          [<a href="https://apache.org/dist/james/server/james-jpa-smtp-guice-3.1.0.zip.sha1">SHA-1</a>]
+          [<a href="https://apache.org/dist/james/server/james-jpa-smtp-guice-3.1.0.zip.asc">PGP</a>]
         </li>
 
       </ul>
