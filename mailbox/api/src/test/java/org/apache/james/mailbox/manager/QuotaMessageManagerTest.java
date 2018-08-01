@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.manager;
 
+import java.nio.charset.StandardCharsets;
+
 import javax.mail.Flags;
 
 import org.apache.james.core.quota.QuotaCount;
@@ -31,8 +33,12 @@ import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.mock.MockMail;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mime4j.dom.Message;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -142,5 +148,40 @@ public abstract class QuotaMessageManagerTest<T extends MailboxManager> {
         resources.appendMessage(messageManager, session, new FlagsBuilder().add(Flags.Flag.SEEN).build());
     }
 
+    @Test
+    public void deletingAMailboxShouldDecreaseCurrentQuota() throws Exception {
+        resources.fillMailbox();
 
+        mailboxManager.deleteMailbox(inbox, session);
+
+        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(inbox);
+        Quota<QuotaCount> messageQuota = resources.getQuotaManager().getMessageQuota(quotaRoot);
+        Quota<QuotaSize> storageQuota = resources.getQuotaManager().getStorageQuota(quotaRoot);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(0));
+            softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(0));
+        });
+    }
+
+    @Test
+    public void deletingAMailboxShouldPreserveQuotaOfOtherMailboxes() throws Exception {
+        resources.fillMailbox();
+
+        mailboxManager.getMailbox(subFolder, session)
+            .appendMessage(MessageManager.AppendCommand.from(
+                Message.Builder.of()
+                    .setSubject("test")
+                    .setBody("testmail", StandardCharsets.UTF_8)
+                    .build()), session);
+
+        mailboxManager.deleteMailbox(subFolder, session);
+
+        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(inbox);
+        Quota<QuotaCount> messageQuota = resources.getQuotaManager().getMessageQuota(quotaRoot);
+        Quota<QuotaSize> storageQuota = resources.getQuotaManager().getStorageQuota(quotaRoot);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(messageQuota.getUsed()).isEqualTo(QuotaCount.count(32));
+            softly.assertThat(storageQuota.getUsed()).isEqualTo(QuotaSize.size(7904));
+        });
+    }
 }
