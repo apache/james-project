@@ -280,7 +280,7 @@ public class ElasticSearchConfiguration {
     }
 
     private static ImmutableList<Host> getHosts(PropertiesConfiguration propertiesReader) throws ConfigurationException {
-        propertiesReader.setListDelimiter(',');
+        PropertiesConfiguration.setDefaultListDelimiter(',');
         Optional<String> masterHost = Optional.ofNullable(
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
         Optional<Integer> masterPort = Optional.ofNullable(
