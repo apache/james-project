@@ -197,6 +197,14 @@ public class InMemoryMailRepositoryStoreTest {
     }
 
     @Test
+    public void getByPathShouldReturnRepositoryWhenUrlExists() {
+        urlStore.add(FILE_REPO);
+
+        assertThat(repositoryStore.getByPath(FILE_REPO.getPath()))
+            .isNotEmpty();
+    }
+
+    @Test
     public void getShouldReturnPreviouslyCreatedMailRepository() {
         MailRepository mailRepository = repositoryStore.select(FILE_REPO);
 

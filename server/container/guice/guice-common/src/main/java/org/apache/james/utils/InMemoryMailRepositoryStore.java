@@ -103,11 +103,9 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
 
     @Override
     public Stream<MailRepository> getByPath(MailRepositoryPath path) {
-        return destinationToRepositoryAssociations
-                .keySet()
-                .stream()
-                .filter((MailRepositoryUrl key) -> key.getPath().equals(path))
-                .map(destinationToRepositoryAssociations::get);
+        return urlStore.listDistinct()
+            .filter(url -> url.getPath().equals(path))
+            .map(this::select);
     }
 
     @Override
