@@ -47,6 +47,7 @@ import com.google.common.collect.Sets;
 
 public class InMemoryMailRepositoryStoreTest {
     private static final MailRepositoryUrl FILE_REPO = MailRepositoryUrl.from("file://repo");
+    private static final MailRepositoryUrl UNKNOWN_PROTOCOL_REPO = MailRepositoryUrl.from("toto://repo");
     private static final MailRepositoryUrl MEMORY_REPO = MailRepositoryUrl.from("memory://repo");
     private static final MailRepositoryPath PATH_REPO = MailRepositoryPath.from("repo");
 
@@ -263,6 +264,13 @@ public class InMemoryMailRepositoryStoreTest {
         long actualSize = repositoryStore.get(url).get().size();
 
         assertThat(actualSize).isEqualTo(threadCount);
+    }
+
+    @Test
+    public void selectShouldNotAddUrlWhenProtocolDoNotExist() {
+        assertThatThrownBy(() -> repositoryStore.select(UNKNOWN_PROTOCOL_REPO));
+
+        assertThat(urlStore.listDistinct()).isEmpty();
     }
 
 }

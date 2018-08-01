@@ -117,8 +117,8 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     }
 
     private MailRepository createNewMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
-        urlStore.add(mailRepositoryUrl);
         MailRepository newMailRepository = retrieveMailRepository(mailRepositoryUrl);
+        urlStore.add(mailRepositoryUrl);
         newMailRepository = initializeNewRepository(newMailRepository, createRepositoryCombinedConfig(mailRepositoryUrl));
         MailRepository previousRepository = destinationToRepositoryAssociations.putIfAbsent(mailRepositoryUrl, newMailRepository);
         return Optional.ofNullable(previousRepository)
