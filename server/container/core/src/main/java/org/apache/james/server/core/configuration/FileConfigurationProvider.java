@@ -45,8 +45,8 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     public static final HierarchicalConfiguration EMTY_CONFIGURATION = new HierarchicalConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
-        XMLConfiguration.setDefaultListDelimiter(SEMICOLON);
         XMLConfiguration config = new XMLConfiguration();
+        config.setListDelimiter(SEMICOLON);
         config.setDelimiterParsingDisabled(true);
         config.setAttributeSplittingDisabled(true);
         config.load(configStream);
