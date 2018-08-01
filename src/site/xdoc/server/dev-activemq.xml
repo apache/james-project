@@ -43,8 +43,9 @@
 
     <dl>
     <dt><strong>org.apache.james.queue.activemq.EmbeddedActiveMQ</strong></dt>
-    <dt><strong>iorg.apache.james.queue.api.MailQueueItemDecoratorFactory</strong></dt>
-    <dt><strong>iorg.apache.james.metrics.api.MetricFactory</strong></dt>
+    <dt><strong>org.apache.james.queue.api.MailQueueItemDecoratorFactory</strong></dt>
+    <dt><strong>org.apache.james.metrics.api.MetricFactory</strong></dt>
+    </dl>
 
   </subsection>
 
