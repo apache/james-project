@@ -86,6 +86,10 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         addEnvDomain();
         addConfiguredDomains(domainListConfiguration.getConfiguredDomains());
     }
+    
+    public void configure(DomainListConfiguration.Builder configurationBuilder) throws ConfigurationException {
+        configure(configurationBuilder.build());
+    }
 
     protected void addConfiguredDomains(List<Domain> domains) {
         domains.stream()

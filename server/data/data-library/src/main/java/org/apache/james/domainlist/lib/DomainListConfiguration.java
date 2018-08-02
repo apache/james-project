@@ -19,6 +19,7 @@
 
 package org.apache.james.domainlist.lib;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -83,6 +84,10 @@ public class DomainListConfiguration {
         public Builder addConfiguredDomains(Collection<Domain> domains) {
             this.configuredDomains.addAll(domains);
             return this;
+        }
+
+        public Builder addConfiguredDomains(Domain... domains) {
+            return this.addConfiguredDomains(Arrays.asList(domains));
         }
 
         public DomainListConfiguration build() {
