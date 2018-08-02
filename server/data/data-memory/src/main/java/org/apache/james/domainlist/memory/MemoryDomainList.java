@@ -24,8 +24,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
@@ -44,18 +42,12 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    protected List<Domain> getDomainListInternal() throws DomainListException {
+    protected List<Domain> getDomainListInternal() {
         return ImmutableList.copyOf(domains);
     }
 
-
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        super.configure(config);
-    }
-
-    @Override
-    protected boolean containsDomainInternal(Domain domain) throws DomainListException {
+    protected boolean containsDomainInternal(Domain domain) {
         return domains.contains(domain);
     }
 
