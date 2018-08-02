@@ -34,7 +34,7 @@ public class CassandraJamesServerTest extends AbstractJmapJamesServerTest {
 
     @Override
     protected GuiceJamesServer createJamesServer() throws IOException {
-        return cassandraJmap.jmapServer(cassandra.getModule());
+        return cassandraJmap.jmapServer(cassandra.getModule(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 
     @Override

@@ -36,7 +36,7 @@ public class CassandraWithTikaTest extends AbstractJmapJamesServerTest {
 
     @Override
     protected GuiceJamesServer createJamesServer() throws IOException {
-        return cassandraJmap.jmapServer(guiceTikaRule.getModule(), cassandra.getModule());
+        return cassandraJmap.jmapServer(guiceTikaRule.getModule(), cassandra.getModule(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 
     @Override

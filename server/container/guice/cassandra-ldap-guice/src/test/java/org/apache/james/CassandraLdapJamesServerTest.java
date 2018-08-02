@@ -68,7 +68,7 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
     @Override
     protected GuiceJamesServer createJamesServer() throws IOException {
         ldapContainer.start();
-        return cassandraLdapJmap.jmapServer(ldapContainer.getLdapHost());
+        return cassandraLdapJmap.jmapServer(ldapContainer.getLdapHost(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 
     @Override

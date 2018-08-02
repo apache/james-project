@@ -31,17 +31,26 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.inject.Module;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
 public abstract class AbstractJmapJamesServerTest {
+
+    public static final Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
+        .toInstance(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(false)
+            .build());
 
     private static final int IMAP_PORT_SSL = 1993;
     private static final int POP3_PORT = 1110;
