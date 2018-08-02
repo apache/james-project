@@ -126,7 +126,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     }
 
     private boolean mayChangeDefaultDomain() {
-        return Domain.LOCALHOST.equals(defaultDomain);
+        return autoDetect && Domain.LOCALHOST.equals(defaultDomain);
     }
 
     private void setDefaultDomain(Domain defaultDomain) throws DomainListException {

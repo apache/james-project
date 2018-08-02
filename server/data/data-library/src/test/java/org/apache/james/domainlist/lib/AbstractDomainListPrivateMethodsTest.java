@@ -306,4 +306,14 @@ public class AbstractDomainListPrivateMethodsTest {
         assertThat(domainList.getDomains()).contains(domain1, domain2);
     }
 
+    @Test
+    public void configureShouldNotAttemptToChangeLocalHostDefaultDomainWhenNoAutoDetect() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false)
+            .defaultDomain(Domain.LOCALHOST));
+
+        assertThat(domainList.getDefaultDomain()).isEqualTo(Domain.LOCALHOST);
+    }
+
 }
