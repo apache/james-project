@@ -20,6 +20,7 @@ package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -33,6 +34,7 @@ import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.mock.DataProvisioner;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -55,6 +57,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -983,5 +986,51 @@ public abstract class MailboxManagerTest {
             .run();
         testRunner.awaitTermination(1, TimeUnit.MINUTES);
         testRunner.assertNoException();
+    }
+
+    @Test
+    public void creatingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+        String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
+
+        assertThatCode(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void renamingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+        String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
+
+        MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+        mailboxManager.createMailbox(originPath, session);
+
+        assertThatCode(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void creatingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+        String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
+
+        assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+            .isInstanceOf(TooLongMailboxNameException.class);
+    }
+
+    @Test
+    public void renamingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+        String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
+
+        MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+        mailboxManager.createMailbox(originPath, session);
+
+        assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
+            .isInstanceOf(TooLongMailboxNameException.class);
     }
 }

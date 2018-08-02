@@ -70,6 +70,8 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 
 public interface MailboxManager extends RequestAware, MailboxListenerSupport, RightManager, MailboxAnnotationManager {
 
+    int MAX_MAILBOX_NAME_LENGTH = 200;
+
     enum MailboxCapabilities {
         Annotation,
         Move,

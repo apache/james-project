@@ -47,6 +47,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -499,6 +500,9 @@ public class StoreMailboxManager implements MailboxManager {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
             MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
+            if (isMailboxNameTooLong(mailboxPath)) {
+                throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
+            }
             if (mailboxExists(sanitizedMailboxPath, mailboxSession)) {
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
             }
@@ -529,6 +533,10 @@ public class StoreMailboxManager implements MailboxManager {
             }
         }
         return Optional.empty();
+    }
+
+    public boolean isMailboxNameTooLong(MailboxPath mailboxPath) {
+        return mailboxPath.getName().length() > MAX_MAILBOX_NAME_LENGTH;
     }
 
     @Override
@@ -566,6 +574,9 @@ public class StoreMailboxManager implements MailboxManager {
         LOGGER.debug("renameMailbox {} to {}", from, to);
         if (mailboxExists(to, session)) {
             throw new MailboxExistsException(to.toString());
+        }
+        if (isMailboxNameTooLong(to)) {
+            throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
         }
 
         assertIsOwner(session, from);
