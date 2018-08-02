@@ -46,7 +46,8 @@ import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
 import org.awaitility.Duration;
 import org.junit.After;
-import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -55,8 +56,8 @@ public class SmtpAuthorizedAddressesTest {
     private static final String FROM = "fromuser@" + DEFAULT_DOMAIN;
     private static final String TO = "to@any.com";
 
-    @Rule
-    public FakeSmtp fakeSmtp = new FakeSmtp();
+    @ClassRule
+    public static FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
@@ -66,8 +67,8 @@ public class SmtpAuthorizedAddressesTest {
 
     private TemporaryJamesServer jamesServer;
 
-    @Before
-    public void setup() {
+    @BeforeClass
+    public static void setup() {
         fakeSmtp.awaitStarted(awaitAtMostOneMinute);
     }
 
@@ -93,6 +94,7 @@ public class SmtpAuthorizedAddressesTest {
 
     @After
     public void tearDown() {
+        fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
@@ -107,10 +109,12 @@ public class SmtpAuthorizedAddressesTest {
         messageSender.connect(LOCALHOST_IP, SMTP_PORT)
             .sendMessage(FROM, TO);
 
-        awaitAtMostOneMinute.until(() -> fakeSmtp.isReceived(response -> response
-            .body("", hasSize(1))
-            .body("[0].from", equalTo(FROM))
-            .body("[0].subject", equalTo("test"))));
+        awaitAtMostOneMinute
+            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
+            .until(() -> fakeSmtp.isReceived(response -> response
+                .body("", hasSize(1))
+                .body("[0].from", equalTo(FROM))
+                .body("[0].subject", equalTo("test"))));
     }
 
     @Test

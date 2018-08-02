@@ -65,7 +65,7 @@ public class FakeSmtp implements TestRule {
         this(fakeSmtpContainer().withExposedPorts(SMTP_PORT), SMTP_PORT);
     }
 
-    public FakeSmtp(SwarmGenericContainer container, Integer smtpPort) {
+    private FakeSmtp(SwarmGenericContainer container, Integer smtpPort) {
         this.smtpPort = smtpPort;
         this.container = container;
     }
@@ -104,5 +104,17 @@ public class FakeSmtp implements TestRule {
 
     public SwarmGenericContainer getContainer() {
         return container;
+    }
+
+    public void clean() {
+        given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/api/email")
+            .jsonPath()
+            .getList("id", String.class)
+            .stream()
+            .mapToInt(Integer::valueOf)
+            .max()
+            .ifPresent(id -> given(requestSpecification(), RESPONSE_SPECIFICATION)
+                .get("/api/email/purge/" + id));
     }
 }

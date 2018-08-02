@@ -52,6 +52,8 @@ import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -73,14 +75,19 @@ public class GroupMappingRelayTest {
     private MimeMessage message;
     private RequestSpecification webAdminApi;
 
-    @Rule
-    public final FakeSmtp fakeSmtp = new FakeSmtp();
+    @ClassRule
+    public static final FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+
+    @BeforeClass
+    public static void classSetUp() {
+        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
+    }
 
     @Before
     public void setup() throws Exception {
@@ -115,8 +122,6 @@ public class GroupMappingRelayTest {
             .withMailetContainer(mailetContainer)
             .build(temporaryFolder);
 
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-
         DataProbe dataProbe = jamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN1);
 
@@ -135,6 +140,7 @@ public class GroupMappingRelayTest {
 
     @After
     public void tearDown() {
+        fakeSmtp.clean();
         jamesServer.shutdown();
     }
 

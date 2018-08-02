@@ -46,6 +46,8 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -56,29 +58,33 @@ public class GatewayRemoteDeliveryIntegrationTest {
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
     private static final String RECIPIENT = "touser@" + JAMES_ANOTHER_DOMAIN;
 
+    @ClassRule
+    public static FakeSmtp fakeSmtp = new FakeSmtp();
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
-    @Rule
-    public FakeSmtp fakeSmtp = new FakeSmtp();
 
     private TemporaryJamesServer jamesServer;
     private DataProbe dataProbe;
     private InMemoryDNSService inMemoryDNSService;
 
+    @BeforeClass
+    public static void classSetUp() {
+        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
+    }
+
     @Before
     public void setup() throws Exception {
-        fakeSmtp.awaitStarted(awaitAtMostOneMinute);
-
         inMemoryDNSService = new InMemoryDNSService()
             .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
     }
 
     @After
     public void tearDown() {
+        fakeSmtp.clean();
         if (jamesServer != null) {
             jamesServer.shutdown();
         }

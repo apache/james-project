@@ -44,7 +44,8 @@ import org.apache.james.utils.FakeSmtp;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 public abstract class VacationRelayIntegrationTest {
@@ -54,9 +55,8 @@ public abstract class VacationRelayIntegrationTest {
     private static final String PASSWORD = "secret";
     private static final String REASON = "Message explaining my wonderful vacations";
 
-
-    @Rule
-    public FakeSmtp fakeSmtp = new FakeSmtp();
+    @ClassRule
+    public static FakeSmtp fakeSmtp = new FakeSmtp();
 
     private GuiceJamesServer guiceJamesServer;
     private JmapGuiceProbe jmapGuiceProbe;
@@ -66,6 +66,11 @@ public abstract class VacationRelayIntegrationTest {
     protected abstract GuiceJamesServer getJmapServer() throws IOException;
 
     protected abstract InMemoryDNSService getInMemoryDns();
+
+    @BeforeClass
+    public static void classSetUp() {
+        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -84,12 +89,11 @@ public abstract class VacationRelayIntegrationTest {
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
-
-        fakeSmtp.awaitStarted(calmlyAwait.atMost(ONE_MINUTE));
     }
 
     @After
     public void teardown() {
+        fakeSmtp.clean();
         guiceJamesServer.stop();
     }
 
