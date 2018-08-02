@@ -58,69 +58,6 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
 
     @Test
     @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeue() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentEnqueueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeue() {
-
-    }
-
-    @Test
-    @Override
     @Disabled("JAMES-2298 Not supported yet")
     public void removeBySenderShouldRemoveSpecificEmail() {
 

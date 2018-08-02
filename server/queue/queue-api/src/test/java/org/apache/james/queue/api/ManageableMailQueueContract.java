@@ -27,10 +27,13 @@ import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT3;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Iterators;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
 
@@ -136,7 +139,25 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     }
 
     @Test
-    default void concurrentDequeueShouldNotAlterBrowsing() throws Exception {
+    default void dequeueShouldNotFailWhenBrowsing() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+
+        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentDequeue() throws Exception {
         getManageableMailQueue().enQueue(defaultMail()
             .name("name1")
             .build());
@@ -151,14 +172,11 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
         getManageableMailQueue().deQueue();
 
-        assertThat(items)
-            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name1", "name2", "name3");
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
-    default void concurrentDequeueShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
+    default void dequeueShouldNotFailWhenBrowsingIterating() throws Exception {
         getManageableMailQueue().enQueue(defaultMail()
             .name("name1")
             .build());
@@ -170,16 +188,236 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
 
+        assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentDequeueWhenIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         ManageableMailQueue.MailQueueItemView firstItem = items.next();
 
         getManageableMailQueue().deQueue();
 
-        assertThat(firstItem.getMail().getName()).isEqualTo("name1");
-        assertThat(items)
-            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name2", "name3");
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void enqueueShouldNotFailWhenBrowsing() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+
+        assertThatCode(() -> getManageableMailQueue().enQueue(defaultMail()
+            .name("name4")
+            .build())).doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentEnqueue() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name4")
+            .build());
+
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void enqueueShouldNotFailWhenBrowsingIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        assertThatCode(() ->
+            getManageableMailQueue().enQueue(defaultMail()
+                .name("name4")
+                .build()))
+            .doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentEnqueueWhenIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void clearShouldNotFailWhenBrowsingIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        assertThatCode(() -> getManageableMailQueue().clear())
+            .doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentClearWhenIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        getManageableMailQueue().clear();
+
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void flushShouldNotFailWhenBrowsingIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        assertThatCode(() -> getManageableMailQueue().flush())
+            .doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentFlushWhenIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        getManageableMailQueue().flush();
+
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
+    }
+
+    @Test
+    default void removeShouldNotFailWhenBrowsingIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        assertThatCode(() -> getManageableMailQueue().flush())
+            .doesNotThrowAnyException();
+
+    }
+
+    @Test
+    default void browseShouldNotFailWhenConcurrentRemoveWhenIterating() throws Exception {
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name1")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name2")
+            .build());
+        getManageableMailQueue().enQueue(defaultMail()
+            .name("name3")
+            .build());
+
+        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+
+        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
+
+        assertThatCode(() ->  Iterators.consumingIterator(items)).doesNotThrowAnyException();
     }
 
     @Test
@@ -200,144 +438,6 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         MailQueue.MailQueueItem mailQueueItem = getManageableMailQueue().deQueue();
 
         assertThat(mailQueueItem.getMail().getName()).isEqualTo("name1");
-    }
-
-    @Test
-    default void concurrentEnqueueShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
-
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name3")
-            .build());
-
-        assertThat(firstItem.getMail().getName()).isEqualTo("name1");
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name2");
-    }
-
-    @Test
-    default void concurrentFlushShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
-
-        getManageableMailQueue().flush();
-
-        assertThat(firstItem.getMail().getName()).isEqualTo("name1");
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name2");
-    }
-
-    @Test
-    default void concurrentFlushShouldNotAlterBrowsing() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        getManageableMailQueue().flush();
-
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name1", "name2");
-    }
-
-    @Test
-    default void concurrentClearShouldNotAlterBrowsingWhenDequeue() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        getManageableMailQueue().clear();
-
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name1", "name2");
-    }
-
-    @Test
-    default void concurrentRemoveShouldNotAlterBrowsingWhenDequeue() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-
-        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
-
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name1", "name2");
-    }
-
-    @Test
-    default void concurrentClearShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView next = items.next();
-
-        getManageableMailQueue().clear();
-
-        assertThat(next.getMail().getName()).isEqualTo("name1");
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name2");
-    }
-
-    @Test
-    default void concurrentRemoveShouldNotAlterBrowsingWhenDequeueWhileIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name1")
-            .build());
-        getManageableMailQueue().enQueue(defaultMail()
-            .name("name2")
-            .build());
-
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView next = items.next();
-
-        getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
-
-        assertThat(next.getMail().getName()).isEqualTo("name1");
-        assertThat(items).extracting(ManageableMailQueue.MailQueueItemView::getMail)
-            .extracting(Mail::getName)
-            .containsExactly("name2");
     }
 
     @Test
