@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -36,7 +35,6 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
-import org.apache.james.mailbox.cassandra.mail.utils.DriverExceptionHelper;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -88,33 +86,25 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     @Override
     public Mailbox findMailboxByPath(MailboxPath path) throws MailboxException {
-        try {
-            return mailboxPathV2DAO.retrieveId(path)
-                .thenCompose(cassandraIdOptional ->
-                    cassandraIdOptional
-                        .map(CassandraIdAndPath::getCassandraId)
-                        .map(this::retrieveMailbox)
-                        .orElseGet(Throwing.supplier(() -> fromPreviousTable(path))))
-                .join()
-                .orElseThrow(() -> new MailboxNotFoundException(path));
-        } catch (CompletionException e) {
-            throw DriverExceptionHelper.handleStorageException(e);
-        }
+        return mailboxPathV2DAO.retrieveId(path)
+            .thenCompose(cassandraIdOptional ->
+                cassandraIdOptional
+                    .map(CassandraIdAndPath::getCassandraId)
+                    .map(this::retrieveMailbox)
+                    .orElseGet(Throwing.supplier(() -> fromPreviousTable(path))))
+            .join()
+            .orElseThrow(() -> new MailboxNotFoundException(path));
     }
 
-    private CompletableFuture<Optional<SimpleMailbox>> fromPreviousTable(MailboxPath path) throws MailboxException {
-        try {
-            return mailboxPathDAO.retrieveId(path)
-                .thenCompose(cassandraIdOptional ->
-                    cassandraIdOptional
-                        .map(CassandraIdAndPath::getCassandraId)
-                        .map(this::retrieveMailbox)
-                        .orElse(CompletableFuture.completedFuture(Optional.empty())))
-                .thenCompose(maybeMailbox -> maybeMailbox.map(this::migrate)
-                    .orElse(CompletableFuture.completedFuture(maybeMailbox)));
-        } catch (CompletionException e) {
-            throw DriverExceptionHelper.handleStorageException(e);
-        }
+    private CompletableFuture<Optional<SimpleMailbox>> fromPreviousTable(MailboxPath path) {
+        return mailboxPathDAO.retrieveId(path)
+            .thenCompose(cassandraIdOptional ->
+                cassandraIdOptional
+                    .map(CassandraIdAndPath::getCassandraId)
+                    .map(this::retrieveMailbox)
+                    .orElse(CompletableFuture.completedFuture(Optional.empty())))
+            .thenCompose(maybeMailbox -> maybeMailbox.map(this::migrate)
+                .orElse(CompletableFuture.completedFuture(maybeMailbox)));
     }
 
     private CompletableFuture<Optional<SimpleMailbox>> migrate(SimpleMailbox mailbox) {
@@ -197,13 +187,9 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
         CassandraId cassandraId = retrieveId(cassandraMailbox);
         cassandraMailbox.setMailboxId(cassandraId);
-        try {
-            boolean applied = trySave(cassandraMailbox, cassandraId).join();
-            if (!applied) {
-                throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
-            }
-        } catch (CompletionException e) {
-            throw DriverExceptionHelper.handleStorageException(e);
+        boolean applied = trySave(cassandraMailbox, cassandraId).join();
+        if (!applied) {
+            throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
         }
         return cassandraId;
     }
