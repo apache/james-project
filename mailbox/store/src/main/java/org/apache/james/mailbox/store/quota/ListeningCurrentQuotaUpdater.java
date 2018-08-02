@@ -66,6 +66,9 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
                 Expunged expungedEvent = (Expunged) event;
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxPath());
                 handleExpungedEvent(expungedEvent, quotaRoot);
+            } else if (event instanceof MailboxDeletion) {
+                MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;
+                handleMailboxDeletionEvent(mailboxDeletionEvent);
             }
         } catch (MailboxException e) {
             LOGGER.error("Error while updating quotas", e);
@@ -105,6 +108,12 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
             quotaRoot,
             quotaManager.getMessageQuota(quotaRoot),
             quotaManager.getStorageQuota(quotaRoot));
+    }
+
+    private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {
+        currentQuotaManager.decrease(mailboxDeletionEvent.getQuotaRoot(),
+                mailboxDeletionEvent.getDeletedMessageCount().asLong(),
+                mailboxDeletionEvent.getTotalDeletedSize().asLong());
     }
 
 }

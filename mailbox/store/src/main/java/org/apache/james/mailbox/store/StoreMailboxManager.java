@@ -30,6 +30,8 @@ import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
@@ -60,6 +62,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -69,7 +72,9 @@ import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
+import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -79,6 +84,7 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
+import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -529,22 +535,29 @@ public class StoreMailboxManager implements MailboxManager {
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox {}", mailboxPath);
         assertIsOwner(session, mailboxPath);
-        final MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+        MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
 
-        Mailbox mailbox = mapper.execute((Mapper.Transaction<Mailbox>) () -> {
-            final Mailbox mailbox1 = mapper.findMailboxByPath(mailboxPath);
-            if (mailbox1 == null) {
+        mailboxMapper.execute((Mapper.Transaction<Mailbox>) () -> {
+            Mailbox mailbox = mailboxMapper.findMailboxByPath(mailboxPath);
+            if (mailbox == null) {
                 throw new MailboxNotFoundException(mailboxPath);
             }
 
+            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
+            long messageCount = messageMapper.countMessagesInMailbox(mailbox);
+            long totalSize = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, -1))
+                .mapToLong(Message::getFullContentOctets)
+                .sum();
+
             // We need to create a copy of the mailbox as maybe we can not refer to the real
             // mailbox once we remove it
-            SimpleMailbox m = new SimpleMailbox(mailbox1);
-            mapper.delete(mailbox1);
+            SimpleMailbox m = new SimpleMailbox(mailbox);
+            mailboxMapper.delete(mailbox);
+            dispatcher.mailboxDeleted(session, mailbox, quotaRoot, QuotaCount.count(messageCount), QuotaSize.size(totalSize));
             return m;
         });
 
-        dispatcher.mailboxDeleted(session, mailbox);
 
     }
 

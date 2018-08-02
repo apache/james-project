@@ -933,6 +933,23 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
+    public void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
+        Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
+        session = mailboxManager.createSystemSession(USER_1);
+
+        EventCollector listener = new EventCollector();
+        mailboxManager.addGlobalListener(listener, session);
+
+        MailboxPath inbox = MailboxPath.inbox(session);
+        mailboxManager.createMailbox(inbox, session);
+        mailboxManager.deleteMailbox(inbox, session);
+
+        assertThat(listener.getEvents())
+            .filteredOn(event -> event instanceof MailboxListener.MailboxDeletion)
+            .isNotEmpty();
+    }
+
+    @Test
     public void moveMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
 

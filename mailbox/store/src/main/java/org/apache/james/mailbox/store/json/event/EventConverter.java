@@ -22,15 +22,19 @@ package org.apache.james.mailbox.store.json.event;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.json.event.dto.EventDataTransferObject;
@@ -83,11 +87,15 @@ public class EventConverter {
                 mailboxDataTransferObject,
                 event.getMailboxPath());
         } else if (event instanceof MailboxListener.MailboxDeletion) {
-            return constructMailboxEventProxy(EventType.MAILBOX_DELETED,
+            MailboxListener.MailboxDeletion deletionEvent = (MailboxListener.MailboxDeletion) event;
+            return constructMailboxDeletionProxy(EventType.MAILBOX_DELETED,
                 event.getSession(),
-                mailboxDataTransferObject);
+                mailboxDataTransferObject,
+                deletionEvent.getQuotaRoot(),
+                deletionEvent.getDeletedMessageCount(),
+                deletionEvent.getTotalDeletedSize());
         } else if (event instanceof MailboxListener.MailboxAdded) {
-            return constructMailboxEventProxy(EventType.MAILBOX_ADDED,
+            return constructMailboxAddedProxy(EventType.MAILBOX_ADDED,
                 event.getSession(),
                 mailboxDataTransferObject);
         } else {
@@ -115,7 +123,10 @@ public class EventConverter {
             case MAILBOX_ADDED:
                 return eventFactory.mailboxAdded(eventDataTransferObject.getSession().getMailboxSession(), mailbox);
             case MAILBOX_DELETED:
-                return eventFactory.mailboxDeleted(eventDataTransferObject.getSession().getMailboxSession(), mailbox);
+                return eventFactory.mailboxDeleted(eventDataTransferObject.getSession().getMailboxSession(), mailbox, 
+                    eventDataTransferObject.getQuotaRoot().orElseThrow(() -> new EventNotValidException("Not a Deletion event, missing quotaRoot")),
+                    eventDataTransferObject.getDeletedMessageCount().orElseThrow(() -> new EventNotValidException("Not a Deletion event, missing quotaCount")),
+                    eventDataTransferObject.getTotalDeletedSize().orElseThrow(() -> new EventNotValidException("Not a Deletion event, missing quotaSize")));
             case MAILBOX_RENAMED:
                 return eventFactory.mailboxRenamed(eventDataTransferObject.getSession().getMailboxSession(),
                     eventDataTransferObject.getFrom().getPath(),
@@ -125,13 +136,29 @@ public class EventConverter {
         }
     }
 
-    private EventDataTransferObject constructMailboxEventProxy(EventType eventType,
+    private EventDataTransferObject constructMailboxAddedProxy(EventType eventType,
                                                                MailboxSession mailboxSession,
                                                                MailboxDataTransferObject mailboxIntermediate) {
         return EventDataTransferObject.builder()
             .type(eventType)
             .session(new MailboxSessionDataTransferObject(mailboxSession))
             .mailbox(mailboxIntermediate)
+            .build();
+    }
+
+    private EventDataTransferObject constructMailboxDeletionProxy(EventType eventType,
+                                                               MailboxSession mailboxSession,
+                                                               MailboxDataTransferObject mailboxIntermediate, 
+                                                               QuotaRoot quotaRoot, 
+                                                               QuotaCount deletedMessageCount,
+                                                               QuotaSize totalDeletedSize) {
+        return EventDataTransferObject.builder()
+            .type(eventType)
+            .session(new MailboxSessionDataTransferObject(mailboxSession))
+            .mailbox(mailboxIntermediate)
+            .quotaRoot(Optional.of(quotaRoot))
+            .deletedMessageCount(Optional.of(deletedMessageCount))
+            .totalDeletedSize(Optional.of(totalDeletedSize))
             .build();
     }
 

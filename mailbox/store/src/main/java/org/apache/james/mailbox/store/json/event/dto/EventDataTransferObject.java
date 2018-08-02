@@ -21,8 +21,12 @@ package org.apache.james.mailbox.store.json.event.dto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.QuotaRoot;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,6 +42,9 @@ public class EventDataTransferObject {
         private Map<MessageUid, MessageMetaDataDataTransferObject> metaData;
         private List<UpdatedFlagsDataTransferObject> updatedFlags;
         private MailboxPathDataTransferObject from;
+        private Optional<QuotaRoot> quotaRoot;
+        private Optional<QuotaCount> deletedMessageCount;
+        private Optional<QuotaSize> totalDeletedSize;
 
         public Builder type(EventType type) {
             this.type = type;
@@ -74,8 +81,23 @@ public class EventDataTransferObject {
             return this;
         }
 
+        public Builder quotaRoot(Optional<QuotaRoot> quotaRoot) {
+            this.quotaRoot = quotaRoot;
+            return this;
+        }
+
+        public Builder deletedMessageCount(Optional<QuotaCount> deletedMessageCount) {
+            this.deletedMessageCount = deletedMessageCount;
+            return this;
+        }
+
+        public Builder totalDeletedSize(Optional<QuotaSize> totalDeletedSize) {
+            this.totalDeletedSize = totalDeletedSize;
+            return this;
+        }
+
         public EventDataTransferObject build() {
-            return new EventDataTransferObject(type, mailbox, session, uids, metaData, updatedFlags, from);
+            return new EventDataTransferObject(type, mailbox, session, uids, metaData, updatedFlags, from, quotaRoot, deletedMessageCount, totalDeletedSize);
         }
 
     }
@@ -98,6 +120,12 @@ public class EventDataTransferObject {
     private List<UpdatedFlagsDataTransferObject> updatedFlags;
     @JsonProperty()
     private MailboxPathDataTransferObject from;
+    @JsonProperty()
+    private Optional<QuotaRoot> quotaRoot;
+    @JsonProperty()
+    private Optional<QuotaCount> deletedMessageCount;
+    @JsonProperty()
+    private Optional<QuotaSize> totalDeletedSize;
 
     public EventDataTransferObject() {}
 
@@ -107,7 +135,10 @@ public class EventDataTransferObject {
                                    List<MessageUid> uids,
                                    Map<MessageUid, MessageMetaDataDataTransferObject> metaData,
                                    List<UpdatedFlagsDataTransferObject> updatedFlags,
-                                   MailboxPathDataTransferObject from) {
+                                   MailboxPathDataTransferObject from, 
+                                   Optional<QuotaRoot> quotaRoot, 
+                                   Optional<QuotaCount> deletedMessageCount,
+                                   Optional<QuotaSize> totalDeletedSize) {
         this.type = type;
         this.mailbox = mailbox;
         this.session = session;
@@ -115,6 +146,9 @@ public class EventDataTransferObject {
         this.metaData = metaData;
         this.updatedFlags = updatedFlags;
         this.from = from;
+        this.quotaRoot = quotaRoot;
+        this.deletedMessageCount = deletedMessageCount;
+        this.totalDeletedSize = totalDeletedSize;
     }
 
     @JsonIgnore
@@ -150,5 +184,20 @@ public class EventDataTransferObject {
     @JsonIgnore
     public MailboxPathDataTransferObject getFrom() {
         return from;
+    }
+
+    @JsonIgnore
+    public Optional<QuotaRoot> getQuotaRoot() {
+        return quotaRoot;
+    }
+
+    @JsonIgnore
+    public Optional<QuotaCount> getDeletedMessageCount() {
+        return deletedMessageCount;
+    }
+
+    @JsonIgnore
+    public Optional<QuotaSize> getTotalDeletedSize() {
+        return totalDeletedSize;
     }
 }

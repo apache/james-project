@@ -25,10 +25,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.event.EventSerializer;
 import org.apache.james.mailbox.store.publisher.MessageConsumer;
 import org.apache.james.mailbox.store.publisher.Publisher;
@@ -166,7 +171,10 @@ public class BroadcastDelegatingMailboxListenerTest {
 
     @Test
     public void deletionDistantEventsShouldBeWellHandled() throws Exception {
-        final MailboxListener.MailboxEvent event = new MailboxListener.MailboxDeletion(mailboxSession, MAILBOX_PATH);
+        QuotaRoot quotaRoot = QuotaRoot.quotaRoot("root", Optional.empty());
+        QuotaCount quotaCount = QuotaCount.count(123);
+        QuotaSize quotaSize = QuotaSize.size(456);
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxDeletion(mailboxSession, MAILBOX_PATH, quotaRoot, quotaCount, quotaSize);
         broadcastDelegatingMailboxListener.addListener(MAILBOX_PATH, mailboxEventCollector, mailboxSession);
         when(mockedEventSerializer.deSerializeEvent(BYTES)).thenReturn(event);
 

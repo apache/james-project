@@ -54,10 +54,6 @@
         <constructor-arg index="0" ref="mailbox-converter"/>
     </bean>
 
-    <bean id="message-pack-event-serializer" class="org.apache.james.mailbox.store.json.MessagePackEventSerializer" lazy-init="true">
-        <constructor-arg index="0" ref="event-converter"/>
-    </bean>
-
     <bean id="event-converter" class="org.apache.james.mailbox.store.json.event.EventConverter" lazy-init="true">
         <constructor-arg index="0" ref="mailbox-converter"/>
     </bean>

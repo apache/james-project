@@ -29,6 +29,8 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -105,4 +107,15 @@ public class ListeningCurrentQuotaUpdaterTest {
         verify(mockedCurrentQuotaManager, never()).increase(QUOTA_ROOT, 0, 0);
     }
 
+    @Test
+    public void mailboxDeletionEventShouldDecreaseCurrentQuotaValues() throws Exception {
+        MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
+        when(deletion.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
+        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(10));
+        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(5));
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        testee.event(deletion);
+        verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 10, 5);
+    }
 }

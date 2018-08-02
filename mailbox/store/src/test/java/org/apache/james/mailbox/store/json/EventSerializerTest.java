@@ -21,10 +21,13 @@ package org.apache.james.mailbox.store.json;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
 import java.util.TreeMap;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -32,6 +35,7 @@ import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -133,12 +137,18 @@ public abstract class EventSerializerTest {
 
     @Test
     public void mailboxDeletionShouldBeWellConverted() throws Exception {
-        MailboxListener.MailboxEvent event = eventFactory.mailboxDeleted(mailboxSession, mailbox);
+        QuotaRoot quotaRoot = QuotaRoot.quotaRoot("root", Optional.empty());
+        QuotaCount quotaCount = QuotaCount.count(123);
+        QuotaSize quotaSize = QuotaSize.size(456);
+        MailboxListener.MailboxDeletion event = eventFactory.mailboxDeleted(mailboxSession, mailbox, quotaRoot, quotaCount, quotaSize);
         byte[] serializedEvent = serializer.serializeEvent(event);
-        MailboxListener.MailboxEvent deserializedEvent = serializer.deSerializeEvent(serializedEvent);
+        MailboxListener.MailboxDeletion deserializedEvent = (MailboxListener.MailboxDeletion) serializer.deSerializeEvent(serializedEvent);
         assertThat(deserializedEvent.getMailboxPath()).isEqualTo(event.getMailboxPath());
         assertThat(deserializedEvent.getSession().getSessionId()).isEqualTo(event.getSession().getSessionId());
         assertThat(deserializedEvent).isInstanceOf(MailboxListener.MailboxDeletion.class);
+        assertThat(deserializedEvent.getQuotaRoot()).isEqualTo(quotaRoot);
+        assertThat(deserializedEvent.getDeletedMessageCount()).isEqualTo(quotaCount);
+        assertThat(deserializedEvent.getTotalDeletedSize()).isEqualTo(quotaSize);
     }
 
     @Test

@@ -145,8 +145,8 @@ public class MailboxEventDispatcher {
      * Should get called when a Mailbox was deleted. All registered
      * MailboxListener will get triggered then
      */
-    public void mailboxDeleted(MailboxSession session, Mailbox mailbox) {
-        listener.event(eventFactory.mailboxDeleted(session, mailbox));
+    public void mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
+        listener.event(eventFactory.mailboxDeleted(session, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize));
     }
 
     /**

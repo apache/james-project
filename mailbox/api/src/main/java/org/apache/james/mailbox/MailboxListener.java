@@ -170,8 +170,27 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
-        public MailboxDeletion(MailboxSession session, MailboxPath path) {
+        private final QuotaRoot quotaRoot;
+        private final QuotaCount deletedMessageCOunt;
+        private final QuotaSize totalDeletedSize;
+
+        public MailboxDeletion(MailboxSession session, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize) {
             super(session, path);
+            this.quotaRoot = quotaRoot;
+            this.deletedMessageCOunt = deletedMessageCOunt;
+            this.totalDeletedSize = totalDeletedSize;
+        }
+
+        public QuotaRoot getQuotaRoot() {
+            return quotaRoot;
+        }
+
+        public QuotaCount getDeletedMessageCount() {
+            return deletedMessageCOunt;
+        }
+
+        public QuotaSize getTotalDeletedSize() {
+            return totalDeletedSize;
         }
     }
 

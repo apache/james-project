@@ -23,9 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
@@ -63,7 +66,10 @@ public class GlobalRegistrationTest {
 
     @Test
     public void pathToIndexShouldBeNullifiedByDeletedEvents() {
-        MailboxListener.MailboxEvent event = eventFactory.mailboxDeleted(session, MAILBOX);
+        QuotaRoot quotaRoot = QuotaRoot.quotaRoot("root", Optional.empty());
+        QuotaCount quotaCount = QuotaCount.count(123);
+        QuotaSize quotaSize = QuotaSize.size(456);
+        MailboxListener.MailboxEvent event = eventFactory.mailboxDeleted(session, MAILBOX, quotaRoot, quotaCount, quotaSize);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX)).isEqualTo(Optional.empty());
     }
