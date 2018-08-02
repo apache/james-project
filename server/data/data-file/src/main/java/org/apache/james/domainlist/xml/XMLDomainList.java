@@ -26,11 +26,11 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.lib.AbstractDomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 
 /**
@@ -48,8 +48,8 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-        super.configure(config);
+    public void configure(DomainListConfiguration domainListConfiguration) throws ConfigurationException {
+        super.configure(domainListConfiguration);
         isConfigured = true;
     }
 
