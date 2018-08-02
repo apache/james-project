@@ -21,8 +21,8 @@ package org.apache.james.webadmin.routes;
 
 import static org.mockito.Mockito.mock;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -51,7 +51,9 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
 
             DNSService dnsService = mock(DNSService.class);
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.configure(new DefaultConfigurationBuilder());
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false));
             usersRepository.setDomainList(domainList);
 
             QuotaSearchTestSystem quotaSearchTestSystem = new QuotaSearchTestSystem(

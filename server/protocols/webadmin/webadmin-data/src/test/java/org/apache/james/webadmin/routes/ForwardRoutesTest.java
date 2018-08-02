@@ -40,6 +40,7 @@ import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -108,9 +109,9 @@ class ForwardRoutesTest {
             memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
             DNSService dnsService = mock(DNSService.class);
             domainList = new MemoryDomainList(dnsService);
-            domainList.setAutoDetectIP(false);
-            domainList.setAutoDetect(false);
-            domainList.configure(new DefaultConfigurationBuilder());
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(false)
+                .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
 
             usersRepository = MemoryUsersRepository.withVirtualHosting();

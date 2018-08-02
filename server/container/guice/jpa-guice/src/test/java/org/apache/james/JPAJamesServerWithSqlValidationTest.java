@@ -34,7 +34,7 @@ public class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
 
         return new GuiceJamesServer(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation());
+            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 
 }

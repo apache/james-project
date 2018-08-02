@@ -68,7 +68,7 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
 
         return new GuiceJamesServer(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
-            .overrideWith(new TestJPAConfigurationModule());
+            .overrideWith(new TestJPAConfigurationModule(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 
     @Override

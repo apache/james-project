@@ -27,10 +27,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.inject.Module;
 
 public abstract class AbstractJamesServerTest {
 
@@ -39,6 +42,12 @@ public abstract class AbstractJamesServerTest {
     private static final int POP3_PORT = 1110;
     private static final int SMTP_PORT = 1025;
     private static final int LMTP_PORT = 1024;
+
+    public static final Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
+        .toInstance(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(false)
+            .build());
 
     protected GuiceJamesServer server;
     private SocketChannel socketChannel;
