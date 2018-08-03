@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.UidSearchOnIndex;
-import org.junit.After;
 import org.junit.Before;
 
 public class InMemoryUidSearchOnIndexTest extends UidSearchOnIndex {
@@ -40,11 +39,6 @@ public class InMemoryUidSearchOnIndexTest extends UidSearchOnIndex {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }

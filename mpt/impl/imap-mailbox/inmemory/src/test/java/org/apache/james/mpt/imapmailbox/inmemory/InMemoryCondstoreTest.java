@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.host.JamesImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.Condstore;
-import org.junit.After;
 import org.junit.Before;
 
 public class InMemoryCondstoreTest extends Condstore {
@@ -40,11 +39,6 @@ public class InMemoryCondstoreTest extends Condstore {
     @Override
     protected JamesImapHostSystem createJamesImapHostSystem() {
         return system;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }

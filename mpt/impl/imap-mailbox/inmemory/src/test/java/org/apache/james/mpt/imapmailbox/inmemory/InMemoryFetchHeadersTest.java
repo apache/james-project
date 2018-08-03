@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.FetchHeaders;
-import org.junit.After;
 import org.junit.Before;
 
 public class InMemoryFetchHeadersTest extends FetchHeaders {
@@ -40,11 +39,6 @@ public class InMemoryFetchHeadersTest extends FetchHeaders {
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }

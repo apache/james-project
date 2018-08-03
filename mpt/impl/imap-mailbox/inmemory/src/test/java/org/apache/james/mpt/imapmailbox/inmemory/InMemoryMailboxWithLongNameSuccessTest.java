@@ -22,7 +22,6 @@ package org.apache.james.mpt.imapmailbox.inmemory;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
 import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameSuccess;
-import org.junit.After;
 import org.junit.Before;
 
 public class InMemoryMailboxWithLongNameSuccessTest extends MailboxWithLongNameSuccess {
@@ -40,11 +39,6 @@ public class InMemoryMailboxWithLongNameSuccessTest extends MailboxWithLongNameS
     @Override
     protected ImapHostSystem createImapHostSystem() {
         return system;
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
     }
     
 }
