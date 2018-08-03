@@ -49,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -68,6 +69,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import io.restassured.RestAssured;
 
 public abstract class SetMailboxesMethodTest {
@@ -177,14 +179,15 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
-    public void setMailboxesShouldCreateWhenOverLimitName() throws Exception {
-        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+    public void setMailboxesCreateShouldFailWhenOverLimitName() {
+        String overLimitName = StringUtils.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
+        String creationId = "create-id01";
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
                 "      \"create\": {" +
-                "        \"create-id01\" : {" +
+                "        \"" + creationId + "\" : {" +
                 "          \"name\" : \"" + overLimitName + "\"" +
                 "        }" +
                 "      }" +
@@ -201,12 +204,14 @@ public abstract class SetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxesSet"))
-            .body(ARGUMENTS + ".created", hasKey("create-id01"));
+            .body(ARGUMENTS + ".notCreated", hasKey(creationId))
+            .body(ARGUMENTS + ".notCreated." + creationId + ".type", is("invalidArguments"))
+            .body(ARGUMENTS + ".notCreated." + creationId + ".description", is("The mailbox name length is too long"));
     }
 
     @Test
-    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() throws Exception {
-        String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
+    public void setMailboxesUpdateShouldFailWhenOverLimitName() throws Exception {
+        String overLimitName = StringUtils.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
         String requestBody =
             "[" +
@@ -229,9 +234,11 @@ public abstract class SetMailboxesMethodTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("mailboxesSet"))
-            .body(ARGUMENTS + ".updated", contains(mailboxId.serialize()));
+            .body(ARGUMENTS + ".notUpdated", hasKey(mailboxId.serialize()))
+            .body(ARGUMENTS + ".notUpdated." + mailboxId.serialize() + ".type", is("invalidArguments"))
+            .body(ARGUMENTS + ".notUpdated." + mailboxId.serialize() + ".description", is("The mailbox name length is too long"));
 
-        assertThat(mailboxProbe.listSubscriptions(username)).contains(overLimitName);
+        assertThat(mailboxProbe.listSubscriptions(username)).doesNotContain(overLimitName);
     }
 
     @Test

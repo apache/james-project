@@ -26,7 +26,6 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.methods.integration.SetMailboxesMethodTest;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 
 public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
@@ -46,23 +45,5 @@ public class CassandraSetMailboxesMethodTest extends SetMailboxesMethodTest {
     protected void await() {
         rule.await();
     }
-
-    @Override
-    @Ignore("JAMES-2514 Cassandra 3.0 supports long mailbox names")
-    public void setMailboxesShouldCreateWhenOverLimitName() {
-    }
-
-    @Override
-    @Ignore("JAMES-2514 Cassandra 3.0 supports long mailbox names")
-    public void setMailboxesShouldUpdateMailboxWhenOverLimitName() {
-    }
-
-    @Override
-    @Ignore
-    public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {}
-
-    @Override
-    @Ignore
-    public void setMailboxesShouldNotCreateWhenOverLimitName() {}
 
 }
