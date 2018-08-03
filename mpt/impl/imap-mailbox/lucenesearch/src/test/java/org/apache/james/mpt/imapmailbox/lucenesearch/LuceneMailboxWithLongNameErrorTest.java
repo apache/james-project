@@ -24,9 +24,7 @@ import org.apache.james.mpt.imapmailbox.lucenesearch.host.LuceneSearchHostSystem
 import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 
-@Ignore("MAILBOX-300 JPA should fail gracefully when too long mailbox name")
 public class LuceneMailboxWithLongNameErrorTest extends MailboxWithLongNameError {
 
     private ImapHostSystem system;

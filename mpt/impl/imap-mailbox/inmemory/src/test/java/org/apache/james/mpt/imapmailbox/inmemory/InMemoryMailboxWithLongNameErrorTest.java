@@ -17,39 +17,26 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.imapmailbox.suite;
-
-import java.util.Locale;
+package org.apache.james.mpt.imapmailbox.inmemory;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.ImapTestConstants;
-import org.apache.james.mpt.imapmailbox.suite.base.BasicImapCommands;
-import org.apache.james.mpt.script.SimpleScriptedTestProtocol;
+import org.apache.james.mpt.imapmailbox.inmemory.host.InMemoryHostSystem;
+import org.apache.james.mpt.imapmailbox.suite.MailboxWithLongNameError;
 import org.junit.Before;
-import org.junit.Test;
 
-public abstract class MailboxWithLongNameSuccess implements ImapTestConstants {
-
-    protected abstract ImapHostSystem createImapHostSystem();
-    
+public class InMemoryMailboxWithLongNameErrorTest extends MailboxWithLongNameError {
     private ImapHostSystem system;
-    private SimpleScriptedTestProtocol simpleScriptedTestProtocol;
 
+    @Override
     @Before
     public void setUp() throws Exception {
-        system = createImapHostSystem();
-        simpleScriptedTestProtocol = new SimpleScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
-                .withUser(USER, PASSWORD)
-                .withLocale(Locale.US);
-        BasicImapCommands.welcome(simpleScriptedTestProtocol);
-        BasicImapCommands.authenticate(simpleScriptedTestProtocol);
-    }
-    
-    @Test
-    public void testWithLongMailboxNameUS() throws Exception {
-        simpleScriptedTestProtocol
-            .withLocale(Locale.US)
-            .run("CreateSuccessWithLongName");
+        system = new InMemoryHostSystem();
+        system.beforeTest();
+        super.setUp();
     }
 
+    @Override
+    protected ImapHostSystem createImapHostSystem() {
+        return system;
+    }
 }
