@@ -117,8 +117,9 @@ public class LogMessage extends GenericMailet {
 
     private void logBody(MimeMessage message) throws MessagingException, IOException {
         if (body && logger.isInfoEnabled()) {
-            InputStream inputStream = ByteStreams.limit(message.getDataHandler().getInputStream(), lengthToLog(message));
-            logger.info(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            try (InputStream inputStream = ByteStreams.limit(message.getDataHandler().getInputStream(), lengthToLog(message))) {
+                logger.info(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            }
         }
     }
 

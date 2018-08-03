@@ -363,11 +363,9 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         /* TODO: see if it is possible to store the number of unseen messages in the mailbox table
          * and just return that value with a Get and kepp it up to date.
          */
-        HTable messages = null;
         ResultScanner scanner = null;
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
-        try {
-            messages = new HTable(conf, MESSAGES_TABLE);
+        try (HTable messages = new HTable(conf, MESSAGES_TABLE)) {
             /* Limit the number of entries scanned to just the mails in this mailbox */
             Scan scan = new Scan(
                     messageRowKey(mailboxId, MessageUid.MAX_VALUE),
@@ -382,13 +380,6 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             throw new MailboxException("Search of first unseen message failed in mailbox " + mailbox, e);
         } finally {
             scanner.close();
-            if (messages != null) {
-                try {
-                    messages.close();
-                } catch (IOException ex) {
-                    throw new MailboxException("Error closing table " + messages, ex);
-                }
-            }
         }
     }
 
@@ -433,11 +424,8 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
 
     @Override
     public MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException {
-        HTable messages = null;
-        ResultScanner scanner = null;
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
-        try {
-            messages = new HTable(conf, MESSAGES_TABLE);
+        try (HTable messages = new HTable(conf, MESSAGES_TABLE)) {
             /* Limit the number of entries scanned to just the mails in this mailbox */
             Scan scan = new Scan(
                     messageRowKey(mailboxId, MessageUid.MAX_VALUE), 
@@ -448,28 +436,20 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             scan.setFilter(filter);
             scan.setCaching(messages.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
-            scanner = messages.getScanner(scan);
-            Result result;
-            MessageUid lastUnseen = null;
-            byte[] row = null;
-            while ((result = scanner.next()) != null) {
-                row = result.getRow();
+            try (ResultScanner scanner = messages.getScanner(scan)) {
+                Result result;
+                MessageUid lastUnseen = null;
+                byte[] row = null;
+                while ((result = scanner.next()) != null) {
+                    row = result.getRow();
+                }
+                if (row != null) {
+                    lastUnseen = MessageUid.of(Long.MAX_VALUE - Bytes.toLong(row, 16, 8));
+                }
+                return lastUnseen;
             }
-            if (row != null) {
-                lastUnseen = MessageUid.of(Long.MAX_VALUE - Bytes.toLong(row, 16, 8));
-            }
-            return lastUnseen;
         } catch (IOException e) {
             throw new MailboxException("Search of first unseen message failed in mailbox " + mailbox, e);
-        } finally {
-            scanner.close();
-            if (messages != null) {
-                try {
-                    messages.close();
-                } catch (IOException ex) {
-                    throw new MailboxException("Error closing table " + messages, ex);
-                }
-            }
         }
     }
 
@@ -478,11 +458,8 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
         /** TODO: improve performance by implementing a last seen and last recent value per mailbox.
          * maybe one more call to HBase is less expensive than iterating throgh all rows.
          */
-        HTable messages = null;
-        ResultScanner scanner = null;
         HBaseId mailboxId = (HBaseId) mailbox.getMailboxId();
-        try {
-            messages = new HTable(conf, MESSAGES_TABLE);
+        try (HTable messages = new HTable(conf, MESSAGES_TABLE)) {
             /* Limit the number of entries scanned to just the mails in this mailbox */
             Scan scan = new Scan(
                     messageRowKey(mailboxId, MessageUid.MAX_VALUE),
@@ -494,25 +471,17 @@ public class HBaseMessageMapper extends NonTransactionalMapper implements Messag
             scan.setCaching(messages.getConfiguration().getInt("hbase.client.scanner.caching", 1) * 2);
             scan.setMaxVersions(1);
 
-            scanner = messages.getScanner(scan);
-            Result result;
-            List<MessageUid> uids = new ArrayList<>();
-            while ((result = scanner.next()) != null) {
-                uids.add(MessageUid.of(Long.MAX_VALUE - Bytes.toLong(result.getRow(), 16, 8)));
+            try (ResultScanner scanner = messages.getScanner(scan)) {
+                Result result;
+                List<MessageUid> uids = new ArrayList<>();
+                while ((result = scanner.next()) != null) {
+                    uids.add(MessageUid.of(Long.MAX_VALUE - Bytes.toLong(result.getRow(), 16, 8)));
+                }
+                Collections.reverse(uids);
+                return uids;
             }
-            Collections.reverse(uids);
-            return uids;
         } catch (IOException e) {
             throw new MailboxException("Search of recent messages failed in mailbox " + mailbox, e);
-        } finally {
-            scanner.close();
-            if (messages != null) {
-                try {
-                    messages.close();
-                } catch (IOException ex) {
-                    throw new MailboxException("Error closing table " + messages, ex);
-                }
-            }
         }
     }
 

@@ -110,12 +110,13 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
             @Override
             public void body(BodyDescriptor bodyDescriptor, InputStream inputStream) throws MimeException, IOException {
                 if (bodyDescriptor.getMimeType().equalsIgnoreCase("message/disposition-notification")) {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("Disposition:")) {
-                            if (line.contains("MDN-sent-automatically") || line.contains("automatic-action")) {
-                                resultCollector.setResult(true);
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            if (line.startsWith("Disposition:")) {
+                                if (line.contains("MDN-sent-automatically") || line.contains("automatic-action")) {
+                                    resultCollector.setResult(true);
+                                }
                             }
                         }
                     }

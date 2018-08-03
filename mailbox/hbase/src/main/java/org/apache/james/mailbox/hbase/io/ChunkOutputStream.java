@@ -93,9 +93,7 @@ public class ChunkOutputStream extends OutputStream {
      */
     private void writeData(boolean close) throws IOException {
         if (pos != 0 && (close || pos == chunk.length - 1)) {
-            HTable messages = null;
-            try {
-                messages = new HTable(conf, tableName);
+            try (HTable messages = new HTable(conf, tableName)) {
                 Put put = new Put(key);
                 put.add(cf, Bytes.toBytes(chunkPos), Bytes.head(chunk, (int) pos + 1));
                 messages.put(put);
@@ -104,10 +102,6 @@ public class ChunkOutputStream extends OutputStream {
 
             } catch (IOException e) {
                 throw new IOException("Unable to write data", e);
-            } finally {
-                if (messages != null) {
-                    messages.close();
-                }
             }
         }
     }

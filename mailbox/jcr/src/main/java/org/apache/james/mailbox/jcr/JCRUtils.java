@@ -64,14 +64,12 @@ public class JCRUtils implements JCRImapConstants {
     
     /**
      * Register the imap CND file 
-     * 
-     * @param session
      */
     public static void registerCnd(Session session) {
         // Register the custom node types defined in the CND file
-        InputStream is = Thread.currentThread().getContextClassLoader()
-                              .getResourceAsStream("mailbox-jcr.cnd");
-        try {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+
+        try (InputStream is = contextClassLoader.getResourceAsStream("mailbox-jcr.cnd")) {
             CndImporter.registerNodeTypes(new InputStreamReader(is), session);
         } catch (Exception e) {
             throw new RuntimeException("Unable to register cnd file", e);

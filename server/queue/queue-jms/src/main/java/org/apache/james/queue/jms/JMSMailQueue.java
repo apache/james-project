@@ -476,60 +476,48 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     @Override
     public long getSize() throws MailQueueException {
-        QueueBrowser browser = null;
-        try {
-            browser = session.createBrowser(queue);
+        try (QueueBrowser browser = session.createBrowser(queue)) {
             Enumeration<?> enumeration = browser.getEnumeration();
             return Iterators.size(new EnumerationIterator(enumeration));
         } catch (Exception e) {
             LOGGER.error("Unable to get size of queue {}", queueName, e);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
-        } finally {
-            closeBrowser(browser);
         }
     }
 
     @Override
     public long flush() throws MailQueueException {
-        Session session = null;
-        Message message = null;
-        MessageConsumer consumer = null;
-        MessageProducer producer = null;
         boolean first = true;
         long count = 0;
-        try {
-
-            session = connection.createSession(true, Session.SESSION_TRANSACTED);
+        try (Session session = connection.createSession(true, Session.SESSION_TRANSACTED)) {
             Queue queue = session.createQueue(queueName);
-            consumer = session.createConsumer(queue);
-            producer = session.createProducer(queue);
+            try (MessageConsumer consumer = session.createConsumer(queue)) {
+                try (MessageProducer producer = session.createProducer(queue)) {
 
-            while (first || message != null) {
-                if (first) {
-                    // give the consumer 2000 ms to receive messages
-                    message = consumer.receive(2000);
-                } else {
-                    message = consumer.receiveNoWait();
-                }
-                first = false;
+                    Message message = null;
+                    while (first || message != null) {
+                        if (first) {
+                            // give the consumer 2000 ms to receive messages
+                            message = consumer.receive(2000);
+                        } else {
+                            message = consumer.receiveNoWait();
+                        }
+                        first = false;
 
-                if (message != null) {
-                    Message m = copy(session, message);
-                    m.setBooleanProperty(FORCE_DELIVERY, true);
-                    producer.send(m, message.getJMSDeliveryMode(), message.getJMSPriority(), message.getJMSExpiration());
-                    count++;
+                        if (message != null) {
+                            Message m = copy(session, message);
+                            m.setBooleanProperty(FORCE_DELIVERY, true);
+                            producer.send(m, message.getJMSDeliveryMode(), message.getJMSPriority(), message.getJMSExpiration());
+                            count++;
+                        }
+                    }
+                    session.commit();
+                    return count;
                 }
             }
-            session.commit();
-            return count;
         } catch (Exception e) {
             LOGGER.error("Unable to flush mail", e);
-            rollback(session);
             throw new MailQueueException("Unable to get size of queue " + queueName, e);
-        } finally {
-            closeConsumer(consumer);
-            closeProducer(producer);
-            closeSession(session);
         }
     }
 
@@ -553,37 +541,32 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
      * @return messages
      */
     public List<Message> removeWithSelector(String selector) throws MailQueueException {
-        Session session = null;
-        Message message = null;
-        MessageConsumer consumer = null;
         boolean first = true;
         List<Message> messages = new ArrayList<>();
 
         try {
-            session = connection.createSession(true, Session.SESSION_TRANSACTED);
-            Queue queue = session.createQueue(queueName);
-            consumer = session.createConsumer(queue, selector);
-            while (first || message != null) {
-                if (first) {
-                    // give the consumer 2000 ms to receive messages
-                    message = consumer.receive(2000);
-                } else {
-                    message = consumer.receiveNoWait();
+            try (Session session = connection.createSession(true, Session.SESSION_TRANSACTED)) {
+                Queue queue = session.createQueue(queueName);
+                try (MessageConsumer consumer = session.createConsumer(queue, selector)) {
+                    Message message = null;
+                    while (first || message != null) {
+                        if (first) {
+                            // give the consumer 2000 ms to receive messages
+                            message = consumer.receive(2000);
+                        } else {
+                            message = consumer.receiveNoWait();
+                        }
+                        first = false;
+                        if (message != null) {
+                            messages.add(message);
+                        }
+                    }
                 }
-                first = false;
-                if (message != null) {
-                    messages.add(message);
-                }
+                session.commit();
             }
-            session.commit();
             return messages;
         } catch (Exception e) {
-            rollback(session);
             throw new MailQueueException("Unable to remove mails", e);
-
-        } finally {
-            closeConsumer(consumer);
-            closeSession(session);
         }
     }
 

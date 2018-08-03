@@ -20,6 +20,7 @@
 package org.apache.james.mpt.ant;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -387,19 +388,22 @@ public class MailProtocolTestTask extends Task implements Monitor {
             validate();
             try {
                 final File scriptFile = getScript();
-                final Reader reader;
-                if (scriptFile == null) {
-                    reader = new StringReader(scriptText);
-                } else {
-                    reader = new FileReader(scriptFile);
-                }
                 final ScriptedUserAdder adder = new ScriptedUserAdder(getHost(), port, MailProtocolTestTask.this);
-                adder.addUser(getUser(), getPasswd(), reader);
+                try (Reader reader = newReader(scriptFile)) {
+                    adder.addUser(getUser(), getPasswd(), reader);
+                }
             } catch (Exception e) {
                 log(e.getMessage(), Project.MSG_ERR);
                 throw new BuildException("User addition failed: \n" + e.getMessage(), e);
             }
-        } 
+        }
+
+        private Reader newReader(File scriptFile) throws FileNotFoundException {
+            if (scriptFile == null) {
+                return new StringReader(scriptText);
+            }
+            return new FileReader(scriptFile);
+        }
     }
 
     @Override

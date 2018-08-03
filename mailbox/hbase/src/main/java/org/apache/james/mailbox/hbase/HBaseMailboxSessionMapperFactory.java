@@ -36,7 +36,6 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.SubscriptionException;
@@ -82,9 +81,7 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
         this.messageIdFactory = messageIdFactory;
 
         //TODO: add better exception handling for this
-        HBaseAdmin hbaseAdmin = null;
-        try {
-            hbaseAdmin = new HBaseAdmin(conf);
+        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(conf)) {
             HTableDescriptor desc = null;
             HColumnDescriptor hColumnDescriptor = null;
 
@@ -127,8 +124,6 @@ public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactor
 
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.cleanup(null, hbaseAdmin);
         }
     }
 

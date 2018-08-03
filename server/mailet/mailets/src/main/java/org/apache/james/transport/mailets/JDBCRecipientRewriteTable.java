@@ -144,10 +144,8 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
         int pos = datasourceName.indexOf("/");
         String tableName = datasourceName.substring(pos + 1);
         datasourceName = datasourceName.substring(0, pos);
-        Connection conn = null;
 
-        try {
-            conn = datasource.getConnection();
+        try (Connection conn = datasource.getConnection()) {
 
             // Check if the required table exists. If not, complain.
             DatabaseMetaData dbMetaData = conn.getMetaData();
@@ -165,8 +163,6 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             throw me;
         } catch (Exception e) {
             throw new MessagingException("Error initializing JDBCRecipientRewriteTable", e);
-        } finally {
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 
@@ -179,35 +175,25 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
      */
     @Override
     protected void mapRecipients(Map<MailAddress, String> recipientsMap) throws MessagingException {
-        Connection conn = null;
-        PreparedStatement mappingStmt = null;
 
         Collection<MailAddress> recipients = recipientsMap.keySet();
 
-        try {
-            conn = datasource.getConnection();
-            mappingStmt = conn.prepareStatement(query);
-
-            for (MailAddress recipient : recipients) {
-                ResultSet mappingRS = null;
-                try {
+        try (Connection conn = datasource.getConnection()) {
+            try (PreparedStatement mappingStmt = conn.prepareStatement(query)) {
+                for (MailAddress recipient : recipients) {
                     mappingStmt.setString(1, recipient.getLocalPart());
                     mappingStmt.setString(2, recipient.getDomain().asString());
                     mappingStmt.setString(3, recipient.getDomain().asString());
-                    mappingRS = mappingStmt.executeQuery();
-                    if (mappingRS.next()) {
-                        String targetString = mappingRS.getString(1);
-                        recipientsMap.put(recipient, targetString);
+                    try (ResultSet mappingRS = mappingStmt.executeQuery()) {
+                        if (mappingRS.next()) {
+                            String targetString = mappingRS.getString(1);
+                            recipientsMap.put(recipient, targetString);
+                        }
                     }
-                } finally {
-                    theJDBCUtil.closeJDBCResultSet(mappingRS);
                 }
             }
         } catch (SQLException sqle) {
             throw new MessagingException("Error accessing database", sqle);
-        } finally {
-            theJDBCUtil.closeJDBCStatement(mappingStmt);
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 

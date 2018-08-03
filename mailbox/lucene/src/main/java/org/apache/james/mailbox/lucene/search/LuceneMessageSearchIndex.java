@@ -113,7 +113,6 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.IOUtils;
 import org.apache.lucene.util.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -481,12 +480,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     private List<SearchResult> searchMultimap(Collection<MailboxId> mailboxIds, SearchQuery searchQuery) throws MailboxException {
         ImmutableList.Builder<SearchResult> results = ImmutableList.builder();
-        IndexSearcher searcher = null;
 
         Query inMailboxes = buildQueryFromMailboxes(mailboxIds);
         
-        try {
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
             query.add(inMailboxes, BooleanClause.Occur.MUST);
             // Not return flags documents
@@ -509,14 +506,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             }
         } catch (IOException e) {
             throw new MailboxException("Unable to search the mailbox", e);
-        } finally {
-            if (searcher != null) {
-                try {
-                    searcher.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
         }
         return results.build();
     }
@@ -593,13 +582,12 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     
                     if (f instanceof DateTimeField) {
                         // We need to make sure we convert it to GMT
-                        final StringReader reader = new StringReader(f.getBody());
-                        try {
+                        try (StringReader reader = new StringReader(f.getBody())) {
                             DateTime dateTime = new DateTimeParser(reader).parseAll();
                             Calendar cal = getGMT();
                             cal.set(dateTime.getYear(), dateTime.getMonth() - 1, dateTime.getDay(), dateTime.getHour(), dateTime.getMinute(), dateTime.getSecond());
-                            sentDate =  cal.getTime();
-                            
+                            sentDate = cal.getTime();
+
                         } catch (org.apache.james.mime4j.field.datetime.parser.ParseException e) {
                             LOGGER.debug("Unable to parse Date header for proper indexing", e);
                             // This should never happen anyway fallback to the already parsed field
@@ -722,10 +710,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                     }
                     
                     // Read the content one line after the other and add it to the document
-                    BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset));
-                    String line = null;
-                    while ((line = bodyReader.readLine()) != null) {
-                        doc.add(new Field(BODY_FIELD,  line.toUpperCase(Locale.US),Store.NO, Index.ANALYZED));
+                    try (BufferedReader bodyReader = new BufferedReader(new InputStreamReader(in, charset))) {
+                        String line = null;
+                        while ((line = bodyReader.readLine()) != null) {
+                            doc.add(new Field(BODY_FIELD, line.toUpperCase(Locale.US), Store.NO, Index.ANALYZED));
+                        }
                     }
                     
                 }
@@ -976,14 +965,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             query.add(bQuery, BooleanClause.Occur.MUST);
         }
         query.add(inMailboxes, BooleanClause.Occur.MUST);
-        
-        
-        IndexSearcher searcher = null;
 
-        try {
+
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             Set<MessageUid> uids = new HashSet<>();
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
-            
+
             // query for all the documents sorted by uid
             TopDocs docs = searcher.search(query, null, maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
@@ -1010,14 +996,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             return createUidQuery((UidCriterion) SearchQuery.uid(nRanges));
         } catch (IOException e) {
             throw new MailboxException("Unable to search mailbox " + inMailboxes, e);
-        } finally {
-            if (searcher != null) {
-                try {
-                    searcher.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
         }
     }
     
@@ -1268,9 +1246,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private void update(Mailbox mailbox, MessageUid uid, Flags f) throws MailboxException {
-        IndexSearcher searcher = null;
-        try {
-            searcher = new IndexSearcher(IndexReader.open(writer, true));
+        try (IndexSearcher searcher = new IndexSearcher(IndexReader.open(writer, true))) {
             BooleanQuery query = new BooleanQuery();
             query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
             query.add(createQuery(MessageRange.one(uid)), BooleanClause.Occur.MUST);
@@ -1291,15 +1267,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             }
         } catch (IOException e) {
             throw new MailboxException("Unable to add messages in index", e);
-
-        } finally {
-            try {
-                IOUtils.closeWhileHandlingException(searcher);
-            } catch (IOException e) {
-                //can't happen anyway
-            }
         }
-        
     }
 
     /**

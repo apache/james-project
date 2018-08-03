@@ -754,13 +754,14 @@ public class MailImpl implements Disposable, Mail {
      */
     private static Object cloneSerializableObject(Object o) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream b = new ByteArrayOutputStream();
-        ObjectOutputStream out = new ObjectOutputStream(b);
-        out.writeObject(o);
-        out.flush();
-        out.close();
+        try (ObjectOutputStream out = new ObjectOutputStream(b)) {
+            out.writeObject(o);
+            out.flush();
+        }
         ByteArrayInputStream bi = new ByteArrayInputStream(b.toByteArray());
-        ObjectInputStream in = new ObjectInputStream(bi);
-        return in.readObject();
+        try (ObjectInputStream in = new ObjectInputStream(bi)) {
+            return in.readObject();
+        }
     }
 
     /**

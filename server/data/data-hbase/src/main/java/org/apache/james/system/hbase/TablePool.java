@@ -116,8 +116,7 @@ public class TablePool {
      * @throws IOException
      */
     private static void ensureTable(byte[] tableName, byte[] columnFamilyName) throws IOException {
-        HBaseAdmin hbaseAdmin = new HBaseAdmin(configuration);
-        try {
+        try (HBaseAdmin hbaseAdmin = new HBaseAdmin(configuration)) {
             if (!hbaseAdmin.tableExists(tableName)) {
                 HTableDescriptor desc = new HTableDescriptor(tableName);
                 HColumnDescriptor hColumnDescriptor = new HColumnDescriptor(columnFamilyName);
@@ -125,8 +124,6 @@ public class TablePool {
                 desc.addFamily(hColumnDescriptor);
                 hbaseAdmin.createTable(desc);
             }
-        } finally {
-            hbaseAdmin.close();
         }
     }
 }

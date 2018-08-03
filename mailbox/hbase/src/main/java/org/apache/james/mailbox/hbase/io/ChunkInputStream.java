@@ -74,10 +74,8 @@ public class ChunkInputStream extends InputStream {
      * @throws IOException
      */
     private boolean fetchChunk() throws IOException {
-        HTable messages = null;
-        try {
+        try (HTable messages = new HTable(conf, tableName)) {
             byte[] cp = Bytes.toBytes(chunkPos);
-            messages = new HTable(conf, tableName);
             Get get = new Get(key);
             get.addColumn(cf, cp);
             get.setMaxVersions(1);
@@ -92,11 +90,6 @@ public class ChunkInputStream extends InputStream {
             }
         } catch (IOException e) {
             throw new IOException("Unable to read data", e);
-        } finally {
-            if (messages != null) {
-                messages.close();
-
-            }
         }
     }
 

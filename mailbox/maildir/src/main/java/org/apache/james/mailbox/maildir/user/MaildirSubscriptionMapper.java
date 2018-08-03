@@ -137,14 +137,13 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         if (!subscriptionFile.exists()) {
             return ImmutableSet.of();
         }
-        FileReader fileReader = new FileReader(subscriptionFile);
-        BufferedReader reader = new BufferedReader(fileReader);
-        Set<String> subscriptions = reader.lines()
-            .filter(subscription -> !subscription.equals(""))
-            .collect(Guavate.toImmutableSet());
-        reader.close();
-        fileReader.close();
-        return subscriptions;
+        try (FileReader fileReader = new FileReader(subscriptionFile)) {
+            try (BufferedReader reader = new BufferedReader(fileReader)) {
+                return reader.lines()
+                    .filter(subscription -> !subscription.equals(""))
+                    .collect(Guavate.toImmutableSet());
+            }
+        }
     }
     
     /**
@@ -161,21 +160,19 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
                 throw new IOException("Could not create folder " + mailboxFolder);
             }
         }
-        
+
         File subscriptionFile = new File(mailboxFolder, FILE_SUBSCRIPTION);
         if (!subscriptionFile.exists()) {
             if (!subscriptionFile.createNewFile()) {
                 throw new IOException("Could not create file " + subscriptionFile);
             }
         }
-                
-        FileWriter fileWriter = new FileWriter(subscriptionFile);
-        PrintWriter writer = new PrintWriter(fileWriter);
-        for (String subscription : sortedSubscriptions) {
-            writer.println(subscription);
+
+        try (FileWriter fileWriter = new FileWriter(subscriptionFile)) {
+            try (PrintWriter writer = new PrintWriter(fileWriter)) {
+                sortedSubscriptions.forEach(writer::println);
+            }
         }
-        writer.close();
-        fileWriter.close();
     }
 
 }
