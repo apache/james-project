@@ -19,6 +19,7 @@ RUN apt-get install -y git
 # Copy the script
 COPY compile.sh /root/compile.sh
 COPY integration_tests.sh /root/integration_tests.sh
+COPY .testcontainers.properties /root/.testcontainers.properties
 
 # Define the entrypoint
 WORKDIR /james-project
