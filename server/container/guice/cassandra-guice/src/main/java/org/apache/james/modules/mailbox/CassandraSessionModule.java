@@ -38,6 +38,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
+import org.apache.james.util.Host;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.PropertiesProvider;
@@ -62,7 +63,8 @@ public class CassandraSessionModule extends AbstractModule {
 
     private static final String LOCALHOST = "127.0.0.1";
     private static final String BATCHSIZES_FILE_NAME = "batchsizes";
-    private static final String CASSANDRA_NODES = "cassandra.nodes";
+    private static final String CASSANDRA_FILE_NAME = "cassandra";
+    private static final int CASSANDRA_PORT = 9042;
 
     @Override
     protected void configure() {
@@ -120,23 +122,23 @@ public class CassandraSessionModule extends AbstractModule {
     @Provides
     @Singleton
     CassandraConfiguration provideCassandraConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
-        return CassandraConfiguration.from(getConfiguration(propertiesProvider));
+        try {
+            return CassandraConfiguration.from(propertiesProvider.getConfiguration(CASSANDRA_FILE_NAME));
+        } catch (FileNotFoundException e) {
+            return CassandraConfiguration.DEFAULT_CONFIGURATION;
+        }
     }
 
     @Provides
     @Singleton
     ClusterConfiguration provideClusterConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
-        return ClusterConfiguration.from(getConfiguration(propertiesProvider));
-    }
-
-    private PropertiesConfiguration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            return propertiesProvider.getConfiguration("cassandra");
+            return ClusterConfiguration.from(propertiesProvider.getConfiguration(CASSANDRA_FILE_NAME));
         } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not locate cassandra configuration file. Defaulting to node " + LOCALHOST + ":9042");
-            PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
-            propertiesConfiguration.addProperty(CASSANDRA_NODES, LOCALHOST);
-            return propertiesConfiguration;
+            LOGGER.warn("Could not locate cassandra configuration file. Defaulting to node " + LOCALHOST + ":" + CASSANDRA_PORT);
+            return ClusterConfiguration.builder()
+                .host(Host.from(LOCALHOST, CASSANDRA_PORT))
+                .build();
         }
     }
 
