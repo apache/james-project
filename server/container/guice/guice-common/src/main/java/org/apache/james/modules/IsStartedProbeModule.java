@@ -17,31 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import org.apache.james.IsStartedProbe;
+import org.apache.james.utils.GuiceProbe;
 
-import org.apache.james.data.LdapUsersRepositoryModule;
-import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.server.core.configuration.Configuration;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+public class IsStartedProbeModule extends AbstractModule {
+    private final IsStartedProbe probe;
 
-public class CassandraLdapJamesServerMain {
-
-    public static final Module cassandraLdapServerModule = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
-        .with(new LdapUsersRepositoryModule());
-
-    public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(cassandraLdapServerModule, new JMXServerModule());
-
-        server.start();
+    public IsStartedProbeModule(IsStartedProbe probe) {
+        this.probe = probe;
     }
 
+    @Override
+    protected void configure() {
+        bind(IsStartedProbe.class).toInstance(probe);
+
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().toInstance(probe);
+    }
 }

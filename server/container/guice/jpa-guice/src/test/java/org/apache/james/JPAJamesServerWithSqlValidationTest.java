@@ -32,7 +32,7 @@ public class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
             .configurationFromClasspath()
             .build();
 
-        return new GuiceJamesServer(configuration)
+        return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE);
     }

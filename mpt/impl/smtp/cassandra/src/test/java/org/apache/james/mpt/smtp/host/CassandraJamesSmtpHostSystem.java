@@ -113,7 +113,7 @@ public class CassandraJamesSmtpHostSystem extends ExternalSessionFactory impleme
             .configurationFromClasspath()
             .build();
 
-        return new GuiceJamesServer(configuration)
+        return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(
                 CassandraJamesServerMain.CASSANDRA_SERVER_CORE_MODULE,
                 SMTP_PROTOCOL_MODULE,

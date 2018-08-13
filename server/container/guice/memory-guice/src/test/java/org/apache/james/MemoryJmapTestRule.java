@@ -47,7 +47,7 @@ public class MemoryJmapTestRule implements TestRule {
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .build();
-        return new GuiceJamesServer(configuration)
+        return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))

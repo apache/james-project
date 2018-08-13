@@ -102,8 +102,11 @@ public class MemoryJamesServerMain {
         WEBADMIN);
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
-        new GuiceJamesServer(configuration)
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        GuiceJamesServer.forConfiguration(configuration)
             .combineWith(IN_MEMORY_SERVER_AGGREGATE_MODULE, new JMXServerModule())
             .start();
     }

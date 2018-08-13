@@ -145,7 +145,7 @@ public class TemporaryJamesServer {
         Configuration configuration = Configuration.builder().workingDirectory(workingDir).build();
         copyResources(Paths.get(workingDir, "conf"));
 
-        jamesServer = new GuiceJamesServer(configuration)
+        jamesServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(serverBaseModule)
             .overrideWith((binder) -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
             .overrideWith(additionalModules)

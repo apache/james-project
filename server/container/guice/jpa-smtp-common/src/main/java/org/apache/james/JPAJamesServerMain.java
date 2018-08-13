@@ -57,8 +57,11 @@ public class JPAJamesServerMain {
         new ElasticSearchMetricReporterModule());
 
     public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder().useWorkingDirectoryEnvProperty().build();
-        GuiceJamesServer server = new GuiceJamesServer(configuration)
+        Configuration configuration = Configuration.builder()
+            .useWorkingDirectoryEnvProperty()
+            .build();
+
+        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
                     .combineWith(JPA_SERVER_MODULE, PROTOCOLS);
         server.start();
     }

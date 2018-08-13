@@ -75,7 +75,7 @@ public class CassandraStepdefs {
             .configurationFromClasspath()
             .build();
 
-        mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
+        mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(new TestJMAPServerModule(10))
             .overrideWith(new TestESMetricReporterModule())

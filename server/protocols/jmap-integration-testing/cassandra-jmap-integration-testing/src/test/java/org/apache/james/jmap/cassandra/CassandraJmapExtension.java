@@ -69,7 +69,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
             .configurationFromClasspath()
             .build();
         return new JamesWithSpamAssassin(
-                new GuiceJamesServer(configuration)
+            GuiceJamesServer.forConfiguration(configuration)
                     .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                     .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                     .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))

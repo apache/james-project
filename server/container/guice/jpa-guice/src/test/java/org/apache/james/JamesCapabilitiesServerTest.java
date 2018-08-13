@@ -54,7 +54,7 @@ public class JamesCapabilitiesServerTest {
             .configurationFromClasspath()
             .build();
 
-        return new GuiceJamesServer(configuration)
+        return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE)
             .overrideWith(
                 new TestJPAConfigurationModule(),

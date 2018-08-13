@@ -61,7 +61,7 @@ public class MemoryStepdefs {
             .build();
 
         mainStepdefs.messageIdFactory = new InMemoryMessageId.Factory();
-        mainStepdefs.jmapServer = new GuiceJamesServer(configuration)
+        mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES),
                         (binder) -> binder.bind(MessageId.Factory.class).toInstance(mainStepdefs.messageIdFactory))

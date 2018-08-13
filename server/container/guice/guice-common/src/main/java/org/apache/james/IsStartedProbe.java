@@ -19,29 +19,25 @@
 
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import org.apache.james.utils.GuiceProbe;
 
-import org.apache.james.data.LdapUsersRepositoryModule;
-import org.apache.james.modules.server.JMXServerModule;
-import org.apache.james.server.core.configuration.Configuration;
+public class IsStartedProbe implements GuiceProbe {
 
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
+    private boolean isStarted;
 
-public class CassandraLdapJamesServerMain {
-
-    public static final Module cassandraLdapServerModule = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
-        .with(new LdapUsersRepositoryModule());
-
-    public static void main(String[] args) throws Exception {
-        Configuration configuration = Configuration.builder()
-            .useWorkingDirectoryEnvProperty()
-            .build();
-
-        GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(cassandraLdapServerModule, new JMXServerModule());
-
-        server.start();
+    public IsStartedProbe() {
+        isStarted = false;
     }
 
+    public void notifyStarted() {
+        isStarted = true;
+    }
+
+    public void notifyStoped() {
+        isStarted = false;
+    }
+
+    public boolean isStarted() {
+        return isStarted;
+    }
 }

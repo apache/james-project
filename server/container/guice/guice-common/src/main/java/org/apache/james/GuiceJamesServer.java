@@ -25,6 +25,7 @@ import java.util.Optional;
 import javax.annotation.PreDestroy;
 
 import org.apache.james.modules.CommonServicesModule;
+import org.apache.james.modules.IsStartedProbeModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.server.core.configuration.Configuration;
@@ -43,31 +44,37 @@ import com.google.inject.util.Modules;
 public class GuiceJamesServer {
 
     protected final Module module;
+    private final IsStartedProbe isStartedProbe;
     private Stager<PreDestroy> preDestroy;
     private GuiceProbeProvider guiceProbeProvider;
     private CleanupTasksPerformer cleanupTasksPerformer;
-    private boolean isStarted = false;
 
-    public GuiceJamesServer(Configuration configuration) {
-        this(Modules.combine(
-                        new CommonServicesModule(configuration),
-                        new MailetProcessingModule()));
+    public static GuiceJamesServer forConfiguration(Configuration configuration) {
+        IsStartedProbe isStartedProbe = new IsStartedProbe();
+
+        return new GuiceJamesServer(
+            isStartedProbe,
+            Modules.combine(
+                new IsStartedProbeModule(isStartedProbe),
+                new CommonServicesModule(configuration),
+                new MailetProcessingModule()));
     }
 
-    protected GuiceJamesServer(Module module) {
+    protected GuiceJamesServer(IsStartedProbe isStartedProbe, Module module) {
+        this.isStartedProbe = isStartedProbe;
         this.module = module;
     }
     
     public GuiceJamesServer combineWith(Module... modules) {
-        return new GuiceJamesServer(Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
+        return new GuiceJamesServer(isStartedProbe, Modules.combine(Iterables.concat(Arrays.asList(module), Arrays.asList(modules))));
     }
 
     public GuiceJamesServer overrideWith(Module... overrides) {
-        return new GuiceJamesServer(Modules.override(module).with(overrides));
+        return new GuiceJamesServer(isStartedProbe, Modules.override(module).with(overrides));
     }
 
     public GuiceJamesServer overrideWith(List<Module> overrides) {
-        return new GuiceJamesServer(Modules.override(module).with(overrides));
+        return new GuiceJamesServer(isStartedProbe, Modules.override(module).with(overrides));
     }
 
     public void start() throws Exception {
@@ -76,19 +83,19 @@ public class GuiceJamesServer {
         injector.getInstance(ConfigurationsPerformer.class).initModules();
         guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
         cleanupTasksPerformer = injector.getInstance(CleanupTasksPerformer.class);
-        isStarted = true;
+        isStartedProbe.notifyStarted();
     }
 
     public void stop() {
+        isStartedProbe.notifyStoped();
         Optional.ofNullable(cleanupTasksPerformer).ifPresent(CleanupTasksPerformer::clean);
         if (preDestroy != null) {
             preDestroy.stage();
-            isStarted = false;
         }
     }
 
     public boolean isStarted() {
-        return isStarted;
+        return isStartedProbe.isStarted();
     }
 
     public <T extends GuiceProbe> T getProbe(Class<T> probe) {
