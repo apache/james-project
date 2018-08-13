@@ -24,7 +24,7 @@ services:
     image: elasticsearch:2.4.6
 
   cassandra:
-    image: cassandra:2.2.12
+    image: cassandra:3.11.3
     ports:
       - "9042:9042"
 
