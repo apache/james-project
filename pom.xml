@@ -3210,6 +3210,7 @@
                             <referenceBranch>${env.JAMES_PARTIAL_BUILD_BASE_BRANCH}</referenceBranch>
                             <buildAll>true</buildAll>
                             <skipTestsForNotImpactedModules>true</skipTestsForNotImpactedModules>
+                            <buildSnapshotDependencies>true</buildSnapshotDependencies>
                             <impacted>true</impacted>
                             <ignoreAllReactorProjects>false</ignoreAllReactorProjects>
                         </configuration>
