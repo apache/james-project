@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.StringTokenizer;
 
 import org.apache.james.core.Domain;
-import org.apache.james.rrt.lib.Mapping.Type;
 import org.apache.james.util.OptionalUtils;
 
 /**
@@ -51,41 +50,6 @@ public class RecipientRewriteTableUtil {
                 Optional.ofNullable(mappings.get(MappingSource.fromUser(user, domain))),
                 Optional.ofNullable(mappings.get(MappingSource.fromDomain(domain))))
             .orElse(null);
-    }
-
-    /**
-     * Returns the character used to delineate multiple addresses.
-     * 
-     * @param targetString
-     *            the string to parse
-     * @return the character to tokenize on
-     */
-    public static String getSeparator(String targetString) {
-        return OptionalUtils.or(
-                mayContainComma(targetString),
-                mayContainSemicolon(targetString),
-                mayContainColon(targetString))
-            .orElse("");
-    }
-
-    private static Optional<String> mayContainComma(String targetString) {
-        return mayContain(targetString, ",");
-    }
-
-    private static Optional<String> mayContainSemicolon(String targetString) {
-        return mayContain(targetString, ";");
-    }
-
-    private static Optional<String> mayContainColon(String targetString) {
-        if (Type.hasPrefix(targetString)) {
-            return Optional.empty();
-        }
-        return Optional.of(":");
-    }
-
-    private static Optional<String> mayContain(String targetString, String expectedCharacter) {
-        return Optional.of(expectedCharacter)
-            .filter(targetString::contains);
     }
 
     /**

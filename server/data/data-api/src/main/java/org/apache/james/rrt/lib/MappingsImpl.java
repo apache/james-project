@@ -94,7 +94,7 @@ public class MappingsImpl implements Mappings, Serializable {
 
     private static ArrayList<String> mappingToCollection(String rawMapping) {
         ArrayList<String> map = new ArrayList<>();
-        StringTokenizer tokenizer = new StringTokenizer(rawMapping, RecipientRewriteTableUtil.getSeparator(rawMapping));
+        StringTokenizer tokenizer = new StringTokenizer(rawMapping, SeparatorUtil.getSeparator(rawMapping));
         while (tokenizer.hasMoreTokens()) {
             final String raw = tokenizer.nextToken().trim();
             map.add(raw);

@@ -16,35 +16,47 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.rrt.lib;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Optional;
 
-import org.junit.Test;
+import org.apache.james.util.OptionalUtils;
 
-public class RecipientRewriteTableUtilTest {
-
-    @Test
-    public void getSeparatorShouldReturnCommaWhenCommaIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost, regex:user@test");
-        assertThat(separator).isEqualTo(",");
+public class SeparatorUtil {
+    /**
+     * Returns the character used to delineate multiple addresses.
+     *
+     * @param targetString
+     *            the string to parse
+     * @return the character to tokenize on
+     */
+    public static String getSeparator(String targetString) {
+        return OptionalUtils.or(
+            mayContainComma(targetString),
+            mayContainSemicolon(targetString),
+            mayContainColon(targetString))
+            .orElse("");
     }
 
-    @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresentInPrefix() {
-        String separator = RecipientRewriteTableUtil.getSeparator("regex:(.*)@localhost");
-        assertThat(separator).isEqualTo("");
+    private static Optional<String> mayContainComma(String targetString) {
+        return mayContain(targetString, ",");
     }
 
-    @Test
-    public void getSeparatorShouldReturnEmptyWhenColonIsPresent() {
-        String separator = RecipientRewriteTableUtil.getSeparator("(.*)@localhost: user@test");
-        assertThat(separator).isEqualTo(":");
+    private static Optional<String> mayContainSemicolon(String targetString) {
+        return mayContain(targetString, ";");
     }
 
-    @Test
-    public void getSeparatorShouldReturnColonWhenNoSeparator() {
-        String separator = RecipientRewriteTableUtil.getSeparator("user@test");
-        assertThat(separator).isEqualTo(":");
+    private static Optional<String> mayContainColon(String targetString) {
+        if (Mapping.Type.hasPrefix(targetString)) {
+            return Optional.empty();
+        }
+        return Optional.of(":");
     }
+
+    private static Optional<String> mayContain(String targetString, String expectedCharacter) {
+        return Optional.of(expectedCharacter)
+            .filter(targetString::contains);
+    }
+
 }
