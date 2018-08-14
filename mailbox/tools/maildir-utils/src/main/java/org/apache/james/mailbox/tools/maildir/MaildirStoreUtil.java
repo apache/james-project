@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.adapter.mailbox.maildir;
+package org.apache.james.mailbox.tools.maildir;
 
 import java.io.FileNotFoundException;
 

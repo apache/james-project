@@ -60,6 +60,7 @@
         <module>plugin/quota-search-elasticsearch</module>
         <module>plugin/quota-search-scanning</module>
         <module>plugin/spamassassin</module>
+        <module>tools</module>
     </modules>
 
     <issueManagement>
