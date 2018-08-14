@@ -50,7 +50,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.ACLProbe;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
@@ -73,6 +72,7 @@ import org.junit.Test;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
@@ -189,18 +189,18 @@ public class FixingGhostMailboxTest {
 
     @Test
     public void ghostMailboxBugShouldChangeMailboxId() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
-        assertThat(aliceGhostInboxId).isNotEqualTo(newAliceInbox.getMailboxId());
+        assertThat(aliceGhostInboxId).isNotEqualTo(newAliceInbox);
     }
 
     @Test
     public void ghostMailboxBugShouldDiscardOldContent() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.getMailboxId().serialize() + "\"]}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -213,13 +213,13 @@ public class FixingGhostMailboxTest {
 
     @Test
     public void webadminCanMergeTwoMailboxes() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         fixGhostMailboxes(newAliceInbox);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.getMailboxId().serialize() + "\"]}}, \"#0\"]]")
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -233,14 +233,14 @@ public class FixingGhostMailboxTest {
 
     @Test
     public void webadminCanMergeTwoMailboxesRights() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
         aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
 
         given()
             .header("Authorization", accessToken.serialize())
-            .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.getMailboxId().serialize() + "\"]}, \"#0\"]]")
+            .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
         .then()
@@ -252,7 +252,7 @@ public class FixingGhostMailboxTest {
 
     @Test
     public void oldGhostedMailboxShouldNoMoreBeAccessible() throws Exception {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
         aclProbe.addRights(aliceInboxPath, cedric, MailboxACL.FULL_RIGHTS);
 
         fixGhostMailboxes(newAliceInbox);
@@ -270,7 +270,7 @@ public class FixingGhostMailboxTest {
 
     @Test
     public void mergingMailboxTaskShouldBeInformative() {
-        Mailbox newAliceInbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
+        MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, alice, MailboxConstants.INBOX);
 
         String taskId = fixGhostMailboxes(newAliceInbox);
 
@@ -283,7 +283,7 @@ public class FixingGhostMailboxTest {
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
             .body("additionalInformation.oldMailboxId", is(aliceGhostInboxId.serialize()))
-            .body("additionalInformation.newMailboxId", is(newAliceInbox.getMailboxId().serialize()))
+            .body("additionalInformation.newMailboxId", is(newAliceInbox.serialize()))
             .body("additionalInformation.totalMessageCount", is(1))
             .body("additionalInformation.messageMovedCount", is(1))
             .body("additionalInformation.messageFailedCount", is(0))
@@ -293,12 +293,12 @@ public class FixingGhostMailboxTest {
             .body("completedDate", is(not(nullValue())));
     }
 
-    private String fixGhostMailboxes(Mailbox newAliceInbox) {
+    private String fixGhostMailboxes(MailboxId newAliceInbox) {
         String taskId = given()
             .spec(webadminSpecification)
             .body("{" +
                 "    \"mergeOrigin\":\"" + aliceGhostInboxId.serialize() + "\"," +
-                "    \"mergeDestination\":\"" + newAliceInbox.getMailboxId().serialize() + "\"" +
+                "    \"mergeDestination\":\"" + newAliceInbox.serialize() + "\"" +
                 "}")
             .post(CassandraMailboxMergingRoutes.BASE)
             .jsonPath()

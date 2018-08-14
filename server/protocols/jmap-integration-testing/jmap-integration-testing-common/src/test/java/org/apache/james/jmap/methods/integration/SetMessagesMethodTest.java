@@ -3413,8 +3413,7 @@ public abstract class SetMessagesMethodTest {
             new ByteArrayInputStream("Subject: my test subject\r\n\r\ntestmail".getBytes(StandardCharsets.UTF_8)), Date.from(dateTime.toInstant()), false, new Flags());
 
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any");
-        String mailboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any")
-            .getMailboxId()
+        String mailboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, USERNAME, "any")
             .serialize();
         mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, "any");
 

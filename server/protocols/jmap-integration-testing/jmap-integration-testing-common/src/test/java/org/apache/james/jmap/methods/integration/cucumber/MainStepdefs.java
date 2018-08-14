@@ -68,9 +68,7 @@ public class MainStepdefs {
     }
 
     public MailboxId getMailboxId(String namespace, String username, String mailbox) {
-        return mailboxProbe
-            .getMailbox(namespace, username, mailbox)
-            .getMailboxId();
+        return mailboxProbe.getMailboxId(namespace, username, mailbox);
     }
     
     public String getMailboxIds(String username, List<String> mailboxes) {

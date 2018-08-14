@@ -31,7 +31,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -85,22 +85,22 @@ public class GetMailboxesMethodStepdefs {
 
     @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with parent mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void assertMailboxesNames(String mailboxName, String namespace, String parentName, String parentOwner) throws Exception {
-        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
+        MailboxId parentMailbox = mainStepdefs.mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[*].name")).contains(mailboxName);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].namespace.type",
                 filter(where("name").is(mailboxName))))
             .containsOnly(namespace);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
                 filter(where("name").is(mailboxName))))
-            .containsOnly(parentMailbox.getMailboxId().serialize());
+            .containsOnly(parentMailbox.serialize());
     }
 
     @Then("^the mailboxes should not contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with parent mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void assertNotMailboxesNames(String mailboxName, String namespace, String parentName, String parentOwner) throws Exception {
-        Mailbox parentMailbox = mainStepdefs.mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
+        MailboxId parentMailbox = mainStepdefs.mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, parentOwner, parentName);
         assertThat(httpClient.jsonPath.<List<String>>read(ARGUMENTS + ".list[?].parentId",
             filter(where("name").is(mailboxName).and("namespace.type").is(namespace))))
-            .doesNotContain(parentMailbox.getMailboxId().serialize());
+            .doesNotContain(parentMailbox.serialize());
     }
 
     @Then("^the mailboxes should contain \"([^\"]*)\" in \"([^\"]*)\" namespace, with no parent mailbox$")

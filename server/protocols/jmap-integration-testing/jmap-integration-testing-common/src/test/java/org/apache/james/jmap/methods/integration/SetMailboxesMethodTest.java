@@ -55,7 +55,6 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -272,7 +271,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void userShouldBeSubscribedOnCreatedMailboxWhenCreateChildOfInboxMailbox() throws Exception {
-        MailboxId inboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
+        MailboxId inboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
 
         String requestBody =
             "[" +
@@ -354,8 +353,7 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
 
-        Mailbox mailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, "foo").serialize();
 
         requestBody =
             "[" +
@@ -438,13 +436,13 @@ public abstract class SetMailboxesMethodTest {
             .body(NAME, equalTo("mailboxesSet"))
             .body(ARGUMENTS + ".created", hasKey("create-id01"));
 
-        Mailbox mailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, "foo");
+        MailboxId mailbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, "foo");
 
         requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
-                "      \"destroy\": [\"" + mailbox.getMailboxId().serialize() + "\"]" +
+                "      \"destroy\": [\"" + mailbox.serialize() + "\"]" +
                 "    }," +
                 "    \"#0\"" +
                 "  ]" +
@@ -627,7 +625,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldCreateMailboxWhenChildOfInboxMailbox() {
-        MailboxId inboxId = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).getMailboxId();
+        MailboxId inboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
 
         String requestBody =
             "[" +
@@ -981,8 +979,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotDestroyedWhenSystemMailbox() {
-        Mailbox mailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).serialize();
         String requestBody =
             "[" +
                 "  [ \"setMailboxes\"," +
@@ -1206,9 +1203,9 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void updateShouldRejectInvalidRights() {
-        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = jmapServer.getProbe(MailboxProbeImpl.class)
+            .createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox")
+            .serialize();
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1235,9 +1232,9 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void updateShouldRejectUnhandledRight() {
-        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = jmapServer.getProbe(MailboxProbeImpl.class)
+            .createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox")
+            .serialize();
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -1264,9 +1261,9 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void updateShouldRejectNonExistingRights() {
-        jmapServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        Mailbox mailbox = jmapServer.getProbe(MailboxProbeImpl.class).getMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = jmapServer.getProbe(MailboxProbeImpl.class)
+            .createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox")
+            .serialize();
 
         given()
             .header("Authorization", accessToken.serialize())
@@ -2027,8 +2024,7 @@ public abstract class SetMailboxesMethodTest {
 
     @Test
     public void setMailboxesShouldReturnNotUpdatedWhenRenamingSystemMailbox() {
-        Mailbox mailbox = mailboxProbe.getMailbox(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);
-        String mailboxId = mailbox.getMailboxId().serialize();
+        String mailboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX).serialize();
 
         String requestBody =
                 "[" +

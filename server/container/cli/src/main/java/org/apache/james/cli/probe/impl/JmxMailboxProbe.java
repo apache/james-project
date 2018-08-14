@@ -35,7 +35,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 
 public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
@@ -102,7 +101,7 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
     }
 
     @Override
-    public Mailbox getMailbox(String namespace, String user, String name) {
+    public MailboxId getMailboxId(String namespace, String user, String name) {
         throw new NotImplementedException("Not implemented");
     }
 

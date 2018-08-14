@@ -29,13 +29,12 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public interface MailboxProbe {
 
     MailboxId createMailbox(String namespace, String user, String name);
 
-    Mailbox getMailbox(String namespace, String user, String name);
+    MailboxId getMailboxId(String namespace, String user, String name);
 
     Collection<String> listUserMailboxes(String user);
 

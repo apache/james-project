@@ -43,7 +43,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.utils.GuiceProbe;
 
@@ -80,12 +79,12 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     }
 
     @Override
-    public Mailbox getMailbox(String namespace, String user, String name) {
+    public MailboxId getMailboxId(String namespace, String user, String name) {
         MailboxSession mailboxSession = null;
         try {
             mailboxSession = mailboxManager.createSystemSession(user);
             MailboxMapper mailboxMapper = mailboxMapperFactory.getMailboxMapper(mailboxSession);
-            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name));
+            return mailboxMapper.findMailboxByPath(new MailboxPath(namespace, user, name)).getMailboxId();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         } finally {
