@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.commons.cli.CommandLine;
@@ -33,7 +34,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang.time.StopWatch;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.JamesCliException;
 import org.apache.james.cli.exceptions.MissingCommandException;
@@ -47,8 +47,8 @@ import org.apache.james.cli.type.CmdType;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.core.quota.QuotaValue;
-import org.apache.james.mailbox.store.mail.model.SerializableQuota;
-import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuota;
+import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.probe.DataProbe;
@@ -62,6 +62,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Strings;
 
 /**
@@ -110,20 +111,17 @@ public class ServerCmd {
     }
 
     public static void executeAndOutputToStream(String[] args, PrintStream printStream) throws Exception {
-        StopWatch stopWatch = new StopWatch();
-        stopWatch.start();
+        Stopwatch stopWatch = Stopwatch.createStarted();
         CommandLine cmd = parseCommandLine(args);
         JmxConnection jmxConnection = new JmxConnection(getHost(cmd), getPort(cmd));
         CmdType cmdType = new ServerCmd(
                 new JmxDataProbe().connect(jmxConnection),
                 new JmxMailboxProbe().connect(jmxConnection),
                 new JmxQuotaProbe().connect(jmxConnection),
-                new JmxSieveProbe().connect(jmxConnection)
-            )
+                new JmxSieveProbe().connect(jmxConnection))
             .executeCommandLine(cmd, printStream);
-        stopWatch.split();
         print(new String[] { Joiner.on(' ')
-                .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.getSplitTime(), "ms.")},
+                .join(cmdType.getCommand(), "command executed sucessfully in", stopWatch.elapsed(TimeUnit.MILLISECONDS), "ms.")},
             printStream);
         stopWatch.stop();
     }

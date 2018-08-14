@@ -17,68 +17,75 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model;
+package org.apache.james.mailbox.model;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.james.core.quota.QuotaValue;
-import org.apache.james.mailbox.model.Quota;
 
 import com.google.common.base.MoreObjects;
 
-public class SerializableQuota<T extends QuotaValue<T>> implements Serializable {
+public class SerializableQuotaValue<T extends QuotaValue<T>> implements Serializable {
+
+    public static <U extends QuotaValue<U>> SerializableQuotaValue<U> valueOf(Optional<U> input) {
+        return new SerializableQuotaValue<>(input.orElse(null));
+    }
 
     public static final long UNLIMITED = -1;
 
-    public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(Quota<U> quota) {
-        return newInstance(quota.getUsed(), quota.getLimit());
+    private final Long value;
+
+    public SerializableQuotaValue(T value) {
+        this(encodeAsLong(value));
     }
 
-    public static <U extends QuotaValue<U>> SerializableQuota<U> newInstance(U used, U max) {
-        return new SerializableQuota<>(
-            new SerializableQuotaValue<>(used),
-            new SerializableQuotaValue<>(max)
-        );
-    }
-
-    private final SerializableQuotaValue<T> max;
-    private final SerializableQuotaValue<T> used;
-
-    private SerializableQuota(SerializableQuotaValue<T> used, SerializableQuotaValue<T> max) {
-        this.max = max;
-        this.used = used;
-    }
-
-    public Long encodeAsLong() {
-        return max.encodeAsLong();
-    }
-
-    public Long getUsed() {
-        return Optional.ofNullable(used).map(SerializableQuotaValue::encodeAsLong).orElse(null);
+    SerializableQuotaValue(Long value) {
+        this.value = value;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof SerializableQuota<?>) {
-            SerializableQuota<?> that = (SerializableQuota<?>) o;
-            return Objects.equals(max, that.max) &&
-                Objects.equals(used, that.used);
+        if (o instanceof SerializableQuotaValue<?>) {
+            SerializableQuotaValue<?> that = (SerializableQuotaValue<?>) o;
+            return Objects.equals(value, that.value);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(max, used);
+        return Objects.hash(value);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("max", max)
-            .add("used", used)
+            .add("value", value)
             .toString();
+    }
+
+    private static <U extends QuotaValue<U>> Long encodeAsLong(U quota) {
+        if (quota.isLimited()) {
+            return quota.asLong();
+        }
+        return UNLIMITED;
+    }
+
+    public Long encodeAsLong() {
+        return value;
+    }
+
+    public Optional<T> toValue(Function<Long, T> factory, T unlimited) {
+        Long longValue = encodeAsLong();
+        if (longValue == null) {
+            return Optional.empty();
+        }
+        if (longValue == UNLIMITED) {
+            return Optional.of(unlimited);
+        }
+        return Optional.of(factory.apply(longValue));
     }
 }

@@ -50,6 +50,7 @@
         <module>container/jetty</module>
         <module>container/lifecycle-api</module>
         <module>container/mailbox-adapter</module>
+        <module>container/mailbox-jmx</module>
         <module>container/metrics/metrics-es-reporter</module>
         <module>container/spring</module>
         <module>container/util</module>

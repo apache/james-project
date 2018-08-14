@@ -22,8 +22,8 @@ package org.apache.james.adapter.mailbox;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.SerializableQuota;
-import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuota;
+import org.apache.james.mailbox.model.SerializableQuotaValue;
 
 public interface QuotaManagementMBean {
     String getQuotaRoot(String namespace, String user, String name) throws MailboxException;

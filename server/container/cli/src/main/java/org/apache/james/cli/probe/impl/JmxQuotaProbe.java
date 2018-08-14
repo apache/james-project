@@ -27,8 +27,8 @@ import org.apache.james.adapter.mailbox.QuotaManagementMBean;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.SerializableQuota;
-import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuota;
+import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 
 public class JmxQuotaProbe implements QuotaProbe, JmxProbe {

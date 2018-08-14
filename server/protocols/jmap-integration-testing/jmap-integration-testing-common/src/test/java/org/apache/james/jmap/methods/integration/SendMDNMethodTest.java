@@ -52,7 +52,7 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.mailbox.store.probe.QuotaProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -65,6 +65,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.Iterables;
+
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 
