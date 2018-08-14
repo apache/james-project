@@ -16,26 +16,40 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator.command;
+package org.apache.james.mailbox.tools.jpa.migrator;
 
-import javax.persistence.EntityManager;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
-
-/**
- * JIRA IMAP-172 is "Cleanup JPAMailbox".
- * 
- * Simply drop the MAILBOX.MESSAGECOUNT and MAILBOX.SIZE columns.
- * 
- * @link https://issues.apache.org/jira/browse/IMAP-172
- * 
- */
-public class IMAP172JpaMigrateCommand implements JpaMigrateCommand {
-
-    @Override
-    public void migrate(EntityManager em) throws JpaMigrateException {
-        JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOX DROP COLUMN MESSAGECOUNT");
-        JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOX DROP COLUMN SIZE");
+@Ignore("This class needs to be reviewed")
+public class JpaMigratorTest {
+    @Test
+    public void testImap165() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP165"});
     }
 
+    @Test
+    public void testImap168() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP168"});
+    }
+
+    @Test
+    public void testImap172() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP172"});
+    }
+
+    @Test
+    public void testImap176() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP176"});
+    }
+
+    @Test
+    public void testImap180() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP180"});
+    }
+
+    @Test
+    public void testImap184() throws Exception {
+        JpaMigrator.main(new String[]{"IMAP184"});
+    }
 }

@@ -21,18 +21,25 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <artifactId>apache-james-mailbox</artifactId>
+        <artifactId>apache-james-mailbox-tools</artifactId>
         <groupId>org.apache.james</groupId>
         <version>3.2.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>apache-james-mailbox-tools</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>apache-james-mailbvox-tools-jpa-migrator</artifactId>
 
-    <name>Apache James :: Mailbox :: Tools</name>
+    <name>Apache James :: Mailbox :: Tools :: JPA migrator</name>
 
-    <modules>
-        <module>jpa-migrator</module>
-        <module>maildir-utils</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-james-backends-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
 </project>

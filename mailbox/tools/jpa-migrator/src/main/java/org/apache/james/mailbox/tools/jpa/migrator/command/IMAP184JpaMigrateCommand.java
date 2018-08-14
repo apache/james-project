@@ -16,32 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator.exception;
+package org.apache.james.mailbox.tools.jpa.migrator.command;
+
+import javax.persistence.EntityManager;
+
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 
 /**
- * Exception to be thrown when a problem occurs in the migration process.
- *
+ * JIRA IMAP-184 is "Remove size of MailboxMembership".
+ * 
+ * Simply drop the MAILBOXMEMBERSHIP.SIZE column.
+ * 
+ * @link https://issues.apache.org/jira/browse/IMAP-184
+ * 
  */
-public class JpaMigrateException extends Exception {
+public class IMAP184JpaMigrateCommand implements JpaMigrateCommand {
 
-    /**
-     * 
-     */
-    private static final long serialVersionUID = 1L;
-
-    public JpaMigrateException() {
-    }
-
-    public JpaMigrateException(String message) {
-        super(message);
-    }
-
-    public JpaMigrateException(Throwable cause) {
-        super(cause);
-    }
-
-    public JpaMigrateException(String message, Throwable cause) {
-        super(message, cause);
+    @Override
+    public void migrate(EntityManager em) throws JpaMigrateException {
+        JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOXMEMBERSHIP DROP COLUMN SIZE");
     }
 
 }

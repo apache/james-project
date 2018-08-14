@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator;
+package org.apache.james.mailbox.tools.jpa.migrator;
 
 import java.util.Locale;
 
@@ -24,8 +24,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
-import org.apache.james.mailbox.jpa.migrator.command.JpaMigrateCommand;
-import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
+import org.apache.james.mailbox.tools.jpa.migrator.command.JpaMigrateCommand;
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -16,25 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator.command;
-
-import javax.persistence.EntityManager;
-
-import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
+package org.apache.james.mailbox.tools.jpa.migrator.exception;
 
 /**
- * JIRA 176 is "Change users' namespace to #private".
- * 
- * Simply update the MAILBOX.NAMESPACE column with "#private" value.
- * 
- * @link https://issues.apache.org/jira/browse/IMAP-176
- * 
+ * Exception to be thrown when a problem occurs in the migration process.
+ *
  */
-public class IMAP176JpaMigrateCommand implements JpaMigrateCommand {
+public class JpaMigrateException extends Exception {
 
-    @Override
-    public void migrate(EntityManager em) throws JpaMigrateException {
-        JpaMigrateQuery.executeUpdate(em, "UPDATE MAILBOX SET NAMESPACE = '#private'");
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    public JpaMigrateException() {
+    }
+
+    public JpaMigrateException(String message) {
+        super(message);
+    }
+
+    public JpaMigrateException(Throwable cause) {
+        super(cause);
+    }
+
+    public JpaMigrateException(String message, Throwable cause) {
+        super(message, cause);
     }
 
 }

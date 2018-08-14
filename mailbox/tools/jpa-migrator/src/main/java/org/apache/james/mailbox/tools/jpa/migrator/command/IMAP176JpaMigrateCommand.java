@@ -16,25 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator.command;
+package org.apache.james.mailbox.tools.jpa.migrator.command;
 
 import javax.persistence.EntityManager;
 
-import org.apache.james.mailbox.jpa.migrator.exception.JpaMigrateException;
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 
 /**
- * JIRA IMAP-184 is "Remove size of MailboxMembership".
+ * JIRA 176 is "Change users' namespace to #private".
  * 
- * Simply drop the MAILBOXMEMBERSHIP.SIZE column.
+ * Simply update the MAILBOX.NAMESPACE column with "#private" value.
  * 
- * @link https://issues.apache.org/jira/browse/IMAP-184
+ * @link https://issues.apache.org/jira/browse/IMAP-176
  * 
  */
-public class IMAP184JpaMigrateCommand implements JpaMigrateCommand {
+public class IMAP176JpaMigrateCommand implements JpaMigrateCommand {
 
     @Override
     public void migrate(EntityManager em) throws JpaMigrateException {
-        JpaMigrateQuery.executeUpdate(em, "ALTER TABLE MAILBOXMEMBERSHIP DROP COLUMN SIZE");
+        JpaMigrateQuery.executeUpdate(em, "UPDATE MAILBOX SET NAMESPACE = '#private'");
     }
 
 }

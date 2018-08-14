@@ -16,40 +16,26 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.mailbox.jpa.migrator;
+package org.apache.james.mailbox.tools.jpa.migrator.command;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import javax.persistence.EntityManager;
 
-@Ignore("This class needs to be reviewed")
-public class JpaMigratorTest {
-    @Test
-    public void testImap165() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP165"});
-    }
+import org.apache.james.mailbox.tools.jpa.migrator.exception.JpaMigrateException;
 
-    @Test
-    public void testImap168() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP168"});
-    }
+/**
+ * A command that apply to James database the needed updates.
+ */
+public interface JpaMigrateCommand {
+    
+    /**
+     * Executes the needed SQL commands on the database via the provided JPA entity manager.
+     * A transaction on the provided entity manager must be begun by the caller.
+     * It is also the reponsibility of the caller to commit the opened transaction after
+     * calling the migrate method.
+     * 
+     * @param em the provided Entity Manager
+     * @throws JpaMigrateException
+     */
+    void migrate(EntityManager em) throws JpaMigrateException;
 
-    @Test
-    public void testImap172() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP172"});
-    }
-
-    @Test
-    public void testImap176() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP176"});
-    }
-
-    @Test
-    public void testImap180() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP180"});
-    }
-
-    @Test
-    public void testImap184() throws Exception {
-        JpaMigrator.main(new String[]{"IMAP184"});
-    }
 }
