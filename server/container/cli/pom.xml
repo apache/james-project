@@ -56,6 +56,7 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>commons-cli</groupId>
@@ -110,6 +111,8 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                         </configuration>
                     </execution>

@@ -197,6 +197,8 @@
                         </goals>
                         <phase>package</phase>
                         <configuration>
+                            <includeScope>compile</includeScope>
+                            <includeScope>runtime</includeScope>
                             <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
                         </configuration>
                     </execution>
