@@ -18,17 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
+import java.util.concurrent.ExecutionException;
+
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.Before;
 import org.junit.Test;
-
-import com.google.testing.threadtester.AnnotatedTestRunner;
-import com.google.testing.threadtester.ThreadedAfter;
-import com.google.testing.threadtester.ThreadedBefore;
-import com.google.testing.threadtester.ThreadedMain;
-import com.google.testing.threadtester.ThreadedSecondary;
 
 public class UserProvisioningFilterThreadTest {
 
@@ -36,32 +34,21 @@ public class UserProvisioningFilterThreadTest {
     private MemoryUsersRepository usersRepository;
     private MailboxSession session;
 
-    @ThreadedBefore
+    @Before
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting();
         session = new MockMailboxSession("username");
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
-    
-    @ThreadedMain
-    public void mainThread() {
-        sut.createAccountIfNeeded(session);
-    }
-    
-    @ThreadedSecondary
-    public void secondThread() {
-        sut.createAccountIfNeeded(session);
-    }
-    
-    @ThreadedAfter
-    public void after() {
-        // Exception is thrown if test fails
-    }
-    
+
     @Test
-    public void testConcurrentAccessToFilterShouldNotThrow() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(this.getClass(), UserProvisioningFilter.class);
+    public void testConcurrentAccessToFilterShouldNotThrow() throws ExecutionException, InterruptedException {
+        ConcurrentTestRunner
+            .builder()
+            .threadCount(2)
+            .build((threadNumber, step) -> sut.createAccountIfNeeded(session))
+            .run()
+            .assertNoException();
     }
 }
 

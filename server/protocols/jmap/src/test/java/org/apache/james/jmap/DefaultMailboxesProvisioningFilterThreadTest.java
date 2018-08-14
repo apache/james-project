@@ -18,315 +18,56 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.apache.commons.lang.NotImplementedException;
-import org.apache.james.mailbox.MailboxListener;
+import java.util.Optional;
+
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.mock.MockMailboxSession;
-import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxAnnotation;
-import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.google.testing.threadtester.AnnotatedTestRunner;
-import com.google.testing.threadtester.ThreadedAfter;
-import com.google.testing.threadtester.ThreadedBefore;
-import com.google.testing.threadtester.ThreadedMain;
-import com.google.testing.threadtester.ThreadedSecondary;
-
 public class DefaultMailboxesProvisioningFilterThreadTest {
+
+    private static final String USERNAME = "username";
 
     private DefaultMailboxesProvisioningFilter sut;
     private MailboxSession session;
     private MailboxManager mailboxManager;
-    private FakeSubscriptionManager subscriptionManager;
+    private SubscriptionManager subscriptionManager;
 
-    @ThreadedBefore
+    @Before
     public void before() {
-        session = new MockMailboxSession("username");
-        mailboxManager = new FakeMailboxManager(session);
-        subscriptionManager = new FakeSubscriptionManager();
+        session = new MockMailboxSession(USERNAME);
+        mailboxManager = mock(MailboxManager.class);
+        subscriptionManager = mock(SubscriptionManager.class);
         sut = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());
     }
-    
-    @ThreadedMain
-    public void mainThread() {
-        sut.createMailboxesIfNeeded(session);
-    }
-    
-    @ThreadedSecondary
-    public void secondThread() {
-        sut.createMailboxesIfNeeded(session);
-    }
-    
-    @ThreadedAfter
-    public void after() {
-        // Exception is thrown if test fails
-    }
-    
+
     @Test
-    public void testConcurrentAccessToFilterShouldNotThrow() {
-        AnnotatedTestRunner runner = new AnnotatedTestRunner();
-        runner.runTests(this.getClass(), DefaultMailboxesProvisioningFilter.class);
-    }
+    public void testConcurrentAccessToFilterShouldNotThrow() throws Exception {
+        doNothing().when(subscriptionManager).subscribe(eq(session), anyString());
 
-    private static class FakeSubscriptionManager implements SubscriptionManager {
-        @Override
-        public void subscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+        when(mailboxManager.createMailbox(any(MailboxPath.class), eq(session))).thenReturn(Optional.of(TestId.of(18L)));
+        when(mailboxManager.mailboxExists(any(MailboxPath.class), eq(session))).thenReturn(false);
+        when(mailboxManager.createSystemSession(USERNAME)).thenReturn(session);
 
-        }
-
-        @Override
-        public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
-            return null;
-        }
-
-        @Override
-        public void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException {
-
-        }
-
-        @Override
-        public void startProcessingRequest(MailboxSession session) {
-
-        }
-
-        @Override
-        public void endProcessingRequest(MailboxSession session) {
-
-        }
-    }
-
-    private static class FakeMailboxManager implements MailboxManager {
-        private MailboxSession mailboxSession;
-
-        public FakeMailboxManager(MailboxSession mailboxSession) {
-            this.mailboxSession = mailboxSession;
-        }
-
-        @Override
-        public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
-            return EnumSet.noneOf(SearchCapabilities.class);
-        }
-        
-        @Override
-        public void startProcessingRequest(MailboxSession session) {
-        }
-
-        @Override
-        public void endProcessingRequest(MailboxSession session) {
-        }
-
-        @Override
-        public void addListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public void addGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public void removeGlobalListener(MailboxListener listner, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public char getDelimiter() {
-            return 0;
-        }
-
-        @Override
-        public MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public Optional<MailboxId> createMailbox(MailboxPath mailboxPath, MailboxSession mailboxSession) throws MailboxException {
-            return Optional.of(TestId.of(18L));
-        }
-
-        @Override
-        public void deleteMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-        }
-
-        @Override
-        public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session)
-                throws MailboxException {
-            return null;
-        }
-        
-        @Override
-        public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return false;
-        }
-
-        @Override
-        public MailboxSession createSystemSession(String userName) throws BadCredentialsException, MailboxException {
-            return mailboxSession;
-        }
-
-        @Override
-        public MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException {
-            return null;
-        }
-
-        @Override
-        public void logout(MailboxSession session, boolean force) throws MailboxException {
-        }
-
-        @Override
-        public boolean hasRight(MailboxId mailboxId, MailboxACL.Right right, MailboxSession session) throws MailboxException {
-            return false;
-        }
-
-        @Override
-        public boolean hasRight(MailboxPath mailboxPath, MailboxACL.Right right, MailboxSession session) throws MailboxException {
-            return false;
-        }
-
-        @Override
-        public MailboxACL.Rfc4314Rights myRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public MailboxACL.Rfc4314Rights myRights(MailboxId mailboxId, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public MailboxACL.Rfc4314Rights[] listRights(MailboxPath mailboxPath, MailboxACL.EntryKey identifier, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public MailboxACL listRights(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public void applyRightsCommand(MailboxPath mailboxPath, MailboxACL.ACLCommand mailboxACLCommand, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public void setRights(MailboxId mailboxId, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public void setRights(MailboxPath mailboxPath, MailboxACL mailboxACL, MailboxSession session) throws MailboxException {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public List<MailboxPath> list(MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
-            return null;
-        }
-        
-        @Override
-        public EnumSet<MessageCapabilities> getSupportedMessageCapabilities() {
-            return null;
-        }
-
-        @Override
-        public List<MailboxAnnotation> getAllAnnotations(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public List<MailboxAnnotation> getAnnotationsByKeys(MailboxPath mailboxPath, MailboxSession session, Set<MailboxAnnotationKey> keys) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public void updateAnnotations(MailboxPath mailboxPath, MailboxSession session, List<MailboxAnnotation> mailboxAnnotations) throws MailboxException {
-            
-        }
-
-        @Override
-        public boolean hasCapability(MailboxCapabilities capability) {
-            return false;
-        }
-
-        @Override
-        public List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public List<MailboxAnnotation> getAnnotationsByKeysWithOneDepth(MailboxPath mailboxPath, MailboxSession session,
-                Set<MailboxAnnotationKey> keys) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public List<MailboxAnnotation> getAnnotationsByKeysWithAllDepth(MailboxPath mailboxPath, MailboxSession session,
-                Set<MailboxAnnotationKey> keys) throws MailboxException {
-            return null;
-        }
-
-        @Override
-        public boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException {
-            return false;
-        }
-
-        @Override
-        public MailboxSession loginAsOtherUser(String adminUserId, String passwd, String realUserId) throws BadCredentialsException, MailboxException {
-            return null;
-        }
+        ConcurrentTestRunner
+            .builder()
+            .threadCount(2)
+            .build((threadNumber, step) -> sut.createMailboxesIfNeeded(session))
+            .run()
+            .assertNoException();
     }
 }
-

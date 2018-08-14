@@ -189,12 +189,6 @@
             <artifactId>guavate</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.googlecode.thread-weaver</groupId>
-            <artifactId>threadweaver</artifactId>
-            <version>0.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
             <scope>test</scope>
