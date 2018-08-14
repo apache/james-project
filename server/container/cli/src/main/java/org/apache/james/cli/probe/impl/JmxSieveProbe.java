@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import javax.management.MalformedObjectNameException;
 
-import org.apache.james.mailbox.store.probe.SieveProbe;
+import org.apache.james.probe.SieveProbe;
 import org.apache.james.sieverepository.api.SieveRepositoryManagementMBean;
 
 public class JmxSieveProbe implements SieveProbe, JmxProbe {

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.probe;
+package org.apache.james.probe;
 
 public interface SieveProbe {
 

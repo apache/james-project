@@ -22,7 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.store.probe.SieveProbe;
+import org.apache.james.probe.SieveProbe;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
