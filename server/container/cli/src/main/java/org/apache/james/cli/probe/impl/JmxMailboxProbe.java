@@ -35,7 +35,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
+import org.apache.james.mailbox.probe.MailboxProbe;
 
 public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
 

@@ -41,9 +41,9 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
+import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
-import org.apache.james.mailbox.store.probe.MailboxProbe;
 import org.apache.james.utils.GuiceProbe;
 
 public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
