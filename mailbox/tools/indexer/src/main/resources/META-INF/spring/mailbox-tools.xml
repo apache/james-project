@@ -23,12 +23,12 @@
        xsi:schemaLocation="
           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
 
-    <bean id ="reindexer-impl" class="org.apache.james.mailbox.indexer.ReIndexerImpl" lazy-init="true">
+    <bean id ="reindexer-impl" class="org.apache.mailbox.tools.indexer.ReIndexerImpl" lazy-init="true">
         <constructor-arg index="0" ref="mailboxmanager"/>
         <constructor-arg index="1" ref="indexer"/>
         <constructor-arg index="2" ref="messageMapperFactory"/>
     </bean>
 
-    <bean id ="fake-reindexer" class="org.apache.james.mailbox.indexer.ThrowsReIndexer" lazy-init="true"/>
+    <bean id ="fake-reindexer" class="org.apache.mailbox.tools.indexer.ThrowsReIndexer" lazy-init="true"/>
 
 </beans>

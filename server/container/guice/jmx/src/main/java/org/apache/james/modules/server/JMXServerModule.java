@@ -38,7 +38,6 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.copier.MailboxCopierImpl;
 import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.indexer.ReIndexerImpl;
 import org.apache.james.mailetcontainer.api.jmx.MailSpoolerMBean;
 import org.apache.james.mailetcontainer.impl.JamesMailSpooler;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
@@ -50,6 +49,7 @@ import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
 import org.apache.james.utils.PropertiesProvider;
+import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

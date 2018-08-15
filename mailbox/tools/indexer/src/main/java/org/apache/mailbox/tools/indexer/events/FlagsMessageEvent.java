@@ -17,20 +17,59 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer;
+package org.apache.mailbox.tools.indexer.events;
 
-import org.apache.james.mailbox.exception.MailboxException;
+import javax.mail.Flags;
+
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public class ThrowsReIndexer implements ReIndexer {
+import com.google.common.base.Objects;
 
-    @Override
-    public void reIndex(MailboxPath path) throws MailboxException {
-        throw new MailboxException("Not implemented");
+public class FlagsMessageEvent implements ImpactingMessageEvent {
+
+    private final MailboxPath mailboxPath;
+    private final MessageUid uid;
+    private final Flags flags;
+
+    public FlagsMessageEvent(MailboxPath mailboxPath, MessageUid uid, Flags flags) {
+        this.mailboxPath = mailboxPath;
+        this.uid = uid;
+        this.flags = flags;
     }
 
     @Override
-    public void reIndex() throws MailboxException {
-        throw new MailboxException("Not implemented");
+    public MessageUid getUid() {
+        return uid;
+    }
+
+    @Override
+    public MailboxPath getMailboxPath() {
+        return mailboxPath;
+    }
+
+    @Override
+    public ImpactingEventType getType() {
+        return ImpactingEventType.FlagsUpdate;
+    }
+
+    public Flags getFlags() {
+        return flags;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        FlagsMessageEvent that = (FlagsMessageEvent) o;
+        return Objects.equal(uid, that.uid) &&
+            Objects.equal(mailboxPath, that.mailboxPath) &&
+            Objects.equal(flags, that.flags);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uid, mailboxPath, flags);
     }
 }

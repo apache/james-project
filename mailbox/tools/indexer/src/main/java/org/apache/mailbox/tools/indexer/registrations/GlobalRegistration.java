@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.registrations;
+package org.apache.mailbox.tools.indexer.registrations;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;

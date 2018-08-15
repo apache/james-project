@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.registrations;
+package org.apache.mailbox.tools.indexer.registrations;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,8 +28,6 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.indexer.events.FlagsMessageEvent;
-import org.apache.james.mailbox.indexer.events.MessageDeletedEvent;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -39,6 +37,8 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.mailbox.tools.indexer.events.FlagsMessageEvent;
+import org.apache.mailbox.tools.indexer.events.MessageDeletedEvent;
 import org.junit.Before;
 import org.junit.Test;
 

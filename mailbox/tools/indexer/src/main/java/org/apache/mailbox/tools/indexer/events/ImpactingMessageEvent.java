@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.mailbox.tools.indexer.events;
 
 import org.apache.james.mailbox.MessageUid;
 

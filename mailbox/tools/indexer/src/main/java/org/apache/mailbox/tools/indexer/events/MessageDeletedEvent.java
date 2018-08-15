@@ -17,14 +17,49 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.indexer.events;
+package org.apache.mailbox.tools.indexer.events;
 
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public interface ImpactingEvent {
+import com.google.common.base.Objects;
 
-    MailboxPath getMailboxPath();
+public class MessageDeletedEvent implements ImpactingMessageEvent {
 
-    ImpactingEventType getType();
+    private final MailboxPath mailboxPath;
+    private final MessageUid uid;
 
+    public MessageDeletedEvent(MailboxPath mailboxPath, MessageUid uid) {
+        this.mailboxPath = mailboxPath;
+        this.uid = uid;
+    }
+
+    @Override
+    public MessageUid getUid() {
+        return uid;
+    }
+
+    @Override
+    public MailboxPath getMailboxPath() {
+        return mailboxPath;
+    }
+
+    @Override
+    public ImpactingEventType getType() {
+        return ImpactingEventType.Deletion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MessageDeletedEvent that = (MessageDeletedEvent) o;
+        return Objects.equal(uid, that.uid) && Objects.equal(mailboxPath, that.mailboxPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uid, mailboxPath);
+    }
 }
