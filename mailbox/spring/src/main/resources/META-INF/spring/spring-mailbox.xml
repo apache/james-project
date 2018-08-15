@@ -45,7 +45,7 @@
     <!-- 
       Mailbox Copier
      -->
-    <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
+    <bean id="mailboxcopier" class="org.apache.james.mailbox.tools.copier.MailboxCopierImpl"/>
 
     <!-- 
       Mailbox ACL Resolver

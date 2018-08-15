@@ -874,7 +874,7 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-tool</artifactId>
+                <artifactId>apache-james-mailbox-tools-copier</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

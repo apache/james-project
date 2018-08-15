@@ -156,7 +156,7 @@
     <import resource="classpath:META-INF/spring/event-system.xml"/>
 
     <!-- Mailbox Copier -->
-    <bean id="mailboxcopier" class="org.apache.james.mailbox.copier.MailboxCopierImpl"/>
+    <bean id="mailboxcopier" class="org.apache.james.mailbox.tools.copier.MailboxCopierImpl"/>
 
     <bean id="mailboxmanagerresolver" class="org.apache.james.container.spring.mailbox.SpringResolver" />
 

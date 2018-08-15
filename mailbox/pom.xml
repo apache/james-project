@@ -50,7 +50,6 @@
         <module>spring</module>
         <module>store</module>
         <module>tika</module>
-        <module>tool</module>
         <module>zoo-seq-provider</module>
 
         <module>plugin/quota-mailing</module>

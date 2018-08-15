@@ -32,6 +32,7 @@
     <name>Apache James :: Mailbox :: Tools</name>
 
     <modules>
+        <module>copier</module>
         <module>indexer</module>
         <module>jpa-migrator</module>
         <module>maildir-utils</module>

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.apache.james.mailbox.copier.MailboxCopierImpl;
+import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
