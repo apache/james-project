@@ -111,9 +111,12 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     }
 
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {
-        currentQuotaManager.decrease(mailboxDeletionEvent.getQuotaRoot(),
+        boolean mailboxContainedMessages = mailboxDeletionEvent.getDeletedMessageCount().asLong() > 0;
+        if (mailboxContainedMessages) {
+            currentQuotaManager.decrease(mailboxDeletionEvent.getQuotaRoot(),
                 mailboxDeletionEvent.getDeletedMessageCount().asLong(),
                 mailboxDeletionEvent.getTotalDeletedSize().asLong());
+        }
     }
 
 }

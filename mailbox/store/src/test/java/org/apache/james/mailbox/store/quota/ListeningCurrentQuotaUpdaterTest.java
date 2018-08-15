@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.quota;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
@@ -117,5 +118,19 @@ public class ListeningCurrentQuotaUpdaterTest {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         testee.event(deletion);
         verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 10, 5);
+    }
+
+    @Test
+    public void mailboxDeletionEventShouldDoNothingWhenEmptyMailbox() throws Exception {
+        MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
+        when(deletion.getMailboxPath()).thenReturn(MAILBOX_PATH);
+        when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
+        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(0));
+        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(0));
+        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+
+        testee.event(deletion);
+
+        verifyZeroInteractions(mockedCurrentQuotaManager);
     }
 }
