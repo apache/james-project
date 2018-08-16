@@ -21,11 +21,10 @@
 
 <mailrepositorystore>
     <mailrepositories>
-        <mailrepository class="org.apache.james.mailrepository.None">
+        <mailrepository class="org.apache.james.mailrepository.memory.None">
             <protocols>
-                <protocol>file</protocol>
+                <protocol>memory</protocol>
             </protocols>
-            <config FIFO="false" CACHEKEYS="true"/>
         </mailrepository>
     </mailrepositories>
 </mailrepositorystore>

@@ -32,14 +32,20 @@ import javax.mail.MessagingException;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.mailrepository.memory.MemoryMailRepository;
-import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.Sets;
 
 class ToSenderDomainRepositoryTest {
 
@@ -51,13 +57,27 @@ class ToSenderDomainRepositoryTest {
         .build();
 
     private ToSenderDomainRepository mailet;
-    private MockMailRepositoryStore mailRepositoryStore;
+    private MemoryMailRepositoryStore mailRepositoryStore;
+    private FileSystemImpl fileSystem;
+    private Configuration configuration;
 
     @BeforeEach
-    void setup() {
-        mailRepositoryStore = new MockMailRepositoryStore();
-        mailRepositoryStore.add(JAMES_LOCAL_REPOSITORY_URL, new MemoryMailRepository());
+    void setup() throws Exception {
+        createMailRepositoryStore();
         mailet = new ToSenderDomainRepository(mailRepositoryStore);
+    }
+
+    private void createMailRepositoryStore() throws Exception {
+        configuration = Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build();
+        fileSystem = new FileSystemImpl(configuration.directories());
+        MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
+        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()));
+        mailRepositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
+                .getConfiguration("mailrepositorystore"));
+        mailRepositoryStore.init();
     }
 
     @Test

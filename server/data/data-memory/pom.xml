@@ -35,6 +35,11 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mailet-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
             <artifactId>event-sourcing-event-store-memory</artifactId>
             <scope>test</scope>
         </dependency>
@@ -61,6 +66,11 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-dnsservice-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-mailrepository-memory</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

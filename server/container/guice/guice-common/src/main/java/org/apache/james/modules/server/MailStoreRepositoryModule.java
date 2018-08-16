@@ -21,18 +21,15 @@ package org.apache.james.modules.server;
 
 import java.util.List;
 
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
-import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.mailrepository.file.FileMailRepository;
+import org.apache.james.mailrepository.file.FileMailRepositoryProvider;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InMemoryMailRepositoryStore;
 import org.apache.james.utils.MailRepositoryProbeImpl;
-import org.apache.james.utils.MailRepositoryProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
@@ -45,8 +42,8 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(InMemoryMailRepositoryStore.class).in(Scopes.SINGLETON);
-        bind(MailRepositoryStore.class).to(InMemoryMailRepositoryStore.class);
+        bind(MemoryMailRepositoryStore.class).in(Scopes.SINGLETON);
+        bind(MailRepositoryStore.class).to(MemoryMailRepositoryStore.class);
 
         Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
         multibinder.addBinding().to(FileMailRepositoryProvider.class);
@@ -54,38 +51,15 @@ public class MailStoreRepositoryModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
-    public static class FileMailRepositoryProvider implements MailRepositoryProvider {
-
-        private final FileSystem fileSystem;
-
-        @Inject
-        public FileMailRepositoryProvider(FileSystem fileSystem) {
-            this.fileSystem = fileSystem;
-        }
-
-
-        @Override
-        public String canonicalName() {
-            return FileMailRepository.class.getCanonicalName();
-        }
-
-        @Override
-        public MailRepository provide(MailRepositoryUrl url) {
-            FileMailRepository fileMailRepository = new FileMailRepository();
-            fileMailRepository.setFileSystem(fileSystem);
-            return fileMailRepository;
-        }
-    }
-
     @Singleton
     public static class MailRepositoryStoreModuleConfigurationPerformer implements ConfigurationPerformer {
 
         private final ConfigurationProvider configurationProvider;
-        private final InMemoryMailRepositoryStore javaMailRepositoryStore;
+        private final MemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
         public MailRepositoryStoreModuleConfigurationPerformer(ConfigurationProvider configurationProvider,
-                InMemoryMailRepositoryStore javaMailRepositoryStore) {
+                                                               MemoryMailRepositoryStore javaMailRepositoryStore) {
             this.configurationProvider = configurationProvider;
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
@@ -102,7 +76,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
 
         @Override
         public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of(InMemoryMailRepositoryStore.class);
+            return ImmutableList.of(MemoryMailRepositoryStore.class);
         }
     }
 

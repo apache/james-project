@@ -17,10 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
-
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+package org.apache.james.mailrepository.api;
 
 public interface MailRepositoryProvider {
 

@@ -49,9 +49,10 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.mailrepository.mock.MockMailRepositoryStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
+import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
@@ -61,6 +62,9 @@ import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
+import org.apache.james.server.core.configuration.Configuration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
+import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.smtpserver.netty.SMTPServer;
 import org.apache.james.smtpserver.netty.SmtpMetricsImpl;
 import org.apache.james.user.api.UsersRepository;
@@ -75,6 +79,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 public class SMTPServerTest {
 
@@ -167,9 +172,9 @@ public class SMTPServerTest {
     protected HashedWheelTimer hashedWheelTimer;
     protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
     protected AlterableDNSServer dnsServer;
-    protected MockMailRepositoryStore store;
-    protected MockFileSystem fileSystem;
-    protected DNSService dnsService;
+    protected MemoryMailRepositoryStore mailRepositoryStore;
+    protected FileSystemImpl fileSystem;
+    protected Configuration configuration;
     protected MockProtocolHandlerLoader chain;
     protected MemoryMailQueueFactory queueFactory;
     protected MemoryMailQueueFactory.MemoryMailQueue queue;
@@ -178,12 +183,27 @@ public class SMTPServerTest {
 
     @Before
     public void setUp() throws Exception {
+        createMailRepositoryStore();
+
         setUpFakeLoader();
         // slf4j can't set programmatically any log level. It's just a facade
         // log.setLevel(SimpleLog.LOG_LEVEL_ALL);
         smtpConfiguration = new SMTPTestConfiguration();
         hashedWheelTimer = new HashedWheelTimer();
         setUpSMTPServer();
+    }
+
+    protected void createMailRepositoryStore() throws Exception {
+        configuration = Configuration.builder()
+                .workingDirectory("../")
+                .configurationFromClasspath()
+                .build();
+        fileSystem = new FileSystemImpl(configuration.directories());
+        MemoryMailRepositoryUrlStore urlStore = new MemoryMailRepositoryUrlStore();
+        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()));
+        mailRepositoryStore.configure(new FileConfigurationProvider(fileSystem, configuration)
+                .getConfiguration("mailrepositorystore"));
+        mailRepositoryStore.init();
     }
 
     protected SMTPServer createSMTPServer(SmtpMetricsImpl smtpMetrics) {
@@ -221,10 +241,8 @@ public class SMTPServerTest {
         dnsServer = new AlterableDNSServer();
         chain.put("dnsservice", DNSService.class, dnsServer);
     
-        store = new MockMailRepositoryStore();
-        chain.put("mailStore", MailRepositoryStore.class, store);
-        fileSystem = new MockFileSystem();
-    
+        chain.put("mailStore", MailRepositoryStore.class, mailRepositoryStore);
+
         chain.put("fileSystem", FileSystem.class, fileSystem);
 
         MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.mailrepository.memory;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
@@ -35,6 +37,7 @@ import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
@@ -45,10 +48,9 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
 
-public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InMemoryMailRepositoryStore.class);
+public class MemoryMailRepositoryStore implements MailRepositoryStore, Configurable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMailRepositoryStore.class);
 
     private final MailRepositoryUrlStore urlStore;
     private final Set<MailRepositoryProvider> mailRepositories;
@@ -58,7 +60,7 @@ public class InMemoryMailRepositoryStore implements MailRepositoryStore, Configu
     private HierarchicalConfiguration configuration;
 
     @Inject
-    public InMemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories) {
+    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories) {
         this.urlStore = urlStore;
         this.mailRepositories = mailRepositories;
         this.destinationToRepositoryAssociations = new ConcurrentHashMap<>();

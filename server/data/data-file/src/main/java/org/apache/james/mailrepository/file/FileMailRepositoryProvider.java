@@ -17,48 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.mock;
+package org.apache.james.mailrepository.file;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Stream;
+import javax.inject.Inject;
 
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.mailrepository.api.MailRepositoryStore;
+import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-public class MockMailRepositoryStore implements MailRepositoryStore {
+public class FileMailRepositoryProvider implements MailRepositoryProvider {
 
-    private final Map<MailRepositoryUrl, MailRepository> storedObjectMap = new HashMap<>();
+    private final FileSystem fileSystem;
 
-    public void add(MailRepositoryUrl url, MailRepository obj) {
-        storedObjectMap.put(url, obj);
+    @Inject
+    public FileMailRepositoryProvider(FileSystem fileSystem) {
+        this.fileSystem = fileSystem;
     }
 
     @Override
-    public MailRepository select(MailRepositoryUrl url) {
-        return storedObjectMap.get(url);
+    public String canonicalName() {
+        return FileMailRepository.class.getCanonicalName();
     }
 
     @Override
-    public Optional<MailRepository> get(MailRepositoryUrl url) {
-        return Optional.ofNullable(storedObjectMap.get(url));
+    public MailRepository provide(MailRepositoryUrl url) {
+        FileMailRepository fileMailRepository = new FileMailRepository();
+        fileMailRepository.setFileSystem(fileSystem);
+        return fileMailRepository;
     }
-
-    @Override
-    public Stream<MailRepository> getByPath(MailRepositoryPath path) {
-        return storedObjectMap
-                .keySet()
-                .stream()
-                .filter((MailRepositoryUrl key) -> key.getPath().equals(path))
-                .map(storedObjectMap::get);
-    }
-
-    @Override
-    public Stream<MailRepositoryUrl> getUrls() {
-        return storedObjectMap.keySet().stream();
-    }
-
 }
