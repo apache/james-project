@@ -36,7 +36,7 @@ public interface CassandraRegistrationModule {
         .table(CassandraMailboxPathRegisterTable.TABLE_NAME)
         .comment("Holds node mailboxPath registration for distributed events")
         .options(options -> options
-            .compactionOptions(SchemaBuilder.dateTieredStrategy()))
+            .compactionOptions(SchemaBuilder.timeWindowCompactionStrategy()))
         .statement(statement -> statement
             .addUDTPartitionKey(CassandraMailboxPathRegisterTable.MAILBOX_PATH, SchemaBuilder.frozen(CassandraMailboxPathRegisterTable.MAILBOX_PATH))
             .addClusteringColumn(CassandraMailboxPathRegisterTable.TOPIC, text()))
