@@ -42,7 +42,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,13 +59,14 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     /**
      * A request-scoped list of mailboxes in order to refer to them via id
      */
-    private final ArrayList<Mailbox> mailboxCache = new ArrayList<>();
+    private final MailboxCache mailboxCache;
 
     private final MailboxSession session;
     
     public MaildirMailboxMapper(MaildirStore maildirStore, MailboxSession session) {
         this.maildirStore = maildirStore;
         this.session = session;
+        this.mailboxCache = new MailboxCache();
     }
 
     @Override
@@ -110,13 +110,13 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     public Mailbox findMailboxByPath(MailboxPath mailboxPath)
             throws MailboxException, MailboxNotFoundException {      
         Mailbox mailbox = maildirStore.loadMailbox(session, mailboxPath);
-        return cacheMailbox(mailbox);
+        return mailboxCache.cacheMailbox(mailbox);
     }
     
     @Override
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
         MaildirId mailboxId = (MaildirId)id;
-        return getCachedMailbox(mailboxId);
+        return mailboxCache.getCachedMailbox(mailboxId);
     }
     
     @Override
@@ -131,13 +131,13 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         for (File folder : folders) {
             if (folder.isDirectory()) {
                 Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
-                mailboxList.add(cacheMailbox(mailbox));
+                mailboxList.add(mailboxCache.cacheMailbox(mailbox));
             }
         }
         // INBOX is in the root of the folder
         if (Pattern.matches(mailboxPath.getName().replace(MaildirStore.WILDCARD, ".*"), MailboxConstants.INBOX)) {
             Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), "");
-            mailboxList.add(0, cacheMailbox(mailbox));
+            mailboxList.add(0, mailboxCache.cacheMailbox(mailbox));
         }
         return mailboxList;
     }
@@ -153,7 +153,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
         try {
-            Mailbox originalMailbox = getCachedMailbox((MaildirId) mailbox.getMailboxId());
+            Mailbox originalMailbox = mailboxCache.getCachedMailbox((MaildirId) mailbox.getMailboxId());
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
             // equals with null check
             if (originalMailbox.getName() == null ? mailbox.getName() != null : !originalMailbox.getName().equals(mailbox.getName())) {
@@ -230,7 +230,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             }
             folder.setACL(session, mailbox.getACL());
         }
-        cacheMailbox(mailbox);
+        mailboxCache.cacheMailbox(mailbox);
         return mailbox.getMailboxId();
     }
 
@@ -258,36 +258,6 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     @Override
     public void endRequest() {
         mailboxCache.clear();
-    }
-    
-    /**
-     * Stores a copy of a mailbox in a cache valid for one request. This is to enable
-     * referring to renamed mailboxes via id.
-     * @param mailbox The mailbox to cache
-     * @return The id of the cached mailbox
-     */
-    private Mailbox cacheMailbox(Mailbox mailbox) {
-        mailboxCache.add(new SimpleMailbox(mailbox));
-        int id = mailboxCache.size() - 1;
-        ((SimpleMailbox) mailbox).setMailboxId(MaildirId.of(id));
-        return mailbox;
-    }
-    
-    /**
-     * Retrieves a mailbox from the cache
-     * @param mailboxId The id of the mailbox to retrieve
-     * @return The mailbox
-     * @throws MailboxNotFoundException If the mailboxId is not in the cache
-     */
-    private Mailbox getCachedMailbox(MaildirId mailboxId) throws MailboxNotFoundException {
-        if (mailboxId == null) {
-            throw new MailboxNotFoundException("null");
-        }
-        try {
-            return mailboxCache.get(mailboxId.getRawId());
-        } catch (IndexOutOfBoundsException e) {
-            throw new MailboxNotFoundException(mailboxId);
-        }
     }
     
     private void visitUsersForMailboxList(File domain, File[] users, List<Mailbox> mailboxList) throws MailboxException {
