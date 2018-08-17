@@ -649,7 +649,6 @@
         <maven-reporting-impl.version>2.2</maven-reporting-impl.version>
         <maven-reporting-api.version>3.0</maven-reporting-api.version>
         <qdox.version>2.0-M9</qdox.version>
-        <ical4j.version>2.0.2</ical4j.version>
         <guavate.version>1.0.0</guavate.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
