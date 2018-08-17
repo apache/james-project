@@ -259,7 +259,7 @@ public class RemoteDelivery extends GenericMailet {
     public synchronized void destroy() {
         if (startThreads == ThreadState.START_THREADS) {
             isDestroyed.set(true);
-            executor.shutdown();
+            executor.shutdownNow();
             notifyAll();
         }
     }
