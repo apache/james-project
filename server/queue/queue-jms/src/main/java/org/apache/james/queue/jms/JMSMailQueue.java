@@ -412,22 +412,24 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         splitter.split(attributeNames)
                 .forEach(name -> setMailAttribute(message, mail, name));
 
-        String sender = message.getStringProperty(JAMES_MAIL_SENDER);
-        if (sender == null || sender.trim().length() <= 0) {
-            mail.setSender(null);
-        } else {
-            try {
-                mail.setSender(new MailAddress(sender));
-            } catch (AddressException e) {
-                // Should never happen as long as the user does not modify the
-                // the header by himself
-                LOGGER.error("Unable to parse the sender address {} for mail {}, so we fallback to a null sender", sender, mail.getName(), e);
-                mail.setSender(null);
-            }
-        }
-
+        mail.setSender(getMailSender(message.getStringProperty(JAMES_MAIL_SENDER), mail));
         mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
+    }
 
+    private MailAddress getMailSender(String sender, Mail mail) {
+        if (sender == null || sender.trim().length() <= 0) {
+            return null;
+        }
+        if (sender.equals(MailAddress.NULL_SENDER_AS_STRING)) {
+            return MailAddress.nullSender();
+        }
+        try {
+            return new MailAddress(sender);
+        } catch (AddressException e) {
+            // Should never happen as long as the user does not modify the header by himself
+            LOGGER.error("Unable to parse the sender address {} for mail {}, so we fallback to a null sender", sender, mail.getName(), e);
+            return MailAddress.nullSender();
+        }
     }
 
     /**

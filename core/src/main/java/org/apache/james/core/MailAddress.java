@@ -72,6 +72,8 @@ public class MailAddress implements java.io.Serializable {
     private static final char[] SPECIAL =
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
 
+    public static final String NULL_SENDER_AS_STRING = "<>";
+
     private static final MailAddress NULL_SENDER = new MailAddress() {
 
         @Override
@@ -91,7 +93,7 @@ public class MailAddress implements java.io.Serializable {
 
         @Override
         public String asString() {
-            return "<>";
+            return NULL_SENDER_AS_STRING;
         }
 
         @Override
@@ -356,6 +358,9 @@ public class MailAddress implements java.io.Serializable {
             return toString().equalsIgnoreCase(theString);
         } else if (obj instanceof MailAddress) {
             MailAddress addr = (MailAddress) obj;
+            if (isNullSender() && addr.isNullSender()) {
+                return true;
+            }
             return getLocalPart().equalsIgnoreCase(addr.getLocalPart()) && getDomain().equals(addr.getDomain());
         }
         return false;
