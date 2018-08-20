@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.event;
 
+import javax.annotation.PreDestroy;
+
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
@@ -42,6 +44,7 @@ public class MixedEventDelivery implements EventDelivery {
         }
     }
 
+    @PreDestroy
     public void stop() {
         asynchronousEventDelivery.stop();
     }
