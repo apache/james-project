@@ -171,7 +171,7 @@ public class AttachmentV2MigrationTest {
         when(attachmentDAO.retrieveAll()).thenReturn(Stream.of(
             attachment1,
             attachment2));
-        when(blobsDAO.save(any())).thenThrow(new RuntimeException());
+        when(blobsDAO.save(any(byte[].class))).thenThrow(new RuntimeException());
 
         assertThat(migration.run()).isEqualTo(Migration.Result.PARTIAL);
     }

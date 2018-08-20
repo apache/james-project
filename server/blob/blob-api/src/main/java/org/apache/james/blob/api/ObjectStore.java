@@ -25,6 +25,8 @@ public interface ObjectStore {
 
     CompletableFuture<BlobId> save(byte[] data);
 
+    CompletableFuture<BlobId> save(InputStream data);
+
     CompletableFuture<byte[]> readBytes(BlobId blobId);
 
     InputStream read(BlobId blobId);

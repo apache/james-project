@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.blob.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +40,13 @@ public interface ObjectStoreContract {
 
     @Test
     default void saveShouldReturnEmptyWhenNullData() throws Exception {
-        assertThatThrownBy(() -> testee().save(null))
+        assertThatThrownBy(() -> testee().save((byte[]) null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void saveShouldReturnEmptyWhenNullInputStream() throws Exception {
+        assertThatThrownBy(() -> testee().save((InputStream) null))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -53,8 +60,25 @@ public interface ObjectStoreContract {
     }
 
     @Test
+    default void saveShouldSaveEmptyInputStream() throws Exception {
+        BlobId blobId = testee().save(new ByteArrayInputStream(new byte[]{})).join();
+
+        byte[] bytes = testee().readBytes(blobId).join();
+
+        assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
+    }
+
+    @Test
     default void saveShouldReturnBlobId() throws Exception {
         BlobId blobId = testee().save("toto".getBytes(StandardCharsets.UTF_8)).join();
+
+        assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
+    }
+
+    @Test
+    default void saveShouldReturnBlobIdOfInputStream() throws Exception {
+        BlobId blobId =
+            testee().save(new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8))).join();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
