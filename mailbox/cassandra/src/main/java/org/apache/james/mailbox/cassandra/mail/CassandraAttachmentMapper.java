@@ -87,7 +87,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             return CompletableFuture.completedFuture(Optional.empty());
         }
         DAOAttachment daoAttachment = daoAttachmentOptional.get();
-        return objectStore.read(daoAttachment.getBlobId())
+        return objectStore.readBytes(daoAttachment.getBlobId())
             .thenApply(bytes -> Optional.of(daoAttachment.toAttachment(bytes)));
     }
 

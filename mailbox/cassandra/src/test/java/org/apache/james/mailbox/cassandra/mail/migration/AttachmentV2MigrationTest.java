@@ -130,9 +130,9 @@ public class AttachmentV2MigrationTest {
             .contains(CassandraAttachmentDAOV2.from(attachment1, BLOB_ID_FACTORY.forPayload(attachment1.getBytes())));
         assertThat(attachmentDAOV2.getAttachment(ATTACHMENT_ID_2).join())
             .contains(CassandraAttachmentDAOV2.from(attachment2, BLOB_ID_FACTORY.forPayload(attachment2.getBytes())));
-        assertThat(blobsDAO.read(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).join())
+        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment1.getBytes())).join())
             .isEqualTo(attachment1.getBytes());
-        assertThat(blobsDAO.read(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).join())
+        assertThat(blobsDAO.readBytes(BLOB_ID_FACTORY.forPayload(attachment2.getBytes())).join())
             .isEqualTo(attachment2.getBytes());
     }
 

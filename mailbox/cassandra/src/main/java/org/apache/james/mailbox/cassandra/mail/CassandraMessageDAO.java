@@ -372,7 +372,7 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
-        return objectStore.read(blobIdFactory.from(row.getString(field)));
+        return objectStore.readBytes(blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

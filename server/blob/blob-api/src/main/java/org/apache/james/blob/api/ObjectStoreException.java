@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.blob.api;
 
-import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
+public class ObjectStoreException extends RuntimeException {
 
-public interface ObjectStore {
+    public ObjectStoreException(String message) {
+        super(message);
+    }
 
-    CompletableFuture<BlobId> save(byte[] data);
-
-    CompletableFuture<byte[]> readBytes(BlobId blobId);
-
-    InputStream read(BlobId blobId);
+    public ObjectStoreException(String message, Throwable cause) {
+        super(message,cause);
+    }
 }

@@ -24,7 +24,11 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.Pipe;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
@@ -37,6 +41,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.BlobTable.BlobParts;
 import org.apache.james.blob.cassandra.utils.DataChunker;
 import org.apache.james.util.FluentFutureStream;
@@ -47,6 +52,8 @@ import org.slf4j.LoggerFactory;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -149,7 +156,7 @@ public class CassandraBlobsDAO implements ObjectStore {
     }
 
     @Override
-    public CompletableFuture<byte[]> read(BlobId blobId) {
+    public CompletableFuture<byte[]> readBytes(BlobId blobId) {
         return cassandraAsyncExecutor.executeSingleRow(
             select.bind()
                 .setString(BlobTable.ID, blobId.asString()))
@@ -207,6 +214,28 @@ public class CassandraBlobsDAO implements ObjectStore {
             this.blobId = blobId;
             this.position = position;
             this.row = row;
+        }
+    }
+
+    @Override
+    public InputStream read(BlobId blobId) {
+        try {
+            Pipe pipe = Pipe.open();
+            ConsumerChainer<ByteBuffer> consumer = Throwing.consumer(
+                bytes -> {
+                    try (Pipe.SinkChannel sink = pipe.sink()) {
+                        sink.write(bytes);
+                    }
+                }
+            );
+            readBytes(blobId)
+                .thenApply(ByteBuffer::wrap)
+                .thenAccept(consumer.sneakyThrow());
+            return Channels.newInputStream(pipe.source());
+        } catch (IOException cause) {
+            throw new ObjectStoreException(
+                "Failed to convert CompletableFuture<byte[]> to InputStream",
+                cause);
         }
     }
 }
