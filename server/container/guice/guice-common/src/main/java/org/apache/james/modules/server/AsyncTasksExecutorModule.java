@@ -21,25 +21,38 @@ package org.apache.james.modules.server;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.inject.Named;
+import javax.annotation.PreDestroy;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.google.inject.Provider;
+import com.google.inject.name.Names;
 
 public class AsyncTasksExecutorModule extends AbstractModule {
 
-    public static final int THREAD_POOL_SIZE = 8;
+    private static final int THREAD_POOL_SIZE = 8;
 
     @Override
     protected void configure() {
-
+        bind(ExecutorService.class).annotatedWith(Names.named("AsyncExecutor"))
+            .toProvider(new LifecycleAwareExecutorServiceProvider(
+                Executors.newFixedThreadPool(THREAD_POOL_SIZE)));
     }
 
-    @Provides
-    @Singleton
-    @Named("AsyncExecutor")
-    public ExecutorService provideAsyncExecutorService() {
-        return Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+    public static class LifecycleAwareExecutorServiceProvider implements Provider<ExecutorService> {
+        private final ExecutorService executorService;
+
+        LifecycleAwareExecutorServiceProvider(ExecutorService executorService) {
+            this.executorService = executorService;
+        }
+
+        @Override
+        public ExecutorService get() {
+            return executorService;
+        }
+
+        @PreDestroy
+        public void stop() {
+            executorService.shutdownNow();
+        }
     }
 }
