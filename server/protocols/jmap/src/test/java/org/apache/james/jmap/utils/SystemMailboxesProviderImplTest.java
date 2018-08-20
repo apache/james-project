@@ -57,7 +57,6 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 

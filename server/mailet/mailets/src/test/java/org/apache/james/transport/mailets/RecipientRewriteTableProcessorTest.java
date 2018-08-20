@@ -77,7 +77,6 @@ public class RecipientRewriteTableProcessorTest {
         nonDomainWithDefaultLocal = new MailAddress(NONEDOMAIN + "@" + MailAddressFixture.JAMES_LOCAL);
     }
 
-    @SuppressWarnings("unchecked")
     @Test(expected = MessagingException.class)
     public void handleMappingsShouldThrowExceptionWhenMappingsContainAtLeastOneNoneDomainObjectButCannotGetDefaultDomain() throws Exception {
         when(domainList.getDefaultDomain()).thenThrow(DomainListException.class);
@@ -90,7 +89,6 @@ public class RecipientRewriteTableProcessorTest {
         processor.handleMappings(mappings, MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES, message);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void handleMappingsShouldDoNotCareDefaultDomainWhenMappingsDoesNotContainAnyNoneDomainObject() throws Exception {
         when(domainList.getDefaultDomain()).thenThrow(DomainListException.class);
@@ -235,7 +233,6 @@ public class RecipientRewriteTableProcessorTest {
         assertThat(mail.getRecipients()).containsOnly(MailAddressFixture.ANY_AT_JAMES, MailAddressFixture.OTHER_AT_JAMES);
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void processShouldSendMailToAllErrorRecipientsWhenErrorMappingException() throws Exception {
         when(virtualTableStore.getMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(ErrorMappingException.class);
@@ -260,7 +257,6 @@ public class RecipientRewriteTableProcessorTest {
         assertThat(mail.getRecipients()).containsOnly(MailAddressFixture.ANY_AT_LOCAL);
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void processShouldSendMailToAllErrorRecipientsWhenRecipientRewriteTableException() throws Exception {
         when(virtualTableStore.getMappings(eq("other"), eq(Domain.of(MailAddressFixture.JAMES_LOCAL)))).thenThrow(RecipientRewriteTableException.class);

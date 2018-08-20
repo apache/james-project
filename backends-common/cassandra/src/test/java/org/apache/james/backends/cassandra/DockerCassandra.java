@@ -36,8 +36,6 @@ public class DockerCassandra {
 
     private static final int CASSANDRA_PORT = 9042;
     private static final String CASSANDRA_CONFIG_DIR = "$CASSANDRA_CONFIG";
-    private static final String CASSANDRA_YAML = CASSANDRA_CONFIG_DIR + "/cassandra.yaml";
-    private static final String CASSANDRA_ENV = CASSANDRA_CONFIG_DIR + "/cassandra-env.sh";
     private static final String JVM_OPTIONS = CASSANDRA_CONFIG_DIR + "/jvm.options";
 
     private final GenericContainer<?> cassandraContainer;

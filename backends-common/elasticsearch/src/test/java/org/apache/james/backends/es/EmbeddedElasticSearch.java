@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 
 import org.awaitility.Duration;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.flush.FlushAction;
 import org.elasticsearch.action.admin.indices.flush.FlushRequestBuilder;
 import org.elasticsearch.client.Client;

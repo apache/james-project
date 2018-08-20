@@ -106,7 +106,6 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         verify(elasticSearchIndexer).index(eq(ELASTIC_SEARCH_ID), eq(EXPECTED_JSON_CONTENT));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void addShouldIndexEmailBodyWhenNotIndexableAttachment() throws Exception {
         //Given
@@ -136,7 +135,6 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         return message;
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void addShouldNotPropagateExceptionWhenExceptionOccurs() throws Exception {
         //Given

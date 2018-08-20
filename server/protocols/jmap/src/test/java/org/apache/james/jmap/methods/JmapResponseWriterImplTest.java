@@ -158,6 +158,7 @@ public class JmapResponseWriterImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void formatMethodResponseShouldFilterRightFieldsForEachResponse() {
         ObjectResponseClass responseClass = new ObjectResponseClass();
         responseClass.list = ImmutableList.of(new ObjectResponseClass.Foo("id", "name"));

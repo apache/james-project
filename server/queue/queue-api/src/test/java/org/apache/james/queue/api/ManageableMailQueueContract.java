@@ -150,7 +150,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .name("name3")
             .build());
 
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        getManageableMailQueue().browse();
 
         assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
 
@@ -188,7 +188,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         assertThatCode(() -> getManageableMailQueue().deQueue()).doesNotThrowAnyException();
 
@@ -207,7 +207,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         getManageableMailQueue().deQueue();
 
@@ -226,7 +226,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .name("name3")
             .build());
 
-        ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
+        getManageableMailQueue().browse();
 
         assertThatCode(() -> getManageableMailQueue().enQueue(defaultMail()
             .name("name4")
@@ -268,7 +268,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         assertThatCode(() ->
             getManageableMailQueue().enQueue(defaultMail()
@@ -291,7 +291,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         getManageableMailQueue().enQueue(defaultMail()
             .name("name2")
@@ -313,7 +313,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         assertThatCode(() -> getManageableMailQueue().clear())
             .doesNotThrowAnyException();
@@ -333,7 +333,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         getManageableMailQueue().clear();
 
@@ -353,7 +353,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         assertThatCode(() -> getManageableMailQueue().flush())
             .doesNotThrowAnyException();
@@ -373,7 +373,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         getManageableMailQueue().flush();
 
@@ -393,7 +393,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         assertThatCode(() -> getManageableMailQueue().flush())
             .doesNotThrowAnyException();
@@ -413,7 +413,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
-        ManageableMailQueue.MailQueueItemView firstItem = items.next();
+        items.next();
 
         getManageableMailQueue().remove(ManageableMailQueue.Type.Name, "name2");
 

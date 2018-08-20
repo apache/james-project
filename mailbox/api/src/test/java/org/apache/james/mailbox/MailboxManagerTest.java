@@ -874,6 +874,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws Exception {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);

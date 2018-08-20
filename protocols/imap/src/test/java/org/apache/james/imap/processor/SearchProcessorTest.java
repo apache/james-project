@@ -189,6 +189,7 @@ public class SearchProcessorTest {
         check(SearchKey.buildAll(), SearchQuery.all());
     }
 
+    @SuppressWarnings("unchecked")
     private void expectsGetSelectedMailbox() throws Exception {
         when(mailboxManager.getMailbox(mailboxPath, mailboxSession)).thenReturn(mailbox, mailbox);
         when(session.getSelected()).thenReturn(selectedMailbox);

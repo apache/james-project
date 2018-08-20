@@ -58,7 +58,6 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldRethrowWhenScheduledServiceAlwaysThrowException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
@@ -74,7 +73,6 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldRetryWhenMatchExceptionAndSuccess() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalArgumentException.class)
@@ -87,7 +85,6 @@ public class RetryExecutorUtilTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void retryOnExceptionsAndExecuteShouldNotRetryWhenDoesNotMatchException() throws Exception {
         given(serviceMock.faultyService())
                 .willThrow(IllegalStateException.class)

@@ -190,6 +190,7 @@ public class GetMessagesMethodTest {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     public void processShouldFetchMessages() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
@@ -217,6 +218,7 @@ public class GetMessagesMethodTest {
     }
     
     @Test
+    @SuppressWarnings("unchecked")
     public void processShouldFetchHtmlMessage() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
         ComposedMessageId message = inbox.appendMessage(
@@ -314,6 +316,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void processShouldReturnTextBodyWhenEmptyTextBodyAndNotEmptyHtmlBody() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
@@ -340,6 +343,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void processShouldReturnEmptyTextBodyAndHtmlBodyWhenThoseAreEmpty() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
@@ -365,6 +369,7 @@ public class GetMessagesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void processShouldNotOverrideTextBodyWhenItIsThere() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 

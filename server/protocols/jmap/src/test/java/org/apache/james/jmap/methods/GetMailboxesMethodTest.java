@@ -126,6 +126,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWhenAvailable() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
@@ -156,6 +157,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnOnlyMailboxesOfCurrentUserWhenAvailable() throws Exception {
         MailboxPath mailboxPathToReturn = MailboxPath.forUser(USERNAME, "mailboxToReturn");
         MailboxPath mailboxPathtoSkip = MailboxPath.forUser(USERNAME2, "mailboxToSkip");
@@ -243,6 +245,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);
@@ -278,6 +281,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnEmptyMailboxByDefault() throws MailboxException {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "name");
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
@@ -368,6 +372,7 @@ public class GetMailboxesMethodTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWithRoles() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);

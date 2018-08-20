@@ -273,7 +273,6 @@ public class PostDequeueDecoratorTest {
         verifyNoMoreInteractions(messageIdManager);
     }
 
-    @SuppressWarnings("unchecked")
     @Test(expected = MailQueue.MailQueueException.class)
     public void doneShouldThrowWhenMailboxException() throws Exception {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);

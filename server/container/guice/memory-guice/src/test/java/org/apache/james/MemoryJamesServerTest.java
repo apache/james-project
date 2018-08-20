@@ -21,10 +21,7 @@ package org.apache.james;
 
 import java.io.IOException;
 
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.junit.Rule;
-
-import com.google.inject.Module;
 
 public class MemoryJamesServerTest extends AbstractJmapJamesServerTest {
     @Rule

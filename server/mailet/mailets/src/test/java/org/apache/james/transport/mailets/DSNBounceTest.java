@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;

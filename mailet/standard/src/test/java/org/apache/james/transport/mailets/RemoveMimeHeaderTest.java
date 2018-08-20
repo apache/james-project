@@ -133,7 +133,6 @@ class RemoveMimeHeaderTest {
         assertThatThrownBy(() -> mailet.init(mailetConfig)).isInstanceOf(MessagingException.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void serviceShouldThrowWhenExceptionOccured() throws MessagingException {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
