@@ -158,7 +158,7 @@ public class SwarmGenericContainer implements TestRule {
 
     @Override
     public Statement apply(Statement statement, Description description) {
-        return container.apply(statement, description);
+        return statement;
     }
 
 }

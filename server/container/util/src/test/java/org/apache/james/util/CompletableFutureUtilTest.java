@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class CompletableFutureUtilTest {
@@ -89,7 +88,7 @@ public class CompletableFutureUtilTest {
                 try {
                     Thread.sleep(itemCount - i);
                 } catch (InterruptedException e) {
-                    throw Throwables.propagate(e);
+                    throw new RuntimeException(e);
                 }
                 queue.add(i);
                 return i;

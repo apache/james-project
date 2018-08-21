@@ -72,6 +72,7 @@ public class JPAUser implements User {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private static HashFunction chooseHashing(String algorithm) {
         switch (algorithm) {
             case "MD5":

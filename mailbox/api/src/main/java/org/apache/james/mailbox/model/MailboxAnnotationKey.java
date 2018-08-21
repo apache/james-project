@@ -22,18 +22,20 @@ package org.apache.james.mailbox.model;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.util.UnicodeSetUtils;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.ibm.icu.text.UnicodeSet;
 
 public class MailboxAnnotationKey {
-    public static final String SLASH_CHARACTER = "/";
 
+    public static final String SLASH_CHARACTER = "/";
     public static final String TWO_SLASH_CHARACTER = "//";
 
-    private static final CharMatcher NAME_ANNOTATION_PATTERN = CharMatcher.JAVA_LETTER_OR_DIGIT
-        .or(CharMatcher.is('/'));
+    private static final UnicodeSet NAME_ANNOTATION_PATTERN = UnicodeSetUtils.letterOrDigitUnicodeSet()
+            .add(SLASH_CHARACTER)
+            .freeze();
     public static final int MINIMUM_COMPONENTS = 2;
     public static final int MINIMUM_COMPONENTS_OF_VENDOR = 4;
     public static final int SECOND_COMPONENT_INDEX = 1;
@@ -63,7 +65,7 @@ public class MailboxAnnotationKey {
         if (key.endsWith(SLASH_CHARACTER)) {
             return false;
         }
-        if (!NAME_ANNOTATION_PATTERN.matchesAllOf(key)) {
+        if (!NAME_ANNOTATION_PATTERN.containsAll(key)) {
             return false;
         }
         int componentsNo = countComponents();

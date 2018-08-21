@@ -22,7 +22,7 @@ package org.apache.james.eventsourcing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyListOf;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -89,7 +89,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void throwingStoreShouldNotLeadToPusblishing() {
         EventStore eventStore = mock(EventStore.class);
-        doThrow(new RuntimeException()).when(eventStore).appendAll(anyListOf(Event.class));
+        doThrow(new RuntimeException()).when(eventStore).appendAll(anyList());
         when(eventStore.getEventsOfAggregate(any())).thenReturn(History.empty());
 
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();

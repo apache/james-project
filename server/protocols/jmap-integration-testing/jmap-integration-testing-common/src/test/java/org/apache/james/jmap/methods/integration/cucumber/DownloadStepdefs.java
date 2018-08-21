@@ -444,7 +444,7 @@ public class DownloadStepdefs {
 
     @Then("^the attachment is named \"([^\"]*)\"$")
     public void assertContentDisposition(String name) {
-        if (!CharMatcher.ASCII.matchesAllOf(name)) {
+        if (!CharMatcher.ascii().matchesAllOf(name)) {
             assertEncodedFilenameMatches(name);
         } else {
             assertThat(response.getFirstHeader("Content-Disposition").getValue()).isEqualTo("attachment; filename=\"" + name + "\"");

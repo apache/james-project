@@ -198,7 +198,7 @@ public class UploadStepdefs {
     }
 
     private String normalizeContentType(String input) {
-        return CharMatcher.WHITESPACE.removeFrom(input.toLowerCase(Locale.US));
+        return CharMatcher.whitespace().removeFrom(input.toLowerCase(Locale.US));
     }
 
     @Then("^\"([^\"]*)\" should be able to retrieve the content$")

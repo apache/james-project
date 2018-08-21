@@ -143,7 +143,7 @@ public class DownloadServlet extends HttpServlet {
     }
 
     private void addContentDispositionHeaderRegardingEncoding(String name, HttpServletResponse resp) {
-        if (CharMatcher.ASCII.matchesAllOf(name)) {
+        if (CharMatcher.ascii().matchesAllOf(name)) {
             resp.addHeader("Content-Disposition", "attachment; filename=\"" + name + "\"");
         } else {
             resp.addHeader("Content-Disposition", "attachment; filename*=\"" + EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN) + "\"");

@@ -28,6 +28,7 @@ import org.awaitility.Awaitility;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerClient.RemoveContainerParam;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
@@ -89,7 +90,7 @@ public class Docker {
     public void stop(ContainerCreation container) {
         try {
             dockerClient.killContainer(container.id());
-            dockerClient.removeContainer(container.id(), true);
+            dockerClient.removeContainer(container.id(), RemoveContainerParam.removeVolumes());
         } catch (DockerException | InterruptedException e) {
             throw new RuntimeException(e);
         }

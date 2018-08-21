@@ -45,7 +45,8 @@
 
       <dl>
         <dt><strong>algorithm</strong></dt>
-        <dd>Algorithm to has passwords. Supported password algorithm are: MD5, SHA-256, SHA-512, NONE</dd>
+        <dd>Algorithm to hash passwords. Supported password algorithm are: MD5, SHA-256, SHA-512, NONE(then SHA-1 will be used).</dd>
+        <dd>MD5 and SHA-1 are deprecated.</dd>
         <dt><strong>enableVirtualHosting</strong></dt>
         <dd>true (default) or false. Defines if the usernames must (true) or may not contain (false) a domain part (user@domain.tld).</dd>
       </dl>

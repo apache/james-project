@@ -24,22 +24,24 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.james.util.UnicodeSetUtils;
 
-import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
+import com.ibm.icu.text.UnicodeSet;
 
 public class Keyword {
     private static final int FLAG_NAME_MIN_LENGTH = 1;
     private static final int FLAG_NAME_MAX_LENGTH = 255;
-    private static final CharMatcher FLAG_NAME_PATTERN =
-            CharMatcher.JAVA_LETTER_OR_DIGIT
-                .or(CharMatcher.is('$'))
-                .or(CharMatcher.is('_')
-                .or(CharMatcher.is('-')));
+    private static final UnicodeSet FLAG_NAME_PATTERN =
+            UnicodeSetUtils.letterOrDigitUnicodeSet()
+                .add('$')
+                .add('_')
+                .add('-')
+                .freeze();
 
     public static final Keyword DRAFT = new Keyword("$Draft");
     public static final Keyword SEEN = new Keyword("$Seen");
@@ -80,7 +82,7 @@ public class Keyword {
         if (flagName.length() < FLAG_NAME_MIN_LENGTH || flagName.length() > FLAG_NAME_MAX_LENGTH) {
             return false;
         }
-        if (!FLAG_NAME_PATTERN.matchesAllOf(flagName)) {
+        if (!FLAG_NAME_PATTERN.containsAll(flagName)) {
             return false;
         }
         return true;

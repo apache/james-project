@@ -1717,6 +1717,11 @@
                 <version>4.0</version>
             </dependency>
             <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>62.1</version>
+            </dependency>
+            <dependency>
                 <groupId>com.jayway.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>1.6.5</version>
