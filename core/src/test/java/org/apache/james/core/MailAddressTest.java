@@ -19,12 +19,16 @@
 
 package org.apache.james.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class MailAddressTest {
 
@@ -221,5 +225,17 @@ public class MailAddressTest {
 
         Assert.assertTrue(a.toString() + " != " + b.toString(), a.equals(b));
         Assert.assertFalse(a.toString() + " != " + null, a.equals(null));
+    }
+
+    @Test
+    public void equalsShouldReturnTrueWhenBothNullSender() {
+        assertThat(MailAddress.nullSender())
+            .isEqualTo(MailAddress.nullSender());
+    }
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailAddress.class)
+            .verify();
     }
 }
