@@ -99,6 +99,11 @@ public class MailRepositoriesRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return MAIL_REPOSITORIES;
+    }
+
+    @Override
     public void define(Service service) {
         this.service = service;
 

@@ -28,6 +28,11 @@ import spark.Service;
 public class CORSRoute implements Routes {
 
     @Override
+    public String getBasePath() {
+        return "";
+    }
+
+    @Override
     public void define(Service service) {
         service.options("/*", (request, response) -> {
 

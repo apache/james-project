@@ -65,7 +65,8 @@ import spark.Service;
 public class DomainQuotaRoutes implements Routes {
 
     private static final String DOMAIN = "domain";
-    static final String QUOTA_ENDPOINT = "/quota/domains/:" + DOMAIN;
+    public static final String BASE_PATH = "/quota/domains";
+    static final String QUOTA_ENDPOINT = BASE_PATH + "/:" + DOMAIN;
     private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
 
@@ -83,6 +84,11 @@ public class DomainQuotaRoutes implements Routes {
         this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
+    }
+
+    @Override
+    public String getBasePath() {
+        return QUOTA_ENDPOINT;
     }
 
     @Override

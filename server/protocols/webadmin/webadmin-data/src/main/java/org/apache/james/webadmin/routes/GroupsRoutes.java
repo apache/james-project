@@ -109,6 +109,11 @@ public class GroupsRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return ROOT_PATH;
+    }
+
+    @Override
     public void define(Service service) {
         service.get(ROOT_PATH, this::listGroups, jsonTransformer);
         service.get(GROUP_ADDRESS_PATH, this::listGroupMembers, jsonTransformer);

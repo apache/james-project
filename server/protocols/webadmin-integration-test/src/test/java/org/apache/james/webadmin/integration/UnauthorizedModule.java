@@ -16,25 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.webadmin.integration;
 
-package org.apache.james.modules.server;
+import static spark.Spark.halt;
 
-import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.webadmin.PublicRoutes;
-import org.apache.james.webadmin.routes.HealthCheckRoutes;
+import org.apache.james.webadmin.authentication.AuthenticationFilter;
+import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
 
-public class HealthCheckRoutesModule extends AbstractModule {
+import spark.Request;
+import spark.Response;
+
+public class UnauthorizedModule extends AbstractModule {
+
     @Override
     protected void configure() {
-        bind(HealthCheckRoutes.class).in(Scopes.SINGLETON);
+        bind(UnauthorizedModule.UnauthorizedFilter.class).in(Scopes.SINGLETON);
+        bind(AuthenticationFilter.class).to(UnauthorizedModule.UnauthorizedFilter.class);
+    }
 
-        Multibinder<PublicRoutes> routesMultibinder = Multibinder.newSetBinder(binder(), PublicRoutes.class);
-        routesMultibinder.addBinding().to(HealthCheckRoutes.class);
+    private static class UnauthorizedFilter implements AuthenticationFilter {
 
-        Multibinder.newSetBinder(binder(), HealthCheck.class);
+        @Override
+        public void handle(Request request, Response response) throws Exception {
+            halt(HttpStatus.UNAUTHORIZED_401, "Unauthorize every endpoints.");
+        }
     }
 }

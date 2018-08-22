@@ -61,6 +61,7 @@ public class WebAdminServer implements Configurable {
 
     private final WebAdminConfiguration configuration;
     private final Set<Routes> routesList;
+    private final Set<PublicRoutes> publicRoutes;
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
     private final MetricFactory metricFactory;
@@ -68,10 +69,11 @@ public class WebAdminServer implements Configurable {
 
     // Spark do not allow to retrieve allocated port when using a random port. Thus we generate the port.
     @Inject
-    protected WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, AuthenticationFilter authenticationFilter,
+    protected WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, Set<PublicRoutes> publicRoutes, AuthenticationFilter authenticationFilter,
                            MetricFactory metricFactory) {
         this.configuration = configuration;
         this.routesList = routesList;
+        this.publicRoutes = publicRoutes;
         this.authenticationFilter = authenticationFilter;
         this.metricFactory = metricFactory;
         this.service = Service.ignite();
@@ -85,10 +87,14 @@ public class WebAdminServer implements Configurable {
             configureHTTPS();
             configureCORS();
             configureMetrics();
-            service.before(authenticationFilter);
             service.before((request, response) -> response.type(Constants.JSON_CONTENT_TYPE));
             configureMDC();
-            routesList.forEach(routes -> routes.define(service));
+            routesList.forEach(routes -> {
+                service.before(routes.getBasePath(), authenticationFilter);
+                service.before(routes.getBasePath() + "/*", authenticationFilter);
+                routes.define(service);
+            });
+            publicRoutes.forEach(routes -> routes.define(service));
             service.awaitInitialization();
             port = new Port(service.port());
             LOGGER.info("Web admin server started");

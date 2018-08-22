@@ -80,10 +80,14 @@ public class CassandraMailboxMergingRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return BASE;
+    }
+
+    @Override
     public void define(Service service) {
         service.post(BASE, this::mergeMailboxes, jsonTransformer);
     }
-
 
     @POST
     @ApiOperation("Triggers the merge of 2 mailboxes. Old mailbox Id will no more be accessible, rights and messages will be merged.")

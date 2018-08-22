@@ -71,7 +71,9 @@ class DomainMappingsRoutesTest {
     private WebAdminServer webAdminServer;
 
     private void createServer(DomainMappingsRoutes domainMappingsRoutes) throws Exception {
-        webAdminServer = WebAdminUtils.createWebAdminServer(new DefaultMetricFactory(), domainMappingsRoutes);
+        webAdminServer = WebAdminUtils.createWebAdminServer(
+                new DefaultMetricFactory(),
+                domainMappingsRoutes);
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
 
@@ -91,6 +93,10 @@ class DomainMappingsRoutesTest {
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
+    }
+
+    @Nested
+    class Authentication {
     }
 
     @Nested

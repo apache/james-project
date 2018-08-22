@@ -83,7 +83,6 @@ class DLPConfigurationRoutesTest {
                 .build();
     }
 
-
     @BeforeEach
     void setup() throws Exception {
         DNSService dnsService = mock(DNSService.class);
@@ -99,7 +98,6 @@ class DLPConfigurationRoutesTest {
         dlpStore = new EventSourcingDLPConfigurationStore(new InMemoryEventStore());
         createServer(dlpStore, domainList);
     }
-
 
     @Nested
     class DefineStore {

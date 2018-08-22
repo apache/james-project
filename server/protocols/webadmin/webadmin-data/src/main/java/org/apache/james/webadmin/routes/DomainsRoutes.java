@@ -78,6 +78,11 @@ public class DomainsRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return DOMAINS;
+    }
+
+    @Override
     public void define(Service service) {
         this.service = service;
 

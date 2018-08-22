@@ -32,6 +32,7 @@ import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.JsonTransformer;
 
 import com.google.common.collect.ImmutableSet;
+
 import io.restassured.specification.RequestSpecification;
 
 public class WebAdminQuotaSearchTestSystem {

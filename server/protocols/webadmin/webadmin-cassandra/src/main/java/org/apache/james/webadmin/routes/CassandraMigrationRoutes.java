@@ -80,6 +80,11 @@ public class CassandraMigrationRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return VERSION_BASE;
+    }
+
+    @Override
     public void define(Service service) {
         service.get(VERSION_BASE, (request, response) -> getCassandraCurrentVersion(), jsonTransformer);
 

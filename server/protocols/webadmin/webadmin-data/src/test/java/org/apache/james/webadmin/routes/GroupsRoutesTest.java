@@ -122,7 +122,6 @@ class GroupsRoutesTest {
                 .body(is("[]"));
         }
 
-
         @Test
         void getShouldNotResolveRecurseGroups() throws Exception {
             when().put(GROUP1 + SEPARATOR + USER_A);
@@ -370,7 +369,6 @@ class GroupsRoutesTest {
                 .containsEntry("type", "InvalidArgument")
                 .containsEntry("message", "Server doesn't own the domain: unregisteredDomain");
         }
-
 
         @Test
         void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {

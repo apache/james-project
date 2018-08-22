@@ -36,6 +36,11 @@ public class ErrorRoutes implements Routes {
         defineJsonExtractException(service);
     }
 
+    @Override
+    public String getBasePath() {
+        return BASE_URL;
+    }
+
     private void defineInternalError(Service service) {
         service.get(BASE_URL + INTERNAL_SERVER_ERROR,
             (req, res) -> {

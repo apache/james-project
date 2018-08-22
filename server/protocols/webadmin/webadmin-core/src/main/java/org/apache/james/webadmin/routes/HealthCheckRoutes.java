@@ -28,7 +28,7 @@ import javax.ws.rs.Path;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
-import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.PublicRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import spark.Service;
 
 @Api(tags = "Healthchecks")
 @Path(HealthCheckRoutes.HEALTHCHECK)
-public class HealthCheckRoutes implements Routes {
+public class HealthCheckRoutes implements PublicRoutes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
 
@@ -56,6 +56,11 @@ public class HealthCheckRoutes implements Routes {
     @Inject
     public HealthCheckRoutes(Set<HealthCheck> healthChecks) {
         this.healthChecks = healthChecks;
+    }
+
+    @Override
+    public String getBasePath() {
+        return HEALTHCHECK;
     }
 
     @Override

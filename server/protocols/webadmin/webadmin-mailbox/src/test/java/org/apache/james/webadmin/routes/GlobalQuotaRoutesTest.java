@@ -130,7 +130,6 @@ class GlobalQuotaRoutesTest {
         assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.unlimited());
     }
 
-
     @Test
     void putCountShouldAcceptValidValue() throws Exception {
         given()

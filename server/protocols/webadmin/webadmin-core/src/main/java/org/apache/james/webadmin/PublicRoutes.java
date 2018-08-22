@@ -16,25 +16,8 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.webadmin;
 
-package org.apache.james.modules.server;
+public interface PublicRoutes extends Routes {
 
-import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.webadmin.PublicRoutes;
-import org.apache.james.webadmin.routes.HealthCheckRoutes;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
-
-public class HealthCheckRoutesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(HealthCheckRoutes.class).in(Scopes.SINGLETON);
-
-        Multibinder<PublicRoutes> routesMultibinder = Multibinder.newSetBinder(binder(), PublicRoutes.class);
-        routesMultibinder.addBinding().to(HealthCheckRoutes.class);
-
-        Multibinder.newSetBinder(binder(), HealthCheck.class);
-    }
 }

@@ -66,6 +66,11 @@ public class TasksRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return BASE;
+    }
+
+    @Override
     public void define(Service service) {
         service.get(BASE + "/:id", this::getStatus, jsonTransformer);
 

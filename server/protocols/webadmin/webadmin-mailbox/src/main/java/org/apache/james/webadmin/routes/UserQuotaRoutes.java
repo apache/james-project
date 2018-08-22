@@ -75,7 +75,7 @@ public class UserQuotaRoutes implements Routes {
     private static final String MIN_OCCUPATION_RATIO = "minOccupationRatio";
     private static final String MAX_OCCUPATION_RATIO = "maxOccupationRatio";
     private static final String DOMAIN = "domain";
-    static final String USERS_QUOTA_ENDPOINT = "/quota/users";
+    public static final String USERS_QUOTA_ENDPOINT = "/quota/users";
     private static final String QUOTA_ENDPOINT = USERS_QUOTA_ENDPOINT + "/:" + USER;
     private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
@@ -92,6 +92,11 @@ public class UserQuotaRoutes implements Routes {
         this.userQuotaService = userQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
+    }
+
+    @Override
+    public String getBasePath() {
+        return USERS_QUOTA_ENDPOINT;
     }
 
     @Override

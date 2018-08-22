@@ -58,7 +58,7 @@ import spark.Service;
 @Produces("application/json")
 public class GlobalQuotaRoutes implements Routes {
 
-    /* for @Path annotation */ static final String QUOTA_ENDPOINT = "/quota";
+    public static final String QUOTA_ENDPOINT = "/quota";
     private static final String COUNT_ENDPOINT = QUOTA_ENDPOINT + "/count";
     private static final String SIZE_ENDPOINT = QUOTA_ENDPOINT + "/size";
 
@@ -72,6 +72,11 @@ public class GlobalQuotaRoutes implements Routes {
         this.globalQuotaService = globalQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, new QuotaModule().asJacksonModule());
+    }
+
+    @Override
+    public String getBasePath() {
+        return QUOTA_ENDPOINT;
     }
 
     @Override

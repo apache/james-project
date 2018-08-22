@@ -59,7 +59,7 @@ import spark.Service;
 @Produces("application/json")
 public class SieveQuotaRoutes implements Routes {
 
-    static final String ROOT_PATH = "/sieve/quota";
+    public static final String ROOT_PATH = "/sieve/quota";
     public static final String DEFAULT_QUOTA_PATH = ROOT_PATH + SEPARATOR + "default";
     private static final String USER_ID = "userId";
     private static final String USER_SIEVE_QUOTA_PATH = Joiner.on(SEPARATOR).join(ROOT_PATH, "users", ":" + USER_ID);
@@ -75,6 +75,11 @@ public class SieveQuotaRoutes implements Routes {
         this.sieveQuotaRepository = sieveQuotaRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(Long.class);
+    }
+
+    @Override
+    public String getBasePath() {
+        return ROOT_PATH;
     }
 
     @Override

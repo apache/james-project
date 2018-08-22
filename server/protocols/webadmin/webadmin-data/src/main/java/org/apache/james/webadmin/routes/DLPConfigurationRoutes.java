@@ -67,7 +67,7 @@ import spark.Service;
 @Produces(JSON_CONTENT_TYPE)
 public class DLPConfigurationRoutes implements Routes {
 
-    static final String BASE_PATH = "/dlp/rules";
+    public static final String BASE_PATH = "/dlp/rules";
 
     private static final String DOMAIN_NAME = ":senderDomain";
     private static final String SPECIFIC_DLP_RULE_DOMAIN = BASE_PATH + SEPARATOR + DOMAIN_NAME;
@@ -83,6 +83,11 @@ public class DLPConfigurationRoutes implements Routes {
         this.domainList = domainList;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(DLPConfigurationDTO.class);
+    }
+
+    @Override
+    public String getBasePath() {
+        return BASE_PATH;
     }
 
     @Override

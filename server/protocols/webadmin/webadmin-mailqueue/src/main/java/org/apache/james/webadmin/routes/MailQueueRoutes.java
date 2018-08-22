@@ -105,6 +105,11 @@ public class MailQueueRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return BASE_URL;
+    }
+
+    @Override
     public void define(Service service) {
         defineListQueues(service);
 

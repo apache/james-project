@@ -108,6 +108,11 @@ public class ForwardRoutes implements Routes {
     }
 
     @Override
+    public String getBasePath() {
+        return ROOT_PATH;
+    }
+
+    @Override
     public void define(Service service) {
         service.get(ROOT_PATH, this::listForwards, jsonTransformer);
         service.get(FORWARD_ADDRESS_PATH, this::listForwardDestinations, jsonTransformer);
