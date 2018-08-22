@@ -41,6 +41,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.DomainsRoutes;
+import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
@@ -328,4 +329,11 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"Address Groups\"]"));
     }
 
+    @Test
+    public void validateHealthChecksShouldReturnOk() throws Exception {
+        when()
+            .get(HealthCheckRoutes.HEALTHCHECK)
+        .then()
+            .statusCode(HttpStatus.OK_200);
+    }
 }

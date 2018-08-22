@@ -70,6 +70,7 @@ public class WebAdminServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new TaskRoutesModule());
+        install(new HealthCheckRoutesModule());
 
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
