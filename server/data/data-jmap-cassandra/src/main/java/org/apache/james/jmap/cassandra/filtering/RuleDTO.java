@@ -17,69 +17,71 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.filtering.impl;
+package org.apache.james.jmap.cassandra.filtering;
 
+import java.util.List;
 import java.util.Objects;
 
-import org.apache.james.eventsourcing.AggregateId;
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.EventId;
 import org.apache.james.jmap.api.filtering.Rule;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class RuleSetDefined implements Event {
+public class RuleDTO {
 
-    private final FilteringAggregateId aggregateId;
-    private final EventId eventId;
-    private final ImmutableList<Rule> rules;
-
-    public RuleSetDefined(FilteringAggregateId aggregateId, EventId eventId, ImmutableList<Rule> rules) {
-        this.aggregateId = aggregateId;
-        this.eventId = eventId;
-        this.rules = rules;
+    public static ImmutableList<Rule> toRules(List<RuleDTO> ruleDTOList) {
+        Preconditions.checkNotNull(ruleDTOList);
+        return ruleDTOList.stream()
+                .map(dto -> Rule.of(dto.getId()))
+                .collect(ImmutableList.toImmutableList());
     }
 
-    @Override
-    public EventId eventId() {
-        return eventId;
+    public static ImmutableList<RuleDTO> from(List<Rule> rules) {
+        Preconditions.checkNotNull(rules);
+        return rules.stream()
+            .map(RuleDTO::from)
+            .collect(ImmutableList.toImmutableList());
     }
 
-    @Override
-    public AggregateId getAggregateId() {
-        return aggregateId;
+    public static RuleDTO from(Rule rule) {
+        return new RuleDTO(rule.getId());
     }
 
-    public ImmutableList<Rule> getRules() {
-        return rules;
+    private final String id;
+
+    @JsonCreator
+    public RuleDTO(@JsonProperty("id") String id) {
+        Preconditions.checkNotNull(id);
+
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof RuleDTO) {
+            RuleDTO ruleDTO = (RuleDTO) o;
+
+            return Objects.equals(this.id, ruleDTO.id);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        RuleSetDefined that = (RuleSetDefined) o;
-        return Objects.equals(aggregateId, that.aggregateId) &&
-            Objects.equals(eventId, that.eventId) &&
-            Objects.equals(rules, that.rules);
+        return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(aggregateId, eventId, rules);
+        return Objects.hash(id);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("aggregateId", aggregateId)
-            .add("eventId", eventId)
-            .add("rules", rules)
+            .add("id", id)
             .toString();
     }
 }

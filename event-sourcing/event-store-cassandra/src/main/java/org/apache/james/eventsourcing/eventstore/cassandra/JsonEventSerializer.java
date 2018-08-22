@@ -35,6 +35,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
@@ -54,6 +55,7 @@ public class JsonEventSerializer {
     public JsonEventSerializer(Set<EventDTOModule> modules) {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
+        objectMapper.registerModule(new GuavaModule());
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
 
         typeToModule = modules.stream()
