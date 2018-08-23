@@ -45,8 +45,8 @@ public class DockerCassandra {
     public DockerCassandra() {
         client = DockerClientFactory.instance().client();
         boolean deleteOnExit = false;
-        int cassandraMemory = 1000;
-        long cassandraContainerMemory = Float.valueOf(cassandraMemory * 1.2f * 1024 * 1024L).longValue();
+        int cassandraMemory = 1200;
+        long cassandraContainerMemory = Float.valueOf(cassandraMemory * 1.5f * 1024 * 1024L).longValue();
         cassandraContainer = new GenericContainer<>(
             new ImageFromDockerfile("cassandra_3_11_3", deleteOnExit)
                 .withDockerfileFromBuilder(builder ->
