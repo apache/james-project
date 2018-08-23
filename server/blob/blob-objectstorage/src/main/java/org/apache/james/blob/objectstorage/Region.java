@@ -17,21 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage;
 
-import java.util.UUID;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-public interface BlobId {
-
-    interface Factory {
-        BlobId forPayload(byte[] payload);
-
-        BlobId from(String id);
-
-        default BlobId randomId() {
-            return from(UUID.randomUUID().toString());
-        }
+public final class Region {
+    public static Region of(String value) {
+        return new Region(value);
     }
 
-    String asString();
+    private final String region;
+
+    private Region(String value) {
+        this.region = value;
+    }
+
+    public String value() {
+        return region;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Region region1 = (Region) o;
+        return Objects.equal(region, region1.region);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(region);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("region", region)
+            .toString();
+    }
 }

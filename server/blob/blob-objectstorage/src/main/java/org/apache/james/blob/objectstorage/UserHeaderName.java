@@ -17,21 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage;
 
-import java.util.UUID;
-
-public interface BlobId {
-
-    interface Factory {
-        BlobId forPayload(byte[] payload);
-
-        BlobId from(String id);
-
-        default BlobId randomId() {
-            return from(UUID.randomUUID().toString());
-        }
+public final class UserHeaderName extends HeaderName {
+    public static UserHeaderName of(String value) {
+        return new UserHeaderName(value);
     }
 
-    String asString();
+    private UserHeaderName(String value) {
+        super(value);
+    }
 }

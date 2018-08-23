@@ -17,21 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage;
 
-import java.util.UUID;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-public interface BlobId {
-
-    interface Factory {
-        BlobId forPayload(byte[] payload);
-
-        BlobId from(String id);
-
-        default BlobId randomId() {
-            return from(UUID.randomUUID().toString());
-        }
+public final class Identity {
+    public static Identity of(String value) {
+        return new Identity(value);
     }
 
-    String asString();
+    private final String identity;
+
+    private Identity(String value) {
+        this.identity = value;
+    }
+
+    public String value() {
+        return identity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Identity identity1 = (Identity) o;
+        return Objects.equal(identity, identity1.identity);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(identity);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("identity", identity)
+            .toString();
+    }
 }

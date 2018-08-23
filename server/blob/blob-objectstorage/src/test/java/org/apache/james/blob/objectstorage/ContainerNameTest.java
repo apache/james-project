@@ -17,21 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.api;
+package org.apache.james.blob.objectstorage;
 
-import java.util.UUID;
+import org.junit.jupiter.api.Test;
 
-public interface BlobId {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    interface Factory {
-        BlobId forPayload(byte[] payload);
-
-        BlobId from(String id);
-
-        default BlobId randomId() {
-            return from(UUID.randomUUID().toString());
-        }
+class ContainerNameTest {
+    @Test
+    public void credentialsShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ContainerName.class).verify();
     }
-
-    String asString();
 }
