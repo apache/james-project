@@ -17,28 +17,33 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james;
 
-import org.apache.james.GuiceLifecycleHealthCheck;
-import org.apache.james.IsStartedProbe;
+import javax.inject.Inject;
+
+import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
-import org.apache.james.utils.GuiceProbe;
+import org.apache.james.core.healthcheck.Result;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-
-public class IsStartedProbeModule extends AbstractModule {
+public class GuiceLifecycleHealthCheck implements HealthCheck {
     private final IsStartedProbe probe;
 
-    public IsStartedProbeModule(IsStartedProbe probe) {
+    @Inject
+    public GuiceLifecycleHealthCheck(IsStartedProbe probe) {
         this.probe = probe;
     }
 
     @Override
-    protected void configure() {
-        bind(IsStartedProbe.class).toInstance(probe);
+    public ComponentName componentName() {
+        return new ComponentName("Guice application lifecycle");
+    }
 
-        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().toInstance(probe);
-        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(GuiceLifecycleHealthCheck.class);
+    @Override
+    public Result check() {
+        if (probe.isStarted()) {
+            return Result.healthy(componentName());
+        } else {
+            return Result.unhealthy(componentName(), "James server is not started.");
+        }
     }
 }
