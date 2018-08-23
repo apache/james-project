@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra;
+package org.apache.james.blob.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,25 +25,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraBlobIdTest {
+public class HashBlobIdTest {
 
-    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
+    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @Test
     public void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(CassandraBlobId.class).verify();
+        EqualsVerifier.forClass(HashBlobId.class).verify();
     }
 
     @Test
     public void fromShouldConstructBlobId() {
         String id = "111";
         assertThat(BLOB_ID_FACTORY.from(id))
-            .isEqualTo(new CassandraBlobId(id));
+            .isEqualTo(new HashBlobId(id));
     }
 
     @Test

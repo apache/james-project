@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.DockerCassandraExtension.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.blob.api.ObjectStoreContract;
 import org.junit.jupiter.api.AfterAll;
@@ -60,7 +61,7 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
                 .build(),
-            new CassandraBlobId.Factory());
+            new HashBlobId.Factory());
     }
 
     @AfterEach
@@ -80,7 +81,7 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return new CassandraBlobId.Factory();
+        return new HashBlobId.Factory();
     }
 
     @Test

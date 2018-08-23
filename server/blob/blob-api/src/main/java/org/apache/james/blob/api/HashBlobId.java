@@ -17,9 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra;
-
-import org.apache.james.blob.api.BlobId;
+package org.apache.james.blob.api;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
@@ -28,26 +26,26 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 
-public class CassandraBlobId implements BlobId {
+public class HashBlobId implements BlobId {
 
     public static class Factory implements BlobId.Factory {
         @Override
-        public CassandraBlobId forPayload(byte[] payload) {
+        public HashBlobId forPayload(byte[] payload) {
             Preconditions.checkArgument(payload != null);
-            return new CassandraBlobId(Hashing.sha256().hashBytes(payload).toString());
+            return new HashBlobId(Hashing.sha256().hashBytes(payload).toString());
         }
 
         @Override
-        public CassandraBlobId from(String id) {
+        public HashBlobId from(String id) {
             Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-            return new CassandraBlobId(id);
+            return new HashBlobId(id);
         }
     }
 
     private final String id;
 
     @VisibleForTesting
-    CassandraBlobId(String id) {
+    HashBlobId(String id) {
         this.id = id;
     }
 
@@ -58,8 +56,8 @@ public class CassandraBlobId implements BlobId {
 
     @Override
     public final boolean equals(Object obj) {
-        if (obj instanceof CassandraBlobId) {
-            CassandraBlobId other = (CassandraBlobId) obj;
+        if (obj instanceof HashBlobId) {
+            HashBlobId other = (HashBlobId) obj;
             return Objects.equal(id, other.id);
         }
         return false;

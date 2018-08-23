@@ -27,7 +27,7 @@ import java.util.Optional;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
@@ -41,7 +41,7 @@ import org.junit.Test;
 
 public class CassandraAttachmentDAOV2Test {
     public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
-    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
+    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();

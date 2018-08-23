@@ -23,7 +23,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailrepository.MailRepositoryContract;
@@ -40,7 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(DockerCassandraExtension.class)
 class CassandraMailRepositoryTest implements MailRepositoryContract {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
-    static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
+    static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     CassandraMailRepository cassandraMailRepository;
     static CassandraCluster cassandra;

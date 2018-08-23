@@ -34,7 +34,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
@@ -52,7 +52,7 @@ import org.junit.Test;
 public class AttachmentV2MigrationTest {
     public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
-    private static final CassandraBlobId.Factory BLOB_ID_FACTORY = new CassandraBlobId.Factory();
+    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     @ClassRule
     public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
