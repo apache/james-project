@@ -158,8 +158,8 @@ public class CassandraMailRepository implements MailRepository {
 
     public CompletableFuture<Mail> toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {
         return CompletableFutureUtil.combine(
-            objectStore.read(mailDTO.getHeaderBlobId()),
-            objectStore.read(mailDTO.getBodyBlobId()),
+            objectStore.readBytes(mailDTO.getHeaderBlobId()),
+            objectStore.readBytes(mailDTO.getBodyBlobId()),
             Bytes::concat)
             .thenApply(this::toMimeMessage)
             .thenApply(mimeMessage -> mailDTO.getMailBuilder()

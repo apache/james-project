@@ -84,11 +84,11 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
     }
 
     @Test
-    public void readShouldReturnSplitSavedDataByChunk() throws IOException {
+    public void readBytesShouldReturnSplitSavedDataByChunk() throws IOException {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
         BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 
-        byte[] bytes = testee.read(blobId).join();
+        byte[] bytes = testee.readBytes(blobId).join();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
