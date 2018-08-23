@@ -52,7 +52,6 @@ public class DockerCassandra {
                 .withDockerfileFromBuilder(builder ->
                     builder
                         .from("cassandra:3.11.3")
-                        .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
                         .build()))
