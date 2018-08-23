@@ -20,13 +20,12 @@
 package org.apache.james.mailbox.quota.cassandra.listeners;
 
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraGenericEventStoreExtension;
-import org.apache.james.mailbox.quota.cassandra.dto.QuotaThresholdChangedEventDTOModule;
+import org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules;
 
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraEventStoreExtension extends CassandraGenericEventStoreExtension {
     public CassandraEventStoreExtension() {
-        super(ImmutableSet.of(
-            new QuotaThresholdChangedEventDTOModule()));
+        super(ImmutableSet.of(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE));
     }
 }

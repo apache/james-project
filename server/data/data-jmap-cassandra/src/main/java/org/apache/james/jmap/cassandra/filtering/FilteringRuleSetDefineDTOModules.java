@@ -17,38 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.quota.cassandra.dto;
+package org.apache.james.jmap.cassandra.filtering;
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
+import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 
-import com.google.common.base.Preconditions;
+public interface FilteringRuleSetDefineDTOModules {
 
-public class QuotaThresholdChangedEventDTOModule implements EventDTOModule {
-    private static final String QUOTA_THRESHOLD_CHANGE = "quota-threshold-change";
+    EventDTOModule<RuleSetDefined, FilteringRuleSetDefinedDTO> FILTERING_RULE_SET_DEFINED =
+        EventDTOModule
+            .forEvent(RuleSetDefined.class)
+            .convertToDTO(FilteringRuleSetDefinedDTO.class)
+            .convertWith(FilteringRuleSetDefinedDTO::from)
+            .typeName("filtering-rule-set-defined");
 
-    @Override
-    public String getType() {
-        return QUOTA_THRESHOLD_CHANGE;
-    }
-
-    @Override
-    public Class<? extends EventDTO> getDTOClass() {
-        return QuotaThresholdChangedEventDTO.class;
-    }
-
-    @Override
-    public Class<? extends Event> getEventClass() {
-        return QuotaThresholdChangedEvent.class;
-    }
-
-    @Override
-    public EventDTO toDTO(Event event) {
-        Preconditions.checkArgument(event instanceof QuotaThresholdChangedEvent);
-        return QuotaThresholdChangedEventDTO.from(
-            (QuotaThresholdChangedEvent) event,
-            QUOTA_THRESHOLD_CHANGE);
-    }
 }

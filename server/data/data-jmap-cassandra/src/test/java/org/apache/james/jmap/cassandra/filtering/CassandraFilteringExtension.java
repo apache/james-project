@@ -25,7 +25,6 @@ import com.google.common.collect.ImmutableSet;
 
 public class CassandraFilteringExtension extends CassandraGenericEventStoreExtension {
     public CassandraFilteringExtension() {
-        super(ImmutableSet.of(
-            new FilteringRuleSetDefineDTOModule()));
+        super(ImmutableSet.of(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED));
     }
 }

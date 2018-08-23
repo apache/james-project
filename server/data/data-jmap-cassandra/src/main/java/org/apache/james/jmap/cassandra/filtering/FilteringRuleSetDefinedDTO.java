@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 
 public class FilteringRuleSetDefinedDTO implements EventDTO {
 
-    public static EventDTO from(RuleSetDefined event, String type) {
+    public static FilteringRuleSetDefinedDTO from(RuleSetDefined event, String type) {
         return new FilteringRuleSetDefinedDTO(
             type, event.eventId().serialize(),
             event.getAggregateId().asAggregateKey(),

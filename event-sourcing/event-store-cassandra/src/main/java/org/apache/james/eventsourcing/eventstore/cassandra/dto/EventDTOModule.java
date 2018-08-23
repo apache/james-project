@@ -21,12 +21,80 @@ package org.apache.james.eventsourcing.eventstore.cassandra.dto;
 
 import org.apache.james.eventsourcing.Event;
 
-public interface EventDTOModule {
-    String getType();
+public class EventDTOModule<T extends Event, U extends EventDTO> {
 
-    Class<? extends EventDTO> getDTOClass();
+    public interface EventDTOConverter<T extends Event, U extends EventDTO> {
+        U convert(T event, String typeName);
+    }
 
-    Class<? extends Event> getEventClass();
+    public static <U extends Event> Builder<U> forEvent(Class<U> eventType) {
+        return new Builder<>(eventType);
+    }
 
-    EventDTO toDTO(Event event);
+    public static class Builder<T extends Event> {
+
+        private final Class<T> eventType;
+
+        private Builder(Class<T> eventType) {
+            this.eventType = eventType;
+        }
+
+        public <U extends EventDTO> RequireConversionFunctionBuilder<U> convertToDTO(Class<U> dtoType) {
+            return new RequireConversionFunctionBuilder<>(dtoType);
+        }
+
+        public class RequireConversionFunctionBuilder<U extends EventDTO> {
+
+            private final Class<U> dtoType;
+
+            private RequireConversionFunctionBuilder(Class<U> dtoType) {
+                this.dtoType = dtoType;
+            }
+
+            public RequireTypeNameBuilder convertWith(EventDTOConverter<T, U> converter) {
+                return new RequireTypeNameBuilder(converter);
+            }
+
+            public class RequireTypeNameBuilder {
+                private final EventDTOConverter<T, U> converter;
+
+                private RequireTypeNameBuilder(EventDTOConverter<T, U> converter) {
+                    this.converter = converter;
+                }
+
+                public EventDTOModule<T, U> typeName(String typeName) {
+                    return new EventDTOModule<>(converter, eventType, dtoType, typeName);
+                }
+            }
+        }
+
+    }
+
+    private final EventDTOConverter<T, U> converter;
+    private final Class<T> eventType;
+    private final Class<U> dtoType;
+    private final String typeName;
+
+    private EventDTOModule(EventDTOConverter<T, U> converter, Class<T> eventType, Class<U> dtoType, String typeName) {
+        this.converter = converter;
+        this.eventType = eventType;
+        this.dtoType = dtoType;
+        this.typeName = typeName;
+    }
+
+    public String getType() {
+        return typeName;
+    }
+
+    public Class<U> getDTOClass() {
+        return dtoType;
+    }
+
+    public Class<T> getEventClass() {
+        return eventType;
+    }
+
+    public EventDTO toDTO(T event) {
+        return converter.convert(event, typeName);
+    }
 }

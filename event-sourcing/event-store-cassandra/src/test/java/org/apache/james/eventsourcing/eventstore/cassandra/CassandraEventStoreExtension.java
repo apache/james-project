@@ -19,12 +19,12 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
 
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraEventStoreExtension extends CassandraGenericEventStoreExtension {
     public CassandraEventStoreExtension() {
-        super(ImmutableSet.of(new TestEventDTOModule()));
+        super(ImmutableSet.of(TestEventDTOModules.TEST_TYPE));
     }
 }

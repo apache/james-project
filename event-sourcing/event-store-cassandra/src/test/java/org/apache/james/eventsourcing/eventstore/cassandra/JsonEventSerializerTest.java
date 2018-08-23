@@ -27,8 +27,7 @@ import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.OtherEvent;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.OtherTestEventDTOModule;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
 import org.junit.jupiter.api.Test;
 
 class JsonEventSerializerTest {
@@ -43,7 +42,7 @@ class JsonEventSerializerTest {
 
     @Test
     void shouldDeserializeKnownEvent() throws Exception {
-        assertThat(new JsonEventSerializer(new TestEventDTOModule())
+        assertThat(new JsonEventSerializer(TestEventDTOModules.TEST_TYPE)
             .deserialize(TEST_EVENT_JSON))
             .isEqualTo(TEST_EVENT);
     }
@@ -58,8 +57,8 @@ class JsonEventSerializerTest {
     @Test
     void serializeShouldHandleAllKnownEvents() throws Exception {
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(
-            new TestEventDTOModule(),
-            new OtherTestEventDTOModule());
+            TestEventDTOModules.TEST_TYPE,
+            TestEventDTOModules.OTHER_TEST_TYPE);
 
         assertThatJson(
             jsonEventSerializer.serialize(OTHER_EVENT))
@@ -73,8 +72,8 @@ class JsonEventSerializerTest {
     @Test
     void deserializeShouldHandleAllKnownEvents() throws Exception {
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(
-            new TestEventDTOModule(),
-            new OtherTestEventDTOModule());
+            TestEventDTOModules.TEST_TYPE,
+            TestEventDTOModules.OTHER_TEST_TYPE);
 
         assertThatJson(
             jsonEventSerializer.deserialize(OTHER_EVENT_JSON))
@@ -87,7 +86,7 @@ class JsonEventSerializerTest {
 
     @Test
     void shouldSerializeKnownEvent() throws Exception {
-        assertThatJson(new JsonEventSerializer(new TestEventDTOModule())
+        assertThatJson(new JsonEventSerializer(TestEventDTOModules.TEST_TYPE)
             .serialize(TEST_EVENT))
             .isEqualTo(TEST_EVENT_JSON);
     }

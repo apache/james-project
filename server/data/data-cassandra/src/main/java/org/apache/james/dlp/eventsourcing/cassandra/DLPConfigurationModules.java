@@ -17,39 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+package org.apache.james.dlp.eventsourcing.cassandra;
 
-import org.apache.james.eventsourcing.Event;
-import org.testcontainers.shaded.com.google.common.base.Preconditions;
+import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsAdded;
+import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 
-public class OtherTestEventDTOModule implements EventDTOModule {
+public interface DLPConfigurationModules {
 
-    public static final String OTHER_TYPE = "other-type";
+    EventDTOModule<ConfigurationItemsAdded, DLPConfigurationItemAddedDTO> DLP_CONFIGURATION_STORE =
+        EventDTOModule
+            .forEvent(ConfigurationItemsAdded.class)
+            .convertToDTO(DLPConfigurationItemAddedDTO.class)
+            .convertWith(DLPConfigurationItemAddedDTO::from)
+            .typeName("dlp-configuration-store");
 
-    @Override
-    public String getType() {
-        return OTHER_TYPE;
-    }
+    EventDTOModule<ConfigurationItemsRemoved, DLPConfigurationItemsRemovedDTO> DLP_CONFIGURATION_CLEAR =
+        EventDTOModule
+            .forEvent(ConfigurationItemsRemoved.class)
+            .convertToDTO(DLPConfigurationItemsRemovedDTO.class)
+            .convertWith(DLPConfigurationItemsRemovedDTO::from)
+            .typeName("dlp-configuration-clear");
 
-    @Override
-    public Class<? extends EventDTO> getDTOClass() {
-        return OtherTestEventDTO.class;
-    }
 
-    @Override
-    public Class<? extends Event> getEventClass() {
-        return OtherEvent.class;
-    }
-
-    @Override
-    public EventDTO toDTO(Event event) {
-        Preconditions.checkArgument(event instanceof OtherEvent);
-        OtherEvent otherEvent = (OtherEvent) event;
-
-        return new OtherTestEventDTO(
-            OTHER_TYPE,
-            otherEvent.getPayload(),
-            otherEvent.eventId().serialize(),
-            otherEvent.getAggregateId().getId());
-    }
 }

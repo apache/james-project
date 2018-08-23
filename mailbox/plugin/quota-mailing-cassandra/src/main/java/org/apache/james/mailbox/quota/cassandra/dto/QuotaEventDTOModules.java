@@ -17,37 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.dlp.eventsourcing.cassandra;
+package org.apache.james.mailbox.quota.cassandra.dto;
 
-import org.apache.james.dlp.eventsourcing.events.ConfigurationItemsRemoved;
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
 
-import com.google.common.base.Preconditions;
+public interface QuotaEventDTOModules {
 
-public class DLPConfigurationItemsRemovedDTOModule implements EventDTOModule {
-    private static final String DLP_CONFIGURATION_CLEAR = "dlp-configuration-clear";
+    EventDTOModule<QuotaThresholdChangedEvent, QuotaThresholdChangedEventDTO> QUOTA_THRESHOLD_CHANGE =
+        EventDTOModule
+            .forEvent(QuotaThresholdChangedEvent.class)
+            .convertToDTO(QuotaThresholdChangedEventDTO.class)
+            .convertWith(QuotaThresholdChangedEventDTO::from)
+            .typeName("quota-threshold-change");
 
-    @Override
-    public String getType() {
-        return DLP_CONFIGURATION_CLEAR;
-    }
-
-    @Override
-    public Class<? extends EventDTO> getDTOClass() {
-        return DLPConfigurationItemsRemovedDTO.class;
-    }
-
-    @Override
-    public Class<? extends Event> getEventClass() {
-        return ConfigurationItemsRemoved.class;
-    }
-
-    @Override
-    public EventDTO toDTO(Event event) {
-        Preconditions.checkArgument(event instanceof ConfigurationItemsRemoved);
-        return DLPConfigurationItemsRemovedDTO
-            .from((ConfigurationItemsRemoved) event, DLP_CONFIGURATION_CLEAR);
-    }
 }

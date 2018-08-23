@@ -17,36 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.filtering;
+package org.apache.james.eventsourcing.eventstore.cassandra.dto;
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
+import org.apache.james.eventsourcing.TestEvent;
 
-import com.google.common.base.Preconditions;
+public interface TestEventDTOModules {
 
-public class FilteringRuleSetDefineDTOModule implements EventDTOModule {
-    private static final String FILTERING_RULE_SET_DEFINED = "filtering-rule-set-defined";
+    EventDTOModule<TestEvent, TestEventDTO> TEST_TYPE =
+        EventDTOModule
+            .forEvent(TestEvent.class)
+            .convertToDTO(TestEventDTO.class)
+            .convertWith((event, typeName) -> new TestEventDTO(
+                typeName,
+                event.getData(),
+                event.eventId().serialize(),
+                event.getAggregateId().getId()))
+            .typeName("TestType");
 
-    @Override
-    public String getType() {
-        return FILTERING_RULE_SET_DEFINED;
-    }
-
-    @Override
-    public Class<? extends EventDTO> getDTOClass() {
-        return FilteringRuleSetDefinedDTO.class;
-    }
-
-    @Override
-    public Class<? extends Event> getEventClass() {
-        return RuleSetDefined.class;
-    }
-
-    @Override
-    public EventDTO toDTO(Event event) {
-        Preconditions.checkArgument(event instanceof RuleSetDefined);
-        return FilteringRuleSetDefinedDTO.from((RuleSetDefined) event, FILTERING_RULE_SET_DEFINED);
-    }
+    EventDTOModule<OtherEvent, OtherTestEventDTO> OTHER_TEST_TYPE =
+        EventDTOModule
+            .forEvent(OtherEvent.class)
+            .convertToDTO(OtherTestEventDTO.class)
+            .convertWith(((event, typeName) -> new OtherTestEventDTO(
+                typeName,
+                event.getPayload(),
+                event.eventId().serialize(),
+                event.getAggregateId().getId())))
+            .typeName("other-type");
 }

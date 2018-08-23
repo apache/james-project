@@ -73,7 +73,9 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(
-            ImmutableSet.of(new DLPConfigurationItemAddedDTOModule(), new DLPConfigurationItemsRemovedDTOModule()));
+            ImmutableSet.of(
+                DLPConfigurationModules.DLP_CONFIGURATION_STORE,
+                DLPConfigurationModules.DLP_CONFIGURATION_CLEAR));
 
         EventStoreDao eventStoreDao = new EventStoreDao(
             cassandra.getConf(),
