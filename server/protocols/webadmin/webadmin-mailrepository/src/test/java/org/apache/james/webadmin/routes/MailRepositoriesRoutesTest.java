@@ -727,7 +727,7 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
-    public void retrievingAMailShouldFailWhenUnknown() throws Exception{
+    public void retrievingAMailShouldFailWhenUnknown() throws Exception {
         mailRepositoryStore.create(URL_MY_REPO);
 
         String name = "name";
