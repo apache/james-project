@@ -38,10 +38,12 @@ import java.util.concurrent.TimeoutException;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -79,6 +81,21 @@ public interface MailQueueContract {
         MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
         assertThat(mailQueueItem.getMail().getRecipients())
             .containsOnly(RECIPIENT1, RECIPIENT2);
+    }
+
+    @Test
+    default void queueShouldPreserveNullSender() throws Exception {
+        getMailQueue().enQueue(FakeMail.builder()
+            .name("name")
+            .mimeMessage(createMimeMessage())
+            .recipients(RECIPIENT1, RECIPIENT2)
+            .sender(MailAddress.nullSender())
+            .lastUpdated(new Date())
+            .build());
+
+        MailQueue.MailQueueItem mailQueueItem = getMailQueue().deQueue();
+        assertThat(mailQueueItem.getMail().getSender())
+            .isEqualTo(MailAddress.nullSender());
     }
 
     @Test

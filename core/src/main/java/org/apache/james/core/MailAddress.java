@@ -20,6 +20,8 @@
 package org.apache.james.core;
 
 import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -72,6 +74,8 @@ public class MailAddress implements java.io.Serializable {
     private static final char[] SPECIAL =
             {'<', '>', '(', ')', '[', ']', '\\', '.', ',', ';', ':', '@', '\"'};
 
+    public static final String NULL_SENDER_AS_STRING = "<>";
+
     private static final MailAddress NULL_SENDER = new MailAddress() {
 
         @Override
@@ -91,7 +95,7 @@ public class MailAddress implements java.io.Serializable {
 
         @Override
         public String asString() {
-            return "<>";
+            return NULL_SENDER_AS_STRING;
         }
 
         @Override
@@ -106,11 +110,12 @@ public class MailAddress implements java.io.Serializable {
         return NULL_SENDER;
     }
 
-    private String localPart = null;
-    private Domain domain = null;
+    private final String localPart;
+    private final Domain domain;
 
     private MailAddress() {
-
+        localPart = null;
+        domain = null;
     }
 
     /**
@@ -315,7 +320,9 @@ public class MailAddress implements java.io.Serializable {
 
     @Override
     public String toString() {
-        return localPart + "@" + domain.asString();
+        return localPart + "@" + Optional.ofNullable(domain)
+            .map(Domain::asString)
+            .orElse("");
     }
     
     public String asPrettyString() {
@@ -348,7 +355,7 @@ public class MailAddress implements java.io.Serializable {
      * @returns true if the given object is equal to this one, false otherwise
      */
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj == null) {
             return false;
         } else if (obj instanceof String) {
@@ -356,9 +363,23 @@ public class MailAddress implements java.io.Serializable {
             return toString().equalsIgnoreCase(theString);
         } else if (obj instanceof MailAddress) {
             MailAddress addr = (MailAddress) obj;
-            return getLocalPart().equalsIgnoreCase(addr.getLocalPart()) && getDomain().equals(addr.getDomain());
+            if (isNullSender() && addr.isNullSender()) {
+                return true;
+            }
+            return equalsIgnoreCase(getLocalPart(), addr.getLocalPart())
+                && Objects.equals(getDomain(), addr.getDomain());
         }
         return false;
+    }
+
+    private boolean equalsIgnoreCase(String a, String b) {
+        if (a == null ^ b == null) {
+            return false;
+        }
+        if (a == null) {
+            return true;
+        }
+        return a.equalsIgnoreCase(b);
     }
 
     /**
@@ -371,7 +392,7 @@ public class MailAddress implements java.io.Serializable {
      * @return the hashcode.
      */
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return toString().toLowerCase(Locale.US).hashCode();
     }
 
