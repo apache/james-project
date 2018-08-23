@@ -35,7 +35,7 @@ public class RuleDTO {
     public static ImmutableList<Rule> toRules(List<RuleDTO> ruleDTOList) {
         Preconditions.checkNotNull(ruleDTOList);
         return ruleDTOList.stream()
-                .map(dto -> Rule.of(dto.getId()))
+                .map(RuleDTO::toRule)
                 .collect(ImmutableList.toImmutableList());
     }
 
@@ -47,13 +47,33 @@ public class RuleDTO {
     }
 
     public static RuleDTO from(Rule rule) {
-        return new RuleDTO(rule.getId());
+        return new RuleDTO(rule.getId().asString(),
+                rule.getName(),
+                rule.getCondition().getField().asString(),
+                rule.getCondition().getComparator().asString(),
+                rule.getCondition().getValue(),
+                rule.getAction().getMailboxIds());
     }
 
     private final String id;
+    private final String name;
+    private final String field;
+    private final String comparator;
+    private final String value;
+    private final List<String> mailboxIds;
 
     @JsonCreator
-    public RuleDTO(@JsonProperty("id") String id) {
+    public RuleDTO(@JsonProperty("id") String id,
+                   @JsonProperty("name") String name,
+                   @JsonProperty("field") String field,
+                   @JsonProperty("comparator") String comparator,
+                   @JsonProperty("value") String value,
+                   @JsonProperty("mailboxIds") List<String> mailboxIds) {
+        this.name = name;
+        this.field = field;
+        this.comparator = comparator;
+        this.value = value;
+        this.mailboxIds = ImmutableList.copyOf(mailboxIds);
         Preconditions.checkNotNull(id);
 
         this.id = id;
@@ -63,19 +83,57 @@ public class RuleDTO {
         return id;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getField() {
+        return field;
+    }
+
+    public String getComparator() {
+        return comparator;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public List<String> getMailboxIds() {
+        return mailboxIds;
+    }
+
+    public Rule toRule() {
+        return Rule.builder()
+            .id(Rule.Id.of(id))
+            .name(name)
+            .condition(Rule.Condition.of(
+                Rule.Condition.Field.valueOf(field),
+                Rule.Condition.Comparator.of(comparator),
+                value))
+            .name(name)
+            .action(Rule.Action.ofMailboxIds(mailboxIds))
+            .build();
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RuleDTO) {
             RuleDTO ruleDTO = (RuleDTO) o;
 
-            return Objects.equals(this.id, ruleDTO.id);
+            return Objects.equals(this.id, ruleDTO.id)
+                   && Objects.equals(this.name, ruleDTO.name)
+                   && Objects.equals(this.field, ruleDTO.field)
+                   && Objects.equals(this.comparator, ruleDTO.comparator)
+                   && Objects.equals(this.value, ruleDTO.value)
+                   && Objects.equals(this.mailboxIds, ruleDTO.mailboxIds);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, name, field, comparator, value, mailboxIds);
     }
 
     @Override

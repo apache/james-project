@@ -19,13 +19,25 @@
 
 package org.apache.james.jmap.api.filtering;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class RuleTest {
+public class RuleTest {
+
+    private static final List<String> ACTION_MAILBOXIDS = Arrays.asList("id-01");
+    private static final String CONDITION_COMPARATOR = "contains";
+    private static final String CONDITION_FIELD = "cc";
+    private static final String NAME = "a name";
+    public static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.of(CONDITION_FIELD), Rule.Condition.Comparator.of(CONDITION_COMPARATOR), "something");
+    public static final Rule.Action ACTION = Rule.Action.ofMailboxIds(ACTION_MAILBOXIDS);
+    public static final Rule.Id UNIQUE_ID = Rule.Id.of("uniqueId");
 
     @Test
     void shouldMatchBeanContract() {
@@ -34,8 +46,119 @@ class RuleTest {
     }
 
     @Test
-    void constructorShouldThrowWhenNullId() {
-        assertThatThrownBy(() -> new Rule(null))
-            .isInstanceOf(NullPointerException.class);
+    void innerClassConditionShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.Condition.class)
+            .verify();
     }
+
+    @Test
+    void innerClassActionShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.Action.class)
+            .verify();
+    }
+
+    @Test
+    void innerClassIdShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.Id.class)
+            .verify();
+    }
+
+    @Test
+    void idShouldThrowOnNull() {
+        assertThatThrownBy(() -> Rule.Id.of(null)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void idShouldThrowOnEmpty() {
+        assertThatThrownBy(() -> Rule.Id.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void idShouldThrowOnBlank() {
+        assertThatThrownBy(() -> Rule.Id.of("   ")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void idShouldBeMandatory() {
+        assertThatThrownBy(() ->
+            Rule.builder()
+                .name(NAME)
+                .condition(CONDITION)
+                .action(ACTION)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void nameShouldBeMandatory() {
+        assertThatThrownBy(() ->
+            Rule.builder()
+                .id(UNIQUE_ID)
+                .condition(CONDITION)
+                .action(ACTION)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void conditionShouldBeMandatory() {
+        assertThatThrownBy(() ->
+            Rule.builder()
+                .id(UNIQUE_ID)
+                .name(NAME)
+                .action(ACTION)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void actionShouldBeMandatory() {
+        assertThatThrownBy(() ->
+            Rule.builder()
+                .id(UNIQUE_ID)
+                .name(NAME)
+                .condition(CONDITION)
+                .build())
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void builderShouldPreserveCondition() {
+        Rule rule = Rule.builder()
+            .id(UNIQUE_ID)
+            .name(NAME)
+            .condition(CONDITION)
+            .action(ACTION)
+            .build();
+
+        assertThat(rule.getCondition()).isEqualTo(CONDITION);
+    }
+
+    @Test
+    void builderShouldPreserveAction() {
+        Rule rule = Rule.builder()
+            .id(UNIQUE_ID)
+            .name(NAME)
+            .condition(CONDITION)
+            .action(ACTION)
+            .build();
+
+        assertThat(rule.getAction()).isEqualTo(ACTION);
+    }
+
+    @Test
+    void buildConditionShouldConserveField() {
+        assertThat(CONDITION.getField().asString()).isEqualTo(CONDITION_FIELD);
+    }
+
+    @Test
+    void buildConditionShouldConserveComparator() {
+        assertThat(CONDITION.getComparator().asString()).isEqualTo(CONDITION_COMPARATOR);
+    }
+
+    @Test
+    void buildActionShouldConserveMailboxIdsList() {
+        assertThat(ACTION.getMailboxIds()).isEqualTo(ACTION_MAILBOXIDS);
+    }
+
 }

@@ -24,11 +24,13 @@ import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 
 public interface FilteringRuleSetDefineDTOModules {
 
+    String TYPE = "filtering-rule-set-defined";
+
     EventDTOModule<RuleSetDefined, FilteringRuleSetDefinedDTO> FILTERING_RULE_SET_DEFINED =
         EventDTOModule
             .forEvent(RuleSetDefined.class)
             .convertToDTO(FilteringRuleSetDefinedDTO.class)
             .convertWith(FilteringRuleSetDefinedDTO::from)
-            .typeName("filtering-rule-set-defined");
+            .typeName(TYPE);
 
 }

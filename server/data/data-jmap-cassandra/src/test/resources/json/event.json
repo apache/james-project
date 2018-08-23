@@ -1,0 +1,23 @@
+{
+  "type":"filtering-rule-set-defined",
+  "eventId":0,
+  "aggregateId":"FilteringRule/Bart",
+  "rules":[
+    {
+      "id":"1",
+      "name":"a name",
+      "field":"cc",
+      "comparator":"contains",
+      "value":"something",
+      "mailboxIds":["id-01"]
+    },
+    {
+      "id":"2",
+      "name":"a name",
+      "field":"cc",
+      "comparator":"contains",
+      "value":"something",
+      "mailboxIds":["id-01"]
+    }
+  ]
+}

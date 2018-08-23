@@ -41,6 +41,10 @@ public class FilteringRuleSetDefinedDTO implements EventDTO {
             RuleDTO.from(event.getRules()));
     }
 
+    public static FilteringRuleSetDefinedDTO from(RuleSetDefined event) {
+        return from(event, FilteringRuleSetDefineDTOModules.TYPE);
+    }
+
     private final String type;
     private final int eventId;
     private final String aggregateId;

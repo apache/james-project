@@ -19,10 +19,11 @@
 
 package org.apache.james.jmap.api.filtering.impl;
 
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
+import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.User;
-import org.apache.james.jmap.api.filtering.Rule;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -39,7 +40,7 @@ class DefineRulesCommandTest {
 
     @Test
     void constructorShouldThrowWhenNullUser() {
-        assertThatThrownBy(() -> new DefineRulesCommand(null, ImmutableList.of(Rule.of("1"), Rule.of("2"))))
+        assertThatThrownBy(() -> new DefineRulesCommand(null, ImmutableList.of(RULE_1, RULE_2)))
             .isInstanceOf(NullPointerException.class);
     }
 
