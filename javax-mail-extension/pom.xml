@@ -40,5 +40,9 @@
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mime4j-core</artifactId>
+        </dependency>
     </dependencies>
 </project>
