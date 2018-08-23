@@ -6,6 +6,8 @@ The web administration supports for now the CRUD operations on the domains, the 
 
 **WARNING**: This API allow authentication only via the use of JWT. If not configured with JWT, an administrator should ensure an attacker can not use this API.
 
+By the way, some endpoints are not filtered by authentication. Those endpoints are not related to data stored in James, for example: Swagger documentation & James health checks.
+
 Please also note **webadmin** is only enabled with **Guice**. You can not use it when using James with **Spring**, as the required injections are not implemented.
 
 In case of any error, the system will return an error message which is json format like this:
@@ -24,6 +26,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
 
 ## Navigation menu
 
+ - [HealthCheck](#HealthCheck)
  - [Administrating domains](#Administrating_domains)
  - [Administrating users](#Administrating_users)
  - [Administrating user mailboxes](#Administrating_user_mailboxes)
@@ -39,6 +42,21 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
  - [Task management](#Task_management)
+
+## HealthCheck
+
+This endpoint is simple for now and is just returning the http status code corresponding to the state of checks (see below).
+The user has to check in the logs in order to have more information about failing checks.
+
+```
+curl -XGET http://ip:port/healthcheck
+```
+
+Response codes:
+
+ - 200: All checks have answered with a Healthy status
+ - 500: At least one check have answered with a Unhealthy or Degraded status
+
 
 ## Administrating domains
 
