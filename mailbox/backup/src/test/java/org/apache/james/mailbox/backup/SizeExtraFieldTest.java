@@ -27,10 +27,9 @@ import java.util.zip.ZipException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.org.bouncycastle.util.Arrays;
 
 import com.google.common.base.Charsets;
-
+import com.google.common.primitives.Bytes;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
@@ -160,7 +159,7 @@ public class SizeExtraFieldTest {
 
     @Test
     void parseFromLocalFileDataShouldHandleOffset() throws Exception {
-        byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
+        byte[] input = Bytes.concat(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         testee.parseFromLocalFileData(input, 2, 8);
         assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);
@@ -204,7 +203,7 @@ public class SizeExtraFieldTest {
 
     @Test
     void parseFromCentralDirectoryDataShouldHandleOffset() throws Exception {
-        byte[] input = Arrays.concatenate(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
+        byte[] input = Bytes.concat(UNUSED, _123456789ABCDEF0_AS_LE_BYTE_ARRAY);
         testee.parseFromCentralDirectoryData(input, 2, 8);
         assertThat(testee.getValue())
             .contains(0x123456789ABCDEF0L);

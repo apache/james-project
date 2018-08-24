@@ -44,7 +44,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class CassandraAttachmentFallbackTest {
     public static final AttachmentId ATTACHMENT_ID_1 = AttachmentId.from("id1");

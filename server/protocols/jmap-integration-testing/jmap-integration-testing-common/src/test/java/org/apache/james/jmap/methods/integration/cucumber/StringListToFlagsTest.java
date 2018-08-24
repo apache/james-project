@@ -26,7 +26,8 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.jmap.model.Keyword;
 import org.junit.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
+
+import com.google.common.collect.ImmutableList;
 
 public class StringListToFlagsTest {
     @Test
