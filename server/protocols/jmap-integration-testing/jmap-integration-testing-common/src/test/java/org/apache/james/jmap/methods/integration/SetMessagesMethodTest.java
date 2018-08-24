@@ -1360,7 +1360,8 @@ public abstract class SetMessagesMethodTest {
         String fromAddress = USERNAME;
         String body = Strings.repeat("d", BIG_MESSAGE_SIZE);
         {
-            String requestBody = "[" +
+            String requestBody = new StringBuilder(BIG_MESSAGE_SIZE + 10 * 1024)
+                .append("[" +
                 "  [" +
                 "    \"setMessages\"," +
                 "    {" +
@@ -1368,13 +1369,16 @@ public abstract class SetMessagesMethodTest {
                 "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
                 "        \"to\": [{ \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}]," +
                 "        \"subject\": \"Thank you for joining example.com!\"," +
-                "        \"textBody\": \"" + body + "\"," +
+                "        \"textBody\": \"")
+                .append(body)
+                .append("\"," +
                 "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
                 "      }}" +
                 "    }," +
                 "    \"#0\"" +
                 "  ]" +
-                "]";
+                "]")
+                .toString();
 
             given()
                 .header("Authorization", accessToken.serialize())
