@@ -127,6 +127,7 @@ import com.google.common.io.ByteStreams;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.filter.log.LogDetail;
 import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
 
@@ -1356,6 +1357,8 @@ public abstract class SetMessagesMethodTest {
 
     @Test
     public void setMessagesWithABigBodyShouldReturnCreatedMessageWhenSendingMessage() {
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails(LogDetail.HEADERS);
+
         String messageCreationId = "creationId1337";
         String fromAddress = USERNAME;
         String body = Strings.repeat("d", BIG_MESSAGE_SIZE);
