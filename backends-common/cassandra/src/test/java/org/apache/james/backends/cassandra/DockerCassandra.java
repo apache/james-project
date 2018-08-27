@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import com.github.dockerjava.api.DockerClient;
@@ -35,8 +34,6 @@ public class DockerCassandra {
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
 
     private static final int CASSANDRA_PORT = 9042;
-    private static final String CASSANDRA_CONFIG_DIR = "$CASSANDRA_CONFIG";
-    private static final String JVM_OPTIONS = CASSANDRA_CONFIG_DIR + "/jvm.options";
 
     private final GenericContainer<?> cassandraContainer;
     private final DockerClient client;
@@ -44,19 +41,8 @@ public class DockerCassandra {
     @SuppressWarnings("resource")
     public DockerCassandra() {
         client = DockerClientFactory.instance().client();
-        boolean deleteOnExit = false;
-        int cassandraMemory = 1200;
-        long cassandraContainerMemory = Float.valueOf(cassandraMemory * 1.5f * 1024 * 1024L).longValue();
-        cassandraContainer = new GenericContainer<>(
-            new ImageFromDockerfile("cassandra_3_11_3", deleteOnExit)
-                .withDockerfileFromBuilder(builder ->
-                    builder
-                        .from("cassandra:3.11.3")
-                        .run("echo \"-Xms" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
-                        .run("echo \"-Xmx" + cassandraMemory + "M\" >> " + JVM_OPTIONS)
-                        .build()))
+        cassandraContainer = new GenericContainer<>("cassandra:3.11.3")
             .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig().withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m")))
-            .withCreateContainerCmdModifier(cmd -> cmd.withMemory(cassandraContainerMemory))
             .withExposedPorts(CASSANDRA_PORT)
             .withLogConsumer(DockerCassandra::displayDockerLog);
         cassandraContainer
