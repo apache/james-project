@@ -22,7 +22,7 @@ package org.apache.james.jmap.api.filtering;
 public interface RuleFixture {
     String NAME = "a name";
     Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.CC, Rule.Condition.Comparator.CONTAINS, "something");
-    Rule.Action ACTION = Rule.Action.ofMailboxIds("id-01");
+    Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("id-01"));
     Rule.Builder RULE_BUILER = Rule.builder().name(NAME).condition(CONDITION).action(ACTION);
     Rule RULE_1 = RULE_BUILER.id(Rule.Id.of("1")).build();
     Rule RULE_2 = RULE_BUILER.id(Rule.Id.of("2")).build();
@@ -31,7 +31,7 @@ public interface RuleFixture {
     Rule RULE_TO = Rule.builder()
             .id(Rule.Id.of("id-to"))
             .name(NAME)
-            .action(Rule.Action.ofMailboxIds("mbx1"))
+            .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
             .condition(Rule.Condition.of(
                     Rule.Condition.Field.TO,
                     Rule.Condition.Comparator.EXACTLY_EQUALS,
@@ -41,7 +41,7 @@ public interface RuleFixture {
     Rule RULE_SUBJECT = Rule.builder()
             .id(Rule.Id.of("id-subject"))
             .name(NAME)
-            .action(Rule.Action.ofMailboxIds("mbx1"))
+            .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
             .condition(Rule.Condition.of(
                     Rule.Condition.Field.SUBJECT,
                     Rule.Condition.Comparator.NOT_CONTAINS,
@@ -51,7 +51,7 @@ public interface RuleFixture {
     Rule RULE_RECIPIENT = Rule.builder()
             .id(Rule.Id.of("id-rcpt"))
             .name(NAME)
-            .action(Rule.Action.ofMailboxIds("mbx1"))
+            .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
             .condition(Rule.Condition.of(
                     Rule.Condition.Field.RECIPIENT,
                     Rule.Condition.Comparator.NOT_EXACTLY_EQUALS,
@@ -61,7 +61,7 @@ public interface RuleFixture {
     Rule RULE_FROM = Rule.builder()
             .id(Rule.Id.of("id-from"))
             .name(NAME)
-            .action(Rule.Action.ofMailboxIds("mbx1"))
+            .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds("mbx1")))
             .condition(Rule.Condition.of(
                     Rule.Condition.Field.FROM,
                     Rule.Condition.Comparator.CONTAINS,

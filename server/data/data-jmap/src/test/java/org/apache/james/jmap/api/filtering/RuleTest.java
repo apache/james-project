@@ -29,15 +29,15 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class RuleTest {
+class RuleTest {
 
     private static final List<String> ACTION_MAILBOXIDS = Arrays.asList("id-01");
     private static final String CONDITION_COMPARATOR = "contains";
     private static final String CONDITION_FIELD = "cc";
     private static final String NAME = "a name";
-    public static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.of(CONDITION_FIELD), Rule.Condition.Comparator.of(CONDITION_COMPARATOR), "something");
-    public static final Rule.Action ACTION = Rule.Action.ofMailboxIds(ACTION_MAILBOXIDS);
-    public static final Rule.Id UNIQUE_ID = Rule.Id.of("uniqueId");
+    private static final Rule.Condition CONDITION = Rule.Condition.of(Rule.Condition.Field.of(CONDITION_FIELD), Rule.Condition.Comparator.of(CONDITION_COMPARATOR), "something");
+    private static final Rule.Action ACTION = Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ACTION_MAILBOXIDS));
+    private static final Rule.Id UNIQUE_ID = Rule.Id.of("uniqueId");
 
     @Test
     void shouldMatchBeanContract() {
@@ -60,6 +60,12 @@ public class RuleTest {
     @Test
     void innerClassIdShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rule.Id.class)
+            .verify();
+    }
+
+    @Test
+    void innerClassAppendInMailboxesShouldMatchBeanContract() {
+        EqualsVerifier.forClass(Rule.Action.AppendInMailboxes.class)
             .verify();
     }
 
@@ -158,7 +164,7 @@ public class RuleTest {
 
     @Test
     void buildActionShouldConserveMailboxIdsList() {
-        assertThat(ACTION.getMailboxIds()).isEqualTo(ACTION_MAILBOXIDS);
+        assertThat(ACTION.getAppendInMailboxes().getMailboxIds()).isEqualTo(ACTION_MAILBOXIDS);
     }
 
 }

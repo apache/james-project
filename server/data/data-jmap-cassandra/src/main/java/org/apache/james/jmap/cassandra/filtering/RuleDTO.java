@@ -52,7 +52,7 @@ public class RuleDTO {
                 rule.getCondition().getField().asString(),
                 rule.getCondition().getComparator().asString(),
                 rule.getCondition().getValue(),
-                rule.getAction().getMailboxIds());
+                rule.getAction().getAppendInMailboxes().getMailboxIds());
     }
 
     private final String id;
@@ -112,7 +112,7 @@ public class RuleDTO {
                 Rule.Condition.Comparator.of(comparator),
                 value))
             .name(name)
-            .action(Rule.Action.ofMailboxIds(mailboxIds))
+            .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(mailboxIds)))
             .build();
     }
 

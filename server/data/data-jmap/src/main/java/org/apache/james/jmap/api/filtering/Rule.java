@@ -35,8 +35,8 @@ public class Rule {
     public static class Id {
 
         public static Id of(String id) {
-            Preconditions.checkNotNull(id, "id should no be null");
-            Preconditions.checkArgument(StringUtils.isNotBlank(id), "id should no be empty");
+            Preconditions.checkNotNull(id, "id should not be null");
+            Preconditions.checkArgument(StringUtils.isNotBlank(id), "id should not be empty");
             return new Id(id);
         }
 
@@ -130,10 +130,10 @@ public class Rule {
         }
 
         public static Condition of(Field field, Comparator comparator, String value) {
-            Preconditions.checkNotNull(field, "field should no be null");
-            Preconditions.checkNotNull(comparator, "comparator should no be null");
-            Preconditions.checkNotNull(value, "value should no be null");
-            Preconditions.checkArgument(StringUtils.isNotBlank(value), "value should no be empty");
+            Preconditions.checkNotNull(field, "field should not be null");
+            Preconditions.checkNotNull(comparator, "comparator should not be null");
+            Preconditions.checkNotNull(value, "value should not be null");
+            Preconditions.checkArgument(StringUtils.isNotBlank(value), "value should not be empty");
             return new Condition(field, comparator, value);
         }
 
@@ -185,46 +185,83 @@ public class Rule {
         }
     }
 
-
     public static class Action {
 
-        public static Action ofMailboxIds(List<String> mailboxIds) {
-            Preconditions.checkNotNull(mailboxIds, "mailboxIds should no be null");
-            return new Action(mailboxIds);
+        public static class AppendInMailboxes {
+
+            public static AppendInMailboxes withMailboxIds(List<String> mailboxIds) {
+                Preconditions.checkNotNull(mailboxIds, "mailboxIds should not be null");
+                return new AppendInMailboxes(mailboxIds);
+            }
+
+            public static AppendInMailboxes withMailboxIds(String... mailboxIds) {
+                return withMailboxIds(Arrays.asList(mailboxIds));
+            }
+
+            private final ImmutableList<String> mailboxIds;
+
+            private AppendInMailboxes(List<String> mailboxIds) {
+                this.mailboxIds = ImmutableList.copyOf(mailboxIds);
+            }
+
+            public ImmutableList<String> getMailboxIds() {
+                return mailboxIds;
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof AppendInMailboxes) {
+                    AppendInMailboxes appendInMailboxes = (AppendInMailboxes) o;
+                    return Objects.equals(mailboxIds, appendInMailboxes.mailboxIds);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(mailboxIds);
+            }
+
+            @Override
+            public String toString() {
+                return MoreObjects.toStringHelper(this)
+                        .add("mailboxIds", mailboxIds)
+                        .toString();
+            }
         }
 
-        public static Action ofMailboxIds(String... mailboxIds) {
-            return ofMailboxIds(Arrays.asList(mailboxIds));
+        public static Action of(AppendInMailboxes appendInMailboxes) {
+            return new Action(appendInMailboxes);
         }
 
-        private final ImmutableList<String> mailboxIds;
+        private final AppendInMailboxes appendInMailboxes;
 
-        private Action(List<String> mailboxIds) {
-            this.mailboxIds = ImmutableList.copyOf(mailboxIds);
+        private Action(AppendInMailboxes appendInMailboxes) {
+            this.appendInMailboxes = appendInMailboxes;
         }
         
-        public ImmutableList<String> getMailboxIds() {
-            return mailboxIds;
+        public AppendInMailboxes getAppendInMailboxes() {
+            return appendInMailboxes;
         }
 
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Action) {
                 Action action = (Action) o;
-                return Objects.equals(mailboxIds, action.mailboxIds);
+                return Objects.equals(appendInMailboxes, action.appendInMailboxes);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(mailboxIds);
+            return Objects.hash(appendInMailboxes);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("mailboxIds", mailboxIds)
+                .add("appendInMailboxes", appendInMailboxes)
                 .toString();
         }
     }
