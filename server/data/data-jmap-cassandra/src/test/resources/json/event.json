@@ -6,18 +6,30 @@
     {
       "id":"1",
       "name":"a name",
-      "field":"cc",
-      "comparator":"contains",
-      "value":"something",
-      "mailboxIds":["id-01"]
+      "condition": {
+        "field": "cc",
+        "comparator": "contains",
+        "value": "something"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        }
+      }
     },
     {
       "id":"2",
       "name":"a name",
-      "field":"cc",
-      "comparator":"contains",
-      "value":"something",
-      "mailboxIds":["id-01"]
+      "condition": {
+        "field": "cc",
+        "comparator": "contains",
+        "value": "something"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["id-01"]
+        }
+      }
     }
   ]
 }

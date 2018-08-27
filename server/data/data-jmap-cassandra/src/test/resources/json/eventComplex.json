@@ -6,34 +6,58 @@
     {
       "id":"id-from",
       "name":"a name",
-      "field":"from",
-      "comparator":"contains",
-      "value":"A value to match 4",
-      "mailboxIds":["mbx1"]
+      "condition": {
+        "field": "from",
+        "comparator": "contains",
+        "value": "A value to match 4"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        }
+      }
     },
     {
       "id":"id-rcpt",
       "name":"a name",
-      "field":"recipient",
-      "comparator":"not-exactly-equals",
-      "value":"A value to match 3",
-      "mailboxIds":["mbx1"]
+      "condition": {
+        "field": "recipient",
+        "comparator": "not-exactly-equals",
+        "value": "A value to match 3"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        }
+      }
     },
     {
       "id":"id-subject",
       "name":"a name",
-      "field":"subject",
-      "comparator":"not-contains",
-      "value":"A value to match 2",
-      "mailboxIds":["mbx1"]
+      "condition": {
+        "field": "subject",
+        "comparator": "not-contains",
+        "value": "A value to match 2"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        }
+      }
     },
     {
       "id":"id-to",
       "name":"a name",
-      "field":"to",
-      "comparator":"exactly-equals",
-      "value":"A value to match 1",
-      "mailboxIds":["mbx1"]
+      "condition": {
+        "field": "to",
+        "comparator": "exactly-equals",
+        "value": "A value to match 1"
+      },
+      "action": {
+        "appendIn": {
+          "mailboxIds":["mbx1"]
+        }
+      }
     }
   ]
 }
