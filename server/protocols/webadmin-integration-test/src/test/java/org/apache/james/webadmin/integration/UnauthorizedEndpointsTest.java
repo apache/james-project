@@ -20,10 +20,7 @@
 package org.apache.james.webadmin.integration;
 
 import static io.restassured.RestAssured.when;
-import static io.restassured.RestAssured.with;
 
-import org.apache.james.CassandraJmapTestRule;
-import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -43,728 +40,149 @@ import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import io.restassured.RestAssured;
 
-public class UnauthorizedEndpointsTest {
+@ExtendWith(CassandraJmapExtension.class)
+class UnauthorizedEndpointsTest {
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
-    @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
-
-    private GuiceJamesServer guiceJamesServer;
-
-    @Before
-    public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule())
-                .overrideWith(new WebAdminConfigurationModule());
-        guiceJamesServer.start();
-        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
+    @BeforeEach
+    void setup(GuiceJamesServer james) {
+        WebAdminGuiceProbe webAdminGuiceProbe = james.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
     }
 
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
-    }
-
-    @Test
-    public void getCassandraMigrationShouldBeAuthenticated() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            CassandraMigrationRoutes.VERSION_BASE,
+            CassandraMigrationRoutes.VERSION_BASE + "/latest",
+            DLPConfigurationRoutes.BASE_PATH + "/james.org",
+            DomainMappingsRoutes.DOMAIN_MAPPINGS,
+            DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com",
+            DomainQuotaRoutes.BASE_PATH + "/james.org",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/count",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/size",
+            DomainsRoutes.DOMAINS,
+            UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes",
+            UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT,
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
+            UserRoutes.USERS,
+            ForwardRoutes.ROOT_PATH,
+            ForwardRoutes.ROOT_PATH + "/alice@james.org",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT,
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
+            GroupsRoutes.ROOT_PATH,
+            GroupsRoutes.ROOT_PATH + "/group@james.org",
+            MailQueueRoutes.BASE_URL + "/first_queue",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES,
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/1",
+            SieveQuotaRoutes.DEFAULT_QUOTA_PATH,
+            SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
+            TasksRoutes.BASE,
+            TasksRoutes.BASE + "/taskId",
+            TasksRoutes.BASE + "/taskId/await"
+    })
+    void checkUrlProtectionOnGet(String url) {
         when()
-            .get(CassandraMigrationRoutes.VERSION_BASE)
+            .get(url)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
     }
 
-    @Test
-    public void upgradeCassandraMigrationShouldBeAuthenticated() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            CassandraMigrationRoutes.VERSION_BASE + "/upgrade",
+            CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest"
+    })
+    void checkUrlProtectionOnPost(String url) {
         when()
-            .post(CassandraMigrationRoutes.VERSION_BASE + "/upgrade")
+            .post(url)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
     }
 
-    @Test
-    public void upgradeLatestCassandraMigrationShouldBeAuthenticated() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            DLPConfigurationRoutes.BASE_PATH + "/james.org",
+            DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/count",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/size",
+            DomainQuotaRoutes.BASE_PATH + "/james.org",
+            DomainsRoutes.DOMAINS + "/james.org",
+            UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
+            UserRoutes.USERS + "/user@james.org",
+            ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT,
+            GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo",
+            SieveQuotaRoutes.DEFAULT_QUOTA_PATH,
+            SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org"
+    })
+    void checkUrlProtectionOnPut(String url) {
         when()
-            .post(CassandraMigrationRoutes.VERSION_BASE + "/upgrade/latest")
+            .put(url)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
     }
 
-    @Test
-    public void getLatestCassandraMigrationShouldBeAuthenticated() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            DLPConfigurationRoutes.BASE_PATH + "/james.org",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/count",
+            DomainQuotaRoutes.BASE_PATH + "/james.org/size",
+            DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com",
+            DomainsRoutes.DOMAINS + "/james.org",
+            UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes",
+            UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count",
+            UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
+            UserRoutes.USERS + "/user@james.org",
+            ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
+            GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
+            GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org",
+            MailQueueRoutes.BASE_URL,
+            MailQueueRoutes.BASE_URL + "/first_queue/mails",
+            MailQueueRoutes.BASE_URL + "/second_queue/mails",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/1",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails",
+            SieveQuotaRoutes.DEFAULT_QUOTA_PATH,
+            SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org",
+            TasksRoutes.BASE + "/taskId"
+    })
+    void checkUrlProtectionOnDelete(String url) {
         when()
-            .get(CassandraMigrationRoutes.VERSION_BASE + "/latest")
+            .delete(url)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
     }
 
-    @Test
-    public void storeDLPShouldBeAuthenticated() {
-        String storeBody =
-                "{\"rules\": [" +
-                        "  {" +
-                        "    \"id\": \"1\"," +
-                        "    \"expression\": \"expression 1\"," +
-                        "    \"explanation\": \"explanation 1\"," +
-                        "    \"targetsSender\": true," +
-                        "    \"targetsRecipients\": true," +
-                        "    \"targetsContent\": true" +
-                        "  }," +
-                        "  {" +
-                        "    \"id\": \"2\"," +
-                        "    \"expression\": \"expression 2\"," +
-                        "    \"explanation\": \"explanation 2\"," +
-                        "    \"targetsSender\": false," +
-                        "    \"targetsRecipients\": false," +
-                        "    \"targetsContent\": false" +
-                        "  }]}";
-
-        with()
-            .body(storeBody)
-        .when()
-            .put(DLPConfigurationRoutes.BASE_PATH + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void clearDLPShouldBeAuthenticated() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            MailQueueRoutes.BASE_URL + "/first_queue/mails",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails",
+            MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/name1"
+    })
+    void checkUrlProtectionOnPath(String url) {
         when()
-            .delete(DLPConfigurationRoutes.BASE_PATH + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void listDLPShouldBeAuthenticated() {
-        when()
-            .get(DLPConfigurationRoutes.BASE_PATH + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteDomainMappingShouldBeAuthenticated() {
-        with()
-            .body("to.com")
-        .when()
-            .delete(DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void addDomainMappingShouldBeAuthenticated() {
-        with()
-            .body("to.com")
-        .when()
-            .put(DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getDomainMappingsShouldBeAuthenticated() {
-        with()
-            .get(DomainMappingsRoutes.DOMAIN_MAPPINGS)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getDomainMappingShouldBeAuthenticated() {
-        with()
-            .get(DomainMappingsRoutes.DOMAIN_MAPPINGS + "/from.com")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getDomainQuotaShouldBeAuthenticated() {
-        with()
-            .get(DomainQuotaRoutes.BASE_PATH + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getCountDomainQuotaShouldBeAuthenticated() {
-        with()
-            .get(DomainQuotaRoutes.BASE_PATH + "/james.org/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getSizeDomainQuotaShouldBeAuthenticated() {
-        with()
-            .get(DomainQuotaRoutes.BASE_PATH + "/james.org/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteCountDomainQuotaShouldBeAuthenticated() {
-        with()
-            .delete(DomainQuotaRoutes.BASE_PATH + "/james.org/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteSizeDomainQuotaShouldBeAuthenticated() {
-        with()
-            .delete(DomainQuotaRoutes.BASE_PATH + "/james.org/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putCountDomainQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(DomainQuotaRoutes.BASE_PATH + "/james.org/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putSizeDomainQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(DomainQuotaRoutes.BASE_PATH + "/james.org/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putDomainQuotaShouldBeAuthenticated() {
-        with()
-            .body("{\"count\":52,\"size\":42}")
-        .when()
-            .put(DomainQuotaRoutes.BASE_PATH + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getDomainsShouldBeAuthenticated() {
-        when()
-            .get(DomainsRoutes.DOMAINS)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void createDomainShouldBeAuthenticated() {
-        when()
-            .put(DomainsRoutes.DOMAINS + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteDomainShouldBeAuthenticated() {
-        when()
-            .delete(DomainsRoutes.DOMAINS + "/james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getUserMailboxesShouldBeAuthenticated() {
-        when()
-            .get(UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getMailboxUserMailboxesShouldBeAuthenticated() {
-        when()
-            .get(UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteUserMailboxesShouldBeAuthenticated() {
-        when()
-            .delete(UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteMailboxUserMailboxesShouldBeAuthenticated() {
-        when()
-            .delete(UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void createMailboxUserMailboxesShouldBeAuthenticated() {
-        when()
-            .put(UserMailboxesRoutes.USERS_BASE + "/someuser/mailboxes/mymailbox")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getUserQuotaShouldBeAuthenticated() {
-        when()
-            .get(UserQuotaRoutes.USERS_QUOTA_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getUserUserQuotaShouldBeAuthenticated() {
-        when()
-            .get(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getCountUserQuotaShouldBeAuthenticated() {
-        when()
-            .get(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getSizeUserQuotaShouldBeAuthenticated() {
-        when()
-            .get(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteCountUserQuotaShouldBeAuthenticated() {
-        when()
-            .delete(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteSizeUserQuotaShouldBeAuthenticated() {
-        when()
-            .delete(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putUserQuotaShouldBeAuthenticated() {
-        with()
-            .body("{\"count\":52,\"size\":42}")
-        .when()
-            .put(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putCountUserQuotaShouldBeAuthenticated() {
-        with()
-            .body("35")
-        .when()
-            .put(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putSizeUserQuotaShouldBeAuthenticated() {
-        with()
-            .body("35")
-        .when()
-            .put(UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getUsersShouldBeAuthenticated() {
-        when()
-            .get(UserRoutes.USERS)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void createUserShouldBeAuthenticated() {
-        with()
-            .body("{\"password\":\"password\"}")
-        .when()
-            .put(UserRoutes.USERS + "/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteUserShouldBeAuthenticated() {
-        when()
-            .delete(UserRoutes.USERS + "/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getForwardsShouldBeAuthenticated() {
-        when()
-            .get(ForwardRoutes.ROOT_PATH)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getForwardShouldBeAuthenticated() {
-        when()
-            .get(ForwardRoutes.ROOT_PATH + "/alice@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putForwardDestinationShouldBeAuthenticated() {
-        when()
-            .put(ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteForwardDestinationShouldBeAuthenticated() {
-        when()
-            .delete(ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getGlobalQuotaShouldBeAuthenticated() {
-        when()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getCountGlobalQuotaShouldBeAuthenticated() {
-        when()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getSizeGlobalQuotaShouldBeAuthenticated() {
-        when()
-            .get(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteCountGlobalQuotaShouldBeAuthenticated() {
-        when()
-            .delete(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteSizeGlobalQuotaShouldBeAuthenticated() {
-        when()
-            .delete(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putCountGlobalQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putSizeGlobalQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putGlobalQuotaShouldBeAuthenticated() {
-        with()
-            .body("{\"count\":52,\"size\":42}")
-        .when()
-            .put(GlobalQuotaRoutes.QUOTA_ENDPOINT)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getGroupsShouldBeAuthenticated() {
-        when()
-            .get(GroupsRoutes.ROOT_PATH)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getGroupShouldBeAuthenticated() {
-        when()
-            .get(GroupsRoutes.ROOT_PATH + "/group@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putGroupMemberShouldBeAuthenticated() {
-        when()
-            .put(GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteGroupMemberShouldBeAuthenticated() {
-        when()
-            .delete(GroupsRoutes.ROOT_PATH + "/group@james.org/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void listMailQueuesShouldBeAuthenticated() {
-        when()
-            .get(MailQueueRoutes.BASE_URL)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getMailQueueShouldBeAuthenticated() {
-        when()
-            .get(MailQueueRoutes.BASE_URL + "/first_queue")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteMailShouldBeAuthenticated() {
-        with()
-            .param("sender", "123")
-        .when()
-            .delete(MailQueueRoutes.BASE_URL + "/first_queue/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void clearMailQueueShouldBeAuthenticated() {
-        when()
-            .delete(MailQueueRoutes.BASE_URL + "/second_queue/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void flushMailQueueShouldBeAuthenticated() {
-        with()
-            .queryParam("delayed", "true")
-            .body("{\"delayed\": \"false\"}")
-        .when()
-            .patch(MailQueueRoutes.BASE_URL + "/first_queue/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putMailRepositoriesShouldBeAuthenticated() {
-        with()
-            .params("protocol", "memory")
-        .when()
-            .put(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void listMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getMailsMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getMailMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .get(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/1")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteAMailMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .delete(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/1")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteMailsMailRepositoriesShouldBeAuthenticated() {
-        when()
-            .delete(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void reprocessingAllMailRepositoriesShouldBeAuthenticated() {
-        with()
-            .param("action", "reprocess")
-        .when()
-            .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void reprocessingOneMailRepositoriesShouldBeAuthenticated() {
-        with()
-            .param("action", "reprocess")
-        .when()
-            .patch(MailRepositoriesRoutes.MAIL_REPOSITORIES + "/myRepo/mails/name1")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getGlobalSieveQuotaShouldBeAuthenticated() {
-        when()
-            .get(SieveQuotaRoutes.DEFAULT_QUOTA_PATH)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deleteGlobalSieveQuotaShouldBeAuthenticated() {
-        when()
-            .delete(SieveQuotaRoutes.DEFAULT_QUOTA_PATH)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putGlobalSieveQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(SieveQuotaRoutes.DEFAULT_QUOTA_PATH)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getPerUserSieveQuotaShouldBeAuthenticated() {
-        when()
-            .get(SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void deletePerUsersSieveQuotaShouldBeAuthenticated() {
-        when()
-            .delete(SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void putPerUserSieveQuotaShouldBeAuthenticated() {
-        with()
-            .body("42")
-        .when()
-            .put(SieveQuotaRoutes.ROOT_PATH + "/users/user@james.org")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getTasksRoutesShouldBeAuthenticated() {
-        when()
-            .get(TasksRoutes.BASE)
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void getTaskShouldBeAuthenticated() {
-        when()
-            .get(TasksRoutes.BASE + "/taskId")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void cancelTaskShouldBeAuthenticated() {
-        when()
-            .delete(TasksRoutes.BASE + "/taskId")
-        .then()
-            .statusCode(HttpStatus.UNAUTHORIZED_401);
-    }
-
-    @Test
-    public void awaitTaskShouldBeAuthenticated() {
-        when()
-            .get(TasksRoutes.BASE + "/taskId/await")
+            .patch(url)
         .then()
             .statusCode(HttpStatus.UNAUTHORIZED_401);
     }
