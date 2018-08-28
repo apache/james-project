@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.cassandra.filtering;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_FROM;
@@ -26,7 +27,6 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_RECIPIENT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.EventId;

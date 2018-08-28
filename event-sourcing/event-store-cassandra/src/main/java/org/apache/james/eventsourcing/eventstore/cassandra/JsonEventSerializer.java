@@ -47,12 +47,14 @@ public class JsonEventSerializer {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private final Map<Class<? extends Event>, EventDTOModule> eventClassToModule;
+    @SuppressWarnings("rawtypes")
     private final Map<String, EventDTOModule> typeToModule;
     private final ObjectMapper objectMapper;
 
     @Inject
-    public JsonEventSerializer(Set<EventDTOModule> modules) {
+    public JsonEventSerializer(@SuppressWarnings("rawtypes") Set<EventDTOModule> modules) {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
         objectMapper.registerModule(new GuavaModule());
@@ -69,12 +71,13 @@ public class JsonEventSerializer {
                 Function.identity()));
     }
     
-    public JsonEventSerializer(EventDTOModule... modules) {
+    public JsonEventSerializer(@SuppressWarnings("rawtypes") EventDTOModule... modules) {
         this(ImmutableSet.copyOf(modules));
     }
 
     public String serialize(Event event) throws JsonProcessingException {
-        Object dto = Optional.ofNullable(eventClassToModule.get(event.getClass()))
+        @SuppressWarnings("unchecked")
+        EventDTO dto = Optional.ofNullable(eventClassToModule.get(event.getClass()))
             .orElseThrow(() -> new UnknownEventException("unknown event class " + event.getClass()))
             .toDTO(event);
         return objectMapper.writeValueAsString(dto);
@@ -91,6 +94,7 @@ public class JsonEventSerializer {
         return dto.toEvent();
     }
 
+    @SuppressWarnings("unchecked")
     public Class<? extends EventDTO> retrieveDTOClass(String type) {
         return Optional.ofNullable(typeToModule.get(type))
             .map(EventDTOModule::getDTOClass)
