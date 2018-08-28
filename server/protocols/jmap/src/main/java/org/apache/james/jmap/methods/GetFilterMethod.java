@@ -81,9 +81,7 @@ public class GetFilterMethod implements Method {
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetFilterRequest request) {
         try {
-            User user = User.fromUsername(mailboxSession.getUser().getUserName());
-
-            return retrieveFilter(clientId, user);
+            return retrieveFilter(clientId, mailboxSession.getUser().getCoreUser());
         } catch (Exception e) {
             LOGGER.warn("Failed to retrieve filter");
 

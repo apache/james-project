@@ -121,9 +121,7 @@ public class SetFilterMethod implements Method {
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, SetFilterRequest request) {
         try {
-            User user = User.fromUsername(mailboxSession.getUser().getUserName());
-
-            return updateFilter(clientId, request, user);
+            return updateFilter(clientId, request, mailboxSession.getUser().getCoreUser());
         } catch (MultipleMailboxIdException e) {
             LOGGER.debug("Rule targeting several mailboxes", e);
             return Stream.of(multipleMailboxesError(clientId, e));

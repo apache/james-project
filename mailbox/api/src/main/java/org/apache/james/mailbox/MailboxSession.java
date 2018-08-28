@@ -108,6 +108,10 @@ public interface MailboxSession {
         List<Locale> getLocalePreferences();
         
         boolean isSameUser(String username);
+
+        default org.apache.james.core.User getCoreUser() {
+            return org.apache.james.core.User.fromUsername(getUserName());
+        }
     }
 
     /**
