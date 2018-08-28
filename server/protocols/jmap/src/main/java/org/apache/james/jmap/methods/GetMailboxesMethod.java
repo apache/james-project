@@ -81,13 +81,12 @@ public class GetMailboxesMethod implements Method {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
         return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
-            () -> MDCBuilder.withMdc(
-                MDCBuilder.create()
-                    .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
-                    .addContext("accountId", mailboxesRequest.getAccountId())
-                    .addContext("mailboxIds", mailboxesRequest.getIds())
-                    .addContext("properties", mailboxesRequest.getProperties()),
-                () -> process(clientId, mailboxSession, mailboxesRequest)));
+            MDCBuilder.create()
+                .addContext(MDCBuilder.ACTION, "GET_MAILBOXES")
+                .addContext("accountId", mailboxesRequest.getAccountId())
+                .addContext("mailboxIds", mailboxesRequest.getIds())
+                .addContext("properties", mailboxesRequest.getProperties())
+                .wrapArround(() -> process(clientId, mailboxSession, mailboxesRequest)));
     }
 
     private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
