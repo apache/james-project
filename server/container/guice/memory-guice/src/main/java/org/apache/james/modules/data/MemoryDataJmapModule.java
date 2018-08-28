@@ -20,6 +20,8 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.jmap.api.access.AccessTokenRepository;
+import org.apache.james.jmap.api.filtering.FilteringManagement;
+import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
@@ -44,6 +46,9 @@ public class MemoryDataJmapModule extends AbstractModule {
 
         bind(MemoryNotificationRegistry.class).in(Scopes.SINGLETON);
         bind(NotificationRegistry.class).to(MemoryNotificationRegistry.class);
+
+        bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
+        bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
 
         bind(DefaultTextExtractor.class).in(Scopes.SINGLETON);
         bind(TextExtractor.class).to(JsoupTextExtractor.class);
