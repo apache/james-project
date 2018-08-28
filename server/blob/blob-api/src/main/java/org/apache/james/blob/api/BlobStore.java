@@ -21,7 +21,7 @@ package org.apache.james.blob.api;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
-public interface ObjectStore {
+public interface BlobStore {
 
     CompletableFuture<BlobId> save(byte[] data);
 

@@ -30,8 +30,8 @@ import org.apache.james.backends.cassandra.DockerCassandraExtension.DockerCassan
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.ObjectStore;
-import org.apache.james.blob.api.ObjectStoreContract;
+import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BlobStoreContract;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,7 +42,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import com.google.common.base.Strings;
 
 @ExtendWith(DockerCassandraExtension.class)
-public class CassandraBlobsDAOTest implements ObjectStoreContract {
+public class CassandraBlobsDAOTest implements BlobStoreContract {
 
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
@@ -75,7 +75,7 @@ public class CassandraBlobsDAOTest implements ObjectStoreContract {
     }
 
     @Override
-    public ObjectStore testee() {
+    public BlobStore testee() {
         return testee;
     }
 

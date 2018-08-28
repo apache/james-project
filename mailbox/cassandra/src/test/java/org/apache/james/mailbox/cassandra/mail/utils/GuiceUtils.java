@@ -23,7 +23,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -49,7 +49,7 @@ public class GuiceUtils {
             Modules.combine(
                 binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
                 binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
-                binder -> binder.bind(ObjectStore.class).to(CassandraBlobsDAO.class),
+                binder -> binder.bind(BlobStore.class).to(CassandraBlobsDAO.class),
                 binder -> binder.bind(Session.class).toInstance(session),
                 binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
                 binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration)));

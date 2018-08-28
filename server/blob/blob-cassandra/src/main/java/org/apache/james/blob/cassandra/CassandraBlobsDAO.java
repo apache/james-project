@@ -41,8 +41,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.ObjectStore;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.cassandra.BlobTable.BlobParts;
 import org.apache.james.blob.cassandra.utils.DataChunker;
@@ -62,7 +62,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Bytes;
 
-public class CassandraBlobsDAO implements ObjectStore {
+public class CassandraBlobsDAO implements BlobStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraBlobsDAO.class);
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final PreparedStatement insert;
