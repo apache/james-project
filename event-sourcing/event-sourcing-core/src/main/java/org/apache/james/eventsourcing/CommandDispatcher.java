@@ -36,7 +36,7 @@ public class CommandDispatcher {
 
     private static final int MAX_RETRY = 10;
 
-    public class UnknownCommandException extends RuntimeException {
+    public static class UnknownCommandException extends RuntimeException {
         private final Command command;
 
         public UnknownCommandException(Command command) {
@@ -49,7 +49,7 @@ public class CommandDispatcher {
         }
     }
 
-    public class TooManyRetries extends RuntimeException {
+    public static class TooManyRetries extends RuntimeException {
         private final Command command;
         private final int retries;
 

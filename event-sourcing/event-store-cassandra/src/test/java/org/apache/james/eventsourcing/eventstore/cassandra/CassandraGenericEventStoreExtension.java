@@ -38,12 +38,13 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class CassandraGenericEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
     private final DockerCassandraExtension dockerCassandraExtension;
+    @SuppressWarnings("rawtypes")
     private final Set<EventDTOModule> modules;
     private CassandraCluster cassandra;
     private DockerCassandra dockerCassandra;
     private EventStoreDao eventStoreDao;
 
-    public CassandraGenericEventStoreExtension(Set<EventDTOModule> modules) {
+    public CassandraGenericEventStoreExtension(@SuppressWarnings("rawtypes") Set<EventDTOModule> modules) {
         this.modules = modules;
         dockerCassandraExtension = new DockerCassandraExtension();
     }

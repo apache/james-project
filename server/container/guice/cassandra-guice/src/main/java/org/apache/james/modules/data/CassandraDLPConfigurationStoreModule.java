@@ -35,6 +35,7 @@ public class CassandraDLPConfigurationStoreModule extends AbstractModule {
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
+        @SuppressWarnings("rawtypes")
         Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
 
         eventDTOModuleBinder.addBinding().toInstance(DLPConfigurationModules.DLP_CONFIGURATION_STORE);
