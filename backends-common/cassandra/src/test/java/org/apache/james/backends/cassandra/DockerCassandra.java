@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import com.github.dockerjava.api.DockerClient;
+import com.google.common.collect.ImmutableMap;
 
 public class DockerCassandra {
 

@@ -27,11 +27,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.LmtpGuiceProbe;
 import org.apache.james.modules.protocols.Pop3GuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.DataProbeImpl;
 import org.junit.After;
 import org.junit.Before;
