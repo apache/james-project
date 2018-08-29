@@ -65,6 +65,7 @@
             <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
                 <targetFolderName>Spam</targetFolderName>
             </mailet>
+            <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/>
             <mailet match="RecipientIsLocal" class="LocalDelivery"/>
             <mailet match="HostIsLocal" class="ToProcessor">
                 <processor>local-address-error</processor>

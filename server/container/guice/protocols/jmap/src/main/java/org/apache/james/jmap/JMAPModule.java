@@ -31,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
 import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.send.PostDequeueDecoratorFactory;
 import org.apache.james.jmap.utils.HtmlTextExtractor;
@@ -76,6 +77,10 @@ public class JMAPModule extends AbstractModule {
         new CamelMailetContainerModule.TransportProcessorCheck.Impl(
             RecipientIsLocal.class,
             VacationMailet.class);
+    public static final CamelMailetContainerModule.TransportProcessorCheck FILTERING_MAILET_CHECK =
+        new CamelMailetContainerModule.TransportProcessorCheck.Impl(
+            RecipientIsLocal.class,
+            JMAPFiltering.class);
 
     @Override
     protected void configure() {
@@ -96,7 +101,8 @@ public class JMAPModule extends AbstractModule {
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().toInstance(VACATION_MAILET_CHECK);
-        
+        transportProcessorChecks.addBinding().toInstance(FILTERING_MAILET_CHECK);
+
         bind(SystemMailboxesProvider.class).to(SystemMailboxesProviderImpl.class);
         bind(MailQueueItemDecoratorFactory.class).to(PostDequeueDecoratorFactory.class).in(Scopes.SINGLETON);
 

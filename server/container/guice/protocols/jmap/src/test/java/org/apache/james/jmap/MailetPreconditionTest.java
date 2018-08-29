@@ -26,6 +26,7 @@ import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailetcontainer.impl.MatcherMailetPair;
 import org.apache.james.modules.server.CamelMailetContainerModule;
 import org.apache.james.transport.mailets.Null;
@@ -79,6 +80,45 @@ class MailetPreconditionTest {
             List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
 
             assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+                .doesNotThrowAnyException();
+        }
+    }
+
+    @Nested
+    class FilteringMailetCheck {
+        @Test
+        void filteringMailetCheckShouldThrowOnEmptyList() {
+            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(Lists.newArrayList()))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void filteringMailetCheckShouldThrowOnNullList() {
+            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(null))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void filteringMailetCheckShouldThrowOnWrongMatcher() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new JMAPFiltering(null, null, null)));
+
+            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void filteringMailetCheckShouldThrowOnWrongMailet() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
+
+            assertThatThrownBy(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void filteringMailetCheckShouldNotThrowIfValidPairPresent() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new JMAPFiltering(null, null, null)));
+
+            assertThatCode(() -> JMAPModule.FILTERING_MAILET_CHECK.check(pairs))
                 .doesNotThrowAnyException();
         }
     }
