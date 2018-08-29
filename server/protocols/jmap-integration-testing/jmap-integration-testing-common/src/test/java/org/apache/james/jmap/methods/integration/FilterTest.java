@@ -41,6 +41,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
+import java.util.Locale;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapCommonRequests;
@@ -1219,6 +1220,62 @@ public abstract class FilterTest {
             () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, inbox));
     }
 
+
+    @Test
+    public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRuleBecaseOfCase() {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": \"3000-345\"," +
+                "      \"name\": \"Emails from bob\"," +
+                "      \"condition\": {" +
+                "        \"field\": \"subject\"," +
+                "        \"comparator\": \"contains\"," +
+                "        \"value\": \"different case value\"" +
+                "      }," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + matchedMailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[[" +
+            "  \"setMessages\"," +
+            "  {" +
+            "    \"create\": { \"" + messageCreationId  + "\" : {" +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"subject\": \"DIFFERENT CASE VALUE\"," +
+            "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
+            "    }}" +
+            "  }," +
+            "  \"#0\"" +
+            "]]";
+
+        with()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(requestBody)
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        calmlyAwait.until(
+            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, inbox));
+    }
+
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenContainsComparatorMatches() {
         given()
@@ -1454,6 +1511,62 @@ public abstract class FilterTest {
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"exactly-equals\"," +
                 "        \"value\": \"Bob <" + BOB + ">\"" +
+                "      }," +
+                "      \"action\": {" +
+                "        \"appendIn\": {" +
+                "          \"mailboxIds\": [\"" + matchedMailbox.serialize() + "\"]" +
+                "        }" +
+                "      }" +
+                "    }" +
+                "  ]}, " +
+                "\"#0\"" +
+                "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[[" +
+            "  \"setMessages\"," +
+            "  {" +
+            "    \"create\": { \"" + messageCreationId  + "\" : {" +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"subject\": \"subject\"," +
+            "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
+            "    }}" +
+            "  }," +
+            "  \"#0\"" +
+            "]]";
+
+        with()
+            .header("Authorization", bobAccessToken.serialize())
+            .body(requestBody)
+            .post("/jmap")
+        .then()
+            .statusCode(200);
+
+        calmlyAwait.until(
+            () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, matchedMailbox));
+    }
+
+
+    @Test
+    public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesCaseInsensitivelyFullHeader() {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                "  \"setFilter\", " +
+                "  {" +
+                "    \"singleton\": [" +
+                "    {" +
+                "      \"id\": \"3000-345\"," +
+                "      \"name\": \"Emails from bob\"," +
+                "      \"condition\": {" +
+                "        \"field\": \"from\"," +
+                "        \"comparator\": \"exactly-equals\"," +
+                "        \"value\": \"bob <" + BOB.toUpperCase(Locale.ENGLISH) + ">\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
