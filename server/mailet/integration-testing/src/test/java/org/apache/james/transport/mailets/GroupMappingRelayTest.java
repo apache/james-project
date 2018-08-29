@@ -30,6 +30,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -100,6 +101,9 @@ public class GroupMappingRelayTest {
                 .addMailet(MailetConfiguration.builder()
                     .matcher(RecipientIsLocal.class)
                     .mailet(VacationMailet.class))
+                .addMailet(MailetConfiguration.builder()
+                    .matcher(RecipientIsLocal.class)
+                    .mailet(JMAPFiltering.class))
                 .addMailetsFrom(CommonProcessors.deliverOnlyTransport())
                 .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                     .matcher(All.class)

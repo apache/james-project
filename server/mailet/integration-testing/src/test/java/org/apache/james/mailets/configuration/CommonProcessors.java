@@ -21,6 +21,7 @@
 package org.apache.james.mailets.configuration;
 
 import org.apache.james.jmap.mailet.VacationMailet;
+import org.apache.james.jmap.mailet.filter.JMAPFiltering;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.transport.mailets.Bounce;
@@ -93,6 +94,9 @@ public class CommonProcessors {
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
                         .mailet(VacationMailet.class))
+                .addMailet(MailetConfiguration.builder()
+                        .matcher(RecipientIsLocal.class)
+                        .mailet(JMAPFiltering.class))
                 .addMailet(MailetConfiguration.builder()
                         .matcher(RecipientIsLocal.class)
                         .mailet(Sieve.class))
