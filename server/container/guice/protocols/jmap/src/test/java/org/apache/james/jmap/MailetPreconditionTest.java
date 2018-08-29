@@ -20,7 +20,6 @@
 package org.apache.james.jmap;
 
 import java.util.List;
-import java.util.Properties;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.jmap.mailet.VacationMailet;
@@ -39,7 +38,6 @@ import com.google.common.collect.Lists;
 public class MailetPreconditionTest {
 
     private static final MailetContext MAILET_CONTEXT = null;
-    private static final String WRONG_NAME = "wrong";
     private static final String BCC = "bcc";
 
     @Test(expected = ConfigurationException.class)
@@ -83,40 +81,38 @@ public class MailetPreconditionTest {
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnWrongMatcher() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(),  new RemoveMimeHeader()));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
+        CamelMailetContainerModule.BCC_Check.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnWrongMailet() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new Null()));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
+        CamelMailetContainerModule.BCC_Check.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
-    public void bccMailetCheckShouldThrowOnWrongMailetName() throws Exception {
-        Properties properties = new Properties();
-        properties.setProperty("name", WRONG_NAME);
+    public void bccMailetCheckShouldThrowOnWrongFieldName() throws Exception {
         RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
         removeMimeHeader.init(FakeMailetConfig.builder()
-                .mailetName(WRONG_NAME)
-                .mailetContext(MAILET_CONTEXT)
-                .setProperty("name", WRONG_NAME)
-                .build());
+            .mailetName(BCC)
+            .mailetContext(MAILET_CONTEXT)
+            .setProperty("name", "bad")
+            .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
+        CamelMailetContainerModule.BCC_Check.check(pairs);
     }
 
-    @Test(expected = ConfigurationException.class)
+    @Test
     public void bccMailetCheckShouldNotThrowOnValidPair() throws Exception {
         RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
         removeMimeHeader.init(FakeMailetConfig.builder()
-                .mailetName(BCC)
-                .mailetContext(MAILET_CONTEXT)
-                .setProperty("name", BCC)
-                .build());
+            .mailetName(BCC)
+            .mailetContext(MAILET_CONTEXT)
+            .setProperty("name", BCC)
+            .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
+        CamelMailetContainerModule.BCC_Check.check(pairs);
     }
 }
