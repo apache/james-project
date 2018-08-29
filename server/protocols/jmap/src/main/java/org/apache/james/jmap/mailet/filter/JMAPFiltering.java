@@ -36,6 +36,17 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Mailet for applying JMAP filtering to incoming email.
+ *
+ * Users are able to set their personal filtering rules using JMAP setFilter/getFilter methods.
+ *
+ * Configuring this mailet in the 'transport' processor is mandatory when running a JMAP server.
+ *
+ * Example:
+ *
+ *  &lt;mailet matcher="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/&gt;
+ */
 public class JMAPFiltering extends GenericMailet {
 
     private final Logger logger = LoggerFactory.getLogger(JMAPFiltering.class);
