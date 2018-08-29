@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
+### Added
+- Mail filtering configured via the JMAP protocol
+
 ### Changed
 - Multiple libraries updates
 - Migration from Cassandra 2 to Cassandra 3
