@@ -19,6 +19,9 @@
 
 package org.apache.james.jmap;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -31,88 +34,112 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.RecipientIsLocal;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-public class MailetPreconditionTest {
+class MailetPreconditionTest {
 
     private static final MailetContext MAILET_CONTEXT = null;
     private static final String BCC = "bcc";
 
-    @Test(expected = ConfigurationException.class)
-    public void vacationMailetCheckShouldThrowOnEmptyList() throws Exception {
-        JMAPModule.VACATION_MAILET_CHECK.check(Lists.newArrayList());
+    @Nested
+    class VacationMailetCheck {
+        @Test
+        void vacationMailetCheckShouldThrowOnEmptyList() {
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(Lists.newArrayList()))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void vacationMailetCheckShouldThrowOnNullList() {
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(null))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void vacationMailetCheckShouldThrowOnWrongMatcher() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)));
+
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void vacationMailetCheckShouldThrowOnWrongMailet() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
+
+            assertThatThrownBy(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
+
+        @Test
+        void vacationMailetCheckShouldNotThrowIfValidPairPresent() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
+
+            assertThatCode(() -> JMAPModule.VACATION_MAILET_CHECK.check(pairs))
+                .doesNotThrowAnyException();
+        }
     }
 
-    @Test(expected = NullPointerException.class)
-    public void vacationMailetCheckShouldThrowOnNullList() throws Exception {
-        JMAPModule.VACATION_MAILET_CHECK.check(null);
-    }
+    @Nested
+    class BccCheck {
+        @Test
+        void bccMailetCheckShouldThrowOnEmptyList() {
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(Lists.newArrayList()))
+                .isInstanceOf(ConfigurationException.class);
+        }
 
-    @Test(expected = ConfigurationException.class)
-    public void vacationMailetCheckShouldThrowOnWrongMatcher() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
-    }
+        @Test
+        void bccMailetCheckShouldThrowOnNullList() {
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(null))
+                .isInstanceOf(NullPointerException.class);
+        }
 
-    @Test(expected = ConfigurationException.class)
-    public void vacationMailetCheckShouldThrowOnWrongMailet() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
-    }
+        @Test
+        void bccMailetCheckShouldThrowOnWrongMatcher() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new RemoveMimeHeader()));
 
-    @Test
-    public void vacationMailetCheckShouldNotThrowIfValidPairPresent() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
-        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
-    }
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
 
-    @Test(expected = ConfigurationException.class)
-    public void bccMailetCheckShouldThrowOnEmptyList() throws Exception {
-        CamelMailetContainerModule.BCC_Check.check(Lists.newArrayList());
-    }
+        @Test
+        void bccMailetCheckShouldThrowOnWrongMailet() {
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new Null()));
 
-    @Test(expected = NullPointerException.class)
-    public void bccMailetCheckShouldThrowOnNullList() throws Exception {
-        CamelMailetContainerModule.BCC_Check.check(null);
-    }
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
 
-    @Test(expected = ConfigurationException.class)
-    public void bccMailetCheckShouldThrowOnWrongMatcher() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(),  new RemoveMimeHeader()));
-        CamelMailetContainerModule.BCC_Check.check(pairs);
-    }
+        @Test
+        void bccMailetCheckShouldThrowOnWrongFieldName() throws Exception {
+            RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
+            removeMimeHeader.init(FakeMailetConfig.builder()
+                .mailetName(BCC)
+                .mailetContext(MAILET_CONTEXT)
+                .setProperty("name", "bad")
+                .build());
 
-    @Test(expected = ConfigurationException.class)
-    public void bccMailetCheckShouldThrowOnWrongMailet() throws Exception {
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new Null()));
-        CamelMailetContainerModule.BCC_Check.check(pairs);
-    }
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
 
-    @Test(expected = ConfigurationException.class)
-    public void bccMailetCheckShouldThrowOnWrongFieldName() throws Exception {
-        RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
-        removeMimeHeader.init(FakeMailetConfig.builder()
-            .mailetName(BCC)
-            .mailetContext(MAILET_CONTEXT)
-            .setProperty("name", "bad")
-            .build());
+            assertThatThrownBy(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
+                .isInstanceOf(ConfigurationException.class);
+        }
 
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        CamelMailetContainerModule.BCC_Check.check(pairs);
-    }
+        @Test
+        void bccMailetCheckShouldNotThrowOnValidPair() throws Exception {
+            RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
+            removeMimeHeader.init(FakeMailetConfig.builder()
+                .mailetName(BCC)
+                .mailetContext(MAILET_CONTEXT)
+                .setProperty("name", BCC)
+                .build());
 
-    @Test
-    public void bccMailetCheckShouldNotThrowOnValidPair() throws Exception {
-        RemoveMimeHeader removeMimeHeader = new RemoveMimeHeader();
-        removeMimeHeader.init(FakeMailetConfig.builder()
-            .mailetName(BCC)
-            .mailetContext(MAILET_CONTEXT)
-            .setProperty("name", BCC)
-            .build());
-
-        List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        CamelMailetContainerModule.BCC_Check.check(pairs);
+            List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
+            assertThatCode(() -> CamelMailetContainerModule.BCC_Check.check(pairs))
+                .doesNotThrowAnyException();
+        }
     }
 }
