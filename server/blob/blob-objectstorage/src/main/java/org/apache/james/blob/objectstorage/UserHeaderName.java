@@ -17,29 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.blob.objectstorage;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+public final class UserHeaderName extends HeaderName {
+    public static UserHeaderName of(String value) {
+        return new UserHeaderName(value);
+    }
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
-
-public class CassandraObjectStoreModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CassandraBlobsDAO.class).in(Scopes.SINGLETON);
-        bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
-
-        bind(BlobStore.class).to(CassandraBlobsDAO.class);
-        bind(BlobId.Factory.class).to(HashBlobId.Factory.class);
-
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+    private UserHeaderName(String value) {
+        super(value);
     }
 }

@@ -32,9 +32,9 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
 
-public interface ObjectStoreContract {
+public interface BlobStoreContract {
 
-    ObjectStore testee();
+    BlobStore testee();
 
     BlobId.Factory blobIdFactory();
 

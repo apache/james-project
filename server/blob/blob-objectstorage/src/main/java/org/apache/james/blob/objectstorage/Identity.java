@@ -17,64 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra;
+package org.apache.james.blob.objectstorage;
 
-import org.apache.james.blob.api.BlobId;
-
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.hash.Hashing;
 
-public class CassandraBlobId implements BlobId {
-
-    public static class Factory implements BlobId.Factory {
-        @Override
-        public CassandraBlobId forPayload(byte[] payload) {
-            Preconditions.checkArgument(payload != null);
-            return new CassandraBlobId(Hashing.sha256().hashBytes(payload).toString());
-        }
-
-        @Override
-        public CassandraBlobId from(String id) {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
-            return new CassandraBlobId(id);
-        }
+public final class Identity {
+    public static Identity of(String value) {
+        return new Identity(value);
     }
 
-    private final String id;
+    private final String identity;
 
-    @VisibleForTesting
-    CassandraBlobId(String id) {
-        this.id = id;
+    private Identity(String value) {
+        this.identity = value;
+    }
+
+    public String value() {
+        return identity;
     }
 
     @Override
-    public String asString() {
-        return id;
-    }
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (obj instanceof CassandraBlobId) {
-            CassandraBlobId other = (CassandraBlobId) obj;
-            return Objects.equal(id, other.id);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-        return false;
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Identity identity1 = (Identity) o;
+        return Objects.equal(identity, identity1.identity);
     }
 
     @Override
-    public final int hashCode() {
-        return Objects.hashCode(id);
+    public int hashCode() {
+        return Objects.hashCode(identity);
     }
 
     @Override
     public String toString() {
-        return MoreObjects
-            .toStringHelper(this)
-            .add("id", id)
+        return MoreObjects.toStringHelper(this)
+            .add("identity", identity)
             .toString();
     }
 }

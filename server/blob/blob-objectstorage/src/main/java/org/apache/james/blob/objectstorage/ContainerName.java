@@ -17,36 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.cassandra;
+package org.apache.james.blob.objectstorage;
 
-import javax.inject.Inject;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+public final class ContainerName {
+    public static ContainerName of(String value) {
+        return new ContainerName(value);
+    }
 
-public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
-    private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
-    private final CassandraMailRepositoryMailDAO mailDAO;
-    private final BlobStore blobStore;
+    private final String container;
 
-    @Inject
-    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, BlobStore blobStore) {
-        this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
-        this.mailDAO = mailDAO;
-        this.blobStore = blobStore;
+    private ContainerName(String value) {
+        this.container = value;
+    }
+
+    public String value() {
+        return container;
     }
 
     @Override
-    public String canonicalName() {
-        return CassandraMailRepository.class.getCanonicalName();
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ContainerName that = (ContainerName) o;
+        return Objects.equal(container, that.container);
     }
 
     @Override
-    public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, blobStore);
+    public int hashCode() {
+        return Objects.hashCode(container);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("container", container)
+            .toString();
     }
 }

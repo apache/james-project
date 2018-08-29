@@ -23,7 +23,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
@@ -102,7 +102,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
         CassandraAttachmentOwnerDAO ownerDAO = null;
         CassandraACLMapper aclMapper = null;
         CassandraUserMailboxRightsDAO userMailboxRightsDAO = null;
-        ObjectStore objectStore = null;
+        BlobStore blobStore = null;
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
         return new CassandraSubscriptionManager(
@@ -123,7 +123,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
                 attachmentDAO,
                 attachmentDAOV2,
                 deletedMessageDAO,
-                objectStore,
+                blobStore,
                 attachmentMessageIdDAO,
                 ownerDAO,
                 aclMapper,

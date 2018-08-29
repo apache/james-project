@@ -17,36 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.cassandra;
+package org.apache.james.blob.objectstorage;
 
-import javax.inject.Inject;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+public class HeaderName {
+    private final String value;
 
-public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
-    private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
-    private final CassandraMailRepositoryMailDAO mailDAO;
-    private final BlobStore blobStore;
+    protected HeaderName(String value) {
+        this.value = value;
+    }
 
-    @Inject
-    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, BlobStore blobStore) {
-        this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
-        this.mailDAO = mailDAO;
-        this.blobStore = blobStore;
+    public String value() {
+        return value;
     }
 
     @Override
-    public String canonicalName() {
-        return CassandraMailRepository.class.getCanonicalName();
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof HeaderName)) {
+            return false;
+        }
+        HeaderName that = (HeaderName) o;
+        return Objects.equal(value, that.value);
     }
 
     @Override
-    public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, blobStore);
+    public final int hashCode() {
+        return Objects.hashCode(value);
+    }
+
+    @Override
+    public final String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }

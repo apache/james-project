@@ -16,18 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.blob.api;
 
-import java.io.InputStream;
-import java.util.concurrent.CompletableFuture;
+package org.apache.james.blob.objectstorage;
 
-public interface ObjectStore {
+import org.junit.jupiter.api.Test;
 
-    CompletableFuture<BlobId> save(byte[] data);
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    CompletableFuture<BlobId> save(InputStream data);
-
-    CompletableFuture<byte[]> readBytes(BlobId blobId);
-
-    InputStream read(BlobId blobId);
+class IdentityTest {
+    @Test
+    public void credentialsShouldRespectBeanContract() {
+        EqualsVerifier.forClass(Identity.class).verify();
+    }
 }

@@ -60,7 +60,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.ObjectStore;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table;
 import org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.Attachments;
@@ -102,7 +102,7 @@ public class CassandraMessageDAO {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
     private final CassandraTypesProvider typesProvider;
-    private final ObjectStore objectStore;
+    private final BlobStore blobStore;
     private final BlobId.Factory blobIdFactory;
     private final CassandraConfiguration configuration;
     private final CassandraUtils cassandraUtils;
@@ -117,12 +117,12 @@ public class CassandraMessageDAO {
     private final Cid.CidParser cidParser;
 
     @Inject
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
                                BlobId.Factory blobIdFactory, CassandraConfiguration cassandraConfiguration,
             CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
         this.typesProvider = typesProvider;
-        this.objectStore = objectStore;
+        this.blobStore = blobStore;
         this.blobIdFactory = blobIdFactory;
         this.configuration = cassandraConfiguration;
         this.cassandraUtils = cassandraUtils;
@@ -139,9 +139,9 @@ public class CassandraMessageDAO {
     }
 
     @VisibleForTesting
-    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, ObjectStore objectStore,
+    public CassandraMessageDAO(Session session, CassandraTypesProvider typesProvider, BlobStore blobStore,
                                BlobId.Factory blobIdFactory, CassandraUtils cassandraUtils, CassandraMessageId.Factory messageIdFactory) {
-        this(session, typesProvider, objectStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
+        this(session, typesProvider, blobStore,  blobIdFactory, CassandraConfiguration.DEFAULT_CONFIGURATION, cassandraUtils, messageIdFactory);
     }
 
     private PreparedStatement prepareSelect(Session session, String[] fields) {
@@ -185,8 +185,8 @@ public class CassandraMessageDAO {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
             return CompletableFutureUtil.combine(
-                objectStore.save(headerContent),
-                objectStore.save(bodyContent),
+                blobStore.save(headerContent),
+                blobStore.save(bodyContent),
                 Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
@@ -372,7 +372,7 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<byte[]> getFieldContent(String field, Row row) {
-        return objectStore.readBytes(blobIdFactory.from(row.getString(field)));
+        return blobStore.readBytes(blobIdFactory.from(row.getString(field)));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

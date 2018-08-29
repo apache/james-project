@@ -17,29 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.blob.objectstorage;
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.blob.api.BlobId;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.cassandra.CassandraBlobModule;
-import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.junit.jupiter.api.Test;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraObjectStoreModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(CassandraBlobsDAO.class).in(Scopes.SINGLETON);
-        bind(HashBlobId.Factory.class).in(Scopes.SINGLETON);
-
-        bind(BlobStore.class).to(CassandraBlobsDAO.class);
-        bind(BlobId.Factory.class).to(HashBlobId.Factory.class);
-
-        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+class RegionTest {
+    @Test
+    public void credentialsShouldRespectBeanContract() {
+        EqualsVerifier.forClass(Region.class).verify();
     }
 }

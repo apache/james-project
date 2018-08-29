@@ -17,36 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.cassandra;
+package org.apache.james.blob.objectstorage;
 
-import javax.inject.Inject;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
-import org.apache.james.mailrepository.api.MailRepositoryUrl;
+public final class Credentials {
+    public static Credentials of(String value) {
+        return new Credentials(value);
+    }
 
-public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
-    private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
-    private final CassandraMailRepositoryMailDAO mailDAO;
-    private final BlobStore blobStore;
+    private final String credentials;
 
-    @Inject
-    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, BlobStore blobStore) {
-        this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
-        this.mailDAO = mailDAO;
-        this.blobStore = blobStore;
+    private Credentials(String value) {
+        this.credentials = value;
+    }
+
+    public String value() {
+        return credentials;
     }
 
     @Override
-    public String canonicalName() {
-        return CassandraMailRepository.class.getCanonicalName();
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Credentials that = (Credentials) o;
+        return Objects.equal(credentials, that.credentials);
     }
 
     @Override
-    public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, blobStore);
+    public int hashCode() {
+        return Objects.hashCode(credentials);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("credentials", credentials)
+            .toString();
     }
 }

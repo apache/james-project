@@ -39,7 +39,7 @@ import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
-import org.apache.james.blob.cassandra.CassandraBlobId;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.mailbox.MessageUid;
@@ -94,7 +94,7 @@ public class AttachmentMessageIdCreationTest {
 
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
         cassandraMessageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(),
-            blobsDAO, new CassandraBlobId.Factory(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, messageIdFactory);
+            blobsDAO, new HashBlobId.Factory(), CassandraUtils.WITH_DEFAULT_CONFIGURATION, messageIdFactory);
 
         attachmentMessageIdDAO = new CassandraAttachmentMessageIdDAO(cassandra.getConf(),
             new CassandraMessageId.Factory(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
