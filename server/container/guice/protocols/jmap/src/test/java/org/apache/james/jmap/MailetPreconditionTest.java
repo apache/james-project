@@ -44,52 +44,52 @@ public class MailetPreconditionTest {
 
     @Test(expected = ConfigurationException.class)
     public void vacationMailetCheckShouldThrowOnEmptyList() throws Exception {
-        new JMAPModule.VacationMailetCheck().check(Lists.newArrayList());
+        JMAPModule.VACATION_MAILET_CHECK.check(Lists.newArrayList());
     }
 
     @Test(expected = NullPointerException.class)
     public void vacationMailetCheckShouldThrowOnNullList() throws Exception {
-        new JMAPModule.VacationMailetCheck().check(null);
+        JMAPModule.VACATION_MAILET_CHECK.check(null);
     }
 
     @Test(expected = ConfigurationException.class)
     public void vacationMailetCheckShouldThrowOnWrongMatcher() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new VacationMailet(null, null, null, null, null)));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
     public void vacationMailetCheckShouldThrowOnWrongMailet() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new Null()));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test
     public void vacationMailetCheckShouldNotThrowIfValidPairPresent() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(), new VacationMailet(null, null, null, null, null)));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnEmptyList() throws Exception {
-        new CamelMailetContainerModule.BccMailetCheck().check(Lists.newArrayList());
+        CamelMailetContainerModule.BCC_Check.check(Lists.newArrayList());
     }
 
     @Test(expected = NullPointerException.class)
     public void bccMailetCheckShouldThrowOnNullList() throws Exception {
-        new CamelMailetContainerModule.BccMailetCheck().check(null);
+        CamelMailetContainerModule.BCC_Check.check(null);
     }
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnWrongMatcher() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new RecipientIsLocal(),  new RemoveMimeHeader()));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
     public void bccMailetCheckShouldThrowOnWrongMailet() throws Exception {
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), new Null()));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
@@ -104,7 +104,7 @@ public class MailetPreconditionTest {
                 .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 
     @Test(expected = ConfigurationException.class)
@@ -117,6 +117,6 @@ public class MailetPreconditionTest {
                 .build());
 
         List<MatcherMailetPair> pairs = Lists.newArrayList(new MatcherMailetPair(new All(), removeMimeHeader));
-        new JMAPModule.VacationMailetCheck().check(pairs);
+        JMAPModule.VACATION_MAILET_CHECK.check(pairs);
     }
 }
