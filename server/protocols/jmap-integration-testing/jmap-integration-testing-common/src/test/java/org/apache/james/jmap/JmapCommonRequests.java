@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.model.MailboxId;
 
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.specification.ResponseSpecification;
@@ -72,6 +73,24 @@ public class JmapCommonRequests {
             with()
                 .header("Authorization", recipientToken.serialize())
                 .body("[[\"getMessageList\", {}, \"#0\"]]")
+            .when()
+                .post("/jmap")
+            .then()
+                .statusCode(200)
+                .body(NAME, equalTo("messageList"))
+                .body(ARGUMENTS + ".messageIds", hasSize(1));
+            return true;
+
+        } catch (AssertionError e) {
+            return false;
+        }
+    }
+
+    public static boolean isAnyMessageFoundInRecipientsMailbox(AccessToken recipientToken, MailboxId mailboxId) {
+        try {
+            with()
+                .header("Authorization", recipientToken.serialize())
+                .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]")
             .when()
                 .post("/jmap")
             .then()
