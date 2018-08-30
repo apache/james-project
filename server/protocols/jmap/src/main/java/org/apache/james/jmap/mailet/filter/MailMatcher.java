@@ -20,10 +20,9 @@
 package org.apache.james.jmap.mailet.filter;
 
 import static org.apache.james.jmap.api.filtering.Rule.Condition;
+import static org.apache.mailet.base.RFC2822Headers.FROM;
 
-import java.util.Arrays;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -36,7 +35,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
+import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.OptionalUtils;
+import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,14 +49,14 @@ import com.google.common.collect.ImmutableMap;
 public interface MailMatcher {
 
     interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
+        Logger LOGGER = LoggerFactory.getLogger(HeaderExtractor.class);
+
         HeaderExtractor SUBJECT_EXTRACTOR = mail ->
             OptionalUtils.ofNullableToStream(mail.getMessage().getSubject());
-        HeaderExtractor RECIPIENT_EXTRACTOR =  mail -> addressExtractor(
-            mail.getMessage().getRecipients(Message.RecipientType.TO),
-            mail.getMessage().getRecipients(Message.RecipientType.CC));
-        HeaderExtractor FROM_EXTRACTOR = mail -> addressExtractor(mail.getMessage().getFrom());
         HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
         HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
+        HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);
+        HeaderExtractor FROM_EXTRACTOR = addressExtractor(mail -> mail.getMessage().getFrom(), FROM);
 
         Map<Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Field, HeaderExtractor>builder()
             .put(Field.SUBJECT, SUBJECT_EXTRACTOR)
@@ -65,21 +66,38 @@ public interface MailMatcher {
             .put(Field.TO, TO_EXTRACTOR)
             .build();
 
-        static HeaderExtractor recipientExtractor(Message.RecipientType type) {
-            return mail -> addressExtractor(mail.getMessage().getRecipients(type));
+        static HeaderExtractor and(HeaderExtractor headerExtractor1, HeaderExtractor headerExtractor2) {
+            return (Mail mail) -> StreamUtils.flatten(headerExtractor1.apply(mail), headerExtractor2.apply(mail));
         }
 
-        static Stream<String> addressExtractor(Address[]... addresses) {
+        static HeaderExtractor recipientExtractor(Message.RecipientType type) {
+            ThrowingFunction<Mail, Address[]> addressGetter = mail -> mail.getMessage().getRecipients(type);
+            String fallbackHeaderName = type.toString();
+
+            return addressExtractor(addressGetter, fallbackHeaderName);
+        }
+
+        static HeaderExtractor addressExtractor(ThrowingFunction<Mail, Address[]> addressGetter, String fallbackHeaderName) {
+            return mail -> {
+                try {
+                    return toContent(addressGetter.apply(mail));
+                } catch (Exception e) {
+                    LOGGER.info("Failed parsing header. Falling back to unparsed header value matching", e);
+                    return Stream.of(mail.getMessage().getHeader(fallbackHeaderName))
+                        .map(MimeUtil::unscrambleHeaderValue);
+                }
+            };
+        }
+
+        static Stream<String> toContent(Address[] addresses) {
             return Optional.ofNullable(addresses)
-                .map(Arrays::stream)
-                .orElse(Stream.empty())
-                .filter(Objects::nonNull)
-                .flatMap(AddressHelper::asStringStream);
+                .map(AddressHelper::asStringStream)
+                .orElse(Stream.empty());
         }
 
         static Optional<HeaderExtractor> asHeaderExtractor(Field field) {
-            return Optional
-                .ofNullable(HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field));
+            return Optional.ofNullable(
+                HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field));
         }
     }
 
