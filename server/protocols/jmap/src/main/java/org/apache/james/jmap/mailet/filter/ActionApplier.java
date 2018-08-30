@@ -28,14 +28,12 @@ import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 public class ActionApplier {
@@ -90,10 +88,10 @@ public class ActionApplier {
     public void apply(Stream<Rule.Action> actions) {
         actions.flatMap(action -> action.getAppendInMailboxes().getMailboxIds().stream())
             .map(mailboxIdFactory::fromString)
-            .forEach(Throwing.consumer(this::addStorageDirective));
+            .forEach(this::addStorageDirective);
     }
 
-    private void addStorageDirective(MailboxId mailboxId) throws MailboxException {
+    private void addStorageDirective(MailboxId mailboxId) {
         try {
             MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
@@ -103,6 +101,8 @@ public class ActionApplier {
             mail.setAttribute(attributeNameForUser, mailboxName);
         } catch (MailboxNotFoundException e) {
             LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxId, e);
+        } catch (Exception e) {
+            LOGGER.error("Unexpected failure while resolving mailbox name for {}", mailboxId, e);
         }
     }
 }
