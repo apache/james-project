@@ -54,6 +54,7 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_FU
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FULL_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -63,7 +64,6 @@ import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.mailet.filter.JMAPFilteringExtension.JMAPFilteringTestSystem;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.base.test.FakeMail;
@@ -677,11 +677,10 @@ class JMAPFilteringTest {
     @Nested
     class MultiRuleBehaviourTest {
         @Test
-        void mailDirectiveShouldSetFirstMatchedRuleWhenMultipleRules(JMAPFilteringTestSystem testSystem) throws Exception {
-            InMemoryMailboxManager mailboxManager = testSystem.getMailboxManager();
-            MailboxId mailbox1Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
-            MailboxId mailbox2Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
-            MailboxId mailbox3Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
+        void mailDirectiveShouldSetLastMatchedRuleWhenMultipleRules(JMAPFilteringTestSystem testSystem) throws Exception {
+            MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
+            MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
+            MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
             testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
@@ -711,15 +710,14 @@ class JMAPFilteringTest {
             testSystem.getJmapFiltering().service(mail);
 
             assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
-                .isEqualTo("RECIPIENT_1_MAILBOX_1");
+                .isEqualTo("RECIPIENT_1_MAILBOX_3");
         }
 
         @Test
-        void mailDirectiveShouldSetFirstMatchedMailboxWhenMultipleMailboxes(JMAPFilteringTestSystem testSystem) throws Exception {
-            InMemoryMailboxManager mailboxManager = testSystem.getMailboxManager();
-            MailboxId mailbox1Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
-            MailboxId mailbox2Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
-            MailboxId mailbox3Id = testSystem.createMailbox(mailboxManager, RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
+        void mailDirectiveShouldSetLastMatchedMailboxWhenMultipleMailboxes(JMAPFilteringTestSystem testSystem) throws Exception {
+            MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
+            MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
+            MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
             testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
@@ -738,7 +736,35 @@ class JMAPFilteringTest {
             testSystem.getJmapFiltering().service(mail);
 
             assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
-                .isEqualTo("RECIPIENT_1_MAILBOX_3");
+                .isEqualTo("RECIPIENT_1_MAILBOX_1");
+        }
+
+        @Test
+        void rulesWithEmptyMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
+            MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
+
+            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+                Rule.builder()
+                    .id(Rule.Id.of("1"))
+                    .name("rule 1")
+                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of())))
+                    .build(),
+                Rule.builder()
+                    .id(Rule.Id.of("2"))
+                    .name("rule 2")
+                    .condition(Rule.Condition.of(SUBJECT, CONTAINS, UNSCRAMBLED_SUBJECT))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(ImmutableList.of(
+                        mailbox1Id.serialize()))))
+                    .build());
+
+            FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+                    .setSubject(UNSCRAMBLED_SUBJECT));
+
+            testSystem.getJmapFiltering().service(mail);
+
+            assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
+                .isEqualTo("RECIPIENT_1_MAILBOX_1");
         }
 
         @Test
@@ -778,6 +804,97 @@ class JMAPFilteringTest {
 
             assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
                 .isNull();
+        }
+    }
+
+    @Nested
+    class UnknownMailboxIds {
+        @Test
+        void serviceShouldNotThrowWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
+            String unknownMailboxId = "4242";
+            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+                Rule.builder()
+                    .id(Rule.Id.of("1"))
+                    .name("rule 1")
+                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
+                    .build());
+
+            FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+                .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+            assertThatCode(() -> testSystem.getJmapFiltering().service(mail))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void mailDirectiveShouldNotBeSetWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
+            String unknownMailboxId = "4242";
+            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+                Rule.builder()
+                    .id(Rule.Id.of("1"))
+                    .name("rule 1")
+                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
+                    .build());
+
+            FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+                .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+            testSystem.getJmapFiltering().service(mail);
+
+            assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
+                .isNull();
+        }
+
+        @Test
+        void rulesWithInvalidMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
+            String unknownMailboxId = "4242";
+            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+                Rule.builder()
+                    .id(Rule.Id.of("1"))
+                    .name("rule 1")
+                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(unknownMailboxId)))
+                    .build(),
+                Rule.builder()
+                    .id(Rule.Id.of("2"))
+                    .name("rule 2")
+                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
+                        testSystem.getRecipient1MailboxId().serialize())))
+                    .build());
+
+            FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+                .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+            testSystem.getJmapFiltering().service(mail);
+
+            assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
+                .isEqualTo(RECIPIENT_1_MAILBOX_1);
+        }
+
+        @Test
+        void rulesWithMultipleMailboxIdsShouldFallbackWhenInvalidFirstMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
+            String unknownMailboxId = "4242";
+
+            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+                Rule.builder()
+                    .id(Rule.Id.of("1"))
+                    .name("rule 1")
+                    .condition(Rule.Condition.of(FROM, CONTAINS, FRED_MARTIN_FULLNAME))
+                    .action(Rule.Action.of(Rule.Action.AppendInMailboxes.withMailboxIds(
+                        unknownMailboxId,
+                        testSystem.getRecipient1MailboxId().serialize())))
+                    .build());
+
+            FakeMail mail = testSystem.asMail(mimeMessageBuilder()
+                .addFrom(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS));
+
+            testSystem.getJmapFiltering().service(mail);
+
+            assertThat(mail.getAttribute(DELIVERY_PATH_PREFIX + RECIPIENT_1_USERNAME))
+                .isEqualTo(RECIPIENT_1_MAILBOX_1);
         }
     }
 }

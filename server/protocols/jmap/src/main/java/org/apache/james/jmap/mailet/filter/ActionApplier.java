@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import java.util.stream.Stream;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
@@ -27,14 +29,18 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.mailet.Mail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 public class ActionApplier {
     static final String DELIVERY_PATH_PREFIX = "DeliveryPath_";
+    public static final Logger LOGGER = LoggerFactory.getLogger(ActionApplier.class);
 
     @VisibleForTesting
     static class Factory {
@@ -81,21 +87,22 @@ public class ActionApplier {
         this.user = user;
     }
 
-    public void apply(Rule.Action action) {
-        action.getAppendInMailboxes()
-                .getMailboxIds()
-                .stream()
-                .findFirst()
-                .map(mailboxIdFactory::fromString)
-                .ifPresent(Throwing.consumer(this::addStorageDirective));
+    public void apply(Stream<Rule.Action> actions) {
+        actions.flatMap(action -> action.getAppendInMailboxes().getMailboxIds().stream())
+            .map(mailboxIdFactory::fromString)
+            .forEach(Throwing.consumer(this::addStorageDirective));
     }
 
     private void addStorageDirective(MailboxId mailboxId) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
-        MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
+        try {
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
+            MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
 
-        String mailboxName = messageManager.getMailboxPath().getName();
-        String attributeNameForUser = DELIVERY_PATH_PREFIX + user.asString();
-        mail.setAttribute(attributeNameForUser, mailboxName);
+            String mailboxName = messageManager.getMailboxPath().getName();
+            String attributeNameForUser = DELIVERY_PATH_PREFIX + user.asString();
+            mail.setAttribute(attributeNameForUser, mailboxName);
+        } catch (MailboxNotFoundException e) {
+            LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxId, e);
+        }
     }
 }

@@ -21,6 +21,7 @@ package org.apache.james.jmap.mailet.filter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -67,11 +68,11 @@ public class JMAPFiltering extends GenericMailet {
     private void findFirstApplicableRule(User user, Mail mail) {
         List<Rule> filteringRules = filteringManagement.listRulesForUser(user);
         RuleMatcher ruleMatcher = new RuleMatcher(filteringRules);
-        Optional<Rule> maybeMatchingRule = ruleMatcher.findApplicableRule(mail);
+        Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
 
-        maybeMatchingRule.ifPresent(rule -> actionApplierFactory.forMail(mail)
-                .forUser(user)
-                .apply(rule.getAction()));
+        actionApplierFactory.forMail(mail)
+            .forUser(user)
+            .apply(matchingRules.map(Rule::getAction));
     }
 
     private Optional<User> retrieveUser(MailAddress recipient) {

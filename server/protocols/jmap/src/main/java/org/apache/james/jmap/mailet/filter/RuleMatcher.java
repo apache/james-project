@@ -20,7 +20,7 @@
 package org.apache.james.jmap.mailet.filter;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.mailet.Mail;
@@ -36,9 +36,8 @@ class RuleMatcher {
         this.filteringRules = filteringRules;
     }
 
-    Optional<Rule> findApplicableRule(Mail mail) {
+    Stream<Rule> findApplicableRules(Mail mail) {
         return filteringRules.stream()
-            .filter(rule -> MailMatcher.from(rule).match(mail))
-            .findFirst();
+            .filter(rule -> MailMatcher.from(rule).match(mail));
     }
 }

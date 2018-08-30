@@ -68,7 +68,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
             this.filteringManagement = filteringManagement;
             this.mailboxManager = mailboxManager;
             try {
-                this.recipient1Mailbox = createMailbox(mailboxManager, RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1);
+                this.recipient1Mailbox = createMailbox(RECIPIENT_1_USERNAME, RECIPIENT_1_MAILBOX_1);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -90,7 +90,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
             return recipient1Mailbox;
         }
 
-        public MailboxId createMailbox(InMemoryMailboxManager mailboxManager, String username, String mailboxName) throws Exception {
+        public MailboxId createMailbox(String username, String mailboxName) throws Exception {
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             return mailboxManager
                 .createMailbox(MailboxPath.forUser(username, mailboxName), mailboxSession)
