@@ -36,7 +36,6 @@ import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
 import org.apache.james.mime4j.util.MimeUtil;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.StreamUtils;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -52,7 +51,7 @@ public interface MailMatcher {
         Logger LOGGER = LoggerFactory.getLogger(HeaderExtractor.class);
 
         HeaderExtractor SUBJECT_EXTRACTOR = mail ->
-            OptionalUtils.ofNullableToStream(mail.getMessage().getSubject());
+            StreamUtils.ofNullables(mail.getMessage().getSubject());
         HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
         HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
         HeaderExtractor RECIPIENT_EXTRACTOR = and(TO_EXTRACTOR, CC_EXTRACTOR);

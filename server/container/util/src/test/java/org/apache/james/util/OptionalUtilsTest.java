@@ -85,19 +85,6 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    public void ofNullableToStreamShouldReturnAStreamContainingTheValueWhenNotNull() {
-        long value = 18L;
-        assertThat(OptionalUtils.ofNullableToStream(value))
-            .containsExactly(value);
-    }
-
-    @Test
-    public void ofNullableToStreamShouldReturnAnEmptyStreamWhenNull() {
-        assertThat(OptionalUtils.ofNullableToStream(null))
-            .isEmpty();
-    }
-
-    @Test
     public void orShouldReturnEmptyWhenEmpty() {
         assertThat(
             OptionalUtils.or(

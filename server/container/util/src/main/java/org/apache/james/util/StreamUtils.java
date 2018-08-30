@@ -27,6 +27,10 @@ import java.util.stream.Stream;
 
 public class StreamUtils {
 
+    public static <T> Stream<T> ofNullables(T... array) {
+        return ofNullable(array);
+    }
+
     public static <T> Stream<T> ofNullable(T[] array) {
         return ofOptional(Optional.ofNullable(array));
     }
