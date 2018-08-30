@@ -199,7 +199,7 @@ public interface MailMatcher {
         @Override
         public boolean match(Mail mail) {
             try {
-                final Stream<String> headerLines = headerExtractor.apply(mail);
+                Stream<String> headerLines = headerExtractor.apply(mail);
                 return contentMatcher.match(headerLines, ruleValue);
             } catch (Exception e) {
                 LOGGER.error("error while extracting mail header", e);
