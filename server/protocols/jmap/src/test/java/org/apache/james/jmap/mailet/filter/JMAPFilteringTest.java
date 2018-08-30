@@ -31,7 +31,6 @@ import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.SUBJECT;
 import static org.apache.james.jmap.api.filtering.Rule.Condition.Field.TO;
 import static org.apache.james.jmap.mailet.filter.ActionApplier.DELIVERY_PATH_PREFIX;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.BOU;
-import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.CC_HEADER;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.EMPTY;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULLNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.FRED_MARTIN_FULL_SCRAMBLED_ADDRESS;
@@ -40,7 +39,6 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.RECIPIENT_1_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SCRAMBLED_SUBJECT;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.SHOULD_NOT_MATCH;
-import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.TO_HEADER;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.UNFOLDED_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.UNSCRAMBLED_SUBJECT;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_1_ADDRESS;
@@ -51,7 +49,6 @@ import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_AD
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_2_FULL_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_ADDRESS;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_FULL_ADDRESS;
-import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_3_USERNAME;
 import static org.apache.james.jmap.mailet.filter.JMAPFilteringFixture.USER_4_FULL_ADDRESS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -63,9 +60,11 @@ import java.util.stream.Stream;
 import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
+import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
 import org.apache.james.jmap.mailet.filter.JMAPFilteringExtension.JMAPFilteringTestSystem;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.util.StreamUtils;
+import org.apache.mailet.base.RFC2822Headers;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -133,13 +132,6 @@ class JMAPFilteringTest {
             return this;
         }
 
-        public FilteringArgumentBuilder headerForField(String headerValue) {
-            Preconditions.checkState(field.isPresent(), "field should be set first");
-
-            mimeMessageBuilder.addHeader(field.get().asString(), headerValue);
-            return this;
-        }
-
         public FilteringArgumentBuilder subject(String subject) {
             mimeMessageBuilder.setSubject(subject);
             return this;
@@ -197,121 +189,97 @@ class JMAPFilteringTest {
             .field(field);
     }
 
+    static class FieldAndHeader {
+        private final Rule.Condition.Field field;
+        private final String headerName;
+
+        public FieldAndHeader(Rule.Condition.Field field, String headerName) {
+            this.field = field;
+            this.headerName = headerName;
+        }
+    }
+
+    public static final ImmutableList<FieldAndHeader> ADDRESS_TESTING_COMBINATION = ImmutableList.of(
+        new FieldAndHeader(Field.FROM, RFC2822Headers.FROM),
+        new FieldAndHeader(Field.TO, RFC2822Headers.TO),
+        new FieldAndHeader(Field.CC, RFC2822Headers.CC),
+        new FieldAndHeader(Field.RECIPIENT, RFC2822Headers.TO),
+        new FieldAndHeader(Field.RECIPIENT, RFC2822Headers.CC));
+
     static Stream<Arguments> exactlyEqualsTestSuite() {
         return StreamUtils.flatten(
-            Stream.of(FROM, TO, CC)
-                .flatMap(headerField -> Stream.of(
-                    argumentBuilder(headerField)
+            ADDRESS_TESTING_COMBINATION
+                .stream()
+                .flatMap(fieldAndHeader -> Stream.of(
+                    argumentBuilder(fieldAndHeader.field)
                         .description("full address value")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_USERNAME),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("full address value (different case)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_USERNAME.toUpperCase(Locale.ENGLISH)),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("address only value")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_ADDRESS),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("address only value (different case)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_ADDRESS.toUpperCase(Locale.ENGLISH)),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("personal only value")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_FULL_ADDRESS),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("personal only value (different case)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_FULL_ADDRESS.toUpperCase()),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("personal header should match personal")
-                        .headerForField(USER_1_USERNAME)
+                        .header(fieldAndHeader.headerName, USER_1_USERNAME)
                         .valueToMatch(USER_1_USERNAME),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("address header should match address")
-                        .headerForField(USER_1_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_ADDRESS)
                         .valueToMatch(USER_1_ADDRESS),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("multiple headers")
-                        .headerForField(USER_1_FULL_ADDRESS)
-                        .headerForField(USER_2_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_2_FULL_ADDRESS)
                         .valueToMatch(USER_1_USERNAME),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("scrambled content")
-                        .headerForField(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                        .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
                         .valueToMatch(FRED_MARTIN_FULLNAME),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("folded content")
-                        .headerForField(USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
                         .valueToMatch(UNFOLDED_USERNAME),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("folded content (different case)")
-                        .headerForField(USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
                         .valueToMatch(UNFOLDED_USERNAME.toUpperCase()),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, personal match")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
                         .valueToMatch("Benoit"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, address match")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
                         .valueToMatch("invalid"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, full match")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
                         .valueToMatch("Benoit <invalid>"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid header, full match")
-                        .headerForField("Benoit <invalid")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid")
                         .valueToMatch("Benoit <invalid")
                     ).map(FilteringArgumentBuilder::build)),
-            Stream.of(TO_HEADER, CC_HEADER)
-                .flatMap(headerName -> Stream.of(
-                    argumentBuilder(RECIPIENT)
-                        .description("full address " + headerName + " header")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch(USER_3_FULL_ADDRESS),
-                    argumentBuilder(RECIPIENT)
-                        .description("full address " + headerName + " header (different case)")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch(USER_3_FULL_ADDRESS.toUpperCase(Locale.ENGLISH)),
-                    argumentBuilder(RECIPIENT)
-                        .description("address only " + headerName + " header")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch(USER_3_ADDRESS),
-                    argumentBuilder(RECIPIENT)
-                        .description("personal only " + headerName + " header")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch(USER_3_USERNAME),
-                    argumentBuilder(RECIPIENT)
-                        .description("scrambled content in " + headerName + " header")
-                        .header(headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch(FRED_MARTIN_FULLNAME),
-                    argumentBuilder(RECIPIENT)
-                        .description("folded content in " + headerName + " header")
-                        .header(headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch(UNFOLDED_USERNAME),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid " + headerName + " address, personal match")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("Benoit"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid " + headerName + " address, address match")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("invalid"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid " + headerName + " address, full match")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("Benoit <invalid>"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid " + headerName + ", full match")
-                        .header(headerName, "Benoit <invalid")
-                        .valueToMatch("Benoit <invalid"))
-                    .map(FilteringArgumentBuilder::build)),
             Stream.of(
-                argumentBuilder().description("multiple to and cc headers").field(RECIPIENT)
+                argumentBuilder().description("multiple to and cc headers")
+                    .field(RECIPIENT)
                     .ccRecipient(USER_1_FULL_ADDRESS)
                     .ccRecipient(USER_2_FULL_ADDRESS)
                     .toRecipient(USER_3_FULL_ADDRESS)
@@ -330,119 +298,68 @@ class JMAPFilteringTest {
 
     private static Stream<Arguments> containsArguments() {
         return StreamUtils.flatten(
-            Stream.of(FROM, TO, CC)
-                .flatMap(headerField -> Stream.of(
-                    argumentBuilder(headerField)
+            ADDRESS_TESTING_COMBINATION.stream()
+                .flatMap(fieldAndHeader -> Stream.of(
+                    argumentBuilder(fieldAndHeader.field)
                         .description("full address value (partial matching)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch("ser1 <"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("full address value (partial matching, different case)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch("SER1 <"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("address only value (partial matching)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch("ser1@jam"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("personal only value (partial matching)")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
                         .valueToMatch("ser1"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("address header & match in the address (partial matching)")
-                        .headerForField(USER_1_ADDRESS)
+                        .header(fieldAndHeader.headerName,USER_1_ADDRESS)
                         .valueToMatch("ser1@jam"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("raw value matching (partial matching)")
-                        .headerForField(GA_BOU_ZO_MEU_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName,GA_BOU_ZO_MEU_FULL_ADDRESS)
                         .valueToMatch(BOU),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("multiple headers (partial matching)")
-                        .headerForField(USER_1_FULL_ADDRESS)
-                        .headerForField(USER_2_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName,USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName,USER_2_FULL_ADDRESS)
                         .valueToMatch("ser1@jam"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("scrambled content (partial matching)")
-                        .headerForField(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                        .header(fieldAndHeader.headerName,FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
                         .valueToMatch("déric MAR"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("folded content (partial matching)")
-                        .headerForField(USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName,USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
                         .valueToMatch("ded_us"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, personal match (partial matching)")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
                         .valueToMatch("enoi"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, address match (partial matching)")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
                         .valueToMatch("nvali"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, full match (partial matching)")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid>")
                         .valueToMatch("enoit <invali"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid header, full match (partial matching)")
-                        .headerForField("Benoit <invalid")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid")
                         .valueToMatch("enoit <invali"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid header, personal match (partial matching)")
-                        .headerForField("Benoit <invalid")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid")
                         .valueToMatch("enoi"),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid header, address match (partial matching)")
-                        .headerForField("Benoit <invalid")
-                        .valueToMatch("nvali"))
-                    .map(FilteringArgumentBuilder::build)),
-            Stream.of(TO_HEADER, CC_HEADER)
-                .flatMap(headerName -> Stream.of(
-                    argumentBuilder(RECIPIENT)
-                        .description("full address " + headerName + " header (partial matching)")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch("ser3 <us"),
-                    argumentBuilder(RECIPIENT)
-                        .description("full address " + headerName + " header (partial matching, different case)")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch("SER3 <US"),
-                    argumentBuilder(RECIPIENT)
-                        .description("address only " + headerName + " header (partial matching)")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch("ser3@jam"),
-                    argumentBuilder(RECIPIENT)
-                        .description("personal only " + headerName + " header (partial matching)")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch("ser3"),
-                    argumentBuilder(RECIPIENT)
-                        .description("scrambled content in " + headerName + " header (partial matching)")
-                        .header(headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch("déric MAR"),
-                    argumentBuilder(RECIPIENT)
-                        .description("folded content in " + headerName + " header (partial matching)")
-                        .header(headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch("folded_us"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid address, personal match (partial matching)")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("enoi"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid address, address match (partial matching)")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("nvali"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid address, full match (partial matching)")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch("enoit <invali"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid header, full match (partial matching)")
-                        .header(headerName, "Benoit <invalid")
-                        .valueToMatch("enoit <invali"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid header, personal match (partial matching)")
-                        .header(headerName, "Benoit <invalid")
-                        .valueToMatch("enoi"),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid header, address match (partial matching)")
-                        .header(headerName, "Benoit <invalid")
+                        .header(fieldAndHeader.headerName,"Benoit <invalid")
                         .valueToMatch("nvali"))
                     .map(FilteringArgumentBuilder::build)),
             Stream.of(
@@ -464,63 +381,36 @@ class JMAPFilteringTest {
 
     static Stream<Arguments> notContainsTestSuite() {
         return StreamUtils.flatten(
-            Stream.of(FROM, TO, CC)
-                .flatMap(headerField -> Stream.of(
-                    argumentBuilder(headerField)
+            ADDRESS_TESTING_COMBINATION.stream()
+                .flatMap(fieldAndHeader -> Stream.of(
+                    argumentBuilder(fieldAndHeader.field)
                         .description("normal content")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("multiple headers")
-                        .headerForField(USER_1_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .from(USER_2_FULL_ADDRESS)
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("scrambled content")
-                        .headerForField(FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
+                        .header(fieldAndHeader.headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("folded content")
-                        .headerForField(USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
+                        .header(fieldAndHeader.headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("empty content")
-                        .headerForField(EMPTY)
+                        .header(fieldAndHeader.headerName, EMPTY)
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid address, personal match")
-                        .headerForField("Benoit <invalid>")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid>")
                         .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(headerField)
+                    argumentBuilder(fieldAndHeader.field)
                         .description("invalid header, full match")
-                        .headerForField("Benoit <invalid")
-                        .valueToMatch(SHOULD_NOT_MATCH))
-                    .map(FilteringArgumentBuilder::build)),
-            Stream.of(TO_HEADER, CC_HEADER)
-                .flatMap(headerName -> Stream.of(
-                    argumentBuilder(RECIPIENT)
-                        .description("normal content " + headerName + " header")
-                        .header(headerName, USER_3_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(RECIPIENT)
-                        .description("scrambled content in " + headerName + " header")
-                        .field(RECIPIENT).header(headerName, FRED_MARTIN_FULL_SCRAMBLED_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(RECIPIENT)
-                        .description("folded content in " + headerName + " header")
-                        .header(headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(RECIPIENT)
-                        .description("bcc header")
-                        .header(headerName, USER_1_AND_UNFOLDED_USER_FULL_ADDRESS)
-                        .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid address, personal match")
-                        .header(headerName, "Benoit <invalid>")
-                        .valueToMatch(SHOULD_NOT_MATCH),
-                    argumentBuilder(RECIPIENT)
-                        .description("invalid header, full match")
-                        .header(headerName, "Benoit <invalid")
+                        .header(fieldAndHeader.headerName, "Benoit <invalid")
                         .valueToMatch(SHOULD_NOT_MATCH))
                     .map(FilteringArgumentBuilder::build)),
             Stream.of(
