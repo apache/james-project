@@ -25,7 +25,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class RegionTest {
     @Test
-    public void credentialsShouldRespectBeanContract() {
+    public void regionShouldRespectBeanContract() {
         EqualsVerifier.forClass(Region.class).verify();
     }
 }
