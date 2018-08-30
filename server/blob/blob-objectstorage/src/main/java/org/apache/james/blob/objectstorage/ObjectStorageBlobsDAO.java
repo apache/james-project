@@ -60,7 +60,7 @@ class ObjectStorageBlobsDAO implements BlobStore {
         RegionScopedBlobStoreContext blobStoreContext = ContextBuilder.newBuilder("openstack-swift")
             .endpoint(objectStorageConfiguration.getEndpoint().toString())
             .credentials(
-                objectStorageConfiguration.getIdentity().value(),
+                objectStorageConfiguration.getSwiftIdentity().asString(),
                 objectStorageConfiguration.getCredentials().value())
             .overrides(objectStorageConfiguration.getOverrides())
             .modules(JCLOUDS_MODULES)

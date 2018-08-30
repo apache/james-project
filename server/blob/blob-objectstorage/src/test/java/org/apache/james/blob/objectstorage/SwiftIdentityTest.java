@@ -19,45 +19,21 @@
 
 package org.apache.james.blob.objectstorage;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public final class Identity {
-    public static Identity of(String value) {
-        return new Identity(value);
+import org.junit.jupiter.api.Test;
+
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class SwiftIdentityTest {
+    @Test
+    void swiftIdentityRendersProperlyAsString() {
+        SwiftIdentity swiftIdentity = SwiftIdentity.of(TenantName.of("tenant"), UserName.of("user"));
+        assertThat(swiftIdentity.asString()).isEqualTo("tenant:user");
     }
 
-    private final String identity;
-
-    private Identity(String value) {
-        this.identity = value;
-    }
-
-    public String value() {
-        return identity;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Identity identity1 = (Identity) o;
-        return Objects.equal(identity, identity1.identity);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(identity);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("identity", identity)
-            .toString();
+    @Test
+    public void credentialsShouldRespectBeanContract() {
+        EqualsVerifier.forClass(SwiftIdentity.class).verify();
     }
 }

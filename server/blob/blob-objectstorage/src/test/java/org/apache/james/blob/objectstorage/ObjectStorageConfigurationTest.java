@@ -28,31 +28,55 @@ import org.junit.jupiter.api.Test;
 
 class ObjectStorageConfigurationTest {
 
+    private static final TenantName TENANT_NAME = TenantName.of("fake");
+    private static final UserName USER_NAME = UserName.of("fake");
     private static URI ENDPOINT = URI.create("http://example.com");
     private static Credentials CREDENTIALS = Credentials.of("fake");
-    private static Identity IDENTITY = Identity.of("fake");
+    private static SwiftIdentity SWIFT_IDENTITY = SwiftIdentity.of(TenantName.of("fake"),
+        UserName.of("fake"));
 
     @Test
     void enpointIsMandatoryToBuildConfiguration() throws Exception {
         ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        assertThatThrownBy(() -> builder.build()).isInstanceOf(IllegalStateException.class);
+        builder
+            .tenantName(TENANT_NAME)
+            .userName(USER_NAME)
+            .credentials(CREDENTIALS);
+
+        assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void identityIsMandatoryToBuildConfiguration() throws Exception {
+    void tenantNameIsMandatoryToBuildConfiguration() throws Exception {
         ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
         builder
-            .endpoint(new URI("http", "example.com", null, null));
-        assertThatThrownBy(() -> builder.build()).isInstanceOf(IllegalStateException.class);
+            .endpoint(ENDPOINT)
+            .userName(USER_NAME)
+            .credentials(CREDENTIALS);
+
+        assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void userNameIsMandatoryToBuildConfiguration() throws Exception {
+        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
+        builder
+            .endpoint(ENDPOINT)
+            .tenantName(TENANT_NAME)
+            .credentials(CREDENTIALS);
+
+        assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     void credentialsIsMandatoryToBuildConfiguration() throws Exception {
         ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
         builder
-            .endpoint(new URI("http", "example.com", null, null))
-            .identity(Identity.of("fake"));
-        assertThatThrownBy(() -> builder.build()).isInstanceOf(IllegalStateException.class);
+            .endpoint(ENDPOINT)
+            .tenantName(TENANT_NAME)
+            .userName(USER_NAME);
+
+        assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -60,13 +84,29 @@ class ObjectStorageConfigurationTest {
         ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
         builder
             .endpoint(ENDPOINT)
-            .identity(IDENTITY)
+            .tenantName(TENANT_NAME)
+            .userName(USER_NAME)
             .credentials(CREDENTIALS);
 
         ObjectStorageConfiguration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
-        assertThat(build.getIdentity()).isEqualTo(IDENTITY);
+        assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);
+        assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
+    }
+
+    @Test
+    void identityCanReplaceTenantAndUserName() throws Exception {
+        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
+        builder
+            .endpoint(ENDPOINT)
+            .identity(SWIFT_IDENTITY)
+            .credentials(CREDENTIALS);
+
+        ObjectStorageConfiguration build = builder.build();
+
+        assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
+        assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);
         assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
     }
 }

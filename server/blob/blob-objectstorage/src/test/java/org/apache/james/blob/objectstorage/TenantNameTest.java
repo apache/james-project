@@ -23,9 +23,9 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class IdentityTest {
+class TenantNameTest {
     @Test
-    public void credentialsShouldRespectBeanContract() {
-        EqualsVerifier.forClass(Identity.class).verify();
+    public void tenantNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(TenantName.class).verify();
     }
 }

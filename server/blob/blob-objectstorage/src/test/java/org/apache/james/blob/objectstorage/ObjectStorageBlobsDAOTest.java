@@ -37,10 +37,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerSwiftExtension.class)
 public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
-    private static final String TENANT_NAME = "test";
-    private static final String USER_NAME = "tester";
+    private static final TenantName TENANT_NAME = TenantName.of("test");
+    private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
-    private static final Identity IDENTITY = Identity.of(TENANT_NAME + ":" + USER_NAME);
+    private static final SwiftIdentity SWIFT_IDENTITY = SwiftIdentity.of(TENANT_NAME, USER_NAME);
 
     private URI swiftEndpoint;
     private ContainerName containerName;
@@ -55,7 +55,7 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
         swiftEndpoint = dockerSwift.swiftEndpoint();
         BlobStoreContext blobStoreContext = ContextBuilder.newBuilder("openstack-swift")
             .endpoint(swiftEndpoint.toString())
-            .credentials(IDENTITY.value(), PASSWORD.value())
+            .credentials(SWIFT_IDENTITY.asString(), PASSWORD.value())
             .overrides(overrides)
             .buildView(BlobStoreContext.class);
         blobStore = blobStoreContext.getBlobStore();
@@ -74,7 +74,7 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
         ObjectStorageConfiguration testConfig =
             new ObjectStorageConfiguration.Builder()
                 .endpoint(swiftEndpoint)
-                .identity(IDENTITY)
+                .identity(SWIFT_IDENTITY)
                 .credentials(PASSWORD)
                 .tempAuthHeaderUserName(UserHeaderName.of("X-Storage-User"))
                 .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
