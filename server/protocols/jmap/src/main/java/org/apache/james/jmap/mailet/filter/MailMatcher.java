@@ -133,9 +133,9 @@ public interface MailMatcher {
         ContentMatcher ADDRESS_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents
             .map(ContentMatcher::asAddressHeader)
             .anyMatch(addressHeader ->
-                StringUtils.equalsIgnoreCase(addressHeader.getFullAddress(), valueToMatch)
-                    || StringUtils.equalsIgnoreCase(addressHeader.getAddress().orElse(null), valueToMatch)
-                    || StringUtils.equalsIgnoreCase(addressHeader.getPersonal().orElse(null), valueToMatch));
+                valueToMatch.equalsIgnoreCase(addressHeader.getFullAddress())
+                    || addressHeader.getAddress().map(valueToMatch::equalsIgnoreCase).orElse(false)
+                    || addressHeader.getPersonal().map(valueToMatch::equalsIgnoreCase).orElse(false));
         ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(ADDRESS_EXACTLY_EQUALS_MATCHER);
 
         Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
