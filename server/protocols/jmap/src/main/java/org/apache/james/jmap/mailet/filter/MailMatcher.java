@@ -107,18 +107,6 @@ public interface MailMatcher {
                     return Optional.empty();
                 }
             }
-
-            public Optional<String> getPersonal() {
-                return personal;
-            }
-
-            public Optional<String> getAddress() {
-                return address;
-            }
-
-            public String getFullAddress() {
-                return fullAddress;
-            }
         }
 
         ContentMatcher STRING_CONTAINS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.contains(content, valueToMatch));
@@ -128,14 +116,14 @@ public interface MailMatcher {
 
         ContentMatcher ADDRESS_CONTAINS_MATCHER = (contents, valueToMatch) -> contents
             .map(ContentMatcher::asAddressHeader)
-            .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.getFullAddress(), valueToMatch));
+            .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.fullAddress, valueToMatch));
         ContentMatcher ADDRESS_NOT_CONTAINS_MATCHER = negate(ADDRESS_CONTAINS_MATCHER);
         ContentMatcher ADDRESS_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents
             .map(ContentMatcher::asAddressHeader)
             .anyMatch(addressHeader ->
-                valueToMatch.equalsIgnoreCase(addressHeader.getFullAddress())
-                    || addressHeader.getAddress().map(valueToMatch::equalsIgnoreCase).orElse(false)
-                    || addressHeader.getPersonal().map(valueToMatch::equalsIgnoreCase).orElse(false));
+                valueToMatch.equalsIgnoreCase(addressHeader.fullAddress)
+                    || addressHeader.address.map(valueToMatch::equalsIgnoreCase).orElse(false)
+                    || addressHeader.personal.map(valueToMatch::equalsIgnoreCase).orElse(false));
         ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(ADDRESS_EXACTLY_EQUALS_MATCHER);
 
         Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
