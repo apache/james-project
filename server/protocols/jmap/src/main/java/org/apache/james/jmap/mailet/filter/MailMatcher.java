@@ -21,7 +21,9 @@ package org.apache.james.jmap.mailet.filter;
 
 import static org.apache.james.jmap.api.filtering.Rule.Condition;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -30,7 +32,6 @@ import javax.mail.Message;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.javax.AddressHelper;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -179,9 +180,8 @@ public interface MailMatcher {
                     .map(Stream::of)
                     .orElse(Stream.empty());
     HeaderExtractor RECIPIENT_EXTRACTOR =  mail -> addressExtractor(
-            ArrayUtils.addAll(
                 mail.getMessage().getRecipients(Message.RecipientType.TO),
-                mail.getMessage().getRecipients(Message.RecipientType.CC)));
+                mail.getMessage().getRecipients(Message.RecipientType.CC));
 
     HeaderExtractor FROM_EXTRACTOR = mail -> addressExtractor(mail.getMessage().getFrom());
     HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
@@ -210,10 +210,12 @@ public interface MailMatcher {
         return mail -> addressExtractor(mail.getMessage().getRecipients(type));
     }
 
-    static Stream<String> addressExtractor(Address[] addresses) {
+    static Stream<String> addressExtractor(Address[]... addresses) {
         return Optional.ofNullable(addresses)
-                .map(AddressHelper::asStringStream)
-                .orElse(Stream.empty());
+            .map(Arrays::stream)
+            .orElse(Stream.empty())
+            .filter(Objects::nonNull)
+            .flatMap(AddressHelper::asStringStream);
     }
 
     static Optional<HeaderExtractor> getHeaderExtractor(Field field) {
