@@ -48,36 +48,38 @@ import com.google.common.collect.ImmutableMap;
 public interface MailMatcher {
 
     interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
+        HeaderExtractor SUBJECT_EXTRACTOR = mail ->
+            OptionalUtils.ofNullableToStream(mail.getMessage().getSubject());
+        HeaderExtractor RECIPIENT_EXTRACTOR =  mail -> addressExtractor(
+            mail.getMessage().getRecipients(Message.RecipientType.TO),
+            mail.getMessage().getRecipients(Message.RecipientType.CC));
+        HeaderExtractor FROM_EXTRACTOR = mail -> addressExtractor(mail.getMessage().getFrom());
+        HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
+        HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
 
-    }
+        Map<Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Field, HeaderExtractor>builder()
+            .put(Field.SUBJECT, SUBJECT_EXTRACTOR)
+            .put(Field.RECIPIENT, RECIPIENT_EXTRACTOR)
+            .put(Field.FROM, FROM_EXTRACTOR)
+            .put(Field.CC, CC_EXTRACTOR)
+            .put(Field.TO, TO_EXTRACTOR)
+            .build();
 
-    class HeaderMatcher implements MailMatcher {
-
-        private static final Logger LOGGER = LoggerFactory.getLogger(HeaderMatcher.class);
-
-        private final ContentMatcher contentMatcher;
-        private final String ruleValue;
-        private final HeaderExtractor headerExtractor;
-
-        private HeaderMatcher(ContentMatcher contentMatcher, String ruleValue,
-                              HeaderExtractor headerExtractor) {
-            Preconditions.checkNotNull(contentMatcher);
-            Preconditions.checkNotNull(headerExtractor);
-
-            this.contentMatcher = contentMatcher;
-            this.ruleValue = ruleValue;
-            this.headerExtractor = headerExtractor;
+        static HeaderExtractor recipientExtractor(Message.RecipientType type) {
+            return mail -> addressExtractor(mail.getMessage().getRecipients(type));
         }
 
-        @Override
-        public boolean match(Mail mail) {
-            try {
-                final Stream<String> headerLines = headerExtractor.apply(mail);
-                return contentMatcher.match(headerLines, ruleValue);
-            } catch (Exception e) {
-                LOGGER.error("error while extracting mail header", e);
-                return false;
-            }
+        static Stream<String> addressExtractor(Address[]... addresses) {
+            return Optional.ofNullable(addresses)
+                .map(Arrays::stream)
+                .orElse(Stream.empty())
+                .filter(Objects::nonNull)
+                .flatMap(AddressHelper::asStringStream);
+        }
+
+        static Optional<HeaderExtractor> asHeaderExtractor(Field field) {
+            return Optional
+                .ofNullable(HeaderExtractor.HEADER_EXTRACTOR_REGISTRY.get(field));
         }
     }
 
@@ -176,49 +178,45 @@ public interface MailMatcher {
         boolean match(Stream<String> contents, String valueToMatch);
     }
 
-    HeaderExtractor SUBJECT_EXTRACTOR = mail ->
-        OptionalUtils.ofNullableToStream(mail.getMessage().getSubject());
-    HeaderExtractor RECIPIENT_EXTRACTOR =  mail -> addressExtractor(
-        mail.getMessage().getRecipients(Message.RecipientType.TO),
-        mail.getMessage().getRecipients(Message.RecipientType.CC));
-    HeaderExtractor FROM_EXTRACTOR = mail -> addressExtractor(mail.getMessage().getFrom());
-    HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
-    HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
+    class HeaderMatcher implements MailMatcher {
 
-    Map<Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Field, HeaderExtractor>builder()
-        .put(Field.SUBJECT, SUBJECT_EXTRACTOR)
-        .put(Field.RECIPIENT, RECIPIENT_EXTRACTOR)
-        .put(Field.FROM, FROM_EXTRACTOR)
-        .put(Field.CC, CC_EXTRACTOR)
-        .put(Field.TO, TO_EXTRACTOR)
-        .build();
+        private static final Logger LOGGER = LoggerFactory.getLogger(HeaderMatcher.class);
+
+        private final ContentMatcher contentMatcher;
+        private final String ruleValue;
+        private final HeaderExtractor headerExtractor;
+
+        private HeaderMatcher(ContentMatcher contentMatcher, String ruleValue,
+                              HeaderExtractor headerExtractor) {
+            Preconditions.checkNotNull(contentMatcher);
+            Preconditions.checkNotNull(headerExtractor);
+
+            this.contentMatcher = contentMatcher;
+            this.ruleValue = ruleValue;
+            this.headerExtractor = headerExtractor;
+        }
+
+        @Override
+        public boolean match(Mail mail) {
+            try {
+                final Stream<String> headerLines = headerExtractor.apply(mail);
+                return contentMatcher.match(headerLines, ruleValue);
+            } catch (Exception e) {
+                LOGGER.error("error while extracting mail header", e);
+                return false;
+            }
+        }
+    }
 
     static MailMatcher from(Rule rule) {
         Condition ruleCondition = rule.getCondition();
         Optional<ContentMatcher> maybeContentMatcher = ContentMatcher.asContentMatcher(ruleCondition.getField(), ruleCondition.getComparator());
-        Optional<HeaderExtractor> maybeHeaderExtractor = getHeaderExtractor(ruleCondition.getField());
+        Optional<HeaderExtractor> maybeHeaderExtractor = HeaderExtractor.asHeaderExtractor(ruleCondition.getField());
 
         return new HeaderMatcher(
             maybeContentMatcher.orElseThrow(() -> new RuntimeException("No content matcher associated with field " + ruleCondition.getField())),
             rule.getCondition().getValue(),
             maybeHeaderExtractor.orElseThrow(() -> new RuntimeException("No content matcher associated with comparator " + ruleCondition.getComparator())));
-    }
-
-    static HeaderExtractor recipientExtractor(Message.RecipientType type) {
-        return mail -> addressExtractor(mail.getMessage().getRecipients(type));
-    }
-
-    static Stream<String> addressExtractor(Address[]... addresses) {
-        return Optional.ofNullable(addresses)
-            .map(Arrays::stream)
-            .orElse(Stream.empty())
-            .filter(Objects::nonNull)
-            .flatMap(AddressHelper::asStringStream);
-    }
-
-    static Optional<HeaderExtractor> getHeaderExtractor(Field field) {
-        return Optional
-            .ofNullable(HEADER_EXTRACTOR_REGISTRY.get(field));
     }
 
     boolean match(Mail mail);
