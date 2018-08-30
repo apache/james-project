@@ -168,7 +168,7 @@ public class DlpDomainRules {
             }
 
             private Stream<String> listEnvelopSender(Mail mail) {
-                return OptionalUtils.toStream(Optional.ofNullable(mail.getSender()).map(MailAddress::asString));
+                return OptionalUtils.ofNullableToStream(mail.getSender()).map(MailAddress::asString);
             }
 
             private Stream<String> listFromHeaders(Mail mail) throws MessagingException {

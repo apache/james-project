@@ -42,6 +42,10 @@ public class OptionalUtils {
             .orElse(Stream.of());
     }
 
+    public static <T> Stream<T> ofNullableToStream(T maybeNull) {
+        return toStream(Optional.ofNullable(maybeNull));
+    }
+
     @SafeVarargs
     public static <T> Optional<T> or(Optional<T>... optionals) {
         return orStream(Arrays.stream(optionals));
