@@ -47,7 +47,9 @@ import com.google.common.collect.ImmutableMap;
 
 public interface MailMatcher {
 
-    interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {}
+    interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> {
+
+    }
 
     class HeaderMatcher implements MailMatcher {
 
@@ -58,7 +60,7 @@ public interface MailMatcher {
         private final HeaderExtractor headerExtractor;
 
         private HeaderMatcher(ContentMatcher contentMatcher, String ruleValue,
-                      HeaderExtractor headerExtractor) {
+                              HeaderExtractor headerExtractor) {
             Preconditions.checkNotNull(contentMatcher);
             Preconditions.checkNotNull(headerExtractor);
 
@@ -122,45 +124,43 @@ public interface MailMatcher {
         ContentMatcher STRING_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents.anyMatch(content -> StringUtils.equals(content, valueToMatch));
         ContentMatcher STRING_NOT_EXACTLY_EQUALS_MATCHER = negate(STRING_EXACTLY_EQUALS_MATCHER);
 
-        Map<Rule.Condition.Comparator, ContentMatcher> CONTENT_STRING_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
-                .put(Condition.Comparator.CONTAINS, STRING_CONTAINS_MATCHER)
-                .put(Condition.Comparator.NOT_CONTAINS, STRING_NOT_CONTAINS_MATCHER)
-                .put(Condition.Comparator.EXACTLY_EQUALS, STRING_EXACTLY_EQUALS_MATCHER)
-                .put(Condition.Comparator.NOT_EXACTLY_EQUALS, STRING_NOT_EXACTLY_EQUALS_MATCHER)
-                .build();
-
         ContentMatcher ADDRESS_CONTAINS_MATCHER = (contents, valueToMatch) -> contents
-                .map(ContentMatcher::asAddressHeader)
-                .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.getFullAddress(), valueToMatch));
-
+            .map(ContentMatcher::asAddressHeader)
+            .anyMatch(addressHeader -> StringUtils.containsIgnoreCase(addressHeader.getFullAddress(), valueToMatch));
         ContentMatcher ADDRESS_NOT_CONTAINS_MATCHER = negate(ADDRESS_CONTAINS_MATCHER);
         ContentMatcher ADDRESS_EXACTLY_EQUALS_MATCHER = (contents, valueToMatch) -> contents
-                .map(ContentMatcher::asAddressHeader)
-                .anyMatch(addressHeader ->
-                        StringUtils.equalsIgnoreCase(addressHeader.getFullAddress(), valueToMatch)
-                        || StringUtils.equalsIgnoreCase(addressHeader.getAddress().orElse(null), valueToMatch)
-                        || StringUtils.equalsIgnoreCase(addressHeader.getPersonal().orElse(null), valueToMatch));
-
+            .map(ContentMatcher::asAddressHeader)
+            .anyMatch(addressHeader ->
+                StringUtils.equalsIgnoreCase(addressHeader.getFullAddress(), valueToMatch)
+                    || StringUtils.equalsIgnoreCase(addressHeader.getAddress().orElse(null), valueToMatch)
+                    || StringUtils.equalsIgnoreCase(addressHeader.getPersonal().orElse(null), valueToMatch));
         ContentMatcher ADDRESS_NOT_EXACTLY_EQUALS_MATCHER = negate(ADDRESS_EXACTLY_EQUALS_MATCHER);
 
         Map<Rule.Condition.Comparator, ContentMatcher> HEADER_ADDRESS_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
-                .put(Condition.Comparator.CONTAINS, ADDRESS_CONTAINS_MATCHER)
-                .put(Condition.Comparator.NOT_CONTAINS, ADDRESS_NOT_CONTAINS_MATCHER)
-                .put(Condition.Comparator.EXACTLY_EQUALS, ADDRESS_EXACTLY_EQUALS_MATCHER)
-                .put(Condition.Comparator.NOT_EXACTLY_EQUALS, ADDRESS_NOT_EXACTLY_EQUALS_MATCHER)
-                .build();
+            .put(Condition.Comparator.CONTAINS, ADDRESS_CONTAINS_MATCHER)
+            .put(Condition.Comparator.NOT_CONTAINS, ADDRESS_NOT_CONTAINS_MATCHER)
+            .put(Condition.Comparator.EXACTLY_EQUALS, ADDRESS_EXACTLY_EQUALS_MATCHER)
+            .put(Condition.Comparator.NOT_EXACTLY_EQUALS, ADDRESS_NOT_EXACTLY_EQUALS_MATCHER)
+            .build();
+
+        Map<Rule.Condition.Comparator, ContentMatcher> CONTENT_STRING_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Comparator, ContentMatcher>builder()
+            .put(Condition.Comparator.CONTAINS, STRING_CONTAINS_MATCHER)
+            .put(Condition.Comparator.NOT_CONTAINS, STRING_NOT_CONTAINS_MATCHER)
+            .put(Condition.Comparator.EXACTLY_EQUALS, STRING_EXACTLY_EQUALS_MATCHER)
+            .put(Condition.Comparator.NOT_EXACTLY_EQUALS, STRING_NOT_EXACTLY_EQUALS_MATCHER)
+            .build();
 
         Map<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>> CONTENT_MATCHER_REGISTRY = ImmutableMap.<Rule.Condition.Field, Map<Rule.Condition.Comparator, ContentMatcher>>builder()
-                .put(Condition.Field.SUBJECT, CONTENT_STRING_MATCHER_REGISTRY)
-                .put(Condition.Field.TO, HEADER_ADDRESS_MATCHER_REGISTRY)
-                .put(Condition.Field.CC, HEADER_ADDRESS_MATCHER_REGISTRY)
-                .put(Condition.Field.RECIPIENT, HEADER_ADDRESS_MATCHER_REGISTRY)
-                .put(Condition.Field.FROM, HEADER_ADDRESS_MATCHER_REGISTRY)
-                .build();
+            .put(Condition.Field.SUBJECT, CONTENT_STRING_MATCHER_REGISTRY)
+            .put(Condition.Field.TO, HEADER_ADDRESS_MATCHER_REGISTRY)
+            .put(Condition.Field.CC, HEADER_ADDRESS_MATCHER_REGISTRY)
+            .put(Condition.Field.RECIPIENT, HEADER_ADDRESS_MATCHER_REGISTRY)
+            .put(Condition.Field.FROM, HEADER_ADDRESS_MATCHER_REGISTRY)
+            .build();
 
         static ContentMatcher negate(ContentMatcher contentMatcher) {
             return (Stream<String> contents, String valueToMatch) ->
-                    !contentMatcher.match(contents, valueToMatch);
+                !contentMatcher.match(contents, valueToMatch);
         }
 
         static Optional<ContentMatcher> asContentMatcher(Condition.Field field, Condition.Comparator comparator) {
@@ -179,20 +179,19 @@ public interface MailMatcher {
     HeaderExtractor SUBJECT_EXTRACTOR = mail ->
         OptionalUtils.ofNullableToStream(mail.getMessage().getSubject());
     HeaderExtractor RECIPIENT_EXTRACTOR =  mail -> addressExtractor(
-                mail.getMessage().getRecipients(Message.RecipientType.TO),
-                mail.getMessage().getRecipients(Message.RecipientType.CC));
-
+        mail.getMessage().getRecipients(Message.RecipientType.TO),
+        mail.getMessage().getRecipients(Message.RecipientType.CC));
     HeaderExtractor FROM_EXTRACTOR = mail -> addressExtractor(mail.getMessage().getFrom());
     HeaderExtractor CC_EXTRACTOR = recipientExtractor(Message.RecipientType.CC);
     HeaderExtractor TO_EXTRACTOR = recipientExtractor(Message.RecipientType.TO);
 
     Map<Field, HeaderExtractor> HEADER_EXTRACTOR_REGISTRY = ImmutableMap.<Field, HeaderExtractor>builder()
-            .put(Field.SUBJECT, SUBJECT_EXTRACTOR)
-            .put(Field.RECIPIENT, RECIPIENT_EXTRACTOR)
-            .put(Field.FROM, FROM_EXTRACTOR)
-            .put(Field.CC, CC_EXTRACTOR)
-            .put(Field.TO, TO_EXTRACTOR)
-            .build();
+        .put(Field.SUBJECT, SUBJECT_EXTRACTOR)
+        .put(Field.RECIPIENT, RECIPIENT_EXTRACTOR)
+        .put(Field.FROM, FROM_EXTRACTOR)
+        .put(Field.CC, CC_EXTRACTOR)
+        .put(Field.TO, TO_EXTRACTOR)
+        .build();
 
     static MailMatcher from(Rule rule) {
         Condition ruleCondition = rule.getCondition();
