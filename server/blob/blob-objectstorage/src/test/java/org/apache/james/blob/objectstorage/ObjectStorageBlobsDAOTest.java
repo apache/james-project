@@ -35,7 +35,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(DockerSwiftTempAuthExtension.class)
+@ExtendWith(DockerSwiftExtension.class)
 public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private static final String TENANT_NAME = "test";
     private static final String USER_NAME = "tester";
@@ -47,12 +47,12 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private org.jclouds.blobstore.BlobStore blobStore;
 
     @BeforeEach
-    void setUp(DockerSwiftTempAuthExtension.DockerSwift dockerSwift) throws Exception {
+    void setUp(DockerSwift dockerSwift) throws Exception {
         final Properties overrides = new Properties();
         overrides.setProperty(KeystoneProperties.CREDENTIAL_TYPE, "tempAuthCredentials");
         overrides.setProperty(TempAuthHeaders.TEMP_AUTH_HEADER_USER, "X-Storage-User");
         overrides.setProperty(TempAuthHeaders.TEMP_AUTH_HEADER_PASS, "X-Storage-Pass");
-        swiftEndpoint = dockerSwift.getEndpoint();
+        swiftEndpoint = dockerSwift.swiftEndpoint();
         BlobStoreContext blobStoreContext = ContextBuilder.newBuilder("openstack-swift")
             .endpoint(swiftEndpoint.toString())
             .credentials(IDENTITY.value(), PASSWORD.value())
