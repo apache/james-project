@@ -33,6 +33,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>apache-mime4j-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
@@ -41,8 +45,8 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mime4j-core</artifactId>
+            <groupId>javax.activation</groupId>
+            <artifactId>javax.activation-api</artifactId>
         </dependency>
     </dependencies>
 </project>
