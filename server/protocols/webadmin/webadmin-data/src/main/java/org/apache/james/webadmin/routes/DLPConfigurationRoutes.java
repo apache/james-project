@@ -24,6 +24,8 @@ import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -127,11 +129,33 @@ public class DLPConfigurationRoutes implements Routes {
             Domain senderDomain = parseDomain(request);
             DLPConfigurationDTO dto = jsonExtractor.parse(request.body());
 
-            dlpConfigurationStore.store(senderDomain, dto.toDLPConfigurations());
+            List<DLPConfigurationItem> rules = dto.toDLPConfigurations();
+            shouldNotContainDuplicates(rules);
+
+            dlpConfigurationStore.store(senderDomain, rules);
 
             response.status(HttpStatus.NO_CONTENT_204);
             return EMPTY_BODY;
         });
+    }
+
+    private void shouldNotContainDuplicates(Collection<DLPConfigurationItem> items) {
+        if (containsDuplicate(items)) {
+            ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("'id' duplicates are not allowed in DLP rules")
+                .haltError();
+        }
+    }
+
+    private boolean containsDuplicate(Collection<DLPConfigurationItem> items) {
+        long uniqueIdCount = items.stream()
+            .map(DLPConfigurationItem::getId)
+            .distinct()
+            .count();
+
+        return uniqueIdCount != items.size();
     }
 
     @GET

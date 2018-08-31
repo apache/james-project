@@ -411,6 +411,39 @@ class DLPConfigurationRoutesTest {
 
             assertThatJson(retrievedBody).isEqualTo(updatedBody);
         }
+        
+        @Test
+        void putShouldRejectDuplicatedIds() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 3\"," +
+                    "    \"explanation\": \"explanation 3\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+
+            given()
+                .body(storeBody).log().ifValidationFails()
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'id' duplicates are not allowed in DLP rules"));
+        }
 
         @Test
         void putShouldClearTheConfigurationsWhenNoRule() {
