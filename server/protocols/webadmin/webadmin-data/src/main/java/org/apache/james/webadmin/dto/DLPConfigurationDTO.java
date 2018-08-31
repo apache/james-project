@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.dto;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.apache.james.dlp.api.DLPConfigurationItem;
 
@@ -32,13 +33,11 @@ import com.google.common.collect.ImmutableList;
 
 public class DLPConfigurationDTO {
 
-    public static DLPConfigurationDTO toDTO(List<DLPConfigurationItem> dlpConfigurations) {
+    public static DLPConfigurationDTO toDTO(Stream<DLPConfigurationItem> dlpConfigurations) {
         Preconditions.checkNotNull(dlpConfigurations);
 
         return new DLPConfigurationDTO(
-            dlpConfigurations
-                .stream()
-                .map(DLPConfigurationItemDTO::toDTO)
+            dlpConfigurations.map(DLPConfigurationItemDTO::toDTO)
                 .collect(Guavate.toImmutableList()));
     }
 
@@ -56,8 +55,7 @@ public class DLPConfigurationDTO {
 
     @JsonIgnore
     public List<DLPConfigurationItem> toDLPConfigurations() {
-        return rules
-            .stream()
+        return rules.stream()
             .map(DLPConfigurationItemDTO::toDLPConfiguration)
             .collect(Guavate.toImmutableList());
     }

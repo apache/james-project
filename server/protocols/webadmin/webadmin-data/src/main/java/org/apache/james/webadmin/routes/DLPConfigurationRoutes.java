@@ -24,7 +24,7 @@ import static org.apache.james.webadmin.Constants.EMPTY_BODY;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 
-import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -47,8 +47,6 @@ import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.github.steveash.guavate.Guavate;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -155,9 +153,7 @@ public class DLPConfigurationRoutes implements Routes {
     public void defineList(Service service) {
         service.get(SPECIFIC_DLP_RULE_DOMAIN, (request, response) -> {
             Domain senderDomain = parseDomain(request);
-            List<DLPConfigurationItem> dlpConfigurations = dlpConfigurationStore
-                .list(senderDomain)
-                .collect(Guavate.toImmutableList());
+            Stream<DLPConfigurationItem> dlpConfigurations = dlpConfigurationStore.list(senderDomain);
 
             DLPConfigurationDTO dto = DLPConfigurationDTO.toDTO(dlpConfigurations);
             response.status(HttpStatus.OK_200);
