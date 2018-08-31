@@ -25,15 +25,16 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class ProjectNameTest {
+class DomainIdTest {
+
     @Test
-    public void projectNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ProjectName.class).verify();
+    public void domainIdShouldRespectBeanContract() {
+        EqualsVerifier.forClass(DomainId.class).verify();
     }
 
     @Test
-    public void projectNameShouldProjectToProjectNameString() {
-        String actual = ProjectName.of("bar").asString();
-        assertThat(actual).isEqualTo("project:bar");
+    public void domainIdShouldProjectToDomainIdString() {
+        String actual = DomainId.of("foo").asString();
+        assertThat(actual).isEqualTo("domain:foo");
     }
 }

@@ -25,15 +25,39 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class ProjectNameTest {
+class ProjectTest {
+
+    private static final ProjectName PROJECT_NAME = ProjectName.of("project");
+    private static final DomainName DOMAIN_NAME = DomainName.of("domainName");
+    private static final DomainId DOMAIN_ID = DomainId.of("domainId");
+
     @Test
-    public void projectNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ProjectName.class).verify();
+    public void projectShouldRespectBeanContract() {
+        EqualsVerifier.forClass(Project.class).verify();
     }
 
     @Test
-    public void projectNameShouldProjectToProjectNameString() {
-        String actual = ProjectName.of("bar").asString();
-        assertThat(actual).isEqualTo("project:bar");
+    void projectCanBeBuiltFromNameAlone() {
+        Project project = Project.of(PROJECT_NAME);
+        assertThat(project.domainName()).isEmpty();
+        assertThat(project.domainId()).isEmpty();
+        assertThat(project.name()).isEqualTo(PROJECT_NAME);
+    }
+
+
+    @Test
+    void projectCanBeBuiltFromNameAnDomainName() {
+        Project project = Project.of(PROJECT_NAME, DOMAIN_NAME);
+        assertThat(project.domainName()).contains(DOMAIN_NAME);
+        assertThat(project.domainId()).isEmpty();
+        assertThat(project.name()).isEqualTo(PROJECT_NAME);
+    }
+
+    @Test
+    void projectCanBeBuiltFromNameAnDomainId() {
+        Project project = Project.of(PROJECT_NAME, DOMAIN_ID);
+        assertThat(project.domainName()).isEmpty();
+        assertThat(project.domainId()).contains(DOMAIN_ID);
+        assertThat(project.name()).isEqualTo(PROJECT_NAME);
     }
 }

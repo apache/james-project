@@ -19,21 +19,13 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class ProjectNameTest {
+class DomainNameTest {
     @Test
-    public void projectNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ProjectName.class).verify();
-    }
-
-    @Test
-    public void projectNameShouldProjectToProjectNameString() {
-        String actual = ProjectName.of("bar").asString();
-        assertThat(actual).isEqualTo("project:bar");
+    public void domainNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(DomainName.class).verify();
     }
 }

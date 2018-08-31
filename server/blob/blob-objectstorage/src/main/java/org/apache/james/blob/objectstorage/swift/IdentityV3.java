@@ -22,23 +22,29 @@ package org.apache.james.blob.objectstorage.swift;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-public final class ProjectName {
-    public static ProjectName of(String value) {
-        return new ProjectName(value);
+public final class IdentityV3 {
+    public static IdentityV3 of(DomainName domainName, UserName userName) {
+        return new IdentityV3(domainName, userName);
     }
 
-    private final String value;
+    private final DomainName domainName;
+    private final UserName userName;
 
-    private ProjectName(String value) {
-        this.value = value;
-    }
-
-    public String value() {
-        return value;
+    private IdentityV3(DomainName domainName, UserName userName) {
+        this.domainName = domainName;
+        this.userName = userName;
     }
 
     public String asString() {
-        return "project:" + value;
+        return domainName.value() + ":" + userName.value();
+    }
+
+    public DomainName getDomainName() {
+        return domainName;
+    }
+
+    public UserName getUserName() {
+        return userName;
     }
 
     @Override
@@ -49,19 +55,21 @@ public final class ProjectName {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ProjectName that = (ProjectName) o;
-        return Objects.equal(value, that.value);
+        IdentityV3 identity = (IdentityV3) o;
+        return Objects.equal(domainName, identity.domainName) &&
+            Objects.equal(userName, identity.userName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(value);
+        return Objects.hashCode(domainName, userName);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("value", value)
+            .add("domain", domainName)
+            .add("userName", userName)
             .toString();
     }
 }

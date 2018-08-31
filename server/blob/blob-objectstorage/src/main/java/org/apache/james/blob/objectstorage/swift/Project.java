@@ -19,26 +19,44 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
+import java.util.Optional;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-public final class ProjectName {
-    public static ProjectName of(String value) {
-        return new ProjectName(value);
+public final class Project {
+    public static Project of(ProjectName userName) {
+        return new Project(userName, Optional.empty(), Optional.empty());
     }
 
-    private final String value;
-
-    private ProjectName(String value) {
-        this.value = value;
+    public static Project of(ProjectName userName, DomainName domainName) {
+        return new Project(userName, Optional.of(domainName), Optional.empty());
     }
 
-    public String value() {
-        return value;
+    public static Project of(ProjectName userName, DomainId domainId) {
+        return new Project(userName, Optional.empty(), Optional.of(domainId));
     }
 
-    public String asString() {
-        return "project:" + value;
+    private final ProjectName name;
+    private final Optional<DomainName> domainName;
+    private final Optional<DomainId> domainId;
+
+    private Project(ProjectName name, Optional<DomainName> domainName, Optional<DomainId> domainId) {
+        this.domainName = domainName;
+        this.name = name;
+        this.domainId = domainId;
+    }
+
+    public Optional<DomainName> domainName() {
+        return domainName;
+    }
+
+    public Optional<DomainId> domainId() {
+        return domainId;
+    }
+
+    public ProjectName name() {
+        return name;
     }
 
     @Override
@@ -49,19 +67,22 @@ public final class ProjectName {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ProjectName that = (ProjectName) o;
-        return Objects.equal(value, that.value);
+        Project project = (Project) o;
+        return Objects.equal(name, project.name) &&
+            Objects.equal(domainName, project.domainName) &&
+            Objects.equal(domainId, project.domainId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(value);
+        return Objects.hashCode(name, domainName, domainId);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("value", value)
+            .add("domain", domainName)
+            .add("name", name)
             .toString();
     }
 }

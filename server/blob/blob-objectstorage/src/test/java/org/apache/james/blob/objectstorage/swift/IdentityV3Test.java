@@ -25,15 +25,15 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class ProjectNameTest {
+class IdentityV3Test {
     @Test
-    public void projectNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ProjectName.class).verify();
+    void identityV3RendersProperlyAsString() {
+        IdentityV3 identity = IdentityV3.of(DomainName.of("domain"), UserName.of("user"));
+        assertThat(identity.asString()).isEqualTo("domain:user");
     }
 
     @Test
-    public void projectNameShouldProjectToProjectNameString() {
-        String actual = ProjectName.of("bar").asString();
-        assertThat(actual).isEqualTo("project:bar");
+    public void identityV3ShouldRespectBeanContract() {
+        EqualsVerifier.forClass(IdentityV3.class).verify();
     }
 }

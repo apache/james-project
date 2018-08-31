@@ -19,21 +19,49 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-import org.junit.jupiter.api.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class ProjectNameTest {
-    @Test
-    public void projectNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(ProjectName.class).verify();
+public final class DomainId {
+    public static DomainId of(String value) {
+        return new DomainId(value);
     }
 
-    @Test
-    public void projectNameShouldProjectToProjectNameString() {
-        String actual = ProjectName.of("bar").asString();
-        assertThat(actual).isEqualTo("project:bar");
+    private final String value;
+
+    private DomainId(String value) {
+        this.value = value;
+    }
+
+    public String value() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        DomainId that = (DomainId) o;
+        return Objects.equal(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
+
+    public String asString() {
+        return "domain:" + value;
     }
 }
