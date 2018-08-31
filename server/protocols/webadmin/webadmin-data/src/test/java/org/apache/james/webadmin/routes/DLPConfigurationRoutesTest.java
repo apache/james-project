@@ -55,6 +55,7 @@ import org.mockito.Mockito;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import net.javacrumbs.jsonunit.core.Option;
 
 class DLPConfigurationRoutesTest {
 
@@ -409,7 +410,9 @@ class DLPConfigurationRoutesTest {
             .extract()
                 .body().asString();
 
-            assertThatJson(retrievedBody).isEqualTo(updatedBody);
+            assertThatJson(retrievedBody)
+                .when(Option.IGNORING_ARRAY_ORDER)
+                .isEqualTo(updatedBody);
         }
         
         @Test

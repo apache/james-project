@@ -106,6 +106,22 @@ public class DLPConfigurationItemTest {
     }
 
     @Test
+    void hashCodeShouldBeEqualForSimilarRules() {
+        assertThat(
+            DLPConfigurationItem.builder()
+                .id(UNIQUE_ID)
+                .expression(REGEX)
+                .build()
+                .hashCode())
+            .isEqualTo(
+                DLPConfigurationItem.builder()
+                    .id(UNIQUE_ID)
+                    .expression(REGEX)
+                    .build()
+                    .hashCode());
+    }
+
+    @Test
     void expressionShouldBeValidPattern() {
         assertThatThrownBy(() ->
             DLPConfigurationItem.builder()
