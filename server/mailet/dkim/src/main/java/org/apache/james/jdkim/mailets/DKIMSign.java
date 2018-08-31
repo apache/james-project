@@ -150,7 +150,7 @@ public class DKIMSign extends GenericMailet {
 
     private void prependHeader(MimeMessage message, String signatureHeader)
             throws MessagingException {
-        List<String> prevHeader = new LinkedList<String>();
+        List<String> prevHeader = new LinkedList<>();
         // read all the headers
         for (Enumeration<String> e = message.getAllHeaderLines(); e.hasMoreElements();) {
             String headerLine = e.nextElement();

@@ -40,8 +40,8 @@ final class MimeMessageHeaders implements Headers {
 
     public MimeMessageHeaders(MimeMessage message)
             throws MessagingException {
-        headers = new HashMap<String, List<String>>();
-        fields = new LinkedList<String>();
+        headers = new HashMap<>();
+        fields = new LinkedList<>();
         for (Enumeration<String> e = message.getAllHeaderLines(); e
                 .hasMoreElements();) {
             String head = e.nextElement();
@@ -53,7 +53,7 @@ final class MimeMessageHeaders implements Headers {
             fields.add(headerName);
             List<String> strings = headers.get(headerNameLC);
             if (strings == null) {
-                strings = new LinkedList<String>();
+                strings = new LinkedList<>();
                 headers.put(headerNameLC, strings);
             }
             strings.add(head);

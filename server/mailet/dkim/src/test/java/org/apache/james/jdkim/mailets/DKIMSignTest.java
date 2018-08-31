@@ -267,8 +267,7 @@ public class DKIMSignTest {
         mm.setHeader("Content-Transfer-Encoding", "8bit");
         mm.saveChanges();
 
-        FakeMailContext FakeMailContext = FAKE_MAIL_CONTEXT;
-        FakeMailContext.getServerInfo();
+        FAKE_MAIL_CONTEXT.getServerInfo();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")
@@ -316,8 +315,7 @@ public class DKIMSignTest {
         mm.setHeader("Content-Transfer-Encoding", "8bit");
         mm.saveChanges();
 
-        FakeMailContext FakeMailContext = FAKE_MAIL_CONTEXT;
-        FakeMailContext.getServerInfo();
+        FAKE_MAIL_CONTEXT.getServerInfo();
 
         FakeMailetConfig mci = FakeMailetConfig.builder()
                 .mailetName("Test")

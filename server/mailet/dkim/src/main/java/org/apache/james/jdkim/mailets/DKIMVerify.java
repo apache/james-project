@@ -55,7 +55,7 @@ public class DKIMVerify extends GenericMailet {
     private boolean forceCRLF;
 
     @Override
-    public void init() throws MessagingException {
+    public void init() {
         verifier = new DKIMVerifier();
         forceCRLF = getInitParameter("forceCRLF", true);
     }
