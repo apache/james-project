@@ -331,6 +331,133 @@ class DLPConfigurationRoutesTest {
                 .body("message", is("Invalid request for domain: dr@strange.com"))
                 .body("details", is("Domain can not be empty nor contain `@`"));
         }
+
+        @Test
+        void putShouldUpdateTheConfigurations() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"3\"," +
+                    "    \"expression\": \"expression 3\"," +
+                    "    \"explanation\": \"explanation 3\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+            String updatedBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"4\"," +
+                    "    \"expression\": \"expression 4\"," +
+                    "    \"explanation\": \"explanation 4\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"3\"," +
+                    "    \"expression\": \"expression 3 updated\"," +
+                    "    \"explanation\": \"explanation 3 updated\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": true" +
+                    "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            given()
+                .body(updatedBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            String retrievedBody = with()
+                .get(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body().asString();
+
+            assertThatJson(retrievedBody).isEqualTo(updatedBody);
+        }
+
+        @Test
+        void putShouldClearTheConfigurationsWhenNoRule() {
+            String storeBody =
+                "{\"rules\": [" +
+                    "  {" +
+                    "    \"id\": \"1\"," +
+                    "    \"expression\": \"expression 1\"," +
+                    "    \"explanation\": \"explanation 1\"," +
+                    "    \"targetsSender\": true," +
+                    "    \"targetsRecipients\": true," +
+                    "    \"targetsContent\": true" +
+                    "  }," +
+                    "  {" +
+                    "    \"id\": \"2\"," +
+                    "    \"expression\": \"expression 2\"," +
+                    "    \"explanation\": \"explanation 2\"," +
+                    "    \"targetsSender\": false," +
+                    "    \"targetsRecipients\": false," +
+                    "    \"targetsContent\": false" +
+                    "  }]}";
+            String updatedBody = "{\"rules\": []}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            given()
+                .body(updatedBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            String retrievedBody = with()
+                .get(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body().asString();
+
+            assertThatJson(retrievedBody).isEqualTo(updatedBody);
+        }
     }
 
     @Nested
