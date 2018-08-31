@@ -17,16 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
 
+import org.apache.james.blob.objectstorage.Credentials;
+import org.apache.james.blob.objectstorage.SwiftIdentity;
+import org.apache.james.blob.objectstorage.TenantName;
+import org.apache.james.blob.objectstorage.UserName;
 import org.junit.jupiter.api.Test;
 
-class ObjectStorageConfigurationTest {
+class SwiftTempAuthObjectStorageConfigurationTest {
 
     private static final TenantName TENANT_NAME = TenantName.of("fake");
     private static final UserName USER_NAME = UserName.of("fake");
@@ -37,8 +41,8 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void enpointIsMandatoryToBuildConfiguration() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .tenantName(TENANT_NAME)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
@@ -48,8 +52,8 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void tenantNameIsMandatoryToBuildConfiguration() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
@@ -59,8 +63,8 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void userNameIsMandatoryToBuildConfiguration() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .credentials(CREDENTIALS);
@@ -70,8 +74,8 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void credentialsIsMandatoryToBuildConfiguration() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .userName(USER_NAME);
@@ -81,14 +85,14 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void configurationIsBuiltWhenAllMandatoryParamsAreProvided() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
 
-        ObjectStorageConfiguration build = builder.build();
+        SwiftTempAuthObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
         assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);
@@ -97,13 +101,13 @@ class ObjectStorageConfigurationTest {
 
     @Test
     void identityCanReplaceTenantAndUserName() throws Exception {
-        ObjectStorageConfiguration.Builder builder = new ObjectStorageConfiguration.Builder();
-        builder
+        SwiftTempAuthObjectStorage.Configuration.Builder builder =
+            SwiftTempAuthObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .identity(SWIFT_IDENTITY)
             .credentials(CREDENTIALS);
 
-        ObjectStorageConfiguration build = builder.build();
+        SwiftTempAuthObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
         assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);

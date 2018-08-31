@@ -36,7 +36,7 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 
-class DockerSwiftExtension implements ParameterResolver, BeforeAllCallback,
+public class DockerSwiftExtension implements ParameterResolver, BeforeAllCallback,
     AfterAllCallback {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerSwiftExtension.class);
     private static final String SWIFT_DOCKER_IMAGE = "jeantil/openstack-keystone-swift:pike";

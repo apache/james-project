@@ -27,49 +27,34 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
-import org.jclouds.ContextBuilder;
+import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.options.CopyOptions;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.openstack.swift.v1.blobstore.RegionScopedBlobStoreContext;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-import com.google.inject.Inject;
-import com.google.inject.Module;
 
-class ObjectStorageBlobsDAO implements BlobStore {
+public class ObjectStorageBlobsDAO implements BlobStore {
     private static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
-    private static final Iterable<Module> JCLOUDS_MODULES = ImmutableSet.of(new SLF4JLoggingModule());
+
 
     private final BlobId.Factory blobIdFactory;
-    private final org.jclouds.blobstore.BlobStore blobStore;
-    private final ContainerName containerName;
 
-    @Inject
-    public ObjectStorageBlobsDAO(ContainerName containerName, HashBlobId.Factory blobIdFactory,
-                                 ObjectStorageConfiguration objectStorageConfiguration) {
+    private final ContainerName containerName;
+    private final org.jclouds.blobstore.BlobStore blobStore;
+
+    ObjectStorageBlobsDAO(ContainerName containerName, BlobId.Factory blobIdFactory,
+                          org.jclouds.blobstore.BlobStore blobStore) {
         this.blobIdFactory = blobIdFactory;
         this.containerName = containerName;
+        this.blobStore = blobStore;
+    }
 
-        RegionScopedBlobStoreContext blobStoreContext = ContextBuilder.newBuilder("openstack-swift")
-            .endpoint(objectStorageConfiguration.getEndpoint().toString())
-            .credentials(
-                objectStorageConfiguration.getSwiftIdentity().asString(),
-                objectStorageConfiguration.getCredentials().value())
-            .overrides(objectStorageConfiguration.getOverrides())
-            .modules(JCLOUDS_MODULES)
-            .buildView(RegionScopedBlobStoreContext.class);
-
-        blobStore = objectStorageConfiguration
-            .getRegion()
-            .map(region -> blobStoreContext.getBlobStore(region.value()))
-            .orElse(blobStoreContext.getBlobStore());
+    public static ObjectStorageBlobsDAOBuilder builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+        return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
     }
 
     @Override
@@ -90,7 +75,8 @@ class ObjectStorageBlobsDAO implements BlobStore {
 
     private void updateBlobId(BlobId from, BlobId to) {
         String containerName = this.containerName.value();
-        blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(), CopyOptions.NONE);
+        blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(),
+            CopyOptions.NONE);
         blobStore.removeBlob(containerName, from.asString());
     }
 
@@ -126,3 +112,4 @@ class ObjectStorageBlobsDAO implements BlobStore {
 
     }
 }
+
