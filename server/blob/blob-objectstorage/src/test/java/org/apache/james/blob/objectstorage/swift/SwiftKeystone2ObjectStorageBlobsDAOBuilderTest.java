@@ -19,18 +19,11 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
@@ -43,27 +36,38 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerSwiftExtension.class)
-class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
+class SwiftKeystone2ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
 
     private static final TenantName TENANT_NAME = TenantName.of("test");
-    private static final UserName USER_NAME = UserName.of("tester");
-    private static final Credentials PASSWORD = Credentials.of("testing");
+    private static final UserName USER_NAME = UserName.of("demo");
+    private static final Credentials PASSWORD = Credentials.of("demo");
     private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
     private ContainerName containerName;
     private URI endpoint;
-    private SwiftTempAuthObjectStorage.Configuration testConfig;
+    private SwiftKeystone2ObjectStorage.Configuration testConfig;
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) throws Exception {
         containerName = ContainerName.of(UUID.randomUUID().toString());
-        endpoint = dockerSwift.swiftEndpoint();
-        testConfig = SwiftTempAuthObjectStorage.configBuilder()
+        endpoint = dockerSwift.keystoneV2Endpoint();
+        testConfig = SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(endpoint)
             .identity(SWIFT_IDENTITY)
             .credentials(PASSWORD)
-            .tempAuthHeaderUserName(UserHeaderName.of("X-Storage-User"))
-            .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
             .build();
+    }
+
+    @Override
+    public ObjectStorageBlobsDAOBuilder builder() {
+        return ObjectStorageBlobsDAO
+            .builder(testConfig)
+            .container(containerName)
+            .blobIdFactory(new HashBlobId.Factory());
+    }
+
+    @Override
+    public ContainerName containerName() {
+        return containerName;
     }
 
     @Test
@@ -82,18 +86,5 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
             .container(containerName);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Override
-    public ObjectStorageBlobsDAOBuilder builder() {
-        return ObjectStorageBlobsDAO
-            .builder(testConfig)
-            .container(containerName)
-            .blobIdFactory(new HashBlobId.Factory());
-    }
-
-    @Override
-    public ContainerName containerName() {
-        return containerName;
     }
 }

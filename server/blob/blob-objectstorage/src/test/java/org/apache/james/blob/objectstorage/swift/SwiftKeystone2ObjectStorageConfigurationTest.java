@@ -29,19 +29,18 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class SwiftTempAuthObjectStorageConfigurationTest {
+class SwiftKeystone2ObjectStorageConfigurationTest {
 
     private static final TenantName TENANT_NAME = TenantName.of("fake");
     private static final UserName USER_NAME = UserName.of("fake");
     private static URI ENDPOINT = URI.create("http://example.com");
     private static Credentials CREDENTIALS = Credentials.of("fake");
-    private static Identity SWIFT_IDENTITY = Identity.of(TenantName.of("fake"),
-        UserName.of("fake"));
+    private static Identity SWIFT_IDENTITY = Identity.of(TenantName.of("fake"), UserName.of("fake"));
 
     @Test
     void enpointIsMandatoryToBuildConfiguration() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .tenantName(TENANT_NAME)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
@@ -51,8 +50,8 @@ class SwiftTempAuthObjectStorageConfigurationTest {
 
     @Test
     void tenantNameIsMandatoryToBuildConfiguration() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
@@ -62,8 +61,8 @@ class SwiftTempAuthObjectStorageConfigurationTest {
 
     @Test
     void userNameIsMandatoryToBuildConfiguration() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .credentials(CREDENTIALS);
@@ -73,8 +72,8 @@ class SwiftTempAuthObjectStorageConfigurationTest {
 
     @Test
     void credentialsIsMandatoryToBuildConfiguration() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .userName(USER_NAME);
@@ -84,30 +83,30 @@ class SwiftTempAuthObjectStorageConfigurationTest {
 
     @Test
     void configurationIsBuiltWhenAllMandatoryParamsAreProvided() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .tenantName(TENANT_NAME)
             .userName(USER_NAME)
             .credentials(CREDENTIALS);
 
-        SwiftTempAuthObjectStorage.Configuration build = builder.build();
+        SwiftKeystone2ObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
         assertThat(build.getIdentity()).isEqualTo(SWIFT_IDENTITY);
         assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
-        assertThat(build.getOverrides().getProperty(KeystoneProperties.CREDENTIAL_TYPE)).isEqualTo("tempAuthCredentials");
+        assertThat(build.getOverrides().getProperty(KeystoneProperties.KEYSTONE_VERSION)).isEqualTo("2");
     }
 
     @Test
     void identityCanReplaceTenantAndUserName() throws Exception {
-        SwiftTempAuthObjectStorage.Configuration.Builder builder =
-            SwiftTempAuthObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration.Builder builder =
+            SwiftKeystone2ObjectStorage.configBuilder()
             .endpoint(ENDPOINT)
             .identity(SWIFT_IDENTITY)
             .credentials(CREDENTIALS);
 
-        SwiftTempAuthObjectStorage.Configuration build = builder.build();
+        SwiftKeystone2ObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
         assertThat(build.getIdentity()).isEqualTo(SWIFT_IDENTITY);
@@ -116,6 +115,6 @@ class SwiftTempAuthObjectStorageConfigurationTest {
 
     @Test
     void configurationShouldEnforceBeanContract() {
-        EqualsVerifier.forClass(SwiftTempAuthObjectStorage.Configuration.class);
+        EqualsVerifier.forClass(SwiftKeystone2ObjectStorage.Configuration.class);
     }
 }
