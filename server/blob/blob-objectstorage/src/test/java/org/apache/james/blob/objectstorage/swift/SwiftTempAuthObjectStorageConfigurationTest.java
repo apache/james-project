@@ -24,10 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
 
-import org.apache.james.blob.objectstorage.Credentials;
-import org.apache.james.blob.objectstorage.SwiftIdentity;
-import org.apache.james.blob.objectstorage.TenantName;
-import org.apache.james.blob.objectstorage.UserName;
 import org.junit.jupiter.api.Test;
 
 class SwiftTempAuthObjectStorageConfigurationTest {
@@ -36,7 +32,7 @@ class SwiftTempAuthObjectStorageConfigurationTest {
     private static final UserName USER_NAME = UserName.of("fake");
     private static URI ENDPOINT = URI.create("http://example.com");
     private static Credentials CREDENTIALS = Credentials.of("fake");
-    private static SwiftIdentity SWIFT_IDENTITY = SwiftIdentity.of(TenantName.of("fake"),
+    private static Identity SWIFT_IDENTITY = Identity.of(TenantName.of("fake"),
         UserName.of("fake"));
 
     @Test
@@ -95,7 +91,7 @@ class SwiftTempAuthObjectStorageConfigurationTest {
         SwiftTempAuthObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
-        assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);
+        assertThat(build.getIdentity()).isEqualTo(SWIFT_IDENTITY);
         assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
     }
 
@@ -110,7 +106,7 @@ class SwiftTempAuthObjectStorageConfigurationTest {
         SwiftTempAuthObjectStorage.Configuration build = builder.build();
 
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
-        assertThat(build.getSwiftIdentity()).isEqualTo(SWIFT_IDENTITY);
+        assertThat(build.getIdentity()).isEqualTo(SWIFT_IDENTITY);
         assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
     }
 }

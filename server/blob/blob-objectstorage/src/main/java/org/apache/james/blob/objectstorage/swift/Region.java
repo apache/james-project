@@ -17,15 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
-import org.junit.jupiter.api.Test;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+public final class Region {
+    public static Region of(String value) {
+        return new Region(value);
+    }
 
-class TenantNameTest {
-    @Test
-    public void tenantNameShouldRespectBeanContract() {
-        EqualsVerifier.forClass(TenantName.class).verify();
+    private final String region;
+
+    private Region(String value) {
+        this.region = value;
+    }
+
+    public String value() {
+        return region;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Region region1 = (Region) o;
+        return Objects.equal(region, region1.region);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(region);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("region", region)
+            .toString();
     }
 }

@@ -17,14 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
-public final class UserHeaderName extends HeaderName {
-    public static UserHeaderName of(String value) {
-        return new UserHeaderName(value);
-    }
+import org.junit.jupiter.api.Test;
 
-    private UserHeaderName(String value) {
-        super(value);
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class TenantNameTest {
+    @Test
+    public void tenantNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(TenantName.class).verify();
     }
 }

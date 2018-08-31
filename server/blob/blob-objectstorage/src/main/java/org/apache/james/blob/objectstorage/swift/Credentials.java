@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;

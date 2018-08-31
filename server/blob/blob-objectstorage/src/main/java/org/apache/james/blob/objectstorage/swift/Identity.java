@@ -17,24 +17,34 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-public final class Region {
-    public static Region of(String value) {
-        return new Region(value);
+public final class Identity {
+    public static Identity of(TenantName tenant, UserName userName) {
+        return new Identity(tenant, userName);
     }
 
-    private final String region;
+    private final TenantName tenant;
+    private final UserName userName;
 
-    private Region(String value) {
-        this.region = value;
+    private Identity(TenantName tenant, UserName userName) {
+        this.tenant = tenant;
+        this.userName = userName;
     }
 
-    public String value() {
-        return region;
+    public String asString() {
+        return tenant.value() + ":" + userName.value();
+    }
+
+    public TenantName getTenant() {
+        return tenant;
+    }
+
+    public UserName getUserName() {
+        return userName;
     }
 
     @Override
@@ -45,19 +55,21 @@ public final class Region {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        Region region1 = (Region) o;
-        return Objects.equal(region, region1.region);
+        Identity identity = (Identity) o;
+        return Objects.equal(tenant, identity.tenant) &&
+            Objects.equal(userName, identity.userName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(region);
+        return Objects.hashCode(tenant, userName);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("region", region)
+            .add("tenant", tenant)
+            .add("userName", userName)
             .toString();
     }
 }

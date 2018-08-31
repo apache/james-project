@@ -17,23 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
-
-import static org.assertj.core.api.Assertions.assertThat;
+package org.apache.james.blob.objectstorage.swift;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class SwiftIdentityTest {
+class ProjectNameTest {
     @Test
-    void swiftIdentityRendersProperlyAsString() {
-        SwiftIdentity swiftIdentity = SwiftIdentity.of(TenantName.of("tenant"), UserName.of("user"));
-        assertThat(swiftIdentity.asString()).isEqualTo("tenant:user");
-    }
-
-    @Test
-    public void credentialsShouldRespectBeanContract() {
-        EqualsVerifier.forClass(SwiftIdentity.class).verify();
+    public void projectNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(ProjectName.class).verify();
     }
 }

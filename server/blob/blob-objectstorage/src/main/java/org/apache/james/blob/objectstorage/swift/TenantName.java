@@ -17,19 +17,19 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-public final class ProjectName {
-    public static ProjectName of(String value) {
-        return new ProjectName(value);
+public final class TenantName {
+    public static TenantName of(String value) {
+        return new TenantName(value);
     }
 
     private final String value;
 
-    private ProjectName(String value) {
+    private TenantName(String value) {
         this.value = value;
     }
 
@@ -45,7 +45,7 @@ public final class ProjectName {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ProjectName that = (ProjectName) o;
+        TenantName that = (TenantName) o;
         return Objects.equal(value, that.value);
     }
 

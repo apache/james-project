@@ -25,7 +25,13 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.objectstorage.swift.Credentials;
+import org.apache.james.blob.objectstorage.swift.Identity;
+import org.apache.james.blob.objectstorage.swift.PassHeaderName;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
+import org.apache.james.blob.objectstorage.swift.TenantName;
+import org.apache.james.blob.objectstorage.swift.UserHeaderName;
+import org.apache.james.blob.objectstorage.swift.UserName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +41,7 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private static final TenantName TENANT_NAME = TenantName.of("test");
     private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
-    private static final SwiftIdentity SWIFT_IDENTITY = SwiftIdentity.of(TENANT_NAME, USER_NAME);
+    private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
 
     private ContainerName containerName;
     private org.jclouds.blobstore.BlobStore blobStore;

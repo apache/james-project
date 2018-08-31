@@ -17,47 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import org.junit.jupiter.api.Test;
 
-public final class UserName {
-    public static UserName of(String value) {
-        return new UserName(value);
-    }
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private final String value;
-
-    private UserName(String value) {
-        this.value = value;
-    }
-
-    public String value() {
-        return value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        UserName that = (UserName) o;
-        return Objects.equal(value, that.value);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(value);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("value", value)
-            .toString();
+class UserNameTest {
+    @Test
+    public void userNameShouldRespectBeanContract() {
+        EqualsVerifier.forClass(UserName.class).verify();
     }
 }

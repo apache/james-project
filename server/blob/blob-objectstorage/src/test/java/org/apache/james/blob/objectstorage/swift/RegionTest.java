@@ -17,15 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class CredentialsTest {
+class RegionTest {
     @Test
-    public void credentialsShouldRespectBeanContract() {
-        EqualsVerifier.forClass(Credentials.class).verify();
+    public void regionShouldRespectBeanContract() {
+        EqualsVerifier.forClass(Region.class).verify();
     }
 }

@@ -24,14 +24,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.apache.james.blob.objectstorage.Credentials;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.PassHeaderName;
-import org.apache.james.blob.objectstorage.Region;
-import org.apache.james.blob.objectstorage.SwiftIdentity;
-import org.apache.james.blob.objectstorage.TenantName;
-import org.apache.james.blob.objectstorage.UserHeaderName;
-import org.apache.james.blob.objectstorage.UserName;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
@@ -65,7 +58,7 @@ public class SwiftTempAuthObjectStorage {
         public BlobStore get() {
             RegionScopedBlobStoreContext blobStoreContext = contextBuilder()
                 .endpoint(testConfig.getEndpoint().toString())
-                .credentials(testConfig.getSwiftIdentity().asString(), testConfig.getCredentials().value())
+                .credentials(testConfig.getIdentity().asString(), testConfig.getCredentials().value())
                 .overrides(testConfig.getOverrides())
                 .modules(JCLOUDS_MODULES)
                 .buildView(RegionScopedBlobStoreContext.class);
@@ -102,7 +95,7 @@ public class SwiftTempAuthObjectStorage {
                 return this;
             }
 
-            public Builder identity(SwiftIdentity identity) {
+            public Builder identity(Identity identity) {
                 this.tenantName = identity.getTenant();
                 this.userName = identity.getUserName();
                 return this;
@@ -143,21 +136,21 @@ public class SwiftTempAuthObjectStorage {
                 Preconditions.checkState(tenantName != null);
                 Preconditions.checkState(userName != null);
                 Preconditions.checkState(credentials != null);
-                SwiftIdentity identity = SwiftIdentity.of(tenantName, userName);
+                Identity identity = Identity.of(tenantName, userName);
                 return new Configuration(endpoint, identity, credentials, region,
                     userHeaderName, passHeaderName);
             }
         }
 
         private final URI endpoint;
-        private final SwiftIdentity identity;
+        private final Identity identity;
         private final Optional<Region> region;
         private final Credentials credentials;
         private final Optional<UserHeaderName> userHeaderName;
         private final Optional<PassHeaderName> passHeaderName;
 
         private Configuration(URI endpoint,
-                              SwiftIdentity identity,
+                              Identity identity,
                               Credentials credentials,
                               Optional<Region> region,
                               Optional<UserHeaderName> userHeaderName,
@@ -174,7 +167,7 @@ public class SwiftTempAuthObjectStorage {
             return endpoint;
         }
 
-        public SwiftIdentity getSwiftIdentity() {
+        public Identity getIdentity() {
             return identity;
         }
 

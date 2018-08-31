@@ -17,14 +17,43 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.objectstorage;
+package org.apache.james.blob.objectstorage.swift;
 
-public final class PassHeaderName extends HeaderName {
-    public static PassHeaderName of(String value) {
-        return new PassHeaderName(value);
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
+public class HeaderName {
+    private final String value;
+
+    protected HeaderName(String value) {
+        this.value = value;
     }
 
-    private PassHeaderName(String value) {
-        super(value);
+    public String value() {
+        return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof HeaderName)) {
+            return false;
+        }
+        HeaderName that = (HeaderName) o;
+        return Objects.equal(value, that.value);
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(value);
+    }
+
+    @Override
+    public final String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }
