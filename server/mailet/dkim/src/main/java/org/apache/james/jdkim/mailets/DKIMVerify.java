@@ -22,6 +22,7 @@ package org.apache.james.jdkim.mailets;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -81,28 +82,32 @@ public class DKIMVerify extends GenericMailet {
             }
         } catch (FailException e) {
             // fail
-            mail.setAttribute(DKIM_AUTH_RESULT_ATTRIBUTE, "fail ("+(e.getRelatedRecordIdentity() != null ? "identity "+ e.getRelatedRecordIdentity() + ": " : "")+e.getMessage()+")");
+            String relatedRecordIdentity = Optional.ofNullable(e.getRelatedRecordIdentity())
+                .map(value -> "identity" + value + ":")
+                .orElse("");
+            mail.setAttribute(DKIM_AUTH_RESULT_ATTRIBUTE, "fail (" + relatedRecordIdentity + e.getMessage() + ")");
         }
-        
     }
 
-	protected static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
-			throws MessagingException, FailException {
-		Headers headers = new MimeMessageHeaders(message);
-		BodyHasher bh = verifier.newBodyHasher(headers);
-		try {
-		    if (bh != null) {
-		    	OutputStream os = new HeaderSkippingOutputStream(bh
-		                .getOutputStream());
-		    	if (forceCRLF) os = new CRLFOutputStream(os);
-		        message.writeTo(os);
-		        bh.getOutputStream().close();
-		    }
-		    
-		} catch (IOException e) {
-		    throw new MessagingException("Exception calculating bodyhash: "
-		            + e.getMessage(), e);
-		}
-		return verifier.verify(bh);
-	}
+    protected static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
+            throws MessagingException, FailException {
+        Headers headers = new MimeMessageHeaders(message);
+        BodyHasher bh = verifier.newBodyHasher(headers);
+        try {
+            if (bh != null) {
+                OutputStream os = new HeaderSkippingOutputStream(bh
+                        .getOutputStream());
+                if (forceCRLF) {
+                    os = new CRLFOutputStream(os);
+                }
+                message.writeTo(os);
+                bh.getOutputStream().close();
+            }
+
+        } catch (IOException e) {
+            throw new MessagingException("Exception calculating bodyhash: "
+                    + e.getMessage(), e);
+        }
+        return verifier.verify(bh);
+    }
 }

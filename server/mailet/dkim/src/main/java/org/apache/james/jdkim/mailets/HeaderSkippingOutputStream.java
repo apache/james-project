@@ -28,9 +28,9 @@ import java.io.OutputStream;
  */
 public class HeaderSkippingOutputStream extends FilterOutputStream {
 
-    boolean inHeaders = true;
-    final byte[] skipTo = "\r\n\r\n".getBytes();
-    int pos = 0;
+    private final byte[] skipTo = "\r\n\r\n".getBytes();
+    private boolean inHeaders = true;
+    private int pos = 0;
 
     public HeaderSkippingOutputStream(OutputStream out) {
         super(out);
@@ -43,12 +43,14 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
                     pos++;
                     if (pos == skipTo.length) {
                         inHeaders = false;
-                        if (len - i - 1 > 0)
+                        if (len - i - 1 > 0) {
                             out.write(b, i + 1, len - i - 1);
+                        }
                         break;
                     }
-                } else
+                } else {
                     pos = 0;
+                }
             }
         } else {
             out.write(b, off, len);
@@ -59,10 +61,12 @@ public class HeaderSkippingOutputStream extends FilterOutputStream {
         if (inHeaders) {
             if (skipTo[pos] == b) {
                 pos++;
-                if (pos == skipTo.length)
+                if (pos == skipTo.length) {
                     inHeaders = false;
-            } else
+                }
+            } else {
                 pos = 0;
+            }
         } else {
             out.write(b);
         }

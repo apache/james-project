@@ -83,19 +83,19 @@ public class DKIMSign extends GenericMailet {
     private PrivateKey privateKey;
     private boolean forceCRLF;
 
-	/**
-	 * @return the signatureTemplate
-	 */
-	protected String getSignatureTemplate() {
-		return signatureTemplate;
-	}
+    /**
+     * @return the signatureTemplate
+     */
+    protected String getSignatureTemplate() {
+        return signatureTemplate;
+    }
 
-	/**
-	 * @return the privateKey
-	 */
-	protected PrivateKey getPrivateKey() {
-		return privateKey;
-	}
+    /**
+     * @return the privateKey
+     */
+    protected PrivateKey getPrivateKey() {
+        return privateKey;
+    }
 
     public void init() throws MessagingException {
         signatureTemplate = getInitParameter("signatureTemplate");
@@ -126,9 +126,9 @@ public class DKIMSign extends GenericMailet {
             MimeMessage message = mail.getMessage();
             Headers headers = new MimeMessageHeaders(message);
             try {
-            	OutputStream os = new HeaderSkippingOutputStream(bhj.getOutputStream());
-            	if (forceCRLF) {
-            	    os = new CRLFOutputStream(os);
+                OutputStream os = new HeaderSkippingOutputStream(bhj.getOutputStream());
+                if (forceCRLF) {
+                    os = new CRLFOutputStream(os);
                 }
                 message.writeTo(os);
                 bhj.getOutputStream().close();

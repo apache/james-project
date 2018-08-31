@@ -38,16 +38,15 @@ final class MimeMessageHeaders implements Headers {
     private final Map<String, List<String>> headers;
     private final List<String> fields;
 
-    public MimeMessageHeaders(MimeMessage message)
-            throws MessagingException {
+    public MimeMessageHeaders(MimeMessage message) throws MessagingException {
         headers = new HashMap<>();
         fields = new LinkedList<>();
-        for (Enumeration<String> e = message.getAllHeaderLines(); e
-                .hasMoreElements();) {
+        for (Enumeration<String> e = message.getAllHeaderLines(); e.hasMoreElements();) {
             String head = e.nextElement();
             int p = head.indexOf(':');
-            if (p <= 0)
+            if (p <= 0) {
                 throw new MessagingException("Bad header line: " + head);
+            }
             String headerName = head.substring(0, p).trim();
             String headerNameLC = headerName.toLowerCase();
             fields.add(headerName);

@@ -33,23 +33,21 @@ import java.io.OutputStream;
  * 
  */
 public class CRLFOutputStream extends FilterOutputStream {
+    private static final int LAST_WAS_OTHER = 0;
+    private static final int LAST_WAS_CR = 1;
+    private static final int LAST_WAS_LF = 2;
 
     /**
      * Counter for number of last (0A or 0D).
      */
     protected int statusLast;
 
-    protected final static int LAST_WAS_OTHER = 0;
-
-    protected final static int LAST_WAS_CR = 1;
-
-    protected final static int LAST_WAS_LF = 2;
 
     protected boolean startOfLine = true;
 
     /**
      * Constructor that wraps an OutputStream.
-     * 
+     *
      * @param out
      *            the OutputStream to be wrapped
      */
@@ -63,10 +61,10 @@ public class CRLFOutputStream extends FilterOutputStream {
     /**
      * Writes a byte to the stream Fixes any naked CR or LF to the RFC 2821
      * mandated CFLF pairing.
-     * 
+     *
      * @param b
      *            the byte to write
-     * 
+     *
      * @throws IOException
      *             if an error occurs writing the byte
      */
@@ -98,10 +96,10 @@ public class CRLFOutputStream extends FilterOutputStream {
     /**
      * Provides an extension point for ExtraDotOutputStream to be able to add
      * dots at the beginning of new lines.
-     * 
+     *
      * @see java.io.FilterOutputStream#write(byte[], int, int)
      */
-    protected void writeChunk(byte buffer[], int offset, int length)
+    protected void writeChunk(byte[] buffer, int offset, int length)
             throws IOException {
         out.write(buffer, offset, length);
     }
@@ -109,7 +107,7 @@ public class CRLFOutputStream extends FilterOutputStream {
     /**
      * @see java.io.FilterOutputStream#write(byte[], int, int)
      */
-    public synchronized void write(byte buffer[], int offset, int length)
+    public synchronized void write(byte[] buffer, int offset, int length)
             throws IOException {
         /* optimized */
         int lineStart = offset;
@@ -147,7 +145,7 @@ public class CRLFOutputStream extends FilterOutputStream {
 
     /**
      * Ensure that the stream is CRLF terminated.
-     * 
+     *
      * @throws IOException
      *             if an error occurs writing the byte
      */
