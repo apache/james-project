@@ -81,8 +81,10 @@ public class DockerSwiftExtension implements ParameterResolver, BeforeAllCallbac
         }
         URI keystoneV2Endpoint =
             URI.create("http://" + containerIpAddress + ":" + keystonePort + "/v2.0");
-        URI keystoneV3Endpoint = URI.create("http://" + containerIpAddress + ":" + keystonePort + "/v3");
-        URI swiftEndpoint = URI.create("http://" + containerIpAddress + ":" + swiftPort + "/auth/v1.0");
+        URI keystoneV3Endpoint =
+            URI.create("http://" + containerIpAddress + ":" + keystonePort + "/v3");
+        URI swiftEndpoint =
+            URI.create("http://" + containerIpAddress + ":" + swiftPort + "/auth/v1.0");
         dockerSwift = new DockerSwift(keystoneV2Endpoint, keystoneV3Endpoint, swiftEndpoint);
     }
 

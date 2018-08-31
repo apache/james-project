@@ -29,6 +29,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
+import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
 import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.options.CopyOptions;
@@ -60,6 +61,10 @@ public class ObjectStorageBlobsDAO implements BlobStore {
 
     public static ObjectStorageBlobsDAOBuilder builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
         return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
+    }
+
+    public static ObjectStorageBlobsDAOBuilder builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+        return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
     }
 
     @Override

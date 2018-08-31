@@ -25,25 +25,23 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 
 import org.apache.james.blob.api.BlobId;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.domain.Location;
-import org.junit.jupiter.api.Test;
 
 public interface ObjectStorageBlobsDAOContract {
-
-    ObjectStorageBlobsDAOBuilder builder();
 
     Location DEFAULT_LOCATION = null;
 
     ContainerName containerName();
 
-    @Test
-    default void builtBlobsDAOCanStoreAndRetrieve() throws Exception {
-        ObjectStorageBlobsDAOBuilder builder = builder();
-
+    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder builder)
+        throws InterruptedException, ExecutionException, TimeoutException {
         BlobStore blobStore = builder.getSupplier().get();
         blobStore.createContainerInLocation(DEFAULT_LOCATION, containerName().value());
         ObjectStorageBlobsDAO dao = builder.build();

@@ -21,7 +21,8 @@ package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.apache.james.blob.api.HashBlobId;
@@ -34,27 +35,59 @@ import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @ExtendWith(DockerSwiftExtension.class)
-class SwiftKeystone2ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
+class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
 
-    private static final TenantName TENANT_NAME = TenantName.of("test");
-    private static final UserName USER_NAME = UserName.of("demo");
-    private static final Credentials PASSWORD = Credentials.of("demo");
-    private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
+    private static final DomainName DOMAIN_NAME = DomainName.of("Default");
+    private static final DomainId DOMAIN_ID = DomainId.of("default");
+    private static final ProjectName PROJECT_NAME = ProjectName.of("test");
+    private static final UserName DEMO_USER_NAME = UserName.of("demo");
+    private static final Credentials DEMO_PASSWORD = Credentials.of("demo");
+    private static final IdentityV3 DEMO_IDENTITY = IdentityV3.of(DOMAIN_NAME, DEMO_USER_NAME);
+
+    private static final String PROJECT_CONFIG_KEY = "PROJECT_CONFIG_KEY";
+    private static final SwiftKeystone3ObjectStorage.Configuration.Builder PROJECT_CONFIG =
+         SwiftKeystone3ObjectStorage.configBuilder()
+            .identity(DEMO_IDENTITY)
+            .credentials(DEMO_PASSWORD)
+            .project(Project.of(PROJECT_NAME));
+
+    private static final String PROJECT_DOMAIN_NAME_KEY = "PROJECT_DOMAIN_NAME_KEY";
+    private static final SwiftKeystone3ObjectStorage.Configuration.Builder PROJECT_DOMAIN_NAME_SCOPE =
+        SwiftKeystone3ObjectStorage.configBuilder()
+            .identity(DEMO_IDENTITY)
+            .credentials(DEMO_PASSWORD)
+            .project(Project.of(PROJECT_NAME, DOMAIN_NAME));
+
+    private static final String PROJECT_DOMAIN_ID_KEY = "PROJECT_DOMAIN_ID_KEY";
+    private static final SwiftKeystone3ObjectStorage.Configuration.Builder PROJECT_DOMAIN_ID_SCOPE =
+        SwiftKeystone3ObjectStorage.configBuilder()
+            .identity(DEMO_IDENTITY)
+            .credentials(DEMO_PASSWORD)
+            .project(Project.of(PROJECT_NAME, DOMAIN_ID));
+
     private ContainerName containerName;
-    private URI endpoint;
-    private SwiftKeystone2ObjectStorage.Configuration testConfig;
+
+    private SwiftKeystone3ObjectStorage.Configuration testConfig;
+    private DockerSwift dockerSwift;
+    private Map<String, SwiftKeystone3ObjectStorage.Configuration.Builder> configBuilders;
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) throws Exception {
+        this.dockerSwift = dockerSwift;
         containerName = ContainerName.of(UUID.randomUUID().toString());
-        endpoint = dockerSwift.keystoneV2Endpoint();
-        testConfig = SwiftKeystone2ObjectStorage.configBuilder()
-            .endpoint(endpoint)
-            .identity(SWIFT_IDENTITY)
-            .credentials(PASSWORD)
+        testConfig = PROJECT_CONFIG
+            .endpoint(dockerSwift.keystoneV3Endpoint())
             .build();
+        configBuilders = new HashMap<>();
+        // There should be 2 more modes: unscoped and domain-scoped
+        // but the docker image doesn't support them...
+        configBuilders.put(PROJECT_CONFIG_KEY, PROJECT_CONFIG);
+        configBuilders.put(PROJECT_DOMAIN_ID_KEY, PROJECT_DOMAIN_ID_SCOPE);
+        configBuilders.put(PROJECT_DOMAIN_NAME_KEY, PROJECT_DOMAIN_NAME_SCOPE);
     }
 
     @Override
@@ -80,10 +113,13 @@ class SwiftKeystone2ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
-    @Test
-    public void builtBlobsDAOCanStoreAndRetrieve() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {PROJECT_CONFIG_KEY, PROJECT_DOMAIN_ID_KEY, PROJECT_DOMAIN_NAME_KEY})
+    public void builtBlobsDAOCanStoreAndRetrieve(String key) throws Exception {
+        SwiftKeystone3ObjectStorage.Configuration config =
+            configBuilders.get(key).endpoint(dockerSwift.keystoneV3Endpoint()).build();
         ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
-            .builder(testConfig)
+            .builder(config)
             .container(containerName)
             .blobIdFactory(new HashBlobId.Factory());
 

@@ -19,18 +19,11 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
@@ -66,6 +59,11 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
             .build();
     }
 
+    @Override
+    public ContainerName containerName() {
+        return containerName;
+    }
+
     @Test
     void containerNameIsMandatoryToBuildBlobsDAO() throws Exception {
         ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
@@ -84,16 +82,13 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
-    @Override
-    public ObjectStorageBlobsDAOBuilder builder() {
-        return ObjectStorageBlobsDAO
+    @Test
+    public void builtBlobsDAOCanStoreAndRetrieve() throws Exception {
+        ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
             .blobIdFactory(new HashBlobId.Factory());
-    }
 
-    @Override
-    public ContainerName containerName() {
-        return containerName;
+        assertBlobsDAOCanStoreAndRetrieve(builder);
     }
 }
