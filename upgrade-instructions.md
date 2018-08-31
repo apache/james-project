@@ -21,9 +21,9 @@ Changelist:
 
 ### JMAPFiltering mailet is required for JMAP capable servers
 
-Date: XXXX
+Date: 30/08/2018
 
-SHA-1: XXXX
+SHA-1: 9ba6a1dd270f99735c7f9d3d4b2adb5076583c10
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-2529
 
