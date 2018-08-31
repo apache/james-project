@@ -23,6 +23,6 @@ import org.apache.james.dlp.api.DLPConfigurationStoreContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(CassandraEventSourcingDLPConfigurationStoreExtension.class)
-public class CassandraEventSourcingDLPConfigurationStoreTest implements DLPConfigurationStoreContract {
+class CassandraEventSourcingDLPConfigurationStoreTest implements DLPConfigurationStoreContract {
 
 }

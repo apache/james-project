@@ -23,6 +23,6 @@ import org.apache.james.dlp.api.DLPConfigurationStoreContract;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(InMemoryEventSourcingDLPConfigurationStoreExtension.class)
-public class EventSourcingDLPConfigurationStoreTest implements DLPConfigurationStoreContract {
+class EventSourcingDLPConfigurationStoreTest implements DLPConfigurationStoreContract {
 
 }
