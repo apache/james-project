@@ -26,6 +26,8 @@ import java.net.URI;
 
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class SwiftTempAuthObjectStorageConfigurationTest {
 
     private static final TenantName TENANT_NAME = TenantName.of("fake");
@@ -108,5 +110,10 @@ class SwiftTempAuthObjectStorageConfigurationTest {
         assertThat(build.getEndpoint()).isEqualTo(ENDPOINT);
         assertThat(build.getIdentity()).isEqualTo(SWIFT_IDENTITY);
         assertThat(build.getCredentials()).isEqualTo(CREDENTIALS);
+    }
+
+    @Test
+    void configurationShouldEnforceBeanContract() {
+        EqualsVerifier.forClass(SwiftTempAuthObjectStorage.Configuration.class);
     }
 }

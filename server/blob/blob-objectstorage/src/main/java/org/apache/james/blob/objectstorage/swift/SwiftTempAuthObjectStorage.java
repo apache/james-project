@@ -32,6 +32,8 @@ import org.jclouds.openstack.keystone.config.KeystoneProperties;
 import org.jclouds.openstack.swift.v1.blobstore.RegionScopedBlobStoreContext;
 import org.jclouds.openstack.swift.v1.reference.TempAuthHeaders;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -189,6 +191,40 @@ public class SwiftTempAuthObjectStorage {
 
         public Optional<Region> getRegion() {
             return region;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Configuration that = (Configuration) o;
+            return Objects.equal(endpoint, that.endpoint) &&
+                Objects.equal(identity, that.identity) &&
+                Objects.equal(region, that.region) &&
+                Objects.equal(credentials, that.credentials) &&
+                Objects.equal(userHeaderName, that.userHeaderName) &&
+                Objects.equal(passHeaderName, that.passHeaderName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(endpoint, identity, region, credentials, userHeaderName, passHeaderName);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("endpoint", endpoint)
+                .add("identity", identity)
+                .add("region", region)
+                .add("credentials", credentials)
+                .add("userHeaderName", userHeaderName)
+                .add("passHeaderName", passHeaderName)
+                .toString();
         }
     }
 }
