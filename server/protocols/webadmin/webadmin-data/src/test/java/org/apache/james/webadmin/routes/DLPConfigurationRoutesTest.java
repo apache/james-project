@@ -24,6 +24,8 @@ import static io.restassured.RestAssured.requestSpecification;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
+import static net.javacrumbs.jsonunit.core.Option.IGNORING_EXTRA_FIELDS;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.containsString;
@@ -696,6 +698,105 @@ class DLPConfigurationRoutesTest {
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
                 .body("details", is("Domain can not be empty nor contain `@`"));
+        }
+    }
+    
+    @Nested
+    class DefineFetch {
+        @Test
+        public void fetchShouldBeOK() throws Exception {
+            storeRules();
+
+            String jsonAsString =
+                when()
+                    .get(DEFAULT_DOMAIN + "/rules/1")
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                        .body()
+                        .asString();
+
+            assertThatJson(jsonAsString)
+                .when(IGNORING_ARRAY_ORDER)
+                .when(IGNORING_EXTRA_FIELDS)
+                    .isEqualTo("{" +
+                            "    \"id\": \"1\"," +
+                            "    \"expression\": \"expression 1\"," +
+                            "    \"explanation\": \"explanation 1\"," +
+                            "    \"targetsSender\": true," +
+                            "    \"targetsRecipients\": true," +
+                            "    \"targetsContent\": true" +
+                            "}");
+        }
+
+        @Test
+        public void fetchOnUnknownDomainShouldBe404() throws Exception {
+            storeRules();
+
+            when()
+                .get("strange.com/rules/1")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'strange.com' is not managed by this James server"));
+        }
+
+        @Test
+        public void fetchOnUnknownDomainAndRuleShouldBe404() throws Exception {
+            when()
+                .get("strange.com/rules/666")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("'strange.com' is not managed by this James server"));
+        }
+
+        @Test
+        public void fetchOnUnknownRuleIdShouldBe404() throws Exception {
+            storeRules();
+
+            when()
+                .get(DEFAULT_DOMAIN + "/rules/666")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .contentType(JSON_CONTENT_TYPE)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("There is no rule '666' for '" + DEFAULT_DOMAIN + "' managed by this James server"));
+        }
+
+        private void storeRules() {
+            String storeBody =
+                "{\"rules\": [" +
+                "  {" +
+                "    \"id\": \"1\"," +
+                "    \"expression\": \"expression 1\"," +
+                "    \"explanation\": \"explanation 1\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": true," +
+                "    \"targetsContent\": true" +
+                "  }," +
+                "  {" +
+                "    \"id\": \"2\"," +
+                "    \"expression\": \"expression 2\"," +
+                "    \"explanation\": \"explanation 2\"," +
+                "    \"targetsSender\": true," +
+                "    \"targetsRecipients\": false," +
+                "    \"targetsContent\": false" +
+                "  }]}";
+
+            given()
+                .body(storeBody)
+            .when()
+                .put(DEFAULT_DOMAIN)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
         }
     }
 }

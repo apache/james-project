@@ -1809,6 +1809,7 @@ Each `senderDomain` correspond to a distinct DLP configuration.
 - [List DLP configuration by sender domain](List_dlp_configuration_by_sender_domain)
 - [Store DLP configuration by sender domain](Store_dlp_configuration_by_sender_domain)
 - [Remove DLP configuration by sender domain](Remove_dlp_configuration_by_sender_domain)
+- [Fetch a DLP configuration item by sender domain and rule id](Fetch_a_dlp_configuration_item_by_sender_domain_and_rule_id)
 
 ### List DLP configuration by sender domain
 
@@ -1906,6 +1907,34 @@ Response codes:
  - 204: DLP configuration is removed
  - 400: Invalid senderDomain or payload in request
  - 404: The domain does not exist.
+
+
+### Fetch a DLP configuration item by sender domain and rule id
+
+Retrieve a DLP configuration rule for corresponding `senderDomain` and a `ruleId`
+
+```
+curl -XGET http://ip:port/dlp/rules/senderDomain/rules/ruleId
+```
+
+Response codes:
+
+ - 200: A dlp configuration item is returned
+ - 400: Invalid senderDomain or payload in request
+ - 404: The domain and/or the rule does not exist.
+
+This is an example of returned body.
+
+```
+{
+  "id": "1",
+  "expression": "james.org",
+  "explanation": "Find senders or recipients containing james[any char]org",
+  "targetsSender": true,
+  "targetsRecipients": true,
+  "targetsContent": false
+}
+```
 
 ## Administrating Sieve quotas
 

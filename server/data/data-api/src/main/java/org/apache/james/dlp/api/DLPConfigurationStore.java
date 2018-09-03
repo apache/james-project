@@ -20,6 +20,7 @@
 package org.apache.james.dlp.api;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.core.Domain;
 
@@ -34,5 +35,7 @@ public interface DLPConfigurationStore extends DLPConfigurationLoader {
     }
 
     void clear(Domain domain);
-    
+
+    Optional<DLPConfigurationItem> fetch(Domain domain, DLPConfigurationItem.Id ruleId);
+
 }

@@ -27,13 +27,11 @@ import org.apache.james.dlp.api.DLPConfigurationItem;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 public class DLPConfigurationItemDTO {
 
-    @VisibleForTesting
-    static DLPConfigurationItemDTO toDTO(DLPConfigurationItem dlpConfiguration) {
+    public static DLPConfigurationItemDTO toDTO(DLPConfigurationItem dlpConfiguration) {
         DLPConfigurationItem.Targets targets = dlpConfiguration.getTargets();
         return new DLPConfigurationItemDTO(
             dlpConfiguration.getId().asString(),
