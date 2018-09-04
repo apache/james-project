@@ -33,6 +33,7 @@
     <name>Apache James :: Server :: Guice</name>
 
     <modules>
+        <module>blob-api-guice</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>configuration</module>
