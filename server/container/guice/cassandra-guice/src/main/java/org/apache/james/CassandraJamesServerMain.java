@@ -42,6 +42,7 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
+import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.ActiveMQQueueModule;
 import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DLPRoutesModule;
@@ -106,7 +107,8 @@ public class CassandraJamesServerMain {
         new ElasticSearchMetricReporterModule(),
         new MailboxModule(),
         new TikaMailboxModule(),
-        new SpamAssassinListenerModule());
+        new SpamAssassinListenerModule(),
+        new RabbitMQModule());
 
     public static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
         CASSANDRA_SERVER_CORE_MODULE,
