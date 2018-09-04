@@ -17,13 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.docker;
+package org.apache.james.queue.rabbitmq;
 
-public interface Images {
-    String FAKE_SMTP = "weave/rest-smtp-sink:latest";
-    String RABBITMQ = "rabbitmq:3.7.7-management";
-    String ELASTICSEARCH = "elasticsearch:2.4.6";
-    String NGINX = "nginx:1.15.1";
-    String TIKA = "linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520";
-    String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
+public class RabbitMQManagementCredentials {
+
+    private final String user;
+    private final char[] password;
+
+    RabbitMQManagementCredentials(String user, char[] password) {
+        this.user = user;
+        this.password = password;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public char[] getPassword() {
+        return password;
+    }
+
 }

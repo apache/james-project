@@ -17,13 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util.docker;
+package org.apache.james.queue.rabbitmq;
 
-public interface Images {
-    String FAKE_SMTP = "weave/rest-smtp-sink:latest";
-    String RABBITMQ = "rabbitmq:3.7.7-management";
-    String ELASTICSEARCH = "elasticsearch:2.4.6";
-    String NGINX = "nginx:1.15.1";
-    String TIKA = "linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520";
-    String SPAMASSASSIN = "dinkel/spamassassin:3.4.0";
+import java.util.concurrent.TimeUnit;
+
+import org.apache.james.queue.api.MailQueue;
+import org.apache.mailet.Mail;
+
+public class RabbitMQMailQueue implements MailQueue {
+    private final MailQueueName name;
+
+    public RabbitMQMailQueue(MailQueueName name) {
+        this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name.asString();
+    }
+
+    @Override
+    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+
+    }
+
+    @Override
+    public void enQueue(Mail mail) throws MailQueueException {
+
+    }
+
+    @Override
+    public MailQueueItem deQueue() throws MailQueueException, InterruptedException {
+        return null;
+    }
 }

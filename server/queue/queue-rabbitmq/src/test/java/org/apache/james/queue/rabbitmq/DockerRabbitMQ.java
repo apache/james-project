@@ -19,6 +19,7 @@
 package org.apache.james.queue.rabbitmq;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.apache.james.util.docker.Images;
 import org.slf4j.Logger;
@@ -26,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.ConnectionFactory;
@@ -35,6 +38,7 @@ public class DockerRabbitMQ {
 
     private static final String DEFAULT_RABBIT_NODE = "my-rabbit";
     private static final int DEFAULT_RABBITMQ_PORT = 5672;
+    private static final int DEFAULT_RABBITMQ_ADMIN_PORT = 15672;
     private static final String DEFAULT_RABBITMQ_USERNAME = "guest";
     private static final String DEFAULT_RABBITMQ_PASSWORD = "guest";
     private static final String RABBITMQ_ERLANG_COOKIE = "RABBITMQ_ERLANG_COOKIE";
@@ -55,10 +59,12 @@ public class DockerRabbitMQ {
     @SuppressWarnings("resource")
     private DockerRabbitMQ(Optional<String> hostName, Optional<String> erlangCookie, Optional<String> nodeName, Optional<Network> net) {
         container = new GenericContainer<>(Images.RABBITMQ)
-                .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse("localhost")))
+                .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse(randomName())))
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
-                .withExposedPorts(DEFAULT_RABBITMQ_PORT)
-                .waitingFor(RabbitMQWaitStrategy.withDefaultTimeout(this))
+                .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
+                .waitingFor(new WaitAllStrategy()
+                    .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT))
+                    .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this)))
                 .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
                 .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
                     .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m")));
@@ -68,12 +74,20 @@ public class DockerRabbitMQ {
         this.nodeName = nodeName;
     }
 
+    private String randomName() {
+        return UUID.randomUUID().toString();
+    }
+
     public String getHostIp() {
         return container.getContainerIpAddress();
     }
 
     public Integer getPort() {
         return container.getMappedPort(DEFAULT_RABBITMQ_PORT);
+    }
+
+    public Integer getAdminPort() {
+        return container.getMappedPort(DEFAULT_RABBITMQ_ADMIN_PORT);
     }
 
     public String getUsername() {
@@ -138,5 +152,16 @@ public class DockerRabbitMQ {
                 .execInContainer("rabbitmqctl", "start_app")
                 .getStdout();
         LOGGER.debug("start_app: {}", stdout);
+    }
+
+    public void reset() throws Exception {
+        stopApp();
+
+        String stdout = container()
+            .execInContainer("rabbitmqctl", "reset")
+            .getStdout();
+        LOGGER.debug("reset: {}", stdout);
+
+        startApp();
     }
 }
