@@ -111,18 +111,6 @@
         <productName>Apache-James Mail Server</productName>
     </properties>
 
-    <repositories>
-        <!-- apache.snapshot is needed for james-project SNAPSHOT, see JAMES-1470 -->
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <id>apache.snapshots</id>
-            <name>Apache Snapshot Repository</name>
-            <url>http://repository.apache.org/snapshots</url>
-        </repository>
-    </repositories>
-
     <build>
         <pluginManagement>
             <plugins>
