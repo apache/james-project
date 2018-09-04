@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 public class StreamUtils {
 
+    @SafeVarargs
     public static <T> Stream<T> ofNullables(T... array) {
         return ofNullable(array);
     }

@@ -31,8 +31,8 @@ import org.testcontainers.containers.GenericContainer;
 
 class DockerSwiftTempAuthExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
     public static final int SWIFT_PORT = 8080;
-    private static GenericContainer swiftContainer =
-        new GenericContainer("bouncestorage/swift-aio:ea10837d")
+    private static GenericContainer<?> swiftContainer =
+        new GenericContainer<>("bouncestorage/swift-aio:ea10837d")
             .withExposedPorts(SWIFT_PORT);
     private DockerSwift dockerSwift;
 
