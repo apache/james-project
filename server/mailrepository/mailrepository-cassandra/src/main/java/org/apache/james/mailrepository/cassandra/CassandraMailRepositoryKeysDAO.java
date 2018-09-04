@@ -68,6 +68,7 @@ public class CassandraMailRepositoryKeysDAO {
     private PreparedStatement prepareDelete(Session session) {
         return session.prepare(delete()
             .from(KEYS_TABLE_NAME)
+            .ifExists()
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME)))
             .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
     }
@@ -91,8 +92,8 @@ public class CassandraMailRepositoryKeysDAO {
             .thenApply(stream -> stream.map(row -> new MailKey(row.getString(MAIL_KEY))));
     }
 
-    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
-        return executor.executeVoid(deleteKey.bind()
+    public CompletableFuture<Boolean> remove(MailRepositoryUrl url, MailKey key) {
+        return executor.executeReturnApplied(deleteKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }

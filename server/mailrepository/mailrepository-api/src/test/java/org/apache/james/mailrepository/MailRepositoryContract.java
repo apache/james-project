@@ -334,6 +334,18 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void removeShouldHaveNoEffectOnSizeWhenUnknownKeys() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        Mail mail1 = createMail(MAIL_1);
+        testee.store(mail1);
+
+        testee.remove(ImmutableList.of(createMail(UNKNOWN_KEY)));
+
+        assertThat(testee.size()).isEqualTo(1);
+    }
+
+    @Test
     default void removeShouldHaveNoEffectForUnknownMail() throws Exception {
         MailRepository testee = retrieveRepository();
 

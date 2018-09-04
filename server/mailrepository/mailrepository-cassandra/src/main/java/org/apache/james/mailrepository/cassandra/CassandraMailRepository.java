@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -193,20 +194,26 @@ public class CassandraMailRepository implements MailRepository {
         removeAsync(key).join();
     }
 
-    public CompletableFuture<Void> removeAsync(MailKey key) {
-        return CompletableFuture.allOf(
-            keysDAO.remove(url, key),
-            countDAO.decrement(url))
+    private CompletableFuture<Void> removeAsync(MailKey key) {
+        return keysDAO.remove(url, key)
+            .thenCompose(this::decreaseSizeIfDeleted)
             .thenCompose(any -> mailDAO.remove(url, key));
     }
 
+    private CompletionStage<Void> decreaseSizeIfDeleted(Boolean isDeleted) {
+        if (isDeleted) {
+            return countDAO.decrement(url);
+        }
+        return CompletableFuture.completedFuture(null);
+    }
+
     @Override
-    public long size() throws MessagingException {
+    public long size() {
         return countDAO.getCount(url).join();
     }
 
     @Override
-    public void removeAll() throws MessagingException {
+    public void removeAll() {
         keysDAO.list(url)
             .thenCompose(stream -> FluentFutureStream.of(stream.map(this::removeAsync))
                 .completableFuture())

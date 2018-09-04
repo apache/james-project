@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerCassandraExtension.class)
-public class CassandraMailRepositoryKeysDAOTest {
+class CassandraMailRepositoryKeysDAOTest {
 
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
@@ -51,7 +51,7 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
@@ -66,13 +66,13 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    public void test() {
+    void listShouldBeEmptyByDefault() {
         assertThat(testee.list(URL).join())
             .isEmpty();
     }
 
     @Test
-    public void listShouldReturnEmptyByDefault() {
+    void listShouldReturnEmptyByDefault() {
         testee.store(URL, KEY_1).join();
 
         assertThat(testee.list(URL).join())
@@ -80,7 +80,7 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    public void listShouldNotReturnElementsOfOtherRepositories() {
+    void listShouldNotReturnElementsOfOtherRepositories() {
         testee.store(URL, KEY_1).join();
 
         assertThat(testee.list(URL2).join())
@@ -88,7 +88,7 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    public void listShouldReturnSeveralElements() {
+    void listShouldReturnSeveralElements() {
         testee.store(URL, KEY_1).join();
         testee.store(URL, KEY_2).join();
         testee.store(URL, KEY_3).join();
@@ -98,7 +98,7 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    public void listShouldNotReturnRemovedElements() {
+    void listShouldNotReturnRemovedElements() {
         testee.store(URL, KEY_1).join();
         testee.store(URL, KEY_2).join();
         testee.store(URL, KEY_3).join();
@@ -110,18 +110,34 @@ public class CassandraMailRepositoryKeysDAOTest {
     }
 
     @Test
-    public void removeShouldBeIdempotent() {
+    void removeShouldBeIdempotent() {
         testee.remove(URL, KEY_2).join();
     }
 
     @Test
-    public void removeShouldNotAffectOtherRepositories() {
+    void removeShouldNotAffectOtherRepositories() {
         testee.store(URL, KEY_1).join();
 
         testee.remove(URL2, KEY_2).join();
 
         assertThat(testee.list(URL).join())
             .containsOnly(KEY_1);
+    }
+
+    @Test
+    void removeShouldReturnTrueWhenKeyDeleted() {
+        testee.store(URL, KEY_1).join();
+
+        boolean isDeleted = testee.remove(URL, KEY_1).join();
+
+        assertThat(isDeleted).isTrue();
+    }
+
+    @Test
+    void removeShouldReturnFalseWhenKeyNotDeleted() {
+        boolean isDeleted = testee.remove(URL2, KEY_2).join();
+
+        assertThat(isDeleted).isFalse();
     }
 
 }
