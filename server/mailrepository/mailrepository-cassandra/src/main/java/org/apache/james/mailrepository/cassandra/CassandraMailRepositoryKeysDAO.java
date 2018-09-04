@@ -75,12 +75,13 @@ public class CassandraMailRepositoryKeysDAO {
 
     private PreparedStatement prepareInsert(Session session) {
         return session.prepare(insertInto(KEYS_TABLE_NAME)
+            .ifNotExists()
             .value(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))
             .value(MAIL_KEY, bindMarker(MAIL_KEY)));
     }
 
-    public CompletableFuture<Void> store(MailRepositoryUrl url, MailKey key) {
-        return executor.executeVoid(insertKey.bind()
+    public CompletableFuture<Boolean> store(MailRepositoryUrl url, MailKey key) {
+        return executor.executeReturnApplied(insertKey.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }

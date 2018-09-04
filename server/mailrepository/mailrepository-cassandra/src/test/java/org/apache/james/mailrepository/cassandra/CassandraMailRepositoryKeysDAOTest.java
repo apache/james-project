@@ -140,4 +140,21 @@ class CassandraMailRepositoryKeysDAOTest {
         assertThat(isDeleted).isFalse();
     }
 
+
+    @Test
+    void storeShouldReturnTrueWhenNotPreviouslyStored() {
+        boolean isStored = testee.store(URL, KEY_1).join();
+
+        assertThat(isStored).isTrue();
+    }
+
+    @Test
+    void storeShouldReturnFalseWhenPreviouslyStored() {
+        testee.store(URL, KEY_1).join();
+
+        boolean isStored = testee.store(URL, KEY_1).join();
+
+        assertThat(isStored).isFalse();
+    }
+
 }

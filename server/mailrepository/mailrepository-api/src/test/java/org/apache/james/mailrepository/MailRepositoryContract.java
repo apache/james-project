@@ -346,6 +346,17 @@ public interface MailRepositoryContract {
     }
 
     @Test
+    default void storeShouldHaveNoEffectOnSizeWhenAlreadyStoredMail() throws Exception {
+        MailRepository testee = retrieveRepository();
+
+        Mail mail1 = createMail(MAIL_1);
+        testee.store(mail1);
+        testee.store(mail1);
+
+        assertThat(testee.size()).isEqualTo(1);
+    }
+
+    @Test
     default void removeShouldHaveNoEffectForUnknownMail() throws Exception {
         MailRepository testee = retrieveRepository();
 
