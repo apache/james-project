@@ -379,6 +379,25 @@ public abstract class FilterTest {
     }
 
     @Test
+    public void setFilterShouldAcceptNullAccountId() {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                  "  \"setFilter\", " +
+                  "  {" +
+                  "    \"accountId\": null," +
+                  "    \"singleton\": []" +
+                  "  }, " +
+                  "\"#0\"" +
+                  "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(NAME, equalTo("filterSet"))
+            .body(ARGUMENTS + ".updated", hasSize(1));
+    }
+
+    @Test
     public void setFilterShouldRejectIfInState() {
         given()
             .header("Authorization", accessToken.serialize())
@@ -396,6 +415,25 @@ public abstract class FilterTest {
             .body(NAME, equalTo("error"))
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
             .body(ARGUMENTS + ".description", equalTo("The field 'ifInState' of 'SetFilterRequest' is not supported"));
+    }
+
+    @Test
+    public void setFilterShouldAcceptNullIfInState() {
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body("[[" +
+                  "  \"setFilter\", " +
+                  "  {" +
+                  "    \"ifInState\": null," +
+                  "    \"singleton\": []" +
+                  "  }, " +
+                  "\"#0\"" +
+                  "]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .body(NAME, equalTo("filterSet"))
+            .body(ARGUMENTS + ".updated", hasSize(1));
     }
 
     @Test
