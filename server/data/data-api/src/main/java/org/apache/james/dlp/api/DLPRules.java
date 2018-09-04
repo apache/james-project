@@ -17,58 +17,68 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.dlp.eventsourcing.commands;
+package org.apache.james.dlp.api;
 
+import java.util.Iterator;
 import java.util.Objects;
-
-import org.apache.james.core.Domain;
-import org.apache.james.dlp.api.DLPRules;
-import org.apache.james.eventsourcing.Command;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
-public class StoreCommand implements Command {
-    private final Domain domain;
-    private final DLPRules rules;
+public class DLPRules implements Iterable<DLPConfigurationItem> {
 
-    public StoreCommand(Domain domain, DLPRules rules) {
-        Preconditions.checkNotNull(domain);
-        Preconditions.checkNotNull(rules);
-
-        this.domain = domain;
-        this.rules = rules;
+    public static final class DuplicateRulesIdsException extends RuntimeException {
     }
 
-    public Domain getDomain() {
-        return domain;
+    private final ImmutableList<DLPConfigurationItem> items;
+
+    public DLPRules(ImmutableList<DLPConfigurationItem> items) throws DuplicateRulesIdsException {
+        Preconditions.checkNotNull(items);
+        checkNotContainDuplicateIds(items);
+
+        this.items = items;
     }
 
-    public DLPRules getRules() {
-        return rules;
+    private void checkNotContainDuplicateIds(ImmutableList<DLPConfigurationItem> items) throws DuplicateRulesIdsException {
+        long uniqueIdCount = items.stream()
+            .map(DLPConfigurationItem::getId)
+            .distinct()
+            .count();
+
+        if (uniqueIdCount != items.size()) {
+            throw new DuplicateRulesIdsException();
+        }
+    }
+
+    public ImmutableList<DLPConfigurationItem> getItems() {
+        return items;
+    }
+
+    @Override
+    public Iterator<DLPConfigurationItem> iterator() {
+        return items.iterator();
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof StoreCommand) {
-            StoreCommand that = (StoreCommand) o;
+        if (o instanceof DLPRules) {
+            DLPRules dlpConfiguration = (DLPRules) o;
 
-            return Objects.equals(this.domain, that.domain)
-                && Objects.equals(this.rules, that.rules);
+            return Objects.equals(this.items, dlpConfiguration.items);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(domain, rules);
+        return Objects.hash(items);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("domain", domain)
-            .add("rules", rules)
+            .add("items", items)
             .toString();
     }
 }

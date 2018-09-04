@@ -17,39 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.matchers.dlp;
+package org.apache.james.util.streams;
 
-import javax.inject.Inject;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import org.apache.james.core.Domain;
-import org.apache.james.dlp.api.DLPConfigurationStore;
-import org.apache.james.dlp.api.DLPRules;
+public class Iterables {
 
-public interface DlpRulesLoader {
-
-    DlpDomainRules load(Domain domain);
-
-    class Impl implements DlpRulesLoader {
-
-        private final DLPConfigurationStore configurationStore;
-
-        @Inject
-        public Impl(DLPConfigurationStore configurationStore) {
-            this.configurationStore = configurationStore;
-        }
-
-        @Override
-        public DlpDomainRules load(Domain domain) {
-          return toRules(configurationStore.list(domain));
-        }
-
-        private DlpDomainRules toRules(DLPRules items) {
-            DlpDomainRules.DlpDomainRulesBuilder builder = DlpDomainRules.builder();
-            items.forEach(item ->
-                item.getTargets().list().forEach(type ->
-                    builder.rule(type, item.getId(), item.getRegexp())
-                ));
-            return builder.build();
-        }
+    public static <T> Stream<T> toStream(Iterable<T> iterable) {
+        return StreamSupport.stream(iterable.spliterator(), false);
     }
 }

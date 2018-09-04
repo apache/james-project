@@ -111,7 +111,7 @@ public interface DLPConfigurationStoreContract {
     @Test
     default void storeShouldRejectDuplicateIds(DLPConfigurationStore dlpConfigurationStore) {
         assertThatThrownBy(() -> dlpConfigurationStore.store(Domain.LOCALHOST, RULE, RULE))
-            .isInstanceOf(IllegalArgumentException.class);
+            .isInstanceOf(DLPRules.DuplicateRulesIdsException.class);
     }
 
     @Test
@@ -133,7 +133,7 @@ public interface DLPConfigurationStoreContract {
     @Test
     default void storeShouldClearRulesWhenEmpty(DLPConfigurationStore dlpConfigurationStore) {
         dlpConfigurationStore.store(Domain.LOCALHOST, RULE);
-        dlpConfigurationStore.store(Domain.LOCALHOST, ImmutableList.of());
+        dlpConfigurationStore.store(Domain.LOCALHOST, new DLPRules(ImmutableList.of()));
 
         assertThat(dlpConfigurationStore.list(Domain.LOCALHOST)).isEmpty();
     }

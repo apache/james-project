@@ -19,9 +19,7 @@
 
 package org.apache.james.dlp.eventsourcing;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -29,6 +27,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.api.DLPConfigurationItem.Id;
 import org.apache.james.dlp.api.DLPConfigurationStore;
+import org.apache.james.dlp.api.DLPRules;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
 import org.apache.james.dlp.eventsourcing.commands.ClearCommand;
@@ -38,6 +37,7 @@ import org.apache.james.dlp.eventsourcing.commands.StoreCommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.util.streams.Iterables;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -60,7 +60,7 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
     }
 
     @Override
-    public Stream<DLPConfigurationItem> list(Domain domain) {
+    public DLPRules list(Domain domain) {
 
         DLPAggregateId aggregateId = new DLPAggregateId(domain);
 
@@ -71,7 +71,7 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
     }
 
     @Override
-    public void store(Domain domain, List<DLPConfigurationItem> rules) {
+    public void store(Domain domain, DLPRules rules) {
         eventSourcingSystem.dispatch(new StoreCommand(domain, rules));
     }
 
@@ -82,7 +82,7 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
 
     @Override
     public Optional<DLPConfigurationItem> fetch(Domain domain, Id ruleId) {
-        return list(domain)
+        return Iterables.toStream(list(domain))
                 .filter((DLPConfigurationItem item) -> item.getId().equals(ruleId))
                 .findFirst();
     }
