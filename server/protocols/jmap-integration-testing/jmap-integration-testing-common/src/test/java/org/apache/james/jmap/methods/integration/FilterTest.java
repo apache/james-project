@@ -117,6 +117,45 @@ public abstract class FilterTest {
     }
 
     @Test
+    public void getFilterShouldReturnEmptyWhenExplicitNullAccountId() {
+        String body = "[[" +
+                "  \"getFilter\", " +
+                "  {\"accountId\": null}, " +
+                "\"#0\"" +
+                "]]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(body)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("filter"))
+            .body(ARGUMENTS + ".singleton", hasSize(0));
+    }
+
+    @Test
+    public void getFilterShouldReturnErrorWhenUnsupportedAccountId() {
+        String body = "[[" +
+                "  \"getFilter\", " +
+                "  {\"accountId\": \"any\"}, " +
+                "\"#0\"" +
+                "]]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(body)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("error"))
+            .body(ARGUMENTS + ".type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".description", equalTo("The field 'accountId' of 'GetFilterRequest' is not supported"));
+    }
+
+    @Test
     public void setFilterShouldOverwritePreviouslyStoredRules() {
         MailboxId mailbox1 = randomMailboxId();
         MailboxId mailbox2 = randomMailboxId();
