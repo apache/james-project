@@ -29,12 +29,18 @@ import com.google.common.base.Strings;
 public class RabbitMQConfiguration {
 
     private static final String URI_PROPERTY_NAME = "uri";
+    private static final String MANAGEMENT_URI_PROPERTY_NAME = "management.uri";
 
     public static RabbitMQConfiguration from(PropertiesConfiguration configuration) {
         String uriAsString = configuration.getString(URI_PROPERTY_NAME);
         Preconditions.checkState(!Strings.isNullOrEmpty(uriAsString), "You need to specify the URI of RabbitMQ");
         URI uri = checkURI(uriAsString);
-        return new RabbitMQConfiguration(uri);
+
+        String managementUriAsString = configuration.getString(MANAGEMENT_URI_PROPERTY_NAME);
+        Preconditions.checkState(!Strings.isNullOrEmpty(managementUriAsString), "You need to specify the management URI of RabbitMQ");
+        URI managementUri = checkURI(managementUriAsString);
+
+        return new RabbitMQConfiguration(uri, managementUri);
     }
 
     private static URI checkURI(String uri) {
@@ -44,14 +50,21 @@ public class RabbitMQConfiguration {
             throw new IllegalStateException("You need to specify a valid URI", e);
         }
     }
-    private final URI uri;
 
-    private RabbitMQConfiguration(URI uri) {
+    private final URI uri;
+    private final URI managementUri;
+
+    private RabbitMQConfiguration(URI uri, URI managementUri) {
         this.uri = uri;
+        this.managementUri = managementUri;
     }
 
     public URI getUri() {
         return uri;
+    }
+
+    public URI getManagementUri() {
+        return managementUri;
     }
 
     @Override
@@ -59,13 +72,14 @@ public class RabbitMQConfiguration {
         if (o instanceof RabbitMQConfiguration) {
             RabbitMQConfiguration that = (RabbitMQConfiguration) o;
 
-            return Objects.equals(this.uri, that.uri);
+            return Objects.equals(this.uri, that.uri)
+                && Objects.equals(this.managementUri, that.managementUri);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri);
+        return Objects.hash(uri, managementUri);
     }
 }

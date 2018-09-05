@@ -70,4 +70,56 @@ public class RabbitMQConfigurationTest {
             .isInstanceOf(IllegalStateException.class)
             .hasMessage("You need to specify a valid URI");
     }
+
+    @Test
+    public void fromShouldThrowWhenManagementURIIsNotInTheConfiguration() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You need to specify the management URI of RabbitMQ");
+    }
+
+    @Test
+    public void fromShouldThrowWhenManagementURIIsNull() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("management.uri", null);
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You need to specify the management URI of RabbitMQ");
+    }
+
+    @Test
+    public void fromShouldThrowWhenManagementURIIsEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("management.uri", "");
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You need to specify the management URI of RabbitMQ");
+    }
+
+    @Test
+    public void fromShouldThrowWhenManagementURIIsInvalid() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("management.uri", ":invalid");
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You need to specify a valid URI");
+    }
+
+    @Test
+    public void fromShouldNotThrowWhenRequiredParametersAreGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
+        configuration.addProperty("management.uri", "http://james:james@rabbitmq_host:15672/api/");
+
+        RabbitMQConfiguration.from(configuration);
+    }
 }
