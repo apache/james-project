@@ -45,20 +45,19 @@ class RabbitClient {
         this.channel = channel;
     }
 
-    RabbitMQMailQueue attemptQueueCreation(MailQueueName name) {
+    void attemptQueueCreation(MailQueueName name) {
         try {
-            channel.exchangeDeclare(name.toRabbitExchangeName(), "direct", DURABLE);
-            channel.queueDeclare(name.toRabbitWorkQueueName(), DURABLE, !EXCLUSIVE, !AUTO_DELETE, NO_ARGUMENTS);
-            channel.queueBind(name.toRabbitWorkQueueName(), name.toRabbitExchangeName(), ROUTING_KEY);
+            channel.exchangeDeclare(name.toRabbitExchangeName().asString(), "direct", DURABLE);
+            channel.queueDeclare(name.toWorkQueueName().asString(), DURABLE, !EXCLUSIVE, !AUTO_DELETE, NO_ARGUMENTS);
+            channel.queueBind(name.toWorkQueueName().asString(), name.toRabbitExchangeName().asString(), ROUTING_KEY);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        return new RabbitMQMailQueue(name, this);
     }
 
     void publish(MailQueueName name, byte[] message) throws MailQueue.MailQueueException {
         try {
-            channel.basicPublish(name.toRabbitExchangeName(), ROUTING_KEY, new AMQP.BasicProperties(), message);
+            channel.basicPublish(name.toRabbitExchangeName().asString(), ROUTING_KEY, new AMQP.BasicProperties(), message);
         } catch (IOException e) {
             throw new MailQueue.MailQueueException("Unable to publish to RabbitMQ", e);
         }
@@ -69,6 +68,6 @@ class RabbitClient {
     }
 
     Optional<GetResponse> poll(MailQueueName name) throws IOException {
-        return Optional.ofNullable(channel.basicGet(name.toRabbitWorkQueueName(), !AUTO_ACK));
+        return Optional.ofNullable(channel.basicGet(name.toWorkQueueName().asString(), !AUTO_ACK));
     }
 }

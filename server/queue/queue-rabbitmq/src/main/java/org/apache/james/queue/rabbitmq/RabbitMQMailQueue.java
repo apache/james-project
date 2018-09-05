@@ -20,13 +20,28 @@
 package org.apache.james.queue.rabbitmq;
 
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.MimeMessage;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.Store;
+import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.util.SerializationUtil;
 import org.apache.mailet.Mail;
+import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +52,12 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.GetResponse;
 
 public class RabbitMQMailQueue implements MailQueue {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMailQueue.class);
 
     private static class NoMailYetException extends RuntimeException {
@@ -72,13 +89,34 @@ public class RabbitMQMailQueue implements MailQueue {
         }
     }
 
+    static class Factory {
+        private final RabbitClient rabbitClient;
+        private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
+        private final BlobId.Factory blobIdFactory;
+
+        @Inject
+        @VisibleForTesting Factory(RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
+            this.rabbitClient = rabbitClient;
+            this.mimeMessageStore = mimeMessageStore;
+            this.blobIdFactory = blobIdFactory;
+        }
+
+        RabbitMQMailQueue create(MailQueueName mailQueueName) {
+            return new RabbitMQMailQueue(mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory);
+        }
+    }
+
     private static final int TEN_MS = 10;
 
     private final MailQueueName name;
     private final RabbitClient rabbitClient;
+    private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
+    private final BlobId.Factory blobIdFactory;
     private final ObjectMapper objectMapper;
 
-    RabbitMQMailQueue(MailQueueName name, RabbitClient rabbitClient) {
+    RabbitMQMailQueue(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
+        this.mimeMessageStore = mimeMessageStore;
+        this.blobIdFactory = blobIdFactory;
         this.name = name;
         this.rabbitClient = rabbitClient;
         this.objectMapper = new ObjectMapper()
@@ -102,9 +140,18 @@ public class RabbitMQMailQueue implements MailQueue {
 
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
-        MailDTO mailDTO = MailDTO.fromMail(mail);
+        MimeMessagePartsId partsId = saveBlobs(mail).join();
+        MailDTO mailDTO = MailDTO.fromMail(mail, partsId);
         byte[] message = getMessageBytes(mailDTO);
         rabbitClient.publish(name, message);
+    }
+
+    private CompletableFuture<MimeMessagePartsId> saveBlobs(Mail mail) throws MailQueueException {
+        try {
+            return mimeMessageStore.save(mail.getMessage());
+        } catch (MessagingException e) {
+            throw new MailQueueException("Error while saving blob", e);
+        }
     }
 
     private byte[] getMessageBytes(MailDTO mailDTO) throws MailQueueException {
@@ -114,7 +161,6 @@ public class RabbitMQMailQueue implements MailQueue {
             throw new MailQueueException("Unable to serialize message", e);
         }
     }
-
 
     @Override
     public MailQueueItem deQueue() throws MailQueueException {
@@ -147,13 +193,41 @@ public class RabbitMQMailQueue implements MailQueue {
             .orElseThrow(NoMailYetException::new);
     }
 
-    private Mail toMail(MailDTO dto) {
-        return new MailImpl(
-            dto.getName(),
-            MailAddress.getMailSender(dto.getSender()),
-            dto.getRecipients()
-                .stream()
-                .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                .collect(Guavate.toImmutableList()));
+    private Mail toMail(MailDTO dto) throws MailQueueException {
+        try {
+            MimeMessage mimeMessage = mimeMessageStore.read(
+                MimeMessagePartsId.builder()
+                    .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
+                    .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
+                    .build())
+                .join();
+
+            MailImpl mail = new MailImpl(
+                dto.getName(),
+                MailAddress.getMailSender(dto.getSender()),
+                dto.getRecipients()
+                    .stream()
+                    .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
+                    .collect(Guavate.toImmutableList()),
+                mimeMessage);
+
+            mail.setErrorMessage(dto.getErrorMessage());
+            mail.setRemoteAddr(dto.getRemoteAddr());
+            mail.setRemoteHost(dto.getRemoteHost());
+            mail.setState(dto.getState());
+            mail.setLastUpdated(new Date(dto.getLastUpdated().toEpochMilli()));
+
+            dto.getAttributes()
+                .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
+
+            Optional.ofNullable(SerializationUtil.<PerRecipientHeaders>deserialize(dto.getPerRecipientHeaders()))
+                .ifPresent(mail::addAllSpecificHeaderForRecipient);
+
+            return mail;
+        } catch (AddressException e) {
+            throw new MailQueueException("Failed to parse mail address", e);
+        } catch (MessagingException e) {
+            throw new MailQueueException("Failed to generate mime message", e);
+        }
     }
 }

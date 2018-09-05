@@ -29,17 +29,18 @@ import org.apache.james.queue.api.MailQueueFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.rabbitmq.client.Connection;
 
 public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQueue> {
     private final RabbitClient rabbitClient;
     private final RabbitMQManagementApi mqManagementApi;
+    private final RabbitMQMailQueue.Factory mailQueueFactory;
 
     @VisibleForTesting
     @Inject
-    RabbitMQMailQueueFactory(Connection connection, RabbitMQManagementApi mqManagementApi) throws IOException {
-        this.rabbitClient = new RabbitClient(connection.createChannel());
+    RabbitMQMailQueueFactory(RabbitClient rabbitClient, RabbitMQManagementApi mqManagementApi, RabbitMQMailQueue.Factory mailQueueFactory) throws IOException {
+        this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;
+        this.mailQueueFactory = mailQueueFactory;
     }
 
     @Override
@@ -51,20 +52,25 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     public RabbitMQMailQueue createQueue(String name) {
         MailQueueName mailQueueName = MailQueueName.fromString(name);
         return getQueue(mailQueueName)
-            .orElseGet(() -> rabbitClient.attemptQueueCreation(mailQueueName));
+            .orElseGet(() -> attemptQueueCreation(mailQueueName));
     }
 
     @Override
     public Set<RabbitMQMailQueue> listCreatedMailQueues() {
         return mqManagementApi.listCreatedMailQueueNames()
-            .map(name -> new RabbitMQMailQueue(name, rabbitClient))
+            .map(mailQueueFactory::create)
             .collect(Guavate.toImmutableSet());
+    }
+
+    private RabbitMQMailQueue attemptQueueCreation(MailQueueName mailQueueName) {
+        rabbitClient.attemptQueueCreation(mailQueueName);
+        return mailQueueFactory.create(mailQueueName);
     }
 
     private Optional<RabbitMQMailQueue> getQueue(MailQueueName name) {
         return mqManagementApi.listCreatedMailQueueNames()
             .filter(name::equals)
-            .map(queueName -> new RabbitMQMailQueue(queueName, rabbitClient))
+            .map(mailQueueFactory::create)
             .findFirst();
     }
 }
