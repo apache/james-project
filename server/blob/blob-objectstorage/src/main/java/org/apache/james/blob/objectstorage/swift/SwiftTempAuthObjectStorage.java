@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
 public class SwiftTempAuthObjectStorage {
+    public static final String AUTH_API_NAME = "tmpauth";
+
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
 
