@@ -20,12 +20,14 @@
 package org.apache.james.dlp.eventsourcing;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;
+import org.apache.james.dlp.api.DLPConfigurationItem.Id;
 import org.apache.james.dlp.api.DLPConfigurationStore;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
@@ -76,6 +78,13 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
     @Override
     public void clear(Domain domain) {
         eventSourcingSystem.dispatch(new ClearCommand(domain));
+    }
+
+    @Override
+    public Optional<DLPConfigurationItem> fetch(Domain domain, Id ruleId) {
+        return list(domain)
+                .filter((DLPConfigurationItem item) -> item.getId().equals(ruleId))
+                .findFirst();
     }
 
 }
