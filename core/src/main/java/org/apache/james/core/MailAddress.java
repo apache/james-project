@@ -26,6 +26,9 @@ import java.util.Optional;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A representation of an email address.
  * <p/>
@@ -63,6 +66,7 @@ import javax.mail.internet.InternetAddress;
  * @version 1.0
  */
 public class MailAddress implements java.io.Serializable {
+    public static final Logger LOGGER = LoggerFactory.getLogger(MailAddress.class);
     /**
      * We hardcode the serialVersionUID
      * This version (2779163542539434916L) retains compatibility back to
@@ -105,9 +109,24 @@ public class MailAddress implements java.io.Serializable {
 
     };
 
-
     public static MailAddress nullSender() {
         return NULL_SENDER;
+    }
+
+    public static  MailAddress getMailSender(String sender) {
+        if (sender == null || sender.trim().length() <= 0) {
+            return null;
+        }
+        if (sender.equals(MailAddress.NULL_SENDER_AS_STRING)) {
+            return MailAddress.nullSender();
+        }
+        try {
+            return new MailAddress(sender);
+        } catch (AddressException e) {
+            // Should never happen as long as the user does not modify the header by himself
+            LOGGER.error("Unable to parse the sender address {}, so we fallback to a null sender", sender, e);
+            return MailAddress.nullSender();
+        }
     }
 
     private final String localPart;

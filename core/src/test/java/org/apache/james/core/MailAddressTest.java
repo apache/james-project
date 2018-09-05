@@ -234,6 +234,18 @@ public class MailAddressTest {
     }
 
     @Test
+    public void getMailSenderShouldReturnNullSenderWhenNullSender() {
+        assertThat(MailAddress.getMailSender(MailAddress.NULL_SENDER_AS_STRING))
+            .isEqualTo(MailAddress.nullSender());
+    }
+
+    @Test
+    public void getMailSenderShouldReturnParsedAddressWhenNotNullAddress() throws Exception {
+        assertThat(MailAddress.getMailSender(GOOD_ADDRESS))
+            .isEqualTo(new MailAddress(GOOD_ADDRESS));
+    }
+
+    @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailAddress.class)
             .verify();
