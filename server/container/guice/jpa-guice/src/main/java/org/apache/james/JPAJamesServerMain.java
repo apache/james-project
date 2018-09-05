@@ -22,7 +22,7 @@ package org.apache.james;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
 import org.apache.james.modules.data.JPADataModule;
-import org.apache.james.modules.data.SieveFileRepositoryModule;
+import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
@@ -69,7 +69,7 @@ public class JPAJamesServerMain {
         new ProtocolHandlerModule(),
         new SMTPServerModule(),
         WEBADMIN);
-    
+
     public static final Module JPA_SERVER_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new DefaultProcessorsConfigurationProviderModule(),
@@ -79,7 +79,7 @@ public class JPAJamesServerMain {
         new MailboxModule(),
         new NoJwtModule(),
         new RawPostDequeueDecoratorModule(),
-        new SieveFileRepositoryModule(),
+        new SieveJPARepositoryModules(),
         new DefaultEventModule(),
         new SpamAssassinListenerModule());
 
@@ -90,7 +90,7 @@ public class JPAJamesServerMain {
 
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
                     .combineWith(JPA_SERVER_MODULE, PROTOCOLS,
-                            new JMXServerModule(), 
+                            new JMXServerModule(),
                             new LuceneSearchMailboxModule());
         server.start();
     }
