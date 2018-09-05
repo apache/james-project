@@ -110,13 +110,23 @@ public class SwiftKeystone3ObjectStorage {
                 return this;
             }
 
-            public Builder region(Region region) {
-                this.region = Optional.of(region);
+            public Builder region(Optional<Region> region) {
+                this.region = region;
+                return this;
+            }
+
+            public Builder domainId(Optional<DomainId> domainId) {
+                this.domainId = domainId;
                 return this;
             }
 
             public Builder domainId(DomainId domainId) {
                 this.domainId = Optional.of(domainId);
+                return this;
+            }
+
+            public Builder project(Optional<Project> project) {
+                this.project = project;
                 return this;
             }
 

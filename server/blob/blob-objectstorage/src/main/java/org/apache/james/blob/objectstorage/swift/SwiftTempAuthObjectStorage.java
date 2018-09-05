@@ -123,6 +123,11 @@ public class SwiftTempAuthObjectStorage {
                 return this;
             }
 
+            public Builder region(Optional<Region> region) {
+                this.region = region;
+                return this;
+            }
+
             public Builder tempAuthHeaderUserName(UserHeaderName tmpAuthHeaderUser) {
                 userHeaderName = Optional.of(tmpAuthHeaderUser);
                 return this;
@@ -130,6 +135,16 @@ public class SwiftTempAuthObjectStorage {
 
             public Builder tempAuthHeaderPassName(PassHeaderName tmpAuthHeaderPass) {
                 passHeaderName = Optional.of(tmpAuthHeaderPass);
+                return this;
+            }
+
+            public Builder tempAuthHeaderUserName(Optional<UserHeaderName> tmpAuthHeaderUser) {
+                userHeaderName = tmpAuthHeaderUser;
+                return this;
+            }
+
+            public Builder tempAuthHeaderPassName(Optional<PassHeaderName> tmpAuthHeaderPass) {
+                passHeaderName = tmpAuthHeaderPass;
                 return this;
             }
 

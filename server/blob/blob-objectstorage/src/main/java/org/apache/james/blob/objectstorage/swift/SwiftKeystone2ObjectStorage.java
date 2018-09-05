@@ -114,8 +114,8 @@ public class SwiftKeystone2ObjectStorage {
                 return this;
             }
 
-            public Builder region(Region region) {
-                this.region = Optional.of(region);
+            public Builder region(Optional<Region> region) {
+                this.region = region;
                 return this;
             }
 
