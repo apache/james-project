@@ -16,23 +16,23 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+package org.apache.james.util;
 
-import static org.apache.james.queue.jms.JMSSerializationUtils.deserialize;
-import static org.apache.james.queue.jms.JMSSerializationUtils.serialize;
+import static org.apache.james.util.SerializationUtil.deserialize;
+import static org.apache.james.util.SerializationUtil.serialize;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.SerializationException;
 import org.junit.jupiter.api.Test;
 
-class JMSSerializationUtilsTest {
+class SerializationUtilTest {
     /**
      * Serializes and deserializes the provided object.
      *
@@ -43,8 +43,8 @@ class JMSSerializationUtilsTest {
      */
     private static <T extends Serializable> T roundtrip(T obj) {
         return Optional.ofNullable(obj)
-                .map(JMSSerializationUtils::serialize)
-                .<T>map(JMSSerializationUtils::deserialize)
+                .map(SerializationUtil::serialize)
+                .<T>map(SerializationUtil::deserialize)
                 .orElseThrow(() -> new IllegalArgumentException("Cannot serialize/deserialize: " + obj));
     }
 
@@ -52,13 +52,12 @@ class JMSSerializationUtilsTest {
     void trySerializeShouldReturnString() {
         SerializableStringHolder value = new SerializableStringHolder("value");
 
-        String serializedIntegerString = "rO0ABXNyAE1vcmcuYXBhY2hlLmphbWVzLnF1ZXVlLmptcy5KTVNTZXJpYWxp" +
-                "emF0aW9uVXRpbHNUZXN0JFNlcmlhbGl6YWJsZVN0cmluZ0hvbGRlcsy4/DEA" +
-                "8nRZAgABTAAFdmFsdWV0ABJMamF2YS9sYW5nL1N0cmluZzt4cHQABXZhbHVl";
+        String serializedString = "rO0ABXNyAERvcmcuYXBhY2hlLmphbWVzLnV0aWwuU2VyaWFsaXphdGlvblV0aWxUZXN0JFNlcmlhbGl6Y" +
+            "WJsZVN0cmluZ0hvbGRlcjk393aULV9XAgABTAAFdmFsdWV0ABJMamF2YS9sYW5nL1N0cmluZzt4cHQABXZhbHVl";
 
         String actual = serialize(value);
 
-        assertThat(actual).isEqualTo(serializedIntegerString);
+        assertThat(actual).isEqualTo(serializedString);
     }
 
     @Test
@@ -77,7 +76,7 @@ class JMSSerializationUtilsTest {
     @Test
     void deserializeShouldThrowWhenNotSerializedBytesAreEncodedInBase64() {
         assertThatExceptionOfType(SerializationException.class)
-                .isThrownBy(() -> deserialize(Base64.encodeBase64String("abc".getBytes(StandardCharsets.UTF_8))));
+                .isThrownBy(() -> deserialize(Base64.getEncoder().encodeToString("abc".getBytes(StandardCharsets.UTF_8))));
     }
 
     private static class SerializableStringHolder implements Serializable {

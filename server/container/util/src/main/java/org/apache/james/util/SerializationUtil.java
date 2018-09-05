@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.jms;
+package org.apache.james.util;
 
 import java.io.Serializable;
 import java.util.Base64;
@@ -32,7 +32,7 @@ import org.apache.commons.lang3.SerializationUtils;
  * deserialization. The operation consists in encoding/decoding the serialized/deserialized data in Base64, so that data
  * can be safely transmitted over the wire.
  */
-public class JMSSerializationUtils {
+public class SerializationUtil {
     /**
      * Serialize the input object using standard mechanisms then encodes result using base64 encoding.
      *
