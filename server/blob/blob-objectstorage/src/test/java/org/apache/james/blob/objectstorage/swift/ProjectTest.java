@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +38,7 @@ class ProjectTest {
     }
 
     @Test
-    void projectCanBeBuiltFromNameAlone() {
+    void projectCanBeBuiltFromNameAlone()   {
         Project project = Project.of(PROJECT_NAME);
         assertThat(project.domainName()).isEmpty();
         assertThat(project.domainId()).isEmpty();
@@ -59,5 +60,10 @@ class ProjectTest {
         assertThat(project.domainName()).isEmpty();
         assertThat(project.domainId()).contains(DOMAIN_ID);
         assertThat(project.name()).isEqualTo(PROJECT_NAME);
+    }
+
+    @Test
+    void projectCannotBeBuiltFromNullName() {
+        assertThatThrownBy(() -> Project.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

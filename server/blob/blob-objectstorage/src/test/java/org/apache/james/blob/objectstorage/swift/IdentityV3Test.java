@@ -20,20 +20,36 @@
 package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class IdentityV3Test {
+
+    public static final DomainName DOMAIN_NAME = DomainName.of("domain");
+    public static final UserName USER_NAME = UserName.of("user");
+
     @Test
     void identityV3RendersProperlyAsString() {
-        IdentityV3 identity = IdentityV3.of(DomainName.of("domain"), UserName.of("user"));
+        IdentityV3 identity = IdentityV3.of(DOMAIN_NAME, USER_NAME);
         assertThat(identity.asString()).isEqualTo("domain:user");
     }
 
     @Test
-    public void identityV3ShouldRespectBeanContract() {
+    void identityV3ShouldRespectBeanContract() {
         EqualsVerifier.forClass(IdentityV3.class).verify();
+    }
+
+
+    @Test
+    void userNameCanNotBeNull() {
+        assertThatThrownBy(() -> IdentityV3.of(DOMAIN_NAME, null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void domainNameCanNotBeNull() {
+        assertThatThrownBy(() -> IdentityV3.of(null, USER_NAME)).isInstanceOf(IllegalArgumentException.class);
     }
 }

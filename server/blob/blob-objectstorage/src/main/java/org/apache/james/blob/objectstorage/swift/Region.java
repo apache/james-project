@@ -21,6 +21,8 @@ package org.apache.james.blob.objectstorage.swift;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 
 public final class Region {
     public static Region of(String value) {
@@ -30,6 +32,9 @@ public final class Region {
     private final String region;
 
     private Region(String value) {
+        Preconditions.checkArgument(
+            !Strings.isNullOrEmpty(value),
+            this.getClass().getSimpleName() + " cannot be null or empty");
         this.region = value;
     }
 

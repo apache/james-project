@@ -20,20 +20,34 @@
 package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class IdentityTest {
+    public static final TenantName TENANT_NAME = TenantName.of("tenant");
+    public static final UserName USER_NAME = UserName.of("user");
+
     @Test
     void swiftIdentityRendersProperlyAsString() {
-        Identity identity = Identity.of(TenantName.of("tenant"), UserName.of("user"));
+        Identity identity = Identity.of(TENANT_NAME, USER_NAME);
         assertThat(identity.asString()).isEqualTo("tenant:user");
     }
 
     @Test
     public void credentialsShouldRespectBeanContract() {
         EqualsVerifier.forClass(Identity.class).verify();
+    }
+
+    @Test
+    void userNameCanNotBeNull() {
+        assertThatThrownBy(() -> Identity.of(TENANT_NAME, null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void tenantNameCanNotBeNull() {
+        assertThatThrownBy(() -> Identity.of(null, USER_NAME)).isInstanceOf(IllegalArgumentException.class);
     }
 }

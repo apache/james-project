@@ -20,6 +20,7 @@
 package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,14 +28,32 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class DomainIdTest {
 
+    public static final String EXPECTED = "EXPECTED";
+
     @Test
-    public void domainIdShouldRespectBeanContract() {
+    void domainIdShouldRespectBeanContract() {
         EqualsVerifier.forClass(DomainId.class).verify();
     }
 
     @Test
-    public void domainIdShouldProjectToDomainIdString() {
-        String actual = DomainId.of("foo").asString();
-        assertThat(actual).isEqualTo("domain:foo");
+    void domainIdShouldProjectToDomainIdString() {
+        String actual = DomainId.of(EXPECTED).asString();
+        assertThat(actual).isEqualTo("domain:EXPECTED");
+    }
+
+    @Test
+    void domainIdCanBeBuiltFromNonEmptyString() {
+        DomainId actual = DomainId.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void domainIdCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> DomainId.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void domainIdCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> DomainId.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

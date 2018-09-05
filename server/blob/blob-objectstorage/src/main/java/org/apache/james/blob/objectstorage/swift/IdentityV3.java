@@ -21,6 +21,7 @@ package org.apache.james.blob.objectstorage.swift;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public final class IdentityV3 {
     public static IdentityV3 of(DomainName domainName, UserName userName) {
@@ -31,6 +32,12 @@ public final class IdentityV3 {
     private final UserName userName;
 
     private IdentityV3(DomainName domainName, UserName userName) {
+        Preconditions.checkArgument(
+            domainName != null,
+            "Domain name cannot be null");
+        Preconditions.checkArgument(
+            userName != null,
+            "User name cannot be null");
         this.domainName = domainName;
         this.userName = userName;
     }

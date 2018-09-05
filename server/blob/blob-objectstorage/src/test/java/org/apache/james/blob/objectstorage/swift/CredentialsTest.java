@@ -19,13 +19,35 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class CredentialsTest {
+
+    private static final String EXPECTED = "expected";
+
     @Test
     public void credentialsShouldRespectBeanContract() {
         EqualsVerifier.forClass(Credentials.class).verify();
+    }
+
+    @Test
+    void credentialsCanBeBuiltFromNonEmptyString() {
+        Credentials actual = Credentials.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void credentialsCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> Credentials.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void credentialsCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> Credentials.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

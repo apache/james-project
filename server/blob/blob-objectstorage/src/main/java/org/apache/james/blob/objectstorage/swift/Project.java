@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public final class Project {
     public static Project of(ProjectName userName) {
@@ -30,11 +31,11 @@ public final class Project {
     }
 
     public static Project of(ProjectName userName, DomainName domainName) {
-        return new Project(userName, Optional.of(domainName), Optional.empty());
+        return new Project(userName, Optional.ofNullable(domainName), Optional.empty());
     }
 
     public static Project of(ProjectName userName, DomainId domainId) {
-        return new Project(userName, Optional.empty(), Optional.of(domainId));
+        return new Project(userName, Optional.empty(), Optional.ofNullable(domainId));
     }
 
     private final ProjectName name;
@@ -42,6 +43,9 @@ public final class Project {
     private final Optional<DomainId> domainId;
 
     private Project(ProjectName name, Optional<DomainName> domainName, Optional<DomainId> domainId) {
+        Preconditions.checkArgument(
+            name != null,
+        this.getClass().getSimpleName() + "name cannot be null or empty");
         this.domainName = domainName;
         this.name = name;
         this.domainId = domainId;

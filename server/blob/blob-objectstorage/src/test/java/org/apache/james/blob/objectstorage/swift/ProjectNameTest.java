@@ -20,20 +20,39 @@
 package org.apache.james.blob.objectstorage.swift;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class ProjectNameTest {
+    private static final String EXPECTED = "expected";
+
     @Test
-    public void projectNameShouldRespectBeanContract() {
+    void projectNameShouldRespectBeanContract() {
         EqualsVerifier.forClass(ProjectName.class).verify();
     }
 
     @Test
-    public void projectNameShouldProjectToProjectNameString() {
+    void projectNameShouldProjectToProjectNameString() {
         String actual = ProjectName.of("bar").asString();
         assertThat(actual).isEqualTo("project:bar");
+    }
+
+    @Test
+    void projectNameCanBeBuiltFromNonEmptyString() {
+        ProjectName actual = ProjectName.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void projectNameCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> ProjectName.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void projectNameCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> ProjectName.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

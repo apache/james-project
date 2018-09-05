@@ -19,13 +19,35 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class RegionTest {
+
+    public static final String EXPECTED = "EXPECTED";
+
     @Test
     public void regionShouldRespectBeanContract() {
         EqualsVerifier.forClass(Region.class).verify();
+    }
+
+    @Test
+    void regionCanBeBuiltFromNonEmptyString() {
+        Region actual = Region.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void regionCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> Region.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void regionCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> Region.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

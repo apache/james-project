@@ -19,13 +19,50 @@
 
 package org.apache.james.blob.objectstorage.swift;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class HeaderNameTest {
+    private static final String EXPECTED = "expected";
+
     @Test
-    public void credentialsShouldRespectBeanContract() {
+    public void headerNameShouldRespectBeanContract() {
         EqualsVerifier.forClass(HeaderName.class).verify();
+    }
+
+    @Test
+    void passHeaderNameCanBeBuiltFromNonEmptyString() {
+        PassHeaderName actual = PassHeaderName.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void passHeaderNameCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> PassHeaderName.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void passHeaderNameCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> PassHeaderName.of(null)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void userHeaderNameCanBeBuiltFromNonEmptyString() {
+        UserHeaderName actual = UserHeaderName.of(EXPECTED);
+        assertThat(actual.value()).isEqualTo(EXPECTED);
+    }
+
+    @Test
+    void userHeaderNameCanNotBeBuiltFromEmptyString() {
+        assertThatThrownBy(() -> UserHeaderName.of("")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void userHeaderNameCanNotBeBuiltFromNull() {
+        assertThatThrownBy(() -> UserHeaderName.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 }
