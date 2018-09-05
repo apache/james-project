@@ -23,10 +23,14 @@ import javax.jms.ConnectionFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueMetricContract;
+import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.PriorityManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -37,17 +41,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(BrokerExtension.class)
-public class JMSMailQueueTest implements DelayedManageableMailQueueContract, PriorityManageableMailQueueContract, DelayedPriorityMailQueueContract {
+public class JMSMailQueueTest implements DelayedManageableMailQueueContract, PriorityManageableMailQueueContract, DelayedPriorityMailQueueContract,
+    MailQueueMetricContract {
 
     private JMSMailQueue mailQueue;
 
     @BeforeEach
-    void setUp(BrokerService broker) {
+    void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
         RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-        NoopMetricFactory metricFactory = new NoopMetricFactory();
+        MetricFactory metricFactory = metricTestSystem.getSpyMetricFactory();
+        GaugeRegistry gaugeRegistry = metricTestSystem.getSpyGaugeRegistry();
         String queueName = BrokerExtension.generateRandomQueueName(broker);
-        mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory);
+        mailQueue = new JMSMailQueue(connectionFactory, mailQueueItemDecoratorFactory, queueName, metricFactory, gaugeRegistry);
     }
 
     @AfterEach
