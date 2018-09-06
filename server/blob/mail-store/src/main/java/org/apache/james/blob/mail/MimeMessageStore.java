@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -37,6 +38,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.Store;
 import org.apache.james.util.BodyOffsetInputStream;
@@ -50,13 +52,13 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
 
     static class MailEncoder implements Encoder<MimeMessage> {
         @Override
-        public Map<BlobType, InputStream> encode(MimeMessage message) {
+        public Stream<Pair<BlobType, InputStream>> encode(MimeMessage message) {
             try {
                 byte[] messageAsArray = messageToArray(message);
                 int bodyStartOctet = computeBodyStartOctet(messageAsArray);
-                return ImmutableMap.of(
-                    HEADER_BLOB_TYPE, new ByteArrayInputStream(getHeaderBytes(messageAsArray, bodyStartOctet)),
-                    BODY_BLOB_TYPE, new ByteArrayInputStream(getBodyBytes(messageAsArray, bodyStartOctet)));
+                return Stream.of(
+                    Pair.of(HEADER_BLOB_TYPE, new ByteArrayInputStream(getHeaderBytes(messageAsArray, bodyStartOctet))),
+                    Pair.of(BODY_BLOB_TYPE, new ByteArrayInputStream(getBodyBytes(messageAsArray, bodyStartOctet))));
             } catch (MessagingException | IOException e) {
                 throw new RuntimeException(e);
             }
@@ -114,15 +116,16 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
         }
 
         @Override
-        public MimeMessage decode(Map<BlobType, byte[]> streams) {
+        public MimeMessage decode(Stream<Pair<BlobType, byte[]>> streams) {
             Preconditions.checkNotNull(streams);
-            Preconditions.checkArgument(streams.containsKey(HEADER_BLOB_TYPE));
-            Preconditions.checkArgument(streams.containsKey(BODY_BLOB_TYPE));
+            Map<BlobType,byte[]> pairs = streams.collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
+            Preconditions.checkArgument(pairs.containsKey(HEADER_BLOB_TYPE));
+            Preconditions.checkArgument(pairs.containsKey(BODY_BLOB_TYPE));
 
             return toMimeMessage(
                 new SequenceInputStream(
-                    new ByteArrayInputStream(streams.get(HEADER_BLOB_TYPE)),
-                    new ByteArrayInputStream(streams.get(BODY_BLOB_TYPE))));
+                    new ByteArrayInputStream(pairs.get(HEADER_BLOB_TYPE)),
+                    new ByteArrayInputStream(pairs.get(BODY_BLOB_TYPE))));
         }
 
         private MimeMessage toMimeMessage(InputStream inputStream) {

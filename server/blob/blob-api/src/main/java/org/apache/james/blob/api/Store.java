@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.util.FluentFutureStream;
@@ -59,13 +60,13 @@ public interface Store<T> {
     }
 
     interface Encoder<T> {
-        Map<BlobType, InputStream> encode(T t);
+        Stream<Pair<BlobType, InputStream>> encode(T t);
     }
 
     interface Decoder<T> {
         void validateInput(Collection<BlobType> input);
 
-        T decode(Map<BlobType, byte[]> streams);
+        T decode(Stream<Pair<BlobType, byte[]>> streams);
     }
 
     CompletableFuture<Map<BlobType, BlobId>> save(T t);
@@ -87,27 +88,25 @@ public interface Store<T> {
         public CompletableFuture<Map<BlobType, BlobId>> save(T t) {
             return FluentFutureStream.of(
                 encoder.encode(t)
-                    .entrySet()
-                    .stream()
                     .map(this::saveEntry))
                 .completableFuture()
                 .thenApply(pairStream -> pairStream.collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
         }
 
-        private CompletableFuture<Pair<BlobType, BlobId>> saveEntry(Map.Entry<BlobType, InputStream> entry) {
-            return blobStore.save(entry.getValue())
-                .thenApply(blobId -> Pair.of(entry.getKey(), blobId));
+        private CompletableFuture<Pair<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
+            return blobStore.save(entry.getRight())
+                .thenApply(blobId -> Pair.of(entry.getLeft(), blobId));
         }
 
         @Override
         public CompletableFuture<T> read(Map<BlobType, BlobId> blobIds) {
             decoder.validateInput(blobIds.keySet());
 
-            CompletableFuture<ImmutableMap<BlobType, byte[]>> binaries = FluentFutureStream.of(blobIds.entrySet()
+            CompletableFuture<Stream<Pair<BlobType, byte[]>>> binaries = FluentFutureStream.of(blobIds.entrySet()
                 .stream()
                 .map(entry -> blobStore.readBytes(entry.getValue())
                     .thenApply(bytes -> Pair.of(entry.getKey(), bytes))))
-                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+                .completableFuture();
 
             return binaries.thenApply(decoder::decode);
         }
