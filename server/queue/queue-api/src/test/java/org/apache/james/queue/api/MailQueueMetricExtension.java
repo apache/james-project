@@ -19,8 +19,12 @@
 
 package org.apache.james.queue.api;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
+import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
+import static org.apache.james.queue.api.MailQueue.DEQUEUED_TIMER_METRIC_NAME_PREFIX;
+import static org.apache.james.queue.api.MailQueue.ENQUEUED_METRIC_NAME_PREFIX;
+import static org.apache.james.queue.api.MailQueue.ENQUEUED_TIMER_METRIC_NAME_PREFIX;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -28,6 +32,7 @@ import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.api.TimeMetric;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -38,24 +43,28 @@ import org.mockito.Mockito;
 public class MailQueueMetricExtension implements BeforeEachCallback, ParameterResolver {
 
     public class MailQueueMetricTestSystem {
-        private final Metric mockEnqueuedMailsMetric;
-        private final Metric mockDequeuedMailsMetric;
+        private final Metric spyEnqueuedMailsMetric;
+        private final Metric spyDequeuedMailsMetric;
+        private final TimeMetric spyEnqueuedMailsTimeMetric;
+        private final TimeMetric spyDequeuedMailsTimeMetric;
         private final GaugeRegistry spyGaugeRegistry;
         private final MetricFactory spyMetricFactory;
 
         public MailQueueMetricTestSystem() {
-            mockEnqueuedMailsMetric = mock(Metric.class);
-            mockDequeuedMailsMetric = mock(Metric.class);
+            spyEnqueuedMailsMetric = spy(new NoopMetricFactory.NoopMetric());
+            spyDequeuedMailsMetric = spy(new NoopMetricFactory.NoopMetric());
+            spyEnqueuedMailsTimeMetric = spy(new NoopMetricFactory.NoopTimeMetric());
+            spyDequeuedMailsTimeMetric = spy(new NoopMetricFactory.NoopTimeMetric());
             spyGaugeRegistry = Mockito.spy(new NoopGaugeRegistry());
             spyMetricFactory = Mockito.spy(new NoopMetricFactory());
         }
 
-        public Metric getMockEnqueuedMailsMetric() {
-            return mockEnqueuedMailsMetric;
+        public Metric getSpyEnqueuedMailsMetric() {
+            return spyEnqueuedMailsMetric;
         }
 
-        public Metric getMockDequeuedMailsMetric() {
-            return mockDequeuedMailsMetric;
+        public Metric getSpyDequeuedMailsMetric() {
+            return spyDequeuedMailsMetric;
         }
 
         public GaugeRegistry getSpyGaugeRegistry() {
@@ -65,6 +74,14 @@ public class MailQueueMetricExtension implements BeforeEachCallback, ParameterRe
         public MetricFactory getSpyMetricFactory() {
             return spyMetricFactory;
         }
+
+        public TimeMetric getSpyEnqueuedMailsTimeMetric() {
+            return spyEnqueuedMailsTimeMetric;
+        }
+
+        public TimeMetric getSpyDequeuedMailsTimeMetric() {
+            return spyDequeuedMailsTimeMetric;
+        }
     }
 
     private MailQueueMetricTestSystem testSystem;
@@ -73,8 +90,15 @@ public class MailQueueMetricExtension implements BeforeEachCallback, ParameterRe
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         testSystem = new MailQueueMetricTestSystem();
 
-        when(testSystem.spyMetricFactory.generate(anyString()))
-            .thenReturn(testSystem.mockEnqueuedMailsMetric, testSystem.mockDequeuedMailsMetric);
+        when(testSystem.spyMetricFactory.generate(startsWith(ENQUEUED_METRIC_NAME_PREFIX)))
+            .thenReturn(testSystem.spyEnqueuedMailsMetric);
+        when(testSystem.spyMetricFactory.generate(startsWith(DEQUEUED_METRIC_NAME_PREFIX)))
+            .thenReturn(testSystem.spyDequeuedMailsMetric);
+
+        when(testSystem.spyMetricFactory.timer(startsWith(ENQUEUED_TIMER_METRIC_NAME_PREFIX)))
+            .thenReturn(testSystem.spyEnqueuedMailsTimeMetric);
+        when(testSystem.spyMetricFactory.timer(startsWith(DEQUEUED_TIMER_METRIC_NAME_PREFIX)))
+            .thenReturn(testSystem.spyDequeuedMailsTimeMetric);
     }
 
     @Override

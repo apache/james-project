@@ -168,8 +168,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
         this.queueName = queueName;
         this.metricFactory = metricFactory;
-        this.enqueuedMailsMetric = metricFactory.generate("enqueuedMail:" + queueName);
-        this.dequeuedMailsMetric = metricFactory.generate("dequeuedMail:" + queueName);
+        this.enqueuedMailsMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + queueName);
+        this.dequeuedMailsMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + queueName);
 
         this.gaugeRegistry = gaugeRegistry;
         this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + queueName, queueSizeGauge());
@@ -210,7 +210,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         MessageConsumer consumer = null;
 
         while (true) {
-            TimeMetric timeMetric = metricFactory.timer("dequeueTime:" + queueName);
+            TimeMetric timeMetric = metricFactory.timer(DEQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
             try {
                 session = connection.createSession(true, Session.SESSION_TRANSACTED);
                 Queue queue = session.createQueue(queueName);
@@ -240,7 +240,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
 
     @Override
     public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
-        TimeMetric timeMetric = metricFactory.timer("enqueueMailTime:" + queueName);
+        TimeMetric timeMetric = metricFactory.timer(ENQUEUED_TIMER_METRIC_NAME_PREFIX + queueName);
 
         long nextDeliveryTimestamp = computeNextDeliveryTimestamp(delay, unit);
 

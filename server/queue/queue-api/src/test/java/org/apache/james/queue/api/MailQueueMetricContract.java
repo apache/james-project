@@ -23,6 +23,7 @@ import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.util.stream.IntStream;
 
@@ -75,16 +76,16 @@ public interface MailQueueMetricContract extends MailQueueContract {
     default void enqueueShouldIncreaseEnQueueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
         enQueueMail(2);
 
-        verify(testSystem.getMockEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getMockEnqueuedMailsMetric());
+        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
+        Mockito.verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsMetric());
     }
 
     @Test
     default void enqueueShouldNotTouchDequeueMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
         enQueueMail(2);
 
-        verify(testSystem.getMockEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getMockDequeuedMailsMetric());
+        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
+        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
     }
 
     @Test
@@ -92,8 +93,8 @@ public interface MailQueueMetricContract extends MailQueueContract {
         enQueueMail(2);
         deQueueMail(2);
 
-        verify(testSystem.getMockDequeuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getMockDequeuedMailsMetric());
+        verify(testSystem.getSpyDequeuedMailsMetric(), times(2)).increment();
+        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
     }
 
     @Test
@@ -101,10 +102,43 @@ public interface MailQueueMetricContract extends MailQueueContract {
         enQueueMail(2);
         deQueueMail(2);
 
-        verify(testSystem.getMockDequeuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getMockDequeuedMailsMetric());
+        verify(testSystem.getSpyDequeuedMailsMetric(), times(2)).increment();
+        Mockito.verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsMetric());
 
-        verify(testSystem.getMockEnqueuedMailsMetric(), times(2)).increment();
-        Mockito.verifyNoMoreInteractions(testSystem.getMockEnqueuedMailsMetric());
+        verify(testSystem.getSpyEnqueuedMailsMetric(), times(2)).increment();
+        Mockito.verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsMetric());
     }
+
+    @Test
+    default void enqueueShouldPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+        enQueueMail(2);
+
+        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
+    }
+
+    @Test
+    default void enqueueShouldNotPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+        enQueueMail(2);
+
+        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
+        verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsTimeMetric());
+    }
+    @Test
+    default void dequeueShouldPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+        enQueueMail(2);
+        deQueueMail(2);
+
+        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
+    }
+
+    @Test
+    default void dequeueShouldNotPublishEnqueueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
+        enQueueMail(2);
+        verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
+
+        deQueueMail(2);
+        verify(testSystem.getSpyDequeuedMailsTimeMetric(), times(2)).stopAndPublish();
+        verifyNoMoreInteractions(testSystem.getSpyEnqueuedMailsTimeMetric());
+    }
+
 }
