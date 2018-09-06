@@ -22,8 +22,11 @@ package org.apache.james.protocols.pop3.core;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import org.junit.Test;
+
 public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
 
+    @Test
     public void testExtraDot() throws IOException {
         String data = "This\r\n.\r\nThis.\r\n";
         String expectedOutput = "This\r\n..\r\nThis.\r\n";
@@ -33,6 +36,7 @@ public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
 
     }
 
+    @Test
     public void testExtraDotOnDoubleDot() throws IOException {
         String data = "This\r\n..\r\nThis.\r\n";
         String expectedOutput = "This\r\n...\r\nThis.\r\n";
@@ -41,8 +45,8 @@ public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
         checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expectedOutput);
 
     }
-    
 
+    @Test
     public void testExtraDotOnDotWithText() throws IOException {
         String data = "This\r\n.TestText\r\nThis.\r\n";
         String expected = "This\r\n..TestText\r\nThis.\r\n";
@@ -51,13 +55,15 @@ public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
         checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), expected);
 
     }
-    
+
+    @Test
     public void testNoDotCLRF() throws IOException {
         String data = "ABCD\r\n";
         checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
         checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
     }
 
+    @Test
     public void testNoDot() throws IOException {
         String data = "ABCD";
         checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
@@ -65,14 +71,11 @@ public class ExtraDotInputStreamTest extends AbstractInputStreamTest {
     }
 
     // Proof of BUG JAMES-1152
+    @Test
     public void testNoDotHeaderBody() throws IOException {
         String data = "Subject: test\r\n\r\nABCD\r\n";
         checkRead(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
         checkReadViaArray(new ExtraDotInputStream(new ByteArrayInputStream(data.getBytes())), data);
-
     }
-   
-
-
     
 }

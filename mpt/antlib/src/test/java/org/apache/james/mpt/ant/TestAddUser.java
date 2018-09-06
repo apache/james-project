@@ -22,10 +22,12 @@ package org.apache.james.mpt.ant;
 import org.apache.james.mpt.DiscardProtocol;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.resources.Union;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class TestAddUser extends TestCase {
+public class TestAddUser {
 
     DiscardProtocol fakeServer;
     
@@ -33,9 +35,8 @@ public class TestAddUser extends TestCase {
     
     MailProtocolTestTask subject;
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         fakeServer = new DiscardProtocol();
         fakeServer.start();
         record = fakeServer.recordNext();
@@ -47,12 +48,12 @@ public class TestAddUser extends TestCase {
         subject.setProject(new Project());
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         fakeServer.stop();
     }
 
+    @Test
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         MailProtocolTestTask.AddUser user = subject.createAddUser();
         user.setPort(fakeServer.getPort().getValue());
@@ -61,6 +62,6 @@ public class TestAddUser extends TestCase {
         final String script = "This script adds a user";
         user.addText("C: " + script);
         subject.execute();
-        assertEquals(script + "\r\n", record.complete());
+        Assert.assertEquals(script + "\r\n", record.complete());
     }
 }

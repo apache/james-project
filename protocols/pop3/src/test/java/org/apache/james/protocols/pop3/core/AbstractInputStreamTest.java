@@ -22,10 +22,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
 
-
-public abstract class AbstractInputStreamTest extends TestCase {
+public abstract class AbstractInputStreamTest {
 
     protected void checkRead(InputStream in, String expected) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -35,7 +34,7 @@ public abstract class AbstractInputStreamTest extends TestCase {
         }
         in.close();
         out.close();        
-        assertEquals(expected, new String(out.toByteArray()));
+        Assert.assertEquals(expected, new String(out.toByteArray()));
 
         
         
@@ -53,7 +52,7 @@ public abstract class AbstractInputStreamTest extends TestCase {
        
         in.close();
         out.close();
-        assertEquals(expected, new String(out.toByteArray()));
+        Assert.assertEquals(expected, new String(out.toByteArray()));
         
         
     }

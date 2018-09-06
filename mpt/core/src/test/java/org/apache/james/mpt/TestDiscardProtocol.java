@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -26,9 +28,12 @@ import java.net.Socket;
 
 import javax.net.SocketFactory;
 
-import junit.framework.TestCase;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-public class TestDiscardProtocol extends TestCase {
+public class TestDiscardProtocol {
 
     private final class InputLater implements Runnable {
         private Exception e;
@@ -58,26 +63,25 @@ public class TestDiscardProtocol extends TestCase {
 
     private DiscardProtocol.Record record;
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort().getValue());
         record = protocol.recordNext();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         protocol.stop();
-        super.tearDown();
     }
-    
+
+    @Test
     public void testRecord() throws Exception {
-        assertTrue(socket.isConnected());
+        assertThat(socket.isConnected()).isTrue();
         input();
         String output = record.complete();
-        assertEquals(INPUT, output);
+        Assert.assertEquals(INPUT, output);
     }
 
     private void input() throws IOException {
@@ -86,13 +90,14 @@ public class TestDiscardProtocol extends TestCase {
         out.close();
         socket.close();
     }
-    
+
+    @Test
     public void testComplete() throws Exception {
         InputLater inputLater = new InputLater();
         Thread thread = new Thread(inputLater);
         thread.start();
         String output = record.complete();
-        assertEquals(INPUT, output);
+        Assert.assertEquals(INPUT, output);
         inputLater.assertExecutedSuccessfully();
     }
 }

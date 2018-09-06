@@ -20,32 +20,33 @@
 package org.apache.james.mpt;
 
 import org.apache.james.mpt.user.ScriptedUserAdder;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
-import junit.framework.TestCase;
-
-public class TestScriptedUserAdder extends TestCase {
+public class TestScriptedUserAdder {
     
     private DiscardProtocol protocol;
     
     private DiscardProtocol.Record record;
     
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
+    @Before
+    public void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         record = protocol.recordNext();
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
+    @After
+    public void tearDown() throws Exception {
         protocol.stop();
     }
 
+    @Test
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         ScriptedUserAdder adder = new ScriptedUserAdder("localhost", protocol.getPort(), "C: USER='${user}' password='${password}'");
         adder.addUser("A User", "Some Password");
-        assertEquals("USER='A User' password='Some Password'\r\n", record.complete());
+        Assert.assertEquals("USER='A User' password='Some Password'\r\n", record.complete());
     }
 }
