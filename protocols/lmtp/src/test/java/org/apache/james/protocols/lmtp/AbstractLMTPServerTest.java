@@ -19,7 +19,6 @@
 package org.apache.james.protocols.lmtp;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -223,7 +222,7 @@ public abstract class AbstractLMTPServerTest extends AbstractSMTPServerTest {
 
             int[] replies = ((LMTPClient)client).getReplies();
             
-            assertEquals("Expected two replies",2, replies.length);
+            assertThat(replies.length).describedAs("Expected two replies").isEqualTo(2);
             
             assertThat(SMTPReply.isNegativePermanent(replies[0])).isTrue();
             assertThat(SMTPReply.isPositiveCompletion(replies[1])).isTrue();

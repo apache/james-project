@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -44,13 +44,13 @@ public class SetQuotaCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
         SetQuotaRequest request = (SetQuotaRequest) parser.decode(command, lineReader, "A003", null);
-        assertEquals("quotaRoot", request.getQuotaRoot());
+        assertThat(request.getQuotaRoot()).isEqualTo("quotaRoot");
         List<SetQuotaRequest.ResourceLimit> list = request.getResourceLimits();
-        assertEquals("STORAGE", list.get(0).getResource());
-        assertEquals(512, list.get(0).getLimit());
-        assertEquals("MESSAGE", list.get(1).getResource());
-        assertEquals(1024, list.get(1).getLimit());
-        assertEquals(2, list.size());
+        assertThat(list.get(0).getResource()).isEqualTo("STORAGE");
+        assertThat(list.get(0).getLimit()).isEqualTo(512);
+        assertThat(list.get(1).getResource()).isEqualTo("MESSAGE");
+        assertThat(list.get(1).getLimit()).isEqualTo(1024);
+        assertThat(list.size()).isEqualTo(2);
     }
 
 }

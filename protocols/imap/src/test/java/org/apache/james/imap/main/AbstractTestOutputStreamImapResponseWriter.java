@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.main;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayOutputStream;
 
@@ -50,7 +50,7 @@ public abstract class AbstractTestOutputStreamImapResponseWriter {
         for (byte aChar : output) {
             buffer.append((char) aChar);
         }
-        assertEquals(expected, buffer.toString());
+        assertThat(buffer.toString()).isEqualTo(expected);
     }
 
 }

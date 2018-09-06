@@ -20,7 +20,6 @@
 package org.apache.james.util.retry;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.junit.Test;
@@ -36,10 +35,10 @@ public class DoublingRetryScheduleTest {
     @Test
     public final void testDoublingRetrySchedule() {
     assertThat(RetrySchedule.class.isAssignableFrom(DoublingRetrySchedule.class)).isTrue();
-    assertEquals(0, new DoublingRetrySchedule(0, 0).getInterval(0));
-    assertEquals(0, new DoublingRetrySchedule(-1, -1).getInterval(0));
-    assertEquals(0, new DoublingRetrySchedule(-1, 0).getInterval(0));
-    assertEquals(0, new DoublingRetrySchedule(0, -1).getInterval(0));
+    assertThat(new DoublingRetrySchedule(0, 0).getInterval(0)).isEqualTo(0);
+    assertThat(new DoublingRetrySchedule(-1, -1).getInterval(0)).isEqualTo(0);
+    assertThat(new DoublingRetrySchedule(-1, 0).getInterval(0)).isEqualTo(0);
+    assertThat(new DoublingRetrySchedule(0, -1).getInterval(0)).isEqualTo(0);
     }
 
     /**
@@ -47,30 +46,30 @@ public class DoublingRetryScheduleTest {
      */
     @Test
     public final void testGetInterval() {
-    assertEquals(0, new DoublingRetrySchedule(0, 8).getInterval(0));
-    assertEquals(1, new DoublingRetrySchedule(0, 8).getInterval(1));
-    assertEquals(2, new DoublingRetrySchedule(0, 8).getInterval(2));
-    assertEquals(4, new DoublingRetrySchedule(0, 8).getInterval(3));
-    assertEquals(8, new DoublingRetrySchedule(0, 8).getInterval(4));
-    assertEquals(8, new DoublingRetrySchedule(0, 8).getInterval(5));
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(0)).isEqualTo(0);
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(1)).isEqualTo(1);
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(2)).isEqualTo(2);
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(3)).isEqualTo(4);
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(4)).isEqualTo(8);
+    assertThat(new DoublingRetrySchedule(0, 8).getInterval(5)).isEqualTo(8);
 
-    assertEquals(1, new DoublingRetrySchedule(1, 8).getInterval(0));
-    assertEquals(2, new DoublingRetrySchedule(1, 8).getInterval(1));
-    assertEquals(4, new DoublingRetrySchedule(1, 8).getInterval(2));
-    assertEquals(8, new DoublingRetrySchedule(1, 8).getInterval(3));
-    assertEquals(8, new DoublingRetrySchedule(1, 8).getInterval(4));
+    assertThat(new DoublingRetrySchedule(1, 8).getInterval(0)).isEqualTo(1);
+    assertThat(new DoublingRetrySchedule(1, 8).getInterval(1)).isEqualTo(2);
+    assertThat(new DoublingRetrySchedule(1, 8).getInterval(2)).isEqualTo(4);
+    assertThat(new DoublingRetrySchedule(1, 8).getInterval(3)).isEqualTo(8);
+    assertThat(new DoublingRetrySchedule(1, 8).getInterval(4)).isEqualTo(8);
 
-    assertEquals(3, new DoublingRetrySchedule(3, 12).getInterval(0));
-    assertEquals(6, new DoublingRetrySchedule(3, 12).getInterval(1));
-    assertEquals(12, new DoublingRetrySchedule(3, 12).getInterval(2));
-    assertEquals(12, new DoublingRetrySchedule(3, 12).getInterval(3));
+    assertThat(new DoublingRetrySchedule(3, 12).getInterval(0)).isEqualTo(3);
+    assertThat(new DoublingRetrySchedule(3, 12).getInterval(1)).isEqualTo(6);
+    assertThat(new DoublingRetrySchedule(3, 12).getInterval(2)).isEqualTo(12);
+    assertThat(new DoublingRetrySchedule(3, 12).getInterval(3)).isEqualTo(12);
 
-    assertEquals(0, new DoublingRetrySchedule(0, 8, 1000).getInterval(0));
-    assertEquals(1000, new DoublingRetrySchedule(0, 8, 1000).getInterval(1));
-    assertEquals(2000, new DoublingRetrySchedule(0, 8, 1000).getInterval(2));
-    assertEquals(4000, new DoublingRetrySchedule(0, 8, 1000).getInterval(3));
-    assertEquals(8000, new DoublingRetrySchedule(0, 8, 1000).getInterval(4));
-    assertEquals(8000, new DoublingRetrySchedule(0, 8, 1000).getInterval(5));
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(0)).isEqualTo(0);
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(1)).isEqualTo(1000);
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(2)).isEqualTo(2000);
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(3)).isEqualTo(4000);
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(4)).isEqualTo(8000);
+    assertThat(new DoublingRetrySchedule(0, 8, 1000).getInterval(5)).isEqualTo(8000);
     }
 
     /**
@@ -78,7 +77,7 @@ public class DoublingRetryScheduleTest {
      */
     @Test
     public final void testToString() {
-    assertEquals("DoublingRetrySchedule [startInterval=0, maxInterval=1, multiplier=1]", new DoublingRetrySchedule(0,
-        1).toString());
+    assertThat(new DoublingRetrySchedule(0,
+        1).toString()).isEqualTo("DoublingRetrySchedule [startInterval=0, maxInterval=1, multiplier=1]");
     }
 }

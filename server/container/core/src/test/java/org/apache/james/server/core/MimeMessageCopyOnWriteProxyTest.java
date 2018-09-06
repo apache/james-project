@@ -19,9 +19,8 @@
 package org.apache.james.server.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.assertj.core.api.Fail.fail;
+import static org.junit.Assert.assertNotSame;
 
 import java.util.ArrayList;
 
@@ -95,8 +94,8 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         m2.getMessage().setSubject("new Subject");
         assertThat(!isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // check that the subjects are correct on both mails!
-        assertEquals(m2.getMessage().getSubject(), "new Subject");
-        assertEquals(mail.getMessage().getSubject(), "foo");
+        assertThat("new Subject").isEqualTo(m2.getMessage().getSubject());
+        assertThat("foo").isEqualTo(mail.getMessage().getSubject());
         // cloning again the messages
         Mail m2clone = m2.duplicate("clone2");
         assertThat(isSameMimeMessage(m2clone.getMessage(), m2.getMessage())).isTrue();
@@ -108,7 +107,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         // dispose m2 and check that the clone has still a valid message and it
         // is the same!
         LifecycleUtil.dispose(m2);
-        assertEquals(mm3, getWrappedMessage(m2clone.getMessage()));
+        assertThat(getWrappedMessage(m2clone.getMessage())).isEqualTo(mm3);
         // change the message that should be not referenced by m2 that has
         // been disposed, so it should not clone it!
         m2clone.getMessage().setSubject("new Subject 2");

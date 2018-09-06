@@ -30,7 +30,6 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
@@ -135,7 +134,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         MessageId.Factory messageIdFactory = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, expResult, messageIdFactory);
         ModSeqProvider result = instance.getModSeqProvider();
-        assertEquals(expResult, result);
+        assertThat(result).isEqualTo(expResult);
     }
 
     /**
@@ -148,6 +147,6 @@ public class HBaseMailboxSessionMapperFactoryTest {
         MessageId.Factory messageIdFactory = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, expResult, null, messageIdFactory);
         UidProvider result = instance.getUidProvider();
-        assertEquals(expResult, result);
+        assertThat(result).isEqualTo(expResult);
     }
 }

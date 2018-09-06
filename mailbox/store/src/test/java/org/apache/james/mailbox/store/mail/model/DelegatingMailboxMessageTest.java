@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.MessageBuilder;
@@ -54,6 +53,6 @@ public class DelegatingMailboxMessageTest {
     public void testShouldReturnZeroWhenFirstEqualsSecond() throws Exception {
         MailboxMessage one = buildMessage(90);
         MailboxMessage two = buildMessage(90);
-        assertEquals(0, one.compareTo(two));
+        assertThat(one.compareTo(two)).isEqualTo(0);
     }
 }

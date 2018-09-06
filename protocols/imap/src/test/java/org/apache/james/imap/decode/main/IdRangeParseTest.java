@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.main;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -44,14 +44,14 @@ public class IdRangeParseTest  {
         int val2 = 3;
 
         IdRange[] ranges1 = ranges(rangeAsString(val1, val2));
-        assertEquals(1, ranges1.length);
-        assertEquals(val1, ranges1[0].getLowVal());
-        assertEquals(val2, ranges1[0].getHighVal());
+        assertThat(ranges1.length).isEqualTo(1);
+        assertThat(ranges1[0].getLowVal()).isEqualTo(val1);
+        assertThat(ranges1[0].getHighVal()).isEqualTo(val2);
 
         IdRange[] ranges2 = ranges(rangeAsString(val2, val1));
-        assertEquals(1, ranges2.length);
-        assertEquals(val1, ranges2[0].getLowVal());
-        assertEquals(val2, ranges2[0].getHighVal());
+        assertThat(ranges2.length).isEqualTo(1);
+        assertThat(ranges2[0].getLowVal()).isEqualTo(val1);
+        assertThat(ranges2[0].getHighVal()).isEqualTo(val2);
     }
 
     @Test
@@ -74,9 +74,9 @@ public class IdRangeParseTest  {
         }
 
         IdRange[] ranges2 = ranges(rangeAsString(ImapConstants.MIN_NZ_NUMBER, ImapConstants.MAX_NZ_NUMBER));
-        assertEquals(1, ranges2.length);
-        assertEquals(ImapConstants.MIN_NZ_NUMBER, ranges2[0].getLowVal());
-        assertEquals(ImapConstants.MAX_NZ_NUMBER, ranges2[0].getHighVal());
+        assertThat(ranges2.length).isEqualTo(1);
+        assertThat(ranges2[0].getLowVal()).isEqualTo(ImapConstants.MIN_NZ_NUMBER);
+        assertThat(ranges2[0].getHighVal()).isEqualTo(ImapConstants.MAX_NZ_NUMBER);
 
     }
 

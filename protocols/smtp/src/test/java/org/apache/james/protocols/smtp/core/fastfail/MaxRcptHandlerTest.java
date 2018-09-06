@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +62,7 @@ public class MaxRcptHandlerTest {
         handler.setMaxRcpt(2);
         HookReturnCode resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
     
-        assertEquals("Rejected.. To many recipients", resp, HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Rejected.. To many recipients").isEqualTo(resp);
     }
   
   
@@ -74,7 +74,7 @@ public class MaxRcptHandlerTest {
         handler.setMaxRcpt(4);
         HookReturnCode resp = handler.doRcpt(session,null,new MailAddress("test@test")).getResult();
         
-        assertEquals("Not Rejected..", resp, HookReturnCode.declined());
+        assertThat(HookReturnCode.declined()).describedAs("Not Rejected..").isEqualTo(resp);
     }
 
 }

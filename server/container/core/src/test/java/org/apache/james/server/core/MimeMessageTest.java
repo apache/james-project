@@ -21,7 +21,6 @@ package org.apache.james.server.core;
 import static org.apache.mailet.base.RFC2822Headers.RETURN_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -89,7 +88,7 @@ public class MimeMessageTest {
     @Test
     public void testSimpleMessage() throws Exception {
         MimeMessage m = getSimpleMessage();
-        assertEquals(getSimpleMessageCleanedSource(), getCleanedMessageSource(m));
+        assertThat(getCleanedMessageSource(m)).isEqualTo(getSimpleMessageCleanedSource());
         LifecycleUtil.dispose(m);
     }
 
@@ -199,7 +198,7 @@ public class MimeMessageTest {
         // .setHeader(RFC2822Headers.CONTENT_TYPE,contentType);
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected1(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected1());
 
         MimeMultipart content2 = (MimeMultipart) mm.getContent();
         content2.addBodyPart(new MimeBodyPart(new InternetHeaders(new ByteArrayInputStream(
@@ -207,14 +206,14 @@ public class MimeMessageTest {
         mm.setContent(content2, mm.getContentType());
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected2(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected2());
 
         mm.setContent("mynewcoòàùntent€à!", "text/plain; charset=cp1252");
         mm.setHeader(RFC2822Headers.CONTENT_TYPE, "binary/octet-stream");
         // mm.setHeader("Content-Transfer-Encoding","8bit");
         mm.saveChanges();
 
-        assertEquals(getMultipartMessageExpected3(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getMultipartMessageExpected3());
 
         LifecycleUtil.dispose(mm);
 
@@ -369,7 +368,7 @@ public class MimeMessageTest {
         mm.setHeader("X-Test", "foo");
         mm.saveChanges();
 
-        assertEquals(getSimpleMessageCleanedSourceHeaderExpected(), getCleanedMessageSource(mm));
+        assertThat(getCleanedMessageSource(mm)).isEqualTo(getSimpleMessageCleanedSourceHeaderExpected());
 
         LifecycleUtil.dispose(mm);
         LifecycleUtil.dispose(mmorig);
@@ -388,7 +387,7 @@ public class MimeMessageTest {
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         Enumeration<String> h = message.getAllHeaderLines();
 
-        assertEquals(h.nextElement(), "Return-Path: <test@test.de>");
+        assertThat("Return-Path: <test@test.de>").isEqualTo(h.nextElement());
         LifecycleUtil.dispose(message);
     }
 

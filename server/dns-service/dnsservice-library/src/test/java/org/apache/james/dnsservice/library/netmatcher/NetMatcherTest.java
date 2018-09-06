@@ -19,7 +19,6 @@
 package org.apache.james.dnsservice.library.netmatcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.net.UnknownHostException;
 
@@ -40,7 +39,7 @@ public class NetMatcherTest {
     @Test
     public void testIpV4NetworksUniqueness() {
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V4_ADDRESSES_DUPLICATE, DNSFixture.DNS_SERVER_IPV4_MOCK);
-        assertEquals("[172.16.0.0/255.255.0.0, 192.168.1.0/255.255.255.0]", netMatcher.toString());
+        assertThat(netMatcher.toString()).isEqualTo("[172.16.0.0/255.255.0.0, 192.168.1.0/255.255.255.0]");
     }
 
     /**
@@ -49,7 +48,7 @@ public class NetMatcherTest {
     @Test
     public void testIpV6NetworksUniqueness() {
         netMatcher = new NetMatcher(DNSFixture.LOCALHOST_IP_V6_ADDRESSES_DUPLICATE, DNSFixture.DNS_SERVER_IPV6_MOCK);
-        assertEquals("[0:0:0:0:0:0:0:1/32768, 2781:db8:1234:0:0:0:0:0/48]", netMatcher.toString());
+        assertThat(netMatcher.toString()).isEqualTo("[0:0:0:0:0:0:0:1/32768, 2781:db8:1234:0:0:0:0:0/48]");
     }
 
     /**

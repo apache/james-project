@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.util.Enumeration;
@@ -38,8 +38,8 @@ public class MailHeadersTest {
         header.setHeader(RFC2822Headers.FROM, "<test2@test.de>");
         Enumeration<String> h = header.getAllHeaderLines();
 
-        assertEquals(h.nextElement(), "Return-Path: <test@test>");
-        assertEquals(h.nextElement(), "From: <test2@test.de>");
-        assertEquals(h.nextElement(), "Subject: testsubject");
+        assertThat("Return-Path: <test@test>").isEqualTo(h.nextElement());
+        assertThat("From: <test2@test.de>").isEqualTo(h.nextElement());
+        assertThat("Subject: testsubject").isEqualTo(h.nextElement());
     }
 }

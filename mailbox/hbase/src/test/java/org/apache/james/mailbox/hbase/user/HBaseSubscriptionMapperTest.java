@@ -30,8 +30,6 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,8 +136,8 @@ public class HBaseSubscriptionMapperTest {
             LOG.info("Searching for all subscriptions for user:{}", user);
             for (SimpleSubscription subscription : subscriptionList.get(user)) {
                 final Subscription result = mapper.findMailboxSubscriptionForUser(user, subscription.getMailbox());
-                assertEquals(subscription.getMailbox(), result.getMailbox());
-                assertEquals(subscription.getUser(), result.getUser());
+                assertThat(result.getMailbox()).isEqualTo(subscription.getMailbox());
+                assertThat(result.getUser()).isEqualTo(subscription.getUser());
             }
         }
         assertThat(mapper.findMailboxSubscriptionForUser(fake1.getUser(), fake1.getMailbox())).isNull();
@@ -177,7 +175,7 @@ public class HBaseSubscriptionMapperTest {
         for (String user : subscriptionList.keySet()) {
             LOG.info("Searching for all subscriptions for user: {}", user);
             final List<Subscription> found = mapper.findSubscriptionsForUser(user);
-            assertEquals(subscriptionList.get(user).size(), found.size());
+            assertThat(found.size()).isEqualTo(subscriptionList.get(user).size());
             // TODO: patch Subscription to implement equals
             //assertTrue(subscriptionList.get(user).containsAll(foundSubscriptions));
             //assertTrue(foundSubscriptions.containsAll(subscriptionList.get(user)));
@@ -185,7 +183,7 @@ public class HBaseSubscriptionMapperTest {
             //assertFalse(foundSubscriptions.contains(fake2));
         }
         //TODO: check what value we should return in case of no subscriptions: null or empty list
-        assertEquals(mapper.findSubscriptionsForUser(fake2.getMailbox()).size(), 0);
+        assertThat(0).isEqualTo(mapper.findSubscriptionsForUser(fake2.getMailbox()).size());
 
     }
 

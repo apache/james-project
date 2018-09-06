@@ -19,9 +19,6 @@
 package org.apache.james.server.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -112,9 +109,9 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testDeferredMessageLoading() throws MessagingException, IOException {
-        assertEquals("foo", mw.getSubject());
+        assertThat(mw.getSubject()).isEqualTo("foo");
         assertThat(mw.messageParsed()).isFalse();
-        assertEquals("bar\r\n", mw.getContent());
+        assertThat(mw.getContent()).isEqualTo("bar\r\n");
         assertThat(mw.messageParsed()).isTrue();
         assertThat(mw.isModified()).isFalse();
     }
@@ -163,21 +160,21 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
             res.append(line).append("\r\n");
         }
         r.close();
-        assertEquals(body, res.toString());
+        assertThat(res.toString()).isEqualTo(body);
     }
 
     @Test
     public void testAddHeaderAndSave() throws Exception {
         mw.addHeader("X-Test", "X-Value");
 
-        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertThat(mw.getHeader("X-Test")[0]).isEqualTo("X-Value");
 
         mw.saveChanges();
 
         ByteArrayOutputStream rawMessage = new ByteArrayOutputStream();
         mw.writeTo(rawMessage);
 
-        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertThat(mw.getHeader("X-Test")[0]).isEqualTo("X-Value");
 
         String res = rawMessage.toString();
 
@@ -190,10 +187,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         MimeMessage message = getMessageWithBadReturnPath();
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
-        assertEquals("Return-Path: <test@test.de>", e.nextElement());
+        assertThat(e.nextElement()).isEqualTo("Return-Path: <test@test.de>");
         assertThat(e.hasMoreElements()).isFalse();
         Enumeration<String> h = message.getAllHeaderLines();
-        assertEquals("Return-Path: <test@test.de>", h.nextElement());
+        assertThat(h.nextElement()).isEqualTo("Return-Path: <test@test.de>");
         assertThat(h.nextElement().startsWith("Return-Path:")).isFalse();
         LifecycleUtil.dispose(message);
     }
@@ -204,11 +201,11 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         message.addHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         // test that we have now 2 return-paths
         Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
-        assertEquals("Return-Path: <test@test.de>", e.nextElement());
-        assertEquals("Return-Path: <mybadreturn@example.com>", e.nextElement());
+        assertThat(e.nextElement()).isEqualTo("Return-Path: <test@test.de>");
+        assertThat(e.nextElement()).isEqualTo("Return-Path: <mybadreturn@example.com>");
         // test that return-path is the first line
         Enumeration<String> h = message.getAllHeaderLines();
-        assertEquals("Return-Path: <test@test.de>", h.nextElement());
+        assertThat(h.nextElement()).isEqualTo("Return-Path: <test@test.de>");
         LifecycleUtil.dispose(message);
     }
 
@@ -219,7 +216,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testMessageStreamWithUpatedHeaders() throws MessagingException, IOException {
         mw.addHeader("X-Test", "X-Value");
 
-        assertEquals("X-Value", mw.getHeader("X-Test")[0]);
+        assertThat(mw.getHeader("X-Test")[0]).isEqualTo("X-Value");
 
         mw.saveChanges();
 
@@ -238,7 +235,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     public void testMessageStreamWithUpatedContent() throws MessagingException, IOException {
         String newContent = "This is the new message content!";
         mw.setText(newContent);
-        assertEquals(newContent, mw.getContent());
+        assertThat(mw.getContent()).isEqualTo(newContent);
 
         mw.saveChanges();
 
@@ -252,20 +249,20 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
 
     @Test
     public void testSize() throws MessagingException {
-        assertEquals(body.length(), mw.getSize());
+        assertThat(mw.getSize()).isEqualTo(body.length());
     }
 
     @Test
     public void testSizeModifiedHeaders() throws MessagingException {
         mw.addHeader("whatever", "test");
-        assertEquals(body.length(), mw.getSize());
+        assertThat(mw.getSize()).isEqualTo(body.length());
     }
 
     @Test
     public void testSizeModifiedBodyWithoutSave() throws MessagingException {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
-        assertEquals(body.length(), mw.getSize());
+        assertThat(mw.getSize()).isEqualTo(body.length());
     }
 
     @Test
@@ -273,7 +270,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         String newBody = "This is the new body of the message";
         mw.setText(newBody);
         mw.saveChanges();
-        assertEquals(body.length(), mw.getSize());
+        assertThat(mw.getSize()).isEqualTo(body.length());
     }
     
     @Test
@@ -283,7 +280,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         InputStream stream = ClassLoader.getSystemResourceAsStream("JAMES-1593.eml");
         MimeMessage message = new MimeMessage(session, stream);
         MimeMessageWrapper wrapper = new MimeMessageWrapper(message);
-        assertEquals("\"base64\"", wrapper.getEncoding());
+        assertThat(wrapper.getEncoding()).isEqualTo("\"base64\"");
     }
 
     @Test

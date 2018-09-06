@@ -19,8 +19,8 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -158,7 +158,7 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_QUOTED_UTF8_LENGTHY_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     @Test
@@ -170,7 +170,7 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_QUOTED_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     @Test
@@ -273,7 +273,7 @@ public class SearchCommandParserQuotedCharsetTest {
                         BYTES_UTF8_NON_ASCII_SEARCH_TERM)),
                 new ByteArrayOutputStream());
         final SearchKey searchKey = parser.searchKey(null, reader, null, true);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
     private void checkValid(String input, SearchKey key, boolean isFirst,
@@ -283,7 +283,7 @@ public class SearchCommandParserQuotedCharsetTest {
                 new ByteArrayOutputStream());
 
         final SearchKey searchKey = parser.searchKey(null, reader, null, isFirst);
-        assertEquals(key, searchKey);
+        assertThat(searchKey).isEqualTo(key);
     }
 
 }

@@ -19,7 +19,6 @@
 package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -125,7 +124,7 @@ public abstract class MailboxManagerStressTest {
         // For mailboxes without locks, even if the UID is monotic, as re-scheduling can happen between UID generation and event delivery,
         // we can not check the order on the event listener
         // No UID duplicates prevents message loss
-        assertEquals(APPEND_OPERATIONS, ImmutableSet.copyOf(uList).size());
+        assertThat(ImmutableSet.copyOf(uList).size()).isEqualTo(APPEND_OPERATIONS);
         assertThat(fail.get()).describedAs("Unable to append all messages").isFalse();
         pool.shutdown();
     }

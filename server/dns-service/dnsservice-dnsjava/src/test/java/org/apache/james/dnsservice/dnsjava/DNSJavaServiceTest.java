@@ -20,7 +20,6 @@ package org.apache.james.dnsservice.dnsjava;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
@@ -101,8 +100,8 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("nomx.dnstest.com.");
-        assertEquals(1, records.size());
-        assertEquals("nomx.dnstest.com.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("nomx.dnstest.com.");
     }
 
     @Test
@@ -113,8 +112,8 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("badmx.dnstest.com.");
-        assertEquals(1, records.size());
-        assertEquals("badhost.dnstest.com.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("badhost.dnstest.com.");
         // Iterator<HostAddress> it =
         // dnsServer.getSMTPHostAddresses("badmx.dnstest.com.");
         // assertFalse(it.hasNext());
@@ -128,8 +127,8 @@ public class DNSJavaServiceTest {
 
         // dnsServer.setLookupper(new ZoneLookupper(z));
         Collection<String> records = dnsServer.findMXRecords("www.pippo.com.");
-        assertEquals(1, records.size());
-        assertEquals("pippo.com.inbound.mxlogic.net.", records.iterator().next());
+        assertThat(records.size()).isEqualTo(1);
+        assertThat(records.iterator().next()).isEqualTo("pippo.com.inbound.mxlogic.net.");
     }
 
     @Test
@@ -146,8 +145,8 @@ public class DNSJavaServiceTest {
         } catch (UnsupportedOperationException e) {
             LOGGER.info("Ignored error", e);
         }
-        assertEquals(1, res.size());
-        assertEquals("mail.test-zone.com.", res.iterator().next());
+        assertThat(res.size()).isEqualTo(1);
+        assertThat(res.iterator().next()).isEqualTo("mail.test-zone.com.");
     }
 
     /**
@@ -161,7 +160,7 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("two-mx.sameprio.");
-        assertEquals(2, records.size());
+        assertThat(records.size()).isEqualTo(2);
         assertThat(records.contains("mx1.two-mx.sameprio.")).isTrue();
         assertThat(records.contains("mx2.two-mx.sameprio.")).isTrue();
     }
@@ -174,10 +173,10 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         ArrayList<String> records = new ArrayList<>(dnsServer.findMXRecords("three-mx.bar."));
-        assertEquals(3, records.size());
+        assertThat(records.size()).isEqualTo(3);
         assertThat(records.contains("mx1.three-mx.bar.")).isTrue();
         assertThat(records.contains("mx2.three-mx.bar.")).isTrue();
-        assertEquals("mx3.three-mx.bar.", records.get(2));
+        assertThat(records.get(2)).isEqualTo("mx3.three-mx.bar.");
 
     }
 
@@ -191,7 +190,7 @@ public class DNSJavaServiceTest {
         dnsServer.setCache(mockedCache);
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("two-mx.differentprio.");
-        assertEquals(2, records.size());
+        assertThat(records.size()).isEqualTo(2);
         assertThat(records.contains("mx1.two-mx.differentprio.")).isTrue();
         assertThat(records.contains("mx2.two-mx.differentprio.")).isTrue();
 
@@ -208,7 +207,7 @@ public class DNSJavaServiceTest {
 
         // a.setSearchPath(new String[] { "searchdomain.com." });
         Collection<String> records = dnsServer.findMXRecords("one-mx.bar.");
-        assertEquals(1, records.size());
+        assertThat(records.size()).isEqualTo(1);
         assertThat(records.contains("mx1.one-mx.bar.")).isTrue();
     }
     /*

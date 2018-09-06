@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -117,9 +117,9 @@ public class SearchCommandParserNotTest {
                 new ByteArrayOutputStream()); 
         SearchKey key = parser.searchKey(null, reader, null, false); 
         List<SearchKey> keys = key.getKeys().get(0).getKeys(); 
-        assertEquals(2, keys.size()); 
-        assertEquals("bar", keys.get(0).getValue()); 
-        assertEquals("foo", keys.get(1).getValue()); 
+        assertThat(keys.size()).isEqualTo(2);
+        assertThat(keys.get(0).getValue()).isEqualTo("bar");
+        assertThat(keys.get(1).getValue()).isEqualTo("foo");
     } 
 
     private void checkValid(String input, SearchKey key) throws Exception {
@@ -127,6 +127,6 @@ public class SearchCommandParserNotTest {
                 new ByteArrayInputStream(input.getBytes("US-ASCII")),
                 new ByteArrayOutputStream());
 
-        assertEquals(key, parser.searchKey(null, reader, null, false));
+        assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);
     }
 }

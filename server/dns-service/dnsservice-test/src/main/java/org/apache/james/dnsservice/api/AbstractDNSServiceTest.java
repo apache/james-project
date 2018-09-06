@@ -19,8 +19,6 @@
 package org.apache.james.dnsservice.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -73,7 +71,7 @@ public class AbstractDNSServiceTest {
     @Test
     public void testLocalhost() throws UnknownHostException {
 
-        assertEquals("localhost/127.0.0.1", DNS_SERVER.getByName("localhost").toString());
+        assertThat(DNS_SERVER.getByName("localhost").toString()).isEqualTo("localhost/127.0.0.1");
 
         String localHost = DNS_SERVER.getHostName(InetAddress.getByName("127.0.0.1"));
         // We only can check if the returned localhost is not empty. Its value

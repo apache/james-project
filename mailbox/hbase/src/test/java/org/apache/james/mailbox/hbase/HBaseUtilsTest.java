@@ -44,7 +44,6 @@ import static org.apache.james.mailbox.hbase.PropertyConvertor.getProperty;
 import static org.apache.james.mailbox.hbase.PropertyConvertor.getValue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 import java.util.Date;
 import java.util.UUID;
@@ -83,10 +82,10 @@ public class HBaseUtilsTest {
         assertArrayEquals(expResult, result);
 
         HBaseId newUUID = hBaseIdFromRowKey(result);
-        assertEquals(uuid, newUUID);
+        assertThat(newUUID).isEqualTo(uuid);
 
         newUUID = hBaseIdFromRowKey(expResult);
-        assertEquals(uuid, newUUID);
+        assertThat(newUUID).isEqualTo(uuid);
     }
 
     /**
@@ -121,9 +120,9 @@ public class HBaseUtilsTest {
         final Property prop1 = new SimpleProperty("nspace", "localName", "test");
         byte[] value = getValue(prop1);
         final Property prop2 = getProperty(value);
-        assertEquals(prop1.getNamespace(), prop2.getNamespace());
-        assertEquals(prop1.getLocalName(), prop2.getLocalName());
-        assertEquals(prop1.getValue(), prop2.getValue());
+        assertThat(prop2.getNamespace()).isEqualTo(prop1.getNamespace());
+        assertThat(prop2.getLocalName()).isEqualTo(prop1.getLocalName());
+        assertThat(prop2.getValue()).isEqualTo(prop1.getValue());
     }
 
     @Test

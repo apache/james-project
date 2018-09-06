@@ -47,7 +47,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -100,7 +99,7 @@ public class ToRecipientFolderTest {
             .setProperty(ToRecipientFolder.FOLDER_PARAMETER, "Junk")
             .build());
 
-        Assert.assertEquals("Junk", testee.getInitParameter(ToRecipientFolder.FOLDER_PARAMETER));
+        assertThat(testee.getInitParameter(ToRecipientFolder.FOLDER_PARAMETER)).isEqualTo("Junk");
     }
 
     @Test

@@ -18,11 +18,11 @@
  ****************************************************************/
 package org.apache.james.protocols.pop3.core;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.junit.Assert;
 
 public abstract class AbstractInputStreamTest {
 
@@ -34,7 +34,7 @@ public abstract class AbstractInputStreamTest {
         }
         in.close();
         out.close();        
-        Assert.assertEquals(expected, new String(out.toByteArray()));
+        assertThat(new String(out.toByteArray())).isEqualTo(expected);
 
         
         
@@ -52,7 +52,7 @@ public abstract class AbstractInputStreamTest {
        
         in.close();
         out.close();
-        Assert.assertEquals(expected, new String(out.toByteArray()));
+        assertThat(new String(out.toByteArray())).isEqualTo(expected);
         
         
     }

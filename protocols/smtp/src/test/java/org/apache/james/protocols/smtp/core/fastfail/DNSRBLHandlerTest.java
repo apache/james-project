@@ -22,7 +22,6 @@ package org.apache.james.protocols.smtp.core.fastfail;
 
 import static org.apache.james.protocols.api.ProtocolSession.State.Connection;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -185,8 +184,7 @@ public class DNSRBLHandlerTest {
         rbl.setBlacklist(new String[] { "bl.spamcop.net." });
         rbl.setGetDetail(true);
         rbl.doRcpt(mockedSMTPSession, null, new MailAddress("test@localhost"));
-        assertEquals("Details","Blocked - see http://www.spamcop.net/bl.shtml?127.0.0.2",
-               mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection));
+        assertThat(mockedSMTPSession.getAttachment(RBL_DETAIL_MAIL_ATTRIBUTE_NAME, State.Connection)).describedAs("Details").isEqualTo("Blocked - see http://www.spamcop.net/bl.shtml?127.0.0.2");
         assertThat(mockedSMTPSession.getAttachment(RBL_BLOCKLISTED_MAIL_ATTRIBUTE_NAME, Connection)).withFailMessage("Blocked").isNotNull();
     }
 

@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -170,7 +170,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
+        assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
     }
 
     @Test
@@ -188,7 +188,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Email was rejected").isEqualTo(response.getResult());
     }
 
     @Test
@@ -206,7 +206,7 @@ public class URIRBLHandlerTest {
         handler.setUriRblServer(servers);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Email was rejected").isEqualTo(response.getResult());
     }
 
     /*

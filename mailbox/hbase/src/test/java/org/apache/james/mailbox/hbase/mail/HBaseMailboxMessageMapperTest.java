@@ -29,7 +29,7 @@ import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -179,7 +179,7 @@ public class HBaseMailboxMessageMapperTest {
     private void testCountMessagesInMailbox() throws Exception {
         LOG.info("countMessagesInMailbox");
         long messageCount = messageMapper.countMessagesInMailbox(MBOXES.get(1));
-        assertEquals(MESSAGE_NO.size(), messageCount);
+        assertThat(messageCount).isEqualTo(MESSAGE_NO.size());
     }
 
     /**
@@ -188,7 +188,7 @@ public class HBaseMailboxMessageMapperTest {
     private void testCountUnseenMessagesInMailbox() throws Exception {
         LOG.info("countUnseenMessagesInMailbox");
         long unseen = messageMapper.countUnseenMessagesInMailbox(MBOXES.get(1));
-        assertEquals(MESSAGE_NO.size() - 1, unseen);
+        assertThat(unseen).isEqualTo(MESSAGE_NO.size() - 1);
     }
 
     /**
@@ -197,7 +197,7 @@ public class HBaseMailboxMessageMapperTest {
     private void testFindFirstUnseenMessageUid() throws Exception {
         LOG.info("findFirstUnseenMessageUid");
         MessageUid uid = messageMapper.findFirstUnseenMessageUid(MBOXES.get(1));
-        assertEquals(MessageUid.of(1), uid);
+        assertThat(uid).isEqualTo(MessageUid.of(1));
     }
 
     /**
@@ -207,7 +207,7 @@ public class HBaseMailboxMessageMapperTest {
     private void testFindRecentMessageUidsInMailbox() throws Exception {
         LOG.info("findRecentMessageUidsInMailbox");
         List<MessageUid> recentMessages = messageMapper.findRecentMessageUidsInMailbox(MBOXES.get(1));
-        assertEquals(MESSAGE_NO.size() - 1, recentMessages.size());
+        assertThat(recentMessages.size()).isEqualTo(MESSAGE_NO.size() - 1);
     }
 
     /**
@@ -218,7 +218,7 @@ public class HBaseMailboxMessageMapperTest {
         // The tables should be deleted every time the tests run.
         long msgCount = messageMapper.countMessagesInMailbox(MBOXES.get(1));
         LOG.info("{} {}", msgCount, MESSAGE_NO.size());
-        assertEquals(MESSAGE_NO.size(), msgCount);
+        assertThat(msgCount).isEqualTo(MESSAGE_NO.size());
     }
 
     /**
@@ -227,7 +227,7 @@ public class HBaseMailboxMessageMapperTest {
     private void testGetLastUid() throws Exception {
         LOG.info("getLastUid");
         MessageUid lastUid = messageMapper.getLastUid(MBOXES.get(1)).get();
-        assertEquals(MessageUid.of(MESSAGE_NO.size()), lastUid);
+        assertThat(lastUid).isEqualTo(MessageUid.of(MESSAGE_NO.size()));
     }
 
     /**
@@ -236,6 +236,6 @@ public class HBaseMailboxMessageMapperTest {
     private void testGetHighestModSeq() throws Exception {
         LOG.info("getHighestModSeq");
         long highestModSeq = messageMapper.getHighestModSeq(MBOXES.get(1));
-        assertEquals(MESSAGE_NO.size(), highestModSeq);
+        assertThat(highestModSeq).isEqualTo(MESSAGE_NO.size());
     }
 }

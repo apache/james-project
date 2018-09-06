@@ -20,7 +20,7 @@
 
 package org.apache.james.transport.matchers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -85,8 +85,8 @@ public abstract class AbstractHasMailAttributeTest {
         Collection<MailAddress> matchedRecipients = matcher.match(mockedMail);
 
         assertNotNull(matchedRecipients);
-        assertEquals(matchedRecipients.size(), mockedMail.getRecipients()
-                .size());
+        assertThat(mockedMail.getRecipients()
+                .size()).isEqualTo(matchedRecipients.size());
     }
 
     protected void init() {

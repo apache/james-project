@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.stream.LongStream;
 
@@ -75,7 +74,7 @@ public class CassandraModSeqProviderTest {
     public void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
         long result = modSeqProvider.highestModSeq(null, mailbox);
-        assertEquals(0, result);
+        assertThat(result).isEqualTo(0);
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                         long uid = modSeqProvider.nextModSeq(null, mailbox);

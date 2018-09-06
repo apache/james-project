@@ -19,7 +19,6 @@
 package org.apache.james.user.memory;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.assertj.core.api.Fail.fail;
 
 import java.util.Arrays;
@@ -45,13 +44,13 @@ public class UsersRepositoryManagementTest {
 
     @Test
     public void testUserCount() throws Exception {
-        assertEquals("no user yet", 0, userManagement.countUsers());
+        assertThat(userManagement.countUsers()).describedAs("no user yet").isEqualTo(0);
         usersRepository.addUser("testcount1", "testCount");
-        assertEquals("1 user", 1, userManagement.countUsers());
+        assertThat(userManagement.countUsers()).describedAs("1 user").isEqualTo(1);
         usersRepository.addUser("testcount2", "testCount");
-        assertEquals("2 users", 2, userManagement.countUsers());
+        assertThat(userManagement.countUsers()).describedAs("2 users").isEqualTo(2);
         usersRepository.removeUser("testcount1");
-        assertEquals("1 user", 1, userManagement.countUsers());
+        assertThat(userManagement.countUsers()).describedAs("1 user").isEqualTo(1);
     }
 
     @Test
@@ -82,7 +81,7 @@ public class UsersRepositoryManagementTest {
         }
 
         String[] userNames = userManagement.listAllUsers();
-        assertEquals("user count", users.size(), userNames.length);
+        assertThat(userNames.length).describedAs("user count").isEqualTo(users.size());
 
         for (String user : userNames) {
             if (!users.contains(user)) {

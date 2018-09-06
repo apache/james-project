@@ -19,7 +19,6 @@
 package org.apache.james.imap.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,7 +41,7 @@ public class IdRangeTest {
         ranges.add(r3);
         
         List<IdRange> merged = IdRange.mergeRanges(ranges);
-        assertEquals(3, merged.size());
+        assertThat(merged.size()).isEqualTo(3);
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(r,rIt.next());
         checkIdRange(r2,rIt.next());
@@ -63,7 +62,7 @@ public class IdRangeTest {
         ranges.add(r3);
         
         List<IdRange> merged = IdRange.mergeRanges(ranges);
-        assertEquals(2, merged.size());
+        assertThat(merged.size()).isEqualTo(2);
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 4),rIt.next());
         checkIdRange(r3,rIt.next());
@@ -83,7 +82,7 @@ public class IdRangeTest {
         ranges.add(r3);
         
         List<IdRange> merged = IdRange.mergeRanges(ranges);
-        assertEquals(1, merged.size());
+        assertThat(merged.size()).isEqualTo(1);
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 10),rIt.next());
         assertThat(rIt.hasNext()).isFalse();
@@ -101,7 +100,7 @@ public class IdRangeTest {
         ranges.add(r3);
         
         List<IdRange> merged = IdRange.mergeRanges(ranges);
-        assertEquals(1, merged.size());
+        assertThat(merged.size()).isEqualTo(1);
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 15),rIt.next());
         assertThat(rIt.hasNext()).isFalse();
@@ -119,14 +118,14 @@ public class IdRangeTest {
         ranges.add(r3);
         
         List<IdRange> merged = IdRange.mergeRanges(ranges);
-        assertEquals(1, merged.size());
+        assertThat(merged.size()).isEqualTo(1);
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 2),rIt.next());
         assertThat(rIt.hasNext()).isFalse();
     }
     
     private void checkIdRange(IdRange r1, IdRange r2) {
-        assertEquals(r1.getLowVal(), r2.getLowVal());
-        assertEquals(r1.getHighVal(), r2.getHighVal());
+        assertThat(r2.getLowVal()).isEqualTo(r1.getLowVal());
+        assertThat(r2.getHighVal()).isEqualTo(r1.getHighVal());
     }
 }

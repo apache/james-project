@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -65,6 +64,6 @@ public class MailboxStatusResponseEncoderTest  {
 
         encoder.encode(new MailboxStatusResponse(messages, recent, uidNext,
                 null, uidValidity, unseen, mailbox), composer, new FakeImapSession());
-        assertEquals("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
     }
 }

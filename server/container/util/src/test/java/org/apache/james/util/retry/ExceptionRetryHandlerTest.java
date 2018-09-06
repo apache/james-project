@@ -20,7 +20,6 @@
 package org.apache.james.util.retry;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -84,7 +83,7 @@ public class ExceptionRetryHandlerTest {
                 return "Hi!";
             }
         }.perform();
-        assertEquals("Hi!", result);
+        assertThat(result).isEqualTo("Hi!");
 
         try {
             new ExceptionRetryHandler(
@@ -98,7 +97,7 @@ public class ExceptionRetryHandlerTest {
         } catch (Exception ex) {
             // no-op
         }
-        assertEquals("Hi!", result);
+        assertThat(result).isEqualTo("Hi!");
     }
 
     @Test
@@ -123,7 +122,7 @@ public class ExceptionRetryHandlerTest {
         } catch (Exception ex) {
             // no-op
         }
-        assertEquals(7, results.size());
+        assertThat(results.size()).isEqualTo(7);
     }
 
     @Test
@@ -136,7 +135,7 @@ public class ExceptionRetryHandlerTest {
                 return "Hi!";
             }
         };
-        assertEquals("Hi!", handler.operation());
+        assertThat(handler.operation()).isEqualTo("Hi!");
     }
 
     @Test
@@ -149,6 +148,6 @@ public class ExceptionRetryHandlerTest {
                 return null;
             }
         };
-        assertEquals(8, handler.getRetryInterval(8));
+        assertThat(handler.getRetryInterval(8)).isEqualTo(8);
     }
 }

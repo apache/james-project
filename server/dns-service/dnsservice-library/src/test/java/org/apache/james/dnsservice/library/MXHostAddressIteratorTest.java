@@ -19,9 +19,6 @@
 package org.apache.james.dnsservice.library;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.net.InetAddress;
 import java.util.Arrays;

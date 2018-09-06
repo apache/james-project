@@ -63,6 +63,10 @@ to the library requiring no extra coding.</description>
             <artifactId>ant-antunit</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

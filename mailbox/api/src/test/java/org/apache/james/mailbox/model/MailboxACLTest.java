@@ -21,7 +21,6 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -82,7 +81,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertEquals(foundEntries, expectedEntries);
+        assertThat(expectedEntries).isEqualTo(foundEntries);
     }
 
     @Test
@@ -109,7 +108,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertEquals(foundEntries, expectedEntries);
+        assertThat(expectedEntries).isEqualTo(foundEntries);
     }
 
     @Test
@@ -122,7 +121,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertEquals(foundEntries, expectedEntries);
+        assertThat(foundEntries).isEqualTo(expectedEntries);
     }
 
     @Test
@@ -146,7 +145,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertEquals(foundEntries, expectedEntries);
+        assertThat(expectedEntries).isEqualTo(foundEntries);
     }
 
     @Test
@@ -159,7 +158,7 @@ public class MailboxACLTest {
 
         Map<EntryKey, Rfc4314Rights> foundEntries = result.getEntries();
 
-        assertEquals(foundEntries, expectedEntries);
+        assertThat(expectedEntries).isEqualTo(foundEntries);
     }
 
     @Test

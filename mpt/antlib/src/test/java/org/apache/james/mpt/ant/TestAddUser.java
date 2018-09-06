@@ -19,11 +19,12 @@
 
 package org.apache.james.mpt.ant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.mpt.DiscardProtocol;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.types.resources.Union;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,6 +63,6 @@ public class TestAddUser {
         final String script = "This script adds a user";
         user.addText("C: " + script);
         subject.execute();
-        Assert.assertEquals(script + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(script + "\r\n");
     }
 }

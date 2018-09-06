@@ -20,7 +20,6 @@
 package org.apache.mailet.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -85,6 +84,6 @@ public class MatcherInverterTest {
                 .recipients(address1, address2)
                 .build();
 
-        assertEquals("Should match one recipient", address2.toString(), inverter.match(mail).iterator().next().toString());
+        assertThat(inverter.match(mail).iterator().next().toString()).describedAs("Should match one recipient").isEqualTo(address2.toString());
     }
 }

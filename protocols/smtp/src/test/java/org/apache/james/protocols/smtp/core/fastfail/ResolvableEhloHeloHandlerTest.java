@@ -22,7 +22,6 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import static org.apache.james.protocols.api.ProtocolSession.State.Transaction;
 import static org.apache.james.protocols.smtp.core.fastfail.ResolvableEhloHeloHandler.BAD_EHLO_HELO;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -128,7 +127,7 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Invalid HELO").isNotNull();
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
     @Test
@@ -142,7 +141,7 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Valid HELO").isNull();
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Not reject", result,HookReturnCode.declined());
+        assertThat(HookReturnCode.declined()).describedAs("Not reject").isEqualTo(result);
     }
    
     @Test
@@ -157,7 +156,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
    
@@ -173,7 +172,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
-        assertEquals("Reject", result,HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
 }
     

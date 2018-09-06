@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.ant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStream;
@@ -29,7 +31,6 @@ import org.apache.tools.ant.types.Resource;
 import org.apache.tools.ant.types.resources.StringResource;
 import org.apache.tools.ant.types.resources.Union;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,14 +78,14 @@ public class TestRunScripts {
         stubResourceCollection.add(unsupportedResource);
         subject.add(stubResourceCollection);
         subject.execute();
-        Assert.assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
 
     @Test
     public void testRunOneScriptFromCollection() throws Exception {
         subject.add(stubResourceCollection);
         subject.execute();
-        Assert.assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
 
     @Test
@@ -96,6 +97,6 @@ public class TestRunScripts {
         writer.close();
         subject.setScript(file);
         subject.execute();
-        Assert.assertEquals(SCRIPT + "\r\n", record.complete());
+        assertThat(record.complete()).isEqualTo(SCRIPT + "\r\n");
     }
 }

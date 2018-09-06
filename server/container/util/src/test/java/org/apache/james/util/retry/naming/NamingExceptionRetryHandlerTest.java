@@ -20,7 +20,6 @@
 package org.apache.james.util.retry.naming;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import javax.naming.Context;
 import javax.naming.NamingException;
@@ -82,7 +81,7 @@ public class NamingExceptionRetryHandlerTest {
                 return "Hi!";
             }
         }.perform();
-        assertEquals("Hi!", result);
+        assertThat(result).isEqualTo("Hi!");
 
         try {
             new NamingExceptionRetryHandler(
@@ -96,6 +95,6 @@ public class NamingExceptionRetryHandlerTest {
         } catch (NamingException ex) {
             // no-op
         }
-        assertEquals("Hi!", result);
+        assertThat(result).isEqualTo("Hi!");
     }
 }

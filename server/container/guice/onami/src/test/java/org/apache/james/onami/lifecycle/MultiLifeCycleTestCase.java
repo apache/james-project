@@ -21,13 +21,13 @@ package org.apache.james.onami.lifecycle;
 
 import static com.google.inject.matcher.Matchers.any;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.inject.AbstractModule;
@@ -40,7 +40,7 @@ public class MultiLifeCycleTestCase {
     public void testOrdering() {
         Module lifeCycleModule = new TestLifeCycleModule(asList(TestAnnotationA.class, TestAnnotationB.class, TestAnnotationC.class));
         MultiLifeCycleObject obj = Guice.createInjector(lifeCycleModule).getInstance(MultiLifeCycleObject.class);
-        Assert.assertEquals("aaabbbc", obj.toString());
+        assertThat(obj.toString()).isEqualTo("aaabbbc");
     }
 
     public static class Foo {
@@ -59,14 +59,14 @@ public class MultiLifeCycleTestCase {
         Injector injector = Guice.createInjector(moduleA, moduleB, moduleC);
         MultiLifeCycleObject obj = injector.getInstance(MultiLifeCycleObject.class);
 
-        Assert.assertEquals(obj.toString(), "");
+        assertThat("").isEqualTo(obj.toString());
 
         injector.getInstance(LifeCycleStageModule.key(TestAnnotationA.class)).stage();
-        Assert.assertEquals("aaa", obj.toString());
+        assertThat(obj.toString()).isEqualTo("aaa");
         injector.getInstance(LifeCycleStageModule.key(TestAnnotationB.class)).stage();
-        Assert.assertEquals("aaabbb", obj.toString());
+        assertThat(obj.toString()).isEqualTo("aaabbb");
         injector.getInstance(LifeCycleStageModule.key(TestAnnotationC.class)).stage();
-        Assert.assertEquals("aaabbbc", obj.toString());
+        assertThat(obj.toString()).isEqualTo("aaabbbc");
 
         injector.getInstance(Foo.class);
     }
@@ -89,11 +89,11 @@ public class MultiLifeCycleTestCase {
         injector.getInstance(StageObject2.class);
 
         injector.getInstance(LifeCycleStageModule.key(TestAnnotationA.class)).stage();
-        Assert.assertEquals("1a2a", str.toString());
+        assertThat(str.toString()).isEqualTo("1a2a");
         str.setLength(0);
 
         injector.getInstance(LifeCycleStageModule.key(TestAnnotationB.class)).stage();
-        Assert.assertEquals("2b1b", str.toString());
+        assertThat(str.toString()).isEqualTo("2b1b");
     }
 
     private static class TestLifeCycleModule extends LifeCycleModule {

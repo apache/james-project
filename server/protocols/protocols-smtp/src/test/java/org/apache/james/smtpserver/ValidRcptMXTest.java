@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 
@@ -85,6 +85,6 @@ public class ValidRcptMXTest {
         handler.setBannedNetworks(ImmutableList.of(bannedAddress), dns);
         HookReturnCode rCode = handler.doRcpt(session, null, mailAddress).getResult();
 
-        assertEquals("Reject", rCode, HookReturnCode.deny());
+        assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(rCode);
     }
 }

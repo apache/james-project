@@ -20,7 +20,6 @@ package org.apache.james.smtpserver;
 
 import static org.apache.james.spamassassin.SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 
 import java.util.HashMap;
 
@@ -120,8 +119,8 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
-        assertEquals("email was not spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "NO");
+        assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
+        assertThat("NO").describedAs("email was not spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
         assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
 
     }
@@ -137,8 +136,8 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(2000.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
-        assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
+        assertThat(HookReturnCode.declined()).describedAs("Email was not rejected").isEqualTo(response.getResult());
+        assertThat("YES").describedAs("email was spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
         assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
     }
 
@@ -153,8 +152,8 @@ public class SpamAssassinHandlerTest {
         handler.setSpamdRejectionHits(200.0);
         HookResult response = handler.onMessage(session, mockedMail);
 
-        assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
-        assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
+        assertThat(HookReturnCode.deny()).describedAs("Email was rejected").isEqualTo(response.getResult());
+        assertThat("YES").describedAs("email was spam").isEqualTo(mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME));
         assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
     }
 }

@@ -29,7 +29,6 @@ import java.net.Socket;
 import javax.net.SocketFactory;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,7 +80,7 @@ public class TestDiscardProtocol {
         assertThat(socket.isConnected()).isTrue();
         input();
         String output = record.complete();
-        Assert.assertEquals(INPUT, output);
+        assertThat(output).isEqualTo(INPUT);
     }
 
     private void input() throws IOException {
@@ -97,7 +96,7 @@ public class TestDiscardProtocol {
         Thread thread = new Thread(inputLater);
         thread.start();
         String output = record.complete();
-        Assert.assertEquals(INPUT, output);
+        assertThat(output).isEqualTo(INPUT);
         inputLater.assertExecutedSuccessfully();
     }
 }

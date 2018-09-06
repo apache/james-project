@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -62,6 +61,6 @@ public class SearchResponseEncoderTest {
     @Test
     public void testEncode() throws Exception {
         encoder.encode(response, composer, new FakeImapSession());
-        assertEquals("* SEARCH 1 4 9 16\r\n", writer.getString());
+        assertThat(writer.getString()).isEqualTo("* SEARCH 1 4 9 16\r\n");
     }
 }

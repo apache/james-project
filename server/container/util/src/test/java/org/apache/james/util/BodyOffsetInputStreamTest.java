@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -37,8 +37,8 @@ public class BodyOffsetInputStreamTest {
         while (in.read() != -1) {
             // consume stream
         }
-        assertEquals(expectedOffset, in.getBodyStartOffset());
-        assertEquals(bytes, in.getReadBytes());
+        assertThat(in.getBodyStartOffset()).isEqualTo(expectedOffset);
+        assertThat(in.getReadBytes()).isEqualTo(bytes);
         in.close();
     }
     
@@ -51,8 +51,8 @@ public class BodyOffsetInputStreamTest {
         while (in.read(b) != -1) {
             // consume stream
         }
-        assertEquals(expectedOffset, in.getBodyStartOffset());
-        assertEquals(bytes, in.getReadBytes());
+        assertThat(in.getBodyStartOffset()).isEqualTo(expectedOffset);
+        assertThat(in.getReadBytes()).isEqualTo(bytes);
         in.close();
     }
     
@@ -65,8 +65,8 @@ public class BodyOffsetInputStreamTest {
         while (in.read(b) != -1) {
             // consume stream
         }
-        assertEquals(expectedOffset, in.getBodyStartOffset());
-        assertEquals(bytes, in.getReadBytes());
+        assertThat(in.getBodyStartOffset()).isEqualTo(expectedOffset);
+        assertThat(in.getReadBytes()).isEqualTo(bytes);
         in.close();
     }
 }

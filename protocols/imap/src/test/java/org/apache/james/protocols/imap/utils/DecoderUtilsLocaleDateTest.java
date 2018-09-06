@@ -19,7 +19,7 @@
 
 package org.apache.james.protocols.imap.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Locale;
 
@@ -94,205 +94,205 @@ public class DecoderUtilsLocaleDateTest  {
 
     @SuppressWarnings("deprecation")
     private void decodeDateTime() throws Exception {
-        assertEquals("21 Oct 1972 20:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0000").toGMTString());
-        assertEquals("21 Oct 1972 19:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0100").toGMTString());
-        assertEquals("21 Oct 1972 18:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0200").toGMTString());
-        assertEquals("21 Oct 1972 17:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0300").toGMTString());
-        assertEquals("21 Oct 1972 16:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0400").toGMTString());
-        assertEquals("21 Oct 1972 15:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0500").toGMTString());
-        assertEquals("21 Oct 1972 14:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0600").toGMTString());
-        assertEquals("21 Oct 1972 13:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0700").toGMTString());
-        assertEquals("21 Oct 1972 12:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0800").toGMTString());
-        assertEquals("21 Oct 1972 11:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0900").toGMTString());
-        assertEquals("21 Oct 1972 10:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1000").toGMTString());
-        assertEquals("21 Oct 1972 09:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1100").toGMTString());
-        assertEquals("21 Oct 1972 08:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1200").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0000").toGMTString()).isEqualTo("21 Oct 1972 20:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0100").toGMTString()).isEqualTo("21 Oct 1972 19:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0200").toGMTString()).isEqualTo("21 Oct 1972 18:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0300").toGMTString()).isEqualTo("21 Oct 1972 17:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0400").toGMTString()).isEqualTo("21 Oct 1972 16:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0500").toGMTString()).isEqualTo("21 Oct 1972 15:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0600").toGMTString()).isEqualTo("21 Oct 1972 14:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0700").toGMTString()).isEqualTo("21 Oct 1972 13:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0800").toGMTString()).isEqualTo("21 Oct 1972 12:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0900").toGMTString()).isEqualTo("21 Oct 1972 11:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1000").toGMTString()).isEqualTo("21 Oct 1972 10:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1100").toGMTString()).isEqualTo("21 Oct 1972 09:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1200").toGMTString()).isEqualTo("21 Oct 1972 08:00:00 GMT");
 
-        assertEquals("21 Oct 1972 10:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1000").toGMTString());
-        assertEquals("21 Oct 1972 21:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0100").toGMTString());
-        assertEquals("21 Oct 1972 22:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0200").toGMTString());
-        assertEquals("21 Oct 1972 23:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0300").toGMTString());
-        assertEquals("22 Oct 1972 00:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0400").toGMTString());
-        assertEquals("22 Oct 1972 01:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0500").toGMTString());
-        assertEquals("22 Oct 1972 02:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0600").toGMTString());
-        assertEquals("22 Oct 1972 03:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0700").toGMTString());
-        assertEquals("22 Oct 1972 04:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0800").toGMTString());
-        assertEquals("22 Oct 1972 05:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0900").toGMTString());
-        assertEquals("22 Oct 1972 06:00:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -1000").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1000").toGMTString()).isEqualTo("21 Oct 1972 10:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0100").toGMTString()).isEqualTo("21 Oct 1972 21:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0200").toGMTString()).isEqualTo("21 Oct 1972 22:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0300").toGMTString()).isEqualTo("21 Oct 1972 23:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0400").toGMTString()).isEqualTo("22 Oct 1972 00:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0500").toGMTString()).isEqualTo("22 Oct 1972 01:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0600").toGMTString()).isEqualTo("22 Oct 1972 02:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0700").toGMTString()).isEqualTo("22 Oct 1972 03:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0800").toGMTString()).isEqualTo("22 Oct 1972 04:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0900").toGMTString()).isEqualTo("22 Oct 1972 05:00:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -1000").toGMTString()).isEqualTo("22 Oct 1972 06:00:00 GMT");
 
-        assertEquals("21 Oct 1972 19:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0030").toGMTString());
-        assertEquals("21 Oct 1972 18:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0130").toGMTString());
-        assertEquals("21 Oct 1972 17:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0230").toGMTString());
-        assertEquals("21 Oct 1972 16:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0330").toGMTString());
-        assertEquals("21 Oct 1972 15:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0430").toGMTString());
-        assertEquals("21 Oct 1972 14:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0530").toGMTString());
-        assertEquals("21 Oct 1972 13:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0630").toGMTString());
-        assertEquals("21 Oct 1972 12:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0730").toGMTString());
-        assertEquals("21 Oct 1972 11:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0830").toGMTString());
-        assertEquals("21 Oct 1972 10:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +0930").toGMTString());
-        assertEquals("21 Oct 1972 09:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1030").toGMTString());
-        assertEquals("21 Oct 1972 08:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1130").toGMTString());
-        assertEquals("21 Oct 1972 07:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 +1230").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0030").toGMTString()).isEqualTo("21 Oct 1972 19:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0130").toGMTString()).isEqualTo("21 Oct 1972 18:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0230").toGMTString()).isEqualTo("21 Oct 1972 17:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0330").toGMTString()).isEqualTo("21 Oct 1972 16:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0430").toGMTString()).isEqualTo("21 Oct 1972 15:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0530").toGMTString()).isEqualTo("21 Oct 1972 14:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0630").toGMTString()).isEqualTo("21 Oct 1972 13:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0730").toGMTString()).isEqualTo("21 Oct 1972 12:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0830").toGMTString()).isEqualTo("21 Oct 1972 11:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +0930").toGMTString()).isEqualTo("21 Oct 1972 10:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1030").toGMTString()).isEqualTo("21 Oct 1972 09:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1130").toGMTString()).isEqualTo("21 Oct 1972 08:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 +1230").toGMTString()).isEqualTo("21 Oct 1972 07:30:00 GMT");
 
-        assertEquals("21 Oct 1972 20:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0030").toGMTString());
-        assertEquals("21 Oct 1972 21:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0130").toGMTString());
-        assertEquals("21 Oct 1972 22:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0230").toGMTString());
-        assertEquals("21 Oct 1972 23:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0330").toGMTString());
-        assertEquals("22 Oct 1972 00:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0430").toGMTString());
-        assertEquals("22 Oct 1972 01:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0530").toGMTString());
-        assertEquals("22 Oct 1972 02:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0630").toGMTString());
-        assertEquals("22 Oct 1972 03:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0730").toGMTString());
-        assertEquals("22 Oct 1972 04:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0830").toGMTString());
-        assertEquals("22 Oct 1972 05:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -0930").toGMTString());
-        assertEquals("22 Oct 1972 06:30:00 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:00:00 -1030").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0030").toGMTString()).isEqualTo("21 Oct 1972 20:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0130").toGMTString()).isEqualTo("21 Oct 1972 21:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0230").toGMTString()).isEqualTo("21 Oct 1972 22:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0330").toGMTString()).isEqualTo("21 Oct 1972 23:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0430").toGMTString()).isEqualTo("22 Oct 1972 00:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0530").toGMTString()).isEqualTo("22 Oct 1972 01:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0630").toGMTString()).isEqualTo("22 Oct 1972 02:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0730").toGMTString()).isEqualTo("22 Oct 1972 03:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0830").toGMTString()).isEqualTo("22 Oct 1972 04:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -0930").toGMTString()).isEqualTo("22 Oct 1972 05:30:00 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:00:00 -1030").toGMTString()).isEqualTo("22 Oct 1972 06:30:00 GMT");
 
-        assertEquals("21 Oct 1972 20:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0000").toGMTString());
-        assertEquals("21 Oct 1972 19:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0100").toGMTString());
-        assertEquals("21 Oct 1972 18:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0200").toGMTString());
-        assertEquals("21 Oct 1972 17:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0300").toGMTString());
-        assertEquals("21 Oct 1972 16:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0400").toGMTString());
-        assertEquals("21 Oct 1972 15:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0500").toGMTString());
-        assertEquals("21 Oct 1972 14:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0600").toGMTString());
-        assertEquals("21 Oct 1972 13:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0700").toGMTString());
-        assertEquals("21 Oct 1972 12:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0800").toGMTString());
-        assertEquals("21 Oct 1972 11:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0900").toGMTString());
-        assertEquals("21 Oct 1972 10:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1000").toGMTString());
-        assertEquals("21 Oct 1972 09:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1100").toGMTString());
-        assertEquals("21 Oct 1972 08:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1200").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0000").toGMTString()).isEqualTo("21 Oct 1972 20:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0100").toGMTString()).isEqualTo("21 Oct 1972 19:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0200").toGMTString()).isEqualTo("21 Oct 1972 18:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0300").toGMTString()).isEqualTo("21 Oct 1972 17:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0400").toGMTString()).isEqualTo("21 Oct 1972 16:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0500").toGMTString()).isEqualTo("21 Oct 1972 15:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0600").toGMTString()).isEqualTo("21 Oct 1972 14:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0700").toGMTString()).isEqualTo("21 Oct 1972 13:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0800").toGMTString()).isEqualTo("21 Oct 1972 12:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0900").toGMTString()).isEqualTo("21 Oct 1972 11:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1000").toGMTString()).isEqualTo("21 Oct 1972 10:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1100").toGMTString()).isEqualTo("21 Oct 1972 09:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1200").toGMTString()).isEqualTo("21 Oct 1972 08:16:27 GMT");
 
-        assertEquals("21 Oct 1972 20:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0000").toGMTString());
-        assertEquals("21 Oct 1972 21:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0100").toGMTString());
-        assertEquals("21 Oct 1972 22:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0200").toGMTString());
-        assertEquals("21 Oct 1972 23:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0300").toGMTString());
-        assertEquals("22 Oct 1972 00:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0400").toGMTString());
-        assertEquals("22 Oct 1972 01:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0500").toGMTString());
-        assertEquals("22 Oct 1972 02:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0600").toGMTString());
-        assertEquals("22 Oct 1972 03:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0700").toGMTString());
-        assertEquals("22 Oct 1972 04:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0800").toGMTString());
-        assertEquals("22 Oct 1972 05:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0900").toGMTString());
-        assertEquals("22 Oct 1972 06:16:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -1000").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0000").toGMTString()).isEqualTo("21 Oct 1972 20:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0100").toGMTString()).isEqualTo("21 Oct 1972 21:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0200").toGMTString()).isEqualTo("21 Oct 1972 22:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0300").toGMTString()).isEqualTo("21 Oct 1972 23:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0400").toGMTString()).isEqualTo("22 Oct 1972 00:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0500").toGMTString()).isEqualTo("22 Oct 1972 01:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0600").toGMTString()).isEqualTo("22 Oct 1972 02:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0700").toGMTString()).isEqualTo("22 Oct 1972 03:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0800").toGMTString()).isEqualTo("22 Oct 1972 04:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0900").toGMTString()).isEqualTo("22 Oct 1972 05:16:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -1000").toGMTString()).isEqualTo("22 Oct 1972 06:16:27 GMT");
 
-        assertEquals("21 Oct 1972 19:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0030").toGMTString());
-        assertEquals("21 Oct 1972 18:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0130").toGMTString());
-        assertEquals("21 Oct 1972 17:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0230").toGMTString());
-        assertEquals("21 Oct 1972 16:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0330").toGMTString());
-        assertEquals("21 Oct 1972 15:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0430").toGMTString());
-        assertEquals("21 Oct 1972 14:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0530").toGMTString());
-        assertEquals("21 Oct 1972 13:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0630").toGMTString());
-        assertEquals("21 Oct 1972 12:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0730").toGMTString());
-        assertEquals("21 Oct 1972 11:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0830").toGMTString());
-        assertEquals("21 Oct 1972 10:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +0930").toGMTString());
-        assertEquals("21 Oct 1972 09:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1030").toGMTString());
-        assertEquals("21 Oct 1972 08:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1130").toGMTString());
-        assertEquals("21 Oct 1972 07:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 +1230").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0030").toGMTString()).isEqualTo("21 Oct 1972 19:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0130").toGMTString()).isEqualTo("21 Oct 1972 18:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0230").toGMTString()).isEqualTo("21 Oct 1972 17:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0330").toGMTString()).isEqualTo("21 Oct 1972 16:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0430").toGMTString()).isEqualTo("21 Oct 1972 15:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0530").toGMTString()).isEqualTo("21 Oct 1972 14:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0630").toGMTString()).isEqualTo("21 Oct 1972 13:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0730").toGMTString()).isEqualTo("21 Oct 1972 12:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0830").toGMTString()).isEqualTo("21 Oct 1972 11:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +0930").toGMTString()).isEqualTo("21 Oct 1972 10:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1030").toGMTString()).isEqualTo("21 Oct 1972 09:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1130").toGMTString()).isEqualTo("21 Oct 1972 08:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 +1230").toGMTString()).isEqualTo("21 Oct 1972 07:46:27 GMT");
 
-        assertEquals("21 Oct 1972 20:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0030").toGMTString());
-        assertEquals("21 Oct 1972 21:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0130").toGMTString());
-        assertEquals("21 Oct 1972 22:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0230").toGMTString());
-        assertEquals("21 Oct 1972 23:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0330").toGMTString());
-        assertEquals("22 Oct 1972 00:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0430").toGMTString());
-        assertEquals("22 Oct 1972 01:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0530").toGMTString());
-        assertEquals("22 Oct 1972 02:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0630").toGMTString());
-        assertEquals("22 Oct 1972 03:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0730").toGMTString());
-        assertEquals("22 Oct 1972 04:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0830").toGMTString());
-        assertEquals("22 Oct 1972 05:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -0930").toGMTString());
-        assertEquals("22 Oct 1972 06:46:27 GMT", DecoderUtils.decodeDateTime(
-                "21-Oct-1972 20:16:27 -1030").toGMTString());
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0030").toGMTString()).isEqualTo("21 Oct 1972 20:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0130").toGMTString()).isEqualTo("21 Oct 1972 21:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0230").toGMTString()).isEqualTo("21 Oct 1972 22:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0330").toGMTString()).isEqualTo("21 Oct 1972 23:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0430").toGMTString()).isEqualTo("22 Oct 1972 00:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0530").toGMTString()).isEqualTo("22 Oct 1972 01:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0630").toGMTString()).isEqualTo("22 Oct 1972 02:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0730").toGMTString()).isEqualTo("22 Oct 1972 03:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0830").toGMTString()).isEqualTo("22 Oct 1972 04:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -0930").toGMTString()).isEqualTo("22 Oct 1972 05:46:27 GMT");
+        assertThat(DecoderUtils.decodeDateTime(
+                "21-Oct-1972 20:16:27 -1030").toGMTString()).isEqualTo("22 Oct 1972 06:46:27 GMT");
 
     }
 }

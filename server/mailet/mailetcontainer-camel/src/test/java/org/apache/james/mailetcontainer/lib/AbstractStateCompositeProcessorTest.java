@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
@@ -55,7 +55,7 @@ public abstract class AbstractStateCompositeProcessorTest {
                     @Override
                     public void service(Mail mail) throws MessagingException {
                         // check if the right processor was selected depending on the state
-                        assertEquals(state, mail.getState());
+                        assertThat(mail.getState()).isEqualTo(state);
                         super.service(mail);
                     }
                 };
