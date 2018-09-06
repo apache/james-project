@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.encode;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 
@@ -167,9 +166,9 @@ public class NamespaceResponseEncoderTest {
 
     @Test
     public void testNamespaceResponseIsAcceptable() {
-        assertFalse(subject.isAcceptable(mock(ImapMessage.class)));
-        assertTrue(subject
-                .isAcceptable(new NamespaceResponse(null, null, null)));
+        assertThat(subject.isAcceptable(mock(ImapMessage.class))).isFalse();
+        assertThat(subject
+                .isAcceptable(new NamespaceResponse(null, null, null))).isTrue();
     }
 
 }

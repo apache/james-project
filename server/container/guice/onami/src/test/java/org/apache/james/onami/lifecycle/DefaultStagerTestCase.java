@@ -19,9 +19,10 @@
 
 package org.apache.james.onami.lifecycle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 public class DefaultStagerTestCase {
@@ -36,7 +37,7 @@ public class DefaultStagerTestCase {
 
         stager.stage();
 
-        Assert.assertTrue(staged.get());
+        assertThat(staged.get()).isTrue();
     }
 
     /*
@@ -62,6 +63,6 @@ public class DefaultStagerTestCase {
 
         stager.stage();
 
-        Assert.assertTrue(staged.get());
+        assertThat(staged.get()).isTrue();
     }
 }

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.pop3server;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -111,7 +111,7 @@ public class POP3ServerTest {
 
         pop3Client.login("known", "test");
         assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -124,7 +124,7 @@ public class POP3ServerTest {
 
         pop3Client.login("unknown", "test");
         assertEquals(0, pop3Client.getState());
-        assertTrue(pop3Client.getReplyString().startsWith("-ERR"));
+        assertThat(pop3Client.getReplyString().startsWith("-ERR")).isTrue();
     }
 
     @Test
@@ -139,7 +139,7 @@ public class POP3ServerTest {
 
         // not authenticated
         POP3MessageInfo[] entries = pop3Client.listMessages();
-        assertNull(entries);
+        assertThat(entries).isNull();
 
         pop3Client.login("foo", "bar");
         System.err.println(pop3Client.getState());
@@ -148,12 +148,12 @@ public class POP3ServerTest {
         entries = pop3Client.listMessages();
         assertEquals(1, pop3Client.getState());
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(entries.length, 0);
 
         POP3MessageInfo p3i = pop3Client.listMessage(1);
         assertEquals(1, pop3Client.getState());
-        assertNull(p3i);
+        assertThat(p3i).isNull();
     }
 
     // TODO: This currently fails with Async implementation because
@@ -223,7 +223,7 @@ public class POP3ServerTest {
         assertEquals("Expected 2 messages, found: " + list.length, 2, list.length);
 
         POP3MessageInfo p3i = pop3Client.listUniqueIdentifier(1);
-        assertNotNull(p3i);
+        assertThat(p3i).isNotNull();
 
         mailboxManager.deleteMailbox(mailboxPath, session);
 
@@ -312,33 +312,33 @@ public class POP3ServerTest {
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(2, entries.length);
         assertEquals(1, pop3Client.getState());
 
         Reader r = pop3Client.retrieveMessageTop(entries[0].number, 0);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
 
         r.close();
 
         Reader r2 = pop3Client.retrieveMessage(entries[0].number);
-        assertNotNull(r2);
+        assertThat(r2).isNotNull();
         r2.close();
 
         // existing message
         boolean deleted = pop3Client.deleteMessage(entries[0].number);
-        assertTrue(deleted);
+        assertThat(deleted).isTrue();
 
         // already deleted message
         deleted = pop3Client.deleteMessage(entries[0].number);
 
         // TODO: Understand why this fails...
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         // unexisting message
         deleted = pop3Client.deleteMessage(10);
-        assertFalse(deleted);
+        assertThat(deleted).isFalse();
 
         pop3Client.logout();
         //m_pop3Protocol.disconnect();
@@ -356,7 +356,7 @@ public class POP3ServerTest {
 
         entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(1, entries.length);
         assertEquals(1, pop3Client.getState());
 
@@ -365,7 +365,7 @@ public class POP3ServerTest {
         assertEquals("-ERR", pop3Client.getReplyString().substring(0, 4));
 
         Reader r3 = pop3Client.retrieveMessageTop(entries[0].number, 0);
-        assertNotNull(r3);
+        assertThat(r3).isNotNull();
         r3.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
     }
@@ -490,7 +490,7 @@ public class POP3ServerTest {
         assertEquals(msgCount, uidlEntries2.length);
         assertEquals(msgCount, statInfo2.number);
 
-        assertTrue(pop3Client.logout());
+        assertThat(pop3Client.logout()).isTrue();
         pop3Client.disconnect();
 
         // even after the message was deleted and the session was quit it should
@@ -503,8 +503,8 @@ public class POP3ServerTest {
         assertEquals(msgCount, statInfo2.number);
 
         // This both should error and so return null
-        assertNull(pop3Protocol2.retrieveMessageTop(1, 100));
-        assertNull(pop3Protocol2.retrieveMessage(1));
+        assertThat(pop3Protocol2.retrieveMessageTop(1, 100)).isNull();
+        assertThat(pop3Protocol2.retrieveMessage(1)).isNull();
 
         pop3Protocol2.sendCommand("quit");
         pop3Protocol2.disconnect();
@@ -563,7 +563,7 @@ public class POP3ServerTest {
 
         pop3Client.login("foo", pass);
         assertEquals(1, pop3Client.getState());
-        assertTrue(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1"));
+        assertThat(POP3BeforeSMTPHelper.isAuthorized("127.0.0.1")).isTrue();
 
     }
 
@@ -584,7 +584,7 @@ public class POP3ServerTest {
         pop3Client.getReplyString();
         List<String> replies = Arrays.asList(pop3Client.getReplyStrings());
 
-        assertTrue("contains USER", replies.contains("USER"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
 
         pop3Client.login("foo", pass);
         assertEquals(POP3Reply.OK, pop3Client.sendCommand("CAPA"));
@@ -592,9 +592,9 @@ public class POP3ServerTest {
         pop3Client.getAdditionalReply();
         pop3Client.getReplyString();
         replies = Arrays.asList(pop3Client.getReplyStrings());
-        assertTrue("contains USER", replies.contains("USER"));
-        assertTrue("contains UIDL", replies.contains("UIDL"));
-        assertTrue("contains TOP", replies.contains("TOP"));
+        assertThat(replies.contains("USER")).describedAs("contains USER").isTrue();
+        assertThat(replies.contains("UIDL")).describedAs("contains UIDL").isTrue();
+        assertThat(replies.contains("TOP")).describedAs("contains TOP").isTrue();
         
     }
 
@@ -681,13 +681,13 @@ public class POP3ServerTest {
 
         POP3MessageInfo[] entries = pop3Client.listMessages();
 
-        assertNotNull(entries);
+        assertThat(entries).isNotNull();
         assertEquals(1, entries.length);
         assertEquals(1, pop3Client.getState());
 
         Reader r = pop3Client.retrieveMessage(entries[0].number);
 
-        assertNotNull(r);
+        assertThat(r).isNotNull();
         r.close();
         mailboxManager.deleteMailbox(mailboxPath, session);
 

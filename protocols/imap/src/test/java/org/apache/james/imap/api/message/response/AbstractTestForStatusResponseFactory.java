@@ -19,14 +19,11 @@
 
 package org.apache.james.imap.api.message.response;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.imap.api.message.response.StatusResponse;
-import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,14 +52,14 @@ public abstract class AbstractTestForStatusResponseFactory  {
     @Test
     public void testTaggedOk() {
         StatusResponse response = factory.taggedOk(TAG, command, KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.OK, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(command, response.getCommand());
-        assertNull(response.getResponseCode());
+        assertThat(response.getResponseCode()).isNull();
         response = factory.taggedOk(TAG, command, KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.OK, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
@@ -73,14 +70,14 @@ public abstract class AbstractTestForStatusResponseFactory  {
     @Test
     public void testTaggedNo() {
         StatusResponse response = factory.taggedNo(TAG, command, KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.NO, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(command, response.getCommand());
-        assertNull(response.getResponseCode());
+        assertThat(response.getResponseCode()).isNull();
         response = factory.taggedNo(TAG, command, KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.NO, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
@@ -91,14 +88,14 @@ public abstract class AbstractTestForStatusResponseFactory  {
     @Test
     public void testTaggedBad() {
         StatusResponse response = factory.taggedBad(TAG, command, KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BAD, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
+        assertThat(response.getResponseCode()).isNull();
         assertEquals(command, response.getCommand());
         response = factory.taggedBad(TAG, command, KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BAD, response.getServerResponseType());
         assertEquals(TAG, response.getTag());
         assertEquals(KEY, response.getTextKey());
@@ -109,94 +106,94 @@ public abstract class AbstractTestForStatusResponseFactory  {
     @Test
     public void testUntaggedOk() {
         StatusResponse response = factory.untaggedOk(KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.OK, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getResponseCode()).isNull();
+        assertThat(response.getCommand()).isNull();
         response = factory.untaggedOk(KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.OK, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(CODE, response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getCommand()).isNull();
     }
 
 
     @Test
     public void testUntaggedNo() {
         StatusResponse response = factory.untaggedNo(KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.NO, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getResponseCode()).isNull();
+        assertThat(response.getCommand()).isNull();
         response = factory.untaggedNo(KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.NO, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(CODE, response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getCommand()).isNull();
     }
 
     @Test
     public void testUntaggedBad() {
         StatusResponse response = factory.untaggedBad(KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BAD, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getResponseCode()).isNull();
+        assertThat(response.getCommand()).isNull();
         response = factory.untaggedBad(KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BAD, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(CODE, response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getCommand()).isNull();
     }
 
     @Test
     public void testPreauth() {
         StatusResponse response = factory.preauth(KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.PREAUTH, response
                 .getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getResponseCode()).isNull();
+        assertThat(response.getCommand()).isNull();
         response = factory.preauth(KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.PREAUTH, response
                 .getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(CODE, response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getCommand()).isNull();
     }
 
     @Test
     public void testBye() {
         StatusResponse response = factory.bye(KEY);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BYE, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
-        assertNull(response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getResponseCode()).isNull();
+        assertThat(response.getCommand()).isNull();
         response = factory.bye(KEY, CODE);
-        assertNotNull(response);
+        assertThat(response).isNotNull();
         assertEquals(StatusResponse.Type.BYE, response.getServerResponseType());
         assertEquals(null, response.getTag());
         assertEquals(KEY, response.getTextKey());
         assertEquals(CODE, response.getResponseCode());
-        assertNull(response.getCommand());
+        assertThat(response.getCommand()).isNull();
     }
 
 }

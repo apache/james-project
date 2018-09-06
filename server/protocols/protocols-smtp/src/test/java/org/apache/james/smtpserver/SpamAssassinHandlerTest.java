@@ -18,8 +18,9 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static org.apache.james.spamassassin.SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import java.util.HashMap;
 
@@ -121,7 +122,7 @@ public class SpamAssassinHandlerTest {
 
         assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
         assertEquals("email was not spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "NO");
-        assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
+        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
 
     }
 
@@ -138,7 +139,7 @@ public class SpamAssassinHandlerTest {
 
         assertEquals("Email was not rejected", response.getResult(), HookReturnCode.declined());
         assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
-        assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
+        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
     }
 
     @Test
@@ -154,6 +155,6 @@ public class SpamAssassinHandlerTest {
 
         assertEquals("Email was rejected", response.getResult(), HookReturnCode.deny());
         assertEquals("email was spam", mockedMail.getAttribute(SpamAssassinResult.FLAG_MAIL_ATTRIBUTE_NAME), "YES");
-        assertNotNull("spam hits", mockedMail.getAttribute(SpamAssassinResult.STATUS_MAIL_ATTRIBUTE_NAME));
+        assertThat(mockedMail.getAttribute(STATUS_MAIL_ATTRIBUTE_NAME)).withFailMessage("spam hits").isNotNull();
     }
 }

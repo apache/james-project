@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -82,7 +82,7 @@ public class SearchUtilTest {
         String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
         
         //expect
-        assertNull(serialiazedMessageId);
+        assertThat(serialiazedMessageId).isNull();
     }
 
     @Test
@@ -100,7 +100,7 @@ public class SearchUtilTest {
         String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
 
         //expect
-        assertNull(serialiazedMessageId);
+        assertThat(serialiazedMessageId).isNull();
     }
 
     @Test

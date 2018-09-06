@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.mailets;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -152,7 +153,7 @@ class OnlyTextTest {
         assertEquals("prova", mail.getMessage().getSubject());
         assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
                 .getContent());
-        assertTrue(mail.getMessage().isMimeType("text/plain"));
+        assertThat(mail.getMessage().isMimeType("text/plain")).isTrue();
 
         // -----------------
 
@@ -177,7 +178,7 @@ class OnlyTextTest {
         assertEquals("prova", mail.getMessage().getSubject());
         assertEquals("Questa è una prova\ndi html\n", mail.getMessage()
                 .getContent());
-        assertTrue(mail.getMessage().isMimeType("text/plain"));
+        assertThat(mail.getMessage().isMimeType("text/plain")).isTrue();
     }
 
     @Test

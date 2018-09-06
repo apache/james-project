@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.server.core;
 
+import static org.apache.mailet.base.RFC2822Headers.RETURN_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -296,7 +298,7 @@ public class MimeMessageTest {
         MimeMessage mm = getMissingEncodingMessage();
         try {
             int count = mm.getLineCount();
-            assertTrue(count == -1 || count == 7);
+            assertThat(count == -1 || count == 7).isTrue();
         } catch (Exception e) {
             fail("Unexpected exception in getLineCount");
         }
@@ -378,7 +380,7 @@ public class MimeMessageTest {
     @Test
     public void testReturnPath() throws Exception {
         MimeMessage message = getSimpleMessage();
-        assertNull(message.getHeader(RFC2822Headers.RETURN_PATH));
+        assertThat(message.getHeader(RETURN_PATH)).isNull();
         LifecycleUtil.dispose(message);
     }
 

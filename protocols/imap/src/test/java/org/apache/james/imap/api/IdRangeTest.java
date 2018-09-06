@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,7 +47,7 @@ public class IdRangeTest {
         checkIdRange(r,rIt.next());
         checkIdRange(r2,rIt.next());
         checkIdRange(r3,rIt.next());
-        assertFalse(rIt.hasNext());
+        assertThat(rIt.hasNext()).isFalse();
     }
 
 
@@ -67,7 +67,7 @@ public class IdRangeTest {
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 4),rIt.next());
         checkIdRange(r3,rIt.next());
-        assertFalse(rIt.hasNext());
+        assertThat(rIt.hasNext()).isFalse();
     }
     
 
@@ -86,7 +86,7 @@ public class IdRangeTest {
         assertEquals(1, merged.size());
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 10),rIt.next());
-        assertFalse(rIt.hasNext());
+        assertThat(rIt.hasNext()).isFalse();
     }
     
     @Test
@@ -104,7 +104,7 @@ public class IdRangeTest {
         assertEquals(1, merged.size());
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 15),rIt.next());
-        assertFalse(rIt.hasNext());
+        assertThat(rIt.hasNext()).isFalse();
     }
     
     @Test
@@ -122,7 +122,7 @@ public class IdRangeTest {
         assertEquals(1, merged.size());
         Iterator<IdRange> rIt = merged.iterator();
         checkIdRange(new IdRange(0, 2),rIt.next());
-        assertFalse(rIt.hasNext());
+        assertThat(rIt.hasNext()).isFalse();
     }
     
     private void checkIdRange(IdRange r1, IdRange r2) {

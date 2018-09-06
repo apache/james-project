@@ -19,9 +19,8 @@
 
 package org.apache.james.imap.encode;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -49,10 +48,10 @@ public class MailboxStatusResponseEncoderTest  {
 
     @Test
     public void testIsAcceptable() {
-        assertTrue(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
-                null, null, null, "mailbox")));
-        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
-        assertFalse(encoder.isAcceptable(null));
+        assertThat(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
+                null, null, null, "mailbox"))).isTrue();
+        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
+        assertThat(encoder.isAcceptable(null)).isFalse();
     }
 
     @Test

@@ -18,10 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -85,7 +83,7 @@ public abstract class AbstractStateMailetProcessorTest {
                     assertEquals(mail.getName(), mailName);
                     // match one recipient
                     assertEquals(1, matches.size());
-                    assertNull(e);
+                    assertThat(e).isNull();
                     latch.countDown();
                 }
 
@@ -98,7 +96,7 @@ public abstract class AbstractStateMailetProcessorTest {
                 if (MockMailet.class.equals(m.getClass())) {
                     //assertEquals(mail.getName(), mailName);
                     assertEquals("test", state);
-                    assertNull(e);
+                    assertThat(e).isNull();
                     latch.countDown();
                 }
             }
@@ -133,7 +131,7 @@ public abstract class AbstractStateMailetProcessorTest {
                     assertEquals(mail.getName(), mailName);
                     // match all recipient
                     assertEquals(2, matches.size());
-                    assertNull(e);
+                    assertThat(e).isNull();
                     latch.countDown();
                 }
 
@@ -147,7 +145,7 @@ public abstract class AbstractStateMailetProcessorTest {
                     // the name should be the same as we have a full match
                     assertEquals(mail.getName(), mailName);
                     assertEquals("test", state);
-                    assertNull(e);
+                    assertThat(e).isNull();
                     latch.countDown();
                 }
             }
@@ -182,8 +180,8 @@ public abstract class AbstractStateMailetProcessorTest {
                 if (ExceptionThrowingMatcher.class.equals(m.getClass())) {
                     assertEquals(mail.getName(), mailName);
                     // match no recipient because of the error
-                    assertNull(matches);
-                    assertNotNull(e);
+                    assertThat(matches).isNull();
+                    assertThat(e).isNotNull();
                     latch.countDown();
                 }
 
@@ -260,7 +258,7 @@ public abstract class AbstractStateMailetProcessorTest {
                     assertEquals(mail.getName(), mailName);
                     // match one recipient
                     assertEquals(1, matches.size());
-                    assertNull(e);
+                    assertThat(e).isNull();
                     latch.countDown();
                 }
 
@@ -270,8 +268,8 @@ public abstract class AbstractStateMailetProcessorTest {
             public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 if (ExceptionThrowingMailet.class.equals(m.getClass())) {
                     // the name should be not the same as we have a part match
-                    assertFalse(mail.getName().equals(mailName));
-                    assertNotNull(e);
+                    assertThat(mail.getName().equals(mailName)).isFalse();
+                    assertThat(e).isNotNull();
                     assertEquals(Mail.ERROR, state);
                     latch.countDown();
                 }

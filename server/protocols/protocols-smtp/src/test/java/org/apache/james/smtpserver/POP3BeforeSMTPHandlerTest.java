@@ -18,8 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetSocketAddress;
 
@@ -66,9 +65,9 @@ public class POP3BeforeSMTPHandlerTest {
         setupMockedSMTPSession();
         POP3BeforeSMTPHelper.addIPAddress("192.168.200.1");
 
-        assertFalse(mockedSession.isRelayingAllowed());
+        assertThat(mockedSession.isRelayingAllowed()).isFalse();
         handler.onConnect(mockedSession);
-        assertTrue(mockedSession.isRelayingAllowed());
+        assertThat(mockedSession.isRelayingAllowed()).isTrue();
     }
 
     @Test
@@ -78,13 +77,13 @@ public class POP3BeforeSMTPHandlerTest {
 
         setupMockedSMTPSession();
         POP3BeforeSMTPHelper.addIPAddress("192.168.200.1");
-        assertFalse(mockedSession.isRelayingAllowed());
+        assertThat(mockedSession.isRelayingAllowed()).isFalse();
 
         try {
             Thread.sleep(sleepTime);
             POP3BeforeSMTPHelper.removeExpiredIP(10);
             handler.onConnect(mockedSession);
-            assertFalse(mockedSession.isRelayingAllowed());
+            assertThat(mockedSession.isRelayingAllowed()).isFalse();
 
         } catch (InterruptedException e) {
             // ignore
@@ -103,7 +102,7 @@ public class POP3BeforeSMTPHandlerTest {
         } catch (NumberFormatException e) {
             exception = true;
         }
-        assertTrue(exception);
+        assertThat(exception).isTrue();
     }
 
     @Test
@@ -118,6 +117,6 @@ public class POP3BeforeSMTPHandlerTest {
         } catch (NumberFormatException e) {
             exception = true;
         }
-        assertFalse(exception);
+        assertThat(exception).isFalse();
     }
 }

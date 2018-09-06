@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.dnsservice.library.inetnetwork.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -72,9 +72,9 @@ public class InetNetworkTest {
         // Test Bad IP V4 address.
         try {
             address = InetAddress.getByAddress(getBytesFromAddress("127.0.0.1.1"));
-            assertTrue(false);
+            assertThat(false).isTrue();
         } catch (UnknownHostException e) {
-            assertTrue(true);
+            assertThat(true).isTrue();
         }
 
         // Test IP V4 address.
@@ -109,9 +109,9 @@ public class InetNetworkTest {
         // Test Bad IP V6 address.
         try {
             address = InetAddress.getByAddress(getBytesFromAddress("0000:0000:0000:0000:0000:0000:0000:0001:00001"));
-            assertTrue(false);
+            assertThat(false).isTrue();
         } catch (UnknownHostException e) {
-            assertTrue(true);
+            assertThat(true).isTrue();
         }
 
         // Test IP V6 address.
@@ -140,9 +140,9 @@ public class InetNetworkTest {
         Inet4Network network4;
         try {
             network4 = new Inet4Network(address, null);
-            assertTrue(false);
+            assertThat(false).isTrue();
         } catch (NullPointerException e) {
-            assertTrue(true);
+            assertThat(true).isTrue();
         }
 
         // Test IP V4.
@@ -165,9 +165,9 @@ public class InetNetworkTest {
         Inet6Network network6;
         try {
             network6 = new Inet6Network(address, null);
-            assertTrue(false);
+            assertThat(false).isTrue();
         } catch (NullPointerException e) {
-            assertTrue(true);
+            assertThat(true).isTrue();
         }
 
         // Test IP V6 with subnet mask 32768.

@@ -19,9 +19,8 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
@@ -63,7 +62,7 @@ public class MailboxMessageResultImplTest {
 
     @Test
     public void testEqualsNull() throws Exception {
-        assertFalse(msgResultA.equals(null));
+        assertThat(msgResultA.equals(null)).isFalse();
     }
 
 
@@ -125,19 +124,19 @@ public class MailboxMessageResultImplTest {
 
     @Test
     public void testNotEqualDiffValue() throws Exception {
-        assertFalse(msgResultA.equals(msgResultC));
-        assertFalse(msgResultC.equals(msgResultA));
+        assertThat(msgResultA.equals(msgResultC)).isFalse();
+        assertThat(msgResultC.equals(msgResultA)).isFalse();
     }
 
     @Test
     public void testShouldReturnPositiveWhenFirstGreaterThanSecond()
             throws Exception {
-        assertTrue(msgResultC.compareTo(msgResultB) > 0);
+        assertThat(msgResultC.compareTo(msgResultB) > 0).isTrue();
     }
 
     @Test
     public void testShouldReturnNegativeWhenFirstLessThanSecond()
             throws Exception {
-        assertTrue(msgResultB.compareTo(msgResultC) < 0);
+        assertThat(msgResultB.compareTo(msgResultC) < 0).isTrue();
     }
 }

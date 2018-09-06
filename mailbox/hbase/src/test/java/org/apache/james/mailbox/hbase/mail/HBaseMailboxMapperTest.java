@@ -27,6 +27,7 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.apache.james.mailbox.hbase.HBaseUtils.mailboxFromResult;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -264,9 +265,9 @@ public class HBaseMailboxMapperTest {
             boolean result = mapper.hasChildren(mailbox, SEPARATOR);
             mailbox.setName(oldName);
             if (path.getUser().equals("user3")) {
-                assertTrue(result);
+                assertThat(result).isTrue();
             } else {
-                assertFalse(result);
+                assertThat(result).isFalse();
             }
 
         }
@@ -313,7 +314,7 @@ public class HBaseMailboxMapperTest {
                 bout.write(b);
             }
             String s = bout.toString();
-            assertTrue(original.equals(s));
+            assertThat(original.equals(s)).isTrue();
         } finally {
             in.close();
             out.close();

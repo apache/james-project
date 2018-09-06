@@ -113,10 +113,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
     @Test
     public void testDeferredMessageLoading() throws MessagingException, IOException {
         assertEquals("foo", mw.getSubject());
-        assertFalse(mw.messageParsed());
+        assertThat(mw.messageParsed()).isFalse();
         assertEquals("bar\r\n", mw.getContent());
-        assertTrue(mw.messageParsed());
-        assertFalse(mw.isModified());
+        assertThat(mw.messageParsed()).isTrue();
+        assertThat(mw.isModified()).isFalse();
     }
 
     /**
@@ -191,10 +191,10 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         message.setHeader(RFC2822Headers.RETURN_PATH, "<test@test.de>");
         Enumeration<String> e = message.getMatchingHeaderLines(new String[]{"Return-Path"});
         assertEquals("Return-Path: <test@test.de>", e.nextElement());
-        assertFalse(e.hasMoreElements());
+        assertThat(e.hasMoreElements()).isFalse();
         Enumeration<String> h = message.getAllHeaderLines();
         assertEquals("Return-Path: <test@test.de>", h.nextElement());
-        assertFalse(h.nextElement().startsWith("Return-Path:"));
+        assertThat(h.nextElement().startsWith("Return-Path:")).isFalse();
         LifecycleUtil.dispose(message);
     }
 
@@ -228,7 +228,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         boolean headerUpdated = reader.lines()
             .anyMatch(line -> line.equals("X-Test: X-Value"));
         reader.close();
-        assertTrue(headerUpdated);
+        assertThat(headerUpdated).isTrue();
     }
 
     /**
@@ -247,7 +247,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         boolean contentUpdated = reader.lines()
             .anyMatch(line -> line.equals(newContent));
         reader.close();
-        assertTrue(contentUpdated);
+        assertThat(contentUpdated).isTrue();
     }
 
     @Test

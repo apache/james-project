@@ -29,10 +29,9 @@ import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -143,8 +142,8 @@ public class HBaseSubscriptionMapperTest {
                 assertEquals(subscription.getUser(), result.getUser());
             }
         }
-        assertNull(mapper.findMailboxSubscriptionForUser(fake1.getUser(), fake1.getMailbox()));
-        assertNull(mapper.findMailboxSubscriptionForUser(fake2.getUser(), fake2.getMailbox()));
+        assertThat(mapper.findMailboxSubscriptionForUser(fake1.getUser(), fake1.getMailbox())).isNull();
+        assertThat(mapper.findMailboxSubscriptionForUser(fake2.getUser(), fake2.getMailbox())).isNull();
     }
 
     /**
@@ -160,7 +159,7 @@ public class HBaseSubscriptionMapperTest {
             get.addFamily(SUBSCRIPTION_CF);
             final Result result = subscriptions.get(get);
             for (Subscription subscription : subscriptionList.get(user)) {
-                assertTrue(result.containsColumn(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox())));
+                assertThat(result.containsColumn(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox()))).isTrue();
             }
         }
         subscriptions.close();
@@ -205,7 +204,7 @@ public class HBaseSubscriptionMapperTest {
                 mapper.delete(subscription);
                 final Get get = new Get(Bytes.toBytes(subscription.getUser()));
                 final Result result = subscriptions.get(get);
-                assertFalse(result.containsColumn(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox())));
+                assertThat(result.containsColumn(SUBSCRIPTION_CF, Bytes.toBytes(subscription.getMailbox()))).isFalse();
             }
         }
         subscriptions.close();

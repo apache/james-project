@@ -29,9 +29,8 @@ import static org.apache.james.mailbox.hbase.HBaseNames.MESSAGE_DATA_HEADERS_CF;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
@@ -91,8 +90,8 @@ public class HBaseMailboxSessionMapperFactoryTest {
         MessageId.Factory messageIdFactory = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         MessageMapper messageMapper = instance.createMessageMapper(session);
-        assertNotNull(messageMapper);
-        assertTrue(messageMapper instanceof MessageMapper);
+        assertThat(messageMapper).isNotNull();
+        assertThat(messageMapper instanceof MessageMapper).isTrue();
     }
 
     /**
@@ -106,8 +105,8 @@ public class HBaseMailboxSessionMapperFactoryTest {
         MessageId.Factory messageIdFactory = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         MailboxMapper mailboxMapper = instance.createMailboxMapper(session);
-        assertNotNull(mailboxMapper);
-        assertTrue(mailboxMapper instanceof MailboxMapper);
+        assertThat(mailboxMapper).isNotNull();
+        assertThat(mailboxMapper instanceof MailboxMapper).isTrue();
     }
 
     /**
@@ -121,8 +120,8 @@ public class HBaseMailboxSessionMapperFactoryTest {
         MessageId.Factory messageIdFactory = null;
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         SubscriptionMapper subscriptionMapper = instance.createSubscriptionMapper(session);
-        assertNotNull(subscriptionMapper);
-        assertTrue(subscriptionMapper instanceof SubscriptionMapper);
+        assertThat(subscriptionMapper).isNotNull();
+        assertThat(subscriptionMapper instanceof SubscriptionMapper).isTrue();
     }
 
     /**

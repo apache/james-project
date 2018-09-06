@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.ImapMessage;
@@ -60,8 +59,8 @@ public class XListResponseEncoderTest {
     @Test
     public void encoderShouldNotAcceptLsubResponse() {
         assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
-        assertFalse(encoder.isAcceptable(mock(ImapMessage.class)));
-        assertFalse(encoder.isAcceptable(null));
+        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
+        assertThat(encoder.isAcceptable(null)).isFalse();
     }
 
     @Test

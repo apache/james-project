@@ -18,9 +18,8 @@
  ****************************************************************/
 package org.apache.james.user.memory;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Arrays;
@@ -58,19 +57,19 @@ public class UsersRepositoryManagementTest {
     @Test
     public void testAddUserAndVerify() throws Exception {
         usersRepository.addUser("testcount1", "testCount");
-        assertFalse("user not there", userManagement.verifyExists("testNotAdded"));
-        assertTrue("user is there", userManagement.verifyExists("testCount1"));
+        assertThat(userManagement.verifyExists("testNotAdded")).describedAs("user not there").isFalse();
+        assertThat(userManagement.verifyExists("testCount1")).describedAs("user is there").isTrue();
         usersRepository.removeUser("testcount1");
-        assertFalse("user not there", userManagement.verifyExists("testCount1"));
+        assertThat(userManagement.verifyExists("testCount1")).describedAs("user not there").isFalse();
     }
 
     @Test
     public void testDelUser() throws Exception {
         usersRepository.addUser("testdel", "test");
-        assertFalse("user not there", userManagement.verifyExists("testNotDeletable"));
-        assertTrue("user is there", userManagement.verifyExists("testdel"));
+        assertThat(userManagement.verifyExists("testNotDeletable")).describedAs("user not there").isFalse();
+        assertThat(userManagement.verifyExists("testdel")).describedAs("user is there").isTrue();
         usersRepository.removeUser("testdel");
-        assertFalse("user no longer there", userManagement.verifyExists("testdel"));
+        assertThat(userManagement.verifyExists("testdel")).describedAs("user no longer there").isFalse();
     }
 
     @Test
@@ -96,19 +95,19 @@ public class UsersRepositoryManagementTest {
     public void testSetPassword() throws Exception {
         userManagement.addUser("testpwduser", "pwd1");
 
-        assertTrue("initial password", usersRepository.test("testpwduser", "pwd1"));
+        assertThat(usersRepository.test("testpwduser", "pwd1")).describedAs("initial password").isTrue();
 
         // set empty pwd
         userManagement.setPassword("testpwduser", "");
-        assertTrue("password changed to empty", usersRepository.test("testpwduser", ""));
+        assertThat(usersRepository.test("testpwduser", "")).describedAs("password changed to empty").isTrue();
 
         // change pwd
         userManagement.setPassword("testpwduser", "pwd2");
-        assertTrue("password not changed to pwd2", usersRepository.test("testpwduser", "pwd2"));
+        assertThat(usersRepository.test("testpwduser", "pwd2")).describedAs("password not changed to pwd2").isTrue();
 
         // assure case sensitivity
         userManagement.setPassword("testpwduser", "pWD2");
-        assertFalse("password no longer pwd2", usersRepository.test("testpwduser", "pwd2"));
-        assertTrue("password changed to pWD2", usersRepository.test("testpwduser", "pWD2"));
+        assertThat(usersRepository.test("testpwduser", "pwd2")).describedAs("password no longer pwd2").isFalse();
+        assertThat(usersRepository.test("testpwduser", "pWD2")).describedAs("password changed to pWD2").isTrue();
     }
 }

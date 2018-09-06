@@ -19,9 +19,10 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
+import static org.apache.james.protocols.api.ProtocolSession.State.Transaction;
+import static org.apache.james.protocols.smtp.core.fastfail.ResolvableEhloHeloHandler.BAD_EHLO_HELO;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -29,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -125,7 +125,7 @@ public class ResolvableEhloHeloHandlerTest {
         ResolvableEhloHeloHandler handler = createHandler();
         
         handler.doHelo(session, INVALID_HOST);
-        assertNotNull("Invalid HELO",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Invalid HELO").isNotNull();
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
         assertEquals("Reject", result,HookReturnCode.deny());
@@ -139,7 +139,7 @@ public class ResolvableEhloHeloHandlerTest {
 
   
         handler.doHelo(session, VALID_HOST);
-        assertNull("Valid HELO",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Valid HELO").isNull();
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
         assertEquals("Not reject", result,HookReturnCode.declined());
@@ -153,7 +153,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         handler.doHelo(session, INVALID_HOST);
-        assertNotNull("Value stored",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isNotNull();
 
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
@@ -169,7 +169,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
         handler.doHelo(session, INVALID_HOST);
-        assertNotNull("Value stored",session.getAttachment(ResolvableEhloHeloHandler.BAD_EHLO_HELO, State.Transaction));
+        assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isNotNull();
 
 
         HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
