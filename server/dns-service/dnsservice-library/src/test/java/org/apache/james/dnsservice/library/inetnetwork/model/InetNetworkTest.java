@@ -52,8 +52,8 @@ public class InetNetworkTest {
         // Test name alone (can be IPv4 or IPv6 depending on the OS plaform
         // configuration).
         address = InetAddress.getByName("localhost");
-        assertEquals(true, address instanceof InetAddress);
-        assertEquals(true, address.toString().contains("localhost"));
+        assertThat(address).isInstanceOf(InetAddress.class);
+        assertThat(address.toString().contains("localhost")).isTrue();
 
     }
 
@@ -79,19 +79,19 @@ public class InetNetworkTest {
 
         // Test IP V4 address.
         address = InetAddress.getByAddress(getBytesFromAddress("127.0.0.1"));
-        assertEquals(true, address instanceof Inet4Address);
-        assertEquals(true, address.toString().contains("/127.0.0.1"));
+        assertThat(address).isInstanceOf(Inet4Address.class);
+        assertThat(address.toString().contains("/127.0.0.1")).isTrue();
 
         // Test IP V4 with 255 values (just 'like' a subnet mask).
         address = InetAddress.getByAddress(getBytesFromAddress("255.255.225.0"));
-        assertEquals(true, address instanceof Inet4Address);
-        assertEquals(true, address.toString().contains("/255.255.225.0"));
+        assertThat(address).isInstanceOf(Inet4Address.class);
+        assertThat(address.toString().contains("/255.255.225.0")).isTrue();
 
         // Test IP V4 Address with name and IP address.
         address = InetAddress.getByAddress("localhost", getBytesFromAddress("127.0.0.1"));
-        assertEquals(true, address instanceof Inet4Address);
-        assertEquals(true, address.toString().contains("localhost"));
-        assertEquals(true, address.toString().contains("/127.0.0.1"));
+        assertThat(address).isInstanceOf(Inet4Address.class);
+        assertThat(address.toString().contains("localhost")).isTrue();
+        assertThat(address.toString().contains("/127.0.0.1")).isTrue();
     }
 
     /**
@@ -116,14 +116,14 @@ public class InetNetworkTest {
 
         // Test IP V6 address.
         address = InetAddress.getByAddress(getBytesFromAddress("0000:0000:0000:0000:0000:0000:0000:0001"));
-        assertEquals(true, address instanceof Inet6Address);
-        assertEquals(true, address.toString().contains("/0:0:0:0:0:0:0:1"));
+        assertThat(address).isInstanceOf(Inet6Address.class);
+        assertThat(address.toString().contains("/0:0:0:0:0:0:0:1")).isTrue();
 
         // Test IP V6 Address with name and IP address.
         address = InetAddress.getByAddress("localhost", getBytesFromAddress("0000:0000:0000:0000:0000:0000:0000:0001"));
-        assertEquals(true, address instanceof Inet6Address);
-        assertEquals(true, address.toString().contains("localhost"));
-        assertEquals(true, address.toString().contains("/0:0:0:0:0:0:0:1"));
+        assertThat(address).isInstanceOf(Inet6Address.class);
+        assertThat(address.toString().contains("localhost")).isTrue();
+        assertThat(address.toString().contains("/0:0:0:0:0:0:0:1")).isTrue();
 
     }
 

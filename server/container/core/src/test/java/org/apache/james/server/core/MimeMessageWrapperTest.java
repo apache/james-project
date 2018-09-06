@@ -182,7 +182,7 @@ public class MimeMessageWrapperTest extends MimeMessageFromStreamTest {
         String res = rawMessage.toString();
 
         boolean found = res.indexOf("X-Test: X-Value") > 0;
-        assertEquals(true, found);
+        assertThat(found).isTrue();
     }
 
     @Test
