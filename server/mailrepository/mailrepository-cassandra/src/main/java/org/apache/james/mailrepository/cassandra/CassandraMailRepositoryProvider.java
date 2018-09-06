@@ -21,7 +21,7 @@ package org.apache.james.mailrepository.cassandra;
 
 import javax.inject.Inject;
 
-import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -30,14 +30,15 @@ public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDAO mailDAO;
-    private final BlobStore blobStore;
+    private final MimeMessageStore mimeMessageStore;
 
     @Inject
-    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO, BlobStore blobStore) {
+    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO,
+                                           CassandraMailRepositoryMailDAO mailDAO, MimeMessageStore mimeMessageStore) {
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
         this.mailDAO = mailDAO;
-        this.blobStore = blobStore;
+        this.mimeMessageStore = mimeMessageStore;
     }
 
     @Override
@@ -47,6 +48,6 @@ public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
 
     @Override
     public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, blobStore);
+        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, mimeMessageStore);
     }
 }

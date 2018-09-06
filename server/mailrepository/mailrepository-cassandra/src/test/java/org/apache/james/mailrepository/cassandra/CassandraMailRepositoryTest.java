@@ -26,6 +26,7 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -61,7 +62,7 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
 
         cassandraMailRepository = new CassandraMailRepository(URL,
-            keysDAO, countDAO, mailDAO, blobsDAO);
+            keysDAO, countDAO, mailDAO, new MimeMessageStore(blobsDAO));
     }
 
     @AfterEach
