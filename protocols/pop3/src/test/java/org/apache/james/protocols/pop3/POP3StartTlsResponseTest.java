@@ -33,7 +33,7 @@ public class POP3StartTlsResponseTest {
     @Test
     public void testImmutable() {
         POP3StartTlsResponse response = new POP3StartTlsResponse(POP3Response.OK_RESPONSE);
-        assertThat(response instanceof StartTlsResponse).isTrue();
-        assertThat(response.immutable() instanceof StartTlsResponse).isTrue();
+        assertThat(response).isInstanceOf(StartTlsResponse.class);
+        assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);
     }
 }

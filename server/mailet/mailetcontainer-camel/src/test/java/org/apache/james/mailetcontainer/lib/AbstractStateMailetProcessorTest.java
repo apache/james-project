@@ -268,7 +268,7 @@ public abstract class AbstractStateMailetProcessorTest {
             public void afterMailet(Mailet m, String mailName, String state, long processTime, Exception e) {
                 if (ExceptionThrowingMailet.class.equals(m.getClass())) {
                     // the name should be not the same as we have a part match
-                    assertThat(mail.getName().equals(mailName)).isFalse();
+                    assertThat(mail.getName()).isNotEqualTo(mailName);
                     assertThat(e).isNotNull();
                     assertEquals(Mail.ERROR, state);
                     latch.countDown();

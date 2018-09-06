@@ -91,7 +91,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         MessageMapper messageMapper = instance.createMessageMapper(session);
         assertThat(messageMapper).isNotNull();
-        assertThat(messageMapper instanceof MessageMapper).isTrue();
+        assertThat(messageMapper).isInstanceOf(MessageMapper.class);
     }
 
     /**
@@ -106,7 +106,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         MailboxMapper mailboxMapper = instance.createMailboxMapper(session);
         assertThat(mailboxMapper).isNotNull();
-        assertThat(mailboxMapper instanceof MailboxMapper).isTrue();
+        assertThat(mailboxMapper).isInstanceOf(MailboxMapper.class);
     }
 
     /**
@@ -121,7 +121,7 @@ public class HBaseMailboxSessionMapperFactoryTest {
         HBaseMailboxSessionMapperFactory instance = new HBaseMailboxSessionMapperFactory(conf, null, null, messageIdFactory);
         SubscriptionMapper subscriptionMapper = instance.createSubscriptionMapper(session);
         assertThat(subscriptionMapper).isNotNull();
-        assertThat(subscriptionMapper instanceof SubscriptionMapper).isTrue();
+        assertThat(subscriptionMapper).isInstanceOf(SubscriptionMapper.class);
     }
 
     /**

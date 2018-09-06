@@ -89,7 +89,7 @@ public class MailAddressTest {
 
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         MailAddress b = new MailAddress(GOOD_ADDRESS);
-        assertThat(a.hashCode() == b.hashCode()).describedAs(a.hashCode() + " != " + b.hashCode()).isTrue();
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
     }
 
     /**
@@ -101,7 +101,7 @@ public class MailAddressTest {
     public void testMailAddressString() throws AddressException {
 
         MailAddress a = new MailAddress(GOOD_ADDRESS);
-        assertThat(GOOD_ADDRESS.equals(a.toString())).isTrue();
+        assertThat(GOOD_ADDRESS).isEqualTo(a.toString());
 
         for (String goodAddress : GOOD_ADDRESSES) {
             try {
@@ -158,7 +158,7 @@ public class MailAddressTest {
 
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
-            assertThat(a.getDomain().equals(GOOD_DOMAIN)).describedAs(a.getDomain() + " != " + GOOD_DOMAIN).isTrue();
+            assertThat(a.getDomain()).isEqualTo(GOOD_DOMAIN);
         } catch (AddressException e) {
             System.out.println("AddressException" + e.getMessage());
             assertThat(false).describedAs(e.getMessage()).isTrue();
@@ -173,7 +173,7 @@ public class MailAddressTest {
 
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
-            assertThat(a.getLocalPart().equals(GOOD_LOCAL_PART)).describedAs(GOOD_LOCAL_PART + " != " + a.getLocalPart()).isTrue();
+            assertThat(a.getLocalPart()).isEqualTo(GOOD_LOCAL_PART);
         } catch (AddressException e) {
             System.out.println("AddressException" + e.getMessage());
             assertThat(false).describedAs(e.getMessage()).isTrue();
@@ -188,7 +188,7 @@ public class MailAddressTest {
 
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
-            assertThat(a.toString().equals(GOOD_ADDRESS)).describedAs(a.toString() + " != " + GOOD_ADDRESS).isTrue();
+            assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
         } catch (AddressException e) {
             System.out.println("AddressException" + e.getMessage());
             assertThat(false).describedAs(e.getMessage()).isTrue();
@@ -204,8 +204,8 @@ public class MailAddressTest {
         try {
             InternetAddress b = new InternetAddress(GOOD_ADDRESS);
             MailAddress a = new MailAddress(b);
-            assertThat(a.toInternetAddress().equals(b)).isTrue();
-            assertThat(a.toString().equals(GOOD_ADDRESS)).describedAs(a.toString() + " != " + GOOD_ADDRESS).isTrue();
+            assertThat(a.toInternetAddress()).isEqualTo(b);
+            assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
         } catch (AddressException e) {
             System.out.println("AddressException" + e.getMessage());
             assertThat(false).describedAs(e.getMessage()).isTrue();
@@ -223,8 +223,7 @@ public class MailAddressTest {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         MailAddress b = new MailAddress(GOOD_ADDRESS);
 
-        assertThat(a.equals(b)).describedAs(a.toString() + " != " + b.toString()).isTrue();
-        assertThat(a.equals(null)).describedAs(a.toString() + " != " + null).isFalse();
+        assertThat(a).isNotNull().isEqualTo(b);
     }
 
     @Test

@@ -62,7 +62,7 @@ public class MailboxMessageResultImplTest {
 
     @Test
     public void testEqualsNull() throws Exception {
-        assertThat(msgResultA.equals(null)).isFalse();
+        assertThat(msgResultA).isNotNull();
     }
 
 
@@ -124,8 +124,8 @@ public class MailboxMessageResultImplTest {
 
     @Test
     public void testNotEqualDiffValue() throws Exception {
-        assertThat(msgResultA.equals(msgResultC)).isFalse();
-        assertThat(msgResultC.equals(msgResultA)).isFalse();
+        assertThat(msgResultA).isNotEqualTo(msgResultC);
+        assertThat(msgResultC).isNotEqualTo(msgResultA);
     }
 
     @Test

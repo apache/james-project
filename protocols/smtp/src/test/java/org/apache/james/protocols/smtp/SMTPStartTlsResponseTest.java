@@ -32,7 +32,7 @@ public class SMTPStartTlsResponseTest {
     @Test
     public void testImmutable() {
         SMTPStartTlsResponse response = new SMTPStartTlsResponse("554", "Reject");
-        assertThat(response instanceof StartTlsResponse).isTrue();
-        assertThat(response.immutable() instanceof StartTlsResponse).isTrue();
+        assertThat(response).isInstanceOf(StartTlsResponse.class);
+        assertThat(response.immutable()).isInstanceOf(StartTlsResponse.class);
     }
 }
