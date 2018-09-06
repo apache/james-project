@@ -1436,6 +1436,7 @@ public class SMTPServerTest {
             .isEqualTo(503);
     }
 
+    @Test
     public void testHandleMessageSizeLimitExceeded() throws Exception {
         smtpConfiguration.setMaxMessageSize(1); // set message limit to 1kb
         init(smtpConfiguration);
