@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
@@ -105,6 +106,13 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
     }
 
     static class MailDecoder implements Decoder<MimeMessage> {
+        @Override
+        public void validateInput(Collection<BlobType> input) {
+            Preconditions.checkArgument(input.contains(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
+            Preconditions.checkArgument(input.contains(BODY_BLOB_TYPE), "Expecting 'mailBody' blobId to be specified");
+            Preconditions.checkArgument(input.size() == 2, "blobId other than 'mailHeader' or 'mailBody' are not supported");
+        }
+
         @Override
         public MimeMessage decode(Map<BlobType, byte[]> streams) {
             Preconditions.checkNotNull(streams);

@@ -20,6 +20,7 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -62,6 +63,8 @@ public interface Store<T> {
     }
 
     interface Decoder<T> {
+        void validateInput(Collection<BlobType> input);
+
         T decode(Map<BlobType, byte[]> streams);
     }
 
@@ -98,6 +101,8 @@ public interface Store<T> {
 
         @Override
         public CompletableFuture<T> read(Map<BlobType, BlobId> blobIds) {
+            decoder.validateInput(blobIds.keySet());
+
             CompletableFuture<ImmutableMap<BlobType, byte[]>> binaries = FluentFutureStream.of(blobIds.entrySet()
                 .stream()
                 .map(entry -> blobStore.readBytes(entry.getValue())

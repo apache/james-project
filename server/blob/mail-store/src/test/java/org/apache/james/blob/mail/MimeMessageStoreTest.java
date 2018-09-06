@@ -36,6 +36,7 @@ import org.apache.james.util.MimeMessageUtil;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 class MimeMessageStoreTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
@@ -59,6 +60,29 @@ class MimeMessageStoreTest {
     void readShouldThrowWhenNull() {
         assertThatThrownBy(() -> testee.read(null))
             .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void readShouldThrowWhenMissingHeaderBlobs() {
+        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
+            MimeMessageStore.HEADER_BLOB_TYPE, BLOB_ID_FACTORY.randomId())))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void readShouldThrowWhenMissingBodyBlobs() {
+        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
+            MimeMessageStore.BODY_BLOB_TYPE, BLOB_ID_FACTORY.randomId())))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void readShouldThrowWhenExtraBodyBlobs() {
+        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
+            MimeMessageStore.BODY_BLOB_TYPE, BLOB_ID_FACTORY.randomId(),
+            MimeMessageStore.HEADER_BLOB_TYPE, BLOB_ID_FACTORY.randomId(),
+            new Store.BlobType("Unknown"), BLOB_ID_FACTORY.randomId())))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
