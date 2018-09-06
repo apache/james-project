@@ -106,15 +106,15 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
 
     static class MailDecoder implements Decoder<MimeMessage> {
         @Override
-        public MimeMessage decode(Map<BlobType, InputStream> streams) {
+        public MimeMessage decode(Map<BlobType, byte[]> streams) {
             Preconditions.checkNotNull(streams);
             Preconditions.checkArgument(streams.containsKey(HEADER_BLOB_TYPE));
             Preconditions.checkArgument(streams.containsKey(BODY_BLOB_TYPE));
 
             return toMimeMessage(
                 new SequenceInputStream(
-                    streams.get(HEADER_BLOB_TYPE),
-                    streams.get(BODY_BLOB_TYPE)));
+                    new ByteArrayInputStream(streams.get(HEADER_BLOB_TYPE)),
+                    new ByteArrayInputStream(streams.get(BODY_BLOB_TYPE))));
         }
 
         private MimeMessage toMimeMessage(InputStream inputStream) {

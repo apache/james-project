@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
@@ -34,9 +33,11 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 
 public class CassandraMailRepository implements MailRepository {
@@ -61,10 +62,10 @@ public class CassandraMailRepository implements MailRepository {
     public MailKey store(Mail mail) throws MessagingException {
         MailKey mailKey = MailKey.forMail(mail);
 
-
-        Map<Store.BlobType, BlobId> parts = mimeMessageStore.save(mail.getMessage());
-
-        mailDAO.store(url, mail, parts.get(MimeMessageStore.HEADER_BLOB_TYPE), parts.get(MimeMessageStore.BODY_BLOB_TYPE))
+        mimeMessageStore.save(mail.getMessage())
+            .thenCompose(Throwing.function(parts -> mailDAO.store(url, mail,
+                parts.get(MimeMessageStore.HEADER_BLOB_TYPE),
+                parts.get(MimeMessageStore.BODY_BLOB_TYPE))))
             .thenCompose(any -> keysDAO.store(url, mailKey))
             .thenCompose(this::increaseSizeIfStored)
             .join();
@@ -88,21 +89,22 @@ public class CassandraMailRepository implements MailRepository {
 
     @Override
     public Mail retrieve(MailKey key) {
-        return mailDAO.read(url, key)
-                .thenApply(optional -> optional.map(this::toMail))
+        return CompletableFutureUtil
+            .unwrap(mailDAO.read(url, key)
+                .thenApply(optional -> optional.map(this::toMail)))
             .join()
             .orElse(null);
     }
 
-    private Mail toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {
-        MimeMessage mimeMessage = mimeMessageStore
-            .read(ImmutableMap.of(
-                MimeMessageStore.HEADER_BLOB_TYPE, mailDTO.getHeaderBlobId(),
-                MimeMessageStore.BODY_BLOB_TYPE, mailDTO.getBodyBlobId()));
+    private CompletableFuture<Mail> toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {
+        Map<Store.BlobType, BlobId> parts = ImmutableMap.of(
+            MimeMessageStore.HEADER_BLOB_TYPE, mailDTO.getHeaderBlobId(),
+            MimeMessageStore.BODY_BLOB_TYPE, mailDTO.getBodyBlobId());
 
-        return mailDTO.getMailBuilder()
-            .mimeMessage(mimeMessage)
-            .build();
+        return mimeMessageStore.read(parts)
+            .thenApply(mimeMessage -> mailDTO.getMailBuilder()
+                .mimeMessage(mimeMessage)
+                .build());
     }
 
     @Override

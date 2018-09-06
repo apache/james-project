@@ -70,9 +70,9 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message);
+        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
 
-        MimeMessage retrievedMessage = testee.read(parts);
+        MimeMessage retrievedMessage = testee.read(parts).join();
 
         assertThat(MimeMessageUtil.asString(retrievedMessage))
             .isEqualTo(MimeMessageUtil.asString(message));
@@ -86,9 +86,9 @@ class MimeMessageStoreTest {
             .setSubject("Important Mail")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message);
+        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
 
-        MimeMessage retrievedMessage = testee.read(parts);
+        MimeMessage retrievedMessage = testee.read(parts).join();
 
         assertThat(MimeMessageUtil.asString(retrievedMessage))
             .isEqualTo(MimeMessageUtil.asString(message));
@@ -105,7 +105,7 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message);
+        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
 
         SoftAssertions.assertSoftly(
             softly -> {

@@ -62,12 +62,12 @@ public interface Store<T> {
     }
 
     interface Decoder<T> {
-        T decode(Map<BlobType, InputStream> streams);
+        T decode(Map<BlobType, byte[]> streams);
     }
 
-    Map<BlobType, BlobId> save(T t);
+    CompletableFuture<Map<BlobType, BlobId>> save(T t);
 
-    T read(Map<BlobType, BlobId> blobIds);
+    CompletableFuture<T> read(Map<BlobType, BlobId> blobIds);
 
     class Impl<T> implements Store<T> {
         private final Encoder<T> encoder;
@@ -81,14 +81,14 @@ public interface Store<T> {
         }
 
         @Override
-        public Map<BlobType, BlobId> save(T t) {
+        public CompletableFuture<Map<BlobType, BlobId>> save(T t) {
             return FluentFutureStream.of(
                 encoder.encode(t)
                     .entrySet()
                     .stream()
                     .map(this::saveEntry))
-                .join()
-                .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
+                .completableFuture()
+                .thenApply(pairStream -> pairStream.collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
         }
 
         private CompletableFuture<Pair<BlobType, BlobId>> saveEntry(Map.Entry<BlobType, InputStream> entry) {
@@ -97,12 +97,14 @@ public interface Store<T> {
         }
 
         @Override
-        public T read(Map<BlobType, BlobId> blobIds) {
-            ImmutableMap<BlobType, InputStream> binaries = blobIds.entrySet()
+        public CompletableFuture<T> read(Map<BlobType, BlobId> blobIds) {
+            CompletableFuture<ImmutableMap<BlobType, byte[]>> binaries = FluentFutureStream.of(blobIds.entrySet()
                 .stream()
-                .map(entry -> Pair.of(entry.getKey(), blobStore.read(entry.getValue())))
+                .map(entry -> blobStore.readBytes(entry.getValue())
+                    .thenApply(bytes -> Pair.of(entry.getKey(), bytes))))
                 .collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue));
-            return decoder.decode(binaries);
+
+            return binaries.thenApply(decoder::decode);
         }
     }
 }
