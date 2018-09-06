@@ -28,7 +28,6 @@ import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTIONS_TABLE;
 import static org.apache.james.mailbox.hbase.HBaseNames.SUBSCRIPTION_CF;
 import static org.apache.james.mailbox.hbase.HBaseUtils.mailboxFromResult;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertArrayEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -212,7 +211,7 @@ public class HBaseMailboxMapperTest {
             assertThat(newValue.getLastUid()).isEqualTo(mlbx.getLastUid());
             assertThat(newValue.getUidValidity()).isEqualTo(mlbx.getUidValidity());
             assertThat(newValue.getHighestModSeq()).isEqualTo(mlbx.getHighestModSeq());
-            assertArrayEquals(mlbx.getMailboxId().toBytes(), newValue.getMailboxId().toBytes());
+            assertThat(newValue.getMailboxId().toBytes()).isEqualTo(mlbx.getMailboxId().toBytes());
         } finally {
             mailboxes.close();
         }

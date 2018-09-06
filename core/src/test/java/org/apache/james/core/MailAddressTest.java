@@ -20,12 +20,12 @@
 package org.apache.james.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -107,7 +107,7 @@ public class MailAddressTest {
             try {
                 a = new MailAddress(goodAddress);
             } catch (AddressException e) {
-                Assert.fail(e.getMessage());
+                fail(e.getMessage());
             }
         }
 

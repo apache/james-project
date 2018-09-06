@@ -20,7 +20,6 @@ package org.apache.james.server.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertNotSame;
 
 import java.util.ArrayList;
 
@@ -55,8 +54,8 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
         MailImpl m2 = MailImpl.duplicate(mail);
         System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
-        assertNotSame(m2, mail);
-        assertNotSame(m2.getMessage(), mail.getMessage());
+        assertThat(mail).isNotSameAs((m2));
+        assertThat(mail.getMessage()).isNotSameAs(m2.getMessage());
         // test that the wrapped message is the same
         assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // test it is the same after read only operations!
@@ -81,8 +80,8 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         MailImpl mail = new MailImpl("test", new MailAddress("test@test.com"), r, messageFromSources);
         MailImpl m2 = MailImpl.duplicate(mail);
         System.out.println("mail: " + getReferences(mail.getMessage()) + " m2: " + getReferences(m2.getMessage()));
-        assertNotSame(m2, mail);
-        assertNotSame(m2.getMessage(), mail.getMessage());
+        assertThat(mail).isNotSameAs((m2));
+        assertThat(mail.getMessage()).isNotSameAs(m2.getMessage());
         // test that the wrapped message is the same
         assertThat(isSameMimeMessage(m2.getMessage(), mail.getMessage())).isTrue();
         // test it is the same after real only operations!
@@ -100,7 +99,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         Mail m2clone = m2.duplicate("clone2");
         assertThat(isSameMimeMessage(m2clone.getMessage(), m2.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(m2.getMessage());
-        assertNotSame(m2.getMessage(), m2clone.getMessage());
+        assertThat(m2clone.getMessage()).isNotSameAs(m2.getMessage());
         // test that m2clone has a valid wrapped message
         MimeMessage mm3 = getWrappedMessage(m2clone.getMessage());
         assertThat(mm3).isNotNull();
@@ -133,7 +132,7 @@ public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
         Mail mailClone = MailImpl.duplicate(mail);
         assertThat(isSameMimeMessage(mailClone.getMessage(), mail.getMessage())).isTrue();
         MimeMessage mm = getWrappedMessage(mail.getMessage());
-        assertNotSame(mail.getMessage(), mailClone.getMessage());
+        assertThat(mailClone.getMessage()).isNotSameAs(mail.getMessage());
         // dispose mail and check that the clone has still a valid message and
         // it is the same!
         LifecycleUtil.dispose(mail);

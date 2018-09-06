@@ -4,7 +4,6 @@ import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.kara
 import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.keepRuntimeFolder;
 import static org.apache.karaf.tooling.exam.options.KarafDistributionOption.logLevel;
 import static org.assertj.core.api.Fail.fail;
-import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
