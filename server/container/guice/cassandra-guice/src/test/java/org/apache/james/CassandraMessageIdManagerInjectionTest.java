@@ -50,7 +50,7 @@ public class CassandraMessageIdManagerInjectionTest {
     private GuiceJamesServer server;
 
     @Before
-    public void test() throws Exception {
+    public void setup() throws Exception {
         Module module = new AbstractModule() {
             @Override
             protected void configure() {
