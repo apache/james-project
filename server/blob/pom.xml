@@ -37,6 +37,8 @@
         <module>blob-cassandra</module>
         <module>blob-memory</module>
         <module>blob-objectstorage</module>
+
+        <module>mail-store</module>
     </modules>
 
 </project>
