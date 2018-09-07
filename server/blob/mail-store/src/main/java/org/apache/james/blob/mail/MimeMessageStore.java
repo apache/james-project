@@ -61,13 +61,13 @@ public class MimeMessageStore {
         public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore() {
             return new Store.Impl<>(
                 new MimeMessagePartsId.Factory(),
-                new MailEncoder(),
-                new MailDecoder(),
+                new MimeMessageEncoder(),
+                new MimeMessageDecoder(),
                 blobStore);
         }
     }
 
-    static class MailEncoder implements Store.Impl.Encoder<MimeMessage> {
+    static class MimeMessageEncoder implements Store.Impl.Encoder<MimeMessage> {
         @Override
         public Stream<Pair<BlobType, InputStream>> encode(MimeMessage message) {
             try {
@@ -124,7 +124,7 @@ public class MimeMessageStore {
         }
     }
 
-    static class MailDecoder implements Store.Impl.Decoder<MimeMessage> {
+    static class MimeMessageDecoder implements Store.Impl.Decoder<MimeMessage> {
         @Override
         public MimeMessage decode(Stream<Pair<BlobType, byte[]>> streams) {
             Preconditions.checkNotNull(streams);
