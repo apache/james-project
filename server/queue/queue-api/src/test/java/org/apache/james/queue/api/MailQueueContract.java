@@ -330,11 +330,13 @@ public interface MailQueueContract {
 
     @Test
     default void deQueueShouldWaitForAMailToBeEnqueued(ExecutorService executorService) throws Exception {
+        MailQueue testee = getMailQueue();
+
         Mail mail = defaultMail()
             .name("name")
             .build();
-        Future<MailQueue.MailQueueItem> tryDequeue = executorService.submit(() -> getMailQueue().deQueue());
-        getMailQueue().enQueue(mail);
+        Future<MailQueue.MailQueueItem> tryDequeue = executorService.submit(testee::deQueue);
+        testee.enQueue(mail);
 
         assertThat(tryDequeue.get().getMail().getName()).isEqualTo("name");
     }
