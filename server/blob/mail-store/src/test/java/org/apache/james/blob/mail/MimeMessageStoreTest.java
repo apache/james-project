@@ -28,6 +28,7 @@ import java.util.Map;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.memory.MemoryBlobStore;
@@ -41,13 +42,13 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 class MimeMessageStoreTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    private MimeMessageStore testee;
-    private MemoryBlobStore blobStore;
+    private Store<MimeMessage> testee;
+    private BlobStore blobStore;
 
     @BeforeEach
     void setUp() {
         blobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-        testee = new MimeMessageStore(blobStore);
+        testee = MimeMessageStore.factory(blobStore).mimeMessageStore();
     }
 
     @Test

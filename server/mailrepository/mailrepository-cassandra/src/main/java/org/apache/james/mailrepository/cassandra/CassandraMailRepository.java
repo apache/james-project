@@ -26,6 +26,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
@@ -46,11 +47,11 @@ public class CassandraMailRepository implements MailRepository {
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDAO mailDAO;
-    private final MimeMessageStore mimeMessageStore;
+    private final Store<MimeMessage> mimeMessageStore;
 
     public CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
                                    CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO,
-                                   MimeMessageStore mimeMessageStore) {
+                                   Store<MimeMessage> mimeMessageStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;

@@ -30,15 +30,15 @@ public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDAO mailDAO;
-    private final MimeMessageStore mimeMessageStore;
+    private final MimeMessageStore.Factory mimeMessageStoreFactory;
 
     @Inject
     public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO,
-                                           CassandraMailRepositoryMailDAO mailDAO, MimeMessageStore mimeMessageStore) {
+                                           CassandraMailRepositoryMailDAO mailDAO, MimeMessageStore.Factory mimeMessageStoreFactory) {
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
         this.mailDAO = mailDAO;
-        this.mimeMessageStore = mimeMessageStore;
+        this.mimeMessageStoreFactory = mimeMessageStoreFactory;
     }
 
     @Override
@@ -48,6 +48,6 @@ public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
 
     @Override
     public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, mimeMessageStore);
+        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory.mimeMessageStore());
     }
 }

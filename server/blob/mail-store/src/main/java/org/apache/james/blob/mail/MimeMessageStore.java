@@ -41,16 +41,33 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.Store;
+import org.apache.james.blob.api.Store.BlobType;
 import org.apache.james.util.BodyOffsetInputStream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
-public class MimeMessageStore extends Store.Impl<MimeMessage> {
-    public static final BlobType HEADER_BLOB_TYPE = new BlobType("mailHeader");
-    public static final BlobType BODY_BLOB_TYPE = new BlobType("mailBody");
+public class MimeMessageStore {
+    public static final Store.BlobType HEADER_BLOB_TYPE = new Store.BlobType("mailHeader");
+    public static final Store.BlobType BODY_BLOB_TYPE = new Store.BlobType("mailBody");
 
-    static class MailEncoder implements Encoder<MimeMessage> {
+    public static class Factory {
+        private final BlobStore blobStore;
+
+        @Inject
+        public Factory(BlobStore blobStore) {
+            this.blobStore = blobStore;
+        }
+
+        public Store<MimeMessage> mimeMessageStore() {
+            return new Store.Impl<>(
+                new MailEncoder(),
+                new MailDecoder(),
+                blobStore);
+        }
+    }
+
+    static class MailEncoder implements Store.Encoder<MimeMessage> {
         @Override
         public Stream<Pair<BlobType, InputStream>> encode(MimeMessage message) {
             try {
@@ -107,7 +124,7 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
         }
     }
 
-    static class MailDecoder implements Decoder<MimeMessage> {
+    static class MailDecoder implements Store.Decoder<MimeMessage> {
         @Override
         public void validateInput(Collection<BlobType> input) {
             Preconditions.checkArgument(input.contains(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
@@ -137,8 +154,7 @@ public class MimeMessageStore extends Store.Impl<MimeMessage> {
         }
     }
 
-    @Inject
-    public MimeMessageStore(BlobStore blobStore) {
-        super(new MailEncoder(), new MailDecoder(), blobStore);
+    public static Factory factory(BlobStore blobStore) {
+        return new Factory(blobStore);
     }
 }
