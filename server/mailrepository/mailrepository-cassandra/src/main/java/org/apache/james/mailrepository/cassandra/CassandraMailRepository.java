@@ -21,16 +21,14 @@ package org.apache.james.mailrepository.cassandra;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
-import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -39,7 +37,6 @@ import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableMap;
 
 public class CassandraMailRepository implements MailRepository {
 
@@ -47,11 +44,11 @@ public class CassandraMailRepository implements MailRepository {
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDAO mailDAO;
-    private final Store<MimeMessage> mimeMessageStore;
+    private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
 
     public CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
                                    CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDAO mailDAO,
-                                   Store<MimeMessage> mimeMessageStore) {
+                                   Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;
@@ -65,8 +62,8 @@ public class CassandraMailRepository implements MailRepository {
 
         mimeMessageStore.save(mail.getMessage())
             .thenCompose(Throwing.function(parts -> mailDAO.store(url, mail,
-                parts.get(MimeMessageStore.HEADER_BLOB_TYPE),
-                parts.get(MimeMessageStore.BODY_BLOB_TYPE))))
+                parts.getHeaderBlobId(),
+                parts.getBodyBlobId())))
             .thenCompose(any -> keysDAO.store(url, mailKey))
             .thenCompose(this::increaseSizeIfStored)
             .join();
@@ -98,9 +95,10 @@ public class CassandraMailRepository implements MailRepository {
     }
 
     private CompletableFuture<Mail> toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {
-        Map<Store.BlobType, BlobId> parts = ImmutableMap.of(
-            MimeMessageStore.HEADER_BLOB_TYPE, mailDTO.getHeaderBlobId(),
-            MimeMessageStore.BODY_BLOB_TYPE, mailDTO.getBodyBlobId());
+        MimeMessagePartsId parts = MimeMessagePartsId.builder()
+            .headerBlobId(mailDTO.getHeaderBlobId())
+            .bodyBlobId(mailDTO.getBodyBlobId())
+            .build();
 
         return mimeMessageStore.read(parts)
             .thenApply(mimeMessage -> mailDTO.getMailBuilder()

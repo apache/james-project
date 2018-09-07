@@ -20,6 +20,8 @@
 package org.apache.james.blob.mail;
 
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+import static org.apache.james.blob.mail.MimeMessagePartsId.BODY_BLOB_TYPE;
+import static org.apache.james.blob.mail.MimeMessagePartsId.HEADER_BLOB_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,7 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.ByteBuffer;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -48,8 +49,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class MimeMessageStore {
-    public static final Store.BlobType HEADER_BLOB_TYPE = new Store.BlobType("mailHeader");
-    public static final Store.BlobType BODY_BLOB_TYPE = new Store.BlobType("mailBody");
 
     public static class Factory {
         private final BlobStore blobStore;
@@ -59,15 +58,16 @@ public class MimeMessageStore {
             this.blobStore = blobStore;
         }
 
-        public Store<MimeMessage> mimeMessageStore() {
+        public Store<MimeMessage, MimeMessagePartsId> mimeMessageStore() {
             return new Store.Impl<>(
+                new MimeMessagePartsId.Factory(),
                 new MailEncoder(),
                 new MailDecoder(),
                 blobStore);
         }
     }
 
-    static class MailEncoder implements Store.Encoder<MimeMessage> {
+    static class MailEncoder implements Store.Impl.Encoder<MimeMessage> {
         @Override
         public Stream<Pair<BlobType, InputStream>> encode(MimeMessage message) {
             try {
@@ -124,14 +124,7 @@ public class MimeMessageStore {
         }
     }
 
-    static class MailDecoder implements Store.Decoder<MimeMessage> {
-        @Override
-        public void validateInput(Collection<BlobType> input) {
-            Preconditions.checkArgument(input.contains(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
-            Preconditions.checkArgument(input.contains(BODY_BLOB_TYPE), "Expecting 'mailBody' blobId to be specified");
-            Preconditions.checkArgument(input.size() == 2, "blobId other than 'mailHeader' or 'mailBody' are not supported");
-        }
-
+    static class MailDecoder implements Store.Impl.Decoder<MimeMessage> {
         @Override
         public MimeMessage decode(Stream<Pair<BlobType, byte[]>> streams) {
             Preconditions.checkNotNull(streams);

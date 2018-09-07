@@ -20,8 +20,6 @@
 package org.apache.james.blob.api;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -31,7 +29,12 @@ import org.apache.james.util.FluentFutureStream;
 
 import com.google.common.collect.ImmutableMap;
 
-public interface Store<T> {
+public interface Store<T, I> {
+
+    CompletableFuture<I> save(T t);
+
+    CompletableFuture<T> read(I blobIds);
+
     class BlobType {
         private final String name;
 
@@ -59,38 +62,36 @@ public interface Store<T> {
         }
     }
 
-    interface Encoder<T> {
-        Stream<Pair<BlobType, InputStream>> encode(T t);
-    }
+    class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
-    interface Decoder<T> {
-        void validateInput(Collection<BlobType> input);
+        public interface Encoder<T> {
+            Stream<Pair<BlobType, InputStream>> encode(T t);
+        }
 
-        T decode(Stream<Pair<BlobType, byte[]>> streams);
-    }
+        public interface Decoder<T> {
+            T decode(Stream<Pair<BlobType, byte[]>> streams);
+        }
 
-    CompletableFuture<Map<BlobType, BlobId>> save(T t);
-
-    CompletableFuture<T> read(Map<BlobType, BlobId> blobIds);
-
-    class Impl<T> implements Store<T> {
+        private final BlobPartsId.Factory<I> idFactory;
         private final Encoder<T> encoder;
         private final Decoder<T> decoder;
         private final BlobStore blobStore;
 
-        public Impl(Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore) {
+        public Impl(BlobPartsId.Factory<I> idFactory, Encoder<T> encoder, Decoder<T> decoder, BlobStore blobStore) {
+            this.idFactory = idFactory;
             this.encoder = encoder;
             this.decoder = decoder;
             this.blobStore = blobStore;
         }
 
         @Override
-        public CompletableFuture<Map<BlobType, BlobId>> save(T t) {
+        public CompletableFuture<I> save(T t) {
             return FluentFutureStream.of(
                 encoder.encode(t)
                     .map(this::saveEntry))
                 .completableFuture()
-                .thenApply(pairStream -> pairStream.collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)));
+                .thenApply(pairStream -> pairStream.collect(ImmutableMap.toImmutableMap(Pair::getKey, Pair::getValue)))
+                .thenApply(idFactory::generate);
         }
 
         private CompletableFuture<Pair<BlobType, BlobId>> saveEntry(Pair<BlobType, InputStream> entry) {
@@ -99,10 +100,9 @@ public interface Store<T> {
         }
 
         @Override
-        public CompletableFuture<T> read(Map<BlobType, BlobId> blobIds) {
-            decoder.validateInput(blobIds.keySet());
-
-            CompletableFuture<Stream<Pair<BlobType, byte[]>>> binaries = FluentFutureStream.of(blobIds.entrySet()
+        public CompletableFuture<T> read(I blobIds) {
+            CompletableFuture<Stream<Pair<BlobType, byte[]>>> binaries = FluentFutureStream.of(blobIds.asMap()
+                .entrySet()
                 .stream()
                 .map(entry -> blobStore.readBytes(entry.getValue())
                     .thenApply(bytes -> Pair.of(entry.getKey(), bytes))))

@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
 import javax.mail.internet.MimeMessage;
 
@@ -37,12 +36,11 @@ import org.apache.james.util.MimeMessageUtil;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 class MimeMessageStoreTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    private Store<MimeMessage> testee;
+    private Store<MimeMessage, MimeMessagePartsId> testee;
     private BlobStore blobStore;
 
     @BeforeEach
@@ -64,29 +62,6 @@ class MimeMessageStoreTest {
     }
 
     @Test
-    void readShouldThrowWhenMissingHeaderBlobs() {
-        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
-            MimeMessageStore.HEADER_BLOB_TYPE, BLOB_ID_FACTORY.randomId())))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void readShouldThrowWhenMissingBodyBlobs() {
-        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
-            MimeMessageStore.BODY_BLOB_TYPE, BLOB_ID_FACTORY.randomId())))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void readShouldThrowWhenExtraBodyBlobs() {
-        assertThatThrownBy(() -> testee.read(ImmutableMap.of(
-            MimeMessageStore.BODY_BLOB_TYPE, BLOB_ID_FACTORY.randomId(),
-            MimeMessageStore.HEADER_BLOB_TYPE, BLOB_ID_FACTORY.randomId(),
-            new Store.BlobType("Unknown"), BLOB_ID_FACTORY.randomId())))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
     void mailStoreShouldPreserveContent() throws Exception {
         MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
             .addFrom("any@any.com")
@@ -95,7 +70,7 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).join();
 
         MimeMessage retrievedMessage = testee.read(parts).join();
 
@@ -111,7 +86,7 @@ class MimeMessageStoreTest {
             .setSubject("Important Mail")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).join();
 
         MimeMessage retrievedMessage = testee.read(parts).join();
 
@@ -130,14 +105,12 @@ class MimeMessageStoreTest {
             .setText("Important mail content")
             .build();
 
-        Map<Store.BlobType, BlobId> parts = testee.save(message).join();
+        MimeMessagePartsId parts = testee.save(message).join();
 
         SoftAssertions.assertSoftly(
             softly -> {
-                softly.assertThat(parts).containsKeys(MimeMessageStore.HEADER_BLOB_TYPE, MimeMessageStore.BODY_BLOB_TYPE);
-
-                BlobId headerBlobId = parts.get(MimeMessageStore.HEADER_BLOB_TYPE);
-                BlobId bodyBlobId = parts.get(MimeMessageStore.BODY_BLOB_TYPE);
+                BlobId headerBlobId = parts.getHeaderBlobId();
+                BlobId bodyBlobId = parts.getBodyBlobId();
 
                 softly.assertThat(new String(blobStore.readBytes(headerBlobId).join(), StandardCharsets.UTF_8))
                     .isEqualTo("Date: Thu, 6 Sep 2018 13:29:13 +0700 (ICT)\r\n" +
