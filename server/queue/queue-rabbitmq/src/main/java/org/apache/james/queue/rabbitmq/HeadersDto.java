@@ -20,6 +20,7 @@
 package org.apache.james.queue.rabbitmq;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.apache.mailet.PerRecipientHeaders;
 
@@ -31,7 +32,7 @@ import com.google.common.collect.Multimap;
 
 public class HeadersDto {
 
-    public static HeadersDto from(Collection<PerRecipientHeaders.Header> headers) {
+    static HeadersDto from(Collection<PerRecipientHeaders.Header> headers) {
         return new HeadersDto(headers.stream()
             .collect(ImmutableListMultimap.toImmutableListMultimap(
                 PerRecipientHeaders.Header::getName,
@@ -50,7 +51,7 @@ public class HeadersDto {
         return headers;
     }
 
-    public Collection<PerRecipientHeaders.Header> toHeaders() {
+    Collection<PerRecipientHeaders.Header> toHeaders() {
         return headers.entries()
             .stream()
             .map(entry -> PerRecipientHeaders.Header.builder()
@@ -58,5 +59,20 @@ public class HeadersDto {
                 .value(entry.getValue())
                 .build())
             .collect(ImmutableList.toImmutableList());
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof HeadersDto) {
+            HeadersDto that = (HeadersDto) o;
+
+            return Objects.equals(this.headers, that.headers);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(headers);
     }
 }

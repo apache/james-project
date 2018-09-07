@@ -1,0 +1,16 @@
+{
+  "recipients":["recipient1@localhost","recipient2@localhost"],
+  "name":"mail-name-558",
+  "sender":"sender@localhost",
+  "state":"state",
+  "errorMessage":"an error",
+  "lastUpdated":1473344752.000000000,
+  "attributes":{"att1":"rO0ABXQABXZhbHVl"},
+  "remoteAddr":"159.221.12.145",
+  "remoteHost":"toto.com",
+  "perRecipientHeaders":{
+    "recipient1@localhost":{"header":{"X-custom-header":["uedcgukrcg"]}},
+    "recipient2@localhost":{"header":{"X-custom-header-2":["uedcgukrcg"]}}},
+  "headerBlobId":"210e7136-ede3-44eb-9495-3ed816d6e23b",
+  "bodyBlobId":"ef46c026-7819-4048-b562-3a37469191ed"
+}

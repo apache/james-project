@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.Instant;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -203,7 +204,7 @@ public class RabbitMQMailQueue implements MailQueue {
 
             MailImpl mail = new MailImpl(
                 dto.getName(),
-                MailAddress.getMailSender(dto.getSender()),
+                dto.getSender().map(MailAddress::getMailSender).orElse(null),
                 dto.getRecipients()
                     .stream()
                     .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
@@ -214,7 +215,10 @@ public class RabbitMQMailQueue implements MailQueue {
             mail.setRemoteAddr(dto.getRemoteAddr());
             mail.setRemoteHost(dto.getRemoteHost());
             mail.setState(dto.getState());
-            mail.setLastUpdated(new Date(dto.getLastUpdated().toEpochMilli()));
+            dto.getLastUpdated()
+                .map(Instant::toEpochMilli)
+                .map(Date::new)
+                .ifPresent(mail::setLastUpdated);
 
             dto.getAttributes()
                 .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
