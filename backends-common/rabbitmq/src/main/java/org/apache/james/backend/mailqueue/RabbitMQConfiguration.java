@@ -27,20 +27,52 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class RabbitMQConfiguration {
+    @FunctionalInterface
+    public interface RequireAmqpUri {
+        RequireManagementUri amqpUri(URI amqpUri);
+    }
+
+    @FunctionalInterface
+    public interface RequireManagementUri {
+        Builder managementUri(URI managementUri);
+    }
+
+    public static class Builder {
+        private final URI amqpUri;
+        private final URI managementUri;
+
+        private Builder(URI amqpUri, URI managementUri) {
+            this.amqpUri = amqpUri;
+            this.managementUri = managementUri;
+        }
+
+        public RabbitMQConfiguration build() {
+            Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
+            Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
+            return new RabbitMQConfiguration(amqpUri, managementUri);
+        }
+    }
 
     private static final String URI_PROPERTY_NAME = "uri";
     private static final String MANAGEMENT_URI_PROPERTY_NAME = "management.uri";
 
+    public static RequireAmqpUri builder() {
+        return amqpUri -> managementUri -> new Builder(amqpUri, managementUri);
+    }
+
     public static RabbitMQConfiguration from(PropertiesConfiguration configuration) {
         String uriAsString = configuration.getString(URI_PROPERTY_NAME);
         Preconditions.checkState(!Strings.isNullOrEmpty(uriAsString), "You need to specify the URI of RabbitMQ");
-        URI uri = checkURI(uriAsString);
+        URI amqpUri = checkURI(uriAsString);
 
         String managementUriAsString = configuration.getString(MANAGEMENT_URI_PROPERTY_NAME);
         Preconditions.checkState(!Strings.isNullOrEmpty(managementUriAsString), "You need to specify the management URI of RabbitMQ");
         URI managementUri = checkURI(managementUriAsString);
 
-        return new RabbitMQConfiguration(uri, managementUri);
+        return builder()
+            .amqpUri(amqpUri)
+            .managementUri(managementUri)
+            .build();
     }
 
     private static URI checkURI(String uri) {
