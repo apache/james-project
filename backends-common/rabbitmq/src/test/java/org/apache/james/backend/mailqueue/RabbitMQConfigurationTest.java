@@ -18,22 +18,25 @@
  ****************************************************************/
 package org.apache.james.backend.mailqueue;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.net.URI;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class RabbitMQConfigurationTest {
+class RabbitMQConfigurationTest {
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(RabbitMQConfiguration.class).verify();
     }
 
     @Test
-    public void fromShouldThrowWhenURIIsNotInTheConfiguration() {
+    void fromShouldThrowWhenURIIsNotInTheConfiguration() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
@@ -42,7 +45,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenURIIsNull() {
+    void fromShouldThrowWhenURIIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", null);
 
@@ -52,7 +55,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenURIIsEmpty() {
+    void fromShouldThrowWhenURIIsEmpty() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", "");
 
@@ -62,7 +65,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenURIIsInvalid() {
+    void fromShouldThrowWhenURIIsInvalid() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", ":invalid");
 
@@ -72,7 +75,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenManagementURIIsNotInTheConfiguration() {
+    void fromShouldThrowWhenManagementURIIsNotInTheConfiguration() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
 
@@ -82,7 +85,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenManagementURIIsNull() {
+    void fromShouldThrowWhenManagementURIIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
         configuration.addProperty("management.uri", null);
@@ -93,7 +96,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenManagementURIIsEmpty() {
+    void fromShouldThrowWhenManagementURIIsEmpty() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
         configuration.addProperty("management.uri", "");
@@ -104,7 +107,7 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowWhenManagementURIIsInvalid() {
+    void fromShouldThrowWhenManagementURIIsInvalid() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
         configuration.addProperty("management.uri", ":invalid");
@@ -115,11 +118,17 @@ public class RabbitMQConfigurationTest {
     }
 
     @Test
-    public void fromShouldNotThrowWhenRequiredParametersAreGiven() {
+    void fromShouldReturnTheConfigurationWhenRequiredParametersAreGiven() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("uri", "amqp://james:james@rabbitmq_host:5672");
-        configuration.addProperty("management.uri", "http://james:james@rabbitmq_host:15672/api/");
+        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
 
-        RabbitMQConfiguration.from(configuration);
+        assertThat(RabbitMQConfiguration.from(configuration))
+            .isEqualTo(RabbitMQConfiguration.builder()
+                .amqpUri(URI.create(amqpUri))
+                .managementUri(URI.create(managementUri))
+                .build());
     }
 }
