@@ -133,7 +133,7 @@ public class DockerRabbitMQ {
         joinCluster(rabbitMQ);
     }
 
-    private void stopApp() throws java.io.IOException, InterruptedException {
+    public void stopApp() throws java.io.IOException, InterruptedException {
         String stdout = container()
             .execInContainer("rabbitmqctl", "stop_app")
             .getStdout();
