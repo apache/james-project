@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.rabbitmq;
+package org.apache.james.backend.mailqueue;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

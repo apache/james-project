@@ -16,16 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.queue.rabbitmq;
+package org.apache.james.backend.mailqueue;
 
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.AUTO_DELETE;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.DIRECT;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.DURABLE;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.EXCLUSIVE;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.NO_PROPERTIES;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.ROUTING_KEY;
-import static org.apache.james.queue.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.AUTO_DELETE;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.DIRECT;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.DURABLE;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.EXCHANGE_NAME;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.EXCLUSIVE;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.NO_PROPERTIES;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.ROUTING_KEY;
+import static org.apache.james.backend.mailqueue.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -36,7 +36,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import org.apache.james.queue.rabbitmq.DockerClusterRabbitMQExtension.DockerRabbitMQCluster;
+import org.apache.james.backend.mailqueue.DockerClusterRabbitMQExtension.DockerRabbitMQCluster;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;

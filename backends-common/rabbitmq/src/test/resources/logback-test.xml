@@ -7,9 +7,7 @@
                 </encoder>
         </appender>
 
-        <logger name="org.testcontainers" level="ERROR"/>
         <logger name="org.apache.james" level="WARN"/>
-        <logger name="org.apache.james.backend.mailqueue.DockerRabbitMQ" level="WARN"/>
 
         <root level="ERROR">
                 <appender-ref ref="CONSOLE" />
