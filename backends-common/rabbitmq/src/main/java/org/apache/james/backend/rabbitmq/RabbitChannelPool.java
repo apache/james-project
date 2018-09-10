@@ -30,6 +30,12 @@ import com.rabbitmq.client.Connection;
 
 public class RabbitChannelPool {
 
+    public static class ConnectionFailedException extends RuntimeException {
+        public ConnectionFailedException(Throwable cause) {
+            super(cause);
+        }
+    }
+
     private static class ChannelBasePooledObjectFactory extends BasePooledObjectFactory<Channel> {
         private final Connection connection;
 
@@ -65,7 +71,7 @@ public class RabbitChannelPool {
             new ChannelBasePooledObjectFactory(connection));
     }
 
-    public <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E {
+    public <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
         Channel channel = borrowChannel();
         try {
             return f.execute(channel);
@@ -75,7 +81,7 @@ public class RabbitChannelPool {
     }
 
 
-    public <E extends Throwable> void execute(RabbitConsumer<E> f) throws E {
+    public <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
         Channel channel = borrowChannel();
         try {
             f.execute(channel);
@@ -88,15 +94,15 @@ public class RabbitChannelPool {
         try {
             return pool.borrowObject();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ConnectionFailedException(e);
         }
     }
 
     private void returnChannel(Channel channel) {
         try {
             pool.returnObject(channel);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception ignore) {
+            //ignore when return is failing
         }
     }
 

@@ -31,19 +31,15 @@ import org.apache.james.core.healthcheck.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-
 public class RabbitMQHealthCheck implements HealthCheck {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQ backend");
 
-    private final ConnectionFactory connectionFactory;
+    private final RabbitChannelPool rabbitChannelPool;
 
     @Inject
-    public RabbitMQHealthCheck(RabbitMQConfiguration configuration) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
-        this.connectionFactory = new ConnectionFactory();
-        this.connectionFactory.setUri(configuration.getUri());
+    public RabbitMQHealthCheck(RabbitChannelPool rabbitChannelPool) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
+        this.rabbitChannelPool = rabbitChannelPool;
     }
 
     @Override
@@ -53,12 +49,14 @@ public class RabbitMQHealthCheck implements HealthCheck {
 
     @Override
     public Result check() {
-        try (Connection connection = connectionFactory.newConnection()) {
-            if (connection.isOpen()) {
-                return Result.healthy(COMPONENT_NAME);
-            }
-            LOGGER.error("The created connection was not opened");
-            return Result.unhealthy(COMPONENT_NAME);
+        try {
+            return rabbitChannelPool.execute(channel -> {
+                    if (channel.isOpen()) {
+                        return Result.healthy(COMPONENT_NAME);
+                    }
+                    LOGGER.error("The created connection was not opened");
+                    return Result.unhealthy(COMPONENT_NAME);
+            });
         } catch (Exception e) {
             LOGGER.error("Unhealthy RabbitMQ instances: could not establish a connection", e);
             return Result.unhealthy(COMPONENT_NAME);
