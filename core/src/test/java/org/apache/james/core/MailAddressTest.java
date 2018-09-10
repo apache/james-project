@@ -101,7 +101,7 @@ public class MailAddressTest {
     public void testMailAddressString() throws AddressException {
 
         MailAddress a = new MailAddress(GOOD_ADDRESS);
-        assertThat(GOOD_ADDRESS).isEqualTo(a.toString());
+        assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
 
         for (String goodAddress : GOOD_ADDRESSES) {
             try {

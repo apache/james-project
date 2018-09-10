@@ -310,7 +310,7 @@ public class HBaseMailboxMapperTest {
                 bout.write(b);
             }
             String s = bout.toString();
-            assertThat(original).isEqualTo(s);
+            assertThat(s).isEqualTo(original);
         } finally {
             in.close();
             out.close();
