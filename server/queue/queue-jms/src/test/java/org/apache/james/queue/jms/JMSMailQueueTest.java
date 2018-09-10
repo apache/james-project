@@ -25,7 +25,6 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.DelayedPriorityMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
