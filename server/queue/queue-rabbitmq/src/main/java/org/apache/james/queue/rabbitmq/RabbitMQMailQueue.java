@@ -20,6 +20,7 @@
 package org.apache.james.queue.rabbitmq;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
@@ -44,8 +45,8 @@ public class RabbitMQMailQueue implements MailQueue {
         private final MetricFactory metricFactory;
         private final RabbitClient rabbitClient;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
-        private final BlobId.Factory blobIdFactory;
         private final MailReferenceSerializer mailReferenceSerializer;
+        private final Function<MailReferenceDTO, Mail> mailLoader;
 
         @Inject
         @VisibleForTesting Factory(MetricFactory metricFactory, RabbitClient rabbitClient,
@@ -53,14 +54,14 @@ public class RabbitMQMailQueue implements MailQueue {
             this.metricFactory = metricFactory;
             this.rabbitClient = rabbitClient;
             this.mimeMessageStore = mimeMessageStore;
-            this.blobIdFactory = blobIdFactory;
             this.mailReferenceSerializer = new MailReferenceSerializer();
+            this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
             return new RabbitMQMailQueue(metricFactory, mailQueueName,
                 new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, mailReferenceSerializer, metricFactory),
-                new Dequeuer(mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory, mailReferenceSerializer, metricFactory));
+                new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer, metricFactory));
         }
     }
 

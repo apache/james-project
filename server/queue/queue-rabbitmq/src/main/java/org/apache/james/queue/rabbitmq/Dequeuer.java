@@ -23,6 +23,7 @@ import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -74,16 +75,14 @@ class Dequeuer {
 
     private final MailQueueName name;
     private final RabbitClient rabbitClient;
-    private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
-    private final BlobId.Factory blobIdFactory;
+    private final Function<MailReferenceDTO, Mail> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory, MailReferenceSerializer serializer, MetricFactory metricFactory) {
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader, MailReferenceSerializer serializer, MetricFactory metricFactory) {
         this.name = name;
         this.rabbitClient = rabbitClient;
-        this.mimeMessageStore = mimeMessageStore;
-        this.blobIdFactory = blobIdFactory;
+        this.mailLoader = mailLoader;
         this.mailReferenceSerializer = serializer;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
@@ -91,7 +90,7 @@ class Dequeuer {
     MailQueue.MailQueueItem deQueue() throws MailQueue.MailQueueException {
         GetResponse getResponse = pollChannel();
         MailReferenceDTO mailDTO = toDTO(getResponse);
-        Mail mail = toMail(mailDTO);
+        Mail mail = mailLoader.apply(mailDTO);
         dequeueMetric.increment();
         return new RabbitMQMailQueueItem(rabbitClient, getResponse.getEnvelope().getDeliveryTag(), mail);
     }
@@ -119,20 +118,4 @@ class Dequeuer {
             .orElseThrow(NoMailYetException::new);
     }
 
-    private Mail toMail(MailReferenceDTO dto) throws MailQueue.MailQueueException {
-        try {
-            MimeMessage mimeMessage = mimeMessageStore.read(
-                MimeMessagePartsId.builder()
-                    .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
-                    .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
-                    .build())
-                .join();
-
-            return dto.toMailWithMimeMessage(mimeMessage);
-        } catch (AddressException e) {
-            throw new MailQueue.MailQueueException("Failed to parse mail address", e);
-        } catch (MessagingException e) {
-            throw new MailQueue.MailQueueException("Failed to generate mime message", e);
-        }
-    }
 }
