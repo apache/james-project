@@ -76,15 +76,15 @@ class Dequeuer {
     private final RabbitClient rabbitClient;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
-    private final ObjectMapper objectMapper;
     private final Metric dequeueMetric;
+    private final MailReferenceSerializer mailReferenceSerializer;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory, ObjectMapper objectMapper, MetricFactory metricFactory) {
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory, MailReferenceSerializer serializer, MetricFactory metricFactory) {
         this.name = name;
         this.rabbitClient = rabbitClient;
         this.mimeMessageStore = mimeMessageStore;
         this.blobIdFactory = blobIdFactory;
-        this.objectMapper = objectMapper;
+        this.mailReferenceSerializer = serializer;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
@@ -98,7 +98,7 @@ class Dequeuer {
 
     private MailReferenceDTO toDTO(GetResponse getResponse) throws MailQueue.MailQueueException {
         try {
-            return objectMapper.readValue(getResponse.getBody(), MailReferenceDTO.class);
+            return mailReferenceSerializer.read(getResponse.getBody());
         } catch (IOException e) {
             throw new MailQueue.MailQueueException("Failed to parse DTO", e);
         }

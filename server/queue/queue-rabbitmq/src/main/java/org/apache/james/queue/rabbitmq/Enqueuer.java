@@ -34,21 +34,20 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 class Enqueuer {
     private final MailQueueName name;
     private final RabbitClient rabbitClient;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
-    private final ObjectMapper objectMapper;
+    private final MailReferenceSerializer mailReferenceSerializer;
     private final Metric enqueueMetric;
 
     Enqueuer(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
-             ObjectMapper objectMapper, MetricFactory metricFactory) {
+             MailReferenceSerializer serializer, MetricFactory metricFactory) {
         this.name = name;
         this.rabbitClient = rabbitClient;
         this.mimeMessageStore = mimeMessageStore;
-        this.objectMapper = objectMapper;
+        this.mailReferenceSerializer = serializer;
         this.enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
@@ -71,7 +70,7 @@ class Enqueuer {
 
     private byte[] getMessageBytes(MailReferenceDTO mailDTO) throws MailQueue.MailQueueException {
         try {
-            return objectMapper.writeValueAsBytes(mailDTO);
+            return mailReferenceSerializer.write(mailDTO);
         } catch (JsonProcessingException e) {
             throw new MailQueue.MailQueueException("Unable to serialize message", e);
         }
