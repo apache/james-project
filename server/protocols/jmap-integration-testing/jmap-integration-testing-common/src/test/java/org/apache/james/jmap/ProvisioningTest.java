@@ -84,9 +84,7 @@ public abstract class ProvisioningTest {
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap"))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         given()
             .header("Authorization", token)

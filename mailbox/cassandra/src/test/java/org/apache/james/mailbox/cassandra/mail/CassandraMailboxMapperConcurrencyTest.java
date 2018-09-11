@@ -65,9 +65,7 @@ class CassandraMailboxMapperConcurrencyTest {
             .operation((a, b) -> testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY)))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         assertThat(testee.list()).hasSize(1);
     }
@@ -83,9 +81,7 @@ class CassandraMailboxMapperConcurrencyTest {
             .operation((a, b) -> testee.save(mailbox))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         List<Mailbox> list = testee.list();
         assertThat(list).hasSize(1);

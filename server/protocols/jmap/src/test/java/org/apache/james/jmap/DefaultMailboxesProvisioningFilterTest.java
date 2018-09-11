@@ -92,10 +92,7 @@ public class DefaultMailboxesProvisioningFilterTest {
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> testee.createMailboxesIfNeeded(session))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(10, TimeUnit.SECONDS)
-            .assertNoException();
+            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
 
         assertThat(mailboxManager.list(session))
             .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES

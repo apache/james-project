@@ -239,10 +239,7 @@ public class MemoryMailRepositoryStoreTest {
                         .setText("Any body"))
                     .build()))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         long actualSize = repositoryStore.get(url).get().size();
 

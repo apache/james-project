@@ -802,10 +802,7 @@ public abstract class MessageMapperTest {
                 MessageRange.one(message1.getUid())))
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);
@@ -835,10 +832,7 @@ public abstract class MessageMapperTest {
             })
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);

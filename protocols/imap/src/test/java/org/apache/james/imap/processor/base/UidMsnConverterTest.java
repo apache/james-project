@@ -380,9 +380,7 @@ public class UidMsnConverterTest {
             })
             .threadCount(2)
             .operationCount(initialCount)
-            .build()
-            .run()
-            .awaitTermination(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= initialCount; i++) {
@@ -401,9 +399,7 @@ public class UidMsnConverterTest {
             .operation((threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .build()
-            .run()
-            .awaitTermination(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= threadCount * operationCount; i++) {
@@ -425,9 +421,7 @@ public class UidMsnConverterTest {
             .operation((threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .build()
-            .run()
-            .awaitTermination(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= operationCount; i++) {

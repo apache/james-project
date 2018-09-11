@@ -22,6 +22,8 @@ package org.apache.james.transport.mailets.delivery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -128,8 +130,6 @@ public class MailboxAppenderTest {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> testee.append(mimeMessage, USER, FOLDER + "/any"))
             .threadCount(100)
-            .build()
-            .run()
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
     }
 }

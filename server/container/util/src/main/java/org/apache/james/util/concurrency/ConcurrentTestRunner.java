@@ -74,6 +74,11 @@ public class ConcurrentTestRunner {
                 operationCount.orElse(DEFAULT_OPERATION_COUNT),
                 operation);
         }
+
+        public ConcurrentTestRunner runSuccessfullyWithin(long time, TimeUnit unit) throws InterruptedException, ExecutionException {
+            return build()
+                .runSuccessfullyWithin(time, unit);
+        }
     }
 
     public interface ConcurrentOperation {
@@ -155,5 +160,11 @@ public class ConcurrentTestRunner {
             throw new NotTerminatedException();
         }
         return this;
+    }
+
+    public ConcurrentTestRunner runSuccessfullyWithin(long time, TimeUnit unit) throws InterruptedException, ExecutionException {
+        return run()
+            .awaitTermination(time, unit)
+            .assertNoException();
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.james.jmap;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -47,9 +48,7 @@ public class UserProvisioningFilterThreadTest {
             .builder()
             .operation((threadNumber, step) -> sut.createAccountIfNeeded(session))
             .threadCount(2)
-            .build()
-            .run()
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
     }
 }
 

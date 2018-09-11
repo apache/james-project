@@ -79,10 +79,7 @@ public interface MailRepositoryUrlStoreContract {
             .operation((a, b) -> store.add(MailRepositoryUrl.from("proto://" + a + "/" + b)))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         assertThat(store.listDistinct()).hasSize(threadCount * operationCount);
     }
@@ -95,10 +92,7 @@ public interface MailRepositoryUrlStoreContract {
             .operation((a, b) -> store.add(MailRepositoryUrl.from("proto://" + b)))
             .threadCount(10)
             .operationCount(operationCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         assertThat(store.listDistinct()).hasSize(operationCount);
     }

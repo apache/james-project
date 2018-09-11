@@ -983,10 +983,7 @@ public abstract class MailboxManagerTest {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName + a), session))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
     }
 
     @Test

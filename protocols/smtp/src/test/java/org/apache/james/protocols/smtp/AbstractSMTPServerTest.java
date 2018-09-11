@@ -106,10 +106,7 @@ public abstract class AbstractSMTPServerTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
                 .threadCount(4)
-                .build()
-                .run()
-                .awaitTermination(1, TimeUnit.MINUTES)
-                .assertNoException();
+                .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
             assertThat(queued.hasNext()).isTrue();

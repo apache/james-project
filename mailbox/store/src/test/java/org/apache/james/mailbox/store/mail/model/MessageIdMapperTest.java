@@ -684,10 +684,7 @@ public abstract class MessageIdMapperTest {
                 FlagsUpdateMode.ADD))
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -719,10 +716,7 @@ public abstract class MessageIdMapperTest {
             })
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

@@ -188,10 +188,7 @@ public class CachingTextExtractorTest {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES)
-            .assertNoException();
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
     }

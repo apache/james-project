@@ -214,9 +214,7 @@ public interface QuotaThresholdMailingIntegrationTest {
         ConcurrentTestRunner.builder()
             .operation((threadNb, step) -> testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
             .threadCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         assertThat(mailetContext.getSentMails())
             .hasSize(1);
