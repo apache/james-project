@@ -42,7 +42,7 @@
   "rows": [
     {
       "collapse": false,
-      "height": 253,
+      "height": 386,
       "panels": [
         {
           "aliasColors": {},
@@ -68,7 +68,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 3,
+          "span": 2,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -186,7 +186,7 @@
               "yaxis": 2
             }
           ],
-          "span": 3,
+          "span": 2,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -267,15 +267,120 @@
           "bars": false,
           "datasource": "${DS_JAMES_ES}",
           "fill": 1,
-          "id": 27,
+          "id": 35,
           "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
+            "avg": true,
+            "current": true,
+            "max": true,
             "min": false,
             "show": true,
             "total": false,
-            "values": false
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
+          "span": 2,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "bucketAggs": [
+                {
+                  "field": "@timestamp",
+                  "id": "2",
+                  "settings": {
+                    "interval": "1m",
+                    "min_doc_count": 0,
+                    "trimEdges": 0
+                  },
+                  "type": "date_histogram"
+                }
+              ],
+              "dsType": "elasticsearch",
+              "metrics": [
+                {
+                  "field": "count",
+                  "id": "1",
+                  "meta": {},
+                  "pipelineAgg": "3",
+                  "settings": {},
+                  "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
+                }
+              ],
+              "query": "name:\"dequeuedMail:spool\"",
+              "refId": "A",
+              "timeField": "@timestamp"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "dequeuedMail:spool",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "opm",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "${DS_JAMES_ES}",
+          "fill": 1,
+          "id": 27,
+          "legend": {
+            "avg": true,
+            "current": false,
+            "max": true,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": true
           },
           "lines": true,
           "linewidth": 1,
@@ -382,13 +487,13 @@
           "fill": 1,
           "id": 33,
           "legend": {
-            "avg": true,
-            "current": true,
-            "max": true,
-            "min": true,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
             "show": true,
             "total": false,
-            "values": true
+            "values": false
           },
           "lines": true,
           "linewidth": 1,
@@ -424,7 +529,7 @@
               "dsType": "elasticsearch",
               "metrics": [
                 {
-                  "field": "count",
+                  "field": "value",
                   "id": "1",
                   "meta": {},
                   "pipelineAgg": "3",
@@ -490,7 +595,7 @@
     },
     {
       "collapse": false,
-      "height": 275,
+      "height": 318,
       "panels": [
         {
           "aliasColors": {},
@@ -516,7 +621,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 3,
+          "span": 2,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -634,7 +739,7 @@
               "yaxis": 2
             }
           ],
-          "span": 3,
+          "span": 2,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -679,6 +784,111 @@
           "timeFrom": null,
           "timeShift": null,
           "title": "enqueuedMails:outgoing",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "none",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "opm",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "${DS_JAMES_ES}",
+          "fill": 1,
+          "id": 36,
+          "legend": {
+            "avg": true,
+            "current": true,
+            "max": true,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": true
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [
+            {
+              "alias": "Derivative Max count",
+              "yaxis": 2
+            }
+          ],
+          "span": 2,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "bucketAggs": [
+                {
+                  "field": "@timestamp",
+                  "id": "2",
+                  "settings": {
+                    "interval": "1m",
+                    "min_doc_count": 0,
+                    "trimEdges": 0
+                  },
+                  "type": "date_histogram"
+                }
+              ],
+              "dsType": "elasticsearch",
+              "metrics": [
+                {
+                  "field": "count",
+                  "id": "1",
+                  "meta": {},
+                  "pipelineAgg": "3",
+                  "settings": {},
+                  "type": "max"
+                },
+                {
+                  "field": "1",
+                  "id": "3",
+                  "meta": {},
+                  "pipelineAgg": "1",
+                  "settings": {},
+                  "type": "derivative"
+                }
+              ],
+              "query": "name:\"dequeuedMail:outgoing\"",
+              "refId": "A",
+              "timeField": "@timestamp"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "dequeuedMails:outgoing",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -872,7 +1082,7 @@
               "dsType": "elasticsearch",
               "metrics": [
                 {
-                  "field": "count",
+                  "field": "value",
                   "id": "1",
                   "meta": {},
                   "pipelineAgg": "3",
@@ -1099,5 +1309,5 @@
   },
   "timezone": "browser",
   "title": "MailQueue",
-  "version": 23
+  "version": 26
 }
