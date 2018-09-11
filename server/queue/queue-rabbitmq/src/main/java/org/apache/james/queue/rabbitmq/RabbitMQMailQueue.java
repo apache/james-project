@@ -19,78 +19,31 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Date;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
-import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
-import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.GaugeRegistry;
-import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.SerializationUtil;
 import org.apache.mailet.Mail;
-import org.apache.mailet.PerRecipientHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-import com.rabbitmq.client.GetResponse;
 
 public class RabbitMQMailQueue implements MailQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMailQueue.class);
-
-    private static class NoMailYetException extends RuntimeException {
-    }
-
-    private static class RabbitMQMailQueueItem implements MailQueueItem {
-        private final RabbitClient rabbitClient;
-        private final long deliveryTag;
-        private final Mail mail;
-
-        private RabbitMQMailQueueItem(RabbitClient rabbitClient, long deliveryTag, Mail mail) {
-            this.rabbitClient = rabbitClient;
-            this.deliveryTag = deliveryTag;
-            this.mail = mail;
-        }
-
-        @Override
-        public Mail getMail() {
-            return mail;
-        }
-
-        @Override
-        public void done(boolean success) throws MailQueueException {
-            try {
-                rabbitClient.ack(deliveryTag);
-            } catch (IOException e) {
-                throw new MailQueueException("Failed to ACK " + mail.getName() + " with delivery tag " + deliveryTag, e);
-            }
-        }
-    }
 
     static class Factory {
         private final MetricFactory metricFactory;
@@ -98,6 +51,7 @@ public class RabbitMQMailQueue implements MailQueue {
         private final RabbitClient rabbitClient;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final BlobId.Factory blobIdFactory;
+        private final ObjectMapper objectMapper;
 
         @Inject
         @VisibleForTesting Factory(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, RabbitClient rabbitClient,
@@ -107,40 +61,34 @@ public class RabbitMQMailQueue implements MailQueue {
             this.rabbitClient = rabbitClient;
             this.mimeMessageStore = mimeMessageStore;
             this.blobIdFactory = blobIdFactory;
+            this.objectMapper = new ObjectMapper()
+                .registerModule(new Jdk8Module())
+                .registerModule(new JavaTimeModule())
+                .registerModule(new GuavaModule());
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
-            return new RabbitMQMailQueue(metricFactory, gaugeRegistry, mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory);
+            return new RabbitMQMailQueue(metricFactory, gaugeRegistry, mailQueueName,
+                new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, objectMapper, metricFactory),
+                new Dequeuer(mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory, objectMapper, metricFactory));
         }
     }
 
-    private static final int TEN_MS = 10;
-
     private final MailQueueName name;
-    private final RabbitClient rabbitClient;
-    private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
-    private final BlobId.Factory blobIdFactory;
-    private final ObjectMapper objectMapper;
     private final MetricFactory metricFactory;
-    private final Metric enqueueMetric;
-    private final Metric dequeueMetric;
     private final GaugeRegistry gaugeRegistry;
+    private final Enqueuer enqueuer;
+    private final Dequeuer dequeuer;
 
-    RabbitMQMailQueue(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailQueueName name, RabbitClient rabbitClient,
-                      Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
-        this.mimeMessageStore = mimeMessageStore;
-        this.blobIdFactory = blobIdFactory;
+    RabbitMQMailQueue(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailQueueName name,
+                      Enqueuer enqueuer, Dequeuer dequeuer) {
+
         this.name = name;
-        this.rabbitClient = rabbitClient;
-        this.objectMapper = new ObjectMapper()
-            .registerModule(new Jdk8Module())
-            .registerModule(new JavaTimeModule())
-            .registerModule(new GuavaModule());
+        this.enqueuer = enqueuer;
+        this.dequeuer = dequeuer;
 
         this.metricFactory = metricFactory;
         this.gaugeRegistry = gaugeRegistry;
-        this.enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString());
-        this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
     @Override
@@ -159,115 +107,12 @@ public class RabbitMQMailQueue implements MailQueue {
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
         metricFactory.withMetric(ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
-            Throwing.runnable(() -> {
-                MimeMessagePartsId partsId = saveBlobs(mail).join();
-                MailDTO mailDTO = MailDTO.fromMail(mail, partsId);
-                byte[] message = getMessageBytes(mailDTO);
-                rabbitClient.publish(name, message);
-
-                enqueueMetric.increment();
-            }).sneakyThrow());
-    }
-
-    private CompletableFuture<MimeMessagePartsId> saveBlobs(Mail mail) throws MailQueueException {
-        try {
-            return mimeMessageStore.save(mail.getMessage());
-        } catch (MessagingException e) {
-            throw new MailQueueException("Error while saving blob", e);
-        }
-    }
-
-    private byte[] getMessageBytes(MailDTO mailDTO) throws MailQueueException {
-        try {
-            return objectMapper.writeValueAsBytes(mailDTO);
-        } catch (JsonProcessingException e) {
-            throw new MailQueueException("Unable to serialize message", e);
-        }
+            Throwing.runnable(() -> enqueuer.enQueue(mail)).sneakyThrow());
     }
 
     @Override
     public MailQueueItem deQueue() throws MailQueueException {
         return metricFactory.withMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
-            Throwing.supplier(() -> {
-                GetResponse getResponse = pollChannel();
-                MailDTO mailDTO = toDTO(getResponse);
-                Mail mail = toMail(mailDTO);
-                dequeueMetric.increment();
-                return new RabbitMQMailQueueItem(rabbitClient, getResponse.getEnvelope().getDeliveryTag(), mail);
-            }).sneakyThrow());
-    }
-
-    private MailDTO toDTO(GetResponse getResponse) throws MailQueueException {
-        try {
-            return objectMapper.readValue(getResponse.getBody(), MailDTO.class);
-        } catch (IOException e) {
-            throw new MailQueueException("Failed to parse DTO", e);
-        }
-    }
-
-    private GetResponse pollChannel() {
-        return new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor())
-            .withFixedRate()
-            .withMinDelay(TEN_MS)
-            .retryOn(NoMailYetException.class)
-            .getWithRetry(this::singleChannelRead)
-            .join();
-    }
-
-    private GetResponse singleChannelRead() throws IOException {
-        return rabbitClient.poll(name)
-            .filter(getResponse -> getResponse.getBody() != null)
-            .orElseThrow(NoMailYetException::new);
-    }
-
-    private Mail toMail(MailDTO dto) throws MailQueueException {
-        try {
-            MimeMessage mimeMessage = mimeMessageStore.read(
-                MimeMessagePartsId.builder()
-                    .headerBlobId(blobIdFactory.from(dto.getHeaderBlobId()))
-                    .bodyBlobId(blobIdFactory.from(dto.getBodyBlobId()))
-                    .build())
-                .join();
-
-            MailImpl mail = new MailImpl(
-                dto.getName(),
-                dto.getSender().map(MailAddress::getMailSender).orElse(null),
-                dto.getRecipients()
-                    .stream()
-                    .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                    .collect(Guavate.toImmutableList()),
-                mimeMessage);
-
-            mail.setErrorMessage(dto.getErrorMessage());
-            mail.setRemoteAddr(dto.getRemoteAddr());
-            mail.setRemoteHost(dto.getRemoteHost());
-            mail.setState(dto.getState());
-            dto.getLastUpdated()
-                .map(Instant::toEpochMilli)
-                .map(Date::new)
-                .ifPresent(mail::setLastUpdated);
-
-            dto.getAttributes()
-                .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
-
-            mail.addAllSpecificHeaderForRecipient(retrievePerRecipientHeaders(dto));
-
-            return mail;
-        } catch (AddressException e) {
-            throw new MailQueueException("Failed to parse mail address", e);
-        } catch (MessagingException e) {
-            throw new MailQueueException("Failed to generate mime message", e);
-        }
-    }
-
-    private PerRecipientHeaders retrievePerRecipientHeaders(MailDTO dto) {
-        PerRecipientHeaders perRecipientHeaders = new PerRecipientHeaders();
-        dto.getPerRecipientHeaders()
-            .entrySet()
-            .stream()
-            .flatMap(entry -> entry.getValue().toHeaders().stream()
-                .map(Throwing.function(header -> Pair.of(new MailAddress(entry.getKey()), header))))
-            .forEach(pair -> perRecipientHeaders.addHeaderForRecipient(pair.getValue(), pair.getKey()));
-        return perRecipientHeaders;
+            Throwing.supplier(dequeuer::deQueue).sneakyThrow());
     }
 }
