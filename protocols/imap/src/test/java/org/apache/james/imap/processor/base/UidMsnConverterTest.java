@@ -21,8 +21,8 @@ package org.apache.james.imap.processor.base;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -380,7 +380,7 @@ public class UidMsnConverterTest {
             })
             .threadCount(2)
             .operationCount(initialCount)
-            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= initialCount; i++) {
@@ -399,7 +399,7 @@ public class UidMsnConverterTest {
             .operation((threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= threadCount * operationCount; i++) {
@@ -421,7 +421,7 @@ public class UidMsnConverterTest {
             .operation((threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(10, TimeUnit.SECONDS);
+            .runSuccessfullyWithin(Duration.ofSeconds(10));
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= operationCount; i++) {

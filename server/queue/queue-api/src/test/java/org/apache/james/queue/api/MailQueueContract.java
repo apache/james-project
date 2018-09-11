@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -368,7 +369,7 @@ public interface MailQueueContract {
             })
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(
             dequeuedMails.stream()

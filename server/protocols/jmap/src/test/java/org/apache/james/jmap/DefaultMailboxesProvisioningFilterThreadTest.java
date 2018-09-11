@@ -25,8 +25,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -68,6 +68,6 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
             .builder()
             .operation((threadNumber, step) -> sut.createMailboxesIfNeeded(session))
             .threadCount(2)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
     }
 }

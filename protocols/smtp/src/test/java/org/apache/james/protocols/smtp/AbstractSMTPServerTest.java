@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -106,7 +107,7 @@ public abstract class AbstractSMTPServerTest {
             ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
                 .threadCount(4)
-                .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+                .runSuccessfullyWithin(Duration.ofMinutes(1));
 
             Iterator<MailEnvelope> queued = hook.getQueued().iterator();
             assertThat(queued.hasNext()).isTrue();

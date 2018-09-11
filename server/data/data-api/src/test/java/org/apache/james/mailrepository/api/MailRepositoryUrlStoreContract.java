@@ -21,7 +21,7 @@ package org.apache.james.mailrepository.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
@@ -79,7 +79,7 @@ public interface MailRepositoryUrlStoreContract {
             .operation((a, b) -> store.add(MailRepositoryUrl.from("proto://" + a + "/" + b)))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(store.listDistinct()).hasSize(threadCount * operationCount);
     }
@@ -92,7 +92,7 @@ public interface MailRepositoryUrlStoreContract {
             .operation((a, b) -> store.add(MailRepositoryUrl.from("proto://" + b)))
             .threadCount(10)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(store.listDistinct()).hasSize(operationCount);
     }

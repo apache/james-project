@@ -21,10 +21,10 @@ package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -684,7 +684,7 @@ public abstract class MessageIdMapperTest {
                 FlagsUpdateMode.ADD))
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -716,7 +716,7 @@ public abstract class MessageIdMapperTest {
             })
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +32,7 @@ import org.junit.Test;
 
 public class ConcurrentTestRunnerTest {
     public static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
-    public static final int DEFAULT_AWAIT_TIME = 100;
+    public static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
 
     @Test
     public void constructorShouldThrowOnNegativeThreadCount() {
@@ -39,7 +40,7 @@ public class ConcurrentTestRunnerTest {
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
                 .threadCount(-1)
-                .runSuccessfullyWithin(1, TimeUnit.SECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -59,7 +60,7 @@ public class ConcurrentTestRunnerTest {
             ConcurrentTestRunner.builder()
                 .operation(NOOP)
                 .threadCount(0)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -79,7 +80,7 @@ public class ConcurrentTestRunnerTest {
             ConcurrentTestRunner.builder()
                 .operation(null)
                 .threadCount(1)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -88,7 +89,7 @@ public class ConcurrentTestRunnerTest {
         assertThatCode(() ->  ConcurrentTestRunner.builder()
                 .operation(NOOP)
                 .threadCount(1)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
     }
 
@@ -97,7 +98,7 @@ public class ConcurrentTestRunnerTest {
         assertThatThrownBy(() -> ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> Thread.sleep(50))
                 .threadCount(1)
-                .runSuccessfullyWithin(25, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(Duration.ofMillis(25)))
             .isInstanceOf(ConcurrentTestRunner.NotTerminatedException.class);
     }
 
@@ -109,7 +110,7 @@ public class ConcurrentTestRunnerTest {
                 .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
                 .threadCount(2)
                 .operationCount(2)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
 
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
@@ -122,7 +123,7 @@ public class ConcurrentTestRunnerTest {
         assertThatCode(() -> ConcurrentTestRunner.builder()
                 .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
                 .threadCount(2)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
     }
 
@@ -134,7 +135,7 @@ public class ConcurrentTestRunnerTest {
                 })
                 .threadCount(2)
                 .operationCount(2)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
     }
 
@@ -144,7 +145,7 @@ public class ConcurrentTestRunnerTest {
             .operation(NOOP)
             .threadCount(2)
             .operationCount(2)
-            .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)
+            .runSuccessfullyWithin(DEFAULT_AWAIT_TIME)
             .assertNoException();
     }
 
@@ -157,7 +158,7 @@ public class ConcurrentTestRunnerTest {
                     })
                     .threadCount(2)
                     .operationCount(2)
-                    .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)
+                    .runSuccessfullyWithin(DEFAULT_AWAIT_TIME)
                     .assertNoException())
             .isInstanceOf(ExecutionException.class);
     }
@@ -173,7 +174,7 @@ public class ConcurrentTestRunnerTest {
                 })
                 .threadCount(2)
                 .operationCount(2)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
 
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
@@ -192,7 +193,7 @@ public class ConcurrentTestRunnerTest {
                 })
                 .threadCount(2)
                 .operationCount(2)
-                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS))
+                .runSuccessfullyWithin(DEFAULT_AWAIT_TIME))
             .doesNotThrowAnyException();
 
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");

@@ -25,11 +25,11 @@ import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -802,7 +802,7 @@ public abstract class MessageMapperTest {
                 MessageRange.one(message1.getUid())))
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);
@@ -832,7 +832,7 @@ public abstract class MessageMapperTest {
             })
             .threadCount(threadCount)
             .operationCount(updateCount)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);

@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -84,7 +84,7 @@ public abstract class ProvisioningTest {
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap"))
             .threadCount(10)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         given()
             .header("Authorization", token)

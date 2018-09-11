@@ -35,7 +35,7 @@ import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.mailetContext;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
@@ -214,7 +214,7 @@ public interface QuotaThresholdMailingIntegrationTest {
         ConcurrentTestRunner.builder()
             .operation((threadNb, step) -> testee.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
             .threadCount(10)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(mailetContext.getSentMails())
             .hasSize(1);

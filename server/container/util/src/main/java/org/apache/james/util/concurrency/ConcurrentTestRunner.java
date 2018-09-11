@@ -19,6 +19,7 @@
 
 package org.apache.james.util.concurrency;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -75,9 +76,9 @@ public class ConcurrentTestRunner {
                 operation);
         }
 
-        public ConcurrentTestRunner runSuccessfullyWithin(long time, TimeUnit unit) throws InterruptedException, ExecutionException {
+        public ConcurrentTestRunner runSuccessfullyWithin(Duration duration) throws InterruptedException, ExecutionException {
             return build()
-                .runSuccessfullyWithin(time, unit);
+                .runSuccessfullyWithin(duration);
         }
     }
 
@@ -153,18 +154,18 @@ public class ConcurrentTestRunner {
         return this;
     }
 
-    public ConcurrentTestRunner awaitTermination(long time, TimeUnit unit) throws InterruptedException {
+    public ConcurrentTestRunner awaitTermination(Duration duration) throws InterruptedException {
         executorService.shutdown();
-        boolean terminated = executorService.awaitTermination(time, unit);
+        boolean terminated = executorService.awaitTermination(duration.toMillis(), TimeUnit.MILLISECONDS);
         if (!terminated) {
             throw new NotTerminatedException();
         }
         return this;
     }
 
-    public ConcurrentTestRunner runSuccessfullyWithin(long time, TimeUnit unit) throws InterruptedException, ExecutionException {
+    public ConcurrentTestRunner runSuccessfullyWithin(Duration duration) throws InterruptedException, ExecutionException {
         return run()
-            .awaitTermination(time, unit)
+            .awaitTermination(duration)
             .assertNoException();
     }
 }

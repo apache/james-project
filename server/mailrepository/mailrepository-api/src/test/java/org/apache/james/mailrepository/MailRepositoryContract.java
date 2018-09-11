@@ -23,11 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import javax.mail.MessagingException;
@@ -455,7 +455,7 @@ public interface MailRepositoryContract {
             .operation((a, b) -> distribution.sample().run())
             .threadCount(10)
             .operationCount(10)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
     }

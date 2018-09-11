@@ -22,7 +22,7 @@ package org.apache.james.mailrepository.memory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -239,7 +239,7 @@ public class MemoryMailRepositoryStoreTest {
                         .setText("Any body"))
                     .build()))
             .threadCount(10)
-            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         long actualSize = repositoryStore.get(url).get().size();
 
