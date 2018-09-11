@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -41,6 +42,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.junit.ExecutorExtension;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
@@ -323,7 +325,7 @@ public interface MailQueueContract {
     }
 
     @Test
-    default void deQueueShouldBlockWhenNoMail(ExecutorService executorService) throws Exception {
+    default void deQueueShouldBlockWhenNoMail(ExecutorService executorService) {
         Future<?> future = executorService.submit(Throwing.runnable(() -> getMailQueue().deQueue()));
 
         assertThatThrownBy(() -> future.get(2, TimeUnit.SECONDS))
@@ -343,10 +345,42 @@ public interface MailQueueContract {
         assertThat(tryDequeue.get().getMail().getName()).isEqualTo("name");
     }
 
+    @Test
+    default void concurrentEnqueueDequeueShouldNotFail() throws Exception {
+        MailQueue testee = getMailQueue();
+
+        ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
+
+        int threadCount = 10;
+        int operationCount = 100;
+        int totalDequeuedMessages = 500;
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
+                if (step % 2 == 0) {
+                    testee.enQueue(defaultMail()
+                        .name("name" + threadNumber + "-" + step)
+                        .build());
+                } else {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    dequeuedMails.add(mailQueueItem.getMail());
+                    mailQueueItem.done(true);
+                }
+            })
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
+
+        assertThat(
+            dequeuedMails.stream()
+                .map(Mail::getName)
+                .distinct())
+            .hasSize(totalDequeuedMessages);
+    }
+
     class SerializableAttribute implements Serializable {
         private final String value;
 
-        public SerializableAttribute(String value) {
+        SerializableAttribute(String value) {
             this.value = value;
         }
 
