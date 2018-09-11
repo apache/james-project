@@ -47,10 +47,10 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-class MailDTO {
+class MailReferenceDTO {
 
-    static MailDTO fromMail(Mail mail, MimeMessagePartsId partsId) {
-        return new MailDTO(
+    static MailReferenceDTO fromMail(Mail mail, MimeMessagePartsId partsId) {
+        return new MailReferenceDTO(
             Optional.ofNullable(mail.getRecipients()).map(Collection::stream)
                 .orElse(Stream.empty())
                 .map(MailAddress::asString)
@@ -99,18 +99,18 @@ class MailDTO {
     private final String bodyBlobId;
 
     @JsonCreator
-    private MailDTO(@JsonProperty("recipients") ImmutableList<String> recipients,
-                    @JsonProperty("name") String name,
-                    @JsonProperty("sender") Optional<String> sender,
-                    @JsonProperty("state") String state,
-                    @JsonProperty("errorMessage") String errorMessage,
-                    @JsonProperty("lastUpdated") Optional<Instant> lastUpdated,
-                    @JsonProperty("attributes") ImmutableMap<String, String> attributes,
-                    @JsonProperty("remoteAddr") String remoteAddr,
-                    @JsonProperty("remoteHost") String remoteHost,
-                    @JsonProperty("perRecipientHeaders") Map<String, HeadersDto>  perRecipientHeaders,
-                    @JsonProperty("headerBlobId") String headerBlobId,
-                    @JsonProperty("bodyBlobId") String bodyBlobId) {
+    private MailReferenceDTO(@JsonProperty("recipients") ImmutableList<String> recipients,
+                             @JsonProperty("name") String name,
+                             @JsonProperty("sender") Optional<String> sender,
+                             @JsonProperty("state") String state,
+                             @JsonProperty("errorMessage") String errorMessage,
+                             @JsonProperty("lastUpdated") Optional<Instant> lastUpdated,
+                             @JsonProperty("attributes") ImmutableMap<String, String> attributes,
+                             @JsonProperty("remoteAddr") String remoteAddr,
+                             @JsonProperty("remoteHost") String remoteHost,
+                             @JsonProperty("perRecipientHeaders") Map<String, HeadersDto>  perRecipientHeaders,
+                             @JsonProperty("headerBlobId") String headerBlobId,
+                             @JsonProperty("bodyBlobId") String bodyBlobId) {
         this.recipients = recipients;
         this.name = name;
         this.sender = sender;
@@ -222,8 +222,8 @@ class MailDTO {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof MailDTO) {
-            MailDTO mailDTO = (MailDTO) o;
+        if (o instanceof MailReferenceDTO) {
+            MailReferenceDTO mailDTO = (MailReferenceDTO) o;
 
             return Objects.equals(this.recipients, mailDTO.recipients)
                 && Objects.equals(this.name, mailDTO.name)

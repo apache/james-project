@@ -54,7 +54,7 @@ class Enqueuer {
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         MimeMessagePartsId partsId = saveBlobs(mail).join();
-        MailDTO mailDTO = MailDTO.fromMail(mail, partsId);
+        MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(mail, partsId);
         byte[] message = getMessageBytes(mailDTO);
         rabbitClient.publish(name, message);
 
@@ -69,7 +69,7 @@ class Enqueuer {
         }
     }
 
-    private byte[] getMessageBytes(MailDTO mailDTO) throws MailQueue.MailQueueException {
+    private byte[] getMessageBytes(MailReferenceDTO mailDTO) throws MailQueue.MailQueueException {
         try {
             return objectMapper.writeValueAsBytes(mailDTO);
         } catch (JsonProcessingException e) {

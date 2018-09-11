@@ -90,15 +90,15 @@ class Dequeuer {
 
     MailQueue.MailQueueItem deQueue() throws MailQueue.MailQueueException {
         GetResponse getResponse = pollChannel();
-        MailDTO mailDTO = toDTO(getResponse);
+        MailReferenceDTO mailDTO = toDTO(getResponse);
         Mail mail = toMail(mailDTO);
         dequeueMetric.increment();
         return new RabbitMQMailQueueItem(rabbitClient, getResponse.getEnvelope().getDeliveryTag(), mail);
     }
 
-    private MailDTO toDTO(GetResponse getResponse) throws MailQueue.MailQueueException {
+    private MailReferenceDTO toDTO(GetResponse getResponse) throws MailQueue.MailQueueException {
         try {
-            return objectMapper.readValue(getResponse.getBody(), MailDTO.class);
+            return objectMapper.readValue(getResponse.getBody(), MailReferenceDTO.class);
         } catch (IOException e) {
             throw new MailQueue.MailQueueException("Failed to parse DTO", e);
         }
@@ -119,7 +119,7 @@ class Dequeuer {
             .orElseThrow(NoMailYetException::new);
     }
 
-    private Mail toMail(MailDTO dto) throws MailQueue.MailQueueException {
+    private Mail toMail(MailReferenceDTO dto) throws MailQueue.MailQueueException {
         try {
             MimeMessage mimeMessage = mimeMessageStore.read(
                 MimeMessagePartsId.builder()

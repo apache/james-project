@@ -64,7 +64,7 @@ class MailDTOTest {
 
     @Test
     void mailDtoShouldBeDeserializedFromTheRightFormat() throws Exception {
-        assertThat(objectMapper.readValue(getSystemResourceAsString("json/mail1.json"), MailDTO.class))
+        assertThat(objectMapper.readValue(getSystemResourceAsString("json/mail1.json"), MailReferenceDTO.class))
             .isEqualTo(mailDTO1());
     }
 
@@ -76,12 +76,12 @@ class MailDTOTest {
 
     @Test
     void mailDtoShouldBeDeserializedWhenOnlyNameAndBlob() throws Exception {
-        assertThat(objectMapper.readValue(getSystemResourceAsString("json/mail_min.json"), MailDTO.class))
+        assertThat(objectMapper.readValue(getSystemResourceAsString("json/mail_min.json"), MailReferenceDTO.class))
             .isEqualTo(mailDTOMin());
     }
 
-    private MailDTO mailDTO1() throws MessagingException {
-        return MailDTO.fromMail(
+    private MailReferenceDTO mailDTO1() throws MessagingException {
+        return MailReferenceDTO.fromMail(
             FakeMail.builder()
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
                 .sender(MailAddressFixture.SENDER)
@@ -107,12 +107,12 @@ class MailDTOTest {
                 .build());
     }
 
-    private MailDTO mailDTOMin() throws MessagingException {
+    private MailReferenceDTO mailDTOMin() throws MessagingException {
         MailImpl mail = new MailImpl();
         mail.setState(null);
         mail.setName("mail-name-558");
         mail.setLastUpdated(null);
-        return MailDTO.fromMail(
+        return MailReferenceDTO.fromMail(
             mail,
             MimeMessagePartsId.builder()
                 .headerBlobId(BLOB_ID_FACTORY.from("210e7136-ede3-44eb-9495-3ed816d6e23b"))
