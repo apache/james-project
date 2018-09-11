@@ -84,7 +84,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
     @Override
     public SetMessagesResponse process(SetMessagesRequest request, MailboxSession mailboxSession) {
-        return metricFactory.withMetric(JMAP_PREFIX + "SendMDN",
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + "SendMDN",
             () -> handleMDNCreation(request, mailboxSession));
     }
 

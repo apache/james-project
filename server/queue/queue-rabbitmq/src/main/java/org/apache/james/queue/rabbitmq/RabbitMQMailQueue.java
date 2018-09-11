@@ -106,13 +106,13 @@ public class RabbitMQMailQueue implements MailQueue {
 
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
-        metricFactory.withMetric(ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
+        metricFactory.runPublishingTimerMetric(ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
             Throwing.runnable(() -> enqueuer.enQueue(mail)).sneakyThrow());
     }
 
     @Override
     public MailQueueItem deQueue() throws MailQueueException {
-        return metricFactory.withMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
+        return metricFactory.runPublishingTimerMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
             Throwing.supplier(dequeuer::deQueue).sneakyThrow());
     }
 }

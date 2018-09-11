@@ -111,7 +111,7 @@ public class SetFilterMethod implements Method {
 
         SetFilterRequest setFilterRequest = (SetFilterRequest) request;
 
-        return metricFactory.withMetric(JMAP_PREFIX + METHOD_NAME.getName(),
+        return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "SET_FILTER")
                 .addContext("update", setFilterRequest.getSingleton())
