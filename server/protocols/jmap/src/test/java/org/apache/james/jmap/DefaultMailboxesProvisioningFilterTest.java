@@ -94,8 +94,8 @@ public class DefaultMailboxesProvisioningFilterTest {
             .threadCount(10)
             .build()
             .run()
-            .assertNoException()
-            .awaitTermination(10, TimeUnit.SECONDS);
+            .awaitTermination(10, TimeUnit.SECONDS)
+            .assertNoException();
 
         assertThat(mailboxManager.list(session))
             .containsOnlyElementsOf(DefaultMailboxes.DEFAULT_MAILBOXES

@@ -370,7 +370,7 @@ public class UidMsnConverterTest {
             testee.addUid(MessageUid.of(i));
         }
 
-        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (threadNumber == 0) {
                     testee.remove(MessageUid.of(step + 1));
@@ -380,9 +380,9 @@ public class UidMsnConverterTest {
             })
             .threadCount(2)
             .operationCount(initialCount)
-            .build();
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+            .build()
+            .run()
+            .awaitTermination(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= initialCount; i++) {
@@ -397,13 +397,13 @@ public class UidMsnConverterTest {
         int operationCount = 1000;
         int threadCount = 2;
 
-        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> testee.addUid(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .build();
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+            .build()
+            .run()
+            .awaitTermination(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= threadCount * operationCount; i++) {
@@ -421,13 +421,13 @@ public class UidMsnConverterTest {
             testee.addUid(MessageUid.of(i));
         }
 
-        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> testee.remove(MessageUid.of((threadNumber * operationCount) + (step + 1))))
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .build();
-        concurrentTestRunner.run();
-        concurrentTestRunner.awaitTermination(10, TimeUnit.SECONDS);
+            .build()
+            .run()
+            .awaitTermination(10, TimeUnit.SECONDS);
 
         ImmutableMap.Builder<Integer, MessageUid> resultBuilder = ImmutableMap.builder();
         for (int i = 1; i <= operationCount; i++) {

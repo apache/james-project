@@ -980,13 +980,13 @@ public abstract class MailboxManagerTest {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
         String mailboxName = "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z";
 
-        ConcurrentTestRunner testRunner = ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((a, b) -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName + a), session))
             .threadCount(10)
             .build()
-            .run();
-        testRunner.awaitTermination(1, TimeUnit.MINUTES);
-        testRunner.assertNoException();
+            .run()
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
     }
 
     @Test

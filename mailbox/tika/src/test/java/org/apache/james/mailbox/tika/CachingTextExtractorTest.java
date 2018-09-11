@@ -190,7 +190,8 @@ public class CachingTextExtractorTest {
             .threadCount(10)
             .build()
             .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         verify(wrappedTextExtractor, times(1)).extractContent(any(), any());
     }

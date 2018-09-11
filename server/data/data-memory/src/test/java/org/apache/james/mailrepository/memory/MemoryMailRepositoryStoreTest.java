@@ -231,7 +231,7 @@ public class MemoryMailRepositoryStoreTest {
         MailRepositoryUrl url = MailRepositoryUrl.from("memory1://repo");
         int threadCount = 10;
 
-        ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNb, operationNb) -> repositoryStore.select(url)
                 .store(FakeMail.builder()
                     .name("name" + threadNb)
@@ -239,9 +239,10 @@ public class MemoryMailRepositoryStoreTest {
                         .setText("Any body"))
                     .build()))
             .threadCount(10)
-            .build();
-        concurrentTestRunner.run().awaitTermination(1, TimeUnit.MINUTES);
-        concurrentTestRunner.assertNoException();
+            .build()
+            .run()
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         long actualSize = repositoryStore.get(url).get().size();
 

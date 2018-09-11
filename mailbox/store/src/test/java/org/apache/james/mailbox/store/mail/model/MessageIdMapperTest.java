@@ -677,7 +677,7 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> sut.setFlags(message1.getMessageId(),
                 ImmutableList.of(message1.getMailboxId()),
                 new Flags("custom-" + threadNumber + "-" + step),
@@ -686,8 +686,8 @@ public abstract class MessageIdMapperTest {
             .operationCount(updateCount)
             .build()
             .run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);
@@ -703,7 +703,7 @@ public abstract class MessageIdMapperTest {
 
         int threadCount = 4;
         int updateCount = 20;
-        assertThat(ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     sut.setFlags(message1.getMessageId(),
@@ -721,8 +721,8 @@ public abstract class MessageIdMapperTest {
             .operationCount(updateCount)
             .build()
             .run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         List<MailboxMessage> messages = sut.find(ImmutableList.of(message1.getMessageId()), MessageMapper.FetchType.Body);
         assertThat(messages).hasSize(1);

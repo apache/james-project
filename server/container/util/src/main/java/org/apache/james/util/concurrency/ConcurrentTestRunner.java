@@ -108,6 +108,10 @@ public class ConcurrentTestRunner {
         }
     }
 
+    public static class NotTerminatedException extends RuntimeException {
+
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ConcurrentTestRunner.class);
 
     public static RequireOperation builder() {
@@ -144,8 +148,12 @@ public class ConcurrentTestRunner {
         return this;
     }
 
-    public boolean awaitTermination(long time, TimeUnit unit) throws InterruptedException {
+    public ConcurrentTestRunner awaitTermination(long time, TimeUnit unit) throws InterruptedException {
         executorService.shutdown();
-        return executorService.awaitTermination(time, unit);
+        boolean terminated = executorService.awaitTermination(time, unit);
+        if (!terminated) {
+            throw new NotTerminatedException();
+        }
+        return this;
     }
 }

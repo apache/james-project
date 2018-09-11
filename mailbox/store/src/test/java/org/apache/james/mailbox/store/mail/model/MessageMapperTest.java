@@ -796,7 +796,7 @@ public abstract class MessageMapperTest {
 
         int threadCount = 2;
         int updateCount = 10;
-        assertThat(ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> messageMapper.updateFlags(benwaInboxMailbox,
                 new FlagsUpdateCalculator(new Flags("custom-" + threadNumber + "-" + step), FlagsUpdateMode.ADD),
                 MessageRange.one(message1.getUid())))
@@ -804,8 +804,8 @@ public abstract class MessageMapperTest {
             .operationCount(updateCount)
             .build()
             .run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);
@@ -820,7 +820,7 @@ public abstract class MessageMapperTest {
 
         int threadCount = 4;
         int updateCount = 20;
-        assertThat(ConcurrentTestRunner.builder()
+        ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step  < updateCount / 2) {
                     messageMapper.updateFlags(benwaInboxMailbox,
@@ -837,8 +837,8 @@ public abstract class MessageMapperTest {
             .operationCount(updateCount)
             .build()
             .run()
-            .awaitTermination(1, TimeUnit.MINUTES))
-            .isTrue();
+            .awaitTermination(1, TimeUnit.MINUTES)
+            .assertNoException();
 
         Iterator<MailboxMessage> messages = messageMapper.findInMailbox(benwaInboxMailbox, MessageRange.one(message1.getUid()),
             FetchType.Metadata, 1);
