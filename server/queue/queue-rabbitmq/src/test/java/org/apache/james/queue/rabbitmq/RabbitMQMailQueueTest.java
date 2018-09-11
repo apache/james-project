@@ -42,18 +42,23 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.metrics.api.NoopGaugeRegistry;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueContract;
+import org.apache.james.queue.api.MailQueueMetricContract;
+import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 @ExtendWith({ReusableDockerRabbitMQExtension.class, DockerCassandraExtension.class})
-public class RabbitMQMailQueueTest implements MailQueueContract {
+public class RabbitMQMailQueueTest implements MailQueueContract, MailQueueMetricContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     private static CassandraCluster cassandra;
@@ -66,7 +71,7 @@ public class RabbitMQMailQueueTest implements MailQueueContract {
     }
 
     @BeforeEach
-    void setup(DockerRabbitMQ rabbitMQ) throws IOException, TimeoutException, URISyntaxException {
+    void setup(DockerRabbitMQ rabbitMQ, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws IOException, TimeoutException, URISyntaxException {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
 
@@ -81,17 +86,22 @@ public class RabbitMQMailQueueTest implements MailQueueContract {
             .setPort(rabbitMQ.getAdminPort())
             .build();
 
-
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(amqpUri)
             .managementUri(rabbitManagementUri)
             .build();
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
-                new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
+        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
+            rabbitMQConfiguration,
+            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
 
         RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
-        RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(rabbitClient, mimeMessageStore, BLOB_ID_FACTORY);
+        RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(
+            metricTestSystem.getSpyMetricFactory(),
+            metricTestSystem.getSpyGaugeRegistry(),
+            rabbitClient,
+            mimeMessageStore,
+            BLOB_ID_FACTORY);
         RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitManagementUri, new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
@@ -109,5 +119,11 @@ public class RabbitMQMailQueueTest implements MailQueueContract {
     @Override
     public MailQueue getMailQueue() {
         return mailQueueFactory.createQueue("spool");
+    }
+
+    @Disabled("RabbitMQ Mail Queue do not yet implement getSize()")
+    @Override
+    public void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
+
     }
 }

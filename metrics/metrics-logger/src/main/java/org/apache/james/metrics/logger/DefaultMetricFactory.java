@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.metrics.logger;
 
-import java.util.function.Supplier;
-
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -38,16 +36,6 @@ public class DefaultMetricFactory implements MetricFactory {
     @Override
     public TimeMetric timer(String name) {
         return new DefaultTimeMetric(name);
-    }
-
-    @Override
-    public <T> T withMetric(String name, Supplier<T> operation) {
-        TimeMetric timer = timer(name);
-        try {
-            return operation.get();
-        } finally {
-            timer.stopAndPublish();
-        }
     }
 
 }

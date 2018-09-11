@@ -37,6 +37,9 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.SerializationUtil;
@@ -90,19 +93,24 @@ public class RabbitMQMailQueue implements MailQueue {
     }
 
     static class Factory {
+        private final MetricFactory metricFactory;
+        private final GaugeRegistry gaugeRegistry;
         private final RabbitClient rabbitClient;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final BlobId.Factory blobIdFactory;
 
         @Inject
-        @VisibleForTesting Factory(RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
+        @VisibleForTesting Factory(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, RabbitClient rabbitClient,
+                                   Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
+            this.metricFactory = metricFactory;
+            this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
             this.mimeMessageStore = mimeMessageStore;
             this.blobIdFactory = blobIdFactory;
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
-            return new RabbitMQMailQueue(mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory);
+            return new RabbitMQMailQueue(metricFactory, gaugeRegistry, mailQueueName, rabbitClient, mimeMessageStore, blobIdFactory);
         }
     }
 
@@ -113,8 +121,13 @@ public class RabbitMQMailQueue implements MailQueue {
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
     private final BlobId.Factory blobIdFactory;
     private final ObjectMapper objectMapper;
+    private final MetricFactory metricFactory;
+    private final Metric enqueueMetric;
+    private final Metric dequeueMetric;
+    private final GaugeRegistry gaugeRegistry;
 
-    RabbitMQMailQueue(MailQueueName name, RabbitClient rabbitClient, Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
+    RabbitMQMailQueue(MetricFactory metricFactory, GaugeRegistry gaugeRegistry, MailQueueName name, RabbitClient rabbitClient,
+                      Store<MimeMessage, MimeMessagePartsId> mimeMessageStore, BlobId.Factory blobIdFactory) {
         this.mimeMessageStore = mimeMessageStore;
         this.blobIdFactory = blobIdFactory;
         this.name = name;
@@ -123,6 +136,11 @@ public class RabbitMQMailQueue implements MailQueue {
             .registerModule(new Jdk8Module())
             .registerModule(new JavaTimeModule())
             .registerModule(new GuavaModule());
+
+        this.metricFactory = metricFactory;
+        this.gaugeRegistry = gaugeRegistry;
+        this.enqueueMetric = metricFactory.generate(ENQUEUED_METRIC_NAME_PREFIX + name.asString());
+        this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
     @Override
@@ -140,10 +158,15 @@ public class RabbitMQMailQueue implements MailQueue {
 
     @Override
     public void enQueue(Mail mail) throws MailQueueException {
-        MimeMessagePartsId partsId = saveBlobs(mail).join();
-        MailDTO mailDTO = MailDTO.fromMail(mail, partsId);
-        byte[] message = getMessageBytes(mailDTO);
-        rabbitClient.publish(name, message);
+        metricFactory.withMetric(ENQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
+            Throwing.runnable(() -> {
+                MimeMessagePartsId partsId = saveBlobs(mail).join();
+                MailDTO mailDTO = MailDTO.fromMail(mail, partsId);
+                byte[] message = getMessageBytes(mailDTO);
+                rabbitClient.publish(name, message);
+
+                enqueueMetric.increment();
+            }).sneakyThrow());
     }
 
     private CompletableFuture<MimeMessagePartsId> saveBlobs(Mail mail) throws MailQueueException {
@@ -164,10 +187,14 @@ public class RabbitMQMailQueue implements MailQueue {
 
     @Override
     public MailQueueItem deQueue() throws MailQueueException {
-        GetResponse getResponse = pollChannel();
-        MailDTO mailDTO = toDTO(getResponse);
-        Mail mail = toMail(mailDTO);
-        return new RabbitMQMailQueueItem(rabbitClient, getResponse.getEnvelope().getDeliveryTag(), mail);
+        return metricFactory.withMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
+            Throwing.supplier(() -> {
+                GetResponse getResponse = pollChannel();
+                MailDTO mailDTO = toDTO(getResponse);
+                Mail mail = toMail(mailDTO);
+                dequeueMetric.increment();
+                return new RabbitMQMailQueueItem(rabbitClient, getResponse.getEnvelope().getDeliveryTag(), mail);
+            }).sneakyThrow());
     }
 
     private MailDTO toDTO(GetResponse getResponse) throws MailQueueException {
