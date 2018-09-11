@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backend.mailqueue;
+package org.apache.james.backend.rabbitmq;
 
 import java.util.Optional;
 import java.util.UUID;

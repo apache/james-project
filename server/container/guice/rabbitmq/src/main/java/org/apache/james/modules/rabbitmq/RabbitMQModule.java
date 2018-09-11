@@ -24,7 +24,7 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.james.backend.mailqueue.RabbitMQConfiguration;
+import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

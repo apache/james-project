@@ -27,8 +27,8 @@ import java.util.concurrent.TimeoutException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.james.backend.mailqueue.DockerRabbitMQ;
-import org.apache.james.backend.mailqueue.ReusableDockerRabbitMQExtension;
+import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backend.rabbitmq.ReusableDockerRabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;

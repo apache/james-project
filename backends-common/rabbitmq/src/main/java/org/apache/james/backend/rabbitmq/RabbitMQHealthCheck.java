@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backend.mailqueue;
+package org.apache.james.backend.rabbitmq;
 
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;

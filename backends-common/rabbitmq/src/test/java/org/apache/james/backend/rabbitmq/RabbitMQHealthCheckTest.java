@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backend.mailqueue;
+package org.apache.james.backend.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
