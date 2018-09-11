@@ -423,13 +423,13 @@ public interface MailRepositoryContract {
         MailRepository testee = retrieveRepository();
         int nbKeys = 20;
         ConcurrentHashMap.KeySetView<MailKey, Boolean> expectedResult = ConcurrentHashMap.newKeySet();
-        List<Object> locks = IntStream.range(0, 10)
+        List<Object> locks = IntStream.range(0, nbKeys)
             .boxed()
             .collect(Guavate.toImmutableList());
 
         Random random = new Random();
         ThrowingRunnable add = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.store(createMail(key));
@@ -438,7 +438,7 @@ public interface MailRepositoryContract {
         };
 
         ThrowingRunnable remove = () -> {
-            int keyIndex = computeKeyIndex(nbKeys, random.nextInt());
+            int keyIndex = computeKeyIndex(nbKeys, Math.abs(random.nextInt()));
             MailKey key =  computeKey(keyIndex);
             synchronized (locks.get(keyIndex)) {
                 testee.remove(key);
@@ -455,9 +455,7 @@ public interface MailRepositoryContract {
             .operation((a, b) -> distribution.sample().run())
             .threadCount(10)
             .operationCount(10)
-            .build()
-            .run()
-            .awaitTermination(1, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(1, TimeUnit.MINUTES);
 
         assertThat(testee.list()).containsOnlyElementsOf(expectedResult);
     }
