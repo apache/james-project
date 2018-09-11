@@ -22,31 +22,21 @@ package org.apache.james.queue.rabbitmq;
 import static org.apache.james.queue.api.MailQueue.DEQUEUED_METRIC_NAME_PREFIX;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.time.Instant;
-import java.util.Date;
 import java.util.concurrent.Executors;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
-import org.apache.james.core.MailAddress;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.SerializationUtil;
 import org.apache.mailet.Mail;
-import org.apache.mailet.PerRecipientHeaders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 import com.rabbitmq.client.GetResponse;
 
@@ -138,45 +128,11 @@ class Dequeuer {
                     .build())
                 .join();
 
-            MailImpl mail = new MailImpl(
-                dto.getName(),
-                dto.getSender().map(MailAddress::getMailSender).orElse(null),
-                dto.getRecipients()
-                    .stream()
-                    .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
-                    .collect(Guavate.toImmutableList()),
-                mimeMessage);
-
-            mail.setErrorMessage(dto.getErrorMessage());
-            mail.setRemoteAddr(dto.getRemoteAddr());
-            mail.setRemoteHost(dto.getRemoteHost());
-            mail.setState(dto.getState());
-            dto.getLastUpdated()
-                .map(Instant::toEpochMilli)
-                .map(Date::new)
-                .ifPresent(mail::setLastUpdated);
-
-            dto.getAttributes()
-                .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
-
-            mail.addAllSpecificHeaderForRecipient(retrievePerRecipientHeaders(dto));
-
-            return mail;
+            return dto.toMailWithMimeMessage(mimeMessage);
         } catch (AddressException e) {
             throw new MailQueue.MailQueueException("Failed to parse mail address", e);
         } catch (MessagingException e) {
             throw new MailQueue.MailQueueException("Failed to generate mime message", e);
         }
-    }
-
-    private PerRecipientHeaders retrievePerRecipientHeaders(MailDTO dto) {
-        PerRecipientHeaders perRecipientHeaders = new PerRecipientHeaders();
-        dto.getPerRecipientHeaders()
-            .entrySet()
-            .stream()
-            .flatMap(entry -> entry.getValue().toHeaders().stream()
-                .map(Throwing.function(header -> Pair.of(new MailAddress(entry.getKey()), header))))
-            .forEach(pair -> perRecipientHeaders.addHeaderForRecipient(pair.getValue(), pair.getKey()));
-        return perRecipientHeaders;
     }
 }
