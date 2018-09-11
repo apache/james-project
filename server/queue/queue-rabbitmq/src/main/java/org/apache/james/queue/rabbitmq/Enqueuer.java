@@ -34,6 +34,7 @@ import org.apache.james.queue.api.MailQueue;
 import org.apache.mailet.Mail;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.fge.lambdas.Throwing;
 
 class Enqueuer {
     private final MailQueueName name;
@@ -52,15 +53,12 @@ class Enqueuer {
     }
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
-        MimeMessagePartsId partsId = saveBlobs(mail).join();
-        MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(mail, partsId);
-        byte[] message = getMessageBytes(mailDTO);
-        rabbitClient.publish(name, message);
-
-        enqueueMetric.increment();
+        saveMail(mail)
+            .thenAccept(Throwing.<MimeMessagePartsId>consumer(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
+            .thenRun(enqueueMetric::increment);
     }
 
-    private CompletableFuture<MimeMessagePartsId> saveBlobs(Mail mail) throws MailQueue.MailQueueException {
+    private CompletableFuture<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {
         try {
             return mimeMessageStore.save(mail.getMessage());
         } catch (MessagingException e) {
@@ -68,8 +66,13 @@ class Enqueuer {
         }
     }
 
-    private byte[] getMessageBytes(MailReferenceDTO mailDTO) throws MailQueue.MailQueueException {
+    private void publishReferenceToRabbit(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
+        rabbitClient.publish(name, getMailReferenceBytes(mail, partsId));
+    }
+
+    private byte[] getMailReferenceBytes(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
         try {
+            MailReferenceDTO mailDTO = MailReferenceDTO.fromMail(mail, partsId);
             return mailReferenceSerializer.write(mailDTO);
         } catch (JsonProcessingException e) {
             throw new MailQueue.MailQueueException("Unable to serialize message", e);
