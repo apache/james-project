@@ -126,8 +126,9 @@ public class MailboxAppenderTest {
     @RepeatedTest(20)
     void appendShouldNotFailInConcurrentEnvironment() throws Exception {
         ConcurrentTestRunner.builder()
+            .operation((a, b) -> testee.append(mimeMessage, USER, FOLDER + "/any"))
             .threadCount(100)
-            .build((a, b) -> testee.append(mimeMessage, USER, FOLDER + "/any"))
+            .build()
             .run()
             .assertNoException();
     }

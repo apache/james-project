@@ -104,8 +104,9 @@ public abstract class AbstractSMTPServerTest {
             String mailContent = CharStreams.toString(new InputStreamReader(ClassLoader.getSystemResourceAsStream("a50.eml"), StandardCharsets.US_ASCII));
 
             assertThat(ConcurrentTestRunner.builder()
+                .operation((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
                 .threadCount(4)
-                .build((threadNumber, step) -> send(finalServer, bindedAddress, mailContent))
+                .build()
                 .run()
                 .awaitTermination(1, TimeUnit.MINUTES))
                 .isTrue();

@@ -79,11 +79,12 @@ public abstract class ProvisioningTest {
         String token = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD).serialize();
 
         boolean termination = ConcurrentTestRunner.builder()
-            .threadCount(10)
-            .build((a, b) -> with()
+            .operation((a, b) -> with()
                 .header("Authorization", token)
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
                 .post("/jmap"))
+            .threadCount(10)
+            .build()
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 

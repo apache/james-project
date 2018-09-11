@@ -65,8 +65,9 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
 
         ConcurrentTestRunner
             .builder()
+            .operation((threadNumber, step) -> sut.createMailboxesIfNeeded(session))
             .threadCount(2)
-            .build((threadNumber, step) -> sut.createMailboxesIfNeeded(session))
+            .build()
             .run()
             .assertNoException();
     }

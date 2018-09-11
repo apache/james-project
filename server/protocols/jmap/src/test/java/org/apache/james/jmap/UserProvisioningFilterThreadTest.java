@@ -45,8 +45,9 @@ public class UserProvisioningFilterThreadTest {
     public void testConcurrentAccessToFilterShouldNotThrow() throws ExecutionException, InterruptedException {
         ConcurrentTestRunner
             .builder()
+            .operation((threadNumber, step) -> sut.createAccountIfNeeded(session))
             .threadCount(2)
-            .build((threadNumber, step) -> sut.createAccountIfNeeded(session))
+            .build()
             .run()
             .assertNoException();
     }

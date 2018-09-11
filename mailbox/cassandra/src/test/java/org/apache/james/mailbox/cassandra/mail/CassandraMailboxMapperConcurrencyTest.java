@@ -62,9 +62,10 @@ class CassandraMailboxMapperConcurrencyTest {
     @Test
     void saveShouldBeThreadSafe() throws Exception {
         boolean termination = ConcurrentTestRunner.builder()
+            .operation((a, b) -> testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY)))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
-            .build((a, b) -> testee.save(new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY)))
+            .build()
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 
@@ -80,9 +81,10 @@ class CassandraMailboxMapperConcurrencyTest {
         mailbox.setName("newName");
 
         boolean termination = ConcurrentTestRunner.builder()
+            .operation((a, b) -> testee.save(mailbox))
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
-            .build((a, b) -> testee.save(mailbox))
+            .build()
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 

@@ -232,13 +232,14 @@ public class MemoryMailRepositoryStoreTest {
         int threadCount = 10;
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
-            .threadCount(10)
-            .build((threadNb, operationNb) -> repositoryStore.select(url)
+            .operation((threadNb, operationNb) -> repositoryStore.select(url)
                 .store(FakeMail.builder()
                     .name("name" + threadNb)
                     .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
                         .setText("Any body"))
-                    .build()));
+                    .build()))
+            .threadCount(10)
+            .build();
         concurrentTestRunner.run().awaitTermination(1, TimeUnit.MINUTES);
         concurrentTestRunner.assertNoException();
 

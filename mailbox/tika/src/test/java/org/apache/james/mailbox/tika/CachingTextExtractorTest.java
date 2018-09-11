@@ -186,8 +186,9 @@ public class CachingTextExtractorTest {
     @RepeatedTest(10)
     void concurrentValueComputationShouldNotLeadToDuplicatedBackendAccess() throws Exception {
         ConcurrentTestRunner.builder()
+            .operation((a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
             .threadCount(10)
-            .build((a, b) -> textExtractor.extractContent(INPUT_STREAM.get(), CONTENT_TYPE))
+            .build()
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 

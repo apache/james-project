@@ -981,9 +981,9 @@ public abstract class MailboxManagerTest {
         String mailboxName = "a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z";
 
         ConcurrentTestRunner testRunner = ConcurrentTestRunner.builder()
+            .operation((a, b) -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName + a), session))
             .threadCount(10)
-            .build(
-                (a, b) -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName + a), session))
+            .build()
             .run();
         testRunner.awaitTermination(1, TimeUnit.MINUTES);
         testRunner.assertNoException();

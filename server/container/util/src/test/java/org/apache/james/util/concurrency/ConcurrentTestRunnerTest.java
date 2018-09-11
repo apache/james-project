@@ -29,14 +29,16 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 public class ConcurrentTestRunnerTest {
-    public static final ConcurrentTestRunner.BiConsumer EMPTY_BI_CONSUMER = (threadNumber, step) -> { };
+    public static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
     public static final int DEFAULT_AWAIT_TIME = 100;
 
     @Test
     public void constructorShouldThrowOnNegativeThreadCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
-                .threadCount(-1))
+                .operation(NOOP)
+                .threadCount(-1)
+                .build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -44,6 +46,8 @@ public class ConcurrentTestRunnerTest {
     public void constructorShouldThrowOnNegativeOperationCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(1)
                 .operationCount(-1))
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -52,7 +56,9 @@ public class ConcurrentTestRunnerTest {
     public void constructorShouldThrowOnZeroThreadCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
-                .threadCount(0))
+                .operation(NOOP)
+                .threadCount(0)
+                .build())
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -60,6 +66,8 @@ public class ConcurrentTestRunnerTest {
     public void constructorShouldThrowOnZeroOperationCount() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
+                .operation(NOOP)
+                .threadCount(1)
                 .operationCount(0))
             .isInstanceOf(IllegalArgumentException.class);
     }
@@ -68,16 +76,18 @@ public class ConcurrentTestRunnerTest {
     public void constructorShouldThrowOnNullBiConsumer() {
         assertThatThrownBy(() ->
             ConcurrentTestRunner.builder()
+                .operation(null)
                 .threadCount(1)
-                .build(null))
+                .build())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void awaitTerminationShouldReturnTrueWhenFinished() throws Exception {
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .operation(NOOP)
             .threadCount(1)
-            .build(EMPTY_BI_CONSUMER)
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -88,8 +98,9 @@ public class ConcurrentTestRunnerTest {
         int sleepDelay = 50;
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> Thread.sleep(sleepDelay))
             .threadCount(1)
-            .build((threadNumber, step) -> Thread.sleep(sleepDelay))
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(sleepDelay / 2, TimeUnit.MILLISECONDS)).isFalse();
@@ -100,9 +111,10 @@ public class ConcurrentTestRunnerTest {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
             .threadCount(2)
             .operationCount(2)
-            .build((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -114,8 +126,9 @@ public class ConcurrentTestRunnerTest {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> queue.add(threadNumber + ":" + step))
             .threadCount(2)
-            .build((threadNumber, step) -> queue.add(threadNumber + ":" + step))
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -125,11 +138,12 @@ public class ConcurrentTestRunnerTest {
     @Test
     public void runShouldNotThrowOnExceptions() throws Exception {
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
-            .threadCount(2)
-            .operationCount(2)
-            .build((threadNumber, step) -> {
+            .operation((threadNumber, step) -> {
                 throw new RuntimeException();
             })
+            .threadCount(2)
+            .operationCount(2)
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -138,9 +152,10 @@ public class ConcurrentTestRunnerTest {
     @Test
     public void noExceptionsShouldNotThrowWhenNoExceptionGenerated() throws Exception {
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
+            .operation(NOOP)
             .threadCount(2)
             .operationCount(2)
-            .build(EMPTY_BI_CONSUMER)
+            .build()
             .run();
 
         concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
@@ -151,11 +166,12 @@ public class ConcurrentTestRunnerTest {
     @Test
     public void assertNoExceptionShouldThrowOnExceptions() throws Exception {
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
-            .threadCount(2)
-            .operationCount(2)
-            .build((threadNumber, step) -> {
+            .operation((threadNumber, step) -> {
                 throw new RuntimeException();
             })
+            .threadCount(2)
+            .operationCount(2)
+            .build()
             .run();
         concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS);
 
@@ -168,12 +184,13 @@ public class ConcurrentTestRunnerTest {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
-            .threadCount(2)
-            .operationCount(2)
-            .build((threadNumber, step) -> {
+            .operation((threadNumber, step) -> {
                 queue.add(threadNumber + ":" + step);
                 throw new RuntimeException();
             })
+            .threadCount(2)
+            .operationCount(2)
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();
@@ -185,14 +202,15 @@ public class ConcurrentTestRunnerTest {
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>();
 
         ConcurrentTestRunner concurrentTestRunner = ConcurrentTestRunner.builder()
-            .threadCount(2)
-            .operationCount(2)
-            .build((threadNumber, step) -> {
+            .operation((threadNumber, step) -> {
                 queue.add(threadNumber + ":" + step);
                 if ((threadNumber + step) % 2 == 0) {
                     throw new RuntimeException();
                 }
             })
+            .threadCount(2)
+            .operationCount(2)
+            .build()
             .run();
 
         assertThat(concurrentTestRunner.awaitTermination(DEFAULT_AWAIT_TIME, TimeUnit.MILLISECONDS)).isTrue();

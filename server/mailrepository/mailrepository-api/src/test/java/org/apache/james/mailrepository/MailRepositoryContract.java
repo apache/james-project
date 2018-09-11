@@ -452,9 +452,10 @@ public interface MailRepositoryContract {
                 new DistributionEntry<>(remove, 0.75)));
 
         ConcurrentTestRunner.builder()
+            .operation((a, b) -> distribution.sample().run())
             .threadCount(10)
             .operationCount(10)
-            .build((a, b) -> distribution.sample().run())
+            .build()
             .run()
             .awaitTermination(1, TimeUnit.MINUTES);
 
