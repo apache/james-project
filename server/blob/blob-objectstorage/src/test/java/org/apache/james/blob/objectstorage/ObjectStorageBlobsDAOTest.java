@@ -19,12 +19,17 @@
 
 package org.apache.james.blob.objectstorage;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.util.UUID;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.Identity;
 import org.apache.james.blob.objectstorage.swift.PassHeaderName;
@@ -34,6 +39,7 @@ import org.apache.james.blob.objectstorage.swift.UserHeaderName;
 import org.apache.james.blob.objectstorage.swift.UserName;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerSwiftExtension.class)
@@ -46,6 +52,7 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private ContainerName containerName;
     private org.jclouds.blobstore.BlobStore blobStore;
     private SwiftTempAuthObjectStorage.Configuration testConfig;
+    private ObjectStorageBlobsDAO testee;
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) throws Exception {
@@ -57,12 +64,14 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
             .tempAuthHeaderUserName(UserHeaderName.of("X-Storage-User"))
             .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
             .build();
+        BlobId.Factory blobIdFactory = blobIdFactory();
         blobStore = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
-            .blobIdFactory(new HashBlobId.Factory())
+            .blobIdFactory(blobIdFactory)
             .getSupplier().get();
-        blobStore.createContainerInLocation(null, containerName.value());
+        testee = new ObjectStorageBlobsDAO(containerName, blobIdFactory, blobStore);
+        testee.createContainer(containerName);
     }
 
     @AfterEach
@@ -73,16 +82,27 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
 
     @Override
     public BlobStore testee() {
-        return ObjectStorageBlobsDAO
-            .builder(testConfig)
-            .container(containerName)
-            .blobIdFactory(new HashBlobId.Factory())
-            .build();
+        return testee;
     }
 
     @Override
     public BlobId.Factory blobIdFactory() {
         return new HashBlobId.Factory();
+    }
+
+    @Test
+    void canCreateContainer() throws Exception {
+        ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
+        testee.createContainer(containerName).get();
+        assertThat(blobStore.containerExists(containerName.value())).isTrue();
+    }
+    @Test
+    void failsWithRuntimeExceptionOnCreateContainerTwice() throws Exception {
+        ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
+        testee.createContainer(containerName).get();
+        assertThatThrownBy(() -> testee.createContainer(containerName).get())
+            .hasCauseInstanceOf(ObjectStoreException.class)
+            .hasMessageContaining("Unable to create container");
     }
 }
 

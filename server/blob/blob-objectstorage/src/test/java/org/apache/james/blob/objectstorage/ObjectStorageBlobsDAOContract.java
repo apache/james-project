@@ -29,22 +29,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-
 import org.apache.james.blob.api.BlobId;
-import org.jclouds.blobstore.BlobStore;
-import org.jclouds.domain.Location;
+
 
 public interface ObjectStorageBlobsDAOContract {
-
-    Location DEFAULT_LOCATION = null;
 
     ContainerName containerName();
 
     default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder builder)
         throws InterruptedException, ExecutionException, TimeoutException {
-        BlobStore blobStore = builder.getSupplier().get();
-        blobStore.createContainerInLocation(DEFAULT_LOCATION, containerName().value());
         ObjectStorageBlobsDAO dao = builder.build();
+        dao.createContainer(containerName());
         byte[] bytes = "content".getBytes(StandardCharsets.UTF_8);
         CompletableFuture<BlobId> save = dao.save(bytes);
         InputStream inputStream = save.thenApply(dao::read).get(10, TimeUnit.SECONDS);
