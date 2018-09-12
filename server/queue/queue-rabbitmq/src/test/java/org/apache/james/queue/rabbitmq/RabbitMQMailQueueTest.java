@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 import javax.mail.internet.MimeMessage;
@@ -29,6 +30,8 @@ import javax.mail.internet.MimeMessage;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitChannelPool;
+import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.ReusableDockerRabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
@@ -46,6 +49,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 @ExtendWith({ReusableDockerRabbitMQExtension.class, DockerCassandraExtension.class})
 public class RabbitMQMailQueueTest implements MailQueueContract {
@@ -65,13 +70,27 @@ public class RabbitMQMailQueueTest implements MailQueueContract {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
 
+        URI amqpUri = new URIBuilder()
+            .setScheme("amqp")
+            .setHost(rabbitMQ.getHostIp())
+            .setPort(rabbitMQ.getPort())
+            .build();
         URI rabbitManagementUri = new URIBuilder()
             .setScheme("http")
             .setHost(rabbitMQ.getHostIp())
             .setPort(rabbitMQ.getAdminPort())
             .build();
 
-        RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQ.connectionFactory().newConnection()));
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(amqpUri)
+            .managementUri(rabbitManagementUri)
+            .build();
+
+        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
+                new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
+
+        RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
         RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(rabbitClient, mimeMessageStore, BLOB_ID_FACTORY);
         RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitManagementUri, new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);

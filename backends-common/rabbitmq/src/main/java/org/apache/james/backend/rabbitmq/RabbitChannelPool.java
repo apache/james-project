@@ -19,12 +19,18 @@
 
 package org.apache.james.backend.rabbitmq;
 
+import java.util.function.Supplier;
+
+import javax.inject.Inject;
+
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
+import org.apache.james.util.MemoizedSupplier;
 
+import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -37,15 +43,17 @@ public class RabbitChannelPool {
     }
 
     private static class ChannelBasePooledObjectFactory extends BasePooledObjectFactory<Channel> {
-        private final Connection connection;
+        private final Supplier<Connection> connection;
 
-        public ChannelBasePooledObjectFactory(Connection connection) {
-            this.connection = connection;
+        public ChannelBasePooledObjectFactory(RabbitMQConnectionFactory factory) {
+            this.connection = MemoizedSupplier.of(
+                    Throwing.supplier(() -> factory.create()).sneakyThrow());
         }
 
         @Override
         public Channel create() throws Exception {
-            return connection.createChannel();
+            return connection.get()
+                    .createChannel();
         }
 
         @Override
@@ -66,9 +74,10 @@ public class RabbitChannelPool {
 
     private final ObjectPool<Channel> pool;
 
-    public RabbitChannelPool(Connection connection) {
+    @Inject
+    public RabbitChannelPool(RabbitMQConnectionFactory factory) {
         pool = new GenericObjectPool<>(
-            new ChannelBasePooledObjectFactory(connection));
+            new ChannelBasePooledObjectFactory(factory));
     }
 
     public <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
