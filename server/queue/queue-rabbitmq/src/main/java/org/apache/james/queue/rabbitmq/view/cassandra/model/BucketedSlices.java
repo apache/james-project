@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.stream.LongStream;
@@ -37,7 +38,7 @@ public class BucketedSlices {
         private final int value;
 
         private BucketId(int value) {
-            Preconditions.checkArgument(value >= 0, "sliceWindowSizeInSecond should not be negative");
+            Preconditions.checkArgument(value >= 0, "bucketId should not be negative");
 
             this.value = value;
         }
@@ -64,19 +65,19 @@ public class BucketedSlices {
 
     public static class Slice {
 
-        public static Slice of(Instant sliceStartInstant, long sliceWindowSizeInSecond) {
-            return new Slice(sliceStartInstant, sliceWindowSizeInSecond);
+        public static Slice of(Instant sliceStartInstant, Duration sliceWindowSize) {
+            return new Slice(sliceStartInstant, sliceWindowSize);
         }
 
         public static Stream<Slice> allSlicesTill(Slice firstSlice, Instant endAt) {
             long sliceCount = calculateSliceCount(firstSlice, endAt);
             long startAtSeconds =  firstSlice.getStartSliceInstant().getEpochSecond();
-            long sliceWindowSizeInSecond = firstSlice.getSliceWindowSizeInSecond();
+            long sliceWindowSizeInSecond = firstSlice.getSliceWindowSize().getSeconds();
 
             return LongStream.range(0, sliceCount)
                 .map(slicePosition -> startAtSeconds + sliceWindowSizeInSecond * slicePosition)
                 .mapToObj(Instant::ofEpochSecond)
-                .map(sliceStartInstant -> Slice.of(sliceStartInstant, firstSlice.getSliceWindowSizeInSecond()));
+                .map(sliceStartInstant -> Slice.of(sliceStartInstant, firstSlice.getSliceWindowSize()));
         }
 
         private static long calculateSliceCount(Slice firstSlice, Instant endAt) {
@@ -87,27 +88,27 @@ public class BucketedSlices {
             if (timeDiffInSecond < 0) {
                 return 0;
             } else {
-                return (timeDiffInSecond / firstSlice.sliceWindowSizeInSecond) + 1;
+                return (timeDiffInSecond / firstSlice.getSliceWindowSize().getSeconds()) + 1;
             }
         }
 
         private final Instant startSliceInstant;
-        private final long sliceWindowSizeInSecond;
+        private final Duration sliceWindowSize;
 
-        private Slice(Instant startSliceInstant, long sliceWindowSizeInSecond) {
+        private Slice(Instant startSliceInstant, Duration sliceWindowSize) {
             Preconditions.checkNotNull(startSliceInstant);
-            Preconditions.checkArgument(sliceWindowSizeInSecond > 0, "sliceWindowSizeInSecond should be positive");
+            Preconditions.checkNotNull(sliceWindowSize);
 
             this.startSliceInstant = startSliceInstant;
-            this.sliceWindowSizeInSecond = sliceWindowSizeInSecond;
+            this.sliceWindowSize = sliceWindowSize;
         }
 
         public Instant getStartSliceInstant() {
             return startSliceInstant;
         }
 
-        public long getSliceWindowSizeInSecond() {
-            return sliceWindowSizeInSecond;
+        public Duration getSliceWindowSize() {
+            return sliceWindowSize;
         }
 
         @Override
@@ -115,7 +116,7 @@ public class BucketedSlices {
             if (o instanceof Slice) {
                 Slice slice = (Slice) o;
 
-                return Objects.equals(this.sliceWindowSizeInSecond, slice.sliceWindowSizeInSecond)
+                return Objects.equals(this.sliceWindowSize, slice.sliceWindowSize)
                     && Objects.equals(this.startSliceInstant, slice.startSliceInstant);
             }
             return false;
@@ -123,7 +124,7 @@ public class BucketedSlices {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(startSliceInstant, sliceWindowSizeInSecond);
+            return Objects.hash(startSliceInstant, sliceWindowSize);
         }
     }
 }

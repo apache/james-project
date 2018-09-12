@@ -20,7 +20,6 @@
 package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.Objects;
 
 import org.apache.james.queue.rabbitmq.MailQueueName;
@@ -90,10 +89,6 @@ public class EnqueuedMail {
             new Builder.LastStage(mail, bucketId, timeRangeStart, enqueuedTime, mailKey, mailQueueName);
     }
 
-    public static Comparator<EnqueuedMail> getEnqueuedTimeComparator() {
-        return Comparator.comparing(EnqueuedMail::getEnqueuedTime);
-    }
-
     private final Mail mail;
     private final BucketedSlices.BucketId bucketId;
     private final Instant timeRangeStart;
@@ -143,6 +138,7 @@ public class EnqueuedMail {
             return Objects.equals(this.bucketId, that.bucketId)
                     && Objects.equals(this.mail, that.mail)
                     && Objects.equals(this.timeRangeStart, that.timeRangeStart)
+                    && Objects.equals(this.enqueuedTime, that.enqueuedTime)
                     && Objects.equals(this.mailKey, that.mailKey)
                     && Objects.equals(this.mailQueueName, that.mailQueueName);
         }
@@ -151,6 +147,6 @@ public class EnqueuedMail {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(mail, bucketId, timeRangeStart, mailKey, mailQueueName);
+        return Objects.hash(mail, bucketId, timeRangeStart, enqueuedTime, mailKey, mailQueueName);
     }
 }

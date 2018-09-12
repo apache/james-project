@@ -19,47 +19,15 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.model;
 
-import java.util.Objects;
+import org.junit.jupiter.api.Test;
 
-import org.apache.mailet.Mail;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-import com.google.common.base.Preconditions;
+class EnqueuedMailTest {
 
-public class MailKey {
-
-    public static MailKey fromMail(Mail mail) {
-        return of(mail.getName());
-    }
-
-    public static MailKey of(String mailKey) {
-        return new MailKey(mailKey);
-    }
-
-    private final String mailKey;
-
-    private MailKey(String mailKey) {
-        Preconditions.checkNotNull(mailKey);
-        Preconditions.checkArgument(!mailKey.isEmpty());
-
-        this.mailKey = mailKey;
-    }
-
-    public String getMailKey() {
-        return mailKey;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MailKey) {
-            MailKey mailKey1 = (MailKey) o;
-
-            return Objects.equals(this.mailKey, mailKey1.mailKey);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(mailKey);
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(EnqueuedMail.class)
+            .verify();
     }
 }

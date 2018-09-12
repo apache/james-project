@@ -62,4 +62,8 @@ public class CassandraAsyncExecutor {
             .thenApply(Optional::ofNullable);
     }
 
+    public CompletableFuture<Boolean> executeReturnExists(Statement statement) {
+        return executeSingleRow(statement)
+            .thenApply(Optional::isPresent);
+    }
 }

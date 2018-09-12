@@ -79,8 +79,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void delete(Mailbox mailbox) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
-        FluentFutureStream.ofFutures(mailboxPathDAO.delete(mailbox.generateAssociatedPath()), mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
-            .thenComposeOnAll(any -> mailboxDAO.delete(mailboxId))
+        FluentFutureStream.ofFutures(
+                mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
+                mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
+            .map(any -> mailboxDAO.delete(mailboxId), FluentFutureStream::unboxFuture)
             .join();
     }
 
@@ -166,10 +168,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
     private List<Mailbox> toMailboxes(MailboxPath path, CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes) {
         Pattern regex = Pattern.compile(constructEscapedRegexForMailboxNameMatching(path));
-        
+
         return FluentFutureStream.of(listUserMailboxes)
                 .filter(idAndPath -> regex.matcher(idAndPath.getMailboxPath().getName()).matches())
-                .thenFlatComposeOnOptional(this::retrieveMailbox)
+                .map(this::retrieveMailbox, FluentFutureStream::unboxFutureOptional)
                 .join()
                 .collect(Guavate.toImmutableList());
     }
@@ -227,7 +229,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public List<Mailbox> list() {
         return mailboxDAO.retrieveAllMailboxes()
-            .thenComposeOnAll(this::toMailboxWithAclFuture)
+            .map(this::toMailboxWithAclFuture, FluentFutureStream::unboxFuture)
             .join()
             .collect(Guavate.toImmutableList());
     }
@@ -283,7 +285,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) {
         return FluentFutureStream.of(userMailboxRightsDAO.listRightsForUser(userName)
             .thenApply(map -> toAuthorizedMailboxIds(map, right)))
-            .thenFlatComposeOnOptional(this::retrieveMailbox)
+            .map(this::retrieveMailbox, FluentFutureStream::unboxFutureOptional)
             .join()
             .collect(Guavate.toImmutableList());
     }

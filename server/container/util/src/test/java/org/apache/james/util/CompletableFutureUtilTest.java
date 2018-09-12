@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -171,59 +170,6 @@ public class CompletableFutureUtilTest {
     }
 
     @Test
-    public void allOfArrayShouldPreserveOrder() {
-        long value1 = 18L;
-        long value2 = 19L;
-        long value3 = 20L;
-        long value4 = 21L;
-        long value5 = 22L;
-        long value6 = 23L;
-        long value7 = 24L;
-        long value8 = 25L;
-        long value9 = 26L;
-        long value10 = 27L;
-        assertThat(
-            CompletableFutureUtil.allOfArray(
-                    CompletableFuture.completedFuture(value1),
-                    CompletableFuture.completedFuture(value2),
-                    CompletableFuture.completedFuture(value3),
-                    CompletableFuture.completedFuture(value4),
-                    CompletableFuture.completedFuture(value5),
-                    CompletableFuture.completedFuture(value6),
-                    CompletableFuture.completedFuture(value7),
-                    CompletableFuture.completedFuture(value8),
-                    CompletableFuture.completedFuture(value9),
-                    CompletableFuture.completedFuture(value10))
-                .join()
-                .collect(Guavate.toImmutableList()))
-            .containsExactly(value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
-    }
-
-    @Test
-    public void allOfArrayShouldUnboxNoArgs() {
-        assertThat(
-            CompletableFutureUtil.allOfArray()
-                .join()
-                .collect(Guavate.toImmutableList()))
-            .isEmpty();
-    }
-
-    @Test
-    public void allOfArrayShouldUnboxArray() {
-        long value1 = 18L;
-        long value2 = 19L;
-        long value3 = 20L;
-        assertThat(
-            CompletableFutureUtil.allOfArray(
-                    CompletableFuture.completedFuture(value1),
-                    CompletableFuture.completedFuture(value2),
-                    CompletableFuture.completedFuture(value3))
-                .join()
-                .collect(Guavate.toImmutableList()))
-            .containsOnly(value1, value2, value3);
-    }
-
-    @Test
     public void allOfShouldWorkOnVeryLargeStream() {
         CompletableFutureUtil.allOf(
             IntStream.range(0, 100000)
@@ -254,58 +200,6 @@ public class CompletableFutureUtilTest {
                 .join()
                 .collect(Guavate.toImmutableList()))
             .isEmpty();
-    }
-
-    @Test
-    public void thenComposeOnAllShouldMapOnStreamInsideACompletableFuturOfStreamAndTransformTheResultingStreamOfCompletableFutureIntoACompletableOfStreamAndFlatIt() {
-        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of(1, 2, 3));
-
-        assertThat(
-            CompletableFutureUtil.thenComposeOnAll(futurOfInteger, integer ->
-                CompletableFuture.completedFuture(integer * 2))
-                .join()
-                .collect(Guavate.toImmutableList()))
-            .containsExactly(2, 4, 6);
-    }
-
-    @Test
-    public void thenComposeOnAllOnEmptyStreamShouldReturnAnEmptyStream() {
-        CompletableFuture<Stream<Integer>> futurOfInteger = CompletableFuture.completedFuture(Stream.of());
-
-        assertThat(
-            CompletableFutureUtil.thenComposeOnAll(futurOfInteger, integer ->
-                CompletableFuture.completedFuture(integer * 2))
-                .join()
-                .collect(Guavate.toImmutableList()))
-            .isEmpty();
-    }
-
-    @Test
-    public void keepValueShouldCompleteWhenTheGivenCompletableFutureEnd() {
-        final AtomicInteger numOfFutureExecution = new AtomicInteger(0);
-
-        Supplier<CompletableFuture<Void>> future = () ->
-            CompletableFuture.runAsync(numOfFutureExecution::incrementAndGet);
-
-        assertThat(
-            CompletableFutureUtil.keepValue(future, 42)
-                .join())
-            .isEqualTo(42);
-
-        assertThat(
-            numOfFutureExecution.get())
-            .isEqualTo(1);
-    }
-
-    @Test
-    public void keepValueShouldReturnNullWithNullValue() {
-        Supplier<CompletableFuture<Void>> future = () ->
-            CompletableFuture.completedFuture(null);
-
-        assertThat(
-            CompletableFutureUtil.keepValue(future, null)
-                .join())
-            .isNull();
     }
 
     @Test
@@ -357,7 +251,7 @@ public class CompletableFutureUtilTest {
         assertThat(
             CompletableFutureUtil.reduce(
                 (i, j) -> i + j,
-                CompletableFutureUtil.<Long>allOfArray())
+                CompletableFuture.completedFuture(Stream.<Long>of()))
                 .join())
             .isEmpty();
     }
@@ -367,11 +261,8 @@ public class CompletableFutureUtilTest {
         assertThat(
             CompletableFutureUtil.reduce(
                 (i, j) -> i + j,
-                CompletableFutureUtil.allOfArray(
-                    CompletableFuture.completedFuture(1L),
-                    CompletableFuture.completedFuture(2L),
-                    CompletableFuture.completedFuture(3L)
-                ))
+                CompletableFuture.completedFuture(Stream.of(
+                    1L, 2L, 3L)))
                 .join())
             .contains(6L);
     }
@@ -382,7 +273,7 @@ public class CompletableFutureUtilTest {
         assertThat(
             CompletableFutureUtil.reduce(
                 (i, j) -> i + j,
-                CompletableFutureUtil.<Long>allOfArray(),
+                CompletableFuture.completedFuture(Stream.of()),
                 identityAccumulator)
                 .join())
             .isEqualTo(identityAccumulator);
@@ -393,11 +284,7 @@ public class CompletableFutureUtilTest {
         assertThat(
             CompletableFutureUtil.reduce(
                 (i, j) -> i + j,
-                CompletableFutureUtil.allOfArray(
-                    CompletableFuture.completedFuture(1L),
-                    CompletableFuture.completedFuture(2L),
-                    CompletableFuture.completedFuture(3L)
-                ),
+                CompletableFuture.completedFuture(Stream.of(1L, 2L,3L)),
                 0L)
                 .join())
             .isEqualTo(6L);
@@ -419,5 +306,24 @@ public class CompletableFutureUtilTest {
                     CompletableFuture.completedFuture(Optional.empty()))
                 .join())
             .isEmpty();
+    }
+
+    @Test
+    public void sortShouldReturnEmptyWhenEmptyStream() {
+        FluentFutureStream<Long> futureStream = FluentFutureStream.ofFutures();
+        assertThat(futureStream.sorted(Long::compareTo).join())
+            .isEmpty();
+    }
+
+    @Test
+    public void sortShouldReturnTheSortedStream() {
+        FluentFutureStream<Long> futureStream = FluentFutureStream.ofFutures(
+            CompletableFuture.completedFuture(4L),
+            CompletableFuture.completedFuture(3L),
+            CompletableFuture.completedFuture(2L),
+            CompletableFuture.completedFuture(1L));
+
+        assertThat(futureStream.sorted(Long::compareTo).join())
+            .containsExactly(1L, 2L, 3L, 4L);
     }
 }
