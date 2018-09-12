@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
@@ -130,5 +131,55 @@ class RabbitMQConfigurationTest {
                 .amqpUri(URI.create(amqpUri))
                 .managementUri(URI.create(managementUri))
                 .build());
+    }
+
+    @Test
+    void maxRetriesShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .build();
+
+        assertThat(rabbitMQConfiguration.getMaxRetries())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_MAX_RETRIES);
+    }
+
+    @Test
+    void maxRetriesShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int maxRetries = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .maxRetries(maxRetries)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getMaxRetries())
+            .isEqualTo(maxRetries);
+    }
+
+    @Test
+    void minDelayShouldEqualsDefaultValueWhenNotGiven() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .build();
+
+        assertThat(rabbitMQConfiguration.getMinDelay())
+            .isEqualTo(RabbitMQConfiguration.Builder.DEFAULT_MIN_DELAY);
+    }
+
+    @Test
+    void minDelayShouldEqualsCustomValueWhenGiven() throws URISyntaxException {
+        int minDelay = 1;
+
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
+            .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .minDelay(minDelay)
+            .build();
+
+        assertThat(rabbitMQConfiguration.getMinDelay())
+            .isEqualTo(minDelay);
     }
 }

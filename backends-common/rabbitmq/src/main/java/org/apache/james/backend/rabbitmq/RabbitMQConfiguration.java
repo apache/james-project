@@ -20,6 +20,7 @@ package org.apache.james.backend.rabbitmq;
 
 import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
 
@@ -38,18 +39,38 @@ public class RabbitMQConfiguration {
     }
 
     public static class Builder {
+        public static final int DEFAULT_MAX_RETRIES = 7;
+        public static final int DEFAULT_MIN_DELAY = 3000;
+
         private final URI amqpUri;
         private final URI managementUri;
+        private Optional<Integer> maxRetries;
+        private Optional<Integer> minDelay;
 
         private Builder(URI amqpUri, URI managementUri) {
             this.amqpUri = amqpUri;
             this.managementUri = managementUri;
+            this.maxRetries = Optional.empty();
+            this.minDelay = Optional.empty();
+        }
+
+        public Builder maxRetries(int maxRetries) {
+            this.maxRetries = Optional.of(maxRetries);
+            return this;
+        }
+
+        public Builder minDelay(int minDelay) {
+            this.minDelay = Optional.of(minDelay);
+            return this;
         }
 
         public RabbitMQConfiguration build() {
             Preconditions.checkNotNull(amqpUri, "'amqpUri' should not be null");
             Preconditions.checkNotNull(managementUri, "'managementUri' should not be null");
-            return new RabbitMQConfiguration(amqpUri, managementUri);
+            return new RabbitMQConfiguration(amqpUri, 
+                    managementUri, 
+                    maxRetries.orElse(DEFAULT_MAX_RETRIES),
+                    minDelay.orElse(DEFAULT_MIN_DELAY));
         }
     }
 
@@ -85,10 +106,14 @@ public class RabbitMQConfiguration {
 
     private final URI uri;
     private final URI managementUri;
+    private final int maxRetries;
+    private final int minDelay;
 
-    private RabbitMQConfiguration(URI uri, URI managementUri) {
+    private RabbitMQConfiguration(URI uri, URI managementUri, int maxRetries, int minDelay) {
         this.uri = uri;
         this.managementUri = managementUri;
+        this.maxRetries = maxRetries;
+        this.minDelay = minDelay;
     }
 
     public URI getUri() {
@@ -99,19 +124,29 @@ public class RabbitMQConfiguration {
         return managementUri;
     }
 
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public int getMinDelay() {
+        return minDelay;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof RabbitMQConfiguration) {
             RabbitMQConfiguration that = (RabbitMQConfiguration) o;
 
             return Objects.equals(this.uri, that.uri)
-                && Objects.equals(this.managementUri, that.managementUri);
+                && Objects.equals(this.managementUri, that.managementUri)
+                && Objects.equals(this.maxRetries, that.maxRetries)
+                && Objects.equals(this.minDelay, that.minDelay);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(uri, managementUri);
+        return Objects.hash(uri, managementUri, maxRetries, minDelay);
     }
 }
