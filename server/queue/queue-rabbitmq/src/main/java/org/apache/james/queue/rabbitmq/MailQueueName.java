@@ -26,7 +26,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-final class MailQueueName {
+public final class MailQueueName {
 
     static class WorkQueueName {
         static Optional<WorkQueueName> fromString(String name) {
@@ -114,7 +114,7 @@ final class MailQueueName {
     private static final String EXCHANGE_PREFIX = PREFIX + "-exchange-";
     @VisibleForTesting static final String WORKQUEUE_PREFIX = PREFIX + "-workqueue-";
 
-    static MailQueueName fromString(String name) {
+    public static MailQueueName fromString(String name) {
         Preconditions.checkNotNull(name);
         return new MailQueueName(name);
     }
@@ -130,7 +130,7 @@ final class MailQueueName {
         this.name = name;
     }
 
-    String asString() {
+    public String asString() {
         return name;
     }
 
