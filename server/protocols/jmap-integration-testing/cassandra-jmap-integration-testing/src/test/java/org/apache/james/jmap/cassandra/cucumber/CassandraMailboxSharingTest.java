@@ -36,7 +36,7 @@ import cucumber.api.junit.Cucumber;
     "classpath:cucumber/sharing/MoveMailboxAndSharing.feature",
     "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature" },
     glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
-    tags = {"~@Ignore"},
+    tags = {"not @Ignore"},
     strict = true)
 public class CassandraMailboxSharingTest {
 

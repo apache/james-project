@@ -64,11 +64,11 @@ public interface MailQueueMetricContract extends MailQueueContract {
     default void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
         enQueueMail(3);
 
-        ArgumentCaptor<Gauge> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
+        ArgumentCaptor<Gauge<?>> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
         verify(testSystem.getSpyGaugeRegistry(), times(1)).register(any(), gaugeCaptor.capture());
         Mockito.verifyNoMoreInteractions(testSystem.getSpyGaugeRegistry());
 
-        Gauge registeredGauge = gaugeCaptor.getValue();
+        Gauge<?> registeredGauge = gaugeCaptor.getValue();
         Assertions.assertThat(registeredGauge.get()).isEqualTo(3L);
     }
 
@@ -123,6 +123,7 @@ public interface MailQueueMetricContract extends MailQueueContract {
         verify(testSystem.getSpyEnqueuedMailsTimeMetric(), times(2)).stopAndPublish();
         verifyNoMoreInteractions(testSystem.getSpyDequeuedMailsTimeMetric());
     }
+
     @Test
     default void dequeueShouldPublishDequeueTimeMetric(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) throws Exception {
         enQueueMail(2);

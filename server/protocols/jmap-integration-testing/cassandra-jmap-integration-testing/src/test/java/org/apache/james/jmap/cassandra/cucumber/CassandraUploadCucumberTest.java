@@ -29,7 +29,7 @@ import cucumber.api.junit.Cucumber;
 @RunWith(Cucumber.class)
 @CucumberOptions(features = {"classpath:cucumber/UploadEndpoint.feature"},
                 glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
-                tags = {"~@Ignore"},
+                tags = {"not @Ignore"},
                 strict = true)
 public class CassandraUploadCucumberTest {
 
