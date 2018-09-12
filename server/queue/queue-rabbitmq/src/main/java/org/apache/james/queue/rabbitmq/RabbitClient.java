@@ -38,6 +38,7 @@ class RabbitClient {
     private static final boolean MULTIPLE = true;
     private static final ImmutableMap<String, Object> NO_ARGUMENTS = ImmutableMap.of();
     private static final String ROUTING_KEY = "";
+    public static final boolean REQUEUE = true;
 
     private final RabbitChannelPool channelPool;
 
@@ -69,6 +70,11 @@ class RabbitClient {
 
     void ack(long deliveryTag) throws IOException {
         RabbitChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicAck(deliveryTag, !MULTIPLE);
+        channelPool.execute(consumer);
+    }
+
+    void nack(long deliveryTag) throws IOException {
+        RabbitChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicNack(deliveryTag, !MULTIPLE, REQUEUE);
         channelPool.execute(consumer);
     }
 
