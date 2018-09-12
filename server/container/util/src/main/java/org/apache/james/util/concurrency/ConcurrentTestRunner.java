@@ -80,6 +80,11 @@ public class ConcurrentTestRunner {
             return build()
                 .runSuccessfullyWithin(duration);
         }
+
+        public ConcurrentTestRunner runAcceptingErrorsWithin(Duration duration) throws InterruptedException, ExecutionException {
+            return build()
+                .runAcceptingErrorsWithin(duration);
+        }
     }
 
     public interface ConcurrentOperation {
@@ -167,5 +172,10 @@ public class ConcurrentTestRunner {
         return run()
             .awaitTermination(duration)
             .assertNoException();
+    }
+
+    public ConcurrentTestRunner runAcceptingErrorsWithin(Duration duration) throws InterruptedException, ExecutionException {
+        return run()
+            .awaitTermination(duration);
     }
 }
