@@ -124,6 +124,27 @@ public class BounceTest {
     }
 
     @Test
+    public void bounceShouldNotSendEmailToNullSender() throws Exception {
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .build();
+        bounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+            .name(MAILET_NAME)
+            .sender(MailAddress.nullSender())
+            .recipient(MailAddressFixture.ANY_AT_JAMES)
+            .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                .setText("My content"))
+            .build();
+
+        bounce.service(mail);
+
+        assertThat(fakeMailContext.getSentMails()).isEmpty();
+    }
+
+    @Test
     public void bounceShouldChangeTheStateWhenNoSenderAndPassThroughEqualsFalse() throws Exception {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .mailetName(MAILET_NAME)

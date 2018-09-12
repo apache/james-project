@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class MailModifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailModifier.class);
@@ -108,7 +109,10 @@ public class MailModifier {
 
     public void setRecipients(List<MailAddress> recipients) {
         if (!recipients.isEmpty()) {
-            mail.setRecipients(recipients);
+            mail.setRecipients(recipients
+                .stream()
+                .filter(address -> !address.isNullSender())
+                .collect(ImmutableList.toImmutableList()));
             if (mailet.getInitParameters().isDebug()) {
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("recipients set to: {}", (Object) recipients.toArray());
@@ -142,7 +146,7 @@ public class MailModifier {
     public void setReplyTo(Optional<MailAddress> optionalReplyTo) throws MessagingException {
         if (optionalReplyTo.isPresent()) {
             MailAddress replyTo = optionalReplyTo.get();
-            if (replyTo.equals(SpecialAddress.NULL)) {
+            if (replyTo.isNullSender() || replyTo.equals(SpecialAddress.NULL)) {
                 mail.getMessage().setReplyTo(null);
                 if (mailet.getInitParameters().isDebug()) {
                     LOGGER.debug("replyTo set to: null");

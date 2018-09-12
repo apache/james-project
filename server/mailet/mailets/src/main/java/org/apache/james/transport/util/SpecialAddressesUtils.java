@@ -86,6 +86,10 @@ public class SpecialAddressesUtils {
             return ImmutableSet.of(mailAddress);
         }
 
+        if (mailAddress.isNullSender()) {
+            return ImmutableList.of();
+        }
+
         SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
         if (specialAddressKind == null) {
             return ImmutableSet.of(mailAddress);
@@ -95,7 +99,7 @@ public class SpecialAddressesUtils {
             case FROM:
             case REVERSE_PATH:
                 return Optional.ofNullable(mail.getSender())
-                    .map(sender -> ImmutableSet.of(sender))
+                    .map(ImmutableSet::of)
                     .orElse(ImmutableSet.of());
             case REPLY_TO:
                 return getReplyTosFromMail(mail);
@@ -186,6 +190,7 @@ public class SpecialAddressesUtils {
             case SENDER:
             case REVERSE_PATH:
                 return Optional.ofNullable(mail.getSender())
+                    .filter(address -> !address.isNullSender())
                     .map(ImmutableSet::of)
                     .orElse(ImmutableSet.of());
             case FROM:

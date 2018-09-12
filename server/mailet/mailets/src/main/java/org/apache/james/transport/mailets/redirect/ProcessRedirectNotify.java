@@ -72,6 +72,7 @@ public class ProcessRedirectNotify {
             // Set additional headers
 
             mailModifier.setRecipients(mailet.getRecipients(originalMail));
+
             mailModifier.setTo(mailet.getTo(originalMail));
             mailModifier.setSubjectPrefix(originalMail);
             mailModifier.setReplyTo(mailet.getReplyTo(originalMail));
@@ -86,7 +87,9 @@ public class ProcessRedirectNotify {
 
             if (senderDomainIsValid(newMail)) {
                 // Send it off...
-                mailet.getMailetContext().sendMail(newMail);
+                if (!newMail.getRecipients().isEmpty()) {
+                    mailet.getMailetContext().sendMail(newMail);
+                }
             } else {
                 throw new MessagingException(mailet.getMailetName() + " mailet cannot forward " + originalMail.getName() + ". " +
                         "Invalid sender domain for " + newMail.getSender() + ". " +
