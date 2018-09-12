@@ -55,7 +55,8 @@ class Enqueuer {
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         saveMail(mail)
             .thenAccept(Throwing.<MimeMessagePartsId>consumer(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
-            .thenRun(enqueueMetric::increment);
+            .thenRun(enqueueMetric::increment)
+            .join();
     }
 
     private CompletableFuture<MimeMessagePartsId> saveMail(Mail mail) throws MailQueue.MailQueueException {
