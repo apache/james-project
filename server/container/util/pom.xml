@@ -59,6 +59,10 @@
             <artifactId>icu4j</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.nurkiewicz.asyncretry</groupId>
+            <artifactId>asyncretry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
         </dependency>
@@ -97,6 +101,11 @@
         <dependency>
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

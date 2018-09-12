@@ -17,28 +17,8 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.utils;
+package org.apache.james.util.retry;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
-public class RetryExecutorUtil {
-    private static final Logger LOG = LoggerFactory.getLogger(RetryExecutorUtil.class);
-
-    private static final int INITIAL_DELAY_MILLIS = 500;
-    private static final int MULTIPLIER = 2;
-
-    @SafeVarargs
-    public static AsyncRetryExecutor retryOnExceptions(AsyncRetryExecutor executor, int maxRetries, int minDelay, Class<? extends Throwable>... clazz) {
-        LOG.info("The action should retry when {} and retry to {} times if needed", clazz, maxRetries);
-        return executor
-            .withExponentialBackoff(INITIAL_DELAY_MILLIS, MULTIPLIER)
-            .withProportionalJitter()
-            .retryOn(clazz)
-            .withMaxRetries(maxRetries)
-            .withMinDelay(minDelay);
-    }
-
+public interface FaultyService {
+    String faultyService();
 }
