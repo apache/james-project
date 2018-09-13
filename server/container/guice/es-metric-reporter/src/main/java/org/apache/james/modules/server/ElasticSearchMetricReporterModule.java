@@ -22,9 +22,9 @@ package org.apache.james.modules.server;
 import java.io.FileNotFoundException;
 import java.util.List;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.metrics.es.ESMetricReporter;
@@ -58,7 +58,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
     @Provides
     public ESReporterConfiguration provideConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration propertiesReader = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration propertiesReader = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
 
             if (isMetricEnable(propertiesReader)) {
                 return ESReporterConfiguration.builder()
@@ -77,12 +77,12 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
             .build();
     }
 
-    private String locateHost(PropertiesConfiguration propertiesReader) {
+    private String locateHost(Configuration propertiesReader) {
         return propertiesReader.getString("elasticsearch.http.host",
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST));
     }
 
-    private boolean isMetricEnable(PropertiesConfiguration propertiesReader) {
+    private boolean isMetricEnable(Configuration propertiesReader) {
         return propertiesReader.getBoolean("elasticsearch.metrics.reports.enabled", DEFAULT_DISABLE);
     }
 

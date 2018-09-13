@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.Configuration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -81,7 +81,7 @@ public class RabbitMQConfiguration {
         return amqpUri -> managementUri -> new Builder(amqpUri, managementUri);
     }
 
-    public static RabbitMQConfiguration from(PropertiesConfiguration configuration) {
+    public static RabbitMQConfiguration from(Configuration configuration) {
         String uriAsString = configuration.getString(URI_PROPERTY_NAME);
         Preconditions.checkState(!Strings.isNullOrEmpty(uriAsString), "You need to specify the URI of RabbitMQ");
         URI amqpUri = checkURI(uriAsString);

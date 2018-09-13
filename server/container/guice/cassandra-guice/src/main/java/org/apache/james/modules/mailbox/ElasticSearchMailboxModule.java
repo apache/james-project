@@ -29,8 +29,8 @@ import java.util.concurrent.ExecutorService;
 import javax.inject.Named;
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.ClientProviderImpl;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
@@ -104,7 +104,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     private ElasticSearchConfiguration getElasticSearchConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(ELASTICSEARCH_CONFIGURATION_NAME);
             return ElasticSearchConfiguration.fromProperties(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + ELASTICSEARCH_CONFIGURATION_NAME + " configuration file. Using 127.0.0.1:9300 as contact point");

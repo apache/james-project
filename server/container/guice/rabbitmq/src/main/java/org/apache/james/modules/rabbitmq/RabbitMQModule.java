@@ -22,8 +22,8 @@ import java.io.FileNotFoundException;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class RabbitMQModule extends AbstractModule {
     @Singleton
     private RabbitMQConfiguration getMailQueueConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
             return RabbitMQConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
             LOGGER.error("Could not find " + RABBITMQ_CONFIGURATION_NAME + " configuration file.");

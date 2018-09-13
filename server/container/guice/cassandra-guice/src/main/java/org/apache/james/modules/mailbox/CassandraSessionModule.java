@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
@@ -95,7 +95,7 @@ public class CassandraSessionModule extends AbstractModule {
     @Singleton
     BatchSizes getBatchSizesConfiguration(PropertiesProvider propertiesProvider) {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(BATCHSIZES_FILE_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(BATCHSIZES_FILE_NAME);
             BatchSizes batchSizes = BatchSizes.builder()
                     .fetchMetadata(configuration.getInt("fetch.metadata", BatchSizes.DEFAULT_BATCH_SIZE))
                     .fetchHeaders(configuration.getInt("fetch.headers", BatchSizes.DEFAULT_BATCH_SIZE))

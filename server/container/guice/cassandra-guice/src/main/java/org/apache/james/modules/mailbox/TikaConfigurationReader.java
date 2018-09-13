@@ -22,7 +22,7 @@ package org.apache.james.modules.mailbox;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.util.Size;
 import org.apache.james.util.TimeConverter;
@@ -38,7 +38,7 @@ public class TikaConfigurationReader {
     public static final String TIKA_CACHE_EVICTION_PERIOD = "tika.cache.eviction.period";
     public static final String TIKA_CACHE_WEIGHT_MAX = "tika.cache.weight.max";
 
-    public static TikaConfiguration readTikaConfiguration(PropertiesConfiguration configuration) {
+    public static TikaConfiguration readTikaConfiguration(Configuration configuration) {
         Optional<Boolean> enabled = Optional.ofNullable(
             configuration.getBoolean(TIKA_ENABLED, null));
 

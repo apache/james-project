@@ -25,8 +25,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.configuration.AbstractConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
@@ -216,7 +217,7 @@ public class ElasticSearchConfiguration {
         .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
         .build();
 
-    public static ElasticSearchConfiguration fromProperties(PropertiesConfiguration configuration) throws ConfigurationException {
+    public static ElasticSearchConfiguration fromProperties(Configuration configuration) throws ConfigurationException {
         return builder()
             .addHosts(getHosts(configuration))
             .indexMailboxName(computeMailboxIndexName(configuration))
@@ -233,7 +234,7 @@ public class ElasticSearchConfiguration {
             .build();
     }
 
-    public static Optional<IndexName> computeMailboxIndexName(PropertiesConfiguration configuration) {
+    public static Optional<IndexName> computeMailboxIndexName(Configuration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_MAILBOX_NAME))
                 .map(IndexName::new),
@@ -241,7 +242,7 @@ public class ElasticSearchConfiguration {
                 .map(IndexName::new));
     }
 
-    public static Optional<WriteAliasName> computeMailboxWriteAlias(PropertiesConfiguration configuration) {
+    public static Optional<WriteAliasName> computeMailboxWriteAlias(Configuration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_MAILBOX_NAME))
                 .map(WriteAliasName::new),
@@ -249,7 +250,7 @@ public class ElasticSearchConfiguration {
                 .map(WriteAliasName::new));
     }
 
-    public static Optional<ReadAliasName> computeMailboxReadAlias(PropertiesConfiguration configuration) {
+    public static Optional<ReadAliasName> computeMailboxReadAlias(Configuration configuration) {
         return OptionalUtils.or(
             Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_MAILBOX_NAME))
                 .map(ReadAliasName::new),
@@ -257,30 +258,30 @@ public class ElasticSearchConfiguration {
                 .map(ReadAliasName::new));
     }
 
-    public static Optional<IndexName> computeQuotaSearchIndexName(PropertiesConfiguration configuration) {
+    public static Optional<IndexName> computeQuotaSearchIndexName(Configuration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_INDEX_QUOTA_RATIO_NAME))
             .map(IndexName::new);
     }
 
-    public static Optional<WriteAliasName> computeQuotaSearchWriteAlias(PropertiesConfiguration configuration) {
+    public static Optional<WriteAliasName> computeQuotaSearchWriteAlias(Configuration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_WRITE_QUOTA_RATIO_NAME))
             .map(WriteAliasName::new);
     }
 
-    public static Optional<ReadAliasName> computeQuotaSearchReadAlias(PropertiesConfiguration configuration) {
+    public static Optional<ReadAliasName> computeQuotaSearchReadAlias(Configuration configuration) {
         return Optional.ofNullable(configuration.getString(ELASTICSEARCH_ALIAS_READ_QUOTA_RATIO_NAME))
                 .map(ReadAliasName::new);
     }
 
-    private static IndexAttachments provideIndexAttachments(PropertiesConfiguration configuration) {
+    private static IndexAttachments provideIndexAttachments(Configuration configuration) {
         if (configuration.getBoolean(ELASTICSEARCH_INDEX_ATTACHMENTS, DEFAULT_INDEX_ATTACHMENTS)) {
             return IndexAttachments.YES;
         }
         return IndexAttachments.NO;
     }
 
-    private static ImmutableList<Host> getHosts(PropertiesConfiguration propertiesReader) throws ConfigurationException {
-        PropertiesConfiguration.setDefaultListDelimiter(',');
+    private static ImmutableList<Host> getHosts(Configuration propertiesReader) throws ConfigurationException {
+        AbstractConfiguration.setDefaultListDelimiter(',');
         Optional<String> masterHost = Optional.ofNullable(
             propertiesReader.getString(ELASTICSEARCH_MASTER_HOST, null));
         Optional<Integer> masterPort = Optional.ofNullable(

@@ -25,8 +25,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.event.PropagateLookupRightListener;
@@ -113,7 +113,7 @@ public class JMAPModule extends AbstractModule {
     @Singleton
     JMAPConfiguration provideConfiguration(PropertiesProvider propertiesProvider, FileSystem fileSystem) throws ConfigurationException, IOException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration("jmap");
+            Configuration configuration = propertiesProvider.getConfiguration("jmap");
             return JMAPConfiguration.builder()
                 .enabled(configuration.getBoolean("enabled", true))
                 .keystore(configuration.getString("tls.keystoreURL"))

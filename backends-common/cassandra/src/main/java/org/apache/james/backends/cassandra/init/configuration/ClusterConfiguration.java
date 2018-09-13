@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration.AbstractConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.util.Host;
 
@@ -175,8 +176,8 @@ public class ClusterConfiguration {
         return new Builder();
     }
 
-    public static ClusterConfiguration from(PropertiesConfiguration configuration) {
-        PropertiesConfiguration.setDefaultListDelimiter(',');
+    public static ClusterConfiguration from(Configuration configuration) {
+        AbstractConfiguration.setDefaultListDelimiter(',');
         return ClusterConfiguration.builder()
             .hosts(listCassandraServers(configuration))
             .keyspace(Optional.ofNullable(configuration.getString(CASSANDRA_KEYSPACE, null)))
@@ -190,7 +191,7 @@ public class ClusterConfiguration {
             .build();
     }
 
-    private static List<Host> listCassandraServers(PropertiesConfiguration configuration) {
+    private static List<Host> listCassandraServers(Configuration configuration) {
         String[] ipAndPorts = configuration.getStringArray(CASSANDRA_NODES);
 
         return Arrays.stream(ipAndPorts)
@@ -198,7 +199,7 @@ public class ClusterConfiguration {
             .collect(Guavate.toImmutableList());
     }
 
-    private static Optional<PoolingOptions> readPoolingOptions(PropertiesConfiguration configuration) {
+    private static Optional<PoolingOptions> readPoolingOptions(Configuration configuration) {
         Optional<Integer> maxConnections = Optional.ofNullable(configuration.getInteger("cassandra.pooling.local.max.connections", null));
         Optional<Integer> maxRequests = Optional.ofNullable(configuration.getInteger("cassandra.pooling.local.max.requests", null));
         Optional<Integer> poolingTimeout = Optional.ofNullable(configuration.getInteger("cassandra.pooling.timeout", null));

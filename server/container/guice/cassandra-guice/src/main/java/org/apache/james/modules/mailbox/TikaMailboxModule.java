@@ -24,8 +24,8 @@ import java.net.URISyntaxException;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.tika.CachingTextExtractor;
@@ -65,7 +65,7 @@ public class TikaMailboxModule extends AbstractModule {
     @Singleton
     private TikaConfiguration getTikaConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            PropertiesConfiguration configuration = propertiesProvider.getConfiguration(TIKA_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(TIKA_CONFIGURATION_NAME);
 
             return TikaConfigurationReader.readTikaConfiguration(configuration);
         } catch (FileNotFoundException e) {
