@@ -24,56 +24,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
 import org.apache.james.sieverepository.api.ScriptName;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraActiveScriptDAOTest {
+class CassandraActiveScriptDAOTest {
+    private static final User USER = User.fromUsername("user");
+    private static final ScriptName SCRIPT_NAME = new ScriptName("sciptName");
+    private static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
 
-    public static final User USER = User.fromUsername("user");
-    public static final ScriptName SCRIPT_NAME = new ScriptName("sciptName");
-    public static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
 
     private CassandraActiveScriptDAO activeScriptDAO;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraSieveRepositoryModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         activeScriptDAO = new CassandraActiveScriptDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getActiveSctiptInfoShouldReturnEmptyByDefault() {
+    void getActiveSctiptInfoShouldReturnEmptyByDefault() {
         assertThat(activeScriptDAO.getActiveSctiptInfo(USER).join().isPresent())
             .isFalse();
     }
 
     @Test
-    public void getActiveSctiptInfoShouldReturnStoredName() {
+    void getActiveSctiptInfoShouldReturnStoredName() {
         activeScriptDAO.activate(USER, SCRIPT_NAME).join();
 
         Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).join();
@@ -83,7 +64,7 @@ public class CassandraActiveScriptDAOTest {
     }
 
     @Test
-    public void activateShouldAllowRename() {
+    void activateShouldAllowRename() {
         activeScriptDAO.activate(USER, SCRIPT_NAME).join();
 
         activeScriptDAO.activate(USER, NEW_SCRIPT_NAME).join();
@@ -94,7 +75,7 @@ public class CassandraActiveScriptDAOTest {
     }
 
     @Test
-    public void unactivateShouldAllowRemovingActiveScript() {
+    void unactivateShouldAllowRemovingActiveScript() {
         activeScriptDAO.activate(USER, SCRIPT_NAME).join();
 
         activeScriptDAO.unactivate(USER).join();
@@ -103,13 +84,11 @@ public class CassandraActiveScriptDAOTest {
         assertThat(actual.isPresent()).isFalse();
     }
 
-
     @Test
-    public void unactivateShouldWorkWhenNoneStore() {
+    void unactivateShouldWorkWhenNoneStore() {
         activeScriptDAO.unactivate(USER).join();
 
         Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).join();
         assertThat(actual.isPresent()).isFalse();
     }
-
 }
