@@ -22,13 +22,18 @@ package org.apache.james.blob.objectstorage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.Identity;
 import org.apache.james.blob.objectstorage.swift.PassHeaderName;
@@ -47,11 +52,16 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
     private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
+    public static final String SAMPLE_SALT = "c603a7327ee3dcbc031d8d34b1096c605feca5e1";
 
     private ContainerName containerName;
     private org.jclouds.blobstore.BlobStore blobStore;
     private SwiftTempAuthObjectStorage.Configuration testConfig;
     private ObjectStorageBlobsDAO testee;
+    public static final CryptoConfig CRYPTO_CONFIG = CryptoConfig.builder()
+        .salt(SAMPLE_SALT)
+        .password(PASSWORD.value().toCharArray())
+        .build();
 
     @BeforeEach
     void setUp(DockerSwift dockerSwift) throws Exception {
@@ -64,12 +74,12 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
             .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
             .build();
         BlobId.Factory blobIdFactory = blobIdFactory();
-        blobStore = ObjectStorageBlobsDAO
+        ObjectStorageBlobsDAOBuilder daoBuilder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
-            .blobIdFactory(blobIdFactory)
-            .getSupplier().get();
-        testee = new ObjectStorageBlobsDAO(containerName, blobIdFactory, blobStore);
+            .blobIdFactory(blobIdFactory);
+        blobStore = daoBuilder.getSupplier().get();
+        testee = daoBuilder.build();
         testee.createContainer(containerName);
     }
 
@@ -103,6 +113,41 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
         assertThatThrownBy(() -> testee.createContainer(containerName).get())
             .hasCauseInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Unable to create container");
+    }
+
+    @Test
+    void supportsEncryptionWithCustomPayloadCodec() throws Exception {
+        ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
+            .builder(testConfig)
+            .container(containerName)
+            .blobIdFactory(blobIdFactory())
+            .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
+            .build();
+        byte[] bytes = "James is the best!".getBytes(StandardCharsets.UTF_8);
+        BlobId blobId = encryptedDao.save(bytes).join();
+
+        InputStream read = encryptedDao.read(blobId);
+        assertThat(read).hasSameContentAs(new ByteArrayInputStream(bytes));
+    }
+
+    @Test
+    void encryptionWithCustomPayloadCodeCannotBeReadFromUnencryptedDAO() throws Exception {
+        ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
+            .builder(testConfig)
+            .container(containerName)
+            .blobIdFactory(blobIdFactory())
+            .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
+            .build();
+        byte[] bytes = "James is the best!".getBytes(StandardCharsets.UTF_8);
+        BlobId blobId = encryptedDao.save(bytes).join();
+
+        InputStream encryptedIs = testee.read(blobId);
+        assertThat(encryptedIs).isNotNull();
+        byte[] encryptedBytes = IOUtils.toByteArray(encryptedIs);
+        assertThat(encryptedBytes).isNotEqualTo(bytes);
+
+        InputStream clearTextIs = encryptedDao.read(blobId);
+        assertThat(clearTextIs).hasSameContentAs(new ByteArrayInputStream(bytes));
     }
 }
 

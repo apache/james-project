@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.objectstorage;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
@@ -31,8 +32,10 @@ public class ObjectStorageBlobsDAOBuilder {
     private final Supplier<BlobStore> supplier;
     private ContainerName containerName;
     private BlobId.Factory blobIdFactory;
+    private Optional<PayloadCodec> payloadCodec;
 
     public ObjectStorageBlobsDAOBuilder(Supplier<BlobStore> supplier) {
+        this.payloadCodec = Optional.empty();
         this.supplier = supplier;
     }
 
@@ -46,10 +49,20 @@ public class ObjectStorageBlobsDAOBuilder {
         return this;
     }
 
+    public ObjectStorageBlobsDAOBuilder payloadCodec(PayloadCodec payloadCodec) {
+        this.payloadCodec = Optional.of(payloadCodec);
+        return this;
+    }
+    public ObjectStorageBlobsDAOBuilder payloadCodec(Optional<PayloadCodec> payloadCodec) {
+        this.payloadCodec = payloadCodec;
+        return this;
+    }
+
     public ObjectStorageBlobsDAO build() {
         Preconditions.checkState(containerName != null);
         Preconditions.checkState(blobIdFactory != null);
-        return new ObjectStorageBlobsDAO(containerName, blobIdFactory, supplier.get());
+
+        return new ObjectStorageBlobsDAO(containerName, blobIdFactory, supplier.get(), payloadCodec.orElse(PayloadCodec.DEFAULT_CODEC));
     }
 
     @VisibleForTesting
