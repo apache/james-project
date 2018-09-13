@@ -22,51 +22,34 @@ package org.apache.james.mailrepository.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(DockerCassandraExtension.class)
-public class CassandraMailRepositoryCountDAOTest {
+class CassandraMailRepositoryCountDAOTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
 
-    static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryModule.MODULE);
+
     CassandraMailRepositoryCountDAO testee;
 
-    @BeforeAll
-    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(CassandraMailRepositoryModule.MODULE, dockerCassandra.getHost());
-    }
-
     @BeforeEach
-    public void setUp() {
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailRepositoryCountDAO(cassandra.getConf());
     }
 
-    @AfterEach
-    void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getCountShouldReturnZeroWhenEmpty() {
+    void getCountShouldReturnZeroWhenEmpty() {
         assertThat(testee.getCount(URL).join())
             .isEqualTo(0L);
     }
 
     @Test
-    public void getCountShouldReturnOneWhenIncrementedOneTime() {
+    void getCountShouldReturnOneWhenIncrementedOneTime() {
         testee.increment(URL).join();
 
         assertThat(testee.getCount(URL).join())
@@ -74,7 +57,7 @@ public class CassandraMailRepositoryCountDAOTest {
     }
 
     @Test
-    public void incrementShouldNotAffectOtherUrls() {
+    void incrementShouldNotAffectOtherUrls() {
         testee.increment(URL).join();
 
         assertThat(testee.getCount(URL2).join())
@@ -82,7 +65,7 @@ public class CassandraMailRepositoryCountDAOTest {
     }
 
     @Test
-    public void incrementCanBeAppliedSeveralTime() {
+    void incrementCanBeAppliedSeveralTime() {
         testee.increment(URL).join();
         testee.increment(URL).join();
 
@@ -91,7 +74,7 @@ public class CassandraMailRepositoryCountDAOTest {
     }
 
     @Test
-    public void decrementShouldDecreaseCount() {
+    void decrementShouldDecreaseCount() {
         testee.increment(URL).join();
         testee.increment(URL).join();
         testee.increment(URL).join();
@@ -103,7 +86,7 @@ public class CassandraMailRepositoryCountDAOTest {
     }
 
     @Test
-    public void decrementCanLeadToNegativeCount() {
+    void decrementCanLeadToNegativeCount() {
         testee.decrement(URL).join();
 
         assertThat(testee.getCount(URL).join())

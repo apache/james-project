@@ -21,19 +21,20 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.junit.jupiter.api.Test;
 
 import com.github.steveash.guavate.Guavate;
 
-public class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
+class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
 
     @Override
-    CassandraMailboxPathDAO testee() {
+    CassandraMailboxPathDAO testee(CassandraCluster cassandra) {
         return new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
     }
 
     @Test
-    public void countAllShouldReturnEntryCount() {
+    void countAllShouldReturnEntryCount() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
         testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
         testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
@@ -45,7 +46,7 @@ public class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest
     }
 
     @Test
-    public void countAllShouldReturnZeroByDefault() {
+    void countAllShouldReturnZeroByDefault() {
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
         assertThat(daoV1.countAll().join())
@@ -53,7 +54,7 @@ public class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest
     }
 
     @Test
-    public void readAllShouldReturnAllStoredData() {
+    void readAllShouldReturnAllStoredData() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
         testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
         testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
@@ -68,7 +69,7 @@ public class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest
     }
 
     @Test
-    public void readAllShouldReturnEmptyByDefault() {
+    void readAllShouldReturnEmptyByDefault() {
         CassandraMailboxPathDAOImpl daoV1 = (CassandraMailboxPathDAOImpl) testee;
 
         assertThat(daoV1.readAll().join().collect(Guavate.toImmutableList()))

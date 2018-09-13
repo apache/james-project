@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.mailrepository.api.MailKey;
@@ -32,53 +32,35 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-@ExtendWith(DockerCassandraExtension.class)
-public class CassandraMailRepositoryMailDAOTest {
-
+class CassandraMailRepositoryMailDAOTest {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailKey KEY_1 = new MailKey("key1");
     static final TestBlobId.Factory BLOB_ID_FACTORY = new TestBlobId.Factory();
 
-    static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryModule.MODULE);
+
     CassandraMailRepositoryMailDAO testee;
 
-    @BeforeAll
-    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(CassandraMailRepositoryModule.MODULE, dockerCassandra.getHost());
-    }
-
     @BeforeEach
-    public void setUp() {
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
     }
 
-    @AfterEach
-    void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void readShouldReturnEmptyWhenAbsent() {
+    void readShouldReturnEmptyWhenAbsent() {
         assertThat(testee.read(URL, KEY_1).join())
             .isEmpty();
     }
 
     @Test
-    public void readShouldReturnAllMailMetadata() throws Exception {
+    void readShouldReturnAllMailMetadata() throws Exception {
         BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
         BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
         String errorMessage = "error message";
@@ -127,7 +109,7 @@ public class CassandraMailRepositoryMailDAOTest {
     }
 
     @Test
-    public void storeShouldAcceptMailWithOnlyName() throws Exception {
+    void storeShouldAcceptMailWithOnlyName() throws Exception {
         BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
         BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
 
@@ -149,7 +131,7 @@ public class CassandraMailRepositoryMailDAOTest {
     }
 
     @Test
-    public void removeShouldDeleteMailMetaData() throws Exception {
+    void removeShouldDeleteMailMetaData() throws Exception {
         BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
         BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
 

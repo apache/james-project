@@ -23,58 +23,51 @@ import static com.datastax.driver.core.DataType.text;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
-public class CassandraTypeProviderTest {
-
+class CassandraTypeProviderTest {
     private static final String TYPE_NAME = "typename";
     private static final String PROPERTY = "property";
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
+    public static final CassandraModule.Impl MODULE = CassandraModule.type(TYPE_NAME)
+        .statement(statement -> statement.addColumn(PROPERTY, text()))
+        .build();
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);
     
     private CassandraCluster cassandra;
-    private CassandraModule module;
 
-    @Before
-    public void setUp() {
-        module = CassandraModule.type(TYPE_NAME)
-            .statement(statement -> statement.addColumn(PROPERTY, text()))
-            .build();
-        cassandra = CassandraCluster.create(module, cassandraServer.getHost());
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
+        this.cassandra = cassandra;
         cassandra.getTypesProvider();
     }
 
-    @After
-    public void tearDown() {
-        cassandra.close();
-    }
-
     @Test
-    public void getDefinedUserTypeShouldNotReturnNullNorFailWhenTypeIsDefined() {
+    void getDefinedUserTypeShouldNotReturnNullNorFailWhenTypeIsDefined() {
         assertThat(cassandra.getTypesProvider().getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }
 
     @Test
-    public void initializeTypesShouldCreateTheTypes() {
+    void initializeTypesShouldCreateTheTypes() {
         cassandra.getConf().execute(SchemaBuilder.dropType(TYPE_NAME));
 
-        new CassandraTypesCreator(module, cassandra.getConf()).initializeTypes();
-        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(module, cassandra.getConf());
+        new CassandraTypesCreator(MODULE, cassandra.getConf()).initializeTypes();
+        CassandraTypesProvider cassandraTypesProviderTest = new CassandraTypesProvider(MODULE, cassandra.getConf());
         assertThat(cassandraTypesProviderTest.getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }
 
     @Test
-    public void initializeTypesShouldNotFailIfCalledTwice() {
-        new CassandraTypesProvider(module, cassandra.getConf());
+    void initializeTypesShouldNotFailIfCalledTwice() {
+        new CassandraTypesProvider(MODULE, cassandra.getConf());
         assertThat(cassandra.getTypesProvider().getDefinedUserType(TYPE_NAME))
             .isNotNull();
     }

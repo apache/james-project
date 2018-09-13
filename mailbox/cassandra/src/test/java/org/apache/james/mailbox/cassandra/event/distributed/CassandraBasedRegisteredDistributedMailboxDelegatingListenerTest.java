@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.TreeMap;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
@@ -46,12 +46,9 @@ import org.apache.james.mailbox.store.json.event.MailboxConverter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.util.EventCollector;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -60,7 +57,7 @@ import com.google.common.collect.ImmutableMap;
 
  We simulate communications using message queues in memory and check the Listener works as intended.
  */
-public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
+class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
 
     public static final MailboxPath MAILBOX_PATH_1 = MailboxPath.forUser("user", "mbx");
     public static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("user", "mbx.other");
@@ -68,9 +65,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
     public static final int SCHEDULER_PERIOD_IN_S = 20;
     public static final ImmutableMap<MessageUid, MailboxMessage> EMPTY_MESSAGE_CACHE = ImmutableMap.of();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRegistrationModule.MODULE);
 
     private RegisteredDelegatingMailboxListener registeredDelegatingMailboxListener1;
     private RegisteredDelegatingMailboxListener registeredDelegatingMailboxListener2;
@@ -83,13 +79,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
     private EventCollector eventCollectorOnce3;
     private MailboxSession mailboxSession;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraRegistrationModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) throws Exception {
         PublisherReceiver publisherReceiver = new PublisherReceiver();
         DistantMailboxPathRegister mailboxPathRegister1 = new DistantMailboxPathRegister(
             new CassandraMailboxPathRegisterMapper(
@@ -145,18 +136,8 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
         registeredDelegatingMailboxListener3.addListener(MAILBOX_PATH_2, eventCollectorMailbox3, mailboxSession);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void mailboxEventListenersShouldBeTriggeredIfRegistered() throws Exception {
+    void mailboxEventListenersShouldBeTriggeredIfRegistered() {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
         TreeMap<MessageUid, MessageMetaData> uids = new TreeMap<>();
@@ -170,7 +151,7 @@ public class CassandraBasedRegisteredDistributedMailboxDelegatingListenerTest {
     }
 
     @Test
-    public void onceEventListenersShouldBeTriggeredOnceAcrossTheCluster() {
+    void onceEventListenersShouldBeTriggeredOnceAcrossTheCluster() {
         SimpleMailbox simpleMailbox = new SimpleMailbox(MAILBOX_PATH_1, 42);
         simpleMailbox.setMailboxId(TestId.of(52));
         TreeMap<MessageUid, MessageMetaData> uids = new TreeMap<>();

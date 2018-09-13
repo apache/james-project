@@ -23,55 +23,37 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.stream.LongStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 
-public class CassandraModSeqProviderTest {
+class CassandraModSeqProviderTest {
     private static final CassandraId CASSANDRA_ID = new CassandraId.Factory().fromString("e22b3ac0-a80b-11e7-bb00-777268d65503");
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModSeqModule.MODULE);
     
     private CassandraModSeqProvider modSeqProvider;
     private SimpleMailbox mailbox;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraModSeqModule.MODULE, cassandraServer.getHost());
-    }
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         modSeqProvider = new CassandraModSeqProvider(cassandra.getConf());
         MailboxPath path = new MailboxPath("gsoc", "ieugen", "Trash");
         mailbox = new SimpleMailbox(path, 1234);
         mailbox.setMailboxId(CASSANDRA_ID);
     }
-    
-    @After
-    public void cleanUp() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
 
     @Test
-    public void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
+    void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
         long result = modSeqProvider.highestModSeq(null, mailbox);
         assertThat(result).isEqualTo(0);
@@ -84,19 +66,18 @@ public class CassandraModSeqProviderTest {
     }
 
     @Test
-    public void nextModSeqShouldIncrementValueByOne() throws Exception {
+    void nextModSeqShouldIncrementValueByOne() throws Exception {
         int nbEntries = 100;
         long lastUid = modSeqProvider.highestModSeq(null, mailbox);
         LongStream.range(lastUid + 1, lastUid + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long result = modSeqProvider.nextModSeq(null, mailbox);
-                        assertThat(value).isEqualTo(result);
-                })
-            );
+                long result = modSeqProvider.nextModSeq(null, mailbox);
+                assertThat(value).isEqualTo(result);
+            }));
     }
 
     @Test
-    public void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() throws Exception {
+    void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() {
         int nbEntries = 100;
         long nbValues = LongStream.range(0, nbEntries)
             .parallel()

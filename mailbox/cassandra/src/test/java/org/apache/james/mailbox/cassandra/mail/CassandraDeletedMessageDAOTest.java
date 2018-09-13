@@ -25,57 +25,38 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraDeletedMessageModule;
 import org.apache.james.mailbox.model.MessageRange;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
-public class CassandraDeletedMessageDAOTest {
-    
-    public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("110e8400-e29b-11d4-a716-446655440000"));
-    public static final MessageUid UID_1 = MessageUid.of(1);
-    public static final MessageUid UID_2 = MessageUid.of(2);
-    public static final MessageUid UID_3 = MessageUid.of(3);
-    public static final MessageUid UID_4 = MessageUid.of(4);
-    public static final MessageUid UID_7 = MessageUid.of(7);
-    public static final MessageUid UID_8 = MessageUid.of(8);
+class CassandraDeletedMessageDAOTest {
+    private static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("110e8400-e29b-11d4-a716-446655440000"));
+    private static final MessageUid UID_1 = MessageUid.of(1);
+    private static final MessageUid UID_2 = MessageUid.of(2);
+    private static final MessageUid UID_3 = MessageUid.of(3);
+    private static final MessageUid UID_4 = MessageUid.of(4);
+    private static final MessageUid UID_7 = MessageUid.of(7);
+    private static final MessageUid UID_8 = MessageUid.of(8);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraDeletedMessageModule.MODULE);
 
     private CassandraDeletedMessageDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraDeletedMessageModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraDeletedMessageDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void retrieveDeletedMessageShouldReturnEmptyByDefault() {
+    void retrieveDeletedMessageShouldReturnEmptyByDefault() {
         List<MessageUid> result = testee
             .retrieveDeletedMessage(MAILBOX_ID, MessageRange.all())
             .join()
@@ -85,7 +66,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void addDeletedMessageShouldThenBeReportedAsDeletedMessage() {
+    void addDeletedMessageShouldThenBeReportedAsDeletedMessage() {
         testee.addDeleted(MAILBOX_ID, UID_1).join();
         testee.addDeleted(MAILBOX_ID, UID_2).join();
 
@@ -97,7 +78,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void addDeletedMessageShouldBeIdempotent() {
+    void addDeletedMessageShouldBeIdempotent() {
         testee.addDeleted(MAILBOX_ID, UID_1).join();
         testee.addDeleted(MAILBOX_ID, UID_1).join();
 
@@ -110,7 +91,7 @@ public class CassandraDeletedMessageDAOTest {
 
 
     @Test
-    public void removeUnreadShouldReturnEmptyWhenNoData() {
+    void removeUnreadShouldReturnEmptyWhenNoData() {
         testee.removeDeleted(MAILBOX_ID, UID_1).join();
 
         List<MessageUid> result = testee
@@ -122,7 +103,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void removeDeletedMessageShouldNotAffectOtherMessage() {
+    void removeDeletedMessageShouldNotAffectOtherMessage() {
         testee.addDeleted(MAILBOX_ID, UID_2).join();
         testee.addDeleted(MAILBOX_ID, UID_1).join();
 
@@ -137,7 +118,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void removeDeletedShouldRemoveSpecifiedUID() {
+    void removeDeletedShouldRemoveSpecifiedUID() {
         testee.addDeleted(MAILBOX_ID, UID_2).join();
 
         testee.removeDeleted(MAILBOX_ID, UID_2).join();
@@ -160,7 +141,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnAllMessageForMessageRangeAll() {
+    void retrieveDeletedMessageShouldReturnAllMessageForMessageRangeAll() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -172,7 +153,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnOneMessageForMessageRangeOneIfThisMessageIsPresent() {
+    void retrieveDeletedMessageShouldReturnOneMessageForMessageRangeOneIfThisMessageIsPresent() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -184,7 +165,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeOneIfThisMessageIsNotPresent() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeOneIfThisMessageIsNotPresent() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -196,7 +177,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnMessageInRangeForMessageRangeRange() {
+    void retrieveDeletedMessageShouldReturnMessageInRangeForMessageRangeRange() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -208,7 +189,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeRangeIfNoDeletedMessageInThatRange() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeRangeIfNoDeletedMessageInThatRange() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -220,7 +201,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeFromIfNoDeletedMessageWithIdBiggerOrSameThanFrom() {
+    void retrieveDeletedMessageShouldReturnNoMessageForMessageRangeFromIfNoDeletedMessageWithIdBiggerOrSameThanFrom() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee
@@ -232,7 +213,7 @@ public class CassandraDeletedMessageDAOTest {
     }
 
     @Test
-    public void retrieveDeletedMessageShouldReturnDeletedMessageWithIdBiggerOrSameThanFrom() {
+    void retrieveDeletedMessageShouldReturnDeletedMessageWithIdBiggerOrSameThanFrom() {
         addMessageForRetrieveTest();
 
         List<MessageUid> result = testee

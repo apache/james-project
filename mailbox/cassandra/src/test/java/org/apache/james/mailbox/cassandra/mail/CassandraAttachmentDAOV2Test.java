@@ -25,60 +25,40 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAOV2.DAOAttachment;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraAttachmentDAOV2Test {
-    public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
+class CassandraAttachmentDAOV2Test {
+    private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    @ClassRule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAttachmentModule.MODULE);
 
     private CassandraAttachmentDAOV2 testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraAttachmentModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getAttachmentShouldReturnEmptyWhenAbsent() {
+    void getAttachmentShouldReturnEmptyWhenAbsent() {
         Optional<DAOAttachment> attachment = testee.getAttachment(ATTACHMENT_ID).join();
 
         assertThat(attachment).isEmpty();
     }
 
     @Test
-    public void getAttachmentShouldReturnAttachmentWhenStored() throws Exception {
+    void getAttachmentShouldReturnAttachmentWhenStored() {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")

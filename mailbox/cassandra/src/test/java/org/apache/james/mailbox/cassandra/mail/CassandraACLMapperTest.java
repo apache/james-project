@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -40,48 +40,35 @@ import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.table.CassandraACLTable;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraACLMapperTest {
+class CassandraACLMapperTest {
 
-    public static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
+    static final CassandraId MAILBOX_ID = CassandraId.of(UUID.fromString("464765a0-e4e7-11e4-aba4-710c1de3782b"));
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAclModule.MODULE);
 
     private CassandraACLMapper cassandraACLMapper;
     private ExecutorService executor;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraAclModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         cassandraACLMapper = GuiceUtils.testInjector(cassandra)
             .getInstance(CassandraACLMapper.class);
         executor = Executors.newFixedThreadPool(2);
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         executor.shutdownNow();
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
     }
 
     @Test
-    public void retrieveACLWhenInvalidInBaseShouldReturnEmptyACL() throws Exception {
+    void retrieveACLWhenInvalidInBaseShouldReturnEmptyACL(CassandraCluster cassandra) {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
                 .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
@@ -92,12 +79,12 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void retrieveACLWhenNoACLStoredShouldReturnEmptyACL() {
+    void retrieveACLWhenNoACLStoredShouldReturnEmptyACL() {
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join()).isEqualTo(MailboxACL.EMPTY);
     }
 
     @Test
-    public void addACLWhenNoneStoredShouldReturnUpdatedACL() throws Exception {
+    void addACLWhenNoneStoredShouldReturnUpdatedACL() throws Exception {
         MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -109,7 +96,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void modifyACLWhenStoredShouldReturnUpdatedACL() throws MailboxException {
+    void modifyACLWhenStoredShouldReturnUpdatedACL() throws MailboxException {
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -122,7 +109,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void removeWhenStoredShouldReturnUpdatedACL() throws MailboxException {
+    void removeWhenStoredShouldReturnUpdatedACL() throws MailboxException {
         MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -133,7 +120,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void replaceForSingleKeyWithNullRightsWhenSingleKeyStoredShouldReturnEmptyACL() throws MailboxException {
+    void replaceForSingleKeyWithNullRightsWhenSingleKeyStoredShouldReturnEmptyACL() throws MailboxException {
         MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -144,7 +131,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void replaceWhenNotStoredShouldUpdateACLEntry() throws MailboxException {
+    void replaceWhenNotStoredShouldUpdateACLEntry() throws MailboxException {
         MailboxACL.EntryKey key = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
 
@@ -154,7 +141,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void updateInvalidACLShouldBeBasedOnEmptyACL() throws Exception {
+    void updateInvalidACLShouldBeBasedOnEmptyACL(CassandraCluster cassandra) throws Exception {
         cassandra.getConf().execute(
             insertInto(CassandraACLTable.TABLE_NAME)
                 .value(CassandraACLTable.ID, MAILBOX_ID.asUuid())
@@ -169,13 +156,13 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void twoConcurrentUpdatesWhenNoACEStoredShouldReturnACEWithTwoEntries() throws Exception {
+    void twoConcurrentUpdatesWhenNoACEStoredShouldReturnACEWithTwoEntries(CassandraCluster cassandra) throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(2);
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights, countDownLatch::countDown);
-        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights, countDownLatch::countDown);
+        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights, countDownLatch::countDown);
+        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights, countDownLatch::countDown);
         awaitAll(future1, future2);
 
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
@@ -183,7 +170,7 @@ public class CassandraACLMapperTest {
     }
 
     @Test
-    public void twoConcurrentUpdatesWhenStoredShouldReturnACEWithTwoEntries() throws Exception {
+    void twoConcurrentUpdatesWhenStoredShouldReturnACEWithTwoEntries(CassandraCluster cassandra) throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(2);
         MailboxACL.EntryKey keyBenwa = new MailboxACL.EntryKey("benwa", MailboxACL.NameType.user, false);
         MailboxACL.Rfc4314Rights rights = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read);
@@ -191,8 +178,8 @@ public class CassandraACLMapperTest {
 
         MailboxACL.EntryKey keyBob = new MailboxACL.EntryKey("bob", MailboxACL.NameType.user, false);
         MailboxACL.EntryKey keyAlice = new MailboxACL.EntryKey("alice", MailboxACL.NameType.user, false);
-        Future<Boolean> future1 = performACLUpdateInExecutor(executor, keyBob, rights, countDownLatch::countDown);
-        Future<Boolean> future2 = performACLUpdateInExecutor(executor, keyAlice, rights, countDownLatch::countDown);
+        Future<Boolean> future1 = performACLUpdateInExecutor(cassandra, executor, keyBob, rights, countDownLatch::countDown);
+        Future<Boolean> future2 = performACLUpdateInExecutor(cassandra, executor, keyAlice, rights, countDownLatch::countDown);
         awaitAll(future1, future2);
 
         assertThat(cassandraACLMapper.getACL(MAILBOX_ID).join())
@@ -206,7 +193,7 @@ public class CassandraACLMapperTest {
         }
     }
 
-    private Future<Boolean> performACLUpdateInExecutor(ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights, CassandraACLMapper.CodeInjector runnable) {
+    private Future<Boolean> performACLUpdateInExecutor(CassandraCluster cassandra, ExecutorService executor, MailboxACL.EntryKey key, MailboxACL.Rfc4314Rights rights, CassandraACLMapper.CodeInjector runnable) {
         return executor.submit(() -> {
             CassandraACLMapper aclMapper = new CassandraACLMapper(
                 cassandra.getConf(),

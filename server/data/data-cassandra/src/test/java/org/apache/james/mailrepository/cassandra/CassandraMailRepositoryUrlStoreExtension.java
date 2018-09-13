@@ -19,8 +19,7 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -32,30 +31,25 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback, AfterEachCallback {
-    private final DockerCassandraRule cassandra;
-    private CassandraCluster cassandraCluster;
+    private final CassandraClusterExtension cassandraCluster;
 
     public CassandraMailRepositoryUrlStoreExtension() {
-        this.cassandra = new DockerCassandraRule();
+        cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryUrlModule.MODULE);
     }
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        cassandra.start();
-        cassandraCluster = CassandraCluster.create(
-            CassandraMailRepositoryUrlModule.MODULE,
-            cassandra.getHost());
+        cassandraCluster.beforeAll(context);
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cassandraCluster.clearTables();
+        cassandraCluster.afterEach(context);
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
-        cassandraCluster.closeCluster();
-        cassandra.stop();
+        cassandraCluster.afterAll(context);
     }
 
     @Override
@@ -67,7 +61,7 @@ public class CassandraMailRepositoryUrlStoreExtension implements ParameterResolv
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return new CassandraMailRepositoryUrlStore(
             new UrlsDao(
-                cassandraCluster.getConf(),
+                cassandraCluster.getCassandraCluster().getConf(),
                 CassandraUtils.WITH_DEFAULT_CONFIGURATION));
     }
 }

@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -34,50 +34,33 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailboxMapperConcurrencyTest {
+class CassandraMailboxMapperConcurrencyTest {
 
     private static final int UID_VALIDITY = 52;
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "name");
     private static final int THREAD_COUNT = 10;
     private static final int OPERATION_COUNT = 10;
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraMailboxModule.MODULE,
+            CassandraAclModule.MODULE));
 
     private CassandraMailboxMapper testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(CassandraMailboxModule.MODULE, CassandraAclModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = GuiceUtils.testInjector(cassandra)
             .getInstance(CassandraMailboxMapper.class);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void saveShouldBeThreadSafe() throws Exception {
+    void saveShouldBeThreadSafe() throws Exception {
         boolean termination = ConcurrentTestRunner.builder()
             .threadCount(THREAD_COUNT)
             .operationCount(OPERATION_COUNT)
@@ -90,7 +73,7 @@ public class CassandraMailboxMapperConcurrencyTest {
     }
 
     @Test
-    public void saveWithUpdateShouldBeThreadSafe() throws Exception {
+    void saveWithUpdateShouldBeThreadSafe() throws Exception {
         SimpleMailbox mailbox = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY);
         testee.save(mailbox);
 

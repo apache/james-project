@@ -21,7 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -31,49 +31,29 @@ import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraUserMailboxRightsDAOTest {
-
+class CassandraUserMailboxRightsDAOTest {
     private static final String USER_NAME = "userName";
     private static final EntryKey ENTRY_KEY = EntryKey.createUserEntryKey(USER_NAME);
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final Rfc4314Rights RIGHTS = MailboxACL.FULL_RIGHTS;
     private static final Rfc4314Rights OTHER_RIGHTS = new Rfc4314Rights(Right.Administer, Right.Read);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAclModule.MODULE);
 
     private CassandraUserMailboxRightsDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraAclModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraUserMailboxRightsDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
-    @After
-    public void tearDown() throws Exception {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void saveShouldInsertNewEntry() {
+    void saveShouldInsertNewEntry() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
@@ -84,7 +64,7 @@ public class CassandraUserMailboxRightsDAOTest {
     }
 
     @Test
-    public void saveOnSecondShouldOverwrite() {
+    void saveOnSecondShouldOverwrite() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))
@@ -100,13 +80,13 @@ public class CassandraUserMailboxRightsDAOTest {
     }
 
     @Test
-    public void listRightsForUserShouldReturnEmptyWhenEmptyData() {
+    void listRightsForUserShouldReturnEmptyWhenEmptyData() {
         assertThat(testee.listRightsForUser(USER_NAME).join())
             .isEmpty();
     }
 
     @Test
-    public void deleteShouldDeleteWhenExisting() {
+    void deleteShouldDeleteWhenExisting() {
         testee.update(MAILBOX_ID, ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             new MailboxACL(new Entry(ENTRY_KEY, RIGHTS))))

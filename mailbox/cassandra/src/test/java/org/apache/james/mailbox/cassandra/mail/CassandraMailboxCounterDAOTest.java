@@ -22,81 +22,64 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailboxCounterDAOTest {
-    public static final int UID_VALIDITY = 15;
-    public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
+class CassandraMailboxCounterDAOTest {
+    private static final int UID_VALIDITY = 15;
+    private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailboxCounterModule.MODULE);
+
     private CassandraMailboxCounterDAO testee;
     private SimpleMailbox mailbox;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraMailboxCounterModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxCounterDAO(cassandra.getConf());
 
         mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, MAILBOX_ID);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void countMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
+    void countMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
         assertThat(testee.countMessagesInMailbox(mailbox).join()).isEmpty();
     }
 
     @Test
-    public void countUnseenMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
+    void countUnseenMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join()).isEmpty();
     }
 
     @Test
-    public void retrieveMailboxCounterShouldReturnEmptyByDefault() throws Exception {
+    void retrieveMailboxCounterShouldReturnEmptyByDefault() throws Exception {
         assertThat(testee.retrieveMailboxCounters(mailbox).join()).isEmpty();
     }
 
     @Test
-    public void incrementCountShouldAddOneWhenAbsent() throws Exception {
+    void incrementCountShouldAddOneWhenAbsent() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
         assertThat(testee.countMessagesInMailbox(mailbox).join()).contains(1L);
     }
 
     @Test
-    public void incrementUnseenShouldAddOneWhenAbsent() throws Exception {
+    void incrementUnseenShouldAddOneWhenAbsent() throws Exception {
         testee.incrementUnseen(MAILBOX_ID).join();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join()).contains(1L);
     }
 
     @Test
-    public void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+    void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
         testee.incrementUnseen(MAILBOX_ID).join();
 
         assertThat(testee.retrieveMailboxCounters(mailbox).join())
@@ -107,7 +90,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
+    void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
         assertThat(testee.retrieveMailboxCounters(mailbox).join())
@@ -118,7 +101,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void retrieveMailboxCounterShouldWorkWhenFullRow() throws Exception {
+    void retrieveMailboxCounterShouldWorkWhenFullRow() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
         testee.incrementUnseen(MAILBOX_ID).join();
 
@@ -130,7 +113,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementCountShouldRemoveOne() throws Exception {
+    void decrementCountShouldRemoveOne() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
         testee.decrementCount(MAILBOX_ID).join();
@@ -140,7 +123,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementUnseenShouldRemoveOne() throws Exception {
+    void decrementUnseenShouldRemoveOne() throws Exception {
         testee.incrementUnseen(MAILBOX_ID).join();
 
         testee.decrementUnseen(MAILBOX_ID).join();
@@ -150,7 +133,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void incrementUnseenShouldHaveNoImpactOnMessageCount() throws Exception {
+    void incrementUnseenShouldHaveNoImpactOnMessageCount() throws Exception {
         testee.incrementUnseen(MAILBOX_ID).join();
 
         assertThat(testee.countMessagesInMailbox(mailbox).join())
@@ -158,7 +141,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void incrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
+    void incrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())
@@ -166,7 +149,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementUnseenShouldHaveNoEffectOnMessageCount() throws Exception {
+    void decrementUnseenShouldHaveNoEffectOnMessageCount() throws Exception {
         testee.incrementCount(MAILBOX_ID).join();
 
         testee.decrementUnseen(MAILBOX_ID).join();
@@ -176,7 +159,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
+    void decrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
         testee.incrementUnseen(MAILBOX_ID).join();
 
         testee.decrementCount(MAILBOX_ID).join();
@@ -186,7 +169,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementCountCanLeadToNegativeValue() throws Exception {
+    void decrementCountCanLeadToNegativeValue() throws Exception {
         testee.decrementCount(MAILBOX_ID).join();
 
         assertThat(testee.countMessagesInMailbox(mailbox).join())
@@ -194,7 +177,7 @@ public class CassandraMailboxCounterDAOTest {
     }
 
     @Test
-    public void decrementUnseenCanLeadToNegativeValue() throws Exception {
+    void decrementUnseenCanLeadToNegativeValue() throws Exception {
         testee.decrementUnseen(MAILBOX_ID).join();
 
         assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())

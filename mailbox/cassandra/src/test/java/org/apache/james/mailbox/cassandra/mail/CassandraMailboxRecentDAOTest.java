@@ -24,58 +24,39 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxRecentsModule;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
-public class CassandraMailboxRecentDAOTest {
-    public static final MessageUid UID1 = MessageUid.of(36L);
-    public static final MessageUid UID2 = MessageUid.of(37L);
-    public static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
+class CassandraMailboxRecentDAOTest {
+    private static final MessageUid UID1 = MessageUid.of(36L);
+    private static final MessageUid UID2 = MessageUid.of(37L);
+    private static final CassandraId CASSANDRA_ID = CassandraId.timeBased();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailboxRecentsModule.MODULE);
 
     private CassandraMailboxRecentsDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraMailboxRecentsModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxRecentsDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getRecentMessageUidsInMailboxShouldBeEmptyByDefault() throws Exception {
+    void getRecentMessageUidsInMailboxShouldBeEmptyByDefault() {
         assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
             .collect(Guavate.toImmutableList())).isEmpty();
     }
 
     @Test
-    public void addToRecentShouldAddUidWhenEmpty() throws Exception {
+    void addToRecentShouldAddUidWhenEmpty() {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
         assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
@@ -83,7 +64,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void removeFromRecentShouldRemoveUidWhenOnlyOneUid() throws Exception {
+    void removeFromRecentShouldRemoveUidWhenOnlyOneUid() {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
         testee.removeFromRecent(CASSANDRA_ID, UID1).join();
@@ -93,7 +74,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void removeFromRecentShouldNotFailIfNotExisting() throws Exception {
+    void removeFromRecentShouldNotFailIfNotExisting() {
         testee.removeFromRecent(CASSANDRA_ID, UID1).join();
 
         assertThat(testee.getRecentMessageUidsInMailbox(CASSANDRA_ID).join()
@@ -101,7 +82,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void addToRecentShouldAddUidWhenNotEmpty() throws Exception {
+    void addToRecentShouldAddUidWhenNotEmpty() {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
         testee.addToRecent(CASSANDRA_ID, UID2).join();
@@ -111,7 +92,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void removeFromRecentShouldOnlyRemoveUidWhenNotEmpty() throws Exception {
+    void removeFromRecentShouldOnlyRemoveUidWhenNotEmpty() {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
         testee.addToRecent(CASSANDRA_ID, UID2).join();
 
@@ -122,7 +103,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void addToRecentShouldBeIdempotent() throws Exception {
+    void addToRecentShouldBeIdempotent() {
         testee.addToRecent(CASSANDRA_ID, UID1).join();
         testee.addToRecent(CASSANDRA_ID, UID1).join();
 
@@ -131,7 +112,7 @@ public class CassandraMailboxRecentDAOTest {
     }
 
     @Test
-    public void getRecentMessageUidsInMailboxShouldNotTimeoutWhenOverPagingLimit() throws Exception {
+    void getRecentMessageUidsInMailboxShouldNotTimeoutWhenOverPagingLimit() {
         int pageSize = 5000;
         int size = pageSize + 1000;
         IntStream.range(0, size)

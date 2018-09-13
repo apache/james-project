@@ -35,7 +35,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.migration.Migration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
@@ -55,20 +55,20 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-public class AttachmentMessageIdCreationTest {
-    @ClassRule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+class AttachmentMessageIdCreationTest {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraMessageModule.MODULE,
+            CassandraAttachmentModule.MODULE,
+            CassandraBlobModule.MODULE));
 
     private CassandraBlobsDAO blobsDAO;
     private CassandraMessageDAO cassandraMessageDAO;
@@ -79,17 +79,8 @@ public class AttachmentMessageIdCreationTest {
     private SimpleMailboxMessage message;
     private CassandraMessageId messageId;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(
-            CassandraMessageModule.MODULE,
-            CassandraAttachmentModule.MODULE,
-            CassandraBlobModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -104,24 +95,14 @@ public class AttachmentMessageIdCreationTest {
         messageId = messageIdFactory.generate();
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void emptyMigrationShouldSucceed() {
+    void emptyMigrationShouldSucceed() {
         assertThat(migration.run())
             .isEqualTo(Migration.Result.COMPLETED);
     }
 
     @Test
-    public void migrationShouldSucceedWhenNoAttachment() throws Exception {
+    void migrationShouldSucceedWhenNoAttachment() throws Exception {
         List<MessageAttachment> noAttachment = ImmutableList.of();
         message = createMessage(messageId, noAttachment);
 
@@ -132,7 +113,7 @@ public class AttachmentMessageIdCreationTest {
     }
 
     @Test
-    public void migrationShouldSucceedWhenAttachment() throws Exception {
+    void migrationShouldSucceedWhenAttachment() throws Exception {
         MessageAttachment attachment = createAttachment();
         message = createMessage(messageId, ImmutableList.of(attachment));
 
@@ -143,7 +124,7 @@ public class AttachmentMessageIdCreationTest {
     }
 
     @Test
-    public void migrationShouldCreateAttachmentIdOnAttachmentMessageIdTableFromMessage() throws Exception {
+    void migrationShouldCreateAttachmentIdOnAttachmentMessageIdTableFromMessage() throws Exception {
         MessageAttachment attachment = createAttachment();
         message = createMessage(messageId, ImmutableList.of(attachment));
 
@@ -156,7 +137,7 @@ public class AttachmentMessageIdCreationTest {
     }
 
     @Test
-    public void migrationShouldReturnPartialWhenRetrieveAllAttachmentIdFromMessageFail() throws Exception {
+    void migrationShouldReturnPartialWhenRetrieveAllAttachmentIdFromMessageFail() throws Exception {
         CassandraMessageDAO cassandraMessageDAO = mock(CassandraMessageDAO.class);
         CassandraAttachmentMessageIdDAO attachmentMessageIdDAO = mock(CassandraAttachmentMessageIdDAO.class);
         migration = new AttachmentMessageIdCreation(cassandraMessageDAO, attachmentMessageIdDAO);
@@ -167,7 +148,7 @@ public class AttachmentMessageIdCreationTest {
     }
 
     @Test
-    public void migrationShouldReturnPartialWhenSavingAttachmentIdForMessageIdFail() throws Exception {
+    void migrationShouldReturnPartialWhenSavingAttachmentIdForMessageIdFail() throws Exception {
         CassandraMessageDAO cassandraMessageDAO = mock(CassandraMessageDAO.class);
         CassandraAttachmentMessageIdDAO attachmentMessageIdDAO = mock(CassandraAttachmentMessageIdDAO.class);
         CassandraMessageDAO.MessageIdAttachmentIds messageIdAttachmentIds = mock(CassandraMessageDAO.MessageIdAttachmentIds.class);

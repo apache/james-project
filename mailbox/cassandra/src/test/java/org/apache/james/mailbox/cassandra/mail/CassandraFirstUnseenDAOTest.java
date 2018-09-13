@@ -22,56 +22,37 @@ package org.apache.james.mailbox.cassandra.mail;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraFirstUnseenModule;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraFirstUnseenDAOTest {
-    
-    public static final CassandraId MAILBOX_ID = CassandraId.timeBased();
-    public static final MessageUid UID_1 = MessageUid.of(1);
-    public static final MessageUid UID_2 = MessageUid.of(2);
+class CassandraFirstUnseenDAOTest {
+    private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
+    private static final MessageUid UID_1 = MessageUid.of(1);
+    private static final MessageUid UID_2 = MessageUid.of(2);
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraFirstUnseenModule.MODULE);
 
     private CassandraFirstUnseenDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraFirstUnseenModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraFirstUnseenDAO(cassandra.getConf());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void retrieveFirstUnreadShouldReturnEmptyByDefault() {
+    void retrieveFirstUnreadShouldReturnEmptyByDefault() {
         assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join().isPresent())
             .isFalse();
     }
 
     @Test
-    public void addUnreadShouldThenBeReportedAsFirstUnseen() {
+    void addUnreadShouldThenBeReportedAsFirstUnseen() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
         assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
@@ -79,7 +60,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void retrieveFirstUnreadShouldReturnLowestUnreadUid() {
+    void retrieveFirstUnreadShouldReturnLowestUnreadUid() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
         testee.addUnread(MAILBOX_ID, UID_2).join();
@@ -89,7 +70,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void retrieveFirstUnreadShouldBeOrderIndependent() {
+    void retrieveFirstUnreadShouldBeOrderIndependent() {
         testee.addUnread(MAILBOX_ID, UID_2).join();
 
         testee.addUnread(MAILBOX_ID, UID_1).join();
@@ -99,7 +80,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void addUnreadShouldBeIdempotent() {
+    void addUnreadShouldBeIdempotent() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
         testee.addUnread(MAILBOX_ID, UID_1).join();
@@ -108,9 +89,8 @@ public class CassandraFirstUnseenDAOTest {
             .contains(UID_1);
     }
 
-
     @Test
-    public void removeUnreadShouldReturnWhenNoData() {
+    void removeUnreadShouldReturnWhenNoData() {
         testee.removeUnread(MAILBOX_ID, UID_1).join();
 
         assertThat(testee.retrieveFirstUnread(MAILBOX_ID).join())
@@ -118,7 +98,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void removeUnreadShouldRemoveOnlyUnread() {
+    void removeUnreadShouldRemoveOnlyUnread() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
 
         testee.removeUnread(MAILBOX_ID, UID_1).join();
@@ -128,7 +108,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void removeUnreadShouldRemoveLastUnread() {
+    void removeUnreadShouldRemoveLastUnread() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
         testee.addUnread(MAILBOX_ID, UID_2).join();
 
@@ -139,7 +119,7 @@ public class CassandraFirstUnseenDAOTest {
     }
 
     @Test
-    public void removeUnreadShouldHaveNoEffectWhenNotLast() {
+    void removeUnreadShouldHaveNoEffectWhenNotLast() {
         testee.addUnread(MAILBOX_ID, UID_1).join();
         testee.addUnread(MAILBOX_ID, UID_2).join();
 

@@ -35,7 +35,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.HashBlobId;
@@ -55,12 +55,9 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.util.streams.Limit;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -68,15 +65,18 @@ import com.google.common.primitives.Bytes;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraMessageDAOTest {
+class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final String CONTENT = "Subject: Test7 \n\nBody7\n.\n";
     private static final MessageUid messageUid = MessageUid.of(1);
     private static final List<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
+        CassandraModule.aggregateModules(
+            CassandraMessageModule.MODULE,
+            CassandraBlobModule.MODULE));
 
     private CassandraMessageDAO testee;
     private CassandraMessageId.Factory messageIdFactory;
@@ -85,14 +85,8 @@ public class CassandraMessageDAOTest {
     private CassandraMessageId messageId;
     private List<ComposedMessageIdWithMetaData> messageIds;
 
-    @BeforeClass
-    public static void setUpClass() {
-        CassandraModule modules = CassandraModule.aggregateModules(CassandraMessageModule.MODULE, CassandraBlobModule.MODULE);
-        cassandra = CassandraCluster.create(modules, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         messageIdFactory = new CassandraMessageId.Factory();
         messageId = messageIdFactory.generate();
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -107,18 +101,8 @@ public class CassandraMessageDAOTest {
                 .build());
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
+    void saveShouldSaveNullValueForTextualLineCountAsZero() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).join();
@@ -131,7 +115,7 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void saveShouldSaveTextualLineCount() throws Exception {
+    void saveShouldSaveTextualLineCount() throws Exception {
         long textualLineCount = 10L;
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setTextualLineCount(textualLineCount);
@@ -146,7 +130,7 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void saveShouldStoreMessageWithFullContent() throws Exception {
+    void saveShouldStoreMessageWithFullContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).join();
@@ -159,7 +143,7 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void saveShouldStoreMessageWithBodyContent() throws Exception {
+    void saveShouldStoreMessageWithBodyContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).join();
@@ -175,7 +159,7 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void saveShouldStoreMessageWithHeaderContent() throws Exception {
+    void saveShouldStoreMessageWithHeaderContent() throws Exception {
         message = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
 
         testee.save(message).join();
@@ -211,14 +195,14 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldReturnEmptyWhenNone() {
+    void retrieveAllMessageIdAttachmentIdsShouldReturnEmptyWhenNone() {
         Stream<MessageIdAttachmentIds> actual = testee.retrieveAllMessageIdAttachmentIds().join();
         
         assertThat(actual).isEmpty();
     }
 
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStored() throws Exception {
+    void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStored() throws Exception {
         //Given
         MessageAttachment attachment = MessageAttachment.builder()
             .attachment(Attachment.builder()
@@ -238,7 +222,7 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStoredWithTwoAttachments() throws Exception {
+    void retrieveAllMessageIdAttachmentIdsShouldReturnOneWhenStoredWithTwoAttachments() throws Exception {
         //Given
         MessageAttachment attachment1 = MessageAttachment.builder()
             .attachment(Attachment.builder()
@@ -264,7 +248,7 @@ public class CassandraMessageDAOTest {
     }
     
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldReturnAllWhenStoredWithAttachment() throws Exception {
+    void retrieveAllMessageIdAttachmentIdsShouldReturnAllWhenStoredWithAttachment() throws Exception {
         //Given
         MessageId messageId1 = messageIdFactory.generate();
         MessageId messageId2 = messageIdFactory.generate();
@@ -295,7 +279,7 @@ public class CassandraMessageDAOTest {
     }
     
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldReturnEmtpyWhenStoredWithoutAttachment() throws Exception {
+    void retrieveAllMessageIdAttachmentIdsShouldReturnEmtpyWhenStoredWithoutAttachment() throws Exception {
         //Given
         SimpleMailboxMessage message1 = createMessage(messageId, CONTENT, BODY_START, new PropertyBuilder(), NO_ATTACHMENT);
         testee.save(message1).join();
@@ -308,7 +292,7 @@ public class CassandraMessageDAOTest {
     }
     
     @Test
-    public void retrieveAllMessageIdAttachmentIdsShouldFilterMessagesWithoutAttachment() throws Exception {
+    void retrieveAllMessageIdAttachmentIdsShouldFilterMessagesWithoutAttachment() throws Exception {
         //Given
         MessageId messageId1 = messageIdFactory.generate();
         MessageId messageId2 = messageIdFactory.generate();
@@ -341,19 +325,19 @@ public class CassandraMessageDAOTest {
     }
 
     @Test
-    public void messageIdAttachmentIdsShouldMatchBeanContract() {
+    void messageIdAttachmentIdsShouldMatchBeanContract() {
         EqualsVerifier.forClass(MessageIdAttachmentIds.class)
             .verify();
     }
 
     @Test
-    public void messageIdAttachmentIdsShouldThrowOnNullMessageId() {
+    void messageIdAttachmentIdsShouldThrowOnNullMessageId() {
         assertThatThrownBy(() -> new MessageIdAttachmentIds(null, ImmutableSet.of()))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void messageIdAttachmentIdsShouldThrowOnNullAttachmentIds() {
+    void messageIdAttachmentIdsShouldThrowOnNullAttachmentIds() {
         assertThatThrownBy(() -> new MessageIdAttachmentIds(messageIdFactory.generate(), null))
             .isInstanceOf(NullPointerException.class);
     }

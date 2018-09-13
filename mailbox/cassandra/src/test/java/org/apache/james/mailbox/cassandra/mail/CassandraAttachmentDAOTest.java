@@ -25,63 +25,43 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
-public class CassandraAttachmentDAOTest {
-    public static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
-    public static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
+class CassandraAttachmentDAOTest {
+    private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("id1");
+    private static final AttachmentId ATTACHMENT_ID_2 = AttachmentId.from("id2");
 
-    @ClassRule
-    public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAttachmentModule.MODULE);
 
     private CassandraAttachmentDAO testee;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraAttachmentModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getAttachmentShouldReturnEmptyWhenAbsent() {
+    void getAttachmentShouldReturnEmptyWhenAbsent() {
         Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).join();
 
         assertThat(attachment).isEmpty();
     }
 
     @Test
-    public void retrieveAllShouldReturnEmptyByDefault() {
+    void retrieveAllShouldReturnEmptyByDefault() {
         assertThat(
             testee.retrieveAll()
                 .collect(Guavate.toImmutableList()))
@@ -89,7 +69,7 @@ public class CassandraAttachmentDAOTest {
     }
 
     @Test
-    public void retrieveAllShouldReturnStoredAttachments() throws Exception {
+    void retrieveAllShouldReturnStoredAttachments() throws Exception {
         Attachment attachment1 = Attachment.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
@@ -110,7 +90,7 @@ public class CassandraAttachmentDAOTest {
     }
 
     @Test
-    public void getAttachmentShouldReturnAttachmentWhenStored() throws Exception {
+    void getAttachmentShouldReturnAttachmentWhenStored() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")
@@ -124,7 +104,7 @@ public class CassandraAttachmentDAOTest {
     }
 
     @Test
-    public void deleteAttachmentShouldRemoveAttachment() throws Exception {
+    void deleteAttachmentShouldRemoveAttachment() throws Exception {
         Attachment attachment = Attachment.builder()
             .attachmentId(ATTACHMENT_ID)
             .type("application/json")

@@ -24,23 +24,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraRegistrationModule;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.publisher.Topic;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailboxPathRegistrerMapperTest {
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    private static CassandraCluster cassandra;
+class CassandraMailboxPathRegistrerMapperTest {
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraRegistrationModule.MODULE);
 
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final MailboxPath MAILBOX_PATH_2 = new MailboxPath("namespace2", "user2", "name2");
@@ -50,76 +45,61 @@ public class CassandraMailboxPathRegistrerMapperTest {
 
     private CassandraMailboxPathRegisterMapper mapper;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraRegistrationModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
             cassandra.getTypesProvider(),
             CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             CASSANDRA_TIME_OUT_IN_S);
     }
 
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
     @Test
-    public void getTopicsShouldReturnEmptyResultByDefault() {
+    void getTopicsShouldReturnEmptyResultByDefault() {
         assertThat(mapper.getTopics(MAILBOX_PATH)).isEmpty();
     }
 
     @Test
-    public void doRegisterShouldWork() {
+    void doRegisterShouldWork() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         assertThat(mapper.getTopics(MAILBOX_PATH)).containsOnly(TOPIC);
     }
 
     @Test
-    public void doRegisterShouldBeMailboxPathSpecific() {
+    void doRegisterShouldBeMailboxPathSpecific() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         assertThat(mapper.getTopics(MAILBOX_PATH_2)).isEmpty();
     }
 
     @Test
-    public void doRegisterShouldAllowMultipleTopics() {
+    void doRegisterShouldAllowMultipleTopics() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         mapper.doRegister(MAILBOX_PATH, TOPIC_2);
         assertThat(mapper.getTopics(MAILBOX_PATH)).containsOnly(TOPIC, TOPIC_2);
     }
 
     @Test
-    public void doUnRegisterShouldWork() {
+    void doUnRegisterShouldWork() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         mapper.doUnRegister(MAILBOX_PATH, TOPIC);
         assertThat(mapper.getTopics(MAILBOX_PATH)).isEmpty();
     }
 
     @Test
-    public void doUnregisterShouldBeMailboxSpecific() {
+    void doUnregisterShouldBeMailboxSpecific() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         mapper.doUnRegister(MAILBOX_PATH_2, TOPIC);
         assertThat(mapper.getTopics(MAILBOX_PATH)).containsOnly(TOPIC);
     }
 
     @Test
-    public void doUnregisterShouldBeTopicSpecific() {
+    void doUnregisterShouldBeTopicSpecific() {
         mapper.doRegister(MAILBOX_PATH, TOPIC);
         mapper.doUnRegister(MAILBOX_PATH, TOPIC_2);
         assertThat(mapper.getTopics(MAILBOX_PATH)).containsOnly(TOPIC);
     }
 
     @Test
-    public void entriesShouldExpire() throws Exception {
+    void entriesShouldExpire(CassandraCluster cassandra) throws Exception {
         int verySmallTimeoutInSecond = 1;
         mapper = new CassandraMailboxPathRegisterMapper(cassandra.getConf(),
             cassandra.getTypesProvider(),

@@ -24,16 +24,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -51,41 +48,25 @@ public abstract class CassandraMailboxPathDAOTest {
     public static final MailboxPath USER_OUTBOX_MAILBOXPATH = MailboxPath.forUser(USER, "OUTBOX");
     public static final MailboxPath OTHER_USER_MAILBOXPATH = MailboxPath.forUser(OTHER_USER, "INBOX");
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-
-    protected static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailboxModule.MODULE);
 
     protected CassandraMailboxPathDAO testee;
 
-    abstract CassandraMailboxPathDAO testee();
+    abstract CassandraMailboxPathDAO testee(CassandraCluster cassandra);
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraMailboxModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        testee = testee();
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
+        testee = testee(cassandra);
     }
 
     @Test
-    public void cassandraIdAndPathShouldRespectBeanContract() {
+    void cassandraIdAndPathShouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraIdAndPath.class).verify();
     }
 
     @Test
-    public void saveShouldInsertNewEntry() {
+    void saveShouldInsertNewEntry() {
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isTrue();
 
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
@@ -93,20 +74,20 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void saveOnSecondShouldBeFalse() {
+    void saveOnSecondShouldBeFalse() {
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isTrue();
         assertThat(testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join()).isFalse();
     }
 
     @Test
-    public void retrieveIdShouldReturnEmptyWhenEmptyData() {
+    void retrieveIdShouldReturnEmptyWhenEmptyData() {
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join()
             .isPresent())
             .isFalse();
     }
 
     @Test
-    public void retrieveIdShouldReturnStoredData() {
+    void retrieveIdShouldReturnStoredData() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
 
         assertThat(testee.retrieveId(USER_INBOX_MAILBOXPATH).join())
@@ -114,7 +95,7 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void getUserMailboxesShouldReturnAllMailboxesOfUser() {
+    void getUserMailboxesShouldReturnAllMailboxesOfUser() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
         testee.save(USER_OUTBOX_MAILBOXPATH, OUTBOX_ID).join();
         testee.save(OTHER_USER_MAILBOXPATH, otherMailboxId).join();
@@ -130,12 +111,12 @@ public abstract class CassandraMailboxPathDAOTest {
     }
 
     @Test
-    public void deleteShouldNotThrowWhenEmpty() {
+    void deleteShouldNotThrowWhenEmpty() {
         testee.delete(USER_INBOX_MAILBOXPATH).join();
     }
 
     @Test
-    public void deleteShouldDeleteTheExistingMailboxId() {
+    void deleteShouldDeleteTheExistingMailboxId() {
         testee.save(USER_INBOX_MAILBOXPATH, INBOX_ID).join();
 
         testee.delete(USER_INBOX_MAILBOXPATH).join();

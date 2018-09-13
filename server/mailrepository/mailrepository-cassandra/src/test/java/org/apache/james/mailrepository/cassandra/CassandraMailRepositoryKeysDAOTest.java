@@ -22,47 +22,29 @@ package org.apache.james.mailrepository.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(DockerCassandraExtension.class)
 class CassandraMailRepositoryKeysDAOTest {
-
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final MailRepositoryUrl URL2 = MailRepositoryUrl.from("proto://url2");
     static final MailKey KEY_1 = new MailKey("key1");
     static final MailKey KEY_2 = new MailKey("key2");
     static final MailKey KEY_3 = new MailKey("key3");
 
-    static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraMailRepositoryModule.MODULE);
+
     CassandraMailRepositoryKeysDAO testee;
 
-    @BeforeAll
-    static void setUpClass(DockerCassandraExtension.DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(CassandraMailRepositoryModule.MODULE, dockerCassandra.getHost());
-    }
-
     @BeforeEach
-    void setUp() {
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-    }
-
-    @AfterEach
-    void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
-        cassandra.closeCluster();
     }
 
     @Test

@@ -21,57 +21,37 @@ package org.apache.james.blob.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.DockerCassandraExtension.DockerCassandra;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-@ExtendWith(DockerCassandraExtension.class)
 public class CassandraBlobsDAOTest implements BlobStoreContract {
-
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
+
     private CassandraBlobsDAO testee;
 
-    @BeforeAll
-    static void setUpClass(DockerCassandra dockerCassandra) {
-        cassandra = CassandraCluster.create(CassandraBlobModule.MODULE, dockerCassandra.getHost());
-    }
-
     @BeforeEach
-    void setUp() {
+    void setUp(CassandraCluster cassandra) {
         testee = new CassandraBlobsDAO(cassandra.getConf(),
             CassandraConfiguration.builder()
                 .blobPartSize(CHUNK_SIZE)
                 .build(),
             new HashBlobId.Factory());
-    }
-
-    @AfterEach
-    void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterAll
-    public static void tearDownClass() {
-        cassandra.closeCluster();
     }
 
     @Override
@@ -85,7 +65,7 @@ public class CassandraBlobsDAOTest implements BlobStoreContract {
     }
 
     @Test
-    public void readBytesShouldReturnSplitSavedDataByChunk() throws IOException {
+    void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
         BlobId blobId = testee.save(longString.getBytes(StandardCharsets.UTF_8)).join();
 

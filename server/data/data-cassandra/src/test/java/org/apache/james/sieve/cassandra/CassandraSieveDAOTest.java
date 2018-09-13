@@ -25,132 +25,111 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.User;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraSieveDAOTest {
+class CassandraSieveDAOTest {
 
-    public static final User USER = User.fromUsername("user");
-    public static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
-    public static final ScriptName SCRIPT_NAME2 = new ScriptName("scriptName2");
-    public static final Script SCRIPT = Script.builder()
+    private static final User USER = User.fromUsername("user");
+    private static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
+    private static final ScriptName SCRIPT_NAME2 = new ScriptName("scriptName2");
+    private static final Script SCRIPT = Script.builder()
         .name(SCRIPT_NAME)
         .content("content")
         .isActive(false)
         .build();
-    public static final Script SCRIPT2 = Script.builder()
+    private static final Script SCRIPT2 = Script.builder()
         .name(SCRIPT_NAME2)
         .content("alternative content")
         .isActive(true)
         .build();
-    public static final Script ACTIVE_SCRIPT = Script.builder()
+    private static final Script ACTIVE_SCRIPT = Script.builder()
         .copyOf(SCRIPT)
         .isActive(true)
         .build();
-    public static final Script SCRIPT_NEW_CONTENT = Script.builder()
+    private static final Script SCRIPT_NEW_CONTENT = Script.builder()
         .copyOf(SCRIPT)
         .content("newContent")
         .build();
 
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    private static CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);
 
     private CassandraSieveDAO sieveDAO;
 
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(CassandraSieveRepositoryModule.MODULE, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(CassandraCluster cassandra) {
         sieveDAO = new CassandraSieveDAO(cassandra.getConf());
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
     }
     
      @Test
-    public void getScriptShouldReturnEmptyByDefault() {
+    void getScriptShouldReturnEmptyByDefault() {
         assertThat(sieveDAO.getScript(USER, SCRIPT_NAME).join().isPresent())
             .isFalse();
     }
 
     @Test
-    public void getScriptShouldReturnStoredScript() {
+    void getScriptShouldReturnStoredScript() {
         sieveDAO.insertScript(USER, SCRIPT).join();
 
         Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
 
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(SCRIPT);
+        assertThat(actual).contains(SCRIPT);
     }
 
     @Test
-    public void insertScriptShouldUpdateContent() {
+    void insertScriptShouldUpdateContent() {
         sieveDAO.insertScript(USER, SCRIPT).join();
 
         sieveDAO.insertScript(USER, SCRIPT_NEW_CONTENT).join();
 
         Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(SCRIPT_NEW_CONTENT);
+        assertThat(actual).contains(SCRIPT_NEW_CONTENT);
     }
 
     @Test
-    public void insertScriptShouldUpdateActivate() {
+    void insertScriptShouldUpdateActivate() {
         sieveDAO.insertScript(USER, SCRIPT).join();
 
         sieveDAO.insertScript(USER, ACTIVE_SCRIPT).join();
 
         Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
-        assertThat(actual.isPresent()).isTrue();
-        assertThat(actual.get()).isEqualTo(ACTIVE_SCRIPT);
+        assertThat(actual).contains(ACTIVE_SCRIPT);
     }
 
     @Test
-    public void deleteScriptInCassandraShouldWork() {
+    void deleteScriptInCassandraShouldWork() {
         sieveDAO.insertScript(USER, SCRIPT).join();
 
         sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).join();
 
         Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(actual).isEmpty();
     }
 
     @Test
-    public void deleteScriptInCassandraShouldWorkWhenNoneStore() {
+    void deleteScriptInCassandraShouldWorkWhenNoneStore() {
         sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).join();
 
         Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).join();
-        assertThat(actual.isPresent()).isFalse();
+        assertThat(actual).isEmpty();
     }
 
     @Test
-    public void listScriptsShouldReturnEmpty() {
+    void listScriptsShouldReturnEmpty() {
         List<ScriptSummary> scriptSummaryList = sieveDAO.listScripts(USER).join();
 
         assertThat(scriptSummaryList).isEmpty();
     }
 
     @Test
-    public void listScriptsShouldReturnSingleStoredValue() {
+    void listScriptsShouldReturnSingleStoredValue() {
         sieveDAO.insertScript(USER, SCRIPT).join();
         sieveDAO.insertScript(USER, SCRIPT2).join();
 

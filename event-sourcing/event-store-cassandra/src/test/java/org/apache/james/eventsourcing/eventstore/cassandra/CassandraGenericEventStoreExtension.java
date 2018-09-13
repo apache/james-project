@@ -21,9 +21,7 @@ package org.apache.james.eventsourcing.eventstore.cassandra;
 
 import java.util.Set;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraExtension;
-import org.apache.james.backends.cassandra.DockerCassandraExtension.DockerCassandra;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
@@ -37,43 +35,37 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 public class CassandraGenericEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
-    private final DockerCassandraExtension dockerCassandraExtension;
     @SuppressWarnings("rawtypes")
     private final Set<EventDTOModule> modules;
-    private CassandraCluster cassandra;
-    private DockerCassandra dockerCassandra;
+    private CassandraClusterExtension cassandra;
     private EventStoreDao eventStoreDao;
 
     public CassandraGenericEventStoreExtension(@SuppressWarnings("rawtypes") Set<EventDTOModule> modules) {
         this.modules = modules;
-        dockerCassandraExtension = new DockerCassandraExtension();
+        cassandra = new CassandraClusterExtension(CassandraEventStoreModule.MODULE);
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        dockerCassandraExtension.beforeAll(context);
-        dockerCassandra = dockerCassandraExtension.getDockerCassandra();
-        cassandra = CassandraCluster.create(
-            CassandraEventStoreModule.MODULE, dockerCassandra.getHost());
+    public void beforeAll(ExtensionContext context) {
+        cassandra.beforeAll(context);
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        cassandra.closeCluster();
-        dockerCassandraExtension.afterAll(context);
+    public void afterAll(ExtensionContext context) {
+        cassandra.afterAll(context);
     }
 
     @Override
     public void beforeEach(ExtensionContext context) {
         JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules);
 
-        eventStoreDao = new EventStoreDao(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION,
             jsonEventSerializer);
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
-        cassandra.clearTables();
+        cassandra.afterEach(context);
     }
 
     @Override
