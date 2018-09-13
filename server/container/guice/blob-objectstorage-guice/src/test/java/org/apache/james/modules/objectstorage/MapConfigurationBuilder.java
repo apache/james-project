@@ -19,19 +19,23 @@
 
 package org.apache.james.modules.objectstorage;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.PayloadCodec;
+import org.apache.commons.configuration.MapConfiguration;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
+import com.google.common.collect.ImmutableMap;
 
-public class ObjectStorageBlobStoreModule extends AbstractModule {
+class MapConfigurationBuilder {
+    private ImmutableMap.Builder<String, Object> config;
 
-    @Override
-    protected void configure() {
-        bind(PayloadCodec.class).toProvider(PayloadCodecProvider.class).in(Scopes.SINGLETON);
-        bind(ObjectStorageBlobsDAO.class).toProvider(ObjectStorageBlobsDAOProvider.class).in(Scopes.SINGLETON);
-        bind(BlobStore.class).toProvider(ObjectStorageBlobsDAOProvider.class).in(Scopes.SINGLETON);
+    public MapConfigurationBuilder() {
+        this.config = new ImmutableMap.Builder<>();
+    }
+
+    public MapConfigurationBuilder put(String key, Object value) {
+        config.put(key, value);
+        return this;
+    }
+
+    public MapConfiguration build() {
+        return new MapConfiguration(config.build());
     }
 }

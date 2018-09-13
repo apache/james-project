@@ -53,6 +53,7 @@ public class ObjectStorageBlobsDAOBuilder {
         this.payloadCodec = Optional.of(payloadCodec);
         return this;
     }
+    
     public ObjectStorageBlobsDAOBuilder payloadCodec(Optional<PayloadCodec> payloadCodec) {
         this.payloadCodec = payloadCodec;
         return this;
