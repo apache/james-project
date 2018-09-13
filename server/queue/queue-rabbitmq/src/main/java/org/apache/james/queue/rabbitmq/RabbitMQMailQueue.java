@@ -26,12 +26,12 @@ import java.util.function.Function;
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
@@ -133,12 +133,12 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
 
     @Override
     public long clear() {
-        throw new NotImplementedException("Not yet implemented");
+        return mailQueueView.delete(DeleteCondition.all()).join();
     }
 
     @Override
     public long remove(Type type, String value) {
-        throw new NotImplementedException("Not yet implemented");
+        return mailQueueView.delete(DeleteCondition.from(type, value)).join();
     }
 
     @Override

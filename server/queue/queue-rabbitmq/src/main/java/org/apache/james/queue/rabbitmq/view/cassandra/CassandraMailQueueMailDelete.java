@@ -59,11 +59,18 @@ class CassandraMailQueueMailDelete {
             .thenRunAsync(() -> maybeUpdateBrowseStart(mailQueueName));
     }
 
+    CompletableFuture<Boolean> isDeleted(Mail mail, MailQueueName mailQueueName) {
+        return deletedMailsDao.isDeleted(mailQueueName, MailKey.fromMail(mail));
+    }
+
+    CompletableFuture<Void> updateBrowseStart(MailQueueName mailQueueName) {
+        return findNewBrowseStart(mailQueueName)
+            .thenCompose(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart));
+    }
+
     private void maybeUpdateBrowseStart(MailQueueName mailQueueName) {
         if (shouldUpdateBrowseStart()) {
-            findNewBrowseStart(mailQueueName)
-                .thenCompose(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart))
-                .join();
+            updateBrowseStart(mailQueueName).join();
         }
     }
 

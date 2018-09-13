@@ -21,14 +21,15 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
 import com.google.common.collect.Iterators;
@@ -59,9 +60,9 @@ public class CassandraMailQueueView implements MailQueueView {
     private final MailQueueName mailQueueName;
 
     CassandraMailQueueView(CassandraMailQueueMailStore storeHelper,
-                                  MailQueueName mailQueueName,
-                                  CassandraMailQueueBrowser cassandraMailQueueBrowser,
-                                  CassandraMailQueueMailDelete cassandraMailQueueMailDelete) {
+                           MailQueueName mailQueueName,
+                           CassandraMailQueueBrowser cassandraMailQueueBrowser,
+                           CassandraMailQueueMailDelete cassandraMailQueueMailDelete) {
         this.mailQueueName = mailQueueName;
         this.storeHelper = storeHelper;
         this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
@@ -94,12 +95,21 @@ public class CassandraMailQueueView implements MailQueueView {
 
     @Override
     public CompletableFuture<Long> delete(DeleteCondition deleteCondition) {
-        throw new NotImplementedException("Not implemented yet");
+        CompletableFuture<Long> result = cassandraMailQueueBrowser.browseReferences(mailQueueName)
+            .filter(mailReference -> deleteCondition.shouldBeDeleted(mailReference.getMail()))
+            .map(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getMail(), mailQueueName),
+                FluentFutureStream::unboxFuture)
+            .completableFuture()
+            .thenApply(Stream::count);
+
+        result.thenRunAsync(() -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName));
+
+        return result;
     }
 
-
     @Override
-    public CompletableFuture<Boolean> isDeleted(Mail mail) {
-        throw new NotImplementedException("Not implemented yet");
+    public CompletableFuture<Boolean> isPresent(Mail mail) {
+        return cassandraMailQueueMailDelete.isDeleted(mail, mailQueueName)
+                .thenApply(bool -> !bool);
     }
 }
