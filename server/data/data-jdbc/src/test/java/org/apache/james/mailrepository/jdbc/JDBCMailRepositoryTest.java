@@ -32,6 +32,7 @@ import org.apache.james.mailrepository.MailRepositoryContract;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 
 public class JDBCMailRepositoryTest implements MailRepositoryContract {
 
@@ -71,5 +72,11 @@ public class JDBCMailRepositoryTest implements MailRepositoryContract {
         ds.setUsername("james");
         ds.setPassword("james");
         return ds;
+    }
+
+    @Override
+    @Disabled("JAMES-2546 This mail repository does not support null sender")
+    public void storeRegularMailShouldNotFailWhenNullSender() {
+
     }
 }

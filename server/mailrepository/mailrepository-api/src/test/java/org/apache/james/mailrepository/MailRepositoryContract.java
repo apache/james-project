@@ -43,6 +43,8 @@ import org.apache.james.utils.DiscreteDistribution;
 import org.apache.james.utils.DiscreteDistribution.DistributionEntry;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
+import org.apache.mailet.base.MailAddressFixture;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -133,6 +135,21 @@ public interface MailRepositoryContract {
         testee.remove(MAIL_1);
 
         assertThat(testee.size()).isEqualTo(0L);
+    }
+
+    @Test
+    default void storeRegularMailShouldNotFailWhenNullSender() throws Exception {
+        MailRepository testee = retrieveRepository();
+        Mail mail = FakeMail.builder()
+            .sender(MailAddress.nullSender())
+            .recipient(MailAddressFixture.RECIPIENT1)
+            .name(MAIL_1.asString())
+            .mimeMessage(generateMailContent("String body"))
+            .build();
+
+        testee.store(mail);
+
+        assertThat(testee.retrieve(MAIL_1).getSender()).isEqualTo(MailAddress.nullSender());
     }
 
     @Test

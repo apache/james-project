@@ -174,7 +174,7 @@ public class CassandraMailRepositoryMailDAO {
 
     private MailDTO toMail(Row row) {
         MailAddress sender = Optional.ofNullable(row.getString(SENDER))
-            .map(Throwing.function(MailAddress::new))
+            .map(MailAddress::getMailSender)
             .orElse(null);
         List<MailAddress> recipients = row.getList(RECIPIENTS, String.class)
             .stream()
