@@ -20,9 +20,10 @@
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
 import org.apache.james.eventsourcing.eventstore.EventStoreTest;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(CassandraEventStoreExtension.class)
 class CassandraEventStoreTest implements EventStoreTest {
-
+    @RegisterExtension
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(TestEventDTOModules.TEST_TYPE);
 }

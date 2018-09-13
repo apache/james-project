@@ -19,12 +19,64 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
+import java.util.Arrays;
+import java.util.Set;
+
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
 import com.google.common.collect.ImmutableSet;
 
-public class CassandraEventStoreExtension extends CassandraGenericEventStoreExtension {
-    public CassandraEventStoreExtension() {
-        super(ImmutableSet.of(TestEventDTOModules.TEST_TYPE));
+public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+    private final Set<EventDTOModule> modules;
+    private CassandraClusterExtension cassandra;
+    private EventStoreDao eventStoreDao;
+
+    public CassandraEventStoreExtension(EventDTOModule... modules) {
+        this.modules = Arrays.stream(modules).collect(ImmutableSet.toImmutableSet());
+        this.cassandra = new CassandraClusterExtension(CassandraEventStoreModule.MODULE);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext context) {
+        cassandra.beforeAll(context);
+    }
+
+    @Override
+    public void afterAll(ExtensionContext context) {
+        cassandra.afterAll(context);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) {
+        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules);
+
+        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            jsonEventSerializer);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        cassandra.afterEach(context);
+    }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return (parameterContext.getParameter().getType() == EventStore.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return new CassandraEventStore(eventStoreDao);
     }
 }
