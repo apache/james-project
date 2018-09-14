@@ -32,6 +32,11 @@
 
     <name>Apache James :: Server :: Mailets</name>
 
+    <properties>
+        <spec2.version>4.9.4</spec2.version>
+    </properties>
+
+
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -225,12 +230,28 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-core_${scala.base}</artifactId>
+            <version>${spec2.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.specs2</groupId>
+            <artifactId>specs2-junit_${scala.base}</artifactId>
+            <version>${spec2.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.jakewharton.byteunits</groupId>
@@ -247,6 +268,10 @@
                 <configuration>
                     <outputDirectory>target/mailetdocs</outputDirectory>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
