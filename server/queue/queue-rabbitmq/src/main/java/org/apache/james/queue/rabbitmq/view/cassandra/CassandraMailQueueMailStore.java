@@ -21,9 +21,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
@@ -39,7 +37,6 @@ class CassandraMailQueueMailStore {
     private final BrowseStartDAO browseStartDao;
     private final CassandraMailQueueViewConfiguration configuration;
     private final Clock clock;
-    private final Set<MailQueueName> initialInserted;
 
     @Inject
     CassandraMailQueueMailStore(EnqueuedMailsDAO enqueuedMailsDao,
@@ -50,27 +47,17 @@ class CassandraMailQueueMailStore {
         this.browseStartDao = browseStartDao;
         this.configuration = configuration;
         this.clock = clock;
-        this.initialInserted = ConcurrentHashMap.newKeySet();
     }
 
     CompletableFuture<Void> storeMailInEnqueueTable(Mail mail, MailQueueName mailQueueName, Instant enqueuedTime) {
         EnqueuedMail enqueuedMail = convertToEnqueuedMail(mail, mailQueueName, enqueuedTime);
 
-        return enqueuedMailsDao.insert(enqueuedMail)
-            .thenCompose(any -> initBrowseStartIfNeeded(mailQueueName, enqueuedMail.getTimeRangeStart()));
+        return enqueuedMailsDao.insert(enqueuedMail);
     }
 
-    private CompletableFuture<Void> initBrowseStartIfNeeded(MailQueueName mailQueueName, Instant sliceStartAt) {
-        if (!initialInserted.contains(mailQueueName)) {
-            return tryInsertBrowseStart(mailQueueName, sliceStartAt);
-        }
-        return CompletableFuture.completedFuture(null);
-    }
-
-    private CompletableFuture<Void> tryInsertBrowseStart(MailQueueName mailQueueName, Instant sliceStartAt) {
+    CompletableFuture<Void> initializeBrowseStart(MailQueueName mailQueueName) {
         return browseStartDao
-            .insertInitialBrowseStart(mailQueueName, sliceStartAt)
-            .thenAccept(any -> initialInserted.add(mailQueueName));
+            .insertInitialBrowseStart(mailQueueName, currentSliceStartInstant());
     }
 
     private EnqueuedMail convertToEnqueuedMail(Mail mail, MailQueueName mailQueueName, Instant enqueuedTime) {

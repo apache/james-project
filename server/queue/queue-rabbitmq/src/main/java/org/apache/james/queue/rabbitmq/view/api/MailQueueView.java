@@ -23,9 +23,12 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.mailet.Mail;
 
 public interface MailQueueView {
+
+    void initialize(MailQueueName mailQueueName);
 
     CompletableFuture<Void> storeMail(Instant enqueuedTime, Mail mail);
 

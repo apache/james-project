@@ -67,6 +67,12 @@ public class CassandraMailQueueView implements MailQueueView {
     }
 
     @Override
+    public void initialize(MailQueueName mailQueueName) {
+        storeHelper.initializeBrowseStart(mailQueueName)
+            .join();
+    }
+
+    @Override
     public CompletableFuture<Void> storeMail(Instant enqueuedTime, Mail mail) {
         return storeHelper.storeMailInEnqueueTable(mail, mailQueueName, enqueuedTime);
     }
@@ -88,5 +94,4 @@ public class CassandraMailQueueView implements MailQueueView {
     public long getSize() {
         return Iterators.size(browse());
     }
-
 }

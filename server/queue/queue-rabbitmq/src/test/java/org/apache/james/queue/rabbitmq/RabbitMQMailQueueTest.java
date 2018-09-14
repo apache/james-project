@@ -213,6 +213,15 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             .containsExactly("3-4", "3-5", "5-1", "5-2", "5-3", "5-4", "5-5");
     }
 
+    @Test
+    void mailQueueShouldBeInitializedWhenCreating(CassandraCluster cassandra) {
+        String name = "myQueue";
+        mailQueueFactory.createQueue(name);
+
+        boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
+        assertThat(initialized).isTrue();
+    }
+
     @Disabled
     @Override
     public void clearShouldNotFailWhenBrowsingIterating() {

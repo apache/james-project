@@ -69,6 +69,8 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
+            mailQueueView.initialize(mailQueueName);
+
             return new RabbitMQMailQueue(metricFactory, mailQueueName,
                 new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, mailReferenceSerializer,
                     metricFactory, mailQueueView, clock),

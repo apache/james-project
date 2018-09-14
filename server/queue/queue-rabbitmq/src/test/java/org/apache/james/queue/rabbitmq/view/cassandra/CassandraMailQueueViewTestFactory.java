@@ -20,10 +20,12 @@
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Clock;
+import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.queue.rabbitmq.MailQueueName;
 
 import com.datastax.driver.core.Session;
 
@@ -44,5 +46,12 @@ public class CassandraMailQueueViewTestFactory {
             cassandraMailQueueMailStore,
             cassandraMailQueueBrowser,
             cassandraMailQueueMailDelete);
+    }
+
+    public static boolean isInitialized(Session session, MailQueueName mailQueueName) {
+        BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
+        return browseStartDao.findBrowseStart(mailQueueName)
+            .thenApply(Optional::isPresent)
+            .join();
     }
 }
