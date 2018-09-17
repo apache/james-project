@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PoolingOptions;
 import com.datastax.driver.core.QueryOptions;
 import com.datastax.driver.core.SocketOptions;
@@ -164,10 +165,7 @@ public class ClusterBuilder {
             password.map(password ->
                 clusterBuilder.withCredentials(username, password)));
 
-        getRefreshSchemaIntervalMillis().map(refreshSchemaIntervalMillis ->
-            clusterBuilder.withQueryOptions(
-                new QueryOptions()
-                    .setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis)));
+        clusterBuilder.withQueryOptions(queryOptions());
 
         SocketOptions socketOptions = new SocketOptions();
         readTimeoutMillis.ifPresent(socketOptions::setReadTimeoutMillis);
@@ -184,6 +182,16 @@ public class ClusterBuilder {
             cluster.close();
             throw e;
         }
+    }
+
+    private QueryOptions queryOptions() {
+        QueryOptions queryOptions = new QueryOptions()
+                .setConsistencyLevel(ConsistencyLevel.QUORUM);
+
+        getRefreshSchemaIntervalMillis().ifPresent(refreshSchemaIntervalMillis ->
+                    queryOptions.setRefreshSchemaIntervalMillis(refreshSchemaIntervalMillis));
+
+        return queryOptions;
     }
 
     private Optional<Integer> getRefreshSchemaIntervalMillis() {
