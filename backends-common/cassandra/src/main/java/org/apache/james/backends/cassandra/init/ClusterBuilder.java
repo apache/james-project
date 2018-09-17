@@ -187,7 +187,7 @@ public class ClusterBuilder {
     }
 
     private Optional<Integer> getRefreshSchemaIntervalMillis() {
-        return forTest ? Optional.of(0) : refreshSchemaIntervalMillis;
+        return refreshSchemaIntervalMillis;
     }
 
     private Collection<Host> getServers() {
