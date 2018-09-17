@@ -53,8 +53,8 @@ class CassandraMailQueueMailStore {
         this.initialInserted = ConcurrentHashMap.newKeySet();
     }
 
-    CompletableFuture<Void> storeMailInEnqueueTable(Mail mail, MailQueueName mailQueueName) {
-        EnqueuedMail enqueuedMail = convertToEnqueuedMail(mail, mailQueueName);
+    CompletableFuture<Void> storeMailInEnqueueTable(Mail mail, MailQueueName mailQueueName, Instant enqueuedTime) {
+        EnqueuedMail enqueuedMail = convertToEnqueuedMail(mail, mailQueueName, enqueuedTime);
 
         return enqueuedMailsDao.insert(enqueuedMail)
             .thenCompose(any -> initBrowseStartIfNeeded(mailQueueName, enqueuedMail.getTimeRangeStart()));
@@ -73,12 +73,12 @@ class CassandraMailQueueMailStore {
             .thenAccept(any -> initialInserted.add(mailQueueName));
     }
 
-    private EnqueuedMail convertToEnqueuedMail(Mail mail, MailQueueName mailQueueName) {
+    private EnqueuedMail convertToEnqueuedMail(Mail mail, MailQueueName mailQueueName, Instant enqueuedTime) {
         return EnqueuedMail.builder()
             .mail(mail)
             .bucketId(computedBucketId(mail))
             .timeRangeStart(currentSliceStartInstant())
-            .enqueuedTime(Instant.now())
+            .enqueuedTime(enqueuedTime)
             .mailKey(MailKey.fromMail(mail))
             .mailQueueName(mailQueueName)
             .build();

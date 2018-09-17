@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq.view.api;
 
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -26,7 +27,7 @@ import org.apache.mailet.Mail;
 
 public interface MailQueueView {
 
-    CompletableFuture<Void> storeMail(Mail mail);
+    CompletableFuture<Void> storeMail(Instant enqueuedTime, Mail mail);
 
     CompletableFuture<Void> deleteMail(Mail mail);
 

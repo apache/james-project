@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
+import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
@@ -66,8 +67,8 @@ public class CassandraMailQueueView implements MailQueueView {
     }
 
     @Override
-    public CompletableFuture<Void> storeMail(Mail mail) {
-        return storeHelper.storeMailInEnqueueTable(mail, mailQueueName);
+    public CompletableFuture<Void> storeMail(Instant enqueuedTime, Mail mail) {
+        return storeHelper.storeMailInEnqueueTable(mail, mailQueueName, enqueuedTime);
     }
 
     @Override

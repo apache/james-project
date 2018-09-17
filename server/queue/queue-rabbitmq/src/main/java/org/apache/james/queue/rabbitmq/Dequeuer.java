@@ -30,6 +30,7 @@ import java.util.function.Function;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
@@ -56,7 +57,7 @@ class Dequeuer {
         }
 
         @Override
-        public void done(boolean success) throws MailQueue.MailQueueException {
+        public void done(boolean success) {
             ack.accept(success);
         }
     }
@@ -68,16 +69,20 @@ class Dequeuer {
     private final Function<MailReferenceDTO, Mail> mailLoader;
     private final Metric dequeueMetric;
     private final MailReferenceSerializer mailReferenceSerializer;
+    private final MailQueueView mailQueueView;
 
-    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader, MailReferenceSerializer serializer, MetricFactory metricFactory) {
+    Dequeuer(MailQueueName name, RabbitClient rabbitClient, Function<MailReferenceDTO, Mail> mailLoader,
+             MailReferenceSerializer serializer, MetricFactory metricFactory,
+             MailQueueView mailQueueView) {
         this.name = name;
         this.rabbitClient = rabbitClient;
         this.mailLoader = mailLoader;
         this.mailReferenceSerializer = serializer;
+        this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
     }
 
-    MailQueue.MailQueueItem deQueue() throws MailQueue.MailQueueException {
+    MailQueue.MailQueueItem deQueue() {
         return pollChannel()
             .thenApply(Throwing.function(this::loadItem).sneakyThrow())
             .join();
@@ -95,6 +100,7 @@ class Dequeuer {
                 if (success) {
                     dequeueMetric.increment();
                     rabbitClient.ack(deliveryTag);
+                    mailQueueView.deleteMail(mail).join();
                 } else {
                     rabbitClient.nack(deliveryTag);
                 }
