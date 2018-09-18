@@ -40,35 +40,4 @@ class ClusterBuilderTest {
 
         assertThat(consistencyLevel).isEqualTo(ConsistencyLevel.QUORUM);
     }
-
-    @Test
-    void refreshSchemaIntervalMillisShouldReturnDefaultValueWhenNotGiven() {
-        Cluster cluster = ClusterBuilder.builder()
-            .host("localhost")
-            .port(ClusterBuilder.DEFAULT_CASSANDRA_PORT)
-            .build();
-
-        int refreshSchemaIntervalMillis = cluster.getConfiguration()
-                .getQueryOptions()
-                .getRefreshSchemaIntervalMillis();
-
-        assertThat(refreshSchemaIntervalMillis).isEqualTo(1000);
-    }
-
-    @Test
-    void refreshSchemaIntervalMillisShouldReturnCustomValueWhenGiven() {
-        int expected = 123;
-        Cluster cluster = ClusterBuilder.builder()
-            .host("localhost")
-            .port(ClusterBuilder.DEFAULT_CASSANDRA_PORT)
-            .forTest()
-            .refreshSchemaIntervalMillis(expected)
-            .build();
-
-        int refreshSchemaIntervalMillis = cluster.getConfiguration()
-                .getQueryOptions()
-                .getRefreshSchemaIntervalMillis();
-
-        assertThat(refreshSchemaIntervalMillis).isEqualTo(expected);
-    }
 }
