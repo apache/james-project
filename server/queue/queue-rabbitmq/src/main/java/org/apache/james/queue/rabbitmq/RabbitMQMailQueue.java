@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
@@ -46,6 +47,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
 
     static class Factory {
         private final MetricFactory metricFactory;
+        private final GaugeRegistry gaugeRegistry;
         private final RabbitClient rabbitClient;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final MailReferenceSerializer mailReferenceSerializer;
@@ -54,12 +56,14 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
         private final Clock clock;
 
         @Inject
-        @VisibleForTesting Factory(MetricFactory metricFactory, RabbitClient rabbitClient,
+        @VisibleForTesting Factory(MetricFactory metricFactory, GaugeRegistry gaugeRegistry,
+                                   RabbitClient rabbitClient,
                                    Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
                                    BlobId.Factory blobIdFactory,
                                    MailQueueView mailQueueView,
                                    Clock clock) {
             this.metricFactory = metricFactory;
+            this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
             this.mimeMessageStore = mimeMessageStore;
             this.mailQueueView = mailQueueView;
@@ -71,28 +75,36 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
             mailQueueView.initialize(mailQueueName);
 
-            return new RabbitMQMailQueue(metricFactory, mailQueueName,
+            return new RabbitMQMailQueue(
+                metricFactory,
+                mailQueueName,
+                gaugeRegistry,
                 new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, mailReferenceSerializer,
                     metricFactory, mailQueueView, clock),
                 new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer,
-                    metricFactory, mailQueueView), mailQueueView);
+                    metricFactory, mailQueueView),
+                mailQueueView);
         }
     }
 
     private final MailQueueName name;
     private final MetricFactory metricFactory;
+    private final GaugeRegistry gaugeRegistry;
     private final Enqueuer enqueuer;
     private final Dequeuer dequeuer;
     private final MailQueueView mailQueueView;
 
     RabbitMQMailQueue(MetricFactory metricFactory, MailQueueName name,
-                      Enqueuer enqueuer, Dequeuer dequeuer,
+                      GaugeRegistry gaugeRegistry, Enqueuer enqueuer, Dequeuer dequeuer,
                       MailQueueView mailQueueView) {
         this.metricFactory = metricFactory;
         this.name = name;
+        this.gaugeRegistry = gaugeRegistry;
         this.enqueuer = enqueuer;
         this.dequeuer = dequeuer;
         this.mailQueueView = mailQueueView;
+
+        this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + name.asString(), this::getSize);
     }
 
     @Override

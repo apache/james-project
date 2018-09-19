@@ -131,6 +131,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
         RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(
             metricTestSystem.getSpyMetricFactory(),
+            metricTestSystem.getSpyGaugeRegistry(),
             rabbitClient,
             mimeMessageStore,
             BLOB_ID_FACTORY,

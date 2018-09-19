@@ -19,28 +19,33 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.inject.Inject;
 
 import org.apache.james.queue.api.MailQueueFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQueue> {
     private final RabbitClient rabbitClient;
     private final RabbitMQManagementApi mqManagementApi;
     private final RabbitMQMailQueue.Factory mailQueueFactory;
 
+    private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> mailQueueStoreLocal;
+
     @VisibleForTesting
     @Inject
-    RabbitMQMailQueueFactory(RabbitClient rabbitClient, RabbitMQManagementApi mqManagementApi, RabbitMQMailQueue.Factory mailQueueFactory) throws IOException {
+    RabbitMQMailQueueFactory(RabbitClient rabbitClient,
+                             RabbitMQManagementApi mqManagementApi,
+                             RabbitMQMailQueue.Factory mailQueueFactory) {
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;
         this.mailQueueFactory = mailQueueFactory;
+        this.mailQueueStoreLocal = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -58,19 +63,23 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     @Override
     public Set<RabbitMQMailQueue> listCreatedMailQueues() {
         return mqManagementApi.listCreatedMailQueueNames()
-            .map(mailQueueFactory::create)
-            .collect(Guavate.toImmutableSet());
+            .map(this::getOrElseCreateLocally)
+            .collect(ImmutableSet.toImmutableSet());
     }
 
     private RabbitMQMailQueue attemptQueueCreation(MailQueueName mailQueueName) {
         rabbitClient.attemptQueueCreation(mailQueueName);
-        return mailQueueFactory.create(mailQueueName);
+        return getOrElseCreateLocally(mailQueueName);
     }
 
     private Optional<RabbitMQMailQueue> getQueue(MailQueueName name) {
         return mqManagementApi.listCreatedMailQueueNames()
             .filter(name::equals)
-            .map(mailQueueFactory::create)
+            .map(this::getOrElseCreateLocally)
             .findFirst();
+    }
+
+    private RabbitMQMailQueue getOrElseCreateLocally(MailQueueName name) {
+        return mailQueueStoreLocal.computeIfAbsent(name, mailQueueFactory::create);
     }
 }
