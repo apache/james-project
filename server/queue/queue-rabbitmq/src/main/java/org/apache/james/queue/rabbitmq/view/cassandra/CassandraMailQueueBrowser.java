@@ -115,8 +115,8 @@ class CassandraMailQueueBrowser {
 
     private Stream<Slice> allSlicesStartingAt(Optional<Instant> maybeBrowseStart) {
         return maybeBrowseStart
-            .map(browseStart -> Slice.of(browseStart, configuration.getSliceWindow()))
-            .map(startSlice -> allSlicesTill(startSlice, clock.instant()))
+            .map(Slice::of)
+            .map(startSlice -> allSlicesTill(startSlice, clock.instant(), configuration.getSliceWindow()))
             .orElse(Stream.empty());
     }
 

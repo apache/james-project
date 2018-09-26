@@ -65,22 +65,22 @@ public class BucketedSlices {
 
     public static class Slice {
 
-        public static Slice of(Instant sliceStartInstant, Duration sliceWindowSize) {
-            return new Slice(sliceStartInstant, sliceWindowSize);
+        public static Slice of(Instant sliceStartInstant) {
+            return new Slice(sliceStartInstant);
         }
 
-        public static Stream<Slice> allSlicesTill(Slice firstSlice, Instant endAt) {
-            long sliceCount = calculateSliceCount(firstSlice, endAt);
+        public static Stream<Slice> allSlicesTill(Slice firstSlice, Instant endAt, Duration windowSize) {
+            long sliceCount = calculateSliceCount(firstSlice, endAt, windowSize);
             long startAtSeconds =  firstSlice.getStartSliceInstant().getEpochSecond();
-            long sliceWindowSizeInSecond = firstSlice.getSliceWindowSize().getSeconds();
+            long sliceWindowSizeInSecond = windowSize.getSeconds();
 
             return LongStream.range(0, sliceCount)
                 .map(slicePosition -> startAtSeconds + sliceWindowSizeInSecond * slicePosition)
                 .mapToObj(Instant::ofEpochSecond)
-                .map(sliceStartInstant -> Slice.of(sliceStartInstant, firstSlice.getSliceWindowSize()));
+                .map(Slice::of);
         }
 
-        private static long calculateSliceCount(Slice firstSlice, Instant endAt) {
+        private static long calculateSliceCount(Slice firstSlice, Instant endAt, Duration windowSize) {
             long startAtSeconds =  firstSlice.getStartSliceInstant().getEpochSecond();
             long endAtSeconds = endAt.getEpochSecond();
             long timeDiffInSecond = endAtSeconds - startAtSeconds;
@@ -88,43 +88,36 @@ public class BucketedSlices {
             if (timeDiffInSecond < 0) {
                 return 0;
             } else {
-                return (timeDiffInSecond / firstSlice.getSliceWindowSize().getSeconds()) + 1;
+                return (timeDiffInSecond / windowSize.getSeconds()) + 1;
             }
         }
 
         private final Instant startSliceInstant;
-        private final Duration sliceWindowSize;
 
-        private Slice(Instant startSliceInstant, Duration sliceWindowSize) {
+        private Slice(Instant startSliceInstant) {
             Preconditions.checkNotNull(startSliceInstant);
-            Preconditions.checkNotNull(sliceWindowSize);
 
             this.startSliceInstant = startSliceInstant;
-            this.sliceWindowSize = sliceWindowSize;
         }
 
         public Instant getStartSliceInstant() {
             return startSliceInstant;
         }
 
-        public Duration getSliceWindowSize() {
-            return sliceWindowSize;
-        }
 
         @Override
         public final boolean equals(Object o) {
             if (o instanceof Slice) {
                 Slice slice = (Slice) o;
 
-                return Objects.equals(this.sliceWindowSize, slice.sliceWindowSize)
-                    && Objects.equals(this.startSliceInstant, slice.startSliceInstant);
+                return Objects.equals(this.startSliceInstant, slice.startSliceInstant);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(startSliceInstant, sliceWindowSize);
+            return Objects.hash(startSliceInstant);
         }
     }
 }
