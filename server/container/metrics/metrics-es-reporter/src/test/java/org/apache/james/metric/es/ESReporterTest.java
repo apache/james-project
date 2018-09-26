@@ -32,6 +32,7 @@ import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.awaitility.Duration;
 import org.elasticsearch.client.Client;
@@ -40,6 +41,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -55,7 +57,8 @@ public class ESReporterTest {
     @Rule
     public SwarmGenericContainer esContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
         .withAffinityToContainer()
-        .withExposedPorts(ES_HTTP_PORT, ES_APPLICATIVE_PORT);
+        .withExposedPorts(ES_HTTP_PORT, ES_APPLICATIVE_PORT)
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
 
     private ClientProvider clientProvider;
     private ESMetricReporter esMetricReporter;

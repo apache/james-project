@@ -21,6 +21,7 @@ package org.apache.james.blob.objectstorage;
 
 import java.net.URI;
 
+import org.apache.james.util.docker.RateLimiters;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -28,12 +29,14 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 class DockerSwiftTempAuthExtension implements ParameterResolver, BeforeAllCallback, AfterAllCallback {
     public static final int SWIFT_PORT = 8080;
     private static GenericContainer<?> swiftContainer =
         new GenericContainer<>("bouncestorage/swift-aio:ea10837d")
-            .withExposedPorts(SWIFT_PORT);
+            .withExposedPorts(SWIFT_PORT)
+            .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
     private DockerSwift dockerSwift;
 
     @Override

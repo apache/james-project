@@ -40,6 +40,7 @@ import org.apache.james.transport.mailets.amqp.AmqpRule;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.SMTPAuthSuccessful;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -51,6 +52,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 public class ContactExtractorTest {
     public static final String SENDER = "sender@" + DEFAULT_DOMAIN;
@@ -63,7 +65,8 @@ public class ContactExtractorTest {
     public static final String EXCHANGE = "collector:email";
     public static final String ROUTING_KEY = "";
 
-    public SwarmGenericContainer rabbit = new SwarmGenericContainer(Images.RABBITMQ);
+    public SwarmGenericContainer rabbit = new SwarmGenericContainer(Images.RABBITMQ)
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
     public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
     public TemporaryFolder folder = new TemporaryFolder();
 

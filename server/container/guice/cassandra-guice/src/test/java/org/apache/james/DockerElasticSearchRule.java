@@ -23,9 +23,11 @@ import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.google.inject.Module;
 
@@ -42,7 +44,8 @@ public class DockerElasticSearchRule implements GuiceModuleTestRule {
     }
 
     private SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
-        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
+        .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT)
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
 
     @Override
     public Statement apply(Statement base, Description description) {

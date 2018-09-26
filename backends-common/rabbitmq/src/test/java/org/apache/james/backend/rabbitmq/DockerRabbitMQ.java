@@ -26,6 +26,7 @@ import java.util.UUID;
 import com.rabbitmq.client.Address;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.DockerClientFactory;
@@ -67,7 +68,7 @@ public class DockerRabbitMQ {
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
                 .waitingFor(new WaitAllStrategy()
-                    .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT))
+                    .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.DEFAULT))
                     .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this)))
                 .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
                 .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()

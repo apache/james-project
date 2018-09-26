@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.awaitility.core.ConditionFactory;
 import org.junit.rules.TestRule;
@@ -53,7 +54,8 @@ public class FakeSmtp implements TestRule {
     private static SwarmGenericContainer fakeSmtpContainer() {
         return new SwarmGenericContainer(Images.FAKE_SMTP)
             .withAffinityToContainer()
-            .waitingFor(new HostPortWaitStrategy());
+            .waitingFor(new HostPortWaitStrategy()
+            .withRateLimiter(RateLimiters.DEFAULT));
     }
 
     private static final int SMTP_PORT = 25;

@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.rules.ExternalResource;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
@@ -68,7 +69,7 @@ public class LdapGenericContainer extends ExternalResource {
                 .withEnv("SLAPD_PASSWORD", password)
                 .withEnv("SLAPD_CONFIG_PASSWORD", password)
                 .withExposedPorts(LdapGenericContainer.DEFAULT_LDAP_PORT)
-                .waitingFor(new HostPortWaitStrategy());
+                .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
         }
     }
 

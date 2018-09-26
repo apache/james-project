@@ -41,6 +41,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.util.docker.Images;
+import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -61,7 +62,7 @@ public class SpamAssassinTest {
     public static SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy());
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule

@@ -633,7 +633,7 @@
         <jackson.version>2.9.6</jackson.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
         <metrics.version>3.2.6</metrics.version>
-        <testcontainers.version>1.8.3</testcontainers.version>
+        <testcontainers.version>1.9.0</testcontainers.version>
         <assertj.version>3.3.0</assertj.version>
         <es.version>2.2.1</es.version>
         <es-reporter.version>2.2.0</es-reporter.version>
