@@ -115,8 +115,11 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
+        CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
+        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
+
         MailQueueView mailQueueView = CassandraMailQueueViewTestFactory.factory(clock, random, cassandra.getConf(), cassandra.getTypesProvider(),
-            mailQueueViewConfiguration)
+            mailQueueViewConfiguration, mimeMessageStore)
             .create(MailQueueName.fromString(SPOOL));
 
         RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(

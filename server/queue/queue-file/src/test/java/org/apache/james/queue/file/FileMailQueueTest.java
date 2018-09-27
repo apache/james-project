@@ -97,4 +97,11 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Not supported yet")
+    public void browseShouldReturnMailsWithMimeMessage() {
+
+    }
 }

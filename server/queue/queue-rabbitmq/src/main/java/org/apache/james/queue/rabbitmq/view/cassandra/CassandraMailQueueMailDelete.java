@@ -29,7 +29,6 @@ import javax.inject.Inject;
 
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
-import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedMail;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.apache.mailet.Mail;
 
@@ -77,7 +76,7 @@ class CassandraMailQueueMailDelete {
 
     private CompletableFuture<Optional<Instant>> findNewBrowseStart(MailQueueName mailQueueName) {
         return cassandraMailQueueBrowser.browseReferences(mailQueueName)
-            .map(EnqueuedMail::getTimeRangeStart)
+            .map(enqueuedItem -> enqueuedItem.getSlicingContext().getTimeRangeStart())
             .completableFuture()
             .thenApply(Stream::findFirst);
     }

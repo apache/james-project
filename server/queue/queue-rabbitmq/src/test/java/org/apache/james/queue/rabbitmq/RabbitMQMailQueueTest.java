@@ -108,12 +108,17 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         clock = new UpdatableTickingClock(IN_SLICE_1);
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
-        MailQueueView mailQueueView = CassandraMailQueueViewTestFactory.factory(clock, random, cassandra.getConf(), cassandra.getTypesProvider(),
+        MailQueueView mailQueueView = CassandraMailQueueViewTestFactory.factory(
+            clock,
+            random,
+            cassandra.getConf(),
+            cassandra.getTypesProvider(),
             CassandraMailQueueViewConfiguration.builder()
                     .bucketCount(THREE_BUCKET_COUNT)
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                     .sliceWindow(ONE_HOUR_SLICE_WINDOW)
-                    .build())
+                    .build(),
+            mimeMessageStore)
             .create(MailQueueName.fromString(SPOOL));
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()

@@ -61,9 +61,9 @@ class Enqueuer {
 
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         saveMail(mail)
-            .thenAccept(Throwing.<MimeMessagePartsId>consumer(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
+            .thenApply(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
+            .thenApply(mailQueueView::storeMail)
             .thenRun(enqueueMetric::increment)
-            .thenCompose(any -> mailQueueView.storeMail(clock.instant(), mail))
             .join();
     }
 
@@ -75,8 +75,15 @@ class Enqueuer {
         }
     }
 
-    private void publishReferenceToRabbit(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
+    private EnqueuedItem publishReferenceToRabbit(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
         rabbitClient.publish(name, getMailReferenceBytes(mail, partsId));
+
+        return EnqueuedItem.builder()
+            .mailQueueName(name)
+            .mail(mail)
+            .enqueuedTime(clock.instant())
+            .mimeMessagePartsId(partsId)
+            .build();
     }
 
     private byte[] getMailReferenceBytes(Mail mail, MimeMessagePartsId partsId) throws MailQueue.MailQueueException {
