@@ -22,10 +22,11 @@ package org.apache.james.queue.rabbitmq;
 import java.time.Instant;
 import java.util.Objects;
 
-import com.google.common.base.Preconditions;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.apache.mailet.Mail;
+
+import com.google.common.base.Preconditions;
 
 public class EnqueuedItem {
 
