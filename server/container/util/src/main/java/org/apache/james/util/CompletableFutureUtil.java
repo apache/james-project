@@ -105,4 +105,10 @@ public class CompletableFutureUtil {
             .thenApply(stream ->
                 stream.sorted(comparator));
     }
+
+    public static <T> CompletableFuture<T> exceptionallyFuture(Throwable throwable) {
+        CompletableFuture<T> failedFuture = new CompletableFuture<>();
+        failedFuture.completeExceptionally(throwable);
+        return failedFuture;
+    }
 }
