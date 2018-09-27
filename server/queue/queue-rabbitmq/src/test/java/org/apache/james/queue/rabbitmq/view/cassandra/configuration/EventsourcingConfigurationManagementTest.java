@@ -27,11 +27,17 @@ import java.time.Duration;
 import java.util.List;
 
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
-import org.junit.jupiter.api.BeforeEach;
+import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class EventsourcingConfigurationManagementTest {
+
+    @RegisterExtension
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(
+        CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
+
     private static final int DEFAULT_BUCKET_COUNT = 10;
     private static final int DEFAULT_UPDATE_PACE = 100;
     private static final Duration ONE_HOUR = Duration.ofHours(1);
@@ -54,28 +60,22 @@ class EventsourcingConfigurationManagementTest {
         .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
         .sliceWindow(ONE_HOUR)
         .build();
-    private InMemoryEventStore eventStore;
 
-    private EventsourcingConfigurationManagement createConfigurationManagement() {
+    private EventsourcingConfigurationManagement createConfigurationManagement(EventStore eventStore) {
         return new EventsourcingConfigurationManagement(eventStore);
     }
 
-    @BeforeEach
-    void setUp() {
-        eventStore = new InMemoryEventStore();
-    }
-
     @Test
-    void loadShouldReturnEmptyIfNoConfigurationStored() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadShouldReturnEmptyIfNoConfigurationStored(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
 
         assertThat(testee.load())
             .isEmpty();
     }
 
     @Test
-    void loadShouldReturnTheLastConfiguration() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadShouldReturnTheLastConfiguration(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(FIRST_CONFIGURATION);
         testee.registerConfiguration(SECOND_CONFIGURATION);
         testee.registerConfiguration(THIRD_CONFIGURATION);
@@ -85,16 +85,16 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldThrowWhenConfigurationIsNull() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldThrowWhenConfigurationIsNull(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
 
         assertThatThrownBy(() -> testee.registerConfiguration(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    void loadConfigurationShouldThrowWhenBucketCountDecrease() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldThrowWhenBucketCountDecrease(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -110,8 +110,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldUpdateStoredConfigurationWhenIncreaseBucketCount() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldUpdateStoredConfigurationWhenIncreaseBucketCount(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -130,8 +130,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldStoreConfiguration() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldStoreConfiguration(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
 
         testee.registerConfiguration(FIRST_CONFIGURATION);
 
@@ -140,8 +140,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldThrowWhenIncreaseSliceWindow() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldThrowWhenIncreaseSliceWindow(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -157,8 +157,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldThrowWhenDecreaseSliceWindowByANotDivisibleNumber() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldThrowWhenDecreaseSliceWindowByANotDivisibleNumber(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -174,8 +174,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldUpdateConfigurationWhenDecreaseSliceWindowByADivisibleNumber() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldUpdateConfigurationWhenDecreaseSliceWindowByADivisibleNumber(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -194,8 +194,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldUpdateConfigurationWhenIncreaseUpdatePace() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldUpdateConfigurationWhenIncreaseUpdatePace(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -214,8 +214,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldUpdateConfigurationWhenDecreaseUpdatePace() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldUpdateConfigurationWhenDecreaseUpdatePace(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(CassandraMailQueueViewConfiguration.builder()
             .bucketCount(DEFAULT_BUCKET_COUNT)
             .updateBrowseStartPace(DEFAULT_UPDATE_PACE)
@@ -234,8 +234,8 @@ class EventsourcingConfigurationManagementTest {
     }
 
     @Test
-    void loadConfigurationShouldIgnoreDuplicateWhenStoreTheSameConfigurationTwice() {
-        EventsourcingConfigurationManagement testee = createConfigurationManagement();
+    void loadConfigurationShouldIgnoreDuplicateWhenStoreTheSameConfigurationTwice(EventStore eventStore) {
+        EventsourcingConfigurationManagement testee = createConfigurationManagement(eventStore);
         testee.registerConfiguration(FIRST_CONFIGURATION);
         testee.registerConfiguration(FIRST_CONFIGURATION);
 
