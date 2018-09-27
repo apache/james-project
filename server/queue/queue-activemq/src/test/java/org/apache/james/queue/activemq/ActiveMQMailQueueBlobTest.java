@@ -124,6 +124,13 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     }
 
     @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent ack/nack might lead to a deadlock")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+
+    }
+
+    @Test
     void computeNextDeliveryTimestampShouldReturnLongMaxWhenOverflow() {
         long deliveryTimestamp = mailQueue.computeNextDeliveryTimestamp(Long.MAX_VALUE, TimeUnit.DAYS);
 

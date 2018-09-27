@@ -99,4 +99,18 @@ public class JMSMailQueueTest implements DelayedManageableMailQueueContract, Pri
     public void clearShouldRemoveAllElements() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent operations might lead to a missing file and errors upon dequeue")
+    public void concurrentEnqueueDequeueShouldNotFail() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurrent operations might lead to a missing file and errors upon dequeue")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+
+    }
 }

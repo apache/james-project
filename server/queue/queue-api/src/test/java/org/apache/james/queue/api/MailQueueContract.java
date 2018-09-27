@@ -378,6 +378,43 @@ public interface MailQueueContract {
             .hasSize(totalDequeuedMessages);
     }
 
+    @Test
+    default void concurrentEnqueueDequeueWithAckNackShouldNotFail() throws Exception {
+        MailQueue testee = getMailQueue();
+
+        ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
+
+        int threadCount = 10;
+        int operationCount = 150;
+        int totalDequeuedMessages = 500;
+        ConcurrentTestRunner.builder()
+            .operation((threadNumber, step) -> {
+                if (step % 3 == 0) {
+                    testee.enQueue(defaultMail()
+                        .name("name" + threadNumber + "-" + step)
+                        .build());
+                }
+                if (step % 3 == 1) {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    mailQueueItem.done(false);
+                }
+                if (step % 3 == 2) {
+                    MailQueue.MailQueueItem mailQueueItem = testee.deQueue();
+                    dequeuedMails.add(mailQueueItem.getMail());
+                    mailQueueItem.done(true);
+                }
+            })
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(
+            dequeuedMails.stream()
+                .map(Mail::getName)
+                .distinct())
+            .hasSize(totalDequeuedMessages);
+    }
+
     class SerializableAttribute implements Serializable {
         private final String value;
 

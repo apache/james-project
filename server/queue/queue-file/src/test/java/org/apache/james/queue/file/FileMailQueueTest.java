@@ -104,4 +104,11 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     public void browseShouldReturnMailsWithMimeMessage() {
 
     }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 Mixing concurent operation might lead to a deadlock and missing fiels")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+
+    }
 }
