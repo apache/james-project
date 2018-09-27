@@ -52,7 +52,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-@ExtendWith(DockerRabbitMQExtension.class)
+@ExtendWith(RabbitMQExtension.class)
 class RabbitMQTest {
 
     @Nested

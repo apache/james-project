@@ -31,7 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
-@ExtendWith(DockerRabbitMQExtension.class)
+@ExtendWith(RabbitMQExtension.class)
 class RabbitMQHealthCheckTest {
     private RabbitMQHealthCheck healthCheck;
 

@@ -44,7 +44,7 @@ import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
-import org.apache.james.backend.rabbitmq.ReusableDockerRabbitMQExtension;
+import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -75,7 +75,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.fge.lambdas.Throwing;
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
-@ExtendWith(ReusableDockerRabbitMQExtension.class)
+@ExtendWith(RabbitMQExtension.class)
 public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQueueMetricContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;

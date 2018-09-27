@@ -35,7 +35,7 @@ import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
-import org.apache.james.backend.rabbitmq.ReusableDockerRabbitMQExtension;
+import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.blob.api.Store;
@@ -48,7 +48,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
-@ExtendWith(ReusableDockerRabbitMQExtension.class)
+@ExtendWith(RabbitMQExtension.class)
 class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQMailQueue> {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
