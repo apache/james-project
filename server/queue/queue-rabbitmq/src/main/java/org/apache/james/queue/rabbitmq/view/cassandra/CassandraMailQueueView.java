@@ -29,6 +29,8 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
@@ -42,10 +44,16 @@ public class CassandraMailQueueView implements MailQueueView {
         private final CassandraMailQueueMailDelete cassandraMailQueueMailDelete;
 
         @Inject
-        public Factory(CassandraMailQueueMailStore storeHelper, CassandraMailQueueBrowser cassandraMailQueueBrowser, CassandraMailQueueMailDelete cassandraMailQueueMailDelete) {
+        public Factory(CassandraMailQueueMailStore storeHelper,
+                       CassandraMailQueueBrowser cassandraMailQueueBrowser,
+                       CassandraMailQueueMailDelete cassandraMailQueueMailDelete,
+                       EventsourcingConfigurationManagement eventsourcingConfigurationManagement,
+                       CassandraMailQueueViewConfiguration configuration) {
             this.storeHelper = storeHelper;
             this.cassandraMailQueueBrowser = cassandraMailQueueBrowser;
             this.cassandraMailQueueMailDelete = cassandraMailQueueMailDelete;
+
+            eventsourcingConfigurationManagement.registerConfiguration(configuration);
         }
 
         public MailQueueView create(MailQueueName mailQueueName) {

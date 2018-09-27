@@ -25,10 +25,16 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 
 import com.datastax.driver.core.Session;
+import com.google.common.collect.ImmutableSet;
 
 public class CassandraMailQueueViewTestFactory {
 
@@ -43,10 +49,16 @@ public class CassandraMailQueueViewTestFactory {
         CassandraMailQueueMailStore cassandraMailQueueMailStore = new CassandraMailQueueMailStore(enqueuedMailsDao, browseStartDao, configuration, clock);
         CassandraMailQueueMailDelete cassandraMailQueueMailDelete = new CassandraMailQueueMailDelete(deletedMailsDao, browseStartDao, cassandraMailQueueBrowser, configuration, random);
 
+
+        EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session, CassandraUtils.WITH_DEFAULT_CONFIGURATION,
+            new JsonEventSerializer(ImmutableSet.of(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION)))));
+
         return new CassandraMailQueueView.Factory(
             cassandraMailQueueMailStore,
             cassandraMailQueueBrowser,
-            cassandraMailQueueMailDelete);
+            cassandraMailQueueMailDelete,
+            eventsourcingConfigurationManagement,
+            configuration);
     }
 
     public static boolean isInitialized(Session session, MailQueueName mailQueueName) {

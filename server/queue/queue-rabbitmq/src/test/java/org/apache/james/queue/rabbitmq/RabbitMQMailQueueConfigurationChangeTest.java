@@ -23,6 +23,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +53,7 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
+import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -62,7 +64,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -89,7 +90,8 @@ class RabbitMQMailQueueConfigurationChangeTest {
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraBlobModule.MODULE,
-        CassandraMailQueueViewModule.MODULE));
+        CassandraMailQueueViewModule.MODULE,
+        CassandraEventStoreModule.MODULE));
 
     private Clock clock;
     private RabbitMQManagementApi mqManagementApi;
@@ -161,30 +163,16 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    @Disabled("decreasing bucket count lead to losing emails")
-    void decreasingBucketCountShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
-        RabbitMQMailQueue mailQueueWithMoreBuckets = getRabbitMQMailQueue(cassandra,
+    void decreasingBucketCountShouldBeRejected(CassandraCluster cassandra) throws Exception {
+        getRabbitMQMailQueue(cassandra,
             CassandraMailQueueViewConfiguration.builder()
                     .bucketCount(THREE_BUCKET_COUNT + 2)
                     .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
                     .sliceWindow(ONE_HOUR_SLICE_WINDOW)
                     .build());
 
-        enqueueMailsInSlice(mailQueueWithMoreBuckets, 1, 10);
-
-        RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
-
-        enqueueMailsInSlice(mailQueue, 2, 10);
-
-        Stream<String> names = Iterators.toStream(mailQueue.browse())
-            .map(ManageableMailQueue.MailQueueItemView::getMail)
-            .map(Mail::getName);
-
-        assertThat(names).containsOnly(
-            "1-1", "1-2", "1-3", "1-4", "1-5",
-            "1-6", "1-7", "1-8", "1-9", "1-10",
-            "2-1", "2-2", "2-3", "2-4", "2-5",
-            "2-6", "2-7", "2-8", "2-9", "2-10");
+        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -221,71 +209,29 @@ class RabbitMQMailQueueConfigurationChangeTest {
     }
 
     @Test
-    @Disabled("decrease arbitrarily slice window leads to lose emails due to non matching slice start")
-    void decreaseArbitrarilySliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
-        RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
+    void decreaseArbitrarilySliceWindowShouldBeRejected(CassandraCluster cassandra) throws Exception {
+        getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
-        when(clock.instant()).thenReturn(IN_SLICE_1);
-        enqueueMailsInSlice(mailQueue, 1, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_2);
-        enqueueMailsInSlice(mailQueue, 2, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3);
-        enqueueMailsInSlice(mailQueue, 3, 1);
-
-        RabbitMQMailQueue mailQueueWithSmallerSlices = getRabbitMQMailQueue(cassandra,
+        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra,
             CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(Duration.ofMinutes(25))
-                    .build());
-
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(35, MINUTES));
-        enqueueMailsInSlice(mailQueue, 4, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(65, MINUTES));
-        enqueueMailsInSlice(mailQueue, 5, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(95, MINUTES));
-        enqueueMailsInSlice(mailQueue, 6, 1);
-
-        Stream<String> names = Iterators.toStream(mailQueueWithSmallerSlices.browse())
-            .map(ManageableMailQueue.MailQueueItemView::getMail)
-            .map(Mail::getName);
-
-        assertThat(names).containsOnly(
-            "1-1", "2-1", "3-1", "4-1", "5-1", "6-1");
+                .bucketCount(THREE_BUCKET_COUNT)
+                .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                .sliceWindow(Duration.ofMinutes(25))
+                .build()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    @Disabled("increase slice window leads to lose emails due to non matching slice start")
-    void increaseSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
-        RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
+    void increaseSliceWindowShouldBeRejected(CassandraCluster cassandra) throws Exception {
+        getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
-        when(clock.instant()).thenReturn(IN_SLICE_1);
-        enqueueMailsInSlice(mailQueue, 1, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_2);
-        enqueueMailsInSlice(mailQueue, 2, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3);
-        enqueueMailsInSlice(mailQueue, 3, 1);
-
-        RabbitMQMailQueue mailQueueWithSmallerSlices = getRabbitMQMailQueue(cassandra,
+        assertThatThrownBy(() -> getRabbitMQMailQueue(cassandra,
             CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(Duration.ofHours(2))
-                    .build());
-
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(35, MINUTES));
-        enqueueMailsInSlice(mailQueue, 4, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(65, MINUTES));
-        enqueueMailsInSlice(mailQueue, 5, 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(95, MINUTES));
-        enqueueMailsInSlice(mailQueue, 6, 1);
-
-        Stream<String> names = Iterators.toStream(mailQueueWithSmallerSlices.browse())
-            .map(ManageableMailQueue.MailQueueItemView::getMail)
-            .map(Mail::getName);
-
-        assertThat(names).containsOnly(
-            "1-1", "2-1", "3-1", "4-1", "5-1", "6-1");
+                .bucketCount(THREE_BUCKET_COUNT)
+                .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                .sliceWindow(Duration.ofHours(2))
+                .build()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     private Function<Integer, String> namePatternForSlice(int sliceId) {
