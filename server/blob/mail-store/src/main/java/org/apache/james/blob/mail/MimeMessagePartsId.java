@@ -20,6 +20,7 @@
 package org.apache.james.blob.mail;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobPartsId;
@@ -98,5 +99,21 @@ public class MimeMessagePartsId implements BlobPartsId {
 
     public BlobId getBodyBlobId() {
         return bodyBlobId;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MimeMessagePartsId) {
+            MimeMessagePartsId that = (MimeMessagePartsId) o;
+
+            return Objects.equals(this.headerBlobId, that.headerBlobId)
+                && Objects.equals(this.bodyBlobId, that.bodyBlobId);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(headerBlobId, bodyBlobId);
     }
 }
