@@ -244,7 +244,7 @@ Here is some more details about what my commit does, and the rationals of the ch
         <ul>
           <li>Define your dependency versions in james-project pom.xml. This structurally ensures all projects get the
             same version, and that there is no version clashes.</li>
-          <li>Don't use <i>org.apache.james</i> groupId for your dependencies. Use <i>${project.groupId}</i>.
+          <li>Don't use <i>org.apache.james</i> groupId for your dependencies. Use <i>${james.groupId}</i>.
             If not, you break the policies for automatic sorting, as well as make it more ambiguous.</li>
           <li>You should be ordering your dependencies. The sort order is:
             <ul>
