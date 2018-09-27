@@ -22,24 +22,16 @@ package org.apache.james.queue.rabbitmq;
 import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
@@ -94,15 +86,13 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         CassandraMailQueueViewModule.MODULE));
 
     private RabbitMQMailQueueFactory mailQueueFactory;
-    private Clock clock;
+    private UpdatableTickingClock clock;
 
     @BeforeEach
-    void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws IOException, TimeoutException, URISyntaxException {
+    void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
-
-        clock = mock(Clock.class);
-        when(clock.instant()).thenReturn(IN_SLICE_1);
+        clock = new UpdatableTickingClock(IN_SLICE_1);
         ThreadLocalRandom random = ThreadLocalRandom.current();
 
         MailQueueView mailQueueView = CassandraMailQueueViewTestFactory.factory(clock, random, cassandra.getConf(), cassandra.getTypesProvider(),
@@ -128,7 +118,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             mimeMessageStore,
             BLOB_ID_FACTORY,
             mailQueueView,
-            Clock.systemUTC());
+            clock);
         RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQ.managementUri(), new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
@@ -148,19 +138,19 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         ManageableMailQueue mailQueue = getManageableMailQueue();
         int emailCount = 5;
 
-        when(clock.instant()).thenReturn(IN_SLICE_1);
+        clock.setInstant(IN_SLICE_1);
         enqueueMailsInSlice(1, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_2);
+        clock.setInstant(IN_SLICE_2);
         enqueueMailsInSlice(2, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_3);
+        clock.setInstant(IN_SLICE_3);
         enqueueMailsInSlice(3, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_5);
+        clock.setInstant(IN_SLICE_5);
         enqueueMailsInSlice(5, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_6);
+        clock.setInstant(IN_SLICE_6);
         Stream<String> names = Iterators.toStream(mailQueue.browse())
             .map(ManageableMailQueue.MailQueueItemView::getMail)
             .map(Mail::getName);
@@ -177,20 +167,19 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         ManageableMailQueue mailQueue = getManageableMailQueue();
         int emailCount = 5;
 
-        when(clock.instant()).thenReturn(IN_SLICE_1);
+        clock.setInstant(IN_SLICE_1);
         enqueueMailsInSlice(1, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_2);
+        clock.setInstant(IN_SLICE_2);
         enqueueMailsInSlice(2, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_3);
+        clock.setInstant(IN_SLICE_3);
         enqueueMailsInSlice(3, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_5);
+        clock.setInstant(IN_SLICE_5);
         enqueueMailsInSlice(5, emailCount);
 
-        when(clock.instant()).thenReturn(IN_SLICE_6);
-
+        clock.setInstant(IN_SLICE_6);
         dequeueMails(5);
         dequeueMails(5);
         dequeueMails(3);
