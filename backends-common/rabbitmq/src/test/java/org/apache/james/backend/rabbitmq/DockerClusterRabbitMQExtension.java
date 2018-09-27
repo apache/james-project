@@ -122,9 +122,7 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
 
         public ImmutableList<Address> getAddresses() {
             return ImmutableList.of(
-                new Address(rabbitMQ1.getHostIp(), rabbitMQ1.getPort()),
-                new Address(rabbitMQ2.getHostIp(), rabbitMQ2.getPort()),
-                new Address(rabbitMQ3.getHostIp(), rabbitMQ3.getPort()));
+                rabbitMQ1.address(), rabbitMQ2.address(), rabbitMQ3.address());
         }
     }
 }

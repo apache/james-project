@@ -101,16 +101,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
 
-        URI amqpUri = new URIBuilder()
-            .setScheme("amqp")
-            .setHost(rabbitMQ.getHostIp())
-            .setPort(rabbitMQ.getPort())
-            .build();
-        URI rabbitManagementUri = new URIBuilder()
-            .setScheme("http")
-            .setHost(rabbitMQ.getHostIp())
-            .setPort(rabbitMQ.getAdminPort())
-            .build();
         clock = mock(Clock.class);
         when(clock.instant()).thenReturn(IN_SLICE_1);
         ThreadLocalRandom random = ThreadLocalRandom.current();
@@ -124,8 +114,8 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             .create(MailQueueName.fromString(SPOOL));
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(amqpUri)
-            .managementUri(rabbitManagementUri)
+            .amqpUri(rabbitMQ.amqpUri())
+            .managementUri(rabbitMQ.managementUri())
             .build();
 
         RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
@@ -139,7 +129,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             BLOB_ID_FACTORY,
             mailQueueView,
             Clock.systemUTC());
-        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitManagementUri, new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
+        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQ.managementUri(), new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
 

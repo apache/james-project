@@ -18,9 +18,13 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.rabbitmq.client.Address;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.docker.Images;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,15 +82,15 @@ public class DockerRabbitMQ {
         return UUID.randomUUID().toString();
     }
 
-    public String getHostIp() {
+    private String getHostIp() {
         return container.getContainerIpAddress();
     }
 
-    public Integer getPort() {
+    private Integer getPort() {
         return container.getMappedPort(DEFAULT_RABBITMQ_PORT);
     }
 
-    public Integer getAdminPort() {
+    private Integer getAdminPort() {
         return container.getMappedPort(DEFAULT_RABBITMQ_ADMIN_PORT);
     }
 
@@ -163,5 +167,25 @@ public class DockerRabbitMQ {
         LOGGER.debug("reset: {}", stdout);
 
         startApp();
+    }
+
+    public Address address() {
+        return new Address(getHostIp(), getPort());
+    }
+
+    public URI amqpUri() throws URISyntaxException {
+        return new URIBuilder()
+                .setScheme("amqp")
+                .setHost(getHostIp())
+                .setPort(getPort())
+                .build();
+    }
+
+    public URI managementUri() throws URISyntaxException {
+        return new URIBuilder()
+                .setScheme("http")
+                .setHost(getHostIp())
+                .setPort(getAdminPort())
+                .build();
     }
 }
