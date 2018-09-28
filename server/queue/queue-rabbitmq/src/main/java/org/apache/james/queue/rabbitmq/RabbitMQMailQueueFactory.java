@@ -35,7 +35,8 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     private final RabbitMQManagementApi mqManagementApi;
     private final RabbitMQMailQueue.Factory mailQueueFactory;
 
-    private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> mailQueueStoreLocal;
+    // We store created queues to avoid duplicating gauge being registered
+    private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instanciatedQueues;
 
     @VisibleForTesting
     @Inject
@@ -45,7 +46,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;
         this.mailQueueFactory = mailQueueFactory;
-        this.mailQueueStoreLocal = new ConcurrentHashMap<>();
+        this.instanciatedQueues = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -80,6 +81,6 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     private RabbitMQMailQueue getOrElseCreateLocally(MailQueueName name) {
-        return mailQueueStoreLocal.computeIfAbsent(name, mailQueueFactory::create);
+        return instanciatedQueues.computeIfAbsent(name, mailQueueFactory::create);
     }
 }
