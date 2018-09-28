@@ -86,12 +86,27 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         }
     }
 
+    /**
+     * RabbitMQMailQueue should have a single instance in a given JVM for a given MailQueueName.
+     * This class helps at keeping track of previously instanciated MailQueues.
+     */
+    private class RabbitMQMailQueueObjectPool {
+
+        private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instanciatedQueues;
+
+        RabbitMQMailQueueObjectPool() {
+            this.instanciatedQueues = new ConcurrentHashMap<>();
+        }
+
+        RabbitMQMailQueue retrieveInstanceFor(MailQueueName name) {
+            return instanciatedQueues.computeIfAbsent(name, privateFactory::create);
+        }
+    }
+
     private final RabbitClient rabbitClient;
     private final RabbitMQManagementApi mqManagementApi;
     private final PrivateFactory privateFactory;
-
-    // We store created queues to avoid duplicating gauge being registered
-    private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instanciatedQueues;
+    private final RabbitMQMailQueueObjectPool mailQueueObjectPool;
 
     @VisibleForTesting
     @Inject
@@ -101,41 +116,38 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;
         this.privateFactory = privateFactory;
-        this.instanciatedQueues = new ConcurrentHashMap<>();
+        this.mailQueueObjectPool = new RabbitMQMailQueueObjectPool();
     }
 
     @Override
     public Optional<RabbitMQMailQueue> getQueue(String name) {
-        return getQueue(MailQueueName.fromString(name));
+        return getQueueFromRabbitServer(MailQueueName.fromString(name));
     }
 
     @Override
     public RabbitMQMailQueue createQueue(String name) {
         MailQueueName mailQueueName = MailQueueName.fromString(name);
-        return getQueue(mailQueueName)
-            .orElseGet(() -> attemptQueueCreation(mailQueueName));
+        return getQueueFromRabbitServer(mailQueueName)
+            .orElseGet(() -> createQueueIntoRabbitServer(mailQueueName));
     }
 
     @Override
     public Set<RabbitMQMailQueue> listCreatedMailQueues() {
         return mqManagementApi.listCreatedMailQueueNames()
-            .map(this::getOrElseCreateLocally)
+            .map(mailQueueObjectPool::retrieveInstanceFor)
             .collect(ImmutableSet.toImmutableSet());
     }
 
-    private RabbitMQMailQueue attemptQueueCreation(MailQueueName mailQueueName) {
+    private RabbitMQMailQueue createQueueIntoRabbitServer(MailQueueName mailQueueName) {
         rabbitClient.attemptQueueCreation(mailQueueName);
-        return getOrElseCreateLocally(mailQueueName);
+        return mailQueueObjectPool.retrieveInstanceFor(mailQueueName);
     }
 
-    private Optional<RabbitMQMailQueue> getQueue(MailQueueName name) {
+    private Optional<RabbitMQMailQueue> getQueueFromRabbitServer(MailQueueName name) {
         return mqManagementApi.listCreatedMailQueueNames()
             .filter(name::equals)
-            .map(this::getOrElseCreateLocally)
+            .map(mailQueueObjectPool::retrieveInstanceFor)
             .findFirst();
     }
 
-    private RabbitMQMailQueue getOrElseCreateLocally(MailQueueName name) {
-        return instanciatedQueues.computeIfAbsent(name, privateFactory::create);
-    }
 }
