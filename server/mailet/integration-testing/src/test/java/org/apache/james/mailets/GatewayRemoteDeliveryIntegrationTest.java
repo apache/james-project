@@ -108,7 +108,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         awaitAtMostOneMinute
             .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -127,7 +127,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
 
-        awaitAtMostOneMinute.until(this::messageIsReceivedByTheSmtpServer);
+        awaitAtMostOneMinute.untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -148,7 +148,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         awaitAtMostOneMinute
             .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -169,7 +169,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
 
         awaitAtMostOneMinute
             .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
-            .until(this::messageIsReceivedByTheSmtpServer);
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
     @Test
@@ -194,8 +194,7 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(fakeSmtp.isReceived(response -> response.body("", hasSize(0))))
-            .isTrue();
+        fakeSmtp.assertEmailReceived(response -> response.body("", hasSize(0)));
     }
 
     @Test
@@ -250,8 +249,8 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .awaitMessage(awaitAtMostOneMinute);
     }
 
-    private boolean messageIsReceivedByTheSmtpServer() {
-        return fakeSmtp.isReceived(response -> response
+    private void assertMessageReceivedByTheSmtpServer() {
+        fakeSmtp.assertEmailReceived(response -> response
             .body("", hasSize(1))
             .body("[0].from", equalTo(FROM))
             .body("[0].subject", equalTo("test")));

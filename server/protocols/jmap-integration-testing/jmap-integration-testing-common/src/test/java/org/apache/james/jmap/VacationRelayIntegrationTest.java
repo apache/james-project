@@ -115,8 +115,8 @@ public abstract class VacationRelayIntegrationTest {
         smtpClient.sendShortMessageData("content");
 
         calmlyAwait.atMost(1, TimeUnit.MINUTES)
-            .until(() ->
-                fakeSmtp.isReceived(response -> response
+            .untilAsserted(() ->
+                fakeSmtp.assertEmailReceived(response -> response
                     .body("[0].from", equalTo(USER_WITH_DOMAIN))
                     .body("[0].to[0]", equalTo(externalMail))
                     .body("[0].text", equalTo(REASON))));

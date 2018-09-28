@@ -81,17 +81,12 @@ public class FakeSmtp implements TestRule {
         calmyAwait.until(() -> container.tryConnect(smtpPort));
     }
 
-    public boolean isReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
-        try {
-            expectations.apply(
-                given(requestSpecification(), RESPONSE_SPECIFICATION)
-                    .get("/api/email")
-                .then()
-                    .statusCode(200));
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public void assertEmailReceived(Function<ValidatableResponse, ValidatableResponse> expectations) {
+        expectations.apply(
+            given(requestSpecification(), RESPONSE_SPECIFICATION)
+                .get("/api/email")
+            .then()
+                .statusCode(200));
     }
 
     private RequestSpecification requestSpecification() {

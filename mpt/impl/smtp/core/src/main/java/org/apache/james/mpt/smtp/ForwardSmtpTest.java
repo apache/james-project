@@ -78,8 +78,8 @@ public abstract class ForwardSmtpTest {
     public void forwardingAnEmailShouldWork() throws Exception {
         scriptedTest.run("helo");
 
-        calmlyAwait.atMost(ONE_MINUTE).until(() ->
-            fakeSmtp.isReceived(response -> response
+        calmlyAwait.atMost(ONE_MINUTE).untilAsserted(() ->
+            fakeSmtp.assertEmailReceived(response -> response
                 .body("[0].from", equalTo("matthieu@yopmail.com"))
                 .body("[0].subject", equalTo("test"))
                 .body("[0].text", equalTo("content"))));
