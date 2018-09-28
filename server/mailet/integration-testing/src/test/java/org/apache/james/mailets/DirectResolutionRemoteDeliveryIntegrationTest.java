@@ -119,7 +119,6 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
@@ -148,7 +147,6 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 

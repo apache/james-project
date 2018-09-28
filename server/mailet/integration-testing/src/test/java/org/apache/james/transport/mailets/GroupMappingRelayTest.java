@@ -160,7 +160,6 @@ public class GroupMappingRelayTest {
                 .recipient(GROUP_ON_DOMAIN1));
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
             .untilAsserted(() -> fakeSmtp.assertEmailReceived(response -> response
                 .body("[0].from", equalTo(SENDER))
                 .body("[0].to[0]", equalTo(externalMail))

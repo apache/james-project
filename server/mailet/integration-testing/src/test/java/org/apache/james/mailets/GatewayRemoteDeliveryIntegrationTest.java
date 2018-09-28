@@ -107,7 +107,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
@@ -147,7 +146,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 
@@ -168,7 +166,6 @@ public class GatewayRemoteDeliveryIntegrationTest {
             .sendMessage(FROM, RECIPIENT);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
     }
 

@@ -43,9 +43,6 @@ public abstract class ForwardSmtpTest {
     public static final Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     public static final ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
-        .and()
-        .with()
-        .pollDelay(slowPacedPollInterval)
         .await();
 
     @ClassRule

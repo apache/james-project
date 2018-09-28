@@ -110,7 +110,6 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
             .untilAsserted(() -> fakeSmtp.assertEmailReceived(response -> response
                 .body("", hasSize(1))
                 .body("[0].from", equalTo(FROM))
@@ -140,7 +139,6 @@ public class SmtpAuthorizedAddressesTest {
             .sendMessage(FROM, TO);
 
         awaitAtMostOneMinute
-            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
             .untilAsserted(() -> fakeSmtp.assertEmailReceived(response -> response
                 .body("", hasSize(1))
                 .body("[0].from", equalTo(FROM))
