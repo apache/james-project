@@ -20,7 +20,7 @@
 package org.apache.james.mailrepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -33,6 +33,7 @@ import java.util.stream.IntStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import com.github.fge.lambdas.Throwing;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
@@ -85,18 +86,18 @@ public interface MailRepositoryContract {
     }
 
     default void checkMailEquality(Mail actual, Mail expected) {
-        assertAll(
-            () -> assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent()),
-            () -> assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize()),
-            () -> assertThat(actual.getName()).isEqualTo(expected.getName()),
-            () -> assertThat(actual.getState()).isEqualTo(expected.getState()),
-            () -> assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE)),
-            () -> assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage()),
-            () -> assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost()),
-            () -> assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr()),
-            () -> assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated()),
-            () -> assertThat(actual.getPerRecipientSpecificHeaders()).isEqualTo(expected.getPerRecipientSpecificHeaders())
-        );
+        assertSoftly(Throwing.consumer(softly -> {
+            softly.assertThat(actual.getMessage().getContent()).isEqualTo(expected.getMessage().getContent());
+            softly.assertThat(actual.getMessageSize()).isEqualTo(expected.getMessageSize());
+            softly.assertThat(actual.getName()).isEqualTo(expected.getName());
+            softly.assertThat(actual.getState()).isEqualTo(expected.getState());
+            softly.assertThat(actual.getAttribute(TEST_ATTRIBUTE)).isEqualTo(expected.getAttribute(TEST_ATTRIBUTE));
+            softly.assertThat(actual.getErrorMessage()).isEqualTo(expected.getErrorMessage());
+            softly.assertThat(actual.getRemoteHost()).isEqualTo(expected.getRemoteHost());
+            softly.assertThat(actual.getRemoteAddr()).isEqualTo(expected.getRemoteAddr());
+            softly.assertThat(actual.getLastUpdated()).isEqualTo(expected.getLastUpdated());
+            softly.assertThat(actual.getPerRecipientSpecificHeaders()).isEqualTo(expected.getPerRecipientSpecificHeaders());
+        }));
     }
 
     MailRepository retrieveRepository() throws Exception;

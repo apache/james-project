@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -113,13 +114,13 @@ class EnqueuedMailsDaoTest {
         assertThat(selectedEnqueuedMails)
             .hasSize(1)
             .hasOnlyOneElementSatisfying(selectedEnqueuedMail -> {
-                SoftAssertions softly = new SoftAssertions();
-                softly.assertThat(selectedEnqueuedMail.getMailQueueName()).isEqualTo(OUT_GOING_1);
-                softly.assertThat(selectedEnqueuedMail.getBucketId()).isEqualTo(BUCKET_ID);
-                softly.assertThat(selectedEnqueuedMail.getTimeRangeStart()).isEqualTo(NOW);
-                softly.assertThat(selectedEnqueuedMail.getEnqueuedTime()).isEqualTo(NOW);
-                softly.assertThat(selectedEnqueuedMail.getMailKey()).isEqualTo(MAIL_KEY_1);
-                softly.assertAll();
+                assertSoftly(softly -> {
+                    softly.assertThat(selectedEnqueuedMail.getMailQueueName()).isEqualTo(OUT_GOING_1);
+                    softly.assertThat(selectedEnqueuedMail.getBucketId()).isEqualTo(BUCKET_ID);
+                    softly.assertThat(selectedEnqueuedMail.getTimeRangeStart()).isEqualTo(NOW);
+                    softly.assertThat(selectedEnqueuedMail.getEnqueuedTime()).isEqualTo(NOW);
+                    softly.assertThat(selectedEnqueuedMail.getMailKey()).isEqualTo(MAIL_KEY_1);
+                });
             });
     }
 }

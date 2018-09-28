@@ -20,7 +20,7 @@
 package org.apache.james.mailrepository.cassandra;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -90,22 +90,23 @@ class CassandraMailRepositoryMailDAOTest {
         CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
 
         Mail partialMail = mailDTO.getMailBuilder().build();
-        assertAll(
-            () -> assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody),
-            () -> assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader),
-            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1.asString()),
-            () -> assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage),
-            () -> assertThat(partialMail.getState()).isEqualTo(state),
-            () -> assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr),
-            () -> assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost),
-            () -> assertThat(partialMail.getAttributeNames()).containsOnly(attributeName),
-            () -> assertThat(partialMail.getAttribute(attributeName)).isEqualTo(attributeValue),
-            () -> assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
-                .containsOnly(MailAddressFixture.RECIPIENT1),
-            () -> assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
-                .containsOnly(header),
-            () -> assertThat(partialMail.getSender()).isEqualTo(MailAddressFixture.SENDER),
-            () -> assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2));
+        assertSoftly(softly -> {
+            softly.assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody);
+            softly.assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader);
+            softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+            softly.assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage);
+            softly.assertThat(partialMail.getState()).isEqualTo(state);
+            softly.assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr);
+            softly.assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost);
+            softly.assertThat(partialMail.getAttributeNames()).containsOnly(attributeName);
+            softly.assertThat(partialMail.getAttribute(attributeName)).isEqualTo(attributeValue);
+            softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
+                    .containsOnly(MailAddressFixture.RECIPIENT1);
+            softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
+                    .containsOnly(header);
+            softly.assertThat(partialMail.getSender()).isEqualTo(MailAddressFixture.SENDER);
+            softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
+        });
     }
 
     @Test
@@ -124,10 +125,11 @@ class CassandraMailRepositoryMailDAOTest {
         CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
 
         Mail partialMail = mailDTO.getMailBuilder().build();
-        assertAll(
-            () -> assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody),
-            () -> assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader),
-            () -> assertThat(partialMail.getName()).isEqualTo(KEY_1.asString()));
+        assertSoftly(softly -> {
+            softly.assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody);
+            softly.assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader);
+            softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+        });
     }
 
     @Test
