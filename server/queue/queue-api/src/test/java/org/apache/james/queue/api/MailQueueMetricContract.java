@@ -51,7 +51,7 @@ public interface MailQueueMetricContract extends MailQueueContract {
     default void enQueueMail(Integer times) throws Exception {
         IntStream
             .rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(time -> getMailQueue().enQueue(fakeMail())));
+            .forEach(Throwing.intConsumer(time -> enQueue(fakeMail())));
     }
 
     default void deQueueMail(Integer times) throws Exception {

@@ -23,8 +23,10 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -33,6 +35,7 @@ import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
@@ -49,6 +52,7 @@ import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueContract;
 import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -88,6 +92,13 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
+    private RabbitMQMailQueue mailQueue;
+
+    @Override
+    public void enQueue(Mail mail) throws MailQueue.MailQueueException {
+        ManageableMailQueueContract.super.enQueue(mail);
+        clock.tick();
+    }
 
     @BeforeEach
     void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
@@ -122,16 +133,17 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             clock);
         RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQ.managementUri(), new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
+        mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 
     @Override
     public MailQueue getMailQueue() {
-        return mailQueueFactory.createQueue(SPOOL);
+        return mailQueue;
     }
 
     @Override
     public ManageableMailQueue getManageableMailQueue() {
-        return mailQueueFactory.createQueue(SPOOL);
+        return mailQueue;
     }
 
     @Test
@@ -212,10 +224,8 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     }
 
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
-        ManageableMailQueue mailQueue = getManageableMailQueue();
-
         IntStream.rangeClosed(1, emailCount)
-            .forEach(Throwing.intConsumer(i -> mailQueue.enQueue(defaultMail()
+            .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
                 .name(namePattern.apply(i))
                 .build())));
     }
@@ -224,5 +234,36 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         ManageableMailQueue mailQueue = getManageableMailQueue();
         IntStream.rangeClosed(1, times)
             .forEach(Throwing.intConsumer(bucketId -> mailQueue.deQueue().done(true)));
+    }
+
+    private static class UpdatableTickingClock extends Clock {
+        private Instant currentInstant;
+
+        UpdatableTickingClock(Instant currentInstant) {
+            this.currentInstant = currentInstant;
+        }
+
+        void setInstant(Instant instant) {
+            currentInstant = instant;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            throw new NotImplementedException("No timezone attached to this clock");
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            throw new NotImplementedException("No timezone attached to this clock");
+        }
+
+        @Override
+        public Instant instant() {
+            return currentInstant;
+        }
+
+        synchronized void tick() {
+            currentInstant = currentInstant.plusMillis(1);
+        }
     }
 }

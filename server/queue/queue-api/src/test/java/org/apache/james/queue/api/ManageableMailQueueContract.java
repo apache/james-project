@@ -48,7 +48,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void getSizeShouldReturnMessageCount() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail().build());
+        enQueue(defaultMail().build());
 
         long size = getManageableMailQueue().getSize();
 
@@ -57,8 +57,8 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void getSizeShouldReturnMessageCountWhenSeveralMails() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail().name("1").build());
-        getManageableMailQueue().enQueue(defaultMail().name("2").build());
+        enQueue(defaultMail().name("1").build());
+        enQueue(defaultMail().name("2").build());
 
         long size = getManageableMailQueue().getSize();
 
@@ -67,7 +67,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void dequeueShouldDecreaseQueueSize() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail().build());
+        enQueue(defaultMail().build());
 
         getManageableMailQueue().deQueue().done(true);
 
@@ -78,7 +78,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void noAckShouldNotDecreaseSize() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail().build());
+        enQueue(defaultMail().build());
 
         getManageableMailQueue().deQueue().done(false);
 
@@ -89,7 +89,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void processedMailsShouldNotDecreaseSize() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail().build());
+        enQueue(defaultMail().build());
 
         getManageableMailQueue().deQueue();
 
@@ -107,7 +107,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldReturnSingleElement() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name")
             .build());
 
@@ -120,13 +120,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldReturnElementsInOrder() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -140,13 +140,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void dequeueShouldNotFailWhenBrowsing() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -158,13 +158,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentDequeue() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -177,13 +177,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void dequeueShouldNotFailWhenBrowsingIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -196,13 +196,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentDequeueWhenIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -216,19 +216,19 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void enqueueShouldNotFailWhenBrowsing() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
         getManageableMailQueue().browse();
 
-        assertThatCode(() -> getManageableMailQueue().enQueue(defaultMail()
+        assertThatCode(() -> enQueue(defaultMail()
             .name("name4")
             .build())).doesNotThrowAnyException();
 
@@ -236,19 +236,19 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentEnqueue() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
 
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name4")
             .build());
 
@@ -257,13 +257,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void enqueueShouldNotFailWhenBrowsingIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -271,7 +271,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         items.next();
 
         assertThatCode(() ->
-            getManageableMailQueue().enQueue(defaultMail()
+            enQueue(defaultMail()
                 .name("name4")
                 .build()))
             .doesNotThrowAnyException();
@@ -280,20 +280,20 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentEnqueueWhenIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
         ManageableMailQueue.MailQueueIterator items = getManageableMailQueue().browse();
         items.next();
 
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
 
@@ -302,13 +302,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void clearShouldNotFailWhenBrowsingIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -322,13 +322,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentClearWhenIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -342,13 +342,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void flushShouldNotFailWhenBrowsingIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -362,13 +362,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentFlushWhenIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -382,13 +382,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void removeShouldNotFailWhenBrowsingIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -402,13 +402,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browseShouldNotFailWhenConcurrentRemoveWhenIterating() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -422,13 +422,13 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void browsingShouldNotAffectDequeue() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name3")
             .build());
 
@@ -442,10 +442,10 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void removeByNameShouldRemoveSpecificEmail() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
 
@@ -459,11 +459,11 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void removeBySenderShouldRemoveSpecificEmail() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .sender(OTHER_AT_LOCAL)
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .sender(SENDER)
             .name("name2")
             .build());
@@ -478,11 +478,11 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void removeByRecipientShouldRemoveSpecificEmail() throws Exception {
-        getManageableMailQueue().enQueue(defaultMailNoRecipient()
+        enQueue(defaultMailNoRecipient()
             .name("name1")
             .recipient(RECIPIENT1)
             .build());
-        getManageableMailQueue().enQueue(defaultMailNoRecipient()
+        enQueue(defaultMailNoRecipient()
             .name("name2")
             .recipient(RECIPIENT2)
             .build());
@@ -497,11 +497,11 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() throws Exception {
-        getManageableMailQueue().enQueue(defaultMailNoRecipient()
+        enQueue(defaultMailNoRecipient()
             .name("name1")
             .recipients(RECIPIENT1, RECIPIENT2)
             .build());
-        getManageableMailQueue().enQueue(defaultMailNoRecipient()
+        enQueue(defaultMailNoRecipient()
             .name("name2")
             .recipients(RECIPIENT1, RECIPIENT3)
             .build());
@@ -541,10 +541,10 @@ public interface ManageableMailQueueContract extends MailQueueContract {
 
     @Test
     default void clearShouldRemoveAllElements() throws Exception {
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name1")
             .build());
-        getManageableMailQueue().enQueue(defaultMail()
+        enQueue(defaultMail()
             .name("name2")
             .build());
 
