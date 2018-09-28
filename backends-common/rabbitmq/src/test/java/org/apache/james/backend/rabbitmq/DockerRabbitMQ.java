@@ -67,9 +67,7 @@ public class DockerRabbitMQ {
                 .withCreateContainerCmdModifier(cmd -> cmd.withName(hostName.orElse(randomName())))
                 .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostName.orElse(DEFAULT_RABBIT_NODE)))
                 .withExposedPorts(DEFAULT_RABBITMQ_PORT, DEFAULT_RABBITMQ_ADMIN_PORT)
-                .waitingFor(new WaitAllStrategy()
-                    .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.DEFAULT))
-                    .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this)))
+                .waitingFor(waitStrategy())
                 .withLogConsumer(frame -> LOGGER.debug(frame.getUtf8String()))
                 .withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
                     .withTmpFs(ImmutableMap.of("/var/lib/rabbitmq/mnesia", "rw,noexec,nosuid,size=100m")));
@@ -77,6 +75,12 @@ public class DockerRabbitMQ {
         erlangCookie.ifPresent(cookie -> container.withEnv(RABBITMQ_ERLANG_COOKIE, cookie));
         nodeName.ifPresent(name -> container.withEnv(RABBITMQ_NODENAME, name));
         this.nodeName = nodeName;
+    }
+
+    private WaitAllStrategy waitStrategy() {
+        return new WaitAllStrategy()
+            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.DEFAULT))
+            .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this));
     }
 
     private String randomName() {
@@ -168,6 +172,10 @@ public class DockerRabbitMQ {
         LOGGER.debug("reset: {}", stdout);
 
         startApp();
+    }
+
+    public void waitForReadyness() {
+        waitStrategy().waitUntilReady(container);
     }
 
     public Address address() {
