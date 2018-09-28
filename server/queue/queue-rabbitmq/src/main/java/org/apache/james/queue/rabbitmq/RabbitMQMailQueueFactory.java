@@ -19,21 +19,76 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import java.time.Clock;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import javax.inject.Inject;
+import javax.mail.internet.MimeMessage;
 
+import org.apache.james.blob.api.BlobId;
+import org.apache.james.blob.api.Store;
+import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.metrics.api.GaugeRegistry;
+import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.mailet.Mail;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQueue> {
+
+    @VisibleForTesting static class PrivateFactory {
+        private final MetricFactory metricFactory;
+        private final GaugeRegistry gaugeRegistry;
+        private final RabbitClient rabbitClient;
+        private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
+        private final MailReferenceSerializer mailReferenceSerializer;
+        private final Function<MailReferenceDTO, Mail> mailLoader;
+        private final MailQueueView mailQueueView;
+        private final Clock clock;
+
+        @Inject
+        @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
+                                          GaugeRegistry gaugeRegistry,
+                                          RabbitClient rabbitClient,
+                                          Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
+                                          BlobId.Factory blobIdFactory,
+                                          MailQueueView mailQueueView,
+                                          Clock clock) {
+            this.metricFactory = metricFactory;
+            this.gaugeRegistry = gaugeRegistry;
+            this.rabbitClient = rabbitClient;
+            this.mimeMessageStore = mimeMessageStore;
+            this.mailQueueView = mailQueueView;
+            this.clock = clock;
+            this.mailReferenceSerializer = new MailReferenceSerializer();
+            this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
+        }
+
+        RabbitMQMailQueue create(MailQueueName mailQueueName) {
+            mailQueueView.initialize(mailQueueName);
+
+            return new RabbitMQMailQueue(
+                metricFactory,
+                mailQueueName,
+                gaugeRegistry,
+                new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, mailReferenceSerializer,
+                    metricFactory, mailQueueView, clock),
+                new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer,
+                    metricFactory, mailQueueView),
+                mailQueueView);
+        }
+    }
+
     private final RabbitClient rabbitClient;
     private final RabbitMQManagementApi mqManagementApi;
-    private final RabbitMQMailQueue.Factory mailQueueFactory;
+    private final PrivateFactory privateFactory;
 
     // We store created queues to avoid duplicating gauge being registered
     private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instanciatedQueues;
@@ -42,10 +97,10 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     @Inject
     RabbitMQMailQueueFactory(RabbitClient rabbitClient,
                              RabbitMQManagementApi mqManagementApi,
-                             RabbitMQMailQueue.Factory mailQueueFactory) {
+                             PrivateFactory privateFactory) {
         this.rabbitClient = rabbitClient;
         this.mqManagementApi = mqManagementApi;
-        this.mailQueueFactory = mailQueueFactory;
+        this.privateFactory = privateFactory;
         this.instanciatedQueues = new ConcurrentHashMap<>();
     }
 
@@ -81,6 +136,6 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     private RabbitMQMailQueue getOrElseCreateLocally(MailQueueName name) {
-        return instanciatedQueues.computeIfAbsent(name, mailQueueFactory::create);
+        return instanciatedQueues.computeIfAbsent(name, privateFactory::create);
     }
 }

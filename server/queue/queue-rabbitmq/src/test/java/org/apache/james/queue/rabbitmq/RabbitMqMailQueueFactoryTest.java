@@ -76,7 +76,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
 
         RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
-        RabbitMQMailQueue.Factory factory = new RabbitMQMailQueue.Factory(
+        RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             new NoopMetricFactory(),
             new NoopGaugeRegistry(),
             rabbitClient,

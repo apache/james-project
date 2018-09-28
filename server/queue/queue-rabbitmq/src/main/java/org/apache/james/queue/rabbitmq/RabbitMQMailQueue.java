@@ -45,48 +45,6 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQMailQueue.class);
 
-    static class Factory {
-        private final MetricFactory metricFactory;
-        private final GaugeRegistry gaugeRegistry;
-        private final RabbitClient rabbitClient;
-        private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
-        private final MailReferenceSerializer mailReferenceSerializer;
-        private final Function<MailReferenceDTO, Mail> mailLoader;
-        private final MailQueueView mailQueueView;
-        private final Clock clock;
-
-        @Inject
-        @VisibleForTesting Factory(MetricFactory metricFactory, GaugeRegistry gaugeRegistry,
-                                   RabbitClient rabbitClient,
-                                   Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
-                                   BlobId.Factory blobIdFactory,
-                                   MailQueueView mailQueueView,
-                                   Clock clock) {
-            this.metricFactory = metricFactory;
-            this.gaugeRegistry = gaugeRegistry;
-            this.rabbitClient = rabbitClient;
-            this.mimeMessageStore = mimeMessageStore;
-            this.mailQueueView = mailQueueView;
-            this.clock = clock;
-            this.mailReferenceSerializer = new MailReferenceSerializer();
-            this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
-        }
-
-        RabbitMQMailQueue create(MailQueueName mailQueueName) {
-            mailQueueView.initialize(mailQueueName);
-
-            return new RabbitMQMailQueue(
-                metricFactory,
-                mailQueueName,
-                gaugeRegistry,
-                new Enqueuer(mailQueueName, rabbitClient, mimeMessageStore, mailReferenceSerializer,
-                    metricFactory, mailQueueView, clock),
-                new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer,
-                    metricFactory, mailQueueView),
-                mailQueueView);
-        }
-    }
-
     private final MailQueueName name;
     private final MetricFactory metricFactory;
     private final GaugeRegistry gaugeRegistry;
