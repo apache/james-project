@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq.view.cassandra;
+package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
 import java.time.Duration;
 
