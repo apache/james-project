@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.MoreObjects;
 
 public class RabbitMQMailQueue implements ManageableMailQueue {
 
@@ -100,5 +101,12 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     @Override
     public MailQueueIterator browse() {
         return mailQueueView.browse();
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("name", name)
+            .toString();
     }
 }
