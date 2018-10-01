@@ -27,13 +27,16 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.task.Task;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.multibindings.Multibinder;
 
@@ -41,9 +44,11 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
-public class GuiceLifecycleHeathCheckTest {
-    private void configureRequestSpecification() {
-        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
+class GuiceLifecycleHeathCheckTest {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
+
+    private static void configureRequestSpecification(GuiceJamesServer server) {
+        WebAdminGuiceProbe webAdminGuiceProbe = server.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
@@ -53,35 +58,30 @@ public class GuiceLifecycleHeathCheckTest {
                 .build();
     }
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-    private GuiceJamesServer guiceJamesServer;
+    @Nested
+    class Healthy {
+        @RegisterExtension
+        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+            .build();
 
-    @After
-    public void cleanUp() {
-        if (guiceJamesServer != null) {
-            guiceJamesServer.stop();
+        @Test
+        void startedJamesServerShouldBeHealthy(GuiceJamesServer server) {
+            configureRequestSpecification(server);
+
+            when()
+                .get("/healthcheck")
+                .then()
+                .statusCode(HttpStatus.OK_200);
         }
     }
 
-    @Test
-    public void startedJamesServerShouldBeHealthy() throws Exception {
-        guiceJamesServer = memoryJmap.jmapServer()
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
-                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
-
-
-        guiceJamesServer.start();
-        configureRequestSpecification();
-
-        when()
-            .get("/healthcheck")
-        .then()
-            .statusCode(HttpStatus.OK_200);
-    }
-
-    @Test
-    public void stoppingJamesServerShouldBeUnhealthy() throws Exception {
+    @Nested
+    class Unhealthy {
         CountDownLatch latch = new CountDownLatch(1);
         CleanupTasksPerformer.CleanupTask awaitCleanupTask = () -> {
             try {
@@ -91,28 +91,36 @@ public class GuiceLifecycleHeathCheckTest {
             }
             return Task.Result.COMPLETED;
         };
-        CompletableFuture<Void> stopCompletedFuture = CompletableFuture.completedFuture(null);
 
-        try {
-            guiceJamesServer = memoryJmap.jmapServer(
-                binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
+        @RegisterExtension
+        JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
+                .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                     .addBinding()
-                    .toInstance(awaitCleanupTask))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
-                    .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
+                    .toInstance(awaitCleanupTask)))
+            .build();
 
-            guiceJamesServer.start();
-            configureRequestSpecification();
+        @Test
+        void stoppingJamesServerShouldBeUnhealthy(GuiceJamesServer server) {
+            CompletableFuture<Void> stopCompletedFuture = CompletableFuture.completedFuture(null);
 
-            stopCompletedFuture = CompletableFuture.runAsync(() -> guiceJamesServer.stop());
+            try {
+                configureRequestSpecification(server);
 
-            when()
-                .get("/healthcheck")
-            .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
-        } finally {
-            latch.countDown();
-            stopCompletedFuture.join();
+                stopCompletedFuture = CompletableFuture.runAsync(server::stop);
+
+                when()
+                    .get("/healthcheck")
+                    .then()
+                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            } finally {
+                latch.countDown();
+                stopCompletedFuture.join();
+            }
         }
     }
 }
