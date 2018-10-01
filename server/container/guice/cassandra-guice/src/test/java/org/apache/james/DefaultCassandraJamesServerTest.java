@@ -19,47 +19,36 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.FailingPropertiesProvider;
 import org.apache.james.utils.PropertiesProvider;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DefaultCassandraJamesServerTest {
+class DefaultCassandraJamesServerTest {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
-    @Rule
-    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
-
-    private GuiceJamesServer guiceJamesServer;
-
-    @Before
-    public void setUp() throws IOException {
-        guiceJamesServer = cassandraJmap.jmapServer(cassandra.getModule())
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(binder -> binder.bind(PropertiesProvider.class).to(FailingPropertiesProvider.class))
-            .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance(s -> new HierarchicalConfiguration()));
-    }
-
-    @After
-    public void clean() {
-        guiceJamesServer.stop();
-    }
+            .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance(s -> new HierarchicalConfiguration())))
+        .build();
 
     @Test
-    public void memoryJamesServerShouldStartWithNoConfigurationFile() throws Exception {
-        guiceJamesServer.start();
-
-        assertThat(guiceJamesServer.isStarted()).isTrue();
+    void cassandraJamesServerShouldStartWithNoConfigurationFile(GuiceJamesServer server) {
+        assertThat(server.isStarted()).isTrue();
     }
-
 }
