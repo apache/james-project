@@ -28,7 +28,11 @@ class CassandraExtension implements GuiceModuleTestExtension {
     private final DockerCassandraRule cassandra;
 
     CassandraExtension() {
-        this.cassandra = new DockerCassandraRule();
+        this(new DockerCassandraRule());
+    }
+
+    public CassandraExtension(DockerCassandraRule cassandra) {
+        this.cassandra = cassandra;
     }
 
     @Override
