@@ -44,6 +44,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.Module;
 
@@ -89,9 +90,10 @@ class JamesServerWithRetryConnectionTest {
         .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
     private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
 
+    @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
         .extension(new DockerElasticSearchRegistrableExtension(elasticSearchContainer))
-        .extension(new CassandraExtension())
+        .extension(new CassandraExtension(cassandraRule))
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
