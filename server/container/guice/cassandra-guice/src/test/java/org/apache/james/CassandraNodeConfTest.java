@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
@@ -27,82 +28,113 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Host;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.DockerClientFactory;
 
-public class CassandraNodeConfTest {
-
+class CassandraNodeConfTest {
     private static final int CASSANDRA_PORT = 9042;
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
     private static String getDockerHostIp() {
-        return DockerClientFactory.instance().dockerHostIpAddress();
+        DockerClientFactory clientFactory = DockerClientFactory.instance();
+        clientFactory.client();
+        return clientFactory.dockerHostIpAddress();
     }
 
-    @ClassRule
-    public static final DockerCassandraRule dockerCassandraRule = new DockerCassandraRule();
-
-    @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
-
-    private GuiceJamesServer jamesServer;
     private SocketChannel socketChannel;
 
-    @Before
-    public void setUp() throws IOException {
+    @BeforeEach
+    void setUp() throws IOException {
         socketChannel = SocketChannel.open();
     }
 
-    @After
-    public void after() throws IOException {
+    @AfterEach
+    void after() throws IOException {
         socketChannel.close();
-        if (jamesServer != null) {
-            jamesServer.stop();
+    }
+
+    @Nested
+    class NormalBehaviour {
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new CassandraExtension())
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .disableAutoStart()
+            .build();
+
+        @Test
+        void serverShouldStartServiceWhenNodeIsReachable (GuiceJamesServer server) throws Exception {
+            assertThatServerStartCorrectly(server);
         }
     }
 
-    @Test
-    public void serverShouldStartServiceWhenNodeIsReachable() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule());
-
-        assertThatServerStartCorrectly();
-    }
-
-    @Test
-    public void serverShouldStartWhenOneCassandraNodeIsUnreachable() throws Exception {
+    @Nested
+    class OneFailedNode {
         String unreachableNode = "10.2.3.42";
 
+        private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
-        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule())
-            .overrideWith(
-                (binder) -> binder.bind(ClusterConfiguration.class)
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new CassandraExtension(cassandra))
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(ClusterConfiguration.class)
                     .toInstance(clusterWithHosts(
                         Host.from(unreachableNode, 9042),
-                        dockerCassandraRule.getHost())));
+                        cassandra.getHost()))))
+            .disableAutoStart()
+            .build();
 
-        assertThatServerStartCorrectly();
+        @Test
+        void serverShouldStartServiceWhenNodeIsReachable (GuiceJamesServer server) throws Exception {
+            assertThatServerStartCorrectly(server);
+        }
     }
 
+    @Nested
+    class UseMappedPort {
+        private final DockerCassandraRule cassandra = new DockerCassandraRule();
 
-    @Test
-    public void configShouldWorkWithNonDefaultPort() throws Exception {
-        jamesServer = cassandraJmapTestRule.jmapServer(dockerCassandraRule.getModule())
-            .overrideWith(
-                (binder) -> binder.bind(ClusterConfiguration.class)
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new CassandraExtension(cassandra))
+            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(binder -> binder.bind(ClusterConfiguration.class)
                     .toInstance(clusterWithHosts(
-                        Host.from(getDockerHostIp(), dockerCassandraRule.getMappedPort(CASSANDRA_PORT)))));
+                        Host.from(getDockerHostIp(), cassandra.getMappedPort(CASSANDRA_PORT))))))
+            .disableAutoStart()
+            .build();
 
-        assertThatServerStartCorrectly();
+        @Test
+        void configShouldWorkWithNonDefaultPort(GuiceJamesServer server) throws Exception {
+            assertThatServerStartCorrectly(server);
+        }
     }
 
-    private void assertThatServerStartCorrectly() throws Exception {
-        jamesServer.start();
-        socketChannel.connect(new InetSocketAddress("127.0.0.1", jamesServer.getProbe(ImapGuiceProbe.class).getImapPort()));
+    private void assertThatServerStartCorrectly(GuiceJamesServer server) throws Exception {
+        server.start();
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", server.getProbe(ImapGuiceProbe.class).getImapPort()));
         assertThat(getServerConnectionResponse(socketChannel)).startsWith("* OK JAMES IMAP4rev1 Server");
     }
 
@@ -122,5 +154,4 @@ public class CassandraNodeConfTest {
         byte[] bytes = byteBuffer.array();
         return new String(bytes, Charset.forName("UTF-8"));
     }
-
 }
