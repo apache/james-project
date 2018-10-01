@@ -19,11 +19,15 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
@@ -31,47 +35,34 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailRepositoryIntegrationTest {
-
+class CassandraMailRepositoryIntegrationTest {
     private static final MailRepositoryUrl SENDER_DENIED_URL = MailRepositoryUrl.from("cassandra://var/mail/sender-denied/");
     private static final Duration ONE_MILLISECOND = new Duration(1, TimeUnit.MILLISECONDS);
+    private static ConditionFactory await = Awaitility.with()
+        .pollInterval(FIVE_HUNDRED_MILLISECONDS)
+        .and()
+        .with()
+        .pollDelay(ONE_MILLISECOND)
+        .await();
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
-    @Rule
-    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
-    @Rule
-    public SMTPMessageSender smtpMessageSender = new SMTPMessageSender("other.com");
+    private SMTPMessageSender smtpMessageSender = new SMTPMessageSender("other.com");
 
-    private GuiceJamesServer server;
-    private ConditionFactory await;
-
-    @Before
-    public void setup() throws Exception {
-        server = cassandraJmap.jmapServer(cassandra.getModule());
-        server.start();
-        await = Awaitility.with()
-            .pollInterval(FIVE_HUNDRED_MILLISECONDS)
-            .and()
-            .with()
-            .pollDelay(ONE_MILLISECOND)
-            .await();
-    }
-
-    @After
-    public void tearDown() {
-        server.stop();
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+        .build();
 
     @Test
-    public void deniedSenderMailShouldBeStoredInCassandraMailRepositoryWhenConfigured() throws Exception {
+    void deniedSenderMailShouldBeStoredInCassandraMailRepositoryWhenConfigured(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class)
             .fluent()
             .addDomain("domain.com")
@@ -83,6 +74,4 @@ public class CassandraMailRepositoryIntegrationTest {
         MailRepositoryProbeImpl repositoryProbe = server.getProbe(MailRepositoryProbeImpl.class);
         await.until(() -> repositoryProbe.getRepositoryMailCount(SENDER_DENIED_URL) == 1);
     }
-
-
 }
