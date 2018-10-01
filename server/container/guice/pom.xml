@@ -65,6 +65,7 @@
         <module>protocols/webadmin-mailqueue</module>
         <module>protocols/webadmin-mailrepository</module>
         <module>protocols/webadmin-swagger</module>
+        <module>activemq</module>
         <module>rabbitmq</module>
     </modules>
 
@@ -129,6 +130,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-pop</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-guice-activemq</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

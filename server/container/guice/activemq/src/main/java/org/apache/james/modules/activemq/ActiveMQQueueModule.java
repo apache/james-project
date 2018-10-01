@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.modules.activemq;
 
 import javax.jms.ConnectionFactory;
 
@@ -33,6 +33,7 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 
 public class ActiveMQQueueModule extends AbstractModule {
+
     @Override
     protected void configure() {
         bind(PersistenceAdapter.class).to(KahaDBPersistenceAdapter.class);
