@@ -21,48 +21,14 @@ package org.apache.james;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.server.core.configuration.Configuration;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.inject.Module;
-
-public class JamesCapabilitiesServerTest {
-
-    private GuiceJamesServer server;
-    private TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(temporaryFolder);
-
-    @After
-    public void teardown() {
-        server.stop();
-    }
-    
-    private GuiceJamesServer createJPAJamesServer(final MailboxManager mailboxManager) throws IOException {
-        Module mockMailboxManager = (binder) -> binder.bind(MailboxManager.class).toInstance(mailboxManager);
-        Configuration configuration = Configuration.builder()
-            .workingDirectory(temporaryFolder.newFolder())
-            .configurationFromClasspath()
-            .build();
-
-        return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE)
-            .overrideWith(
-                new TestJPAConfigurationModule(),
-                mockMailboxManager);
-    }
-    
-    @Test
-    public void startShouldSucceedWhenRequiredCapabilities() throws Exception {
+class JamesCapabilitiesServerTest {
+    private static MailboxManager mailboxManager() {
         MailboxManager mailboxManager = mock(MailboxManager.class);
         when(mailboxManager.getSupportedMailboxCapabilities())
             .thenReturn(EnumSet.noneOf(MailboxManager.MailboxCapabilities.class));
@@ -70,10 +36,19 @@ public class JamesCapabilitiesServerTest {
             .thenReturn(EnumSet.noneOf(MailboxManager.MessageCapabilities.class));
         when(mailboxManager.getSupportedSearchCapabilities())
             .thenReturn(EnumSet.noneOf(MailboxManager.SearchCapabilities.class));
-
-        server = createJPAJamesServer(mailboxManager);
-
-        server.start();
+        return mailboxManager;
     }
 
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
+            .overrideWith(new TestJPAConfigurationModule())
+            .overrideWith(binder -> binder.bind(MailboxManager.class).toInstance(mailboxManager())))
+        .build();
+    
+    @Test
+    void startShouldSucceedWhenRequiredCapabilities(GuiceJamesServer server) {
+
+    }
 }
