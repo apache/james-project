@@ -19,60 +19,48 @@
 
 package org.apache.james;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
 import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.utils.ConfigurationPerformer;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 
-public class CassandraMessageIdManagerInjectionTest {
+class CassandraMessageIdManagerInjectionTest {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @ClassRule
-    public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
-    @Rule
-    public CassandraJmapTestRule cassandraJmap = CassandraJmapTestRule.defaultTestRule();
-    
-    private GuiceJamesServer server;
-
-    @Before
-    public void setup() throws Exception {
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CallMe.class);
-            }
-        };
-        server = cassandraJmap.jmapServer(module, cassandra.getModule());
-        server.start();
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
+                .addBinding()
+                .to(CallMe.class)))
+        .disableAutoStart()
+        .build();
 
     @Test
-    public void messageIdManagerShouldBeInjected() {
-
-    }
-
-    @After
-    public void tearDown() {
-        server.stop();
+    void messageIdManagerShouldBeInjected(GuiceJamesServer server) {
+        assertThatCode(server::start).doesNotThrowAnyException();
     }
 
     public static class CallMe implements ConfigurationPerformer {
-
         @Inject
         public CallMe(MessageIdManager messageIdManager) {
         }
@@ -84,15 +72,7 @@ public class CassandraMessageIdManagerInjectionTest {
 
         @Override
         public List<Class<? extends Configurable>> forClasses() {
-            return ImmutableList.of(MyConfigurable.class);
+            return ImmutableList.of();
         }
     }
-
-    public static class MyConfigurable implements Configurable {
-        @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
-
-        }
-    }
-
 }
