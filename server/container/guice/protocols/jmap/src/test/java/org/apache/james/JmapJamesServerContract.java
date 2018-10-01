@@ -22,14 +22,12 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.utils.JmapGuiceProbe;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.inject.Module;
 
@@ -37,22 +35,16 @@ import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
-public abstract class AbstractJmapJamesServerTest {
-
-    public static final Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
+public interface JmapJamesServerContract {
+    Module DOMAIN_LIST_CONFIGURATION_MODULE = binder -> binder.bind(DomainListConfiguration.class)
         .toInstance(DomainListConfiguration.builder()
             .autoDetect(true)
             .autoDetectIp(false)
             .build());
+    String JAMES_SERVER_HOST = "127.0.0.1";
 
-    protected static final String JAMES_SERVER_HOST = "127.0.0.1";
-
-    protected GuiceJamesServer server;
-
-    @Before
-    public void setup() throws Exception {
-        server = createJamesServer();
-        server.start();
+    @BeforeEach
+    default void setup(GuiceJamesServer server) throws Exception {
 
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
@@ -62,20 +54,8 @@ public abstract class AbstractJmapJamesServerTest {
             .build();
     }
 
-    protected abstract GuiceJamesServer createJamesServer() throws IOException;
-
-    protected abstract void clean();
-
-    @After
-    public void tearDown() throws Exception {
-        if (server != null) {
-            server.stop();
-        }
-        clean();
-    }
-
     @Test
-    public void connectJMAPServerShouldRespondBadRequest() throws Exception {
+    default void connectJMAPServerShouldRespondBadRequest() {
         given()
             .body("{\"badAttributeName\": \"value\"}")
         .when()

@@ -19,35 +19,20 @@
 
 package org.apache.james;
 
-import java.io.IOException;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.user.ldap.LdapGenericContainer;
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
+class CassandraLdapJmapJamesServerTest implements JmapJamesServerContract {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-public class CassandraLdapJmapJamesServerTest extends AbstractJmapJamesServerTest {
-    private static final String DOMAIN = "james.org";
-    private static final String ADMIN_PASSWORD = "mysecretpassword";
-
-    private LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
-        .domain(DOMAIN)
-        .password(ADMIN_PASSWORD)
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new LdapTestExtention())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
-    private CassandraLdapJmapTestRule cassandraLdapJmap = CassandraLdapJmapTestRule.defaultTestRule();
-
-    @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(ldapContainer).around(cassandraLdapJmap);
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        ldapContainer.start();
-        return cassandraLdapJmap.jmapServer(ldapContainer.getLdapHost());
-    }
-
-    @Override
-    protected void clean() {
-        if (ldapContainer != null) {
-            ldapContainer.stop();
-        }
-    }
 }

@@ -22,28 +22,24 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 
-import java.io.IOException;
-
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Domain;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.user.ldap.LdapGenericContainer;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
+class CassandraLdapJamesServerTest implements JmapJamesServerContract {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String JAMES_USER = "james-user";
     private static final String PASSWORD = "secret";
-    private static final String DOMAIN = "james.org";
-    private static final String ADMIN_PASSWORD = "mysecretpassword";
     private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
@@ -51,50 +47,32 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
         .with()
         .pollDelay(slowPacedPollInterval)
         .await();
-
-    private LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
-        .domain(DOMAIN)
-        .password(ADMIN_PASSWORD)
-        .build();
-    private CassandraLdapJmapTestRule cassandraLdapJmap = CassandraLdapJmapTestRule.defaultTestRule();
     private IMAPClient imapClient = new IMAPClient();
 
-    @Rule
-    public RuleChain ruleChain = RuleChain.outerRule(ldapContainer).around(cassandraLdapJmap);
+    @RegisterExtension
+    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
 
-    @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
-    @Rule
-    public SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        ldapContainer.start();
-        return cassandraLdapJmap.jmapServer(ldapContainer.getLdapHost(), DOMAIN_LIST_CONFIGURATION_MODULE);
-    }
-
-    @Override
-    protected void clean() {
-        if (ldapContainer != null) {
-            ldapContainer.stop();
-        }
-
-        try {
-            imapClient.disconnect();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new LdapTestExtention())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraLdapJamesServerMain.cassandraLdapServerModule)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+        .build();
 
     @Test
-    public void userFromLdapShouldLoginViaImapProtocol() throws Exception {
+    void userFromLdapShouldLoginViaImapProtocol(GuiceJamesServer server) throws Exception {
         imapClient.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort());
 
         assertThat(imapClient.login(JAMES_USER, PASSWORD)).isTrue();
     }
 
     @Test
-    public void mailsShouldBeWellReceivedBeforeFirstUserConnectionWithLdap() throws Exception {
+    void mailsShouldBeWellReceivedBeforeFirstUserConnectionWithLdap(GuiceJamesServer server) throws Exception {
         messageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage("bob@any.com", JAMES_USER + "@localhost");
 
@@ -105,5 +83,4 @@ public class CassandraLdapJamesServerTest extends AbstractJmapJamesServerTest {
             .select("INBOX")
             .awaitMessage(calmlyAwait);
     }
-
 }
