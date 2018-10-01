@@ -48,7 +48,6 @@ class RabbitMQManagementApi {
         List<MessageQueue> listQueues();
     }
 
-
     private final Api api;
 
     RabbitMQManagementApi(RabbitMQConfiguration configuration) {
@@ -68,7 +67,8 @@ class RabbitMQManagementApi {
             .stream()
             .map(x -> x.name)
             .map(MailQueueName::fromRabbitWorkQueueName)
-            .flatMap(OptionalUtils::toStream);
+            .flatMap(OptionalUtils::toStream)
+            .distinct();
     }
 
 }
