@@ -19,27 +19,20 @@
 
 package org.apache.james;
 
-import java.io.IOException;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.apache.james.server.core.configuration.Configuration;
-import org.junit.Ignore;
+class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
 
-public class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        Configuration configuration = Configuration.builder()
-            .workingDirectory(temporaryFolder.newFolder())
-            .configurationFromClasspath()
-            .build();
-
-        return GuiceJamesServer.forConfiguration(configuration)
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE);
-    }
+            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE))
+        .build();
 
     @Override
-    @Ignore("Failing to create the domain: duplicate with test in JPAJamesServerTest")
-    public void jpaGuiceServerShouldUpdateQuota() {
+    @Disabled("Failing to create the domain: duplicate with test in JPAJamesServerTest")
+    void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) {
     }
 }

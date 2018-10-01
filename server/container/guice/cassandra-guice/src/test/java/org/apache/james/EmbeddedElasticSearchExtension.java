@@ -17,29 +17,44 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util;
+package org.apache.james;
 
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import java.io.File;
 
-public class Runnables {
-    public static void runParallel(Runnable... runnables) {
-        Stream<Runnable> stream = Arrays.stream(runnables);
-        runParrallelStream(stream);
+import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.modules.TestElasticSearchModule;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
+import com.google.inject.Module;
+
+public class EmbeddedElasticSearchExtension implements GuiceModuleTestExtension {
+    private final EmbeddedElasticSearch embeddedElasticSearch;
+
+    public EmbeddedElasticSearchExtension(File temporaryFolder) {
+        this.embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder.toPath());
     }
 
-    public static void runParrallelStream(Stream<Runnable> stream) {
-        FluentFutureStream.of(stream
-                .map(runnable -> CompletableFuture.supplyAsync(toVoidSupplier(runnable))))
-            .join();
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+        embeddedElasticSearch.before();
     }
 
-    private static Supplier<Void> toVoidSupplier(Runnable runnable) {
-        return () -> {
-            runnable.run();
-            return null;
-        };
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        embeddedElasticSearch.after();
+    }
+
+    @Override
+    public Module getModule() {
+        return new TestElasticSearchModule(embeddedElasticSearch);
+    }
+
+    @Override
+    public void await() {
+        embeddedElasticSearch.awaitForElasticSearch();
+    }
+
+    public EmbeddedElasticSearch getEmbeddedElasticSearch() {
+        return embeddedElasticSearch;
     }
 }

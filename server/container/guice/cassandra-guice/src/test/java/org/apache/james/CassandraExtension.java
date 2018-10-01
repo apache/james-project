@@ -17,29 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util;
+package org.apache.james;
 
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class Runnables {
-    public static void runParallel(Runnable... runnables) {
-        Stream<Runnable> stream = Arrays.stream(runnables);
-        runParrallelStream(stream);
+import com.google.inject.Module;
+
+class CassandraExtension implements GuiceModuleTestExtension {
+
+    private final DockerCassandraRule cassandra;
+
+    CassandraExtension() {
+        this.cassandra = new DockerCassandraRule();
     }
 
-    public static void runParrallelStream(Stream<Runnable> stream) {
-        FluentFutureStream.of(stream
-                .map(runnable -> CompletableFuture.supplyAsync(toVoidSupplier(runnable))))
-            .join();
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        cassandra.start();
     }
 
-    private static Supplier<Void> toVoidSupplier(Runnable runnable) {
-        return () -> {
-            runnable.run();
-            return null;
-        };
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        cassandra.stop();
+    }
+
+    @Override
+    public Module getModule() {
+        return cassandra.getModule();
     }
 }

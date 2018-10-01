@@ -21,70 +21,60 @@ package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-public class JPAJamesServerTest extends AbstractJamesServerTest {
+class JPAJamesServerTest implements JamesServerContract {
+
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
+            .overrideWith(new TestJPAConfigurationModule(), DOMAIN_LIST_CONFIGURATION_MODULE))
+        .build();
 
     private static final ConditionFactory AWAIT = Awaitility.await()
         .atMost(Duration.ONE_MINUTE)
         .with()
         .pollInterval(Duration.FIVE_HUNDRED_MILLISECONDS);
-    private static final String DOMAIN = "james.local";
+    static final String DOMAIN = "james.local";
     private static final String USER = "toto@" + DOMAIN;
     private static final String PASSWORD = "123456";
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
-    @Rule
-    public SMTPMessageSender smtpMessageSender = new SMTPMessageSender(DOMAIN);
+    private IMAPMessageReader imapMessageReader;
+    private SMTPMessageSender smtpMessageSender;
 
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        Configuration configuration = Configuration.builder()
-            .workingDirectory(temporaryFolder.newFolder())
-            .configurationFromClasspath()
-            .build();
-
-        return GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
-            .overrideWith(new TestJPAConfigurationModule(), DOMAIN_LIST_CONFIGURATION_MODULE);
+    @BeforeEach
+    void setUp() {
+        this.imapMessageReader = new IMAPMessageReader();
+        this.smtpMessageSender = new SMTPMessageSender(DOMAIN);
     }
-
-    @Override
-    protected void clean() {
-    }
-
+    
     @Test
-    public void jpaGuiceServerShouldUpdateQuota() throws Exception {
-        server.getProbe(DataProbeImpl.class)
+    void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) throws Exception {
+        jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
             .addDomain(DOMAIN)
             .addUser(USER, PASSWORD);
-        server.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(50 * 1024)));
+        jamesServer.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(new SerializableQuotaValue<>(QuotaSize.size(50 * 1024)));
 
         // ~ 12 KB email
-        int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
-        smtpMessageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+        int imapPort = jamesServer.getProbe(ImapGuiceProbe.class).getImapPort();
+        smtpMessageSender.connect(JAMES_SERVER_HOST, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessageWithHeaders(USER, USER, "header: toto\\r\\n\\r\\n" + Strings.repeat("0123456789\n", 1024));
         AWAIT.until(() -> imapMessageReader.connect(JAMES_SERVER_HOST, imapPort)
             .login(USER, PASSWORD)
@@ -99,5 +89,4 @@ public class JPAJamesServerTest extends AbstractJamesServerTest {
                 "* QUOTA #private&toto@james.local (STORAGE 12 50)\r\n")
             .endsWith("OK GETQUOTAROOT completed.\r\n");
     }
-
 }

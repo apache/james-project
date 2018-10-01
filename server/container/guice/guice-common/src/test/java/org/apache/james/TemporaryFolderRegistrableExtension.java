@@ -17,29 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util;
+package org.apache.james;
 
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.rules.TemporaryFolder;
 
-public class Runnables {
-    public static void runParallel(Runnable... runnables) {
-        Stream<Runnable> stream = Arrays.stream(runnables);
-        runParrallelStream(stream);
+public class TemporaryFolderRegistrableExtension implements RegistrableExtension {
+
+    private TemporaryFolder temporaryFolder;
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        temporaryFolder = new TemporaryFolder();
+        temporaryFolder.create();
     }
 
-    public static void runParrallelStream(Stream<Runnable> stream) {
-        FluentFutureStream.of(stream
-                .map(runnable -> CompletableFuture.supplyAsync(toVoidSupplier(runnable))))
-            .join();
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+        temporaryFolder.delete();
     }
 
-    private static Supplier<Void> toVoidSupplier(Runnable runnable) {
-        return () -> {
-            runnable.run();
-            return null;
-        };
+    public TemporaryFolder getTemporaryFolder() {
+        return temporaryFolder;
     }
 }

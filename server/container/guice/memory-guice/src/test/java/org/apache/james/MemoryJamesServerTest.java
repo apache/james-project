@@ -19,20 +19,20 @@
 
 package org.apache.james;
 
-import java.io.IOException;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import org.junit.Rule;
+class MemoryJamesServerTest implements JamesServerContract {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-public class MemoryJamesServerTest extends AbstractJamesServerTest {
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws IOException {
-        return memoryJmap.jmapServer(DOMAIN_LIST_CONFIGURATION_MODULE);
-    }
-
-    @Override
-    protected void clean() {
-    }
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+        .build();
 }

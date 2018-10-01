@@ -17,29 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util;
+package org.apache.james;
 
-import java.util.Arrays;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class Runnables {
-    public static void runParallel(Runnable... runnables) {
-        Stream<Runnable> stream = Arrays.stream(runnables);
-        runParrallelStream(stream);
+public interface RegistrableExtension extends BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback {
+    @Override
+    default void afterAll(ExtensionContext extensionContext) throws Exception {
+
     }
 
-    public static void runParrallelStream(Stream<Runnable> stream) {
-        FluentFutureStream.of(stream
-                .map(runnable -> CompletableFuture.supplyAsync(toVoidSupplier(runnable))))
-            .join();
+    @Override
+    default void afterEach(ExtensionContext extensionContext) throws Exception {
+
     }
 
-    private static Supplier<Void> toVoidSupplier(Runnable runnable) {
-        return () -> {
-            runnable.run();
-            return null;
-        };
+    @Override
+    default void beforeAll(ExtensionContext extensionContext) throws Exception {
+
+    }
+
+    @Override
+    default void beforeEach(ExtensionContext extensionContext) throws Exception {
+
     }
 }
