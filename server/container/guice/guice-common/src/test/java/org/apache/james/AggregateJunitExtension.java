@@ -20,7 +20,6 @@
 package org.apache.james;
 
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -44,7 +43,7 @@ public class AggregateJunitExtension implements RegistrableExtension {
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeEach(ExtensionContext extensionContext) {
         Runnables.runParrallelStream(registrableExtensions
             .stream()
             .map(ext -> Throwing.runnable(() -> ext.beforeEach(extensionContext))));
