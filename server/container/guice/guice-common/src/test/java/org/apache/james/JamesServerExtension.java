@@ -41,12 +41,14 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
     private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
     private final ThrowingFunction<File, GuiceJamesServer> serverSupplier;
     private final RegistrableExtension registrableExtension;
+    private final boolean autoStart;
     private GuiceJamesServer guiceJamesServer;
 
-    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier) {
+    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier, boolean autoStart) {
         this.registrableExtension = registrableExtension;
         this.serverSupplier = serverSupplier;
         this.folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
+        this.autoStart = autoStart;
     }
 
     @Override
@@ -59,7 +61,9 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         folderRegistrableExtension.beforeEach(extensionContext);
         registrableExtension.beforeEach(extensionContext);
         guiceJamesServer = serverSupplier.apply(createTmpDir());
-        guiceJamesServer.start();
+        if (autoStart) {
+            guiceJamesServer.start();
+        }
     }
 
     @Override

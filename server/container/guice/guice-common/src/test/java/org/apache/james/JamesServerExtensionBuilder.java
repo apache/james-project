@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
 public class JamesServerExtensionBuilder {
+    private static final boolean DEFAULT_AUTO_START = true;
 
     @FunctionalInterface
     interface ConfigurationProvider {
@@ -46,11 +47,13 @@ public class JamesServerExtensionBuilder {
     private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
     private ServerProvider server;
     private Optional<ConfigurationProvider> configuration;
+    private Optional<Boolean> autoStart;
 
     JamesServerExtensionBuilder() {
         configuration = Optional.empty();
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
+        autoStart = Optional.empty();
     }
 
     public JamesServerExtensionBuilder extensions(GuiceModuleTestExtension... extensions) {
@@ -72,11 +75,17 @@ public class JamesServerExtensionBuilder {
         return this;
     }
 
+    public JamesServerExtensionBuilder disableAutoStart() {
+        this.autoStart = Optional.of(false);
+        return this;
+    }
+
     public JamesServerExtension build() {
         Preconditions.checkNotNull(server);
         ConfigurationProvider configuration = this.configuration.orElse(defaultConfigurationProvider());
-        return new JamesServerExtension(buildAggregateJunitExtension(),
-            file -> overrideServerWithExtensionsModules(file, configuration));
+
+        return new JamesServerExtension(buildAggregateJunitExtension(), file -> overrideServerWithExtensionsModules(file, configuration),
+            autoStart.orElse(DEFAULT_AUTO_START));
     }
 
     private ConfigurationProvider defaultConfigurationProvider() {
