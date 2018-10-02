@@ -24,10 +24,7 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.Executors;
@@ -93,7 +90,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
         CassandraMailQueueViewModule.MODULE,
         CassandraEventStoreModule.MODULE));
 
-    private Clock clock;
+    private UpdatableTickingClock clock;
     private RabbitMQManagementApi mqManagementApi;
     private RabbitClient rabbitClient;
     private ThreadLocalRandom random;
@@ -101,15 +98,13 @@ class RabbitMQMailQueueConfigurationChangeTest {
 
     @BeforeEach
     void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra) throws Exception {
-
         CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION, BLOB_ID_FACTORY);
         mimeMessageStore = MimeMessageStore.factory(blobsDAO).mimeMessageStore();
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
             .build();
-        clock = mock(Clock.class);
-        when(clock.instant()).thenReturn(IN_SLICE_1);
+        clock = new UpdatableTickingClock(IN_SLICE_1);
         random = ThreadLocalRandom.current();
 
         RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
@@ -179,11 +174,11 @@ class RabbitMQMailQueueConfigurationChangeTest {
     void divideSliceWindowShouldAllowBrowsingAllQueueElements(CassandraCluster cassandra) throws Exception {
         RabbitMQMailQueue mailQueue = getRabbitMQMailQueue(cassandra, DEFAULT_CONFIGURATION);
 
-        when(clock.instant()).thenReturn(IN_SLICE_1);
+        clock.setInstant(IN_SLICE_1);
         enqueueSomeMails(mailQueue, namePatternForSlice(1), 1);
-        when(clock.instant()).thenReturn(IN_SLICE_2);
+        clock.setInstant(IN_SLICE_2);
         enqueueSomeMails(mailQueue, namePatternForSlice(2), 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3);
+        clock.setInstant(IN_SLICE_3);
         enqueueSomeMails(mailQueue, namePatternForSlice(3), 1);
 
         RabbitMQMailQueue mailQueueWithSmallerSlices = getRabbitMQMailQueue(cassandra,
@@ -193,11 +188,11 @@ class RabbitMQMailQueueConfigurationChangeTest {
                     .sliceWindow(Duration.ofMinutes(30))
                     .build());
 
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(35, MINUTES));
+        clock.setInstant(IN_SLICE_3.plus(35, MINUTES));
         enqueueSomeMails(mailQueue, namePatternForSlice(4), 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(65, MINUTES));
+        clock.setInstant(IN_SLICE_3.plus(65, MINUTES));
         enqueueSomeMails(mailQueue, namePatternForSlice(5), 1);
-        when(clock.instant()).thenReturn(IN_SLICE_3.plus(95, MINUTES));
+        clock.setInstant(IN_SLICE_3.plus(95, MINUTES));
         enqueueSomeMails(mailQueue, namePatternForSlice(6), 1);
 
         Stream<String> names = Iterators.toStream(mailQueueWithSmallerSlices.browse())

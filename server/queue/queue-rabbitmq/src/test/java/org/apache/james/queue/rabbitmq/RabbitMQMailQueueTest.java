@@ -236,35 +236,4 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         IntStream.rangeClosed(1, times)
             .forEach(Throwing.intConsumer(bucketId -> mailQueue.deQueue().done(true)));
     }
-
-    private static class UpdatableTickingClock extends Clock {
-        private Instant currentInstant;
-
-        UpdatableTickingClock(Instant currentInstant) {
-            this.currentInstant = currentInstant;
-        }
-
-        void setInstant(Instant instant) {
-            currentInstant = instant;
-        }
-
-        @Override
-        public ZoneId getZone() {
-            throw new NotImplementedException("No timezone attached to this clock");
-        }
-
-        @Override
-        public Clock withZone(ZoneId zone) {
-            throw new NotImplementedException("No timezone attached to this clock");
-        }
-
-        @Override
-        public Instant instant() {
-            return currentInstant;
-        }
-
-        synchronized void tick() {
-            currentInstant = currentInstant.plusMillis(1);
-        }
-    }
 }
