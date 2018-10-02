@@ -19,29 +19,32 @@
 
 package org.apache.james;
 
-import java.io.File;
-
 import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.modules.TestElasticSearchModule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
 
 public class EmbeddedElasticSearchExtension implements GuiceModuleTestExtension {
-    private final EmbeddedElasticSearch embeddedElasticSearch;
+    private final TemporaryFolderExtension folderExtension;
+    private EmbeddedElasticSearch embeddedElasticSearch;
 
-    public EmbeddedElasticSearchExtension(File temporaryFolder) {
-        this.embeddedElasticSearch = new EmbeddedElasticSearch(temporaryFolder.toPath());
+    public EmbeddedElasticSearchExtension() {
+        this.folderExtension = new TemporaryFolderExtension();
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) {
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        folderExtension.beforeEach(extensionContext);
+        embeddedElasticSearch = new EmbeddedElasticSearch(folderExtension.getTemporaryFolder().getTempDir().toPath());
         embeddedElasticSearch.before();
     }
 
     @Override
-    public void afterEach(ExtensionContext extensionContext) {
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
         embeddedElasticSearch.after();
+        folderExtension.afterEach(extensionContext);
     }
 
     @Override

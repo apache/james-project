@@ -55,6 +55,10 @@ public class TemporaryFolderExtension implements ParameterResolver, BeforeEachCa
         FileUtils.deleteDirectory(temporaryFolder.getTempDir());
     }
 
+    public TemporaryFolder getTemporaryFolder() {
+        return temporaryFolder;
+    }
+
     public static class TemporaryFolder {
         private final File tempDir;
         private final String folderPath;

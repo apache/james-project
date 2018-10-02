@@ -24,11 +24,10 @@ import org.junit.rules.TemporaryFolder;
 
 public class TemporaryFolderRegistrableExtension implements RegistrableExtension {
 
-    private TemporaryFolder temporaryFolder;
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        temporaryFolder = new TemporaryFolder();
         temporaryFolder.create();
     }
 

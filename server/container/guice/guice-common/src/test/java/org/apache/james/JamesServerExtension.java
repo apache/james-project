@@ -19,10 +19,10 @@
 
 package org.apache.james;
 
-import java.util.List;
-import java.util.function.Supplier;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
-import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -32,22 +32,21 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.Lists;
-
 public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
 
-    interface ThrowingSupplier<T> {
-        T get() throws Exception;
+    interface ThrowingFunction<P, T> {
+        T apply(P parameter) throws Exception;
     }
 
-    private final ThrowingSupplier<GuiceJamesServer> serverSupplier;
+    private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
+    private final ThrowingFunction<File, GuiceJamesServer> serverSupplier;
     private final RegistrableExtension registrableExtension;
     private GuiceJamesServer guiceJamesServer;
 
-    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingSupplier<GuiceJamesServer> serverSupplier) {
+    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier) {
         this.registrableExtension = registrableExtension;
         this.serverSupplier = serverSupplier;
+        this.folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
     }
 
     @Override
@@ -57,8 +56,9 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        folderRegistrableExtension.beforeEach(extensionContext);
         registrableExtension.beforeEach(extensionContext);
-        guiceJamesServer = serverSupplier.get();
+        guiceJamesServer = serverSupplier.apply(createTmpDir());
         guiceJamesServer.start();
     }
 
@@ -66,6 +66,7 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         guiceJamesServer.stop();
         registrableExtension.afterEach(extensionContext);
+        folderRegistrableExtension.afterEach(extensionContext);
     }
 
     @Override
@@ -81,5 +82,13 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return guiceJamesServer;
+    }
+
+    private File createTmpDir() {
+        try {
+            return folderRegistrableExtension.getTemporaryFolder().newFolder();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

@@ -20,10 +20,8 @@
 package org.apache.james;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.james.server.core.configuration.Configuration;
 
@@ -33,11 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 
 public class JamesServerExtensionBuilder {
-
-    @FunctionalInterface
-    interface ExtensionProvider {
-        GuiceModuleTestExtension buildExtension(File tempDirectory);
-    }
 
     @FunctionalInterface
     interface ConfigurationProvider {
@@ -65,14 +58,8 @@ public class JamesServerExtensionBuilder {
         return this;
     }
 
-    public JamesServerExtensionBuilder extension(Supplier<GuiceModuleTestExtension> extension) {
-        this.extensions.add(extension.get());
-        return this;
-    }
-
-    public JamesServerExtensionBuilder extension(ExtensionProvider extension) {
-        this.extensions.add(extension.buildExtension(createTmpDir()));
-        return this;
+    public JamesServerExtensionBuilder extension(GuiceModuleTestExtension extension) {
+        return this.extensions(extension);
     }
 
     public JamesServerExtensionBuilder configuration(ConfigurationProvider configuration) throws UncheckedIOException {
@@ -88,7 +75,8 @@ public class JamesServerExtensionBuilder {
     public JamesServerExtension build() {
         Preconditions.checkNotNull(server);
         ConfigurationProvider configuration = this.configuration.orElse(defaultConfigurationProvider());
-        return new JamesServerExtension(buildAggregateJunitExtension(), () -> overrideServerWithExtensionsModules(configuration));
+        return new JamesServerExtension(buildAggregateJunitExtension(),
+            file -> overrideServerWithExtensionsModules(file, configuration));
     }
 
     private ConfigurationProvider defaultConfigurationProvider() {
@@ -97,14 +85,6 @@ public class JamesServerExtensionBuilder {
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .build();
-    }
-
-    private File createTmpDir() {
-        try {
-            return folderRegistrableExtension.getTemporaryFolder().newFolder();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     private AggregateJunitExtension buildAggregateJunitExtension() {
@@ -116,9 +96,13 @@ public class JamesServerExtensionBuilder {
                 .build());
     }
 
-    private GuiceJamesServer overrideServerWithExtensionsModules(ConfigurationProvider configurationProvider) {
-        ImmutableList<Module> modules = extensions.build().stream().map(x -> x.getModule()).collect(Guavate.toImmutableList());
-        return server.buildServer(configurationProvider.buildConfiguration(createTmpDir())).overrideWith(modules);
+    private GuiceJamesServer overrideServerWithExtensionsModules(File file, ConfigurationProvider configurationProvider) {
+        ImmutableList<Module> modules = extensions.build()
+            .stream()
+            .map(GuiceModuleTestExtension::getModule)
+            .collect(Guavate.toImmutableList());
+
+        return server.buildServer(configurationProvider.buildConfiguration(file)).overrideWith(modules);
     }
 
 }

@@ -31,8 +31,8 @@ class CassandraJamesServerTest implements JamesServerContract {
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(EmbeddedElasticSearchExtension::new)
-        .extension(CassandraExtension::new)
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
