@@ -229,6 +229,20 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     public void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
     }
 
+    @Test
+    @Override
+    @Disabled("JAMES-2544 acknowledgement need to be done on the original channel, which is not permitted by the channelPool")
+    public void concurrentEnqueueDequeueShouldNotFail() {
+
+    }
+
+    @Test
+    @Override
+    @Disabled("JAMES-2544 acknowledgement need to be done on the original channel, which is not permitted by the channelPool")
+    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
+    }
+
+
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
         IntStream.rangeClosed(1, emailCount)
             .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
