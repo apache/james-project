@@ -21,6 +21,7 @@ package org.apache.james.backend.rabbitmq;
 
 import java.util.function.Supplier;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -60,6 +61,12 @@ public class RabbitChannelPool {
         public PooledObject<Channel> wrap(Channel obj) {
             return new DefaultPooledObject<>(obj);
         }
+
+        @Override
+        public void destroyObject(PooledObject<Channel> pooledObject) throws Exception {
+            Channel channel = pooledObject.getObject();
+            channel.close();
+        }
     }
 
     @FunctionalInterface
@@ -97,6 +104,11 @@ public class RabbitChannelPool {
         } finally {
             returnChannel(channel);
         }
+    }
+
+    @PreDestroy
+    public void close() {
+        pool.close();
     }
 
     private Channel borrowChannel() {

@@ -23,7 +23,6 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.rabbitmq.client.Address;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
@@ -36,6 +35,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
 
 import com.google.common.collect.ImmutableMap;
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.ConnectionFactory;
 
 public class DockerRabbitMQ {

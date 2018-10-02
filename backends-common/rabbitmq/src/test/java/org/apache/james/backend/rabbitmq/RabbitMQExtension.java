@@ -18,17 +18,26 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+
+import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
+
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class RabbitMQExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
+import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
+
+public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private DockerRabbitMQ rabbitMQ;
+    private RabbitChannelPool rabbitChannelPool;
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -37,7 +46,13 @@ public class RabbitMQExtension implements BeforeAllCallback, AfterAllCallback, A
     }
 
     @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        rabbitChannelPool = createRabbitChannelPool();
+    }
+
+    @Override
     public void afterEach(ExtensionContext context) throws Exception {
+        rabbitChannelPool.close();
         rabbitMQ.reset();
     }
 
@@ -56,4 +71,24 @@ public class RabbitMQExtension implements BeforeAllCallback, AfterAllCallback, A
         return rabbitMQ;
     }
 
+    public RabbitChannelPool getRabbitChannelPool() {
+        return rabbitChannelPool;
+    }
+
+    public DockerRabbitMQ getRabbitMQ() {
+        return rabbitMQ;
+    }
+
+    private RabbitChannelPool createRabbitChannelPool() throws URISyntaxException {
+        RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
+            .amqpUri(rabbitMQ.amqpUri())
+            .managementUri(rabbitMQ.managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .build();
+
+        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
+            rabbitMQConfiguration,
+            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
+        return new RabbitChannelPool(rabbitMQConnectionFactory);
+    }
 }

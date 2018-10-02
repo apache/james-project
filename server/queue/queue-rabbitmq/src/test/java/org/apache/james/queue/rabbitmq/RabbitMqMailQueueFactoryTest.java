@@ -23,21 +23,15 @@ import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEME
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.Clock;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.RabbitChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
@@ -50,32 +44,28 @@ import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
-
-@ExtendWith(RabbitMQExtension.class)
 class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQMailQueue> {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+
+    @RegisterExtension
+    static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
 
     @BeforeEach
-    void setup(DockerRabbitMQ rabbitMQ) throws IOException, TimeoutException, URISyntaxException {
+    void setup() throws URISyntaxException {
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = mock(Store.class);
         MailQueueView mailQueueView = mock(MailQueueView.class);
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
-            .amqpUri(rabbitMQ.amqpUri())
-            .managementUri(rabbitMQ.managementUri())
+            .amqpUri(rabbitMQExtension.getRabbitMQ().amqpUri())
+            .managementUri(rabbitMQExtension.getRabbitMQ().managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
-            rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-
-        RabbitClient rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
+        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             new NoopMetricFactory(),
             new NoopGaugeRegistry(),
