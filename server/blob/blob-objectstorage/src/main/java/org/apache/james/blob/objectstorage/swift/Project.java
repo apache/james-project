@@ -45,7 +45,7 @@ public final class Project {
     private Project(ProjectName name, Optional<DomainName> domainName, Optional<DomainId> domainId) {
         Preconditions.checkArgument(
             name != null,
-        this.getClass().getSimpleName() + "name cannot be null or empty");
+            this.getClass().getSimpleName() + "name cannot be null or empty");
         this.domainName = domainName;
         this.name = name;
         this.domainId = domainId;
@@ -65,16 +65,13 @@ public final class Project {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof Project) {
+            Project that = (Project) o;
+            return Objects.equal(name, that.name) &&
+                Objects.equal(domainName, that.domainName) &&
+                Objects.equal(domainId, that.domainId);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Project project = (Project) o;
-        return Objects.equal(name, project.name) &&
-            Objects.equal(domainName, project.domainName) &&
-            Objects.equal(domainId, project.domainId);
+        return false;
     }
 
     @Override

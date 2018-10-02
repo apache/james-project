@@ -168,17 +168,14 @@ public class SwiftKeystone2ObjectStorage {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) {
-                return true;
+            if (o instanceof Configuration) {
+                Configuration that = (Configuration) o;
+                return Objects.equal(endpoint, that.endpoint) &&
+                    Objects.equal(identity, that.identity) &&
+                    Objects.equal(region, that.region) &&
+                    Objects.equal(credentials, that.credentials);
             }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            Configuration that = (Configuration) o;
-            return Objects.equal(endpoint, that.endpoint) &&
-                Objects.equal(identity, that.identity) &&
-                Objects.equal(region, that.region) &&
-                Objects.equal(credentials, that.credentials);
+            return false;
         }
 
         @Override

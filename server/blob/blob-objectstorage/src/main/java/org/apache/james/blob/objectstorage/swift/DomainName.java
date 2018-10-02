@@ -44,14 +44,11 @@ public final class DomainName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof DomainName) {
+            DomainName that = (DomainName) o;
+            return Objects.equal(value, that.value);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        DomainName that = (DomainName) o;
-        return Objects.equal(value, that.value);
+        return false;
     }
 
     @Override

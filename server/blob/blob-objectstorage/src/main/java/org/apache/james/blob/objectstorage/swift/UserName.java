@@ -44,14 +44,11 @@ public final class UserName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof UserName) {
+            UserName that = (UserName) o;
+            return Objects.equal(value, that.value);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        UserName that = (UserName) o;
-        return Objects.equal(value, that.value);
+        return false;
     }
 
     @Override

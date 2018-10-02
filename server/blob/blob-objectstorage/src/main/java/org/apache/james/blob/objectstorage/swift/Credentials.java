@@ -44,14 +44,11 @@ public final class Credentials {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof Credentials) {
+            Credentials that = (Credentials) o;
+            return Objects.equal(credentials, that.credentials);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Credentials that = (Credentials) o;
-        return Objects.equal(credentials, that.credentials);
+        return false;
     }
 
     @Override

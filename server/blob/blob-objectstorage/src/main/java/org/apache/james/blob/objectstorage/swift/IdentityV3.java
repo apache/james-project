@@ -56,15 +56,12 @@ public final class IdentityV3 {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof IdentityV3) {
+            IdentityV3 that = (IdentityV3) o;
+            return Objects.equal(domainName, that.domainName) &&
+                Objects.equal(userName, that.userName);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        IdentityV3 identity = (IdentityV3) o;
-        return Objects.equal(domainName, identity.domainName) &&
-            Objects.equal(userName, identity.userName);
+        return false;
     }
 
     @Override

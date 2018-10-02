@@ -44,14 +44,11 @@ public final class DomainId {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof DomainId) {
+            DomainId that = (DomainId) o;
+            return Objects.equal(value, that.value);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        DomainId that = (DomainId) o;
-        return Objects.equal(value, that.value);
+        return false;
     }
 
     @Override

@@ -48,14 +48,11 @@ public final class ProjectName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof ProjectName) {
+            ProjectName that = (ProjectName) o;
+            return Objects.equal(value, that.value);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ProjectName that = (ProjectName) o;
-        return Objects.equal(value, that.value);
+        return false;
     }
 
     @Override

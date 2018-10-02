@@ -56,15 +56,12 @@ public final class Identity {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof Identity) {
+            Identity that = (Identity) o;
+            return Objects.equal(tenant, that.tenant) &&
+                Objects.equal(userName, that.userName);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Identity identity = (Identity) o;
-        return Objects.equal(tenant, identity.tenant) &&
-            Objects.equal(userName, identity.userName);
+        return false;
     }
 
     @Override

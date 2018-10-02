@@ -44,14 +44,11 @@ public final class TenantName {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof TenantName) {
+            TenantName that = (TenantName) o;
+            return Objects.equal(value, that.value);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        TenantName that = (TenantName) o;
-        return Objects.equal(value, that.value);
+        return false;
     }
 
     @Override

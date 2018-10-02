@@ -44,14 +44,11 @@ public final class Region {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
+        if (o instanceof Region) {
+            Region that = (Region) o;
+            return Objects.equal(region, that.region);
         }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Region region1 = (Region) o;
-        return Objects.equal(region, region1.region);
+        return false;
     }
 
     @Override
