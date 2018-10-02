@@ -19,9 +19,9 @@
 
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URI;
 import java.util.concurrent.Executors;
 
 import org.apache.james.core.healthcheck.Result;
@@ -41,6 +41,7 @@ class RabbitMQHealthCheckTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
         RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,

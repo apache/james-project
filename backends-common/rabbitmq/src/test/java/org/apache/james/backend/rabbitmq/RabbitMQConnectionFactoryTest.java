@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.URI;
@@ -43,6 +44,7 @@ class RabbitMQConnectionFactoryTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
         new RabbitMQConnectionFactory(rabbitMQConfiguration, new AsyncRetryExecutor(scheduledExecutor));
@@ -53,6 +55,7 @@ class RabbitMQConnectionFactoryTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(URI.create("badprotocol://james:james@rabbitmq_host:5672"))
             .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
         assertThatThrownBy(() -> new RabbitMQConnectionFactory(rabbitMQConfiguration, new AsyncRetryExecutor(scheduledExecutor)))
@@ -64,6 +67,7 @@ class RabbitMQConnectionFactoryTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
                 .amqpUri(URI.create("amqp://james:james@rabbitmq_host:5672"))
                 .managementUri(URI.create("http://james:james@rabbitmq_host:15672/api/"))
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .maxRetries(1)
                 .minDelay(1)
                 .build();

@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_PASSWORD_STRING;
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -25,6 +28,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -125,12 +129,47 @@ class RabbitMQConfigurationTest {
         configuration.addProperty("uri", amqpUri);
         String managementUri = "http://james:james@rabbitmq_host:15672/api/";
         configuration.addProperty("management.uri", managementUri);
+        configuration.addProperty("management.user", DEFAULT_USER);
+        configuration.addProperty("management.password", DEFAULT_PASSWORD_STRING);
 
         assertThat(RabbitMQConfiguration.from(configuration))
             .isEqualTo(RabbitMQConfiguration.builder()
                 .amqpUri(URI.create(amqpUri))
                 .managementUri(URI.create(managementUri))
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                 .build());
+    }
+
+    @Test
+    void fromShouldThrowWhenManagementCredentialsAreNotGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+
+        assertThatThrownBy(() -> RabbitMQConfiguration.from(configuration))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("You need to specify the management.user property as username of rabbitmq management admin account");
+    }
+
+    @Test
+    void fromShouldReturnCustomValueWhenManagementCredentialsAreGiven() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String amqpUri = "amqp://james:james@rabbitmq_host:5672";
+        configuration.addProperty("uri", amqpUri);
+        String managementUri = "http://james:james@rabbitmq_host:15672/api/";
+        configuration.addProperty("management.uri", managementUri);
+        String user = "james";
+        configuration.addProperty("management.user", user);
+        String passwordString = "james_password";
+        configuration.addProperty("management.password", passwordString);
+
+        RabbitMQConfiguration.ManagementCredentials credentials = new RabbitMQConfiguration.ManagementCredentials(
+            user, passwordString.toCharArray());
+
+        assertThat(RabbitMQConfiguration.from(configuration).getManagementCredentials())
+            .isEqualTo(credentials);
     }
 
     @Test
@@ -138,6 +177,7 @@ class RabbitMQConfigurationTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
         assertThat(rabbitMQConfiguration.getMaxRetries())
@@ -151,6 +191,7 @@ class RabbitMQConfigurationTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .maxRetries(maxRetries)
             .build();
 
@@ -163,6 +204,7 @@ class RabbitMQConfigurationTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
         assertThat(rabbitMQConfiguration.getMinDelay())
@@ -176,10 +218,65 @@ class RabbitMQConfigurationTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(new URI("amqp://james:james@rabbitmq_host:5672"))
             .managementUri(new URI("http://james:james@rabbitmq_host:15672/api/"))
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .minDelay(minDelay)
             .build();
 
         assertThat(rabbitMQConfiguration.getMinDelay())
             .isEqualTo(minDelay);
+    }
+
+    @Nested
+    class ManagementCredentialsTest {
+        @Test
+        void managementCredentialShouldRespectBeanContract() {
+            EqualsVerifier.forClass(RabbitMQConfiguration.ManagementCredentials.class)
+                .verify();
+        }
+
+        @Test
+        void fromShouldThrowWhenUserAndPasswordAreNotGiven() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+
+            assertThatThrownBy(() -> RabbitMQConfiguration.ManagementCredentials.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify the management.user property as username of rabbitmq management admin account");
+        }
+
+        @Test
+        void fromShouldThrowWhenUserIsNotGiven() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            String passwordString = "password";
+            configuration.addProperty("management.password", passwordString);
+
+            assertThatThrownBy(() -> RabbitMQConfiguration.ManagementCredentials.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify the management.user property as username of rabbitmq management admin account");
+        }
+
+        @Test
+        void fromShouldThrowWhenPasswordIsNotGiven() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            String userString = "guest";
+            configuration.addProperty("management.user", userString);
+
+            assertThatThrownBy(() -> RabbitMQConfiguration.ManagementCredentials.from(configuration))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("You need to specify the management.password property as password of rabbitmq management admin account");
+        }
+
+        @Test
+        void fromShouldReturnCorrespondingCredentialWhenGiven() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            String userString = "guest";
+            configuration.addProperty("management.user", userString);
+            String passwordString = "password";
+            configuration.addProperty("management.password", passwordString);
+
+            RabbitMQConfiguration.ManagementCredentials credentialWithUserAndPassword = new RabbitMQConfiguration.ManagementCredentials(
+                userString, passwordString.toCharArray());
+            assertThat(RabbitMQConfiguration.ManagementCredentials.from(configuration))
+                .isEqualTo(credentialWithUserAndPassword);
+        }
     }
 }

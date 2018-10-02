@@ -39,6 +39,11 @@ public class RabbitMQFixture {
     public static final boolean AUTO_DELETE = true;
     public static final String WORK_QUEUE = "workQueue";
 
+    static final String DEFAULT_USER = "guest";
+    static final String DEFAULT_PASSWORD_STRING = "guest";
+    static final char[] DEFAULT_PASSWORD = DEFAULT_PASSWORD_STRING.toCharArray();
+    public static final RabbitMQConfiguration.ManagementCredentials DEFAULT_MANAGEMENT_CREDENTIAL = new RabbitMQConfiguration.ManagementCredentials(DEFAULT_USER, DEFAULT_PASSWORD);
+
     public static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     public static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)

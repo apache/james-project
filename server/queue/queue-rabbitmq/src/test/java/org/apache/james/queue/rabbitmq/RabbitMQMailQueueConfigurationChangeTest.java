@@ -21,6 +21,7 @@ package org.apache.james.queue.rabbitmq;
 
 import static java.time.temporal.ChronoUnit.HOURS;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -103,6 +104,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
+            .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
         clock = new UpdatableTickingClock(IN_SLICE_1);
         random = ThreadLocalRandom.current();
@@ -111,7 +113,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
             new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
 
         rabbitClient = new RabbitClient(new RabbitChannelPool(rabbitMQConnectionFactory));
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQ.managementUri(), new RabbitMQManagementCredentials("guest", "guest".toCharArray()));
+        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
     }
 
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
