@@ -38,17 +38,24 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         T apply(P parameter) throws Exception;
     }
 
+    interface AwaitCondition {
+        void await();
+    }
+
     private final TemporaryFolderRegistrableExtension folderRegistrableExtension;
     private final ThrowingFunction<File, GuiceJamesServer> serverSupplier;
     private final RegistrableExtension registrableExtension;
     private final boolean autoStart;
+    private final AwaitCondition awaitCondition;
     private GuiceJamesServer guiceJamesServer;
 
-    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier, boolean autoStart) {
+    JamesServerExtension(RegistrableExtension registrableExtension, ThrowingFunction<File, GuiceJamesServer> serverSupplier,
+                         AwaitCondition awaitCondition, boolean autoStart) {
         this.registrableExtension = registrableExtension;
         this.serverSupplier = serverSupplier;
         this.folderRegistrableExtension = new TemporaryFolderRegistrableExtension();
         this.autoStart = autoStart;
+        this.awaitCondition = awaitCondition;
     }
 
     @Override
@@ -94,5 +101,9 @@ public class JamesServerExtension implements BeforeAllCallback, BeforeEachCallba
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    public void await() {
+        awaitCondition.await();
     }
 }

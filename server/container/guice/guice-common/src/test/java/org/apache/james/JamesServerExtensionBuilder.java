@@ -83,9 +83,10 @@ public class JamesServerExtensionBuilder {
     public JamesServerExtension build() {
         Preconditions.checkNotNull(server);
         ConfigurationProvider configuration = this.configuration.orElse(defaultConfigurationProvider());
+        JamesServerExtension.AwaitCondition awaitCondition = () -> extensions.build().forEach(GuiceModuleTestExtension::await);
 
         return new JamesServerExtension(buildAggregateJunitExtension(), file -> overrideServerWithExtensionsModules(file, configuration),
-            autoStart.orElse(DEFAULT_AUTO_START));
+            awaitCondition, autoStart.orElse(DEFAULT_AUTO_START));
     }
 
     private ConfigurationProvider defaultConfigurationProvider() {
