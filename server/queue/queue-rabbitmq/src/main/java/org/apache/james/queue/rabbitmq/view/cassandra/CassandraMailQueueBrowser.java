@@ -38,6 +38,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
@@ -50,7 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-class CassandraMailQueueBrowser {
+public class CassandraMailQueueBrowser {
 
     static class CassandraMailQueueIterator implements ManageableMailQueue.MailQueueIterator {
 
@@ -89,13 +90,13 @@ class CassandraMailQueueBrowser {
     CassandraMailQueueBrowser(BrowseStartDAO browseStartDao,
                               DeletedMailsDAO deletedMailsDao,
                               EnqueuedMailsDAO enqueuedMailsDao,
-                              Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
+                              MimeMessageStore.Factory mimeMessageStoreFactory,
                               CassandraMailQueueViewConfiguration configuration,
                               Clock clock) {
         this.browseStartDao = browseStartDao;
         this.deletedMailsDao = deletedMailsDao;
         this.enqueuedMailsDao = enqueuedMailsDao;
-        this.mimeMessageStore = mimeMessageStore;
+        this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
         this.configuration = configuration;
         this.clock = clock;
     }

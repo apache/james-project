@@ -37,7 +37,7 @@ import org.apache.mailet.Mail;
 
 public class CassandraMailQueueView implements MailQueueView {
 
-    public static class Factory {
+    public static class Factory implements MailQueueView.Factory {
         private final CassandraMailQueueMailStore storeHelper;
         private final CassandraMailQueueBrowser cassandraMailQueueBrowser;
         private final CassandraMailQueueMailDelete cassandraMailQueueMailDelete;
@@ -55,6 +55,7 @@ public class CassandraMailQueueView implements MailQueueView {
             eventsourcingConfigurationManagement.registerConfiguration(configuration);
         }
 
+        @Override
         public MailQueueView create(MailQueueName mailQueueName) {
             return new CassandraMailQueueView(storeHelper, mailQueueName, cassandraMailQueueBrowser, cassandraMailQueueMailDelete);
         }

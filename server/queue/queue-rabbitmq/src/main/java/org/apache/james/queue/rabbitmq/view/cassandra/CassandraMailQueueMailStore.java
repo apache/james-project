@@ -32,7 +32,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Bucke
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
-class CassandraMailQueueMailStore {
+public class CassandraMailQueueMailStore {
 
     private final EnqueuedMailsDAO enqueuedMailsDao;
     private final BrowseStartDAO browseStartDao;

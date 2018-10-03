@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -52,28 +53,29 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final MailReferenceSerializer mailReferenceSerializer;
         private final Function<MailReferenceDTO, Mail> mailLoader;
-        private final MailQueueView mailQueueView;
+        private final MailQueueView.Factory mailQueueViewFactory;
         private final Clock clock;
 
         @Inject
         @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
                                           GaugeRegistry gaugeRegistry,
                                           RabbitClient rabbitClient,
-                                          Store<MimeMessage, MimeMessagePartsId> mimeMessageStore,
+                                          MimeMessageStore.Factory mimeMessageStoreFactory,
                                           BlobId.Factory blobIdFactory,
-                                          MailQueueView mailQueueView,
+                                          MailQueueView.Factory mailQueueViewFactory,
                                           Clock clock) {
             this.metricFactory = metricFactory;
             this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
-            this.mimeMessageStore = mimeMessageStore;
-            this.mailQueueView = mailQueueView;
+            this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
+            this.mailQueueViewFactory = mailQueueViewFactory;
             this.clock = clock;
             this.mailReferenceSerializer = new MailReferenceSerializer();
             this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
+            MailQueueView mailQueueView = mailQueueViewFactory.create(mailQueueName);
             mailQueueView.initialize(mailQueueName);
 
             RabbitMQMailQueue rabbitMQMailQueue = new RabbitMQMailQueue(

@@ -28,6 +28,10 @@ import org.apache.mailet.Mail;
 
 public interface MailQueueView {
 
+    interface Factory {
+        MailQueueView create(MailQueueName mailQueueName);
+    }
+
     void initialize(MailQueueName mailQueueName);
 
     CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem);

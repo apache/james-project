@@ -65,7 +65,7 @@ import org.apache.mailet.Mail;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
-class EnqueuedMailsDAO {
+public class EnqueuedMailsDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectFrom;

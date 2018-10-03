@@ -21,7 +21,9 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.net.URISyntaxException;
 import java.time.Clock;
@@ -29,13 +31,10 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.Store;
-import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -56,9 +55,11 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
 
     @BeforeEach
     void setup() throws URISyntaxException {
-        @SuppressWarnings("unchecked")
-        Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = mock(Store.class);
+        MimeMessageStore.Factory mimeMessageStoreFactory = mock(MimeMessageStore.Factory.class);
+        MailQueueView.Factory mailQueueViewFactory = mock(MailQueueView.Factory.class);
         MailQueueView mailQueueView = mock(MailQueueView.class);
+        when(mailQueueViewFactory.create(any()))
+            .thenReturn(mailQueueView);
 
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQExtension.getRabbitMQ().amqpUri())
@@ -71,9 +72,9 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             new NoopMetricFactory(),
             new NoopGaugeRegistry(),
             rabbitClient,
-            mimeMessageStore,
+            mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
-            mailQueueView,
+            mailQueueViewFactory,
             Clock.systemUTC());
         RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);

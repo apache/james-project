@@ -52,7 +52,7 @@ public interface CassandraMailQueueViewModule {
         String LAST_UPDATED = "lastUpdated";
         String PER_RECIPIENT_SPECIFIC_HEADERS = "perRecipientSpecificHeaders";
 
-        String HEADER_TYPE = "header";
+        String HEADER_TYPE = "enqueuedMailHeaders";
         String HEADER_NAME = "headerName";
         String HEADER_VALUE = "headerValue";
     }

@@ -22,6 +22,8 @@ package org.apache.james.queue.rabbitmq;
 import java.io.IOException;
 import java.util.Optional;
 
+import javax.inject.Inject;
+
 import org.apache.james.backend.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.queue.api.MailQueue;
 
@@ -42,6 +44,7 @@ class RabbitClient {
 
     private final RabbitMQChannelPool channelPool;
 
+    @Inject
     RabbitClient(RabbitMQChannelPool channelPool) {
         this.channelPool = channelPool;
     }

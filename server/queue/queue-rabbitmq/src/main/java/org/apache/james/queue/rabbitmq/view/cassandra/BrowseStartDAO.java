@@ -44,7 +44,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 
-class BrowseStartDAO {
+public class BrowseStartDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectOne;

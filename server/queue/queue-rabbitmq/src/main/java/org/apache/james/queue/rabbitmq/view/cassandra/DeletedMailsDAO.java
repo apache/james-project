@@ -38,7 +38,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 
-class DeletedMailsDAO {
+public class DeletedMailsDAO {
 
     private final CassandraAsyncExecutor executor;
     private final PreparedStatement selectOne;
