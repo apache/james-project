@@ -37,6 +37,7 @@
         <module>blob-objectstorage-guice</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
+        <module>cassandra-rabbitmq-guice</module>
         <module>configuration</module>
         <module>custom-mailets</module>
         <module>es-metric-reporter</module>
