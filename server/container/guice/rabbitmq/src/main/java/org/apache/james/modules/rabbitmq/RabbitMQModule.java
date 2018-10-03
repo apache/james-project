@@ -19,18 +19,39 @@
 package org.apache.james.modules.rabbitmq;
 
 import java.io.FileNotFoundException;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
+import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.BrowseStartDAO;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueBrowser;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailDelete;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueMailStore;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueView;
+import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.DeletedMailsDAO;
+import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
+import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
 
 public class RabbitMQModule extends AbstractModule {
 
@@ -40,6 +61,40 @@ public class RabbitMQModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(Clock.class).toInstance(Clock.systemUTC());
+        bind(ThreadLocalRandom.class).toInstance(ThreadLocalRandom.current());
+        bind(CassandraMailQueueViewConfiguration.class).toInstance(CassandraMailQueueViewConfiguration
+                .builder()
+                .bucketCount(1)
+                .updateBrowseStartPace(1000)
+                .sliceWindow(Duration.ofHours(1))
+                .build());
+
+        bind(EnqueuedMailsDAO.class).in(Scopes.SINGLETON);
+        bind(DeletedMailsDAO.class).in(Scopes.SINGLETON);
+        bind(BrowseStartDAO.class).in(Scopes.SINGLETON);
+        bind(CassandraMailQueueBrowser.class).in(Scopes.SINGLETON);
+        bind(CassandraMailQueueMailDelete.class).in(Scopes.SINGLETON);
+        bind(CassandraMailQueueMailStore.class).in(Scopes.SINGLETON);
+
+        Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewModule.MODULE);
+
+        bind(EventsourcingConfigurationManagement.class).in(Scopes.SINGLETON);
+        Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueView.Factory bindMailQueueViewFactory(CassandraMailQueueView.Factory cassandraMailQueueViewFactory) {
+        return cassandraMailQueueViewFactory;
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueFactory<?> bindRabbitMQQueueFactory(RabbitMQMailQueueFactory queueFactory) {
+        return queueFactory;
     }
 
     @Provides
