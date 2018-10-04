@@ -138,19 +138,15 @@ class JamesServerWithRetryConnectionTest {
 
         assertThatServerStartCorrectly(server);
     }
-
-    interface StartAction {
-        void execute();
-    }
     
-    private void waitToStartContainer(long waitingTime, StartAction action) {
+    private void waitToStartContainer(long waitingTime, Runnable action) {
         executorService.submit(() -> {
             try {
                 Thread.sleep(waitingTime);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            action.execute();
+            action.run();
         });
     }
 
