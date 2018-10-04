@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
 
 import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
@@ -33,6 +34,7 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
     private final AtomicReference<Connection> connectionReference;
     private final RabbitMQConnectionFactory connectionFactory;
 
+    @Inject
     public SimpleChannelPool(RabbitMQConnectionFactory factory) {
         this.connectionFactory = factory;
         this.connectionReference = new AtomicReference<>();

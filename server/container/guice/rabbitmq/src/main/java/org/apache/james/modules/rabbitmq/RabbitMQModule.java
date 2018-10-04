@@ -27,7 +27,9 @@ import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.james.backend.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backend.rabbitmq.SimpleChannelPool;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -76,6 +78,9 @@ public class RabbitMQModule extends AbstractModule {
         bind(CassandraMailQueueBrowser.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailDelete.class).in(Scopes.SINGLETON);
         bind(CassandraMailQueueMailStore.class).in(Scopes.SINGLETON);
+
+        bind(SimpleChannelPool.class).in(Scopes.SINGLETON);
+        bind(RabbitMQChannelPool.class).to(SimpleChannelPool.class);
 
         Multibinder<CassandraModule> cassandraModuleBinder = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewModule.MODULE);
