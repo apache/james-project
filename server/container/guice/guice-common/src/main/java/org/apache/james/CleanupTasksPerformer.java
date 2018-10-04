@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.task.Task;
+import org.apache.james.util.Runnables;
 
 public class CleanupTasksPerformer {
 
@@ -39,7 +40,10 @@ public class CleanupTasksPerformer {
     }
 
     public void clean() {
-        cleanupTasks.forEach(Task::run);
+        Runnables
+            .runParrallelStream(
+                cleanupTasks.stream()
+                    .map(cleanupTask -> cleanupTask::run));
     }
 
 }
