@@ -48,7 +48,7 @@ class RabbitMQHealthCheckTest {
                 new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
 
         healthCheck = new RabbitMQHealthCheck(
-            new RabbitChannelPool(rabbitMQConnectionFactory));
+            new RabbitChannelPoolImpl(rabbitMQConnectionFactory));
     }
 
     @Test

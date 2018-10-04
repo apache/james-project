@@ -353,8 +353,8 @@ public interface MailQueueContract {
         ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
 
         int threadCount = 10;
-        int operationCount = 100;
-        int totalDequeuedMessages = 500;
+        int operationCount = 10;
+        int totalDequeuedMessages = 50;
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step % 2 == 0) {
@@ -385,8 +385,8 @@ public interface MailQueueContract {
         ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
 
         int threadCount = 10;
-        int operationCount = 150;
-        int totalDequeuedMessages = 500;
+        int operationCount = 15;
+        int totalDequeuedMessages = 50;
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step % 3 == 0) {

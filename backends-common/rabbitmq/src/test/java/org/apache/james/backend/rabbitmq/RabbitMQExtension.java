@@ -37,7 +37,7 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private DockerRabbitMQ rabbitMQ;
-    private RabbitChannelPool rabbitChannelPool;
+    private RabbitChannelPoolImpl rabbitChannelPoolImpl;
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -47,12 +47,12 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        rabbitChannelPool = createRabbitChannelPool();
+        rabbitChannelPoolImpl = createRabbitChannelPool();
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
-        rabbitChannelPool.close();
+        rabbitChannelPoolImpl.close();
         rabbitMQ.reset();
     }
 
@@ -71,15 +71,15 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    public RabbitChannelPool getRabbitChannelPool() {
-        return rabbitChannelPool;
+    public RabbitChannelPoolImpl getRabbitChannelPool() {
+        return rabbitChannelPoolImpl;
     }
 
     public DockerRabbitMQ getRabbitMQ() {
         return rabbitMQ;
     }
 
-    private RabbitChannelPool createRabbitChannelPool() throws URISyntaxException {
+    private RabbitChannelPoolImpl createRabbitChannelPool() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
@@ -89,6 +89,6 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
             rabbitMQConfiguration,
             new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-        return new RabbitChannelPool(rabbitMQConnectionFactory);
+        return new RabbitChannelPoolImpl(rabbitMQConnectionFactory);
     }
 }

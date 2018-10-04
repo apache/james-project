@@ -22,7 +22,7 @@ package org.apache.james.queue.rabbitmq;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.apache.james.backend.rabbitmq.RabbitChannelPool;
+import org.apache.james.backend.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.queue.api.MailQueue;
 
 import com.google.common.collect.ImmutableMap;
@@ -40,9 +40,9 @@ class RabbitClient {
     private static final String ROUTING_KEY = "";
     public static final boolean REQUEUE = true;
 
-    private final RabbitChannelPool channelPool;
+    private final RabbitMQChannelPool channelPool;
 
-    RabbitClient(RabbitChannelPool channelPool) {
+    RabbitClient(RabbitMQChannelPool channelPool) {
         this.channelPool = channelPool;
     }
 
@@ -69,17 +69,17 @@ class RabbitClient {
     }
 
     void ack(long deliveryTag) throws IOException {
-        RabbitChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicAck(deliveryTag, !MULTIPLE);
+        RabbitMQChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicAck(deliveryTag, !MULTIPLE);
         channelPool.execute(consumer);
     }
 
     void nack(long deliveryTag) throws IOException {
-        RabbitChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicNack(deliveryTag, !MULTIPLE, REQUEUE);
+        RabbitMQChannelPool.RabbitConsumer<IOException> consumer = channel -> channel.basicNack(deliveryTag, !MULTIPLE, REQUEUE);
         channelPool.execute(consumer);
     }
 
     Optional<GetResponse> poll(MailQueueName name) throws IOException {
-        RabbitChannelPool.RabbitFunction<Optional<GetResponse>, IOException> f = channel ->
+        RabbitMQChannelPool.RabbitFunction<Optional<GetResponse>, IOException> f = channel ->
             Optional.ofNullable(channel.basicGet(name.toWorkQueueName().asString(), !AUTO_ACK));
         return channelPool.execute(f);
     }

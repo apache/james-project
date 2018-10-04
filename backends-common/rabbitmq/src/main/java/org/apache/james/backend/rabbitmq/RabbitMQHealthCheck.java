@@ -35,11 +35,11 @@ public class RabbitMQHealthCheck implements HealthCheck {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("RabbitMQ backend");
 
-    private final RabbitChannelPool rabbitChannelPool;
+    private final RabbitMQChannelPool rabbitChannelPoolImpl;
 
     @Inject
-    public RabbitMQHealthCheck(RabbitChannelPool rabbitChannelPool) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
-        this.rabbitChannelPool = rabbitChannelPool;
+    public RabbitMQHealthCheck(RabbitMQChannelPool rabbitChannelPoolImpl) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException {
+        this.rabbitChannelPoolImpl = rabbitChannelPoolImpl;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class RabbitMQHealthCheck implements HealthCheck {
     @Override
     public Result check() {
         try {
-            return rabbitChannelPool.execute(channel -> {
+            return rabbitChannelPoolImpl.execute(channel -> {
                     if (channel.isOpen()) {
                         return Result.healthy(COMPONENT_NAME);
                     }

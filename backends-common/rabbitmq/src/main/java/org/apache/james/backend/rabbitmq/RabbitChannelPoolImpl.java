@@ -35,13 +35,7 @@ import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
-public class RabbitChannelPool {
-
-    public static class ConnectionFailedException extends RuntimeException {
-        public ConnectionFailedException(Throwable cause) {
-            super(cause);
-        }
-    }
+public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
 
     private static class ChannelBasePooledObjectFactory extends BasePooledObjectFactory<Channel> {
         private final Supplier<Connection> connection;
@@ -69,24 +63,15 @@ public class RabbitChannelPool {
         }
     }
 
-    @FunctionalInterface
-    public interface RabbitFunction<T, E extends Throwable> {
-        T execute(Channel channel) throws E;
-    }
-
-    @FunctionalInterface
-    public interface RabbitConsumer<E extends Throwable> {
-        void execute(Channel channel) throws E;
-    }
-
     private final ObjectPool<Channel> pool;
 
     @Inject
-    public RabbitChannelPool(RabbitMQConnectionFactory factory) {
+    public RabbitChannelPoolImpl(RabbitMQConnectionFactory factory) {
         pool = new GenericObjectPool<>(
             new ChannelBasePooledObjectFactory(factory));
     }
 
+    @Override
     public <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
         Channel channel = borrowChannel();
         try {
@@ -96,7 +81,7 @@ public class RabbitChannelPool {
         }
     }
 
-
+    @Override
     public <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
         Channel channel = borrowChannel();
         try {
