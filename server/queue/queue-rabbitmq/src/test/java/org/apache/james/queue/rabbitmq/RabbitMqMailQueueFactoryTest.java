@@ -25,9 +25,9 @@ import static org.mockito.Mockito.mock;
 
 import java.net.URISyntaxException;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
@@ -88,12 +88,11 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
         Set<RabbitMQMailQueue> createdRabbitMQMailQueues =  ConcurrentHashMap.newKeySet();
 
         ConcurrentTestRunner.builder()
+            .operation((threadNumber, operationNumber) ->
+                createdRabbitMQMailQueues.add(mailQueueFactory.createQueue("spool")))
             .threadCount(100)
             .operationCount(10)
-            .build((threadNumber, operationNumber) ->
-                createdRabbitMQMailQueues.add(mailQueueFactory.createQueue("spool")))
-            .run()
-            .awaitTermination(10, TimeUnit.MINUTES);
+            .runSuccessfullyWithin(Duration.ofMinutes(10));
 
         assertThat(mailQueueFactory.listCreatedMailQueues())
             .hasSize(1)
