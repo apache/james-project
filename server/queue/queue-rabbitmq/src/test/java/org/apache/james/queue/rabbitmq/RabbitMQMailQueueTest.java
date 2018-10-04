@@ -62,7 +62,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -222,11 +221,6 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
         boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
         assertThat(initialized).isTrue();
-    }
-
-    @Disabled("RabbitMQ Mail Queue do not yet implement getSize()")
-    @Override
-    public void constructorShouldRegisterGetQueueSizeGauge(MailQueueMetricExtension.MailQueueMetricTestSystem testSystem) {
     }
 
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {

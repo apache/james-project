@@ -42,19 +42,19 @@ import com.github.fge.lambdas.Throwing;
 @ExtendWith(MailQueueMetricExtension.class)
 public interface MailQueueMetricContract extends MailQueueContract {
 
-    default FakeMail fakeMail() throws MessagingException {
+    default FakeMail fakeMail(int i) throws MessagingException {
         return defaultMail()
-            .name("name1")
+            .name("name" + i)
             .build();
     }
 
-    default void enQueueMail(Integer times) throws Exception {
+    default void enQueueMail(Integer times) {
         IntStream
             .rangeClosed(1, times)
-            .forEach(Throwing.intConsumer(time -> enQueue(fakeMail())));
+            .forEach(Throwing.intConsumer(time -> enQueue(fakeMail(time))));
     }
 
-    default void deQueueMail(Integer times) throws Exception {
+    default void deQueueMail(Integer times) {
         IntStream
             .rangeClosed(1, times)
             .forEach(Throwing.intConsumer(time -> getMailQueue().deQueue().done(true)));
