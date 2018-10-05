@@ -19,17 +19,22 @@
 
 package org.apache.james.modules.objectstorage.guice;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.configuration.MapConfiguration;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.apache.james.modules.objectstorage.PayloadCodecs;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.testcontainers.containers.GenericContainer;
@@ -42,6 +47,18 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
     private org.apache.james.blob.objectstorage.DockerSwiftRule swiftContainer =
         new org.apache.james.blob.objectstorage.DockerSwiftRule();
+    private final PayloadCodec payloadCodec;
+
+    public DockerSwiftTestRule() {
+        this(PayloadCodecs.DEFAULT);
+    }
+
+    public DockerSwiftTestRule(PayloadCodecs payloadCodec) {
+        Map<String, Object> payloadCodecConfig = new HashMap<>();
+        payloadCodecConfig.put(PayloadCodecs.OBJECTSTORAGE_AES256_HEXSALT, "c603a7327ee3dcbc031d8d34b1096c605feca5e1");
+        payloadCodecConfig.put(PayloadCodecs.OBJECTSTORAGE_AES256_PASSWORD, "dockerSwiftEncryption");
+        this.payloadCodec = payloadCodec.codec(new MapConfiguration(payloadCodecConfig));
+    }
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -65,6 +82,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
         ObjectStorageBlobsDAO dao = SwiftKeystone2ObjectStorage.daoBuilder(configuration)
             .blobIdFactory(new HashBlobId.Factory())
             .container(containerName)
+            .payloadCodec(payloadCodec)
             .build();
 
         Throwing.supplier(() -> dao.createContainer(containerName).get()).sneakyThrow().get();

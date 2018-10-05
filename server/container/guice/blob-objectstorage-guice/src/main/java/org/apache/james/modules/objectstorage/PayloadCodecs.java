@@ -50,8 +50,8 @@ public enum PayloadCodecs {
         }
     };
 
-    private static final String OBJECTSTORAGE_AES256_HEXSALT = "objectstorage.aes256.hexsalt";
-    private static final String OBJECTSTORAGE_AES256_PASSWORD = "objectstorage.aes256.password";
+    public static final String OBJECTSTORAGE_AES256_HEXSALT = "objectstorage.aes256.hexsalt";
+    public static final String OBJECTSTORAGE_AES256_PASSWORD = "objectstorage.aes256.password";
 
     public abstract PayloadCodec codec(Configuration configuration);
 
