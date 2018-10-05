@@ -195,7 +195,7 @@ public class SwiftTempAuthObjectStorage {
 
         @Override
         public boolean equals(Object o) {
-            if (o instanceof SwiftKeystone2ObjectStorage.Configuration) {
+            if (o instanceof SwiftTempAuthObjectStorage.Configuration) {
                 Configuration that = (Configuration) o;
                 return Objects.equal(endpoint, that.endpoint) &&
                     Objects.equal(identity, that.identity) &&

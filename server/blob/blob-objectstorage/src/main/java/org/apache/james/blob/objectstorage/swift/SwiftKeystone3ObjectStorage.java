@@ -209,7 +209,7 @@ public class SwiftKeystone3ObjectStorage {
 
         @Override
         public boolean equals(Object o) {
-            if (o instanceof SwiftKeystone2ObjectStorage.Configuration) {
+            if (o instanceof SwiftKeystone3ObjectStorage.Configuration) {
                 Configuration that = (Configuration) o;
                 return Objects.equal(endpoint, that.endpoint) &&
                     Objects.equal(identity, that.identity) &&
