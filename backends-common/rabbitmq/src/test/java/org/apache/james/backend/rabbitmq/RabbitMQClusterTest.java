@@ -247,9 +247,9 @@ class RabbitMQClusterTest {
 
         @Test
         void nodeKillingWhenConsuming(DockerRabbitMQCluster cluster) throws Exception {
-            node2Channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
-            node2Channel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
-            node2Channel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+            resilientChannel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            resilientChannel.queueDeclare(QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of()).getQueue();
+            resilientChannel.queueBind(QUEUE, EXCHANGE_NAME, ROUTING_KEY);
 
             int nbMessages = 10;
             IntStream.range(0, nbMessages)
