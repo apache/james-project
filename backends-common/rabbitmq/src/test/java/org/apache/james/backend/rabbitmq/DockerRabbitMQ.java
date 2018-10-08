@@ -140,6 +140,8 @@ public class DockerRabbitMQ {
     public void join(DockerRabbitMQ rabbitMQ) throws Exception {
         stopApp();
         joinCluster(rabbitMQ);
+        startApp();
+        waitForReadyness();
     }
 
     public void stopApp() throws java.io.IOException, InterruptedException {

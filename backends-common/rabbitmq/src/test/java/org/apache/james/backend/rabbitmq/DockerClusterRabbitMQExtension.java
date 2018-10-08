@@ -64,17 +64,7 @@ public class DockerClusterRabbitMQExtension implements BeforeEachCallback, After
             Throwing.runnable(() -> rabbitMQ2.join(rabbitMQ1)),
             Throwing.runnable(() -> rabbitMQ3.join(rabbitMQ1)));
 
-        Runnables.runParallel(
-            Throwing.runnable(rabbitMQ1::startApp),
-            Throwing.runnable(rabbitMQ2::startApp),
-            Throwing.runnable(rabbitMQ3::startApp));
-
         cluster = new DockerRabbitMQCluster(rabbitMQ1, rabbitMQ2, rabbitMQ3);
-
-        Runnables.runParallel(
-            rabbitMQ1::waitForReadyness,
-            rabbitMQ2::waitForReadyness,
-            rabbitMQ3::waitForReadyness);
     }
 
     @Override
