@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -36,9 +35,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
-import org.apache.james.backend.rabbitmq.SimpleChannelPool;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -63,13 +60,10 @@ import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
-@ExtendWith(RabbitMQExtension.class)
 public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQueueMetricContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
@@ -87,6 +81,9 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
         CassandraEventStoreModule.MODULE));
+
+    @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
@@ -124,10 +121,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(rabbitMQConfiguration,
-                new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-
-        RabbitClient rabbitClient = new RabbitClient(new SimpleChannelPool(rabbitMQConnectionFactory));
+        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getSpyMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),

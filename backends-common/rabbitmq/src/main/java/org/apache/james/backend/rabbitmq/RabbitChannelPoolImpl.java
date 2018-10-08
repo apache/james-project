@@ -19,6 +19,7 @@
 
 package org.apache.james.backend.rabbitmq;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
@@ -38,16 +39,16 @@ import com.rabbitmq.client.Connection;
 public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
 
     private static class ChannelBasePooledObjectFactory extends BasePooledObjectFactory<Channel> {
-        private final Supplier<Connection> connection;
+        private final Supplier<Connection> rabbitConnection;
 
         public ChannelBasePooledObjectFactory(RabbitMQConnectionFactory factory) {
-            this.connection = MemoizedSupplier.of(
-                    Throwing.supplier(() -> factory.create()).sneakyThrow());
+            this.rabbitConnection = MemoizedSupplier.of(
+                    Throwing.supplier(factory::create).sneakyThrow());
         }
 
         @Override
         public Channel create() throws Exception {
-            return connection.get()
+            return rabbitConnection.get()
                     .createChannel();
         }
 
@@ -64,11 +65,12 @@ public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
     }
 
     private final ObjectPool<Channel> pool;
+    private final ChannelBasePooledObjectFactory pooledObjectFactory;
 
     @Inject
     public RabbitChannelPoolImpl(RabbitMQConnectionFactory factory) {
-        pool = new GenericObjectPool<>(
-            new ChannelBasePooledObjectFactory(factory));
+        pooledObjectFactory = new ChannelBasePooledObjectFactory(factory);
+        pool = new GenericObjectPool<>(pooledObjectFactory);
     }
 
     @Override
@@ -92,8 +94,11 @@ public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
     }
 
     @PreDestroy
-    public void close() {
+    public void close() throws IOException {
         pool.close();
+        pooledObjectFactory.rabbitConnection
+            .get()
+            .close();
     }
 
     private Channel borrowChannel() {
