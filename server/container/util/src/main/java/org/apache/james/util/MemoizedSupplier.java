@@ -19,12 +19,39 @@
 
 package org.apache.james.util;
 
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.google.common.base.Suppliers;
 
-public class MemoizedSupplier {
-    public static <T> Supplier<T> of(Supplier<T> originalSupplier) {
-        return Suppliers.memoize(originalSupplier::get)::get;
+/**
+ * This supplier is based on memorized supplier from guava(since guava-25.1-jre) with additional
+ * information about value initializing state. Because guava's memorized supplier
+ * doesn't support client to check whether value is initialized or not.
+ */
+public class MemoizedSupplier<T> implements Supplier<T> {
+    public static <T> MemoizedSupplier<T> of(Supplier<T> originalSupplier) {
+        return new MemoizedSupplier<>(originalSupplier);
+    }
+
+    private final Supplier<T> memorizeSupplier;
+    private final AtomicReference<T> valueReference;
+
+    public MemoizedSupplier(Supplier<T> originalSupplier) {
+        this.memorizeSupplier = Suppliers.memoize(originalSupplier::get);
+        this.valueReference = new AtomicReference<>();
+    }
+
+    public void ifInitialized(Consumer<T> valueConsumer) {
+        T value = valueReference.get();
+        if (value != null) {
+            valueConsumer.accept(value);
+        }
+    }
+
+    @Override
+    public T get() {
+        return this.valueReference.updateAndGet(originalValue -> memorizeSupplier.get());
     }
 }
