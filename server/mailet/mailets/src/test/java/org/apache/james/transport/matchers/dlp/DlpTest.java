@@ -34,6 +34,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dlp.api.DLPConfigurationItem.Id;
 import org.apache.mailet.base.test.FakeMail;
@@ -100,6 +101,18 @@ class DlpTest {
         FakeMail mail = FakeMail.builder().sender(ANY_AT_JAMES).recipient(RECIPIENT1).build();
 
         assertThat(dlp.match(mail)).contains(RECIPIENT1);
+    }
+
+    @Test
+    void nullSenderShouldBeIgnored() throws Exception {
+        Dlp dlp = new Dlp(
+            asRulesLoaderFor(
+                JAMES_APACHE_ORG_DOMAIN,
+                DlpDomainRules.builder().recipientRule(Id.of("match all recipient"), Pattern.compile(".*")).build()));
+
+        FakeMail mail = FakeMail.builder().sender(MailAddress.nullSender()).recipient(RECIPIENT1).build();
+
+        assertThat(dlp.match(mail)).isEmpty();
     }
 
     @Test

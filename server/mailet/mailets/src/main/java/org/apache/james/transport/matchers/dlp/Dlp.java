@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Optional;
 
 import javax.inject.Inject;
-import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dlp.api.DLPConfigurationItem;
@@ -51,7 +50,7 @@ public class Dlp extends GenericMatcher {
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) {
         Optional<DLPConfigurationItem.Id> firstMatchingRuleId = findFirstMatchingRule(mail);
 
         if (firstMatchingRuleId.isPresent()) {
@@ -69,6 +68,7 @@ public class Dlp extends GenericMatcher {
     private Optional<DLPConfigurationItem.Id> findFirstMatchingRule(Mail mail) {
         return Optional
                 .ofNullable(mail.getSender())
+                .filter(sender -> !sender.isNullSender())
                 .flatMap(sender -> matchingRule(sender, mail));
     }
 
