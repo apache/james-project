@@ -19,10 +19,126 @@
 
 package org.apache.mailbox.tools.indexer.events;
 
+import java.util.Objects;
+import java.util.Optional;
+
+import javax.mail.Flags;
+
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MailboxPath;
 
 public interface ImpactingMessageEvent extends ImpactingEvent {
 
     MessageUid getUid();
 
+    Optional<Flags> newFlags();
+
+    boolean wasDeleted();
+
+    class FlagsMessageEvent implements ImpactingMessageEvent {
+
+        private final MailboxPath mailboxPath;
+        private final MessageUid uid;
+        private final Flags flags;
+
+        public FlagsMessageEvent(MailboxPath mailboxPath, MessageUid uid, Flags flags) {
+            this.mailboxPath = mailboxPath;
+            this.uid = uid;
+            this.flags = flags;
+        }
+
+        @Override
+        public MessageUid getUid() {
+            return uid;
+        }
+
+        @Override
+        public MailboxPath getMailboxPath() {
+            return mailboxPath;
+        }
+
+        @Override
+        public ImpactingEventType getType() {
+            return ImpactingEventType.FlagsUpdate;
+        }
+
+        @Override
+        public Optional<Flags> newFlags() {
+            return Optional.of(flags);
+        }
+
+        @Override
+        public boolean wasDeleted() {
+            return false;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof FlagsMessageEvent) {
+                FlagsMessageEvent that = (FlagsMessageEvent) o;
+
+                return Objects.equals(this.mailboxPath, that.mailboxPath)
+                    && Objects.equals(this.uid, that.uid)
+                    && Objects.equals(this.flags, that.flags);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(mailboxPath, uid, flags);
+        }
+    }
+
+    class MessageDeletedEvent implements ImpactingMessageEvent {
+
+        private final MailboxPath mailboxPath;
+        private final MessageUid uid;
+
+        public MessageDeletedEvent(MailboxPath mailboxPath, MessageUid uid) {
+            this.mailboxPath = mailboxPath;
+            this.uid = uid;
+        }
+
+        @Override
+        public MessageUid getUid() {
+            return uid;
+        }
+
+        @Override
+        public MailboxPath getMailboxPath() {
+            return mailboxPath;
+        }
+
+        @Override
+        public ImpactingEventType getType() {
+            return ImpactingEventType.Deletion;
+        }
+
+        @Override
+        public Optional<Flags> newFlags() {
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean wasDeleted() {
+            return true;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MessageDeletedEvent) {
+                MessageDeletedEvent that = (MessageDeletedEvent) o;
+
+                return Objects.equals(this.mailboxPath, that.mailboxPath)
+                    && Objects.equals(this.uid, that.uid);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(mailboxPath, uid);
+        }
+    }
 }

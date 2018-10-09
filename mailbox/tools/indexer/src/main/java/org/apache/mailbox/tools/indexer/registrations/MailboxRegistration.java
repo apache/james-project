@@ -26,9 +26,9 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.mailbox.tools.indexer.events.FlagsMessageEvent;
 import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent;
-import org.apache.mailbox.tools.indexer.events.MessageDeletedEvent;
+import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent.FlagsMessageEvent;
+import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent.MessageDeletedEvent;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;

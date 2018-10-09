@@ -37,7 +37,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.apache.mailbox.tools.indexer.events.FlagsMessageEvent;
 import org.apache.mailbox.tools.indexer.events.ImpactingEventType;
 import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent;
 import org.apache.mailbox.tools.indexer.registrations.GlobalRegistration;
@@ -137,10 +136,10 @@ public class ReIndexerImpl implements ReIndexer {
         while (iterator.hasNext()) {
             MailboxMessage message = iterator.next();
             ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
-            if (impactingMessageEvent == null) {
-                messageSearchIndex.add(mailboxSession, mailbox, message);
-            } else if (impactingMessageEvent instanceof FlagsMessageEvent) {
-                message.setFlags(((FlagsMessageEvent) impactingMessageEvent).getFlags());
+
+            impactingMessageEvent.newFlags().ifPresent(message::setFlags);
+
+            if (!impactingMessageEvent.wasDeleted()) {
                 messageSearchIndex.add(mailboxSession, mailbox, message);
             }
         }

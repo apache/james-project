@@ -37,8 +37,8 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.mailbox.tools.indexer.events.FlagsMessageEvent;
-import org.apache.mailbox.tools.indexer.events.MessageDeletedEvent;
+import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent.FlagsMessageEvent;
+import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent.MessageDeletedEvent;
 import org.junit.Before;
 import org.junit.Test;
 
