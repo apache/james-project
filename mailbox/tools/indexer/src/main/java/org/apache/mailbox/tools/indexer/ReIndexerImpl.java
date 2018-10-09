@@ -19,7 +19,6 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +43,7 @@ import org.apache.mailbox.tools.indexer.registrations.MailboxRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 /**
  * Note about live re-indexation handling :
@@ -135,23 +134,27 @@ public class ReIndexerImpl implements ReIndexer {
     private void handleMailboxIndexingIterations(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox mailbox, Iterator<MailboxMessage> iterator) throws MailboxException {
         while (iterator.hasNext()) {
             MailboxMessage message = iterator.next();
-            ImpactingMessageEvent impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
+            Optional<ImpactingMessageEvent> impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(message.getUid()));
 
-            impactingMessageEvent.newFlags().ifPresent(message::setFlags);
+            impactingMessageEvent.flatMap(ImpactingMessageEvent::newFlags).ifPresent(message::setFlags);
 
-            if (!impactingMessageEvent.wasDeleted()) {
+            if (wasNotDeleted(impactingMessageEvent)) {
                 messageSearchIndex.add(mailboxSession, mailbox, message);
             }
         }
     }
 
-    private ImpactingMessageEvent findMostRelevant(Collection<ImpactingMessageEvent> messageEvents) {
+    private boolean wasNotDeleted(Optional<ImpactingMessageEvent> impactingMessageEvent) {
+        return impactingMessageEvent.map(event -> !event.wasDeleted()).orElse(true);
+    }
+
+    private Optional<ImpactingMessageEvent> findMostRelevant(List<ImpactingMessageEvent> messageEvents) {
         for (ImpactingMessageEvent impactingMessageEvent : messageEvents) {
             if (impactingMessageEvent.getType().equals(ImpactingEventType.Deletion)) {
-                return impactingMessageEvent;
+                return Optional.of(impactingMessageEvent);
             }
         }
-        return Iterables.getLast(messageEvents, null);
+        return Lists.reverse(messageEvents).stream().findFirst();
     }
 
 }
