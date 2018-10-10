@@ -105,15 +105,6 @@ public class MailRepositoryStoreService {
         return new ClearMailRepositoryTask(getRepositories(path).collect(Guavate.toImmutableList()), path);
     }
 
-    public MailRepository getRepository(MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
-        return mailRepositoryStore.get(url)
-            .orElseThrow(() -> ErrorResponder.builder()
-                .statusCode(HttpStatus.NOT_FOUND_404)
-                .type(ErrorResponder.ErrorType.NOT_FOUND)
-                .message(url.asString() + " does not exist")
-                .haltError());
-    }
-
     public Stream<MailRepository> getRepositories(MailRepositoryPath path) throws MailRepositoryStore.MailRepositoryStoreException {
         Stream<MailRepository> byPath = mailRepositoryStore.getByPath(path);
         List<MailRepository> repositories = byPath.collect(Collectors.toList());
