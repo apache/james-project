@@ -212,6 +212,20 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void getMailRepositoriesShouldDeduplicateAccordingToPath() throws Exception {
+        mailRepositoryStore.create(URL_MY_REPO);
+        mailRepositoryStore.create(URL_MY_REPO_OTHER);
+
+        when()
+            .get()
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1))
+            .body("[0].repository", is(PATH_MY_REPO.asString()))
+            .body("[0].path", is(PATH_ESCAPED_MY_REPO));
+    }
+
+    @Test
     public void getMailRepositoriesShouldReturnTwoRepositoriesWhenTwo() throws Exception {
         mailRepositoryStore.create(URL_MY_REPO);
         mailRepositoryStore.create(MailRepositoryUrl.from("memory://mySecondRepo"));
@@ -271,6 +285,26 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void listingKeysShouldMergeRepositoryContentWhenSamePath() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+
+        mailRepository1.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository2.store(FakeMail.builder()
+            .name("name2")
+            .build());
+
+        when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2))
+            .body("", containsInAnyOrder("name1", "name2"));
+    }
+
+    @Test
     public void listingKeysShouldApplyLimitAndOffset() throws Exception {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
 
@@ -293,6 +327,31 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(1))
             .body("", contains("name2"));
+    }
+
+    @Ignore("Limit and offset are applied on a per repository bases")
+    @Test
+    public void listingKeysShouldApplyLimitWhenSeveralRepositories() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+
+        mailRepository1.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository1.store(FakeMail.builder()
+            .name("name2")
+            .build());
+        mailRepository2.store(FakeMail.builder()
+            .name("name3")
+            .build());
+
+        given()
+            .param("limit", "1")
+        .when()
+            .get(MY_REPO_MAILS)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(1));
     }
 
     @Test
@@ -342,6 +401,34 @@ public class MailRepositoriesRoutesTest {
             .then()
             .statusCode(HttpStatus.OK_200)
             .body("", hasSize(0));
+    }
+
+    @Ignore("Offset is applied on a per mail repository basis")
+    @Test
+    public void offsetShouldBeAplliedOnTheMergedViewOfMailRepositories() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+
+        mailRepository1.store(FakeMail.builder()
+            .name("name1")
+            .build());
+        mailRepository2.store(FakeMail.builder()
+            .name("name2")
+            .build());
+        mailRepository1.store(FakeMail.builder()
+            .name("name3")
+            .build());
+        mailRepository2.store(FakeMail.builder()
+            .name("name4")
+            .build());
+
+        given()
+            .param("offset", "2")
+        .when()
+            .get(MY_REPO_MAILS)
+            .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("", hasSize(2));
     }
 
     @Test
@@ -451,6 +538,27 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.OK_200)
             .contentType(ContentType.JSON)
             .body("size", equalTo(1));
+    }
+
+    @Test
+    public void retrievingRepositorySizeShouldReturnNumberOfContainedMailsWhenSeveralRepositoryWithSamePath() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+
+        mailRepository1.store(FakeMail.builder()
+            .name(NAME_1)
+            .build());
+
+        mailRepository2.store(FakeMail.builder()
+            .name(NAME_2)
+            .build());
+
+        given()
+            .get(PATH_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(ContentType.JSON)
+            .body("size", equalTo(2));
     }
 
     @Test
