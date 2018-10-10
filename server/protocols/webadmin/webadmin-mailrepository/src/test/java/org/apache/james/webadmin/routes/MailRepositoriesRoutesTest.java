@@ -83,6 +83,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
@@ -95,6 +96,7 @@ import io.restassured.parsing.Parser;
 public class MailRepositoriesRoutesTest {
 
     private static final MailRepositoryUrl URL_MY_REPO = MailRepositoryUrl.from("memory://myRepo");
+    private static final MailRepositoryUrl URL_MY_REPO_OTHER = MailRepositoryUrl.from("other://myRepo");
     private static final MailRepositoryPath PATH_MY_REPO = MailRepositoryPath.from("myRepo");
     private static final String PATH_ESCAPED_MY_REPO = "myRepo";
     private static final String MY_REPO_MAILS = "myRepo/mails";
@@ -1045,6 +1047,36 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void reprocessingAllTaskShouldNotFailWhenSeveralRepositoriesWithSamePath() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepositoryStore.create(URL_MY_REPO_OTHER);
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(name2)
+            .build());
+
+        String transport = "transport";
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+            .when()
+            .get(taskId + "/await")
+            .then()
+            .body("status", is("completed"));
+    }
+
+    @Test
     public void reprocessingAllTaskShouldClearMailRepository() throws Exception {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         String name1 = "name1";
@@ -1073,12 +1105,69 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void reprocessingAllTaskShouldClearBothMailRepositoriesWhenSamePath() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository1.store(FakeMail.builder()
+            .name(name1)
+            .build());
+        mailRepository2.store(FakeMail.builder()
+            .name(name2)
+            .build());
+
+        String transport = "transport";
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(mailRepository1.list()).isEmpty();
+        assertThat(mailRepository2.list()).isEmpty();
+    }
+
+    @Test
     public void reprocessingAllTaskShouldEnqueueMailsOnDefaultQueue() throws Exception {
         MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
         mailRepository.store(FakeMail.builder()
             .name(NAME_1)
             .build());
         mailRepository.store(FakeMail.builder()
+            .name(NAME_2)
+            .build());
+
+        String taskId = with()
+            .param("action", "reprocess")
+            .patch(PATH_ESCAPED_MY_REPO + "/mails")
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .basePath(TasksRoutes.BASE)
+            .get(taskId + "/await");
+
+        assertThat(spoolQueue.browse())
+            .extracting(ManageableMailQueue.MailQueueItemView::getMail)
+            .extracting(Mail::getName)
+            .containsOnly(NAME_1, NAME_2);
+    }
+
+    @Test
+    public void reprocessingAllTaskShouldEnqueueMailsOfBothRepositoriesOnDefaultQueueWhenSamePath() throws Exception {
+        MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
+        MailRepository mailRepository2 = mailRepositoryStore.create(URL_MY_REPO_OTHER);
+        mailRepository1.store(FakeMail.builder()
+            .name(NAME_1)
+            .build());
+        mailRepository2.store(FakeMail.builder()
             .name(NAME_2)
             .build());
 
@@ -1309,6 +1398,37 @@ public class MailRepositoriesRoutesTest {
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));
+    }
+
+    @Ignore
+    @Test
+    public void reprocessingOneTaskShouldNotFailWhenSeveralRepositoryWithSamePath() throws Exception {
+        MailRepository mailRepository = mailRepositoryStore.create(URL_MY_REPO);
+        mailRepositoryStore.create(URL_MY_REPO_OTHER);
+        String name1 = "name1";
+        String name2 = "name2";
+        mailRepository.store(FakeMail.builder()
+            .name(name1)
+            .build());
+        mailRepository.store(FakeMail.builder()
+            .name(name2)
+            .build());
+
+        String transport = "transport";
+        String taskId = with()
+            .param("action", "reprocess")
+            .param("queue", CUSTOM_QUEUE)
+            .param("processor", transport)
+            .patch(PATH_ESCAPED_MY_REPO + "/mails/" + NAME_1)
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
     }
 
     @Test
