@@ -76,7 +76,7 @@ class CassandraNodeConfTest {
             .build();
 
         @Test
-        void serverShouldStartServiceWhenNodeIsReachable (GuiceJamesServer server) throws Exception {
+        void serverShouldStartServiceWhenNodeIsReachable(GuiceJamesServer server) throws Exception {
             assertThatServerStartCorrectly(server);
         }
     }
@@ -103,7 +103,7 @@ class CassandraNodeConfTest {
             .build();
 
         @Test
-        void serverShouldStartServiceWhenNodeIsReachable (GuiceJamesServer server) throws Exception {
+        void serverShouldStartServiceWhenNodeIsReachable(GuiceJamesServer server) throws Exception {
             assertThatServerStartCorrectly(server);
         }
     }

@@ -59,7 +59,7 @@ public class ReprocessingServiceTest {
     private static final MailKey KEY_2 = new MailKey(NAME_2);
     private static final MailKey KEY_3 = new MailKey(NAME_3);
     private static final String SPOOL = "spool";
-    private static final Consumer<MailKey> NOOP_CONSUMER = key -> {};
+    private static final Consumer<MailKey> NOOP_CONSUMER = key -> { };
     private static final Optional<String> NO_TARGET_PROCESSOR = Optional.empty();
 
     private ReprocessingService reprocessingService;

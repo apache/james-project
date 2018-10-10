@@ -44,7 +44,6 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SMTPSendingException;
 import org.apache.james.utils.SmtpSendingStep;
-import org.awaitility.Duration;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;

@@ -19,9 +19,16 @@
 
 package org.apache.james.mailrepository.cassandra;
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableList;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -47,14 +54,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
-import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Session;
+import com.google.common.collect.ImmutableList;
 
 @ExtendWith(CassandraMailRepositoryWithFakeImplementationsTest.MailRepositoryCassandraClusterExtension.class)
 class CassandraMailRepositoryWithFakeImplementationsTest {
@@ -83,7 +85,6 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
             CassandraMailRepositoryMailDAO mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-            CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
 
             cassandraMailRepository = new CassandraMailRepository(URL,
                     keysDAO, countDAO, mailDAO, new FailingStore());

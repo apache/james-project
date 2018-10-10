@@ -33,7 +33,6 @@ import java.util.stream.IntStream;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import com.github.fge.lambdas.Throwing;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
@@ -49,6 +48,7 @@ import org.apache.mailet.base.test.FakeMail;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Strings;

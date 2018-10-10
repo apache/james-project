@@ -37,13 +37,13 @@ public class DockerSwiftExtension implements ParameterResolver, BeforeAllCallbac
     }
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
+    public void beforeAll(ExtensionContext context) {
         swiftContainer.start();
         dockerSwift = swiftContainer.dockerSwift();
     }
 
     @Override
-    public void afterAll(ExtensionContext context) throws Exception {
+    public void afterAll(ExtensionContext context) {
         swiftContainer.stop();
     }
 

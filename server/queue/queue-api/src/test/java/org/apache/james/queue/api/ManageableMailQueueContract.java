@@ -444,6 +444,7 @@ public interface ManageableMailQueueContract extends MailQueueContract {
             softly.assertThat(content).isEqualTo("mail body");
         });
     }
+
     @Test
     default void browsingShouldNotAffectDequeue() throws Exception {
         enQueue(defaultMail()

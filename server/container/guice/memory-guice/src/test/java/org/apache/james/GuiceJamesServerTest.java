@@ -59,7 +59,7 @@ class GuiceJamesServerTest {
 
     @Nested
     class InitFailed {
-        private final ConfigurationPerformer THROWING_CONFIGURATION_PERFORMER = new ConfigurationPerformer() {
+        private final ConfigurationPerformer throwingConfigurationPerformer = new ConfigurationPerformer() {
             @Override
             public void initModule() {
                 throw new RuntimeException();
@@ -79,7 +79,7 @@ class GuiceJamesServerTest {
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(binder -> Multibinder.newSetBinder(binder, ConfigurationPerformer.class)
                     .addBinding()
-                    .toInstance(THROWING_CONFIGURATION_PERFORMER)))
+                    .toInstance(throwingConfigurationPerformer)))
             .disableAutoStart()
             .build();
 

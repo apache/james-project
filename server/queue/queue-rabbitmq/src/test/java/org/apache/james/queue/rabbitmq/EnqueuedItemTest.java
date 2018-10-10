@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.mailet.Mail;

@@ -431,7 +431,7 @@ public class ICSAttachmentWorkflowTest {
     @ClassRule
     public static SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));;
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule

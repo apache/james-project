@@ -56,6 +56,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
 
     @BeforeEach
     void setup() throws URISyntaxException {
+        @SuppressWarnings("unchecked")
         Store<MimeMessage, MimeMessagePartsId> mimeMessageStore = mock(Store.class);
         MailQueueView mailQueueView = mock(MailQueueView.class);
 

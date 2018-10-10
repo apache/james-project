@@ -24,7 +24,7 @@ import com.google.inject.Module;
 public interface GuiceModuleTestExtension extends RegistrableExtension {
 
     default Module getModule() {
-        return binder -> {};
+        return binder -> { };
     }
 
     default void await() {}
