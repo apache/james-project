@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -90,13 +91,15 @@ public class ReprocessingService {
     public void reprocess(MailRepositoryPath path, MailKey key, Optional<String> targetProcessor, String targetQueue) throws MailRepositoryStore.MailRepositoryStoreException, MessagingException {
         Reprocessor reprocessor = new Reprocessor(getMailQueue(targetQueue), targetProcessor);
 
-        mailRepositoryStoreService
+        Pair<MailRepository, Mail> mailPair = mailRepositoryStoreService
             .getRepositories(path)
-            .forEach(Throwing.consumer((MailRepository repository) ->
-                reprocessor.reprocess(repository,
-                    Optional.ofNullable(repository.retrieve(key))
-                        .orElseThrow(() -> new MissingKeyException(key))))
-                .sneakyThrow());
+            .map(Throwing.function(repository -> Pair.of(repository, Optional.ofNullable(repository.retrieve(key)))))
+            .filter(pair -> pair.getRight().isPresent())
+            .map(pair -> Pair.of(pair.getLeft(), pair.getRight().get()))
+            .findFirst()
+            .orElseThrow(() -> new MissingKeyException(key));
+
+        reprocessor.reprocess(mailPair.getKey(), mailPair.getValue());
     }
 
     private MailQueue getMailQueue(String targetQueue) {
