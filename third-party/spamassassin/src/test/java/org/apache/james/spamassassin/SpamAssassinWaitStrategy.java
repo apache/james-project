@@ -34,7 +34,7 @@ public class SpamAssassinWaitStrategy implements WaitStrategy {
 
     private static final Duration DEFAULT_TIMEOUT = Duration.ofMinutes(1);
     private final GenericContainer<?> spamAssassinContainer;
-    private Duration timeout = DEFAULT_TIMEOUT;
+    private final Duration timeout;
 
     public SpamAssassinWaitStrategy(GenericContainer<?> spamAssassinContainer) {
         this(spamAssassinContainer, DEFAULT_TIMEOUT);
@@ -52,7 +52,7 @@ public class SpamAssassinWaitStrategy implements WaitStrategy {
                     return spamAssassinContainer
                         .execInContainer("spamassassin", "-V")
                         .getStdout()
-                        .contains("SpamAssassin version 3.4.1");
+                        .contains("SpamAssassin version 3.4.2");
                 } catch (IOException | InterruptedException e) {
                     return false;
                 }
