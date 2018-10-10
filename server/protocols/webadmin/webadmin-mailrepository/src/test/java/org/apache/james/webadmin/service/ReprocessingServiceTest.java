@@ -42,7 +42,6 @@ import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.github.fge.lambdas.Throwing;
@@ -148,7 +147,6 @@ public class ReprocessingServiceTest {
             .containsOnly(NAME_1, NAME_2, NAME_3);
     }
 
-    @Ignore
     @Test
     public void reprocessingShouldNotFailOnConcurrentDeletion() throws Exception {
         MailRepository repository = mailRepositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(PATH, MEMORY_PROTOCOL));
