@@ -19,6 +19,7 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -30,12 +31,22 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import feign.Feign;
 import feign.Logger;
 import feign.RequestLine;
+import feign.RetryableException;
+import feign.Retryer;
 import feign.auth.BasicAuthRequestInterceptor;
+import feign.codec.ErrorDecoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 
 class RabbitMQManagementApi {
+
+    private static final ErrorDecoder RETRY_500 = (methodKey, response) -> {
+        if (response.status() == 500) {
+            throw new RetryableException("Error encountered, scheduling retry", response.request().httpMethod(), new Date());
+        }
+        throw new RuntimeException("Non recoverable exception status: " + response.status());
+    };
 
     public interface Api {
 
@@ -58,6 +69,8 @@ class RabbitMQManagementApi {
             .logLevel(Logger.Level.FULL)
             .encoder(new JacksonEncoder())
             .decoder(new JacksonDecoder())
+            .retryer(new Retryer.Default())
+            .errorDecoder(RETRY_500)
             .target(Api.class, configuration.getManagementUri().toString());
 
     }
