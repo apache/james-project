@@ -29,4 +29,4 @@ services:
       - "9042:9042"
 
   tika:
-    image: linagora/docker-tikaserver:1.18-SNAPSHOT-plus-TIKA-2520
+    image: logicalspark/docker-tikaserver:1.19.1

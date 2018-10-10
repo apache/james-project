@@ -157,7 +157,7 @@
 
         Note: You can launch a tika server using this command line:
 
-        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.15rc2</pre></code>
+        <code><pre>docker run --name tika logicalspark/docker-tikaserver:1.19.1</pre></code>
 
     </section>
 
