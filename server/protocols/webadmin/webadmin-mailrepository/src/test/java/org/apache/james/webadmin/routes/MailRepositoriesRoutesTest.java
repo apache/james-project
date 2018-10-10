@@ -329,7 +329,6 @@ public class MailRepositoriesRoutesTest {
             .body("", contains("name2"));
     }
 
-    @Ignore("Limit and offset are applied on a per repository bases")
     @Test
     public void listingKeysShouldApplyLimitWhenSeveralRepositories() throws Exception {
         MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
@@ -403,7 +402,6 @@ public class MailRepositoriesRoutesTest {
             .body("", hasSize(0));
     }
 
-    @Ignore("Offset is applied on a per mail repository basis")
     @Test
     public void offsetShouldBeAplliedOnTheMergedViewOfMailRepositories() throws Exception {
         MailRepository mailRepository1 = mailRepositoryStore.create(URL_MY_REPO);
