@@ -19,6 +19,8 @@
 
 package org.apache.james.backend.rabbitmq;
 
+import java.io.IOException;
+
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
@@ -61,12 +63,20 @@ public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
         @Override
         public void destroyObject(PooledObject<Channel> pooledObject) throws Exception {
             Channel channel = pooledObject.getObject();
-            channel.close();
+            if (channel.isOpen()) {
+                channel.close();
+            }
         }
 
-        private void closeRabbitConnection() {
+        private void closeRabbitConnectionIfInitialized() {
             rabbitConnectionSupplier.ifInitialized(
-                Throwing.<Connection>consumer(Connection::close).sneakyThrow());
+                Throwing.consumer(this::closeRabbitConnection).sneakyThrow());
+        }
+
+        private void closeRabbitConnection(Connection connection) throws IOException {
+            if (connection.isOpen()) {
+                connection.close();
+            }
         }
     }
 
@@ -100,10 +110,11 @@ public class RabbitChannelPoolImpl implements RabbitMQChannelPool {
     }
 
     @PreDestroy
+    @Override
     public void close() {
         try {
             pool.close();
-            pooledChannelsFactory.closeRabbitConnection();
+            pooledChannelsFactory.closeRabbitConnectionIfInitialized();
         } catch (Exception e) {
             LOGGER.error("error while closing rabbit channels & connections", e);
         }

@@ -22,12 +22,15 @@ package org.apache.james.backend.rabbitmq;
 import java.io.IOException;
 
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
 
 public class SimpleChannelPool implements RabbitMQChannelPool {
     private final Channel channel;
+    private final Connection connection;
 
     public SimpleChannelPool(RabbitMQConnectionFactory factory) throws IOException {
-        this.channel = factory.create().createChannel();
+        this.connection = factory.create();
+        this.channel = connection.createChannel();
     }
 
     @Override
@@ -38,5 +41,15 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
     @Override
     public synchronized  <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
         f.execute(channel);
+    }
+
+    @Override
+    public void close() throws Exception {
+        if (channel.isOpen()) {
+            channel.close();
+        }
+        if (connection.isOpen()) {
+            connection.close();
+        }
     }
 }

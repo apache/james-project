@@ -66,7 +66,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
+        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPoolImpl());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             new NoopMetricFactory(),
             new NoopGaugeRegistry(),

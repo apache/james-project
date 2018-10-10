@@ -121,7 +121,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
+        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getSimpleChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getSpyMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),

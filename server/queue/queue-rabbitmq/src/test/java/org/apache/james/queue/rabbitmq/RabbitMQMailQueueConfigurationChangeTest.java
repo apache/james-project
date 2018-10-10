@@ -106,7 +106,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
             .managementUri(rabbitMQExtension.getRabbitMQ().managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
-        rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
+        rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPoolImpl());
         mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
     }
 

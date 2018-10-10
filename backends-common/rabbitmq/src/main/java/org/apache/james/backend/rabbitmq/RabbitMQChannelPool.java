@@ -44,4 +44,6 @@ public interface RabbitMQChannelPool {
 
     <E extends Throwable> void execute(RabbitConsumer<E> f)
         throws E, ConnectionFailedException;
+
+    void close() throws Exception;
 }

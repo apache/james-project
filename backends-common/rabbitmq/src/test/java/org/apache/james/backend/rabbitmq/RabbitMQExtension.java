@@ -38,6 +38,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     private DockerRabbitMQ rabbitMQ;
     private RabbitChannelPoolImpl rabbitChannelPoolImpl;
+    private SimpleChannelPool simpleChannelPool;
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -47,11 +48,14 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        rabbitChannelPoolImpl = createRabbitChannelPool();
+        RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
+        this.rabbitChannelPoolImpl = new RabbitChannelPoolImpl(connectionFactory);
+        this.simpleChannelPool = new SimpleChannelPool(connectionFactory);
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
+        simpleChannelPool.close();
         rabbitChannelPoolImpl.close();
         rabbitMQ.reset();
     }
@@ -71,24 +75,27 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    public RabbitChannelPoolImpl getRabbitChannelPool() {
+    public RabbitChannelPoolImpl getRabbitChannelPoolImpl() {
         return rabbitChannelPoolImpl;
+    }
+
+    public SimpleChannelPool getSimpleChannelPool() {
+        return simpleChannelPool;
     }
 
     public DockerRabbitMQ getRabbitMQ() {
         return rabbitMQ;
     }
 
-    private RabbitChannelPoolImpl createRabbitChannelPool() throws URISyntaxException {
+    private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
 
-        RabbitMQConnectionFactory rabbitMQConnectionFactory = new RabbitMQConnectionFactory(
+        return new RabbitMQConnectionFactory(
             rabbitMQConfiguration,
             new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
-        return new RabbitChannelPoolImpl(rabbitMQConnectionFactory);
     }
 }
