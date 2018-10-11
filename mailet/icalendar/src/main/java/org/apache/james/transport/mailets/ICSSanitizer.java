@@ -40,6 +40,15 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 
+/**
+ * Some senders embed 'text/calendar' content as part of Mime bodypart headers with an empty body.
+ *
+ * This mailet duplicate the 'text/calendar' content to the Mime body part.
+ *
+ * Example configuration:
+ *
+ * &lt;mailet match="All" class="ICSSanitizer"/&gt;
+ */
 public class ICSSanitizer extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ICSSanitizer.class);
     private static final int TEXT_PREFIX_SIZE = 5;
