@@ -90,13 +90,14 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     }
 
     @Test
-    void canCreateContainer() throws Exception {
+    void createContainerShouldMakeTheContainerToExist() throws Exception {
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
         testee.createContainer(containerName).get();
         assertThat(blobStore.containerExists(containerName.value())).isTrue();
     }
+
     @Test
-    void failsWithRuntimeExceptionOnCreateContainerTwice() throws Exception {
+    void createContainerShouldFailWithRuntimeExceptionWhenCreateContainerTwice() throws Exception {
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
         testee.createContainer(containerName).get();
         assertThatThrownBy(() -> testee.createContainer(containerName).get())
