@@ -35,7 +35,7 @@ class RabbitMQHealthCheckTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        healthCheck = new RabbitMQHealthCheck(rabbitMQExtension.getRabbitChannelPoolImpl());
+        healthCheck = new RabbitMQHealthCheck(rabbitMQExtension.getRabbitChannelPool());
     }
 
     @Test

@@ -37,7 +37,6 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
     private DockerRabbitMQ rabbitMQ;
-    private RabbitChannelPoolImpl rabbitChannelPoolImpl;
     private SimpleChannelPool simpleChannelPool;
 
     @Override
@@ -49,14 +48,12 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
-        this.rabbitChannelPoolImpl = new RabbitChannelPoolImpl(connectionFactory);
         this.simpleChannelPool = new SimpleChannelPool(connectionFactory);
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         simpleChannelPool.close();
-        rabbitChannelPoolImpl.close();
         rabbitMQ.reset();
     }
 
@@ -75,11 +72,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    public RabbitChannelPoolImpl getRabbitChannelPoolImpl() {
-        return rabbitChannelPoolImpl;
-    }
-
-    public SimpleChannelPool getSimpleChannelPool() {
+    public RabbitMQChannelPool getRabbitChannelPool() {
         return simpleChannelPool;
     }
 
