@@ -31,41 +31,41 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class GlobalRegistrationTest {
     public static final MailboxPath INBOX = MailboxPath.forUser("btellier@apache.org", "INBOX");
-    public static final MailboxPath NEW_PATH = MailboxPath.forUser("btellier@apache.org", "INBOX.new");
-    public static final int UID_VALIDITY = 45;
-    public static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
-    public static final SimpleMailbox NEW_MAILBOX = new SimpleMailbox(NEW_PATH, UID_VALIDITY);
+    private static final MailboxPath NEW_PATH = MailboxPath.forUser("btellier@apache.org", "INBOX.new");
+    private static final int UID_VALIDITY = 45;
+    private static final SimpleMailbox MAILBOX = new SimpleMailbox(INBOX, UID_VALIDITY);
+    private static final SimpleMailbox NEW_MAILBOX = new SimpleMailbox(NEW_PATH, UID_VALIDITY);
 
     private GlobalRegistration globalRegistration;
     private EventFactory eventFactory;
     private MockMailboxSession session;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         eventFactory = new EventFactory();
         session = new MockMailboxSession("test");
         globalRegistration = new GlobalRegistration();
     }
 
     @Test
-    public void pathToIndexShouldNotBeChangedByDefault() {
+    void pathToIndexShouldNotBeChangedByDefault() {
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(INBOX);
     }
 
     @Test
-    public void pathToIndexShouldNotBeChangedByAddedEvents() {
+    void pathToIndexShouldNotBeChangedByAddedEvents() {
         MailboxListener.MailboxEvent event = eventFactory.mailboxAdded(session, MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(INBOX);
     }
 
     @Test
-    public void pathToIndexShouldBeNullifiedByDeletedEvents() {
+    void pathToIndexShouldBeNullifiedByDeletedEvents() {
         QuotaRoot quotaRoot = QuotaRoot.quotaRoot("root", Optional.empty());
         QuotaCount quotaCount = QuotaCount.count(123);
         QuotaSize quotaSize = QuotaSize.size(456);
@@ -75,11 +75,9 @@ public class GlobalRegistrationTest {
     }
 
     @Test
-    public void pathToIndexShouldBeModifiedByRenamedEvents() {
+    void pathToIndexShouldBeModifiedByRenamedEvents() {
         MailboxListener.MailboxEvent event = eventFactory.mailboxRenamed(session, INBOX, NEW_MAILBOX);
         globalRegistration.event(event);
         assertThat(globalRegistration.getPathToIndex(INBOX).get()).isEqualTo(NEW_PATH);
     }
-
-
 }

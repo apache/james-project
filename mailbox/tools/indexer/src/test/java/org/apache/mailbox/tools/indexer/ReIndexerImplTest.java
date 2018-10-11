@@ -39,8 +39,8 @@ import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 public class ReIndexerImplTest {
@@ -52,8 +52,8 @@ public class ReIndexerImplTest {
 
     private ReIndexer reIndexer;
 
-    @Before
-    public void setUp() throws MailboxException {
+    @BeforeEach
+    void setUp() throws MailboxException {
         mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
@@ -61,7 +61,7 @@ public class ReIndexerImplTest {
     }
 
     @Test
-    public void reIndexShouldBeWellPerformed() throws Exception {
+    void reIndexShouldBeWellPerformed() throws Exception {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
@@ -86,7 +86,7 @@ public class ReIndexerImplTest {
     }
 
     @Test
-    public void mailboxPathUserShouldBeUsedWhenReIndexing() throws Exception {
+    void mailboxPathUserShouldBeUsedWhenReIndexing() throws Exception {
         MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
         MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
