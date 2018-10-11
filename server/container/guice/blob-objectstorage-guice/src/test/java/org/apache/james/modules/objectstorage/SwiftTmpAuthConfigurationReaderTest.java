@@ -86,7 +86,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void readKeystone2ConfigurationWithRegion() throws Exception {
+    void readTempAuthConfigurationWithRegion() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
@@ -107,7 +107,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void readKeystone2ConfigurationWithCustomTempAuthHeaders() throws Exception {
+    void readTempAuthConfigurationWithCustomTempAuthHeaders() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
@@ -130,7 +130,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void failToReadSwiftKeyston2ConfigurationWhenMissingEndpoint() throws Exception {
+    void failToReadSwiftTempAuthConfigurationWhenMissingEndpoint() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_CREDENTIALS,
@@ -143,7 +143,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void failToReadSwiftKeyston2ConfigurationWhenMissingCrendentials() throws Exception {
+    void failToReadSwiftTempAuthConfigurationWhenMissingCrendentials() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
@@ -156,7 +156,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void failToReadSwiftKeyston2ConfigurationWhenMissingUserName() throws Exception {
+    void failToReadSwiftTempAuthConfigurationWhenMissingUserName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
@@ -169,7 +169,7 @@ class SwiftTmpAuthConfigurationReaderTest {
     }
 
     @Test
-    void failToReadSwiftKeyston2ConfigurationWhenMissingTenantName() throws Exception {
+    void failToReadSwiftTempAuthConfigurationWhenMissingTenantName() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.load(new StringReader(StringUtils.joinWith("\n",
             CONFIG_ENDPOINT,
