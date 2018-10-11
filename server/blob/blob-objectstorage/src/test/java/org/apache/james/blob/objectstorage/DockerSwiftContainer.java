@@ -43,7 +43,8 @@ public class DockerSwiftContainer {
     private DockerSwift dockerSwift;
 
     public DockerSwiftContainer() {
-        this.swiftContainer = new GenericContainer<>(SWIFT_DOCKER_IMAGE)
+        this.swiftContainer = new GenericContainer<>(SWIFT_DOCKER_IMAGE);
+        this.swiftContainer
             .withExposedPorts(KEYSTONE_ADMIN_PORT)
             .withExposedPorts(SWIFT_PORT)
             .withLogConsumer(DockerSwiftContainer::displayDockerLog)
