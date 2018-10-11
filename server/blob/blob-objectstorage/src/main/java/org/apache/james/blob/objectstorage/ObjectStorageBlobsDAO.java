@@ -76,7 +76,8 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                     return name;
                 } else {
                     throw new ObjectStoreException("Unable to create container " + name.value());
-                }});
+                }
+            });
     }
 
     @Override
