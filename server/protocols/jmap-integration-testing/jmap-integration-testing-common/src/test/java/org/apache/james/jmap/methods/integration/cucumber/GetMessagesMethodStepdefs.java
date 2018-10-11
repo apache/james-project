@@ -21,6 +21,7 @@ package org.apache.james.jmap.methods.integration.cucumber;
 
 import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -40,12 +41,17 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.james.jmap.TestingConstants;
 import org.apache.james.jmap.methods.integration.cucumber.util.TableRow;
 import org.apache.james.jmap.model.MessagePreviewGenerator;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.utils.SMTPMessageSender;
 import org.javatuples.Pair;
 
 import com.github.fge.lambdas.Throwing;
@@ -371,6 +377,26 @@ public class GetMessagesMethodStepdefs {
     @Given("^the user has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with flags \"([^\"]*)\"$")
     public void appendMessageWithFlags(String messageName, String mailbox, List<String> flagList) throws Exception {
         appendMessage(messageName, mailbox, StringListToFlags.fromFlagList(flagList));
+    }
+
+    @Given("^\"([^\"]*)\" receives a SMTP message specified in file \"([^\"]*)\" as message \"([^\"]*)\"$")
+    public void smtpSend(String user, String fileName, String messageName) throws Exception {
+        MailboxId mailboxId = mainStepdefs.mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, user, INBOX);
+        SMTPMessageSender smtpMessageSender = new SMTPMessageSender("domain.com");
+        smtpMessageSender
+            .connect("127.0.0.1", mainStepdefs.jmapServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessageWithHeaders("from@domain.com", user,
+                ClassLoaderUtils.getSystemResourceAsString(fileName));
+        smtpMessageSender.close();
+
+        TestingConstants.calmlyAwait.until(() -> !retrieveIds(user, mailboxId).isEmpty());
+        List<String> ids = retrieveIds(user, mailboxId);
+        messageIdStepdefs.addMessageId(messageName, mainStepdefs.messageIdFactory.fromString(ids.get(0)));
+    }
+
+    public List<String> retrieveIds(String user, MailboxId mailboxId) {
+        userStepdefs.execWithUser(user, () -> httpClient.post("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"]}}, \"#0\"]]"));
+        return httpClient.jsonPath.read(ARGUMENTS + ".messageIds.[*]");
     }
 
     private void appendMessage(String messageName, String mailbox, Flags flags) throws Exception {

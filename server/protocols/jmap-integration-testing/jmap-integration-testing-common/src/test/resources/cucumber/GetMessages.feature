@@ -419,3 +419,18 @@ Feature: GetMessages method
     |cid      |null                          |
     |name     |"IMG_6112.JPG"                |
     |isInline |false                         |
+
+  @Only
+  Scenario: Header only text calendar should be read as normal calendar attachment by JMAP
+    Given "alice@domain.tld" receives a SMTP message specified in file "eml/ics_in_header.eml" as message "m1"
+    When "alice@domain.tld" ask for messages "m1"
+    Then no error is returned
+    And the list should contain 1 message
+    And the hasAttachment of the message is "true"
+    And the list of attachments of the message contains 1 attachments
+    And the first attachment is:
+    |key      | value                        |
+    |type     |"text/calendar"               |
+    |size     |1056                          |
+    |name     |"event.ics"                |
+    |isInline |false                         |

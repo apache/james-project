@@ -57,6 +57,7 @@
             <mailet match="All" class="RemoveMimeHeader">
                 <name>bcc</name>
             </mailet>
+            <mailet match="All" class="ICSSanitizer"/>
             <mailet match="All" class="org.apache.james.jmap.mailet.TextCalendarBodyToAttachment"/>
             <mailet match="All" class="RecipientRewriteTable">
                 <errorProcessor>rrt-error</errorProcessor>
