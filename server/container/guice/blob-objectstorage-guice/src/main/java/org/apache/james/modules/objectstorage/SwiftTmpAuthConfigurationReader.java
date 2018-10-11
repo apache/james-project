@@ -67,15 +67,15 @@ public class SwiftTmpAuthConfigurationReader implements SwiftConfigurationReader
         Identity identity = Identity.of(tenantName, userName);
 
         Optional<Region> region = Optional.ofNullable(
-            configuration.getString(SwiftConfigurationReader.OBJECTSTORAGE_SWIFT_REGION, null))
+                configuration.getString(SwiftConfigurationReader.OBJECTSTORAGE_SWIFT_REGION, null))
             .map(Region::of);
 
         Optional<PassHeaderName> passHeaderName = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_TEMPAUTH_PASS_HEADER_NAME, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_TEMPAUTH_PASS_HEADER_NAME, null))
             .map(PassHeaderName::of);
 
         Optional<UserHeaderName> userHeaderName = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_TEMPAUTH_USER_HEADER_NAME, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_TEMPAUTH_USER_HEADER_NAME, null))
             .map(UserHeaderName::of);
 
         return SwiftTempAuthObjectStorage.configBuilder()

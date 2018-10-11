@@ -76,13 +76,13 @@ public class SwiftKeystone3ConfigurationReader implements SwiftConfigurationRead
         IdentityV3 identity = readIdentity(configuration);
 
         Optional<DomainId> domainScope = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_DOMAIN_ID, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_DOMAIN_ID, null))
             .map(DomainId::of);
 
         Optional<Project> projectScope = readProjectScope(configuration);
 
         Optional<Region> region = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_REGION, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_REGION, null))
             .map(Region::of);
 
         return SwiftKeystone3ObjectStorage.configBuilder()
@@ -114,15 +114,15 @@ public class SwiftKeystone3ConfigurationReader implements SwiftConfigurationRead
 
     private static Optional<Project> readProjectScope(Configuration configuration) {
         Optional<ProjectName> projectName = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_NAME, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_NAME, null))
             .map(ProjectName::of);
 
         Optional<DomainName> projectDomainName = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_DOMAIN_NAME, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_DOMAIN_NAME, null))
             .map(DomainName::of);
 
         Optional<DomainId> projectDomainId = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_DOMAIN_ID, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_PROJECT_DOMAIN_ID, null))
             .map(DomainId::of);
 
         return OptionalUtils.or(

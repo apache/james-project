@@ -61,7 +61,7 @@ public class SwiftKeystone2ConfigurationReader implements SwiftConfigurationRead
         Identity identity = Identity.of(tenantName, userName);
 
         Optional<Region> region = Optional.ofNullable(
-            configuration.getString(OBJECTSTORAGE_SWIFT_REGION, null))
+                configuration.getString(OBJECTSTORAGE_SWIFT_REGION, null))
             .map(Region::of);
 
         return SwiftKeystone2ObjectStorage.configBuilder()
