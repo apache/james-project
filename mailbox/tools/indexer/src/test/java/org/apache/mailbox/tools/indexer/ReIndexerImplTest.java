@@ -57,7 +57,7 @@ public class ReIndexerImplTest {
         mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
-        reIndexer = new ReIndexerImpl(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory);
+        reIndexer = new ReIndexerImpl(new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession);
 
-        reIndexer.reIndex(INBOX);
+        reIndexer.reIndex(INBOX).run();
 
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
@@ -94,7 +94,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession);
 
-        reIndexer.reIndex();
+        reIndexer.reIndex().run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
         ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);

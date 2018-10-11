@@ -21,11 +21,12 @@ package org.apache.james.mailbox.indexer;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.task.Task;
 
 public interface ReIndexer {
 
-    void reIndex(MailboxPath path) throws MailboxException;
+    Task reIndex(MailboxPath path) throws MailboxException;
 
-    void reIndex() throws MailboxException;
+    Task reIndex() throws MailboxException;
 
 }

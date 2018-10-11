@@ -22,16 +22,17 @@ package org.apache.mailbox.tools.indexer;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.task.Task;
 
 public class ThrowsReIndexer implements ReIndexer {
 
     @Override
-    public void reIndex(MailboxPath path) throws MailboxException {
+    public Task reIndex(MailboxPath path) throws MailboxException {
         throw new MailboxException("Not implemented");
     }
 
     @Override
-    public void reIndex() throws MailboxException {
+    public Task reIndex() throws MailboxException {
         throw new MailboxException("Not implemented");
     }
 }

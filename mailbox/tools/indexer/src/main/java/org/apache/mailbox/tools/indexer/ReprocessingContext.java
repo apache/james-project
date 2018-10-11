@@ -19,41 +19,35 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import javax.inject.Inject;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 
-/**
- * Note about live re-indexation handling :
- *
- *  - Data races may arise... If you modify the stored value between the received event check and the index operation,
- *  you have an inconsistent behavior.
- *
- *  This class is more about supporting changes in real time for future indexed values. If you change a flags / delete
- *  mails for instance, you will see it in the indexed value !
- *
- *  Why only care about updates and deletions ? Additions are already handled by the indexer that behaves normaly. We
- *  should just "adapt" our indexed value to the latest value, if any. The normal indexer will take care of new stuff.
- */
-public class ReIndexerImpl implements ReIndexer {
+public class ReprocessingContext {
+    private final AtomicInteger successfullyReprocessedMails;
+    private final AtomicInteger failedReprocessingMails;
 
-    private final ReIndexerPerformer reIndexerPerformer;
-
-    @Inject
-    public ReIndexerImpl(ReIndexerPerformer reIndexerPerformer) {
-        this.reIndexerPerformer = reIndexerPerformer;
+    public ReprocessingContext() {
+        failedReprocessingMails = new AtomicInteger(0);
+        successfullyReprocessedMails = new AtomicInteger(0);
     }
 
-    @Override
-    public Task reIndex(MailboxPath path) {
-        return new SingleMailboxReindexingTask(reIndexerPerformer, path);
+    public void updateAccordingToReprocessingResult(Task.Result result) {
+        switch (result) {
+            case COMPLETED:
+                successfullyReprocessedMails.incrementAndGet();
+                break;
+            case PARTIAL:
+                failedReprocessingMails.incrementAndGet();
+                break;
+        }
     }
 
-    @Override
-    public Task reIndex() {
-        return new FullReindexingTask(reIndexerPerformer);
+    public int successfullyReprocessedMailCount() {
+        return successfullyReprocessedMails.get();
     }
 
+    public int failedReprocessingMailCount() {
+        return failedReprocessingMails.get();
+    }
 }

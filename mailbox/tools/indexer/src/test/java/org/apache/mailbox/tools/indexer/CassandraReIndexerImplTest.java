@@ -64,7 +64,7 @@ public class CassandraReIndexerImplTest {
         mailboxManager = CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider());
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
-        reIndexer = new ReIndexerImpl(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory);
+        reIndexer = new ReIndexerImpl(new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class CassandraReIndexerImplTest {
             .runSuccessfullyWithin(Duration.ofMinutes(10));
 
         // When We re-index
-        reIndexer.reIndex(INBOX);
+        reIndexer.reIndex(INBOX).run();
 
         // The indexer is called for each message
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(Mailbox.class));
