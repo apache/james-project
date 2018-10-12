@@ -29,13 +29,10 @@ import org.apache.james.task.Task;
  * Note about live re-indexation handling :
  *
  *  - Data races may arise... If you modify the stored value between the received event check and the index operation,
- *  you have an inconsistent behavior.
+ *  you have an inconsistent behavior (for mailbox renames).
  *
- *  This class is more about supporting changes in real time for future indexed values. If you change a flags / delete
- *  mails for instance, you will see it in the indexed value !
- *
- *  Why only care about updates and deletions ? Additions are already handled by the indexer that behaves normaly. We
- *  should just "adapt" our indexed value to the latest value, if any. The normal indexer will take care of new stuff.
+ *  A mechanism for tracking mailbox renames had been implemented, and is taken into account when starting re-indexing a mailbox.
+ *  Note that if a mailbox is renamed during its re-indexation process, it will not be taken into account. (We just reduce the inconsistency window).
  */
 public class ReIndexerImpl implements ReIndexer {
 
