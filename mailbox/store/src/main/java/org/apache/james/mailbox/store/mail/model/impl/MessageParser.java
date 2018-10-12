@@ -201,7 +201,7 @@ public class MessageParser {
             .orElse(false);
     }
 
-    private Boolean attachmentContentTypeCriterion(Entity part) {
+    private boolean attachmentContentTypeCriterion(Entity part) {
         return getContentTypeField(part)
             .map(ContentTypeField::getMimeType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
@@ -209,7 +209,7 @@ public class MessageParser {
             .orElse(false);
     }
 
-    private Boolean attachmentDispositionCriterion(Entity part) {
+    private boolean attachmentDispositionCriterion(Entity part) {
         return getContentDispositionField(part)
             .map(ContentDispositionField::getDispositionType)
             .map(dispositionType -> dispositionType.toLowerCase(Locale.US))
