@@ -49,7 +49,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-class ReIndexerPerformer {
+public class ReIndexerPerformer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerPerformer.class);
 
     private static final int NO_LIMIT = 0;
@@ -60,9 +60,9 @@ class ReIndexerPerformer {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Inject
-    ReIndexerPerformer(MailboxManager mailboxManager,
-                       ListeningMessageSearchIndex messageSearchIndex,
-                       MailboxSessionMapperFactory mailboxSessionMapperFactory) {
+    public ReIndexerPerformer(MailboxManager mailboxManager,
+                              ListeningMessageSearchIndex messageSearchIndex,
+                              MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxManager = mailboxManager;
         this.messageSearchIndex = messageSearchIndex;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
