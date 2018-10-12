@@ -30,6 +30,7 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.JPASubscriptionManager;
@@ -53,6 +54,7 @@ import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.modules.Names;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.utils.MailboxManagerDefinition;
+import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -81,6 +83,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(SimpleGroupMembershipResolver.class).in(Scopes.SINGLETON);
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
+        bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
 
         bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
@@ -97,6 +100,8 @@ public class JPAMailboxModule extends AbstractModule {
         bind(MailboxId.Factory.class).to(JPAId.Factory.class);
         bind(GroupMembershipResolver.class).to(SimpleGroupMembershipResolver.class);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
+
+        bind(ReIndexer.class).to(ReIndexerImpl.class);
         
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
     }

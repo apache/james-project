@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.modules.QuotaProbesImpl;
+import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -43,7 +44,7 @@ class JPAJamesServerTest implements JamesServerContract {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS)
+            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS, new LuceneSearchMailboxModule())
             .overrideWith(new TestJPAConfigurationModule(), DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 

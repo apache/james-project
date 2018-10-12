@@ -17,23 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules.server;
 
-import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.extension.RegisterExtension;
+import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.ReindexingRoutes;
 
-class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
 
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS, new LuceneSearchMailboxModule())
-            .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE))
-        .build();
-
+public class ReIndexingModule extends AbstractModule {
     @Override
-    @Disabled("Failing to create the domain: duplicate with test in JPAJamesServerTest")
-    void jpaGuiceServerShouldUpdateQuota(GuiceJamesServer jamesServer) {
+    protected void configure() {
+        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(ReindexingRoutes.class);
     }
 }
