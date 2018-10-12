@@ -133,4 +133,25 @@ public class ReIndexerImplTest {
         assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
             && message.getUid().equals(createdMessage.getUid()));
     }
+
+    @Test
+    void messageReIndexShouldBeWellPerformed() throws Exception {
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+        MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+        ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
+            .appendMessage(
+                MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                systemSession);
+
+        reIndexer.reIndex(INBOX, createdMessage.getUid()).run();
+        ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
+        ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
+
+        verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+        verifyNoMoreInteractions(messageSearchIndex);
+
+        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
+            && message.getUid().equals(createdMessage.getUid()));
+    }
 }

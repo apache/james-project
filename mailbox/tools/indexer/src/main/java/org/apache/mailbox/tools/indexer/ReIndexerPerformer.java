@@ -101,6 +101,14 @@ class ReIndexerPerformer {
         }
     }
 
+    Task.Result handleMessageReIndexing(MailboxPath path, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
+        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
+            .findMailboxByPath(path);
+
+        return handleMessageReIndexing(mailboxSession, mailbox, uid);
+    }
+
     private Task.Result reIndex(List<MailboxPath> mailboxPaths, MailboxSession mailboxSession, ReprocessingContext reprocessingContext) throws MailboxException {
         return wrapInGlobalRegistration(mailboxSession,
             globalRegistration -> handleMultiMailboxesReindexingIterations(mailboxPaths, globalRegistration, reprocessingContext));

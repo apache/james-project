@@ -19,49 +19,67 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
+import org.apache.james.task.TaskExecutionDetails;
 
-/**
- * Note about live re-indexation handling :
- *
- *  - Data races may arise... If you modify the stored value between the received event check and the index operation,
- *  you have an inconsistent behavior (for mailbox renames).
- *
- *  A mechanism for tracking mailbox renames had been implemented, and is taken into account when starting re-indexing a mailbox.
- *  Note that if a mailbox is renamed during its re-indexation process, it will not be taken into account. (We just reduce the inconsistency window).
- */
-public class ReIndexerImpl implements ReIndexer {
+public class SingleMessageReindexingTask implements Task {
+
+    public static final String MESSAGE_RE_INDEXING = "messageReIndexing";
+
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+        private final MailboxPath mailboxPath;
+        private final MessageUid uid;
+
+        AdditionalInformation(MailboxPath mailboxPath, MessageUid uid) {
+            this.mailboxPath = mailboxPath;
+            this.uid = uid;
+        }
+
+        public String getMailboxPath() {
+            return mailboxPath.asString();
+        }
+
+        public long getUid() {
+            return uid.asLong();
+        }
+    }
 
     private final ReIndexerPerformer reIndexerPerformer;
+    private final MailboxPath path;
+    private final MessageUid uid;
+    private final AdditionalInformation additionalInformation;
 
     @Inject
-    public ReIndexerImpl(ReIndexerPerformer reIndexerPerformer) {
+    public SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxPath path, MessageUid uid) {
         this.reIndexerPerformer = reIndexerPerformer;
+        this.path = path;
+        this.uid = uid;
+        this.additionalInformation = new AdditionalInformation(path, uid);
     }
 
     @Override
-    public Task reIndex(MailboxPath path) {
-        return new SingleMailboxReindexingTask(reIndexerPerformer, path);
+    public Result run() {
+        try {
+            return reIndexerPerformer.handleMessageReIndexing(path, uid);
+        } catch (MailboxException e) {
+            return Result.PARTIAL;
+        }
     }
 
     @Override
-    public Task reIndex() {
-        return new FullReindexingTask(reIndexerPerformer);
+    public String type() {
+        return MESSAGE_RE_INDEXING;
     }
 
     @Override
-    public Task reIndex(User user) {
-        return new UserReindexingTask(reIndexerPerformer, user);
-    }
-
-    @Override
-    public Task reIndex(MailboxPath path, MessageUid uid) {
-        return new SingleMessageReindexingTask(reIndexerPerformer, path, uid);
+    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+        return Optional.of(additionalInformation);
     }
 }
