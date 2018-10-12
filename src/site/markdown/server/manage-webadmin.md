@@ -41,6 +41,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
+ - [ReIndexing](#ReIndexing)
  - [Task management](#Task_management)
 
 ## HealthCheck
@@ -2040,6 +2041,198 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 
 Response codes:
  - 204: Operation succeeded
+
+
+## ReIndexing
+
+ - [ReIndexing all mails](#ReIndexing_all_mails)
+ - [ReIndexing a user mails](#ReIndexing_a_user_mails)
+ - [ReIndexing a mailbox mails](#ReIndexing_a_mailbox_mails)
+ - [ReIndexing a single mail](#ReIndexing_a_single_mail)
+
+Be also aware of the limits of these APIs:
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing all mails
+
+```
+curl -XPOST http://ip:port/mailboxIndex?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails stored on this James server.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `FullReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a user mails
+
+```
+curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `userReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "user":"bob@domain.com",
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a mailbox mails
+
+```
+curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com/mailboxes/{mailboxId}?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in one mailbox belonging to "bob@domain.com".
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `mailboxReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxPath":"#private:bob@domain.com:INBOX",
+  "successfullyReprocessMailCount":18,
+  "failedReprocessedMailCount": 1
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+### ReIndexing a single mail
+
+```
+curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com/mailboxes/{mailboxId}/uid/36?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `messageReIndexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxPath":"#private:bob@domain.com:INBOX",
+  "uid":18
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
 
 ## Task management
 
