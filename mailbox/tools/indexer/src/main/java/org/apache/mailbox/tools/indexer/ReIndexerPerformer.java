@@ -38,15 +38,11 @@ import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Task;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.streams.Iterators;
-import org.apache.mailbox.tools.indexer.events.ImpactingEventType;
-import org.apache.mailbox.tools.indexer.events.ImpactingMessageEvent;
 import org.apache.mailbox.tools.indexer.registrations.GlobalRegistration;
-import org.apache.mailbox.tools.indexer.registrations.MailboxRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.Lists;
 
 class ReIndexerPerformer {
 
@@ -105,58 +101,33 @@ class ReIndexerPerformer {
     }
 
     private Task.Result reIndex(MailboxPath path, MailboxSession mailboxSession, ReprocessingContext reprocessingContext) throws MailboxException {
-        MailboxRegistration mailboxRegistration = new MailboxRegistration(path);
         LOGGER.info("Intend to reindex {}", path.asString());
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
         messageSearchIndex.deleteAll(mailboxSession, mailbox);
-        mailboxManager.addListener(path, mailboxRegistration, mailboxSession);
         try {
             return Iterators.toStream(
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
                     .findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, NO_LIMIT))
                 .map(MailboxMessage::getUid)
-                .map(uid -> handleMessageReIndexing(mailboxSession, mailboxRegistration, mailbox, uid))
+                .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid))
                 .peek(reprocessingContext::updateAccordingToReprocessingResult)
                 .reduce(Task::combine)
                 .orElse(Task.Result.COMPLETED);
         } finally {
             LOGGER.info("Finish to reindex {}", path.asString());
-            mailboxManager.removeListener(path, mailboxRegistration, mailboxSession);
         }
     }
 
-    private Task.Result handleMessageReIndexing(MailboxSession mailboxSession, MailboxRegistration mailboxRegistration, Mailbox mailbox, MessageUid uid) {
+    private Task.Result handleMessageReIndexing(MailboxSession mailboxSession, Mailbox mailbox, MessageUid uid) {
         try {
-            Optional<ImpactingMessageEvent> impactingMessageEvent = findMostRelevant(mailboxRegistration.getImpactingEvents(uid));
-
             Optional.of(uid)
-                .filter(x -> !wasDeleted(impactingMessageEvent))
                 .flatMap(Throwing.function(mUid -> fullyReadMessage(mailboxSession, mailbox, mUid)))
-                .map(message -> messageUpdateRegardingEvents(message, impactingMessageEvent))
                 .ifPresent(Throwing.consumer(message -> messageSearchIndex.add(mailboxSession, mailbox, message)));
             return Task.Result.COMPLETED;
         } catch (Exception e) {
             LOGGER.warn("ReIndexing failed for {} {}", mailbox.generateAssociatedPath(), uid, e);
             return Task.Result.PARTIAL;
         }
-    }
-
-    private Optional<ImpactingMessageEvent> findMostRelevant(List<ImpactingMessageEvent> messageEvents) {
-        for (ImpactingMessageEvent impactingMessageEvent : messageEvents) {
-            if (impactingMessageEvent.getType().equals(ImpactingEventType.Deletion)) {
-                return Optional.of(impactingMessageEvent);
-            }
-        }
-        return Lists.reverse(messageEvents).stream().findFirst();
-    }
-
-    private boolean wasDeleted(Optional<ImpactingMessageEvent> impactingMessageEvent) {
-        return impactingMessageEvent.map(ImpactingMessageEvent::wasDeleted).orElse(false);
-    }
-
-    private MailboxMessage messageUpdateRegardingEvents(MailboxMessage message, Optional<ImpactingMessageEvent> impactingMessageEvent) {
-        impactingMessageEvent.flatMap(ImpactingMessageEvent::newFlags).ifPresent(message::setFlags);
-        return message;
     }
 
     private Optional<MailboxMessage> fullyReadMessage(MailboxSession mailboxSession, Mailbox mailbox, MessageUid mUid) throws MailboxException {
