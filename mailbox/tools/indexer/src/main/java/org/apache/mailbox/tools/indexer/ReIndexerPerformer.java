@@ -21,15 +21,19 @@ package org.apache.mailbox.tools.indexer;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -43,9 +47,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 class ReIndexerPerformer {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerPerformer.class);
 
     private static final int NO_LIMIT = 0;
@@ -73,18 +77,37 @@ class ReIndexerPerformer {
         MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing");
         LOGGER.info("Starting a full reindex");
         List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
-        GlobalRegistration globalRegistration = new GlobalRegistration();
-        mailboxManager.addGlobalListener(globalRegistration, mailboxSession);
+
         try {
-            return handleFullReindexingIterations(mailboxPaths, globalRegistration, reprocessingContext);
+            return reIndex(mailboxPaths, mailboxSession, reprocessingContext);
         } finally {
-            mailboxManager.removeGlobalListener(globalRegistration, mailboxSession);
             LOGGER.info("Full reindex finished");
         }
     }
 
-    private Task.Result handleFullReindexingIterations(List<MailboxPath> mailboxPaths, GlobalRegistration globalRegistration,
-                                                       ReprocessingContext reprocessingContext) {
+    Task.Result reIndex(User user, ReprocessingContext reprocessingContext) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
+        LOGGER.info("Starting a reindex for user {}", user.asString());
+        List<MailboxPath> mailboxPaths = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxSession)
+            .build(), mailboxSession)
+            .stream()
+            .map(MailboxMetaData::getPath)
+            .collect(ImmutableList.toImmutableList());
+
+        try {
+            return reIndex(mailboxPaths, mailboxSession, reprocessingContext);
+        } finally {
+            LOGGER.info("User {} reindex finished", user.asString());
+        }
+    }
+
+    private Task.Result reIndex(List<MailboxPath> mailboxPaths, MailboxSession mailboxSession, ReprocessingContext reprocessingContext) throws MailboxException {
+        return wrapInGlobalRegistration(mailboxSession,
+            globalRegistration -> handleMultiMailboxesReindexingIterations(mailboxPaths, globalRegistration, reprocessingContext));
+    }
+
+    private Task.Result handleMultiMailboxesReindexingIterations(List<MailboxPath> mailboxPaths, GlobalRegistration globalRegistration,
+                                                                 ReprocessingContext reprocessingContext) {
         return mailboxPaths.stream()
             .map(globalRegistration::getPathToIndex)
             .flatMap(OptionalUtils::toStream)
@@ -136,4 +159,13 @@ class ReIndexerPerformer {
             .findFirst();
     }
 
+    private <T> T wrapInGlobalRegistration(MailboxSession session, Function<GlobalRegistration, T> function) throws MailboxException {
+        GlobalRegistration globalRegistration = new GlobalRegistration();
+        mailboxManager.addGlobalListener(globalRegistration, session);
+        try {
+            return function.apply(globalRegistration);
+        } finally {
+            mailboxManager.removeGlobalListener(globalRegistration, session);
+        }
+    }
 }

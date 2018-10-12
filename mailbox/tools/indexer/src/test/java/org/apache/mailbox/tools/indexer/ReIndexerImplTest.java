@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -95,6 +96,30 @@ public class ReIndexerImplTest {
                 systemSession);
 
         reIndexer.reIndex().run();
+        ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
+        ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
+        ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
+
+        verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
+        verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
+        verifyNoMoreInteractions(messageSearchIndex);
+
+        assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+        assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
+            && message.getUid().equals(createdMessage.getUid()));
+    }
+
+    @Test
+    void userReIndexShouldBeWellPerformed() throws Exception {
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+        MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+        ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
+            .appendMessage(
+                MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                systemSession);
+
+        reIndexer.reIndex(User.fromUsername(USERNAME)).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
         ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);

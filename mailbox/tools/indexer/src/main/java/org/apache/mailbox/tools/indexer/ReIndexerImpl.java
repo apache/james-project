@@ -21,6 +21,7 @@ package org.apache.mailbox.tools.indexer;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
@@ -51,6 +52,11 @@ public class ReIndexerImpl implements ReIndexer {
     @Override
     public Task reIndex() {
         return new FullReindexingTask(reIndexerPerformer);
+    }
+
+    @Override
+    public Task reIndex(User user) {
+        return new UserReindexingTask(reIndexerPerformer, user);
     }
 
 }
