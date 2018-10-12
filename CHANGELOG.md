@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 ### Added
 - Mail filtering configured via the JMAP protocol
+- WebAdmin exposed mail re-indexing tasks
 
 ### Changed
 - Multiple libraries updates
