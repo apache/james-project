@@ -335,8 +335,13 @@ public class GetMessagesMethodStepdefs {
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined attachments without content disposition$")
-    public void appendMessageWithInlinedImageButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
+    public void appendMessageWithInlinedAttachmentButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
         userStepdefs.execWithUser(username, () -> appendMessage(messageName, mailbox, "eml/inlinedWithoutContentDisposition.eml"));
+    }
+
+    @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined image without content disposition$")
+    public void appendMessageWithInlinedImageButNoContentDisposition(String username, String messageName, String mailbox) throws Exception {
+        userStepdefs.execWithUser(username, () -> appendMessage(messageName, mailbox, "eml/oneInlinedImageWithoutContentDisposition.eml"));
     }
 
     @Given("^\"([^\"]*)\" has a message \"([^\"]*)\" in the \"([^\"]*)\" mailbox with inlined image without content ID$")
