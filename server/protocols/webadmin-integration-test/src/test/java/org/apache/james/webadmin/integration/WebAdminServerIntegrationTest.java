@@ -58,16 +58,16 @@ import io.restassured.RestAssured;
 
 public class WebAdminServerIntegrationTest {
 
-    public static final String DOMAIN = "domain";
-    public static final String USERNAME = "username@" + DOMAIN;
-    public static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
-    public static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
-    public static final String MAILBOX = "mailbox";
-    public static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
-    public static final String VERSION = "/cassandra/version";
-    public static final String VERSION_LATEST = VERSION + "/latest";
-    public static final String UPGRADE_VERSION = VERSION + "/upgrade";
-    public static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
+    private static final String DOMAIN = "domain";
+    private static final String USERNAME = "username@" + DOMAIN;
+    private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
+    private static final String SPECIFIC_USER = UserRoutes.USERS + SEPARATOR + USERNAME;
+    private static final String MAILBOX = "mailbox";
+    private static final String SPECIFIC_MAILBOX = SPECIFIC_USER + SEPARATOR + UserMailboxesRoutes.MAILBOXES + SEPARATOR + MAILBOX;
+    private static final String VERSION = "/cassandra/version";
+    private static final String VERSION_LATEST = VERSION + "/latest";
+    private static final String UPGRADE_VERSION = VERSION + "/upgrade";
+    private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
@@ -326,11 +326,12 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailRepositories\"]"))
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"));
+            .body(containsString("\"tags\":[\"Address Groups\"]"))
+            .body(containsString("{\"name\":\"ReIndexing\"}"));
     }
 
     @Test
-    public void validateHealthChecksShouldReturnOk() throws Exception {
+    public void validateHealthChecksShouldReturnOk() {
         when()
             .get(HealthCheckRoutes.HEALTHCHECK)
         .then()

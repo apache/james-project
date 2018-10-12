@@ -20,6 +20,9 @@
 package org.apache.james.webadmin.routes;
 
 import javax.inject.Inject;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
@@ -41,10 +44,19 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import com.github.fge.lambdas.supplier.ThrowingSupplier;
 
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import spark.Request;
 import spark.Response;
 import spark.Service;
 
+@Api(tags = "ReIndexing")
+@Path("/mailboxIndex")
+@Produces("application/json")
 public class ReindexingRoutes implements Routes {
     private static final String BASE_PATH = "/mailboxIndex";
     private static final String USER_PARAM = ":user";
@@ -82,21 +94,133 @@ public class ReindexingRoutes implements Routes {
         service.post(MESSAGE_PATH, this::reIndexMessage, jsonTransformer);
     }
 
+    @POST
+    @Path("/")
+    @ApiOperation(value = "Re-indexes all the mails on this server")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=reIndex",
+            value = "Compulsory. Only supported value is `reIndex`")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
     private TaskIdDto reIndexAll(Request request, Response response) {
         return wrap(request, response,
             () -> reIndexer.reIndex());
     }
 
+    @POST
+    @Path("/users/{user}")
+    @ApiOperation(value = "Re-indexes all the mails of a user")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=reIndex",
+            value = "Compulsory. Only supported value is `reIndex`"),
+        @ApiImplicitParam(
+            required = true,
+            name = "user",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "benoit@apache.org",
+            value = "Compulsory. Needs to be a valid username")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
     private TaskIdDto reIndexUser(Request request, Response response) {
         return wrap(request, response,
             () -> reIndexer.reIndex(extractUser(request)));
     }
 
+    @POST
+    @Path("/users/{user}/mailboxes/{mailboxId}")
+    @ApiOperation(value = "Re-indexes all the mails in a mailbox")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=reIndex",
+            value = "Compulsory. Only supported value is `reIndex`"),
+        @ApiImplicitParam(
+            required = true,
+            name = "user",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "benoit@apache.org",
+            value = "Compulsory. Needs to be a valid username"),
+        @ApiImplicitParam(
+            required = true,
+            name = "mailboxId",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid mailbox ID")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
     private TaskIdDto reIndexMailbox(Request request, Response response) {
         return wrap(request, response,
             () -> reIndexer.reIndex(retrievePath(request)));
     }
 
+    @POST
+    @Path("/users/{user}/mailboxes/{mailboxId}/mails/{uid}")
+    @ApiOperation(value = "Re-indexes a single email")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=reIndex",
+            value = "Compulsory. Only supported value is `reIndex`"),
+        @ApiImplicitParam(
+            required = true,
+            name = "user",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "benoit@apache.org",
+            value = "Compulsory. Needs to be a valid username"),
+        @ApiImplicitParam(
+            required = true,
+            name = "mailboxId",
+            paramType = "path parameter",
+            dataType = "String",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid mailbox ID"),
+        @ApiImplicitParam(
+            required = true,
+            name = "uid",
+            paramType = "path parameter",
+            dataType = "Integer",
+            defaultValue = "none",
+            value = "Compulsory. Needs to be a valid UID")
+    })
     private TaskIdDto reIndexMessage(Request request, Response response) {
         return wrap(request, response,
             () -> reIndexer.reIndex(retrievePath(request), extractUid(request)));
