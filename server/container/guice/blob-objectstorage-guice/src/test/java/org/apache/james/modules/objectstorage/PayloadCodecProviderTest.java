@@ -22,18 +22,10 @@ package org.apache.james.modules.objectstorage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.objectstorage.AESPayloadCodec;
 import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
-import org.apache.james.utils.PropertiesProvider;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -155,51 +147,6 @@ class PayloadCodecProviderTest {
 
     private static MapConfigurationBuilder newConfigBuilder() {
         return new MapConfigurationBuilder();
-    }
-
-    private static class FakePropertiesProvider extends PropertiesProvider {
-        private Map<String, Configuration> configurations;
-
-        public FakePropertiesProvider(Map<String, Configuration> configurations) {
-            super(null);
-            this.configurations = configurations;
-        }
-
-
-        @Override
-        public Configuration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
-            if (configurations.containsKey(fileName)) {
-                return configurations.get(fileName);
-            } else {
-                throw new FileNotFoundException(
-                    "no configuration defined for " +
-                        fileName +
-                        " know configurations are (" +
-                        StringUtils.join(configurations.keySet(), ",") +
-                        ")");
-            }
-        }
-
-        public static FakePropertiesProviderBuilder builder() {
-            return new FakePropertiesProviderBuilder();
-        }
-
-        static class FakePropertiesProviderBuilder {
-            private final Map<String, Configuration> configurations;
-
-            public FakePropertiesProviderBuilder() {
-                configurations = new HashMap<>();
-            }
-
-            public FakePropertiesProviderBuilder register(String objectstorage, Configuration configuration) {
-                configurations.put(objectstorage, configuration);
-                return this;
-            }
-
-            public FakePropertiesProvider build() {
-                return new FakePropertiesProvider(configurations);
-            }
-        }
     }
 
     private static class MapConfigurationBuilder {
