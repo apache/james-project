@@ -2049,6 +2049,7 @@ Response codes:
  - [ReIndexing a user mails](#ReIndexing_a_user_mails)
  - [ReIndexing a mailbox mails](#ReIndexing_a_mailbox_mails)
  - [ReIndexing a single mail](#ReIndexing_a_single_mail)
+ - [ReIndexing a single mail by messageId](#ReIndexing_a_single_mail_by_messageId)
 
 Be also aware of the limits of these APIs:
 
@@ -2233,6 +2234,45 @@ The scheduled task will have the following type `messageReIndexing` and the foll
 Warning: During the re-indexing, the result of search operations might be altered.
 
 Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+### ReIndexing a single mail by messageId
+
+```
+curl -XPOST http://ip:port/mailboxIndex/messages/{messageId}?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email in all the mailboxes containing it.
+
+Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
+
+The response to that request will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `MessageIdReIndexingTask` and the following `additionalInformation`:
+
+```
+{
+  "messageId":"18"
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
 
 ## Task management
 
