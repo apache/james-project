@@ -19,7 +19,6 @@
 
 package org.apache.james;
 
-import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -28,7 +27,7 @@ class JPAJamesServerWithSqlValidationTest extends JPAJamesServerTest {
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerExtensionBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(JPAJamesServerMain.JPA_SERVER_MODULE, JPAJamesServerMain.PROTOCOLS, new LuceneSearchMailboxModule())
+            .combineWith(JPAJamesServerMain.JPA_MODULE_AGGREGATE)
             .overrideWith(new TestJPAConfigurationModuleWithSqlValidation(), DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 
