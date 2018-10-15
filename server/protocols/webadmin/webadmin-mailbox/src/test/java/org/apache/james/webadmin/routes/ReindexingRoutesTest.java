@@ -37,6 +37,7 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
+import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -51,6 +52,7 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
+import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
@@ -94,6 +96,10 @@ class ReindexingRoutesTest {
                 mailboxManager,
                 mailboxIdFactory,
                 reIndexer,
+                jsonTransformer),
+            new MessageIdReindexingRoutes(taskManager,
+                new InMemoryMessageId.Factory(),
+                new MessageIdReIndexerImpl(mailboxManager, mailboxManager.getMapperFactory(), searchIndex),
                 jsonTransformer));
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
@@ -716,4 +722,132 @@ class ReindexingRoutesTest {
         }
     }
 
+    @Nested
+    class MessageIdReprocessing {
+        @Nested
+        class Validation {
+            @Test
+            void messageIdReprocessingShouldFailWithNoTask() {
+                when()
+                    .post("/mailboxIndex/messages/7")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+            }
+
+            @Test
+            void messageIdReprocessingShouldFailWithBadTask() {
+                when()
+                    .post("/mailboxIndex/messages/7?task=bad")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+            }
+
+            @Test
+            void messageIdReprocessingShouldFailWithBadMessageId() {
+                when()
+                    .post("/mailboxIndex/messages/bad?task=reIndex")
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .body("statusCode", is(400))
+                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .body("message", is("Error while parsing 'messageId'"));
+            }
+        }
+
+        @Nested
+        class TaskDetails {
+            @Test
+            void messageIdReprocessingShouldNotFailWhenUidNotFound() {
+                String taskId = when()
+                    .post("/mailboxIndex/messages/1?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(MessageIdReIndexerImpl.MessageIdReIndexingTask.TYPE))
+                    .body("additionalInformation.messageId", is("1"))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(notNullValue()));
+            }
+
+            @Test
+            void messageIdReprocessingShouldReturnTaskDetailsWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = when()
+                    .post("/mailboxIndex/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"))
+                    .body("taskId", is(notNullValue()))
+                    .body("type", is(MessageIdReIndexerImpl.MessageIdReIndexingTask.TYPE))
+                    .body("additionalInformation.messageId", is(composedMessageId.getMessageId().serialize()))
+                    .body("startedDate", is(notNullValue()))
+                    .body("submitDate", is(notNullValue()))
+                    .body("completedDate", is(notNullValue()));
+            }
+        }
+
+        @Nested
+        class SideEffects {
+            @Test
+            void messageIdReprocessingShouldPerformReprocessingWhenMail() throws Exception {
+                MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+                mailboxManager.createMailbox(INBOX, systemSession).get();
+                ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
+                    .appendMessage(
+                        MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                        systemSession);
+
+                String taskId = when()
+                    .post("/mailboxIndex/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
+                    .jsonPath()
+                    .get("taskId");
+
+                given()
+                    .basePath(TasksRoutes.BASE)
+                .when()
+                    .get(taskId + "/await")
+                .then()
+                    .body("status", is("completed"));
+
+
+                ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
+                ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
+
+                verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+                verifyNoMoreInteractions(searchIndex);
+
+                assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(composedMessageId.getMailboxId()));
+                assertThat(messageCaptor.getValue()).matches(message -> message.getComposedMessageIdWithMetaData()
+                    .getComposedMessageId()
+                    .getMessageId()
+                    .equals(composedMessageId.getMessageId()));
+            }
+        }
+    }
 }

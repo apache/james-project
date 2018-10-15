@@ -58,7 +58,7 @@ import spark.Service;
 @Path("/mailboxIndex")
 @Produces("application/json")
 public class ReindexingRoutes implements Routes {
-    private static final String BASE_PATH = "/mailboxIndex";
+    static final String BASE_PATH = "/mailboxIndex";
     private static final String USER_PARAM = ":user";
     private static final String MAILBOX_PARAM = ":mailbox";
     private static final String UID_PARAM = ":uid";
@@ -227,7 +227,7 @@ public class ReindexingRoutes implements Routes {
     }
 
     private TaskIdDto wrap(Request request, Response response, ThrowingSupplier<Task> taskGenerator) {
-        enforceTaskParameter(request);
+        ReIndexingRoutesUtil.enforceTaskParameter(request);
         Task task = taskGenerator.get();
         TaskId taskId = taskManager.submit(task);
         return TaskIdDto.respond(response, taskId);
@@ -286,17 +286,6 @@ public class ReindexingRoutes implements Routes {
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("mailbox not found")
                 .cause(e)
-                .haltError();
-        }
-    }
-
-    private void enforceTaskParameter(Request request) {
-        String task = request.queryParams("task");
-        if (!"reIndex".equals(task)) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("task query parameter is mandatory. The only supported value is `reIndex`")
                 .haltError();
         }
     }
