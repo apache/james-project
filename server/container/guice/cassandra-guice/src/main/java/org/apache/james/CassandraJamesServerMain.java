@@ -53,6 +53,7 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
+import org.apache.james.modules.server.MessageIdReIndexingModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveQuotaRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
@@ -75,7 +76,8 @@ public class CassandraJamesServerMain {
         new WebAdminServerModule(),
         new DLPRoutesModule(),
         new SieveQuotaRoutesModule(),
-        new ReIndexingModule());
+        new ReIndexingModule(),
+        new MessageIdReIndexingModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),

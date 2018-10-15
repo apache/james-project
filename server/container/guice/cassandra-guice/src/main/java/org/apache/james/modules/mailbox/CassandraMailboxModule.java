@@ -68,6 +68,7 @@ import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -92,6 +93,7 @@ import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.MailboxManagerDefinition;
+import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 
 import com.google.inject.AbstractModule;
@@ -146,6 +148,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);
 
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
+        bind(MessageIdReIndexerImpl.class).in(Scopes.SINGLETON);
 
         bind(BlobManager.class).to(StoreBlobManager.class);
         bind(MessageMapperFactory.class).to(CassandraMailboxSessionMapperFactory.class);
@@ -168,6 +171,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(RightManager.class).to(StoreRightManager.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
+        bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraAclModule.MODULE);
