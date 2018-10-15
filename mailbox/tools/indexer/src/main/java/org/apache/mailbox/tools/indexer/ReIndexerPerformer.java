@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Lists;
 
-public class ReIndexerPerformer {
+class ReIndexerPerformer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerPerformer.class);
 
@@ -60,20 +60,20 @@ public class ReIndexerPerformer {
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
     @Inject
-    public ReIndexerPerformer(MailboxManager mailboxManager,
-                              ListeningMessageSearchIndex messageSearchIndex,
-                              MailboxSessionMapperFactory mailboxSessionMapperFactory) {
+    ReIndexerPerformer(MailboxManager mailboxManager,
+                       ListeningMessageSearchIndex messageSearchIndex,
+                       MailboxSessionMapperFactory mailboxSessionMapperFactory) {
         this.mailboxManager = mailboxManager;
         this.messageSearchIndex = messageSearchIndex;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
-    public Task.Result reIndex(MailboxPath path, ReprocessingContext reprocessingContext) throws MailboxException {
+    Task.Result reIndex(MailboxPath path, ReprocessingContext reprocessingContext) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
         return reIndex(path, mailboxSession, reprocessingContext);
     }
 
-    public Task.Result reIndex(ReprocessingContext reprocessingContext) throws MailboxException {
+    Task.Result reIndex(ReprocessingContext reprocessingContext) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession("re-indexing");
         LOGGER.info("Starting a full reindex");
         List<MailboxPath> mailboxPaths = mailboxManager.list(mailboxSession);
