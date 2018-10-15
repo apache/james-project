@@ -39,11 +39,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class ObjectStorageBlobsDAOProvider implements Provider<ObjectStorageBlobsDAO> {
-    private static final String OBJECTSTORAGE_CONFIGURATION_NAME = "objectstorage";
+    static final String OBJECTSTORAGE_CONFIGURATION_NAME = "objectstorage";
 
-    private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
-    private static final String OBJECTSTORAGE_PROVIDER = "objectstorage.provider";
-    private static final String OBJECTSTORAGE_SWIFT_AUTH_API = "objectstorage.swift.authapi";
+    static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
+    static final String OBJECTSTORAGE_PROVIDER = "objectstorage.provider";
+    static final String OBJECTSTORAGE_SWIFT_AUTH_API = "objectstorage.swift.authapi";
 
     public static final String OBJECTSTORAGE_PROVIDER_SWIFT = "swift";
 

@@ -33,8 +33,9 @@ import com.amazonaws.util.StringUtils;
 import com.google.common.base.Preconditions;
 
 public class PayloadCodecProvider implements Provider<PayloadCodec> {
+    static final String OBJECTSTORAGE_PAYLOAD_CODEC = "objectstorage.payload.codec";
+
     private static final String OBJECTSTORAGE_CONFIGURATION_NAME = "objectstorage";
-    private static final String OBJECTSTORAGE_PAYLOAD_CODEC = "objectstorage.payload.codec";
 
     private final Configuration configuration;
 
