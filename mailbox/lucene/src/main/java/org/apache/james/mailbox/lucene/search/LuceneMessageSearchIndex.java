@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
@@ -354,6 +355,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final IndexWriter writer;
+    private final Directory directory;
 
     private int maxQueryResults = DEFAULT_MAX_QUERY_RESULTS;
 
@@ -380,22 +382,25 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         super(factory);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
-        this.writer = new IndexWriter(directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
+        this.directory = directory;
+        this.writer = new IndexWriter(this.directory,  createConfig(createAnalyzer(lenient), dropIndexOnStart));
     }
-    
-    
-    public LuceneMessageSearchIndex(MessageMapperFactory factory, MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory, IndexWriter writer) {
-        super(factory);
-        this.mailboxIdFactory = mailboxIdFactory;
-        this.messageIdFactory = messageIdFactory;
-        this.writer = writer;
+
+    @PreDestroy
+    public void close() throws IOException {
+        try {
+            writer.close();
+        } finally {
+            if (IndexWriter.isLocked(directory)) {
+                IndexWriter.unlock(directory);
+            }
+        }
     }
 
     @Override
     public ListenerType getType() {
         return ListenerType.EACH_NODE;
     }
-
 
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
