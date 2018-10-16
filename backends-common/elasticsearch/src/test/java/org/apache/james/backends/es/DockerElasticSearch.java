@@ -114,12 +114,23 @@ public class DockerElasticSearch {
         }
     }
 
+    public ElasticSearchConfiguration configuration(Optional<Duration> requestTimeout) {
+        return ElasticSearchConfiguration.builder()
+            .addHost(getHttpHost())
+            .requestTimeout(requestTimeout)
+            .build();
+    }
+
     public ElasticSearchConfiguration configuration() {
-        return ElasticSearchConfiguration.builder().addHost(getHttpHost()).build();
+        return configuration(Optional.empty());
     }
 
     public ClientProvider clientProvider() {
-        return new ClientProvider(configuration());
+        return new ClientProvider(configuration(Optional.empty()));
+    }
+
+    public ClientProvider clientProvider(Duration requestTimeout) {
+        return new ClientProvider(configuration(Optional.of(requestTimeout)));
     }
 
     private ElasticSearchAPI esAPI() {

@@ -19,11 +19,22 @@
 
 package org.apache.james.modules.mailbox;
 
+import java.util.Set;
+
 import org.apache.james.backends.es.ClientProvider;
+import org.apache.james.backends.es.ElasticSearchHealthCheck;
+import org.apache.james.backends.es.IndexName;
+import org.apache.james.core.healthcheck.HealthCheck;
+import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
+import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.elasticsearch.client.RestHighLevelClient;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class ElasticSearchClientModule extends AbstractModule {
 
@@ -31,6 +42,18 @@ public class ElasticSearchClientModule extends AbstractModule {
     protected void configure() {
         bind(ClientProvider.class).in(Scopes.SINGLETON);
         bind(RestHighLevelClient.class).toProvider(ClientProvider.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding()
+            .to(ElasticSearchHealthCheck.class);
     }
 
+    @Provides
+    @Singleton
+    Set<IndexName> provideIndexNames(ElasticSearchMailboxConfiguration mailboxConfiguration,
+                                     ElasticSearchQuotaConfiguration quotaConfiguration) {
+        return ImmutableSet.of(
+            mailboxConfiguration.getIndexMailboxName(),
+            quotaConfiguration.getIndexQuotaRatioName());
+    }
 }
