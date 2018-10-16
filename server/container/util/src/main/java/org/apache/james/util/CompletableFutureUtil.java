@@ -19,6 +19,7 @@
 
 package org.apache.james.util;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -42,17 +43,11 @@ public class CompletableFutureUtil {
     }
 
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
-        return futureStream
-            .map((CompletableFuture<T> future) -> future.thenApply(Stream::of))
-            .parallel()
-            .reduce((future1, future2) ->
-            future1.thenCompose(
-                stream1 -> future2.thenCompose(
-                    stream2 -> {
-                        Stream<T> concatStream = Stream.concat(stream1, stream2);
-                        return CompletableFuture.completedFuture(concatStream);
-                    })))
-            .orElse(CompletableFuture.completedFuture(Stream.of()));
+        CompletableFuture<T>[] arrayOfFutures = futureStream.toArray(CompletableFuture[]::new);
+
+        return CompletableFuture.allOf(arrayOfFutures)
+            .thenApply(any -> Arrays.stream(arrayOfFutures)
+                .map(CompletableFuture::join));
     }
 
     public static <R, T> CompletableFuture<Stream<R>> chainAll(Stream<T> futureStream,
