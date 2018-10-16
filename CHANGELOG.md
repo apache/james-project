@@ -7,13 +7,25 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 - Mail filtering configured via the JMAP protocol
 - WebAdmin exposed mail re-indexing tasks
+- JPA support for Sieve script storage thanks to [Sebast26](https://github.com/sebast26)
+- Mailet DOC: Exclude from documentation annotation thanks to [mschnitzler](https://github.com/mschnitzler)
+- `cassandra.pooling.max.queue.size` configuration option Thanks to [matzepan](https://github.com/matzepan)
+- `RecipentDomainIs` and `SenderDomainIs` matchers by [athulyaraj](https://github.com/athulyaraj)
+- IMAP MOVE commend (RFC-6851) On top of JPA. Thanks to [mschnitzler](https://github.com/mschnitzler)
+- Cassandra health checks thanks to [matzepan](https://github.com/matzepan)
+- Sieve script upload via the CLI thanks to [matzepan](https://github.com/matzepan)
 
 ### Changed
 - Multiple libraries updates
 - Migration from Cassandra 2 to Cassandra 3
+- Mail::getSender was deprecated. Mail::getMaybeSender offers better Null Sender support. Java 8 default API method was used to not break compatibility.
 
 ### Removed
 - Drop partially implemented Kafka distributed events
+
+### Third party softwares
+ - SpamAssassin prior 3.4.2 is subject to multiple CVEs. We recommend the upgrade
+ - Tika prior 1.19.1 is subject to multiple CVEs. We recommend the upgrade
 
 ## [3.1.0] - 2018-07-31
 ### Added
