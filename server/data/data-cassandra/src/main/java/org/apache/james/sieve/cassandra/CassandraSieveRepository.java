@@ -246,10 +246,10 @@ public class CassandraSieveRepository implements SieveRepository {
 
     @Override
     public boolean hasQuota(User user) {
-        return CompletableFutureUtil.combine(
-            cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent),
-            cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent),
-            (b1, b2) -> b1 || b2)
+        CompletableFuture<Boolean> hasUserQuota = cassandraSieveQuotaDAO.getQuota(user).thenApply(Optional::isPresent);
+        CompletableFuture<Boolean> hasGlobalQuota = cassandraSieveQuotaDAO.getQuota().thenApply(Optional::isPresent);
+
+        return hasUserQuota.thenCombine(hasGlobalQuota, (a, b) -> a || b)
             .join();
     }
 

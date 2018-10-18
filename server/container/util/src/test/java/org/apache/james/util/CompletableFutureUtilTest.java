@@ -53,20 +53,6 @@ public class CompletableFutureUtilTest {
     }
 
     @Test
-    public void combineShouldReturnCombinationOfBothSuppliedFutures() {
-        int value1 = 18;
-        int value2 = 12;
-
-        assertThat(CompletableFutureUtil.combine(
-            CompletableFuture.completedFuture(value1),
-            CompletableFuture.completedFuture(value2),
-            (a, b) -> 2 * a + b)
-            .join())
-            .isEqualTo(2 * value1 + value2);
-
-    }
-
-    @Test
     public void allOfShouldUnboxEmptyStream() {
         assertThat(
             CompletableFutureUtil.allOf(Stream.empty())

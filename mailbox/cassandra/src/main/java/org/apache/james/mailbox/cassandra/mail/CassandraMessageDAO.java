@@ -184,10 +184,11 @@ public class CassandraMessageDAO {
         try {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
-            return CompletableFutureUtil.combine(
-                blobStore.save(headerContent),
-                blobStore.save(bodyContent),
-                Pair::of);
+
+            CompletableFuture<BlobId> bodyFuture = blobStore.save(bodyContent);
+            CompletableFuture<BlobId> headerFuture = blobStore.save(headerContent);
+
+            return headerFuture.thenCombine(bodyFuture, Pair::of);
         } catch (IOException e) {
             throw new MailboxException("Error saving mail content", e);
         }
@@ -357,10 +358,8 @@ public class CassandraMessageDAO {
     }
 
     private CompletableFuture<byte[]> getFullContent(Row row) {
-        return CompletableFutureUtil.combine(
-            getHeaderContent(row),
-            getBodyContent(row),
-            Bytes::concat);
+        return getHeaderContent(row)
+            .thenCombine(getBodyContent(row), Bytes::concat);
     }
 
     private CompletableFuture<byte[]> getBodyContent(Row row) {

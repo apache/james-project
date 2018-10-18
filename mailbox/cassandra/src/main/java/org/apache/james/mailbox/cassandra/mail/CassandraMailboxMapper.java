@@ -138,10 +138,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
 
         CompletableFuture<Optional<SimpleMailbox>> simpleMailboxFuture = mailboxDAO.retrieveMailbox(mailboxId);
 
-        return CompletableFutureUtil.combine(
-            aclCompletableFuture,
-            simpleMailboxFuture,
-            this::addAcl);
+        return aclCompletableFuture.thenCombine(simpleMailboxFuture, this::addAcl);
     }
 
     private Optional<SimpleMailbox> addAcl(MailboxACL acl, Optional<SimpleMailbox> mailboxOptional) {

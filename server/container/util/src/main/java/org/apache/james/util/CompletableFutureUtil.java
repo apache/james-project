@@ -40,11 +40,6 @@ public class CompletableFutureUtil {
                 .orElse(CompletableFuture.completedFuture(Optional.empty())));
     }
 
-    public static <T, U, V> CompletableFuture<V> combine(CompletableFuture<T> t, CompletableFuture<U> u, BiFunction<T,U,V> combiner) {
-        return t.thenCompose(valueT ->
-            u.thenApply(valueU -> combiner.apply(valueT, valueU)));
-    }
-
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
         CompletableFuture<T>[] arrayOfFutures = futureStream.toArray(CompletableFuture[]::new);
 

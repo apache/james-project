@@ -21,11 +21,11 @@ package org.apache.james.jmap.mailet;
 
 import java.time.ZonedDateTime;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.MailAddress;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
@@ -33,7 +33,6 @@ import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
-import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
@@ -80,17 +79,16 @@ public class VacationMailet extends GenericMailet {
         }
     }
 
-    public CompletableFuture<Void> manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
+    private CompletableFuture<Void> manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
 
-        return CompletableFutureUtil.combine(
-                vacationRepository.retrieveVacation(accountId),
-                notificationRegistry.isRegistered(
-                    AccountId.fromString(recipient.toString()),
-                    RecipientId.fromMailAddress(processedMail.getMaybeSender().get())),
-                (vacation, alreadySent) ->
-                    sendNotificationIfRequired(recipient, processedMail, processingDate, vacation, alreadySent))
-            .thenCompose(Function.identity());
+        CompletableFuture<Vacation> vacationFuture = vacationRepository.retrieveVacation(accountId);
+        CompletableFuture<Boolean> alreadySentFuture = notificationRegistry.isRegistered(
+            AccountId.fromString(recipient.toString()),
+            RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
+
+        return vacationFuture.thenCombine(alreadySentFuture, Pair::of)
+            .thenCompose(pair -> sendNotificationIfRequired(recipient, processedMail, processingDate, pair.getKey(), pair.getValue()));
     }
 
     private CompletableFuture<Void> sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
