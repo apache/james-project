@@ -245,6 +245,18 @@ public class MailAddressTest {
     }
 
     @Test
+    public void equalsShouldReturnFalseWhenOnlyFirstMemberIsANullSender() {
+        assertThat(MailAddress.getMailSender(GOOD_ADDRESS))
+            .isNotEqualTo(MailAddress.nullSender());
+    }
+
+    @Test
+    public void equalsShouldReturnFalseWhenOnlySecondMemberIsANullSender() {
+        assertThat(MailAddress.nullSender())
+            .isNotEqualTo(MailAddress.getMailSender(GOOD_ADDRESS));
+    }
+
+    @Test
     public void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailAddress.class)
             .verify();

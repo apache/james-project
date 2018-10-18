@@ -381,12 +381,18 @@ public class MailAddress implements java.io.Serializable {
             String theString = (String) obj;
             return toString().equalsIgnoreCase(theString);
         } else if (obj instanceof MailAddress) {
-            MailAddress addr = (MailAddress) obj;
-            if (isNullSender() && addr.isNullSender()) {
+            MailAddress that = (MailAddress) obj;
+            boolean bothNullSender = this.isNullSender() && that.isNullSender();
+            boolean onlyOneIsNullSender = isNullSender() ^ that.isNullSender();
+
+            if (bothNullSender) {
                 return true;
             }
-            return equalsIgnoreCase(getLocalPart(), addr.getLocalPart())
-                && Objects.equals(getDomain(), addr.getDomain());
+            if (onlyOneIsNullSender) {
+                return false;
+            }
+            return equalsIgnoreCase(getLocalPart(), that.getLocalPart())
+                && Objects.equals(getDomain(), that.getDomain());
         }
         return false;
     }
