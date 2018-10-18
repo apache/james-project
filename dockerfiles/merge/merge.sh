@@ -31,6 +31,8 @@ git checkout apache/$ORIGINAL_BRANCH -B $ORIGINAL_BRANCH
 
 # Getting the branch to be merged from /origin
 git fetch origin
+# This is required for non master branches but fails for SHA-1
+git checkout origin/$SHA1 -b $SHA1 || true
 git checkout $SHA1
 git checkout -b SHA1_BRANCH
 
