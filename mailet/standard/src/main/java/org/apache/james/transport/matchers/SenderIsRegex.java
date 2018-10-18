@@ -78,7 +78,7 @@ public class SenderIsRegex extends GenericMatcher {
         if (mailAddress == null) {
             return null;
         }
-        String senderString = mailAddress.toString();
+        String senderString = mailAddress.asString();
         if (pattern.matcher(senderString).matches()) {
             return mail.getRecipients();
         }

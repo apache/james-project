@@ -74,7 +74,7 @@ class SenderIsRegexTest {
     }
 
     @Test
-    void shouldNotMatchWhenNullSender() throws Exception {
+    void shouldNotMatchWhenNoSender() throws Exception {
         matcher.init(FakeMatcherConfig.builder()
                 .matcherName("SenderIsRegex")
                 .condition(".*@.*")
@@ -85,6 +85,36 @@ class SenderIsRegexTest {
             .build();
 
         assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    void shouldNotMatchWhenNullSender() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition(".*@.*")
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .sender(MailAddress.nullSender())
+            .build();
+
+        assertThat(matcher.match(fakeMail)).isNull();
+    }
+
+    @Test
+    void shouldMatchNullSenderWhenConfigured() throws Exception {
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderIsRegex")
+                .condition("<>")
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(recipient)
+            .sender(MailAddress.nullSender())
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(recipient);
     }
 
     @Test

@@ -47,6 +47,9 @@ public class SenderHostIsLocal extends GenericMatcher {
     }
 
     private boolean isLocalServer(Mail mail) {
+        if (mail.getSender().isNullSender()) {
+            return false;
+        }
         return this.getMailetContext().isLocalServer(mail.getSender().getDomain());
     }
 

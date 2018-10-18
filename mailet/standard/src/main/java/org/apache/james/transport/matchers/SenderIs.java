@@ -20,6 +20,7 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.MessagingException;
@@ -66,7 +67,8 @@ public class SenderIs extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (senders.contains(mail.getSender())) {
+        MailAddress sanitizedSender = Optional.ofNullable(mail.getSender()).orElse(MailAddress.nullSender());
+        if (senders.contains(sanitizedSender)) {
             return mail.getRecipients();
         } else {
             return null;
