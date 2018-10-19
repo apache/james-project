@@ -20,6 +20,7 @@ package org.apache.james.backend.rabbitmq;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -79,8 +80,8 @@ public class DockerRabbitMQ {
 
     private WaitAllStrategy waitStrategy() {
         return new WaitAllStrategy()
-            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.DEFAULT))
-            .withStrategy(RabbitMQWaitStrategy.withDefaultTimeout(this));
+            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.TWENTIES_PER_MINUTE))
+            .withStrategy(new RabbitMQWaitStrategy(this, Duration.ofMinutes(10)));
     }
 
     private String randomName() {

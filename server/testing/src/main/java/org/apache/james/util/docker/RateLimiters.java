@@ -29,4 +29,9 @@ public interface RateLimiters {
         .withRate(20, TimeUnit.SECONDS)
         .withConstantThroughput()
         .build();
+
+    RateLimiter TWENTIES_PER_MINUTE = RateLimiterBuilder.newBuilder()
+        .withRate(20, TimeUnit.MINUTES)
+        .withConstantThroughput()
+        .build();
 }
