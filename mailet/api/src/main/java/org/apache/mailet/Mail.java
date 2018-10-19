@@ -157,6 +157,12 @@ public interface Mail extends Serializable, Cloneable {
     default boolean hasSender() {
         return !getMaybeSender().isNullSender();
     }
+
+    /**
+     * @since Mailet API v3.2.0
+     * @return A copy of this email. Implementation can affect a variation of the initial mail name property.
+     */
+    Mail duplicate() throws MessagingException;
     
     /**
      * Returns the current state of the message, such as GHOST, ERROR or DEFAULT.

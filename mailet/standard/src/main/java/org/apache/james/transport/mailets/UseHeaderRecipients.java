@@ -106,7 +106,7 @@ public class UseHeaderRecipients extends GenericMailet {
         }
 
         // Return email to the "root" process.
-        getMailetContext().sendMail(mail.getSender(), mail.getRecipients(), mail.getMessage());
+        getMailetContext().sendMail(mail.duplicate());
         mail.setState(Mail.GHOST);
     }
 
