@@ -26,7 +26,7 @@ James is a project that lives from the contributions of its community! Anyone ca
 Read the https://james.apache.org/contribute.html[contributing guidelines].
 
 We more than welcome *articles* and *blog posts* about James. Contact us by https://james.apache.org/mail.html[email]
-or on https://gitter.im/apache/james-projec[Gitter] to share your experiences.
+or on https://gitter.im/apache/james-project[Gitter] to share your experiences.
 
 *Documentation* is an easy way to get started, and more than wanted! Check out the https://issues.apache.org/jira/issues/?jql=project%20%3D%20JAMES%20AND%20resolution%20%3D%20Unresolved%20AND%20labels%20%3D%20documentation%20ORDER%20BY%20priority%20DESC%2C%20updated%20DESC[~documentation] label on JIRA.
 
