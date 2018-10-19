@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -208,5 +209,63 @@ public class MailImplTest {
     @Test
     public void deriveNewNameShouldGenerateNotEqualsCurrentName() throws MessagingException {
         assertThat(MailImpl.deriveNewName("current")).isNotEqualTo("current");
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleNullSender() {
+        assertThat(
+            MailImpl.builder()
+                .sender(MailAddress.nullSender())
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleNoSender() {
+        assertThat(
+            MailImpl.builder()
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleSender() {
+        assertThat(
+            MailImpl.builder()
+                .sender(MailAddressFixture.SENDER)
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.of(MailAddressFixture.SENDER));
+    }
+
+    @Test
+    public void hasSenderShouldReturnFalseWhenSenderIsNull() {
+        assertThat(
+            MailImpl.builder()
+                .sender(MailAddress.nullSender())
+                .build()
+                .hasSender())
+            .isFalse();
+    }
+
+    @Test
+    public void hasSenderShouldReturnFalseWhenSenderIsNotSpecified() {
+        assertThat(
+            MailImpl.builder()
+                .build()
+                .hasSender())
+            .isFalse();
+    }
+
+    @Test
+    public void hasSenderShouldReturnTrueWhenSenderIsSpecified() {
+        assertThat(
+            MailImpl.builder()
+                .sender(MailAddressFixture.SENDER)
+                .build()
+                .hasSender())
+            .isTrue();
     }
 }

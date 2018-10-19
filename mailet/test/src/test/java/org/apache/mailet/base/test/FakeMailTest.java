@@ -19,10 +19,15 @@
 
 package org.apache.mailet.base.test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
+import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -36,6 +41,64 @@ public class FakeMailTest {
             .suppress(Warning.NONFINAL_FIELDS)
             .withPrefabValues(MimeMessage.class, mock(MimeMessage.class), mock(MimeMessage.class))
             .verify();
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleNullSender() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .sender(MailAddress.nullSender())
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleNoSender() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    public void getMaybeSenderShouldHandleSender() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .sender(MailAddressFixture.SENDER)
+                .build()
+                .getMaybeSender())
+            .isEqualTo(MaybeSender.of(MailAddressFixture.SENDER));
+    }
+
+    @Test
+    public void hasSenderShouldReturnFalseWhenSenderIsNull() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .sender(MailAddress.nullSender())
+                .build()
+                .hasSender())
+            .isFalse();
+    }
+
+    @Test
+    public void hasSenderShouldReturnFalseWhenSenderIsNotSpecified() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .build()
+                .hasSender())
+            .isFalse();
+    }
+
+    @Test
+    public void hasSenderShouldReturnTrueWhenSenderIsSpecified() throws MessagingException {
+        assertThat(
+            FakeMail.builder()
+                .sender(MailAddressFixture.SENDER)
+                .build()
+                .hasSender())
+            .isTrue();
     }
 
 }

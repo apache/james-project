@@ -19,6 +19,7 @@
 
 
 package org.apache.mailet;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Date;
@@ -28,6 +29,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
 /**
@@ -121,9 +123,40 @@ public interface Mail extends Serializable, Cloneable {
      * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
      * or internally defined.
      *
+     * @deprecated @see {@link #getMaybeSender()} and {@link MaybeSender}
+     *
+     * Note that SMTP null sender ( "&lt;&gt;" ) needs to be implicitly handled by the caller under the form of 'null' or
+     * {@link MailAddress#nullSender()}. Replacement method adds type safety on this operation.
+     *
      * @return the sender of this message
      */
+    @Deprecated
     MailAddress getSender();
+
+    /**
+     * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
+     * or internally defined.
+     *
+     * 'null' or {@link MailAddress#nullSender()} are handled with {@link MaybeSender#nullSender()}.
+     *
+     * @since Mailet API v3.2.0
+     * @return the sender of this message wrapped in an optional
+     */
+    @SuppressWarnings("deprecated")
+    default MaybeSender getMaybeSender() {
+        return MaybeSender.of(getSender());
+    }
+
+    /**
+     * Returns if this message has a sender.
+     *
+     * {@link MaybeSender#nullSender()} will be considered as no sender.
+     *
+     * @since Mailet API v3.2.0
+     */
+    default boolean hasSender() {
+        return !getMaybeSender().isNullSender();
+    }
     
     /**
      * Returns the current state of the message, such as GHOST, ERROR or DEFAULT.
