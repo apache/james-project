@@ -34,7 +34,9 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 
+import com.github.fge.lambdas.consumers.ThrowingConsumer;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.Address;
 import com.rabbitmq.client.ConnectionFactory;
@@ -49,6 +51,7 @@ public class DockerRabbitMQ {
     private static final String DEFAULT_RABBITMQ_PASSWORD = "guest";
     private static final String RABBITMQ_ERLANG_COOKIE = "RABBITMQ_ERLANG_COOKIE";
     private static final String RABBITMQ_NODENAME = "RABBITMQ_NODENAME";
+    private static final Duration TEN_MINUTE_TIMEOUT = Duration.ofMinutes(10);
 
     private final GenericContainer<?> container;
     private final Optional<String> nodeName;
@@ -78,10 +81,13 @@ public class DockerRabbitMQ {
         this.nodeName = nodeName;
     }
 
-    private WaitAllStrategy waitStrategy() {
+    private WaitStrategy waitStrategy() {
         return new WaitAllStrategy()
-            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT).withRateLimiter(RateLimiters.TWENTIES_PER_MINUTE))
-            .withStrategy(new RabbitMQWaitStrategy(this, Duration.ofMinutes(10)));
+            .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT)
+                .withRateLimiter(RateLimiters.DEFAULT)
+                .withStartupTimeout(TEN_MINUTE_TIMEOUT))
+            .withStrategy(new RabbitMQWaitStrategy(this, TEN_MINUTE_TIMEOUT))
+            .withStartupTimeout(TEN_MINUTE_TIMEOUT);
     }
 
     private String randomName() {
@@ -177,6 +183,15 @@ public class DockerRabbitMQ {
         startApp();
     }
 
+    public void forgetNode(String removalClusterNodeName) throws Exception {
+        String stdout = container()
+            .execInContainer("rabbitmqctl", "-n", this.nodeName.get(), "forget_cluster_node", removalClusterNodeName)
+            .getStdout();
+        LOGGER.debug("forget_cluster_node: {}", stdout);
+
+        startApp();
+    }
+
     public void waitForReadyness() {
         waitStrategy().waitUntilReady(container);
     }
@@ -199,5 +214,11 @@ public class DockerRabbitMQ {
                 .setHost(getHostIp())
                 .setPort(getAdminPort())
                 .build();
+    }
+
+    public void performIfRunning(ThrowingConsumer<DockerRabbitMQ> actionPerform) {
+        if (container.isRunning()) {
+            actionPerform.accept(this);
+        }
     }
 }

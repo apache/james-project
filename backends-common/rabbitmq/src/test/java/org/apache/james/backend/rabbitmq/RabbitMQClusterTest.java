@@ -57,13 +57,13 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-@ExtendWith(DockerClusterRabbitMQExtension.class)
 class RabbitMQClusterTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQClusterTest.class);
 
     private static final String QUEUE = "queue";
 
+    @ExtendWith(DockerClusterRabbitMQExtension.class)
     @Nested
     class ClusterSharing {
 
@@ -147,6 +147,7 @@ class RabbitMQClusterTest {
 
     }
 
+    @ExtendWith(DockerClusterRabbitMQExtension.class)
     @Nested
     class ClusterNodesFailure {
 
