@@ -39,7 +39,7 @@ public class TikaContainer extends ExternalResource {
     public TikaContainer() {
         tika = new SwarmGenericContainer(Images.TIKA)
                 .withExposedPorts(DEFAULT_TIKA_PORT)
-                .waitingFor(Wait.forHttp("/tika").withRateLimiter(RateLimiters.DEFAULT))
+                .waitingFor(Wait.forHttp("/tika").withRateLimiter(RateLimiters.TWENTIES_PER_SECOND))
                 .withStartupTimeout(Duration.ofSeconds(30));
     }
 

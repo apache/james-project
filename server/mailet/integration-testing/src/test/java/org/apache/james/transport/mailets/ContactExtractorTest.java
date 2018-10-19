@@ -66,7 +66,7 @@ public class ContactExtractorTest {
     public static final String ROUTING_KEY = "";
 
     public SwarmGenericContainer rabbit = new SwarmGenericContainer(Images.RABBITMQ)
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     public AmqpRule amqpRule = new AmqpRule(rabbit, EXCHANGE, ROUTING_KEY);
     public TemporaryFolder folder = new TemporaryFolder();
 

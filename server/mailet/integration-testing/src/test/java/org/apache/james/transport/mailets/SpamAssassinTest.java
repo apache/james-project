@@ -62,7 +62,7 @@ public class SpamAssassinTest {
     public static SwarmGenericContainer spamAssassinContainer = new SwarmGenericContainer(Images.SPAMASSASSIN)
         .withExposedPorts(783)
         .withAffinityToContainer()
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     @Rule

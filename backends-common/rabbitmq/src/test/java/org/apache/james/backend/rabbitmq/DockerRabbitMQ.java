@@ -84,7 +84,7 @@ public class DockerRabbitMQ {
     private WaitStrategy waitStrategy() {
         return new WaitAllStrategy()
             .withStrategy(Wait.forHttp("").forPort(DEFAULT_RABBITMQ_ADMIN_PORT)
-                .withRateLimiter(RateLimiters.DEFAULT)
+                .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
                 .withStartupTimeout(TEN_MINUTE_TIMEOUT))
             .withStrategy(new RabbitMQWaitStrategy(this, TEN_MINUTE_TIMEOUT))
             .withStartupTimeout(TEN_MINUTE_TIMEOUT);

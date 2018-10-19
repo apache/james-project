@@ -67,7 +67,7 @@ public class AmqpForwardAttachmentTest {
     public SwarmGenericContainer rabbitMqContainer = new SwarmGenericContainer(Images.RABBITMQ)
         .withAffinityToContainer()
         .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.DEFAULT));
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
     public AmqpRule amqpRule = new AmqpRule(rabbitMqContainer, EXCHANGE_NAME, ROUTING_KEY);

@@ -69,7 +69,7 @@ public class LdapGenericContainer extends ExternalResource {
                 .withEnv("SLAPD_PASSWORD", password)
                 .withEnv("SLAPD_CONFIG_PASSWORD", password)
                 .withExposedPorts(LdapGenericContainer.DEFAULT_LDAP_PORT)
-                .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
+                .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
         }
     }
 

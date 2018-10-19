@@ -41,7 +41,7 @@ public class ContainerTest {
         .withExposedPorts(80)
         .waitingFor(new HttpWaitStrategy()
             .forStatusCode(200)
-            .withRateLimiter(RateLimiters.DEFAULT));
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     @Test
     public void containerShouldBeReachableOnExposedPort() throws IOException, URISyntaxException {

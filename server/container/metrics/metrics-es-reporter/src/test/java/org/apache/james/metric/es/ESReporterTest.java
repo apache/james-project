@@ -58,7 +58,7 @@ public class ESReporterTest {
     public SwarmGenericContainer esContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
         .withAffinityToContainer()
         .withExposedPorts(ES_HTTP_PORT, ES_APPLICATIVE_PORT)
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.DEFAULT));
+        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
     private ClientProvider clientProvider;
     private ESMetricReporter esMetricReporter;
