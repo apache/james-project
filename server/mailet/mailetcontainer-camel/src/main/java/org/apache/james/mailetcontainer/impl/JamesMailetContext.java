@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -396,7 +397,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
-        sendMail(mail, Mail.DEFAULT);
+        sendMail(mail, Optional.ofNullable(mail.getState()).orElse(Mail.DEFAULT));
     }
 
     @Override

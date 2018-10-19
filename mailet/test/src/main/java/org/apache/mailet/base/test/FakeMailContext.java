@@ -497,7 +497,7 @@ public class FakeMailContext implements MailetContext {
 
     @Override
     public void sendMail(Mail mail) throws MessagingException {
-        sendMail(mail, Mail.DEFAULT);
+        sendMail(mail, Optional.ofNullable(mail.getState()).orElse(Mail.DEFAULT));
     }
 
     @Override
