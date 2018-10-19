@@ -21,7 +21,6 @@ package org.apache.james.transport.mailets.jsieve;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -373,8 +372,8 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     }
     
     @Override
-    public void post(MailAddress sender, Collection<MailAddress> recipients, MimeMessage mail) throws MessagingException {
-        getMailetContext().sendMail(sender, recipients, mail);
+    public void post(Mail mail) throws MessagingException {
+        getMailetContext().sendMail(mail);
     }
 
     @Override

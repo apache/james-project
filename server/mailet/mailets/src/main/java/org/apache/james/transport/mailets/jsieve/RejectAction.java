@@ -20,8 +20,7 @@ package org.apache.james.transport.mailets.jsieve;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -38,11 +37,15 @@ import org.apache.james.mdn.fields.ReportingUserAgent;
 import org.apache.james.mdn.modifier.DispositionModifier;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
 import org.apache.james.mdn.type.DispositionType;
+import org.apache.james.server.core.MailImpl;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.ActionReject;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Performs the rejection of a mail, with a reply to the sender. 
@@ -133,13 +136,14 @@ public class RejectAction implements MailAction {
         reply.setContent(multipart);
         reply.saveChanges();
         Address[] recipientAddresses = reply.getAllRecipients();
-        if (null != recipientAddresses) {
-            Collection<MailAddress> recipients = new ArrayList<>(recipientAddresses.length);
-            for (Address recipientAddress : recipientAddresses) {
-                recipients.add(new MailAddress(
-                        (InternetAddress) recipientAddress));
-            }
-            context.post(null, recipients, reply);
+        if (recipientAddresses != null) {
+            context.post(MailImpl.builder()
+                .recipients(Arrays.stream(recipientAddresses)
+                    .map(address -> (InternetAddress) address)
+                    .map(Throwing.function(MailAddress::new))
+                    .collect(ImmutableList.toImmutableList()))
+                .mimeMessage(reply)
+                .build());
         } else {
             LOGGER.info("Unable to send reject MDN. Could not determine the recipient.");
         }

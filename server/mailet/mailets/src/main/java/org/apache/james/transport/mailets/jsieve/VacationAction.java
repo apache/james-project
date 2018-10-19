@@ -27,6 +27,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MailImpl;
 import org.apache.jsieve.mail.Action;
 import org.apache.jsieve.mail.optional.ActionVacation;
 import org.apache.mailet.Mail;
@@ -64,7 +65,12 @@ public class VacationAction implements MailAction {
             .reason(actionVacation.getReason())
             .subject(actionVacation.getSubject())
             .build();
-        context.post(vacationReply.getSender(), vacationReply.getRecipients(), vacationReply.getMimeMessage());
+
+        context.post(MailImpl.builder()
+            .sender(vacationReply.getSender())
+            .recipients(vacationReply.getRecipients())
+            .mimeMessage(vacationReply.getMimeMessage())
+            .build());
     }
 
     private boolean isStillInVacation(ActionVacation actionVacation, int dayDifference) {
