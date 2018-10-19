@@ -97,9 +97,9 @@ class RabbitMQClusterTest {
 
             assertThat(stdout)
                 .contains(
-                    DockerClusterRabbitMQExtension.RABBIT_1,
-                    DockerClusterRabbitMQExtension.RABBIT_2,
-                    DockerClusterRabbitMQExtension.RABBIT_3);
+                    cluster.getRabbitMQ1().getNodeName(),
+                    cluster.getRabbitMQ2().getNodeName(),
+                    cluster.getRabbitMQ3().getNodeName());
         }
 
         @Test
