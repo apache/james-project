@@ -1063,6 +1063,20 @@ public class ServerCmdTest {
     }
 
     @Test
+    public void addActiveSieveScriptCommandShouldThrowOnAdditionalArguments() throws Exception {
+        String user = "user@domain";
+        String scriptName = "no_fast_money";
+        String script = "if header :contains :comparator \"i;octet\" \"Subject\"" +
+                "\"MAKE MONEY FAST\" {discard;}";
+
+        String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.ADDACTIVESIEVESCRIPT.getCommand(), user, scriptName, script, ADDITIONAL_ARGUMENT };
+        CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
+
+        assertThatThrownBy(() -> testee.executeCommandLine(commandLine))
+                .isInstanceOf(InvalidArgumentNumberException.class);
+    }
+
+    @Test
     public void executeCommandLineShouldThrowOnUnrecognizedCommands() throws Exception {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", "wrongCommand"};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
