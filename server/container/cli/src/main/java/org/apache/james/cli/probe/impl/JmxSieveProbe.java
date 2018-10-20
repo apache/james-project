@@ -74,6 +74,7 @@ public class JmxSieveProbe implements SieveProbe, JmxProbe {
 
     @Override
     public void addActiveSieveScript(String user, String name, String script) throws Exception {
+        sieveRepositoryManagement.addActiveSieveScript(user, name, script);
     }
     
 }
