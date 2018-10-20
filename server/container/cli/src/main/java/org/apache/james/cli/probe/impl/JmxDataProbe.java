@@ -265,7 +265,7 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeForwardMapping")
+                     .addContext(MDCBuilder.ACTION, "addGroupMapping")
                      .build()) {
             virtualUserTableProxy.addGroupMapping(toUser, toDomain, fromAddress);
         }
@@ -276,7 +276,7 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         try (Closeable closeable =
                  MDCBuilder.create()
                      .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "removeForwardMapping")
+                     .addContext(MDCBuilder.ACTION, "removeGroupMapping")
                      .build()) {
             virtualUserTableProxy.removeGroupMapping(toUser, toDomain, fromAddress);
         }
