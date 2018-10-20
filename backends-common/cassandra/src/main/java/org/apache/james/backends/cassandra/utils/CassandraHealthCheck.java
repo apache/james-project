@@ -37,6 +37,7 @@ public class CassandraHealthCheck implements HealthCheck {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraHealthCheck.class);
     private static final ComponentName COMPONENT_NAME = new ComponentName("Cassandra backend");
+    private static final String HEALTH_QUERY = "SELECT NOW() FROM system.local";
 
     private Session session;
 
@@ -55,7 +56,7 @@ public class CassandraHealthCheck implements HealthCheck {
         try {
             // execute a simple query to check if cassandra is responding
             // idea from: https://stackoverflow.com/questions/10246287
-            session.execute("SELECT NOW() FROM system.local");
+            session.execute(HEALTH_QUERY);
             return Result.healthy(COMPONENT_NAME);
         } catch (Exception e) {
             LOGGER.error("Error checking cassandra backend", e);
