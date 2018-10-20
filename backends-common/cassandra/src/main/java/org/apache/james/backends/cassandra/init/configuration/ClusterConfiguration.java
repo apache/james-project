@@ -204,11 +204,13 @@ public class ClusterConfiguration {
         Optional<Integer> maxRequests = Optional.ofNullable(configuration.getInteger("cassandra.pooling.local.max.requests", null));
         Optional<Integer> poolingTimeout = Optional.ofNullable(configuration.getInteger("cassandra.pooling.timeout", null));
         Optional<Integer> heartbeatTimeout = Optional.ofNullable(configuration.getInteger("cassandra.pooling.heartbeat.timeout", null));
+        Optional<Integer> maxQueueSize = Optional.ofNullable(configuration.getInteger("cassandra.pooling.max.queue.size", null));
 
         if (!maxConnections.isPresent()
             && !maxRequests.isPresent()
             && !poolingTimeout.isPresent()
-            && !heartbeatTimeout.isPresent()) {
+            && !heartbeatTimeout.isPresent()
+            && !maxQueueSize.isPresent()) {
             return Optional.empty();
         }
         PoolingOptions result = new PoolingOptions();
@@ -223,6 +225,7 @@ public class ClusterConfiguration {
         });
         poolingTimeout.ifPresent(result::setPoolTimeoutMillis);
         heartbeatTimeout.ifPresent(result::setHeartbeatIntervalSeconds);
+        maxQueueSize.ifPresent(result::setMaxQueueSize);
 
         return Optional.of(result);
     }

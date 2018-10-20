@@ -65,7 +65,7 @@
 
         <dt><strong>cassandra.readTimeoutMillis</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/socket_options/">driver read timeout</a></dd>
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/socket_options/">driver read timeout</a>.</dd>
 
         # Read com.datastax.driver.core.PoolingOptions for knowing defaults value
         # No value here will default to driver's default value
@@ -76,22 +76,27 @@
         # cassandra.pooling.timeout=5000
         ## In seconds.
         # cassandra.pooling.heartbeat.timeout=30
+        # cassandra.pooling.max.queue.size=256
 
         <dt><strong>cassandra.pooling.local.max.connections</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">maximum number of connections to hosts</a> (remote and local)</dd>
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/">maximum number of connections to hosts</a> (remote and local).</dd>
 
         <dt><strong>cassandra.pooling.local.max.requests</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">maximum number of concurrent requests per connection</a></dd>
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/">maximum number of concurrent requests per connection</a>.</dd>
 
         <dt><strong>cassandra.pooling.timeout</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify timeout while not locationg pool</a>. Should be higher than sockets timeout.</dd>
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue">timeout for waiting in the pool queue</a>. Should be higher than sockets timeout.</dd>
 
         <dt><strong>cassandra.pooling.heartbeat.timeout</strong></dt>
         <dd>Optional.
-          If specified defines the Cassandra <a href="http://docs.datastax.com/en/developer/java-driver/2.1/manual/pooling/">Specify heartbeat timeout</a></dd>
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#heartbeat">heartbeat timeout</a>.</dd>
+
+        <dt><strong>cassandra.pooling.max.queue.size</strong></dt>
+        <dd>Optional.
+          If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/pooling/#acquisition-queue">maximum size of the connection pool queue</a>.</dd>
 
         <dt><strong>mailbox.max.retry.acl</strong></dt>
         <dd>Optional. Defaults to 1000.<br/> Controls the number of retries upon Cassandra ACL updates.</dd>
@@ -183,7 +188,7 @@
         <dt><strong>attachment.v2.migration.read.timeout</strong></dt>
         <dd>Optional. Defaults to one day.<br/> Controls how many milliseconds before the read on attachment v1 time out.</dd>
       </dl>
-      
+
     </subsection>
 
     <subsection name="From V4 to V5">
