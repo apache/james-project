@@ -37,11 +37,14 @@ import java.util.Queue;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -52,8 +55,39 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-@ExtendWith(RabbitMQExtension.class)
 class RabbitMQTest {
+
+    private static class RabbitMQNestedTestExtension extends RabbitMQExtension {
+
+        @Override
+        public void beforeAll(ExtensionContext context) {
+        }
+
+        void beforeAll() {
+            super.beforeAll(null);
+        }
+
+        @Override
+        public void afterAll(ExtensionContext extensionContext) {
+        }
+
+        void afterAll() {
+            super.afterAll(null);
+        }
+    }
+
+    @RegisterExtension
+    static RabbitMQNestedTestExtension testExtension = new RabbitMQNestedTestExtension();
+
+    @BeforeAll
+    static void setup() {
+        testExtension.beforeAll();
+    }
+
+    @AfterAll
+    static void tearDown() {
+        testExtension.afterAll();
+    }
 
     @Nested
     class SingleConsumerTest {
