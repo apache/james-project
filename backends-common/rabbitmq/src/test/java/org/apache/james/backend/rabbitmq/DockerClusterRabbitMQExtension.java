@@ -22,9 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import org.apache.james.util.Runnables;
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
@@ -37,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import com.rabbitmq.client.Address;
 
-public class DockerClusterRabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterEachCallback, AfterAllCallback, ParameterResolver {
+public class DockerClusterRabbitMQExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
     private static final String RABBIT_1 = "rabbit1";
     private static final String RABBIT_2 = "rabbit2";
@@ -48,8 +46,7 @@ public class DockerClusterRabbitMQExtension implements BeforeAllCallback, Before
     private DockerRabbitMQ rabbitMQ2;
     private DockerRabbitMQ rabbitMQ3;
 
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) throws Exception {
+    public void beforeAll() {
         String cookie = Hashing.sha256().hashString("secret cookie here", StandardCharsets.UTF_8).toString();
 
         network = Network.NetworkImpl.builder()
@@ -62,14 +59,13 @@ public class DockerClusterRabbitMQExtension implements BeforeAllCallback, Before
         rabbitMQ2 = DockerRabbitMQ.withCookieAndHostName(RABBIT_2, clusterIdentity, cookie, network);
         rabbitMQ3 = DockerRabbitMQ.withCookieAndHostName(RABBIT_3, clusterIdentity, cookie, network);
 
-        Runnables.runParallel(
-            rabbitMQ1::start,
-            rabbitMQ2::start,
-            rabbitMQ3::start);
+        startDockerRabbits();
     }
 
     @Override
-    public void beforeEach(ExtensionContext context) {
+    public void beforeEach(ExtensionContext context) throws Exception {
+        startDockerRabbits();
+
         Runnables.runParallel(
             Throwing.runnable(() -> rabbitMQ2.join(rabbitMQ1)),
             Throwing.runnable(() -> rabbitMQ3.join(rabbitMQ1)));
@@ -78,12 +74,11 @@ public class DockerClusterRabbitMQExtension implements BeforeAllCallback, Before
     }
 
     @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
         cluster.detach();
     }
 
-    @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
+    public void afterAll() throws Exception {
         cluster.stop();
         network.close();
     }
@@ -96,6 +91,13 @@ public class DockerClusterRabbitMQExtension implements BeforeAllCallback, Before
     @Override
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return cluster;
+    }
+
+    private void startDockerRabbits() {
+        Runnables.runParallel(
+            rabbitMQ1::start,
+            rabbitMQ2::start,
+            rabbitMQ3::start);
     }
 
     public static class DockerRabbitMQCluster {

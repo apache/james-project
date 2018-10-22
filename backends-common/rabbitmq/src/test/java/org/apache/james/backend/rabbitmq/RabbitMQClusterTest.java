@@ -39,12 +39,14 @@ import java.util.stream.IntStream;
 import org.apache.james.backend.rabbitmq.DockerClusterRabbitMQExtension.DockerRabbitMQCluster;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +65,19 @@ class RabbitMQClusterTest {
 
     private static final String QUEUE = "queue";
 
-    @ExtendWith(DockerClusterRabbitMQExtension.class)
+    @RegisterExtension
+    static DockerClusterRabbitMQExtension testExtension = new DockerClusterRabbitMQExtension();
+
+    @BeforeAll
+    static void setup() {
+        testExtension.beforeAll();
+    }
+
+    @AfterAll
+    static void tearDown() throws Exception {
+        testExtension.afterAll();
+    }
+
     @Nested
     class ClusterSharing {
 
@@ -147,7 +161,6 @@ class RabbitMQClusterTest {
 
     }
 
-    @ExtendWith(DockerClusterRabbitMQExtension.class)
     @Nested
     class ClusterNodesFailure {
 

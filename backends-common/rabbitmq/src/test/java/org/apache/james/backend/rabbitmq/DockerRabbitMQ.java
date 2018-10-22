@@ -128,7 +128,9 @@ public class DockerRabbitMQ {
     }
 
     public void start() {
-        container.start();
+        if (!container.isRunning()) {
+            container.start();
+        }
     }
 
     public void stop() {
