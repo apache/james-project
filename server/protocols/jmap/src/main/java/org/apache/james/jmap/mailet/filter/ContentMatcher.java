@@ -53,7 +53,7 @@ public interface ContentMatcher {
             try {
                 return Optional.of(new InternetAddress(fullAddress));
             } catch (AddressException e) {
-                LOGGER.error("error while parsing full address {}", fullAddress, e);
+                LOGGER.info("error while parsing full address {}", fullAddress, e);
                 return Optional.empty();
             }
         }
