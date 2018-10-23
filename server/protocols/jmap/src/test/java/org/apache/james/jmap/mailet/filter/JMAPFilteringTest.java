@@ -237,6 +237,56 @@ class JMAPFilteringTest {
                         .valueToMatch(USER_1_ADDRESS),
 
                     argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "invalid@ white.space.in.domain.tld")
+                        .valueToMatch("invalid@ white.space.in.domain.tld"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("\"a, b\"@quoted.com"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Username exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("Toto"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Full exact match in a coma quoted " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("Toto <\"a, b\"@quoted.com>"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a failing + coma quoted" + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("\"a, b\"@quoted.com"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Username exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("Toto"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Full exact match in a failing + coma quoted " + fieldAndHeader.headerName + " header")
+                        .header(fieldAndHeader.headerName, "invalid@ space.org, Toto <\"a, b\"@quoted.com>")
+                        .valueToMatch("Toto <\"a, b\"@quoted.com>"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                        .valueToMatch(USER_1_FULL_ADDRESS),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                        .valueToMatch(USER_1_ADDRESS),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a failing " + fieldAndHeader.headerName + " header with multiple values")
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", invalid@ white.space.in.domain.tld")
+                        .valueToMatch(USER_1_USERNAME),
+
+                    argumentBuilder(fieldAndHeader.field)
                         .description("Full header exact match in a full " + fieldAndHeader.headerName + " header")
                         .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_FULL_ADDRESS),
@@ -315,6 +365,11 @@ class JMAPFilteringTest {
                         .description("Full header partial match in a full " + fieldAndHeader.headerName + " header")
                         .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch("ser1 <"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", Invalid <invalid@ white.space.in.domain.tld>")
+                        .valueToMatch("invalid@ white.space.in.domain.tld"),
 
                     argumentBuilder(fieldAndHeader.field)
                         .description("Address partial match in a full " + fieldAndHeader.headerName + " header")
