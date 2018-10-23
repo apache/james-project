@@ -65,13 +65,25 @@ public class SenderDomainIsTest {
     }
 
     @Test
-    void shouldNotMatchWhenNullSenderDomain() throws Exception {
+    void shouldNotMatchWhenNoSenderDomain() throws Exception {
         matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
                 .build());
 
         FakeMail fakeMail = FakeMail.builder().recipient(recipient).build();
+
+        assertThat(matcher.match(fakeMail)).isEmpty();
+    }
+
+    @Test
+    void shouldNotMatchWhenNullSenderDomain() throws Exception {
+        matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
+                .condition(
+                        "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
+                .build());
+
+        FakeMail fakeMail = FakeMail.builder().sender(MailAddress.nullSender()).recipient(recipient).build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
