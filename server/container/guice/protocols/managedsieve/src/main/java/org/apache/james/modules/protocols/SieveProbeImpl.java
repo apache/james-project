@@ -18,8 +18,11 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.probe.SieveProbe;
@@ -27,6 +30,7 @@ import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.utils.GuiceProbe;
+
 
 public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
@@ -68,9 +72,16 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
     }
 
     @Override
-    public void addActiveSieveScript(String username, String name, String script) throws Exception {
-        User user = User.fromUsername(username);
+    public void addActiveSieveScript(String userName, String name, String script) throws Exception {
+        User user = User.fromUsername(userName);
         sieveRepository.putScript(user, new ScriptName(name), new ScriptContent(script));
         sieveRepository.setActive(user, new ScriptName(name));
+    }
+
+    @Override
+    public void addActiveSieveScriptFromFile(String userName, String name, String path) throws Exception {
+        try (InputStream scriptFileAsStream = new FileInputStream(path)) {
+            addActiveSieveScript(userName, name, IOUtils.toString(scriptFileAsStream));
+        }
     }
 }

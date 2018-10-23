@@ -33,6 +33,7 @@ public interface SieveProbe {
 
     void removeSieveQuota(String user) throws Exception;
 
-    void addActiveSieveScript(String user, String name, String script) throws Exception;
+    void addActiveSieveScript(String userName, String name, String script) throws Exception;
 
+    void addActiveSieveScriptFromFile(String userName, String name, String path) throws Exception;
 }

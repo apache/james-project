@@ -63,7 +63,7 @@ public enum CmdType {
     GETSIEVEUSERQUOTA("GetSieveUserQuota", "username"),
     SETSIEVEUSERQUOTA("SetSieveUserQuota", "username", "quota"),
     REMOVESIEVEUSERQUOTA("RemoveSieveUserQuota", "username"),
-    ADDACTIVESIEVESCRIPT("AddActiveSieveScript", "username", "scriptname", "script");
+    ADDACTIVESIEVESCRIPT("AddActiveSieveScript", "username", "scriptname", "path");
 
     private final String command;
     private final String[] arguments;
