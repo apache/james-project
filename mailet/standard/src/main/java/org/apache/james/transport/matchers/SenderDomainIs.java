@@ -23,14 +23,18 @@ import java.util.Collection;
 
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 /**
  * <P>
@@ -38,35 +42,50 @@ import com.google.common.base.Preconditions;
  * configured value, then all recipients will be returned. Overwise an empty
  * list will be returned.
  * </P>
+ * <p>
+ * Sample configuration:
+ * </p>
+ * 
+ * <PRE>
+ * <CODE>
+ * &lt;mailet match=&quot;SenderDomainIs=&lt;domain.com&gt;&quot; class=&quot;&lt;any-class&gt;&quot;&gt;
+ * </CODE>
+ * </PRE>
  * 
  * @version CVS $Revision$ $Date$
- * @since 2.2.0
+ * @since 3.2.0
  */
 
 public class SenderDomainIs extends GenericMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(SenderDomainIs.class);
 
-    private Collection<MailAddress> senderDomains;
+    private Collection<Domain> senderDomains;
 
     @Override
     public void init() {
         String condition = getCondition();
         Preconditions.checkNotNull(condition, "'condition' should not be null");
 
-        senderDomains = MailAddressCollectionReader.read(condition);
+        senderDomains = parseDomainsList(condition);
+    }
+
+    @VisibleForTesting
+    Collection<Domain> parseDomainsList(String condition) {
+        return Splitter.onPattern("(, |,| )").omitEmptyStrings().splitToList(condition).stream().map(Domain::of)
+                .collect(Guavate.toImmutableList());
     }
 
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         try {
             MailAddress mailAddress = mail.getSender();
-            if (mailAddress != null && senderDomains.contains(mailAddress)) {
+            if (mailAddress != null && senderDomains.contains(mailAddress.getDomain())) {
                 return mail.getRecipients();
             }
         } catch (Exception e) {
-            LOGGER.info(e.getMessage());
+            LOGGER.error("Exception happened while finding sender domain match", e);
         }
-        return null;
+        return ImmutableList.of();
     }
 
 }
