@@ -39,7 +39,7 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     @Override
     public void beforeAll(ExtensionContext context) {
         cassandraContainer.start();
-        dockerCassandra = new DockerCassandra(cassandraContainer.getHost());
+        dockerCassandra = new DockerCassandra(cassandraContainer);
     }
 
     @Override
@@ -62,14 +62,18 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     }
     
     public static class DockerCassandra {
-        private final Host host;
+        private final DockerCassandraRule container;
 
-        private DockerCassandra(Host host) {
-            this.host = host;
+        private DockerCassandra(DockerCassandraRule container) {
+            this.container = container;
         }
 
         public Host getHost() {
-            return host;
+            return container.getHost();
+        }
+
+        public DockerCassandraRule getContainer() {
+            return container;
         }
     }
 

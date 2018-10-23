@@ -19,28 +19,23 @@
 
 package org.apache.james.backends.cassandra.utils;
 
-import org.apache.james.backends.cassandra.*;
+import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.healthcheck.Result;
-
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@ExtendWith(DockerCassandraExtension.class)
 public class CassandraHealthCheckTest {
-
-    @Rule
-    public DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     private CassandraHealthCheck healthCheck;
 
     @BeforeEach
-    void setUp() {
+    void setUp(DockerCassandraExtension.DockerCassandra cassandraServer) {
         CassandraCluster cassandra = CassandraCluster.create(CassandraModule.builder().build(), cassandraServer.getHost());
         healthCheck = new CassandraHealthCheck(cassandra.getConf());
     }
@@ -53,8 +48,8 @@ public class CassandraHealthCheckTest {
     }
 
     @Test
-    void checkShouldReturnUnhealthyWhenCassandraIsNotRunning() {
-        cassandraServer.pause();
+    void checkShouldReturnUnhealthyWhenCassandraIsNotRunning(DockerCassandraExtension.DockerCassandra cassandraServer) {
+        cassandraServer.getContainer().pause();
 
         Result check = healthCheck.check();
 
@@ -62,12 +57,12 @@ public class CassandraHealthCheckTest {
     }
 
     @Test
-    void checkShouldDetectWhenCassandraRecovered() {
-        cassandraServer.pause();
+    void checkShouldDetectWhenCassandraRecovered(DockerCassandraExtension.DockerCassandra cassandraServer) {
+        cassandraServer.getContainer().pause();
 
         healthCheck.check();
 
-        cassandraServer.unpause();
+        cassandraServer.getContainer().unpause();
 
         Result check = healthCheck.check();
 
