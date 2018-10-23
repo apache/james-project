@@ -56,7 +56,10 @@ import org.apache.james.mailbox.store.user.SubscriptionMapper;
 /**
  * HBase implementation of {@link MailboxSessionMapperFactory}
  *
+ * @Deprecated: See JAMES-2571 The HBase implementation is not enough maintained and thus will be removed from James in version 3.3.0. Please prefer using
+ * other MailboxManagers or contribute the HBase mailbox maintenance.
  */
+@Deprecated
 public class HBaseMailboxSessionMapperFactory extends MailboxSessionMapperFactory {
 
     private final Configuration conf;

@@ -70,7 +70,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Mail repository that is backed by a JCR content repository.
  *
- * @Depracted: See JAMES-2323
+ * @Deprecated: See JAMES-2323
  *
  * Will be removed in James 3.2.0 upcoming release.
  *

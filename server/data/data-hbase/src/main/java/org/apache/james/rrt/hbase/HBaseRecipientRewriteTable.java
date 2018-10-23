@@ -51,7 +51,11 @@ import com.google.common.base.Splitter;
 
 /**
  * Implementation of the RecipientRewriteTable for a HBase persistence.
+ *
+ * @Deprecated: See JAMES-2571 The HBase implementation is not enough maintained and thus will be removed from James in version 3.3.0. Please prefer using
+ * other MailboxManagers or contribute the HBase mailbox maintenance.
  */
+@Deprecated
 public class HBaseRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     private static final Logger log = LoggerFactory.getLogger(HBaseRecipientRewriteTable.class.getName());
