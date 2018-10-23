@@ -30,11 +30,13 @@ import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.backends.cassandra.utils.CassandraHealthCheck;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.SchemaState;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.server.CassandraProbe;
@@ -83,6 +85,8 @@ public class CassandraSessionModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(CassandraSchemaChecker.class);
 
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(CassandraProbe.class);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(CassandraHealthCheck.class);
     }
 
     @Provides
