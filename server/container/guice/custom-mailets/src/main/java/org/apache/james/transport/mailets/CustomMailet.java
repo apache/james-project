@@ -21,6 +21,7 @@ package org.apache.james.transport.mailets;
 
 import javax.mail.MessagingException;
 
+import org.apache.mailet.ExcludeFromDocumentation;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
@@ -30,6 +31,8 @@ import org.apache.mailet.base.GenericMailet;
  *
  * Does nothing.
  */
+
+@ExcludeFromDocumentation
 public class CustomMailet extends GenericMailet {
 
     @Override
