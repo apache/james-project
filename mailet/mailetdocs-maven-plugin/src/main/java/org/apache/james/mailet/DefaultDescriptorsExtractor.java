@@ -100,8 +100,8 @@ public class DefaultDescriptorsExtractor {
         }
         
         if (isExcludedFromDocumentation(nextClass)) {
-        	log.debug(nameOfNextClass + " is excluded from documentation");
-        	return;
+            log.debug(nameOfNextClass + " is excluded from documentation");
+            return;
         }
         
         try {
