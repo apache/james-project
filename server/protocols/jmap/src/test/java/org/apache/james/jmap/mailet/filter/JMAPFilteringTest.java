@@ -232,6 +232,11 @@ class JMAPFilteringTest {
                         .valueToMatch(USER_1_ADDRESS),
 
                     argumentBuilder(fieldAndHeader.field)
+                        .description("Address exact match in a full " + fieldAndHeader.headerName + " header with multiple addresses")
+                        .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS + ", " + USER_2_FULL_ADDRESS)
+                        .valueToMatch(USER_1_ADDRESS),
+
+                    argumentBuilder(fieldAndHeader.field)
                         .description("Full header exact match in a full " + fieldAndHeader.headerName + " header")
                         .header(fieldAndHeader.headerName, USER_1_FULL_ADDRESS)
                         .valueToMatch(USER_1_FULL_ADDRESS),
