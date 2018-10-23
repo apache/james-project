@@ -20,12 +20,22 @@
 <document>
 
     <properties>
-        <title>Mailbox HBase</title>
+        <title>Mailbox HBase (Deprecated)</title>
     </properties>
 
     <body>
-
         <section name="Mailbox HBase Responsibility">
+            <div class="ui-widget">
+                <div class="ui-priority-secondary ui-corner-all">
+                    <p> <span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span>
+                        This implementation has been deprecated in the 3.2.0 release of James. It will be removed in the next (3.3.0) release.
+                        We strongly encourage you to choose another mailbox implemetation (JPA for traditional SQL or Cassandra for NoSQL).
+                        By the way, if you have some development skills and you would like to support this backend,
+                        we will be really pleased to help you maintaining this project.
+                    </p>
+                </div>
+            </div>
+
           <p>This module provides a mailbox implementation for persisting mailboxes (messages, and subscriptions) in a HBase cluster.</p>
           <p>It only supports the Basic capability.</p>
         </section>

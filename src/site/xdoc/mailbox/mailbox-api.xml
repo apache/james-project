@@ -40,7 +40,7 @@
         <a href="mailbox-maildir.html">Maildir</a>, 
         <a href="mailbox-jpa.html">JPA</a>, 
         <a href="mailbox-jcr.html">JCR)</a>,
-        <a href="mailbox-hbase.html">HBase</a>) is responsible
+        <a href="mailbox-hbase.html">HBase (Deprecated)</a>) is responsible
         to implement the management interfaces. All "common/util" implementations
         reside in the <a href="mailbox-store.html">Mailbox Store</a> module.</p>
   </section>
