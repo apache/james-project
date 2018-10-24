@@ -30,7 +30,6 @@ import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -71,8 +70,12 @@ public class SenderDomainIs extends GenericMatcher {
 
     @VisibleForTesting
     Collection<Domain> parseDomainsList(String condition) {
-        return Splitter.onPattern("(, |,| )").omitEmptyStrings().splitToList(condition).stream().map(Domain::of)
-                .collect(Guavate.toImmutableList());
+        return Splitter.onPattern("(, |,| )")
+                .omitEmptyStrings()
+                .splitToList(condition)
+                .stream()
+                .map(Domain::of)
+                .collect(ImmutableList.toImmutableList());
     }
 
     @Override

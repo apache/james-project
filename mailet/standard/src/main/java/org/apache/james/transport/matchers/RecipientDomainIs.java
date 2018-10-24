@@ -24,56 +24,52 @@ import java.util.Collection;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.GenericRecipientMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 
 /**
- * This will return recipients mathcing a configured domain.
+ * This will return recipients matching a configured domain.
  * <p>
  * Sample configuration:
  * </p>
  * 
  * <PRE>
  * <CODE>
- * &lt;mailet match=&quot;RecipientDomainIs=&lt;domain.com&gt;&quot; class=&quot;&lt;any-class&gt;&quot;&gt;
+ * &lt;mailet match=&quot;RecipientDomainIs=&lt;domain.com&gt;&quot; class=&quot;&lt;any-class&gt;&quot;/&gt;
  * </CODE>
  * </PRE>
  * @version CVS $Revision$ $Date$
  * @since 3.2.0
  */
 public class RecipientDomainIs extends GenericRecipientMatcher {
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecipientDomainIs.class);
 
-    private Collection<Domain> receipientDomains;
+    private Collection<Domain> recipientDomains;
 
     @Override
     public void init() {
         String condition = getCondition();
         Preconditions.checkNotNull(condition, "'condition' should not be null");
 
-        receipientDomains = parseDomainsList(condition);
+        recipientDomains = parseDomainsList(condition);
     }
 
     @VisibleForTesting
     Collection<Domain> parseDomainsList(String condition) {
-        return Splitter.onPattern("(, |,| )").omitEmptyStrings().splitToList(condition).stream().map(Domain::of)
-                .collect(Guavate.toImmutableList());
+        return Splitter.onPattern("(, |,| )")
+                .omitEmptyStrings()
+                .splitToList(condition)
+                .stream()
+                .map(Domain::of)
+                .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public boolean matchRecipient(MailAddress recipient) {
-        try {
-            return receipientDomains.contains(recipient.getDomain());
 
-        } catch (Exception ex) {
-            LOGGER.error("Exception happened while finding receipient domain match", ex);
-        }
-        return false;
+        return recipientDomains.contains(recipient.getDomain());
     }
 
 }

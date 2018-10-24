@@ -27,7 +27,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class SenderDomainIsTest {
+ class SenderDomainIsTest {
 
     private static final String SENDER_NAME = "test@james.apache.org";
 
@@ -42,55 +42,74 @@ public class SenderDomainIsTest {
 
     @Test
     void shouldMatchOnMatchingSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
                 .build());
 
-        FakeMail fakeMail = FakeMail.builder().sender(SENDER_NAME).recipient(recipient).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .sender(SENDER_NAME)
+                .recipient(recipient)
+                .build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(recipient);
     }
 
     @Test
     void shouldNotMatchWhenWrongSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
                 .build());
 
-        FakeMail fakeMail = FakeMail.builder().recipient(recipient).sender("other@james7.apache.org").build();
+        FakeMail fakeMail = FakeMail.builder()
+                .recipient(recipient)
+                .sender("other@james7.apache.org")
+                .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
     @Test
     void shouldNotMatchWhenNoSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
                 .build());
 
-        FakeMail fakeMail = FakeMail.builder().recipient(recipient).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .recipient(recipient)
+                .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
     @Test
     void shouldNotMatchWhenNullSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs")
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("SenderDomainIs")
                 .condition(
-                        "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
+                        "james.apache.org, james3.apache.org james2.apache.org,,,,james4.apache.org, james5.apache.org")
                 .build());
 
-        FakeMail fakeMail = FakeMail.builder().sender(MailAddress.nullSender()).recipient(recipient).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .sender(MailAddress.nullSender())
+                .recipient(recipient)
+                .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
     @Test
     void initShouldThrowWhenEmptyCondition() {
-        assertThatThrownBy(() -> matcher.init(FakeMatcherConfig.builder().matcherName("SenderDomainIs").build()))
+        assertThatThrownBy(() -> 
+               matcher.init(FakeMatcherConfig.builder()
+                       .matcherName("SenderDomainIs").
+                       build()))
                 .isInstanceOf(NullPointerException.class);
     }
+    
 }

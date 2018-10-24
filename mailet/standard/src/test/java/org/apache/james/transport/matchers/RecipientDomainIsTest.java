@@ -21,7 +21,6 @@ package org.apache.james.transport.matchers;
 
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES2;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES;
 import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_JAMES2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,7 +32,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class RecipientDomainIsTest {
+ class RecipientDomainIsTest {
 
     private RecipientDomainIs matcher;
 
@@ -45,17 +44,27 @@ public class RecipientDomainIsTest {
     @Test
     void shouldMatchOneAddress() throws MessagingException {
         matcher.init(
-                FakeMatcherConfig.builder().matcherName("RecipientDomainIs").condition("james.apache.org").build());
-        FakeMail fakeMail = FakeMail.builder().recipient(ANY_AT_JAMES).build();
+                FakeMatcherConfig.builder()
+                .matcherName("RecipientDomainIs")
+                .condition("james.apache.org")
+                .build());
+        FakeMail fakeMail = FakeMail.builder()
+                .recipient(ANY_AT_JAMES)
+                .build();
         assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES);
     }
 
     @Test
     void shouldOnlyMatchCorrespondingAddress() throws MessagingException {
         matcher.init(
-                FakeMatcherConfig.builder().matcherName("RecipientDomainIs").condition("james.apache.org").build());
+                FakeMatcherConfig.builder()
+                .matcherName("RecipientDomainIs")
+                .condition("james.apache.org")
+                .build());
 
-        FakeMail fakeMail = FakeMail.builder().recipients(ANY_AT_JAMES, ANY_AT_JAMES2).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .recipients(ANY_AT_JAMES, ANY_AT_JAMES2)
+                .build();
 
         assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES);
     }
@@ -63,27 +72,38 @@ public class RecipientDomainIsTest {
     @Test
     void shouldNotMatchUnrelatedAddresses() throws Exception {
         matcher.init(
-                FakeMatcherConfig.builder().matcherName("RecipientDomainIs").condition("james.apache.org").build());
+                FakeMatcherConfig.builder()
+                .matcherName("RecipientDomainIs")
+                .condition("james.apache.org james3.apache.org,james4.apache.org,,,james5.apache.org")
+                .build());
 
-        FakeMail fakeMail = FakeMail.builder().recipients(OTHER_AT_JAMES2, ANY_AT_JAMES2).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .recipients(OTHER_AT_JAMES2, ANY_AT_JAMES2)
+                .build();
 
         assertThat(matcher.match(fakeMail)).isEmpty();
     }
 
     @Test
     void initShouldThrowOnMissingCondition() {
-        assertThatThrownBy(() -> matcher.init(FakeMatcherConfig.builder().matcherName("RecipientDomainIs").build()))
+        assertThatThrownBy(() -> 
+             matcher.init(FakeMatcherConfig.builder()
+                     .matcherName("RecipientDomainIs")
+                     .build()))
                 .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void shouldBeAbleToMatchSeveralAddresses() throws Exception {
-        matcher.init(FakeMatcherConfig.builder().matcherName("RecipientDomainIs")
+        matcher.init(FakeMatcherConfig.builder()
+                .matcherName("RecipientDomainIs")
                 .condition(
-                        "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
+                        "james.apache.org james3.apache.org james2.apache.org james4.apache.org james5.apache.org")
                 .build());
 
-        FakeMail fakeMail = FakeMail.builder().recipients(ANY_AT_JAMES, OTHER_AT_JAMES2, ANY_AT_JAMES2).build();
+        FakeMail fakeMail = FakeMail.builder()
+                .recipients(ANY_AT_JAMES, OTHER_AT_JAMES2, ANY_AT_JAMES2)
+                .build();
 
         assertThat(matcher.match(fakeMail)).containsOnly(ANY_AT_JAMES, ANY_AT_JAMES2, OTHER_AT_JAMES2);
     }
