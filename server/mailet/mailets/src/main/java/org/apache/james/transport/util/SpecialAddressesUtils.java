@@ -87,10 +87,6 @@ public class SpecialAddressesUtils {
             return ImmutableSet.of(mailAddress);
         }
 
-        if (mailAddress.isNullSender()) {
-            return ImmutableList.of();
-        }
-
         SpecialAddressKind specialAddressKind = SpecialAddressKind.forValue(mailAddress.getLocalPart());
         if (specialAddressKind == null) {
             return ImmutableSet.of(mailAddress);
