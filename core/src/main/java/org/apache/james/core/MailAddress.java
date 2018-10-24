@@ -374,6 +374,7 @@ public class MailAddress implements java.io.Serializable {
      * @returns true if the given object is equal to this one, false otherwise
      */
     @Override
+    @SuppressWarnings("deprecated")
     public final boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -666,8 +667,9 @@ public class MailAddress implements java.io.Serializable {
     /**
      * Return <code>true</code> if the {@link MailAddress} should represent a null sender (<>)
      *
-     * @return nullsender
+     * @Deprecated You should use an Optional&lt;MailAddress&gt; representation of a MailAddress rather than relying on a NULL object
      */
+    @Deprecated
     public boolean isNullSender() {
         return false;
     }
