@@ -49,20 +49,26 @@ public class CassandraHealthCheckTest {
 
     @Test
     void checkShouldReturnUnhealthyWhenCassandraIsNotRunning(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        cassandraServer.getContainer().pause();
+        try{
+            cassandraServer.getContainer().pause();
+            Result check = healthCheck.check();
 
-        Result check = healthCheck.check();
+            assertThat(check.isUnHealthy()).isTrue();
+        } finally {
+            cassandraServer.getContainer().unpause();
+        }
 
-        assertThat(check.isUnHealthy()).isTrue();
     }
 
     @Test
     void checkShouldDetectWhenCassandraRecovered(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        cassandraServer.getContainer().pause();
+        try {
+            cassandraServer.getContainer().pause();
 
-        healthCheck.check();
-
-        cassandraServer.getContainer().unpause();
+            healthCheck.check();
+        } finally {
+            cassandraServer.getContainer().unpause();
+        }
 
         Result check = healthCheck.check();
 

@@ -84,11 +84,11 @@ public class DockerCassandra {
     }
 
     public void pause() {
-        client.pauseContainerCmd(cassandraContainer.getContainerId());
+        client.pauseContainerCmd(cassandraContainer.getContainerId()).exec();
     }
 
     public void unpause() {
-        client.unpauseContainerCmd(cassandraContainer.getContainerId());
+        client.unpauseContainerCmd(cassandraContainer.getContainerId()).exec();
     }
 
 }
