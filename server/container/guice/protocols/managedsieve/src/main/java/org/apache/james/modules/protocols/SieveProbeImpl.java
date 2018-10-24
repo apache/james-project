@@ -20,6 +20,7 @@ package org.apache.james.modules.protocols;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
@@ -81,7 +82,7 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
     @Override
     public void addActiveSieveScriptFromFile(String userName, String name, String path) throws Exception {
         try (InputStream scriptFileAsStream = new FileInputStream(path)) {
-            addActiveSieveScript(userName, name, IOUtils.toString(scriptFileAsStream));
+            addActiveSieveScript(userName, name, IOUtils.toString(scriptFileAsStream, StandardCharsets.UTF_8));
         }
     }
 }

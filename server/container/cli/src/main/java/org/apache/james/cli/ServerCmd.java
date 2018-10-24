@@ -77,17 +77,6 @@ public class ServerCmd {
     private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 9999;
     private static final Logger LOG = LoggerFactory.getLogger(ServerCmd.class);
-    private final DataProbe probe;
-    private final MailboxProbe mailboxProbe;
-    private final QuotaProbe quotaProbe;
-    private final SieveProbe sieveProbe;
-
-    public ServerCmd(DataProbe probe, MailboxProbe mailboxProbe, QuotaProbe quotaProbe, SieveProbe sieveProbe) {
-        this.probe = probe;
-        this.mailboxProbe = mailboxProbe;
-        this.quotaProbe = quotaProbe;
-        this.sieveProbe = sieveProbe;
-    }
 
     private static Options createOptions() {
         return new Options()
@@ -136,6 +125,18 @@ public class ServerCmd {
             printStream);
         stopWatch.stop();
     }
+
+    private final DataProbe probe;
+    private final MailboxProbe mailboxProbe;
+    private final QuotaProbe quotaProbe;
+    private final SieveProbe sieveProbe;
+
+    public ServerCmd(DataProbe probe, MailboxProbe mailboxProbe, QuotaProbe quotaProbe, SieveProbe sieveProbe) {
+        this.probe = probe;
+        this.mailboxProbe = mailboxProbe;
+        this.quotaProbe = quotaProbe;
+        this.sieveProbe = sieveProbe;
+    }
     
     @VisibleForTesting
     static CommandLine parseCommandLine(String[] args) throws ParseException {
@@ -177,27 +178,6 @@ public class ServerCmd {
         System.exit(1);
     }
 
-    private static void print(String[] data, PrintStream out) {
-        print(Arrays.asList(data), out);
-    }
-
-    private static void print(Iterable<String> data, PrintStream out) {
-        if (data != null) {
-            out.println(Joiner.on('\n').join(data));
-        }
-    }
-
-    private static void printUsage() {
-        StringBuilder footerBuilder = new StringBuilder();
-        for (CmdType cmdType : CmdType.values()) {
-            footerBuilder.append(cmdType.getUsage()).append("\n");
-        }
-        new HelpFormatter().printHelp(
-            String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
-            "",
-            createOptions(),
-            footerBuilder.toString());
-    }
 
     @VisibleForTesting
     private CmdType executeCommandLine(CommandLine commandLine, PrintStream printStream) throws Exception {
@@ -368,7 +348,7 @@ public class ServerCmd {
         long value = Long.parseLong(argument);
         return longToSerializableQuotaValue(value, QuotaCount.unlimited(), QuotaCount::count);
     }
-    
+
     private <T extends QuotaValue<T>> SerializableQuotaValue<T> longToSerializableQuotaValue(long value, T unlimited, Function<Long, T> factory) {
         return SerializableQuotaValue.valueOf(Optional.of(longToQuotaValue(value, unlimited, factory)));
     }
@@ -381,6 +361,28 @@ public class ServerCmd {
             return factory.apply(value);
         }
         throw new IllegalArgumentException("Quota should be -1 for unlimited or a positive value");
+    }
+
+    private static void print(String[] data, PrintStream out) {
+        print(Arrays.asList(data), out);
+    }
+
+    private static void print(Iterable<String> data, PrintStream out) {
+        if (data != null) {
+            out.println(Joiner.on('\n').join(data));
+        }
+    }
+
+    private static void printUsage() {
+        StringBuilder footerBuilder = new StringBuilder();
+        for (CmdType cmdType : CmdType.values()) {
+            footerBuilder.append(cmdType.getUsage()).append("\n");
+        }
+        new HelpFormatter().printHelp(
+                String.format("java %s --host <arg> <command>%n", ServerCmd.class.getName()),
+                "",
+                createOptions(),
+                footerBuilder.toString());
     }
 
     private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSize> quota, PrintStream printStream) {

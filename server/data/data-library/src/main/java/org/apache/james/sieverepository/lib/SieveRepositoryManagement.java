@@ -23,6 +23,7 @@ package org.apache.james.sieverepository.lib;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.inject.Inject;
 import javax.management.NotCompliantMBeanException;
@@ -93,7 +94,7 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
     @Override
     public void addActiveSieveScriptFromFile(String userName, String scriptName, String scriptPath) throws SieveRepositoryException {
         try (InputStream scriptFileAsStream = new FileInputStream(scriptPath)) {
-            addActiveSieveScript(userName, scriptName, IOUtils.toString(scriptFileAsStream));
+            addActiveSieveScript(userName, scriptName, IOUtils.toString(scriptFileAsStream, StandardCharsets.UTF_8));
         } catch (IOException e) {
             LOGGER.error("Error while reading sieve script from file {}", scriptPath, e);
         }
