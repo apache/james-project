@@ -47,6 +47,10 @@ import org.junit.jupiter.api.Test;
                 FakeMatcherConfig.builder()
                 .matcherName("RecipientDomainIs")
                 .condition("james.apache.org")
+        matcher.init(
+            FakeMatcherConfig.builder()
+                .matcherName("RecipientDomainIs")
+                .condition("james.apache.org")
                 .build());
         FakeMail fakeMail = FakeMail.builder()
                 .recipient(ANY_AT_JAMES)
