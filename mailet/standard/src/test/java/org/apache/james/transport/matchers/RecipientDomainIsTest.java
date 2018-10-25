@@ -32,7 +32,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
- class RecipientDomainIsTest {
+class RecipientDomainIsTest {
 
     private RecipientDomainIs matcher;
 
