@@ -27,7 +27,7 @@ import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
- class SenderDomainIsTest {
+class SenderDomainIsTest {
 
     private static final String SENDER_NAME = "test@james.apache.org";
 
@@ -42,7 +42,8 @@ import org.junit.jupiter.api.Test;
 
     @Test
     void shouldMatchOnMatchingSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder()
+        matcher.init(
+            FakeMatcherConfig.builder()
                 .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
@@ -58,7 +59,8 @@ import org.junit.jupiter.api.Test;
 
     @Test
     void shouldNotMatchWhenWrongSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder()
+        matcher.init(
+            FakeMatcherConfig.builder()
                 .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
@@ -74,7 +76,8 @@ import org.junit.jupiter.api.Test;
 
     @Test
     void shouldNotMatchWhenNoSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder()
+        matcher.init(
+            FakeMatcherConfig.builder()
                 .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org, james2.apache.org, james4.apache.org, james5.apache.org")
@@ -89,7 +92,8 @@ import org.junit.jupiter.api.Test;
 
     @Test
     void shouldNotMatchWhenNullSenderDomain() throws Exception {
-        matcher.init(FakeMatcherConfig.builder()
+        matcher.init(
+            FakeMatcherConfig.builder()
                 .matcherName("SenderDomainIs")
                 .condition(
                         "james.apache.org, james3.apache.org james2.apache.org,,,,james4.apache.org, james5.apache.org")

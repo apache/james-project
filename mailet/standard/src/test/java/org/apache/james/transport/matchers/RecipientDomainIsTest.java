@@ -44,10 +44,6 @@ import org.junit.jupiter.api.Test;
     @Test
     void shouldMatchOneAddress() throws MessagingException {
         matcher.init(
-                FakeMatcherConfig.builder()
-                .matcherName("RecipientDomainIs")
-                .condition("james.apache.org")
-        matcher.init(
             FakeMatcherConfig.builder()
                 .matcherName("RecipientDomainIs")
                 .condition("james.apache.org")
@@ -61,7 +57,7 @@ import org.junit.jupiter.api.Test;
     @Test
     void shouldOnlyMatchCorrespondingAddress() throws MessagingException {
         matcher.init(
-                FakeMatcherConfig.builder()
+            FakeMatcherConfig.builder()
                 .matcherName("RecipientDomainIs")
                 .condition("james.apache.org")
                 .build());
@@ -76,7 +72,7 @@ import org.junit.jupiter.api.Test;
     @Test
     void shouldNotMatchUnrelatedAddresses() throws Exception {
         matcher.init(
-                FakeMatcherConfig.builder()
+            FakeMatcherConfig.builder()
                 .matcherName("RecipientDomainIs")
                 .condition("james.apache.org james3.apache.org,james4.apache.org,,,james5.apache.org")
                 .build());
@@ -99,7 +95,8 @@ import org.junit.jupiter.api.Test;
 
     @Test
     void shouldBeAbleToMatchSeveralAddresses() throws Exception {
-        matcher.init(FakeMatcherConfig.builder()
+        matcher.init(
+            FakeMatcherConfig.builder()
                 .matcherName("RecipientDomainIs")
                 .condition(
                         "james.apache.org james3.apache.org james2.apache.org james4.apache.org james5.apache.org")
