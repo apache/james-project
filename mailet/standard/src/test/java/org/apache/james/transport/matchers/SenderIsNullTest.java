@@ -23,6 +23,7 @@ package org.apache.james.transport.matchers;
 import static org.apache.mailet.base.MailAddressFixture.ANY_AT_JAMES;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.MailAddress;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMatcherConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,9 +42,19 @@ class SenderIsNullTest {
     }
 
     @Test
+    void shouldMatchWhenNoSender() throws Exception {
+        FakeMail fakeMail = FakeMail.builder()
+            .recipient(ANY_AT_JAMES)
+            .build();
+
+        assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);
+    }
+
+    @Test
     void shouldMatchWhenNullSender() throws Exception {
         FakeMail fakeMail = FakeMail.builder()
             .recipient(ANY_AT_JAMES)
+            .sender(MailAddress.nullSender())
             .build();
 
         assertThat(matcher.match(fakeMail)).containsExactly(ANY_AT_JAMES);

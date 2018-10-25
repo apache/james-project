@@ -25,7 +25,7 @@ import org.rnorth.ducttape.ratelimits.RateLimiter;
 import org.rnorth.ducttape.ratelimits.RateLimiterBuilder;
 
 public interface RateLimiters {
-    RateLimiter DEFAULT = RateLimiterBuilder.newBuilder()
+    RateLimiter TWENTIES_PER_SECOND = RateLimiterBuilder.newBuilder()
         .withRate(20, TimeUnit.SECONDS)
         .withConstantThroughput()
         .build();

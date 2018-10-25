@@ -61,6 +61,12 @@ class MailAddressCollectionReaderTest {
     }
 
     @Test
+    void readShouldParseNullSender() {
+        assertThat(MailAddressCollectionReader.read("<>"))
+            .containsExactly(MailAddress.nullSender());
+    }
+
+    @Test
     void readShouldParseTwoEmailSeparatedByComaOnly() throws Exception {
         MailAddress mailAddress1 = new MailAddress("valid@apache.org");
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");

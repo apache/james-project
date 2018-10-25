@@ -55,7 +55,7 @@ public class FakeSmtp implements TestRule {
         return new SwarmGenericContainer(Images.FAKE_SMTP)
             .withAffinityToContainer()
             .waitingFor(new HostPortWaitStrategy()
-            .withRateLimiter(RateLimiters.DEFAULT));
+            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
     private static final int SMTP_PORT = 25;

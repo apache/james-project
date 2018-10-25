@@ -38,10 +38,15 @@ public class SenderIsNull extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (mail.getSender() == null) {
+        if (isNullSender(mail)) {
             return mail.getRecipients();
         } else {
             return null;
         }
+    }
+
+    private boolean isNullSender(Mail mail) {
+        return mail.getSender() == null
+            || mail.getSender().isNullSender();
     }
 }

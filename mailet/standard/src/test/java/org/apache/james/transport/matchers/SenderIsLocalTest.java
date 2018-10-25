@@ -98,4 +98,29 @@ public class SenderIsLocalTest {
         assertThat(actual).isNull();
     }
 
+    @Test
+    public void shouldNotMatchWhenNullSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
+            .sender(MailAddress.nullSender())
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
+    @Test
+    public void shouldNotMatchWhenNoSender() throws MessagingException {
+        //Given
+        Mail mail = FakeMail.builder()
+            .recipient(ANY_AT_JAMES)
+            .build();
+        //When
+        Collection<MailAddress> actual = matcher.match(mail);
+        //Then
+        assertThat(actual).isNull();
+    }
+
 }

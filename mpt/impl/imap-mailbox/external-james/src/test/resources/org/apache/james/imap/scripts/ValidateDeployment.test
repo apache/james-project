@@ -508,7 +508,7 @@ S: d OK STORE completed.
 
 # Indexation may be asynchronous
 LOG INFO Waiting for indexation
-WAIT 1000
+WAIT 5000
 
 C: e SEARCH FLAGGED
 S: \* SEARCH 1 2

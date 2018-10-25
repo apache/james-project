@@ -49,24 +49,42 @@ public class DefaultDescriptorsExtractorTest {
     @Test
     public void extractShouldSetExperimentalAttributeWhenScanningMailets() {
         when(mavenProject.getCompileSourceRoots())
-            .thenReturn(ImmutableList.of("src/test/java"));
+            .thenReturn(ImmutableList.of("src/test/java/org/apache/james/mailet/experimental"));
 
         List<MailetMatcherDescriptor> descriptors = testee.extract(mavenProject, log)
             .descriptors();
 
         MailetMatcherDescriptor experimentalMailet = new MailetMatcherDescriptor();
-        experimentalMailet.setFullyQualifiedName("org.apache.james.mailet.ExperimentalMailet");
+        experimentalMailet.setFullyQualifiedName("org.apache.james.mailet.experimental.ExperimentalMailet");
         experimentalMailet.setName("ExperimentalMailet");
         experimentalMailet.setInfo(null);
         experimentalMailet.setType(Type.MAILET);
         experimentalMailet.setExperimental(true);
         MailetMatcherDescriptor nonExperimentalMailet = new MailetMatcherDescriptor();
-        nonExperimentalMailet.setFullyQualifiedName("org.apache.james.mailet.NonExperimentalMailet");
+        nonExperimentalMailet.setFullyQualifiedName("org.apache.james.mailet.experimental.NonExperimentalMailet");
         nonExperimentalMailet.setName("NonExperimentalMailet");
         nonExperimentalMailet.setInfo(null);
         nonExperimentalMailet.setType(Type.MAILET);
         nonExperimentalMailet.setExperimental(false);
 
         assertThat(descriptors).containsOnly(experimentalMailet, nonExperimentalMailet);
+    }
+    
+    @Test
+    public void extractShouldExcludeAnnotatedClassesWhenScanningMailets() {
+        when(mavenProject.getCompileSourceRoots())
+            .thenReturn(ImmutableList.of("src/test/java/org/apache/james/mailet/excluded"));
+
+        List<MailetMatcherDescriptor> descriptors = testee.extract(mavenProject, log)
+            .descriptors();
+
+        MailetMatcherDescriptor notExcludedMailet = new MailetMatcherDescriptor();
+        notExcludedMailet.setFullyQualifiedName("org.apache.james.mailet.excluded.NotExcludedFromDocumentationMailet");
+        notExcludedMailet.setName("NotExcludedFromDocumentationMailet");
+        notExcludedMailet.setInfo(null);
+        notExcludedMailet.setType(Type.MAILET);
+        notExcludedMailet.setExperimental(false);
+
+        assertThat(descriptors).containsOnly(notExcludedMailet);
     }
 }

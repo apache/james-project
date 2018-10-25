@@ -54,12 +54,12 @@ public class DockerSwiftContainer {
                         forHttp("/v3")
                             .forPort(KEYSTONE_ADMIN_PORT)
                             .forStatusCode(200)
-                            .withRateLimiter(RateLimiters.DEFAULT)
+                            .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
                     ).withStrategy(
                     forHttp("/info")
                         .forPort(SWIFT_PORT)
                         .forStatusCode(200)
-                        .withRateLimiter(RateLimiters.DEFAULT)
+                        .withRateLimiter(RateLimiters.TWENTIES_PER_SECOND)
                 )
             );
 
