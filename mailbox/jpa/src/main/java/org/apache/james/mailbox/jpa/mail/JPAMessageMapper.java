@@ -239,7 +239,13 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        throw new UnsupportedOperationException("Not implemented - see https://issues.apache.org/jira/browse/IMAP-370");
+        JPAId originalMailboxId = (JPAId) original.getMailboxId();
+        JPAMailbox originalMailbox = getEntityManager().find(JPAMailbox.class, originalMailboxId.getRawId());
+        
+        MessageMetaData messageMetaData = copy(mailbox, original);
+        delete(originalMailbox, original);
+        
+        return messageMetaData;
     }
 
     @Override

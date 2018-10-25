@@ -132,7 +132,9 @@ public class TransactionalMessageMapper implements MessageMapper {
 
     @Override
     public MessageMetaData move(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        return messageMapper.move(mailbox, original);
+        MessageMetaData data = messageMapper.execute(
+                () -> messageMapper.move(mailbox, original));
+        return data;
     }
 
     @Override
