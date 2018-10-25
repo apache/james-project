@@ -22,6 +22,8 @@ package org.apache.james.transport.matchers.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.apache.james.core.MailAddress;
 import org.apache.james.transport.matchers.utils.MailAddressCollectionReader;
 import org.junit.jupiter.api.Test;
@@ -57,13 +59,13 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress = new MailAddress("valid@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress.toString()))
-            .containsExactly(mailAddress);
+            .containsExactly(Optional.of(mailAddress));
     }
 
     @Test
     void readShouldParseNullSender() {
         assertThat(MailAddressCollectionReader.read("<>"))
-            .containsExactly(MailAddress.nullSender());
+            .containsExactly(Optional.empty());
     }
 
     @Test
@@ -72,7 +74,7 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "," + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
@@ -81,7 +83,7 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + " " + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
@@ -90,7 +92,7 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + "\t" + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
 
@@ -100,7 +102,7 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress2 = new MailAddress("bis@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress1.toString() + ",\t  \t,\t \t " + mailAddress2.toString()))
-            .containsExactly(mailAddress1, mailAddress2);
+            .containsExactly(Optional.of(mailAddress1), Optional.of(mailAddress2));
     }
 
     @Test
@@ -108,7 +110,7 @@ class MailAddressCollectionReaderTest {
         MailAddress mailAddress = new MailAddress("valid@apache.org");
 
         assertThat(MailAddressCollectionReader.read(mailAddress.toString() + ", " + mailAddress.toString()))
-            .containsExactly(mailAddress);
+            .containsExactly(Optional.of(mailAddress));
     }
 
 

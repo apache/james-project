@@ -628,7 +628,7 @@ public class MessageProcessor extends ProcessorAbstract {
             StringBuilder messageBuffer = new StringBuilder("Created mail with name: ");
             messageBuffer.append(mail.getName());
             messageBuffer.append(", sender: ");
-            messageBuffer.append(mail.getSender());
+            messageBuffer.append(mail.getMaybeSender());
             messageBuffer.append(", recipients: ");
             for (Object o : mail.getRecipients()) {
                 messageBuffer.append(o);

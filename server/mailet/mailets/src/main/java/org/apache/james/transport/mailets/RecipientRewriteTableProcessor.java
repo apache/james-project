@@ -35,6 +35,7 @@ import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.Mappings;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.MemoizedSupplier;
 import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
@@ -127,7 +128,14 @@ public class RecipientRewriteTableProcessor {
         RrtExecutionResult executionResults = executeRrtFor(mail);
 
         if (!executionResults.recipientWithError.isEmpty()) {
-            mailetContext.sendMail(mail.getSender(), executionResults.recipientWithError, mail.getMessage(), errorProcessor);
+            MailImpl newMail = MailImpl.builder()
+                .name(mail.getName())
+                .sender(mail.getMaybeSender())
+                .recipients(executionResults.recipientWithError)
+                .mimeMessage(mail.getMessage())
+                .state(errorProcessor)
+                .build();
+            mailetContext.sendMail(newMail);
         }
 
         if (executionResults.newRecipients.isEmpty()) {
@@ -155,7 +163,7 @@ public class RecipientRewriteTableProcessor {
             Mappings mappings = virtualTableStore.getMappings(recipient.getLocalPart(), recipient.getDomain());
 
             if (mappings != null && !mappings.isEmpty()) {
-                List<MailAddress> newMailAddresses = handleMappings(mappings, mail.getSender(), recipient, mail.getMessage());
+                List<MailAddress> newMailAddresses = handleMappings(mappings, mail, recipient, mail.getMessage());
                 return RrtExecutionResult.success(newMailAddresses);
             }
             return RrtExecutionResult.success(recipient);
@@ -166,14 +174,14 @@ public class RecipientRewriteTableProcessor {
     }
 
     @VisibleForTesting
-    List<MailAddress> handleMappings(Mappings mappings, MailAddress sender, MailAddress recipient, MimeMessage message) throws MessagingException {
+    List<MailAddress> handleMappings(Mappings mappings, Mail mail, MailAddress recipient, MimeMessage message) throws MessagingException {
         ImmutableList<MailAddress> mailAddresses = mappings.asStream()
             .map(mapping -> mapping.appendDomainIfNone(defaultDomainSupplier))
             .map(Mapping::asMailAddress)
             .flatMap(OptionalUtils::toStream)
             .collect(Guavate.toImmutableList());
 
-        forwardToRemoteAddress(sender, recipient, message, mailAddresses);
+        forwardToRemoteAddress(mail, recipient, message, mailAddresses);
 
         return getLocalAddresses(mailAddresses);
     }
@@ -184,14 +192,20 @@ public class RecipientRewriteTableProcessor {
             .collect(Guavate.toImmutableList());
     }
 
-    private void forwardToRemoteAddress(MailAddress sender, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) {
+    private void forwardToRemoteAddress(Mail mail, MailAddress recipient, MimeMessage message, ImmutableList<MailAddress> mailAddresses) {
         ImmutableList<MailAddress> remoteAddresses = mailAddresses.stream()
             .filter(mailAddress -> !mailetContext.isLocalServer(mailAddress.getDomain()))
             .collect(Guavate.toImmutableList());
 
         if (!remoteAddresses.isEmpty()) {
             try {
-                mailetContext.sendMail(sender, remoteAddresses, message);
+                mailetContext.sendMail(
+                    MailImpl.builder()
+                        .name(mail.getName())
+                        .sender(mail.getMaybeSender())
+                        .recipients(remoteAddresses)
+                        .mimeMessage(message)
+                        .build());
                 LOGGER.info("Mail for {} forwarded to {}", recipient, remoteAddresses);
             } catch (MessagingException ex) {
                 LOGGER.warn("Error forwarding mail to {}", remoteAddresses);

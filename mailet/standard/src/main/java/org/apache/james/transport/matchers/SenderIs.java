@@ -47,10 +47,10 @@ import com.google.common.base.Strings;
  */
 public class SenderIs extends GenericMatcher {
 
-    private Set<MailAddress> senders;
+    private Set<Optional<MailAddress>> senders;
 
     @VisibleForTesting
-    Set<MailAddress> getSenders() {
+    Set<Optional<MailAddress>> getSenders() {
         return senders;
     }
 
@@ -67,8 +67,7 @@ public class SenderIs extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        MailAddress sanitizedSender = Optional.ofNullable(mail.getSender()).orElse(MailAddress.nullSender());
-        if (senders.contains(sanitizedSender)) {
+        if (senders.contains(mail.getMaybeSender().asOptional())) {
             return mail.getRecipients();
         } else {
             return null;

@@ -35,18 +35,12 @@ import org.apache.mailet.base.GenericMatcher;
  * @since 2.2.0
  */
 public class SenderIsNull extends GenericMatcher {
-
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (isNullSender(mail)) {
-            return mail.getRecipients();
-        } else {
+        if (mail.hasSender()) {
             return null;
+        } else {
+            return mail.getRecipients();
         }
-    }
-
-    private boolean isNullSender(Mail mail) {
-        return mail.getSender() == null
-            || mail.getSender().isNullSender();
     }
 }

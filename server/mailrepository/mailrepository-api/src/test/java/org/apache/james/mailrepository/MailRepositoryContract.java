@@ -34,6 +34,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -150,7 +151,7 @@ public interface MailRepositoryContract {
 
         testee.store(mail);
 
-        assertThat(testee.retrieve(MAIL_1).getSender()).isEqualTo(MailAddress.nullSender());
+        assertThat(testee.retrieve(MAIL_1).getMaybeSender()).isEqualTo(MaybeSender.nullSender());
     }
 
     @Test

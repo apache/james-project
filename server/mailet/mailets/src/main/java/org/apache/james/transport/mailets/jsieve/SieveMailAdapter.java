@@ -260,8 +260,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
      * @return String
      */
     public String getEnvelopeFrom() {
-        MailAddress sender = getMail().getSender(); 
-        return (null == sender ? "" : sender.toString());
+        return getMail().getMaybeSender().asString("");
     }
     
     /**

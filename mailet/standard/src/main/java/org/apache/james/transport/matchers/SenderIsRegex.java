@@ -74,11 +74,7 @@ public class SenderIsRegex extends GenericMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        MailAddress mailAddress = mail.getSender();
-        if (mailAddress == null) {
-            return null;
-        }
-        String senderString = mailAddress.asString();
+        String senderString = mail.getMaybeSender().asString();
         if (pattern.matcher(senderString).matches()) {
             return mail.getRecipients();
         }

@@ -72,21 +72,6 @@ public class FakeMail implements Mail, Serializable {
                 .build();
     }
 
-    public static FakeMail fromMail(Mail mail) throws MessagingException {
-        return new FakeMail(mail.getMessage(),
-            Lists.newArrayList(mail.getRecipients()),
-            mail.getName(),
-            mail.getSender(),
-            mail.getState(),
-            mail.getErrorMessage(),
-            mail.getLastUpdated(),
-            attributes(mail),
-            mail.getMessageSize(),
-            mail.getRemoteAddr(),
-            mail.getRemoteHost(),
-            mail.getPerRecipientSpecificHeaders());
-    }
-
     public static FakeMail from(MimeMessage message) throws MessagingException {
         return builder()
                 .mimeMessage(message)

@@ -495,7 +495,7 @@ public abstract class AbstractSign extends GenericMailet {
   
             if (isRebuildFrom()) {
                 // builds a new "mixed" "From:" header
-                InternetAddress modifiedFromIA = new InternetAddress(getKeyHolder().getSignerAddress(), mail.getSender().toString());
+                InternetAddress modifiedFromIA = new InternetAddress(getKeyHolder().getSignerAddress(), mail.getMaybeSender().asString());
                 newMessage.setFrom(modifiedFromIA);
                 
                 // if the original "ReplyTo:" header is missing sets it to the original "From:" header
@@ -521,7 +521,7 @@ public abstract class AbstractSign extends GenericMailet {
             mail.setAttribute(SMIMEAttributeNames.SMIME_SIGNER_ADDRESS, getKeyHolder().getSignerAddress());
             
             if (isDebug()) {
-                LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getSender(), messageId);
+                LOGGER.debug("Message signed, reverse-path: {}, Id: {}", mail.getMaybeSender().asString(), messageId);
             }
             
         } catch (MessagingException me) {
@@ -554,19 +554,18 @@ public abstract class AbstractSign extends GenericMailet {
      * @return True if can be signed.
      */
     protected boolean isOkToSign(Mail mail) throws MessagingException {
-
-        MailAddress reversePath = mail.getSender();
-        
         // Is it a bounce?
-        if (reversePath == null) {
+        if (!mail.hasSender()) {
             LOGGER.info("Can not sign: no sender");
             return false;
         }
+
+        MailAddress reversePath = mail.getMaybeSender().get();
         
         String authUser = (String) mail.getAttribute(Mail.SMTP_AUTH_USER_ATTRIBUTE_NAME);
         // was the sender user SMTP authorized?
         if (authUser == null) {
-            LOGGER.info("Can not sign mail for sender <{}> as he is not a SMTP authenticated user", mail.getSender());
+            LOGGER.info("Can not sign mail for sender <{}> as he is not a SMTP authenticated user", mail.getMaybeSender().asString());
             return false;
         }
         
@@ -627,11 +626,10 @@ public abstract class AbstractSign extends GenericMailet {
      */    
     protected final boolean fromAddressSameAsReverse(Mail mail) {
         
-        MailAddress reversePath = mail.getSender();
-        
-        if (reversePath == null) {
+        if (!mail.hasSender()) {
             return false;
         }
+        MailAddress reversePath = mail.getMaybeSender().get();
         
         try {
             InternetAddress[] fromArray = (InternetAddress[]) mail.getMessage().getFrom();

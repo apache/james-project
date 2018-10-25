@@ -104,7 +104,7 @@ class CassandraMailRepositoryMailDAOTest {
                     .containsOnly(MailAddressFixture.RECIPIENT1);
             softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
                     .containsOnly(header);
-            softly.assertThat(partialMail.getSender()).isEqualTo(MailAddressFixture.SENDER);
+            softly.assertThat(partialMail.getMaybeSender().asOptional()).contains(MailAddressFixture.SENDER);
             softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
         });
     }

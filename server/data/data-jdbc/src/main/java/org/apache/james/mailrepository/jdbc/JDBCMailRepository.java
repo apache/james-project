@@ -435,10 +435,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true));
                     updateMessage.setString(1, mc.getState());
                     updateMessage.setString(2, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
+                    if (mc.getMaybeSender().isNullSender()) {
                         updateMessage.setNull(3, java.sql.Types.VARCHAR);
                     } else {
-                        updateMessage.setString(3, mc.getSender().toString());
+                        updateMessage.setString(3, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {
@@ -529,10 +529,10 @@ public class JDBCMailRepository extends AbstractMailRepository {
                     insertMessage.setString(2, repositoryName);
                     insertMessage.setString(3, mc.getState());
                     insertMessage.setString(4, mc.getErrorMessage());
-                    if (mc.getSender() == null) {
+                    if (mc.getMaybeSender().isNullSender()) {
                         insertMessage.setNull(5, Types.VARCHAR);
                     } else {
-                        insertMessage.setString(5, mc.getSender().toString());
+                        insertMessage.setString(5, mc.getMaybeSender().get().toString());
                     }
                     StringBuilder recipients = new StringBuilder();
                     for (Iterator<MailAddress> i = mc.getRecipients().iterator(); i.hasNext();) {

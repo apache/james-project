@@ -48,7 +48,7 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
 
     @Override
     public boolean isAutomaticallySent(Mail mail) throws MessagingException {
-        return mail.getSender() == null ||
+        return !mail.hasSender() ||
             isMailingList(mail) ||
             isAutoSubmitted(mail) ||
             isMdnSentAutomatically(mail);
@@ -61,17 +61,15 @@ public class AutomaticallySentMailDetectorImpl implements AutomaticallySentMailD
     }
 
     private boolean senderIsMailingList(Mail mail) {
-        MailAddress sender = mail.getSender();
-        if (sender == null) {
-            return false;
-        }
-
-        String localPart = sender.getLocalPart();
-        return localPart.startsWith("owner-")
-            || localPart.endsWith("-request")
-            || localPart.equalsIgnoreCase("MAILER-DAEMON")
-            || localPart.equalsIgnoreCase("LISTSERV")
-            || localPart.equalsIgnoreCase("majordomo");
+        return mail.getMaybeSender()
+            .asOptional()
+            .map(MailAddress::getLocalPart)
+            .map(localPart ->  localPart.startsWith("owner-")
+                || localPart.endsWith("-request")
+                || localPart.equalsIgnoreCase("MAILER-DAEMON")
+                || localPart.equalsIgnoreCase("LISTSERV")
+                || localPart.equalsIgnoreCase("majordomo"))
+            .orElse(false);
     }
 
     private boolean headerIsMailingList(Mail mail) throws MessagingException {

@@ -62,6 +62,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 
 public class JamesMailetContext implements MailetContext, Configurable {
@@ -173,13 +174,13 @@ public class JamesMailetContext implements MailetContext, Configurable {
      */
     @Override
     public void bounce(Mail mail, String message, MailAddress bouncer) throws MessagingException {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             LOGGER.info("Mail to be bounced contains a null (<>) reverse path.  No bounce will be sent.");
             return;
         } else {
             // Bounce message goes to the reverse path, not to the Reply-To
             // address
-            LOGGER.info("Processing a bounce request for a message with a reverse path of {}", mail.getSender());
+            LOGGER.info("Processing a bounce request for a message with a reverse path of {}", mail.getMaybeSender());
         }
 
         MailImpl reply = rawBounce(mail, message);
@@ -216,9 +217,13 @@ public class JamesMailetContext implements MailetContext, Configurable {
         MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setSubject("Re: " + original.getSubject());
         reply.setSentDate(new Date());
-        Collection<MailAddress> recipients = new HashSet<>();
-        recipients.add(mail.getSender());
-        InternetAddress[] addr = {new InternetAddress(mail.getSender().toString())};
+        Collection<MailAddress> recipients = mail.getMaybeSender().asList();
+        InternetAddress[] addr = mail.getMaybeSender().asOptional()
+            .map(MailAddress::asString)
+            .map(Throwing.function((String s) -> new InternetAddress(s)).sneakyThrow())
+            .map(address -> new InternetAddress[]{address})
+            .orElse(new InternetAddress[0]);
+
         reply.setRecipients(Message.RecipientType.TO, addr);
         reply.setFrom(new InternetAddress(mail.getRecipients().iterator().next().toString()));
         reply.setText(bounceText);

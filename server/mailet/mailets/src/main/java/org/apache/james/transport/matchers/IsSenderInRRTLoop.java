@@ -56,7 +56,9 @@ public class IsSenderInRRTLoop extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) {
         try {
-            recipientRewriteTable.getMappings(mail.getSender().getLocalPart(), mail.getSender().getDomain());
+            if (mail.hasSender()) {
+                recipientRewriteTable.getMappings(mail.getMaybeSender().get().getLocalPart(), mail.getMaybeSender().get().getDomain());
+            }
         } catch (RecipientRewriteTable.TooManyMappingException e) {
             return mail.getRecipients();
         } catch (Exception e) {

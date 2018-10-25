@@ -30,6 +30,7 @@ import java.util.Collection;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jmap.model.Envelope;
 import org.apache.james.jmap.model.Keyword;
 import org.apache.james.jmap.model.Keywords;
@@ -116,7 +117,7 @@ public class MailFactoryTest {
         Mail actual = testee.build(message, envelope);
         
         assertThat(actual.getName()).isEqualTo(expectedName);
-        assertThat(actual.getSender()).isEqualTo(expectedSender);
+        assertThat(actual.getMaybeSender()).isEqualTo(MaybeSender.of(expectedSender));
         assertThat(actual.getRecipients()).containsAll(expectedRecipients);
     }
 }

@@ -113,7 +113,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
     }
 
     public SMTPMessageSender sendMessage(Mail mail) throws MessagingException, IOException {
-        String from = mail.getSender().asString();
+        String from = mail.getMaybeSender().asString();
         doHelo();
         doSetSender(from);
         mail.getRecipients().stream()

@@ -65,6 +65,9 @@ public class VacationMailet extends GenericMailet {
     @Override
     public void service(Mail mail) {
         try {
+            if (!mail.hasSender()) {
+                return;
+            }
             if (! automaticallySentMailDetector.isAutomaticallySent(mail)) {
                 ZonedDateTime processingDate = zonedDateTimeProvider.get();
                 mail.getRecipients()
@@ -84,7 +87,7 @@ public class VacationMailet extends GenericMailet {
                 vacationRepository.retrieveVacation(accountId),
                 notificationRegistry.isRegistered(
                     AccountId.fromString(recipient.toString()),
-                    RecipientId.fromMailAddress(processedMail.getSender())),
+                    RecipientId.fromMailAddress(processedMail.getMaybeSender().get())),
                 (vacation, alreadySent) ->
                     sendNotificationIfRequired(recipient, processedMail, processingDate, vacation, alreadySent))
             .thenCompose(Function.identity());
@@ -110,10 +113,10 @@ public class VacationMailet extends GenericMailet {
                 .build(mimeMessageBodyGenerator);
             sendNotification(vacationReply);
             return notificationRegistry.register(AccountId.fromString(recipient.toString()),
-                RecipientId.fromMailAddress(processedMail.getSender()),
+                RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
                 vacation.getToDate());
         } catch (MessagingException e) {
-            LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getSender(), e);
+            LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getMaybeSender(), e);
             return CompletableFuture.completedFuture(null);
         }
     }

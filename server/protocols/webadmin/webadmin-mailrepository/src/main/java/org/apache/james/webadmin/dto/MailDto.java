@@ -54,7 +54,7 @@ public class MailDto {
     public static MailDto fromMail(Mail mail, Set<AdditionalField> additionalFields) throws MessagingException, InaccessibleFieldException {
         Optional<MessageContent> messageContent = fetchMessage(additionalFields, mail);
         return new MailDto(mail.getName(),
-            Optional.ofNullable(mail.getSender()).map(MailAddress::asString),
+            mail.getMaybeSender().asOptional().map(MailAddress::asString),
             mail.getRecipients().stream().map(MailAddress::asString).collect(Guavate.toImmutableList()),
             Optional.ofNullable(mail.getErrorMessage()),
             Optional.ofNullable(mail.getState()),

@@ -88,8 +88,8 @@ public class InstrumentationMailet implements Mailet {
             LOGGER.info("Remote Address: " + mail.getRemoteAddr());
             LOGGER.info("Remote Host: " + mail.getRemoteHost());
             LOGGER.info("State: " + mail.getState());
-            LOGGER.info("Sender host: " + mail.getSender().getDomain().name());
-            LOGGER.info("Sender user: " + mail.getSender().getLocalPart());
+            LOGGER.info("Sender host: " + mail.getMaybeSender().asOptional().map(mailAddress -> mailAddress.getDomain().name()));
+            LOGGER.info("Sender user: " + mail.getMaybeSender().asOptional().map(MailAddress::getLocalPart));
             Collection<MailAddress> recipients = mail.getRecipients();
             for (MailAddress address : recipients) {
                 LOGGER.info("Recipient: " + address.getLocalPart() + "@" + address.getDomain().name());

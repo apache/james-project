@@ -23,6 +23,9 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 public class OptionalUtils {
 
     @FunctionalInterface
@@ -40,6 +43,16 @@ public class OptionalUtils {
     public static <T> Stream<T> toStream(Optional<T> optional) {
         return optional.map(Stream::of)
             .orElse(Stream.of());
+    }
+
+    public static <T> ImmutableList<T> toList(Optional<T> optional) {
+        return optional.map(ImmutableList::of)
+            .orElse(ImmutableList.of());
+    }
+
+    public static <T> ImmutableSet<T> toSet(Optional<T> optional) {
+        return optional.map(ImmutableSet::of)
+            .orElse(ImmutableSet.of());
     }
 
     @SafeVarargs

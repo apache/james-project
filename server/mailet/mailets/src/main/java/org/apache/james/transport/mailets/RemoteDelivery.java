@@ -204,7 +204,7 @@ public class RemoteDelivery extends GenericMailet {
                 serviceWithGateway(mail);
             }
         } else {
-            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getSender());
+            LOGGER.debug("Mail {} from {} has no recipients and can not be remotely delivered", mail.getName(), mail.getMaybeSender());
         }
         mail.setState(Mail.GHOST);
     }

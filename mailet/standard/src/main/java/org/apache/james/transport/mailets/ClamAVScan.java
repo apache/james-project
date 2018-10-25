@@ -821,7 +821,7 @@ public class ClamAVScan extends GenericMailet {
             PrintWriter out = new PrintWriter(sout, true);
 
             out.print("Mail details:");
-            out.print(" MAIL FROM: " + mail.getSender());
+            out.print(" MAIL FROM: " + mail.getMaybeSender().asString());
             Iterator<MailAddress> rcptTo = mail.getRecipients().iterator();
             out.print(", RCPT TO: " + rcptTo.next());
             while (rcptTo.hasNext()) {

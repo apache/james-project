@@ -244,10 +244,10 @@ public class WhiteListManager extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
 
         // check if it's a local sender
-        MailAddress senderMailAddress = mail.getSender();
-        if (senderMailAddress == null) {
+        if (!mail.hasSender()) {
             return;
         }
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         if (!getMailetContext().isLocalEmail(senderMailAddress)) {
             // not a local sender, so return
             return;
@@ -375,7 +375,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages a display request.
      */
     private void manageDisplayRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -423,7 +423,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages an insert request.
      */
     private void manageInsertRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -544,7 +544,7 @@ public class WhiteListManager extends GenericMailet {
      * Manages a remove request.
      */
     private void manageRemoveRequest(Mail mail) throws MessagingException {
-        MailAddress senderMailAddress = mail.getSender();
+        MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
@@ -665,7 +665,7 @@ public class WhiteListManager extends GenericMailet {
         try {
             MailAddress notifier = getMailetContext().getPostmaster();
 
-            MailAddress senderMailAddress = mail.getSender();
+            MailAddress senderMailAddress = mail.getMaybeSender().get();
 
             MimeMessage message = mail.getMessage();
             // Create the reply message

@@ -45,7 +45,7 @@ public class SendPromotionCode extends GenericMailet {
             "Here is the following promotion code that you can use on your next order: " + promotionCode);
 
         MailAddress sender = getMailetContext().getPostmaster();
-        ImmutableList<MailAddress> recipients = ImmutableList.of(mail.getSender());
+        ImmutableList<MailAddress> recipients = mail.getMaybeSender().asList();
 
         getMailetContext()
             .sendMail(sender, recipients, response);

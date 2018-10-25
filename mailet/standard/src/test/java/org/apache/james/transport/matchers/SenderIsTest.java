@@ -23,6 +23,8 @@ package org.apache.james.transport.matchers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
@@ -154,7 +156,8 @@ class SenderIsTest {
                 .condition(mailAddress + ", " + SENDER_NAME)
                 .build());
 
-        assertThat(matcher.getSenders()).containsExactly(new MailAddress(mailAddress), new MailAddress(SENDER_NAME));
+        assertThat(matcher.getSenders()).containsExactly(Optional.of(new MailAddress(mailAddress)),
+            Optional.of(new MailAddress(SENDER_NAME)));
     }
 
     @Test

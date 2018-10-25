@@ -47,7 +47,6 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlice
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 
 import java.util.Date;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -58,7 +57,6 @@ import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
-import org.apache.james.core.MailAddress;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
@@ -131,9 +129,7 @@ class EnqueuedMailsDAO {
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())
-            .setString(SENDER, Optional.ofNullable(mail.getSender())
-                .map(MailAddress::asString)
-                .orElse(null))
+            .setString(SENDER, mail.getMaybeSender().asString(null))
             .setList(RECIPIENTS, asStringList(mail.getRecipients()))
             .setString(ERROR_MESSAGE, mail.getErrorMessage())
             .setString(REMOTE_ADDR, mail.getRemoteAddr())

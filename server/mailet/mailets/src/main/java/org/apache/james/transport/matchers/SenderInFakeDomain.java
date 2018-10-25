@@ -38,10 +38,10 @@ public class SenderInFakeDomain extends AbstractNetworkMatcher {
 
     @Override
     public Collection<MailAddress> match(Mail mail) {
-        if (mail.getSender() == null) {
+        if (!mail.hasSender()) {
             return null;
         }
-        Domain domain = mail.getSender().getDomain();
+        Domain domain = mail.getMaybeSender().get().getDomain();
         // DNS Lookup for this domain
         @SuppressWarnings("deprecation")
         Collection<String> servers = getMailetContext().getMailServers(domain);

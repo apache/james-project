@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -262,7 +263,7 @@ public class MailQueueRoutesTest {
                     .contentType(ContentType.JSON)
                     .body(".", hasSize(1))
                     .body(firstMail + ".name", equalTo(mail.getName()))
-                    .body(firstMail + ".sender", equalTo(mail.getSender().asString()))
+                    .body(firstMail + ".sender", equalTo(SENDER.asString()))
                     .body(firstMail + ".recipients", equalTo(expectedRecipients));
             }
 

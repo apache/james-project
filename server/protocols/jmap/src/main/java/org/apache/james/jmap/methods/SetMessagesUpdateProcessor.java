@@ -180,7 +180,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             if (maybeMessageToSend.isPresent()) {
                 MessageResult messageToSend = maybeMessageToSend.get();
                 MailImpl mail = buildMailFromMessage(messageToSend);
-                assertUserIsSender(mailboxSession, mail.getSender());
+                assertUserIsSender(mailboxSession, mail.getMaybeSender().asOptional());
                 messageSender.sendMessage(messageId, mail, mailboxSession);
                 referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
             } else {
@@ -189,8 +189,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertUserIsSender(MailboxSession session, MailAddress sender) throws MailboxSendingNotAllowedException {
-        if (!session.getUser().isSameUser(sender.asString())) {
+    private void assertUserIsSender(MailboxSession session, Optional<MailAddress> sender) throws MailboxSendingNotAllowedException {
+        boolean userIsSender = sender.map(address -> session.getUser().isSameUser(address.asString()))
+            .orElse(false);
+
+        if (!userIsSender) {
             String allowedSender = session.getUser().getUserName();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }

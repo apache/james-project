@@ -64,7 +64,7 @@ public class FakeMailContext implements MailetContext {
 
     public static SentMail.Builder fromMail(Mail mail) throws MessagingException {
         return sentMailBuilder()
-            .sender(mail.getSender())
+            .sender(mail.getMaybeSender().asOptional())
             .recipients(mail.getRecipients())
             .message(mail.getMessage())
             .state(mail.getState())
@@ -130,6 +130,11 @@ public class FakeMailContext implements MailetContext {
 
             public Builder sender(MailAddress sender) {
                 this.sender = sender;
+                return this;
+            }
+
+            public Builder sender(Optional<MailAddress> sender) {
+                sender.ifPresent(this::sender);
                 return this;
             }
 

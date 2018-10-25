@@ -66,9 +66,8 @@ public class Dlp extends GenericMatcher {
     }
 
     private Optional<DLPConfigurationItem.Id> findFirstMatchingRule(Mail mail) {
-        return Optional
-                .ofNullable(mail.getSender())
-                .filter(sender -> !sender.isNullSender())
+        return mail.getMaybeSender()
+                .asOptional()
                 .flatMap(sender -> matchingRule(sender, mail));
     }
 

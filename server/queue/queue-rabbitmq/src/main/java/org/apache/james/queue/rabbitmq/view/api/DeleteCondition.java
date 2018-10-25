@@ -58,7 +58,9 @@ public interface DeleteCondition {
         @Override
         public boolean shouldBeDeleted(Mail mail) {
             Preconditions.checkNotNull(mail);
-            return mail.getSender().asString().equals(senderAsString);
+            return mail.getMaybeSender()
+                .asString()
+                .equals(senderAsString);
         }
 
         @Override

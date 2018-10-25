@@ -19,6 +19,7 @@
 
 package org.apache.james.transport.matchers.utils;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.mail.internet.AddressException;
@@ -33,7 +34,7 @@ import com.google.common.base.Strings;
 
 public class MailAddressCollectionReader {
 
-    public static Set<MailAddress> read(String condition) {
+    public static Set<Optional<MailAddress>> read(String condition) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(condition));
         return Splitter.onPattern("(,| |\t)").splitToList(condition)
             .stream()
@@ -42,12 +43,12 @@ public class MailAddressCollectionReader {
             .collect(Guavate.toImmutableSet());
     }
 
-    private static MailAddress getMailAddress(String s) {
+    private static Optional<MailAddress> getMailAddress(String s) {
         try {
             if (s.equals(MailAddress.NULL_SENDER_AS_STRING)) {
-                return MailAddress.nullSender();
+                return Optional.empty();
             }
-            return new MailAddress(s);
+            return Optional.of(new MailAddress(s));
         } catch (AddressException e) {
             throw new RuntimeException(e);
         }

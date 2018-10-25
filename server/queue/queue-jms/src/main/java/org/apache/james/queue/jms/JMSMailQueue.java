@@ -333,7 +333,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         props.put(JAMES_MAIL_REMOTEADDR, mail.getRemoteAddr());
         props.put(JAMES_MAIL_REMOTEHOST, mail.getRemoteHost());
 
-        String sender = Optional.ofNullable(mail.getSender()).map(MailAddress::asString).orElse("");
+        String sender = mail.getMaybeSender().asString("");
 
         org.apache.james.util.streams.Iterators.toStream(mail.getAttributeNames())
                 .forEach(attrName -> props.put(attrName, SerializationUtil.serialize(mail.getAttribute(attrName))));

@@ -47,6 +47,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -176,7 +177,17 @@ public class MailImpl implements Disposable, Mail {
         }
 
         public Builder sender(MailAddress sender) {
-            this.sender = Optional.ofNullable(sender);
+            return sender(Optional.ofNullable(sender));
+        }
+
+        public Builder sender(Optional<MailAddress> sender) {
+            this.sender = sender;
+            return this;
+        }
+
+
+        public Builder sender(MaybeSender sender) {
+            this.sender = sender.asOptional();
             return this;
         }
 
@@ -387,7 +398,7 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecated"})
     private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());

@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
@@ -64,7 +65,7 @@ public class MailImplTest {
         assertThat(mail.getRemoteHost()).describedAs("initial remote host is localhost").isEqualTo("localhost");
         assertThat(mail.getState()).describedAs("default initial state").isEqualTo(Mail.DEFAULT);
         assertThat(mail.getMessage()).isNull();
-        assertThat(mail.getSender()).isNull();
+        assertThat(mail.getMaybeSender()).isEqualTo(MaybeSender.nullSender());
         assertThat(mail.getName()).isNull();
     }
 
@@ -97,7 +98,7 @@ public class MailImplTest {
         MailAddress senderMailAddress = new MailAddress(sender);
         MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
 
-        assertThat(mail.getSender().asString()).isEqualTo(sender);
+        assertThat(mail.getMaybeSender().get().asString()).isEqualTo(sender);
         assertThat(mail.getName()).isEqualTo(name);
 
      }
