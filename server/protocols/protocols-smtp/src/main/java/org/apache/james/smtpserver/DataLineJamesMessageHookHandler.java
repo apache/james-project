@@ -259,6 +259,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             return ImmutableList.copyOf(mail.getRecipients());
         }
 
+        @SuppressWarnings("deprecated") // This will be handled in a followup pull request See JAMES-2557
         @Override
         public MailAddress getSender() {
             return mail.getSender();
