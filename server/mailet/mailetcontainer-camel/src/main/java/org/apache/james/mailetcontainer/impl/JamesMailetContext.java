@@ -62,7 +62,7 @@ import org.apache.mailet.base.RFC2822Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class JamesMailetContext implements MailetContext, Configurable {
@@ -211,24 +211,20 @@ public class JamesMailetContext implements MailetContext, Configurable {
      * @throws MessagingException if the bounce mail could not be created
      */
     private MailImpl rawBounce(Mail mail, String bounceText) throws MessagingException {
-        // This sends a message to the james component that is a bounce of the
-        // sent message
+        Preconditions.checkArgument(mail.hasSender(), "Mail should have a sender");
+        // This sends a message to the james component that is a bounce of the sent message
         MimeMessage original = mail.getMessage();
         MimeMessage reply = (MimeMessage) original.reply(false);
         reply.setSubject("Re: " + original.getSubject());
         reply.setSentDate(new Date());
         Collection<MailAddress> recipients = mail.getMaybeSender().asList();
-        InternetAddress[] addr = mail.getMaybeSender().asOptional()
-            .map(MailAddress::asString)
-            .map(Throwing.function((String s) -> new InternetAddress(s)).sneakyThrow())
-            .map(address -> new InternetAddress[]{address})
-            .orElse(new InternetAddress[0]);
+        MailAddress sender = mail.getMaybeSender().get();
 
-        reply.setRecipients(Message.RecipientType.TO, addr);
+        reply.setRecipient(Message.RecipientType.TO, new InternetAddress(mail.getMaybeSender().asString()));
         reply.setFrom(new InternetAddress(mail.getRecipients().iterator().next().toString()));
         reply.setText(bounceText);
         reply.setHeader(RFC2822Headers.MESSAGE_ID, "replyTo-" + mail.getName());
-        return new MailImpl("replyTo-" + mail.getName(), new MailAddress(mail.getRecipients().iterator().next().toString()), recipients, reply);
+        return new MailImpl("replyTo-" + mail.getName(), sender, recipients, reply);
     }
 
     @Override

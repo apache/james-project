@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.concurrent.TimeUnit;
@@ -177,6 +178,29 @@ public class JamesMailetContextTest {
         mail.setRecipients(ImmutableList.of(mailAddress));
         mail.setMessage(MimeMessageUtil.defaultMimeMessage());
         testee.bounce(mail, "message");
+    }
+
+    @Test
+    public void bouncingToNullSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setSender(MailAddress.nullSender());
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
+    }
+
+    @Test
+    public void bouncingToNoSenderShouldBeANoop() throws Exception {
+        MailImpl mail = new MailImpl();
+        mail.setRecipients(ImmutableList.of(mailAddress));
+        mail.setMessage(MimeMessageUtil.defaultMimeMessage());
+
+        testee.bounce(mail, "message");
+
+        verifyZeroInteractions(spoolMailQueue);
     }
 
     @Test
