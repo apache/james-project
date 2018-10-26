@@ -54,11 +54,15 @@ public class DockerCassandra {
     }
 
     public void start() {
-        cassandraContainer.start();
+        if (!cassandraContainer.isRunning()) {
+            cassandraContainer.start();
+        }
     }
 
     public void stop() {
-        cassandraContainer.stop();
+        if (cassandraContainer.isRunning()) {
+            cassandraContainer.stop();
+        }
     }
 
     public Host getHost() {

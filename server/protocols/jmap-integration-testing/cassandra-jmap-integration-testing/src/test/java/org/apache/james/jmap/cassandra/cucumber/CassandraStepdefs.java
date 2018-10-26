@@ -67,6 +67,7 @@ public class CassandraStepdefs {
 
     @Before
     public void init() throws Exception {
+        cassandraServer.start();
         temporaryFolder.create();
         embeddedElasticSearch.before();
         mainStepdefs.messageIdFactory = new CassandraMessageId.Factory();
