@@ -46,6 +46,12 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
 
 ## HealthCheck
 
+   - [Check all components](#Check_all_components)
+   - [Check single component](#Check_single_component)
+   
+
+### Check all components
+
 This endpoint is simple for now and is just returning the http status code corresponding to the state of checks (see below).
 The user has to check in the logs in order to have more information about failing checks.
 
@@ -58,6 +64,30 @@ Response codes:
  - 200: All checks have answered with a Healthy status
  - 500: At least one check have answered with a Unhealthy or Degraded status
 
+### Check single component
+
+Performs a health check for the given component. The component is referenced by its name.
+
+```
+curl -XGET http://ip:port/healthcheck/checks/Cassandra%20Backend
+```
+
+Will return the component's name, the component's escaped name, the health status and a cause.
+
+```
+{
+  "componentName": "Cassandra Backend",
+  "escapedComponentName": "Cassandra%20Backend",
+  "status": "HEALTHY"
+  "cause": null
+}
+```
+
+Response codes:
+
+ - 200: The check has answered with a Healthy status.
+ - 404: A component with the given name was not found.
+ - 500: The check has anwered with a Unhealthy or Degraded status.
 
 ## Administrating domains
 

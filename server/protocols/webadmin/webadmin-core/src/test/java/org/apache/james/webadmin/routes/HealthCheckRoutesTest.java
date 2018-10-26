@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.hamcrest.Matchers.equalTo;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -31,6 +32,7 @@ import org.apache.james.core.healthcheck.Result;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
@@ -42,6 +44,7 @@ public class HealthCheckRoutesTest {
 
     private static final ComponentName COMPONENT_NAME_1 = new ComponentName("component-1");
     private static final ComponentName COMPONENT_NAME_2 = new ComponentName("component-2");
+    private static final ComponentName COMPONENT_NAME_3 = new ComponentName("component 3"); // mind the space
 
     private static HealthCheck healthCheck(Result result) {
         return new HealthCheck() {
@@ -65,7 +68,7 @@ public class HealthCheckRoutesTest {
         healthChecks = new HashSet<>();
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new DefaultMetricFactory(),
-            new HealthCheckRoutes(healthChecks));
+            new HealthCheckRoutes(healthChecks, new JsonTransformer()));
 
         webAdminServer.configure(NO_CONFIGURATION);
         webAdminServer.await();
@@ -130,5 +133,54 @@ public class HealthCheckRoutesTest {
             .get()
         .then()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+    }
+    
+    @Test
+    public void performHealthCheckShouldReturnOkWhenHealthCheckIsHealthy() {
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_1)));
+        
+        when()
+            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        .then()
+            .statusCode(HttpStatus.OK_200);
+    }
+    
+    @Test
+    public void performHealthCheckShouldReturnNotFoundWhenComponentNameIsUnknown() {
+        when()
+            .get("/checks/{componentName}", "unknown")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+    
+    @Test
+    public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsDegraded() {
+        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1)));
+        
+        when()
+            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+    }
+    
+    @Test
+    public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsUnhealthy() {
+        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1)));
+        
+        when()
+            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        .then()
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+    }
+    
+    @Test
+    public void performHealthCheckShouldReturnProperlyEscapedComponentName() {
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
+        
+        when()
+            .get("/checks/{componentName}", COMPONENT_NAME_3.getName())
+        .then()
+            .body("componentName", equalTo("component 3"),
+                    "escapedComponentName", equalTo("component%203"));
     }
 }

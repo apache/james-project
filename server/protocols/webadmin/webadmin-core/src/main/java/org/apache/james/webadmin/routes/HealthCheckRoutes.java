@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -29,6 +30,9 @@ import javax.ws.rs.Path;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.webadmin.PublicRoutes;
+import org.apache.james.webadmin.dto.HealthCheckExecutionResultDto;
+import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +40,13 @@ import org.slf4j.LoggerFactory;
 import com.github.steveash.guavate.Guavate;
 
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.Request;
+import spark.Response;
 import spark.Service;
 
 @Api(tags = "Healthchecks")
@@ -49,13 +57,13 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     public static final String HEALTHCHECK = "/healthcheck";
 
-
+    private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
-    private Service service;
 
     @Inject
-    public HealthCheckRoutes(Set<HealthCheck> healthChecks) {
+    public HealthCheckRoutes(Set<HealthCheck> healthChecks, JsonTransformer jsonTransformer) {
         this.healthChecks = healthChecks;
+        this.jsonTransformer = jsonTransformer;
     }
 
     @Override
@@ -65,9 +73,8 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     @Override
     public void define(Service service) {
-        this.service = service;
-
-        validateHealthchecks();
+        service.get(HEALTHCHECK, this::validateHealthchecks, jsonTransformer);
+        service.get(HEALTHCHECK + "/checks/:componentName", this::performHealthCheckForComponent, jsonTransformer);
     }
 
     @GET
@@ -77,21 +84,64 @@ public class HealthCheckRoutes implements PublicRoutes {
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
                 message = "Internal server error - When one check has failed.")
     })
-    public void validateHealthchecks() {
-        service.get(HEALTHCHECK,
-            (request, response) -> {
-                List<Result> anyUnhealthyOrDegraded = retrieveUnhealthyOrDegradedHealthChecks();
+    public Object validateHealthchecks(Request request, Response response) {
+        List<Result> anyUnhealthyOrDegraded = retrieveUnhealthyOrDegradedHealthChecks();
 
-                anyUnhealthyOrDegraded.forEach(this::logFailedCheck);
-                response.status(getCorrespondingStatusCode(anyUnhealthyOrDegraded));
-                return response;
-            });
+        anyUnhealthyOrDegraded.forEach(this::logFailedCheck);
+        response.status(getCorrespondingStatusCode(anyUnhealthyOrDegraded));
+        return response;
+    }
+    
+    @GET
+    @Path("/checks/{componentName}")
+    @ApiOperation(value = "Perform the component's health check")
+    @ApiImplicitParams({
+        @ApiImplicitParam(
+                name="componentName",
+                required=true,
+                paramType="path",
+                dataType="String",
+                defaultValue="None",
+                example="/checks/Cassandra%20Backend",
+                value="The URL encoded name of the component to check.")
+    })
+    public Object performHealthCheckForComponent(Request request, Response response) {
+        String componentName = request.params("componentName");
+        Optional<HealthCheck> optHealthCheck = healthChecks.stream()
+                                                .filter(c -> c.componentName().getName().equals(componentName))
+                                                .findFirst();
+                
+       if (optHealthCheck.isPresent()) {
+           HealthCheck healthCheck = optHealthCheck.get();
+           Result result = healthCheck.check();
+           logFailedCheck(result);
+           response.status(getCorrespondingStatusCode(result));
+           return new HealthCheckExecutionResultDto(result);
+       }
+       else {
+           throw ErrorResponder.builder()
+           .message(String.format("Component with name %s cannot be found", componentName))
+           .statusCode(HttpStatus.NOT_FOUND_404)
+           .type(ErrorResponder.ErrorType.NOT_FOUND)
+           .haltError();
+       }           
     }
 
     private int getCorrespondingStatusCode(List<Result> anyUnhealthy) {
         if (anyUnhealthy.isEmpty()) {
             return HttpStatus.OK_200;
         } else {
+            return HttpStatus.INTERNAL_SERVER_ERROR_500;
+        }
+    }
+    
+    private int getCorrespondingStatusCode(Result result) {
+        switch(result.getStatus()) {
+        case HEALTHY:
+            return HttpStatus.OK_200;
+        case DEGRADED:
+        case UNHEALTHY:
+        default:
             return HttpStatus.INTERNAL_SERVER_ERROR_500;
         }
     }
