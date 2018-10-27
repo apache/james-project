@@ -19,16 +19,21 @@
 
 package org.apache.james.webadmin.routes;
 
+import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
+import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.james.core.healthcheck.ComponentName;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
+import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -139,48 +144,95 @@ public class HealthCheckRoutesTest {
     public void performHealthCheckShouldReturnOkWhenHealthCheckIsHealthy() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_1)));
         
-        when()
-            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        given()
+            .pathParam("componentName", COMPONENT_NAME_1.getName())
+        .when()
+            .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.OK_200);
+            .statusCode(HttpStatus.OK_200)
+            .body("componentName", equalTo("component-1"))
+            .body("escapedComponentName", equalTo("component-1"))
+            .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
+            .body("cause", is(nullValue()));
     }
     
     @Test
     public void performHealthCheckShouldReturnNotFoundWhenComponentNameIsUnknown() {
-        when()
-            .get("/checks/{componentName}", "unknown")
+        
+        given()
+            .pathParam("componentName", "unknown")
+        .when()
+            .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.NOT_FOUND_404);
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("details", is(nullValue()))
+            .body("type", equalTo("notFound"))
+            .body("message", equalTo("Component with name unknown cannot be found"))
+            .body("statusCode", is(404));
     }
     
     @Test
     public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsDegraded() {
-        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1)));
+        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "the cause")));
         
-        when()
-            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        given()
+            .pathParam("componentName", COMPONENT_NAME_1.getName())
+        .when()
+            .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .body("componentName", equalTo("component-1"))
+            .body("escapedComponentName", equalTo("component-1"))
+            .body("status", equalTo(ResultStatus.DEGRADED.getValue()))
+            .body("cause", equalTo("the cause"));
     }
     
     @Test
     public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1)));
         
-        when()
-            .get("/checks/{componentName}", COMPONENT_NAME_1.getName())
+        given()
+            .pathParam("componentName", COMPONENT_NAME_1.getName())
+        .when()
+            .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .body("componentName", equalTo("component-1"))
+            .body("escapedComponentName", equalTo("component-1"))
+            .body("status", equalTo(ResultStatus.UNHEALTHY.getValue()))
+            .body("cause", is(nullValue()));
     }
     
     @Test
     public void performHealthCheckShouldReturnProperlyEscapedComponentName() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
         
-        when()
-            .get("/checks/{componentName}", COMPONENT_NAME_3.getName())
+        given()
+            .pathParam("componentName", COMPONENT_NAME_3.getName())
+        .when()
+            .get("/checks/{componentName}")
         .then()
-            .body("componentName", equalTo("component 3"),
-                    "escapedComponentName", equalTo("component%203"));
+            .body("componentName", equalTo("component 3"))
+            .body("escapedComponentName", equalTo("component%203"))
+            .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
+            .body("cause", is(nullValue()));
+    }
+    
+    @Test
+    public void performHealthCheckShouldWorkWithEscapedPathParam() throws MalformedURLException {
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
+        
+        // disable URL encoding
+        RestAssured.requestSpecification.urlEncodingEnabled(false);
+
+        given()
+            .pathParam("componentName", "component%203")
+        .when()
+            .get("/checks/{componentName}")
+        .then()
+            .body("componentName", equalTo("component 3"))
+            .body("escapedComponentName", equalTo("component%203"))
+            .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
+            .body("cause", is(nullValue()));
     }
 }

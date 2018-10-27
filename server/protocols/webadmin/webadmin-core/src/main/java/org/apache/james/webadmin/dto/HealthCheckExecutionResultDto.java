@@ -45,7 +45,7 @@ public class HealthCheckExecutionResultDto {
     }
     
     public String getStatus() {
-        return healthCheckResult.getStatus().toString();
+        return healthCheckResult.getStatus().getValue();
     }
     
     public Optional<String> getCause() {

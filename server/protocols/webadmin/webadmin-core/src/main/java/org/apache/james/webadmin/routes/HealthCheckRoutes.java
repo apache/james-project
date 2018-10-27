@@ -45,6 +45,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -80,9 +81,9 @@ public class HealthCheckRoutes implements PublicRoutes {
     @GET
     @ApiOperation(value = "Validate all health checks")
     @ApiResponses(value = {
-            @ApiResponse(code = HttpStatus.OK_200, message = "OK"),
-            @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
-                message = "Internal server error - When one check has failed.")
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - When one check has failed.")
     })
     public Object validateHealthchecks(Request request, Response response) {
         List<Result> anyUnhealthyOrDegraded = retrieveUnhealthyOrDegradedHealthChecks();
@@ -97,34 +98,25 @@ public class HealthCheckRoutes implements PublicRoutes {
     @ApiOperation(value = "Perform the component's health check")
     @ApiImplicitParams({
         @ApiImplicitParam(
-                name="componentName",
-                required=true,
-                paramType="path",
-                dataType="String",
-                defaultValue="None",
-                example="/checks/Cassandra%20Backend",
-                value="The URL encoded name of the component to check.")
+            name = "componentName",
+            required = true,
+            paramType = "path",
+            dataType = "String",
+            defaultValue = "None",
+            example = "/checks/Cassandra%20Backend",
+            value = "The URL encoded name of the component to check.")
     })
     public Object performHealthCheckForComponent(Request request, Response response) {
         String componentName = request.params("componentName");
         Optional<HealthCheck> optHealthCheck = healthChecks.stream()
-                                                .filter(c -> c.componentName().getName().equals(componentName))
-                                                .findFirst();
+            .filter(c -> c.componentName().getName().equals(componentName))
+            .findFirst();
                 
-       if (optHealthCheck.isPresent()) {
-           HealthCheck healthCheck = optHealthCheck.get();
-           Result result = healthCheck.check();
-           logFailedCheck(result);
-           response.status(getCorrespondingStatusCode(result));
-           return new HealthCheckExecutionResultDto(result);
-       }
-       else {
-           throw ErrorResponder.builder()
-           .message(String.format("Component with name %s cannot be found", componentName))
-           .statusCode(HttpStatus.NOT_FOUND_404)
-           .type(ErrorResponder.ErrorType.NOT_FOUND)
-           .haltError();
-       }           
+        HealthCheck healthCheck = optHealthCheck.orElseThrow(() -> throw404(componentName));
+        Result result = healthCheck.check();
+        logFailedCheck(result);
+        response.status(getCorrespondingStatusCode(result));
+        return new HealthCheckExecutionResultDto(result);
     }
 
     private int getCorrespondingStatusCode(List<Result> anyUnhealthy) {
@@ -136,7 +128,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
     
     private int getCorrespondingStatusCode(Result result) {
-        switch(result.getStatus()) {
+        switch (result.getStatus()) {
         case HEALTHY:
             return HttpStatus.OK_200;
         case DEGRADED:
@@ -170,4 +162,13 @@ public class HealthCheckRoutes implements PublicRoutes {
             .filter(result -> result.isUnHealthy() || result.isDegraded())
             .collect(Guavate.toImmutableList());
     }
+    
+    private HaltException throw404(String componentName) {
+        return ErrorResponder.builder()
+            .message(String.format("Component with name %s cannot be found", componentName))
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .type(ErrorResponder.ErrorType.NOT_FOUND)
+            .haltError();
+    }
+        
 }
