@@ -18,6 +18,28 @@
  ****************************************************************/
 package org.apache.james.core.healthcheck;
 
+import java.util.Arrays;
+
 public enum ResultStatus {
-    HEALTHY, DEGRADED, UNHEALTHY;
+    HEALTHY("healthy"), 
+    DEGRADED("degraded"), 
+    UNHEALTHY("unhealthy");
+    
+    public static ResultStatus fromString(String value) {
+        return Arrays.stream(values())
+            .filter(status -> status.value.equalsIgnoreCase(value))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException(
+                String.format("Unknown status value '%s'", value)));
+    }
+    
+    private final String value;
+    
+    ResultStatus(String value) {
+        this.value = value;
+    }
+    
+    public String getValue() {
+        return value;
+    }
 }
