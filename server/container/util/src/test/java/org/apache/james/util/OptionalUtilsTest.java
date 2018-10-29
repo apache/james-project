@@ -234,4 +234,54 @@ public class OptionalUtilsTest {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "other")).isTrue();
     }
 
+    @Test
+    public void matchesShouldReturnFalseWhenFirstOptionalIsEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.empty(),
+                Optional.of(42),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    public void matchesShouldReturnFalseWhenSecondOptionalIsEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.empty(),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    public void matchesShouldReturnFalseWhenBothOptionalsAreEmpty() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.empty(),
+                Optional.empty(),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    public void matchesShouldReturnFalseWhenConditionIsNotMatching() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.of(43),
+                Integer::equals))
+            .isFalse();
+    }
+
+    @Test
+    public void matchesShouldReturnTrueWhenConditionIsMatching() {
+        assertThat(
+            OptionalUtils.matches(
+                Optional.of(42),
+                Optional.of(42),
+                Integer::equals))
+            .isTrue();
+    }
+
 }

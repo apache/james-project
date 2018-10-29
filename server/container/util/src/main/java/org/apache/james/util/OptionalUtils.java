@@ -20,6 +20,7 @@ package org.apache.james.util;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -77,5 +78,13 @@ public class OptionalUtils {
         return requestValue
             .filter(value -> !value.equals(storeValue))
             .isPresent();
+    }
+
+    public static <T, U> boolean matches(Optional<T> optional1, Optional<U> optional2, BiPredicate<T, U> biPredicate) {
+        return optional1.map(value1 ->
+            optional2
+                .map(value2 -> biPredicate.test(value1, value2))
+                .orElse(false))
+            .orElse(false);
     }
 }
