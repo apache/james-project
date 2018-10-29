@@ -309,7 +309,7 @@ If you haven't already:
   -t james/project -s HEAD
 
 
-==== Howto ?
+==== How to ?
 
 We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
 
