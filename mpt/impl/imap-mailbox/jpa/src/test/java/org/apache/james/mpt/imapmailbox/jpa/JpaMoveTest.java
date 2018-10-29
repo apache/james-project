@@ -33,6 +33,7 @@ public class JpaMoveTest extends Move {
     @Before
     public void setUp() throws Exception {
         system = JPAHostSystem.build();
+        system.beforeTest();
         super.setUp();
     }
     
