@@ -110,11 +110,11 @@ public class HealthCheckRoutes implements PublicRoutes {
     })
     public Object performHealthCheckForComponent(Request request, Response response) {
         String componentName = request.params(PARAM_COMPONENT_NAME);
-        Optional<HealthCheck> optHealthCheck = healthChecks.stream()
+        HealthCheck healthCheck = healthChecks.stream()
             .filter(c -> c.componentName().getName().equals(componentName))
-            .findFirst();
-                
-        HealthCheck healthCheck = optHealthCheck.orElseThrow(() -> throw404(componentName));
+            .findFirst()
+            .orElseThrow(() -> throw404(componentName));
+        
         Result result = healthCheck.check();
         logFailedCheck(result);
         response.status(getCorrespondingStatusCode(result));
