@@ -50,7 +50,7 @@ public class HealthCheckRoutesTest {
     private static final String NAME_1 = "component-1";
     private static final String NAME_2 = "component-2";
     private static final String NAME_3 = "component 3";
-    private static final String NAME_3_ESCAPED = "component&203";
+    private static final String NAME_3_ESCAPED = "component%203";
 
     private static final ComponentName COMPONENT_NAME_1 = new ComponentName(NAME_1);
     private static final ComponentName COMPONENT_NAME_2 = new ComponentName(NAME_2);
@@ -173,7 +173,7 @@ public class HealthCheckRoutesTest {
             .body("details", is(nullValue()))
             .body("type", equalTo("notFound"))
             .body("message", equalTo("Component with name unknown cannot be found"))
-            .body("statusCode", is(404));
+            .body("statusCode", is(HttpStatus.NOT_FOUND_404));
     }
     
     @Test
