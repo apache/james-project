@@ -66,7 +66,7 @@ Response codes:
 
 ### Check single component
 
-Performs a health check for the given component. The component is referenced by its name.
+Performs a health check for the given component. The component is referenced by its URL encoded name.
 
 ```
 curl -XGET http://ip:port/healthcheck/checks/Cassandra%20Backend
