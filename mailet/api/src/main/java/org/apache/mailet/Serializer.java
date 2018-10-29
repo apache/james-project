@@ -78,7 +78,7 @@ public interface Serializer<T> {
                     LONG_SERIALIZER,
                     FLOAT_SERIALIZER,
                     DOUBLE_SERIALIZER,
-                    ARIBITRARY_SERIALIZABLE_SERIALIZER,
+                    new Serializer.ArbitrarySerializableSerializer(),
                     URL_SERIALIZER,
                     new CollectionSerializer<>(),
                     new MapSerializer<>(),
@@ -259,12 +259,12 @@ public interface Serializer<T> {
 
     Serializer<Double> DOUBLE_SERIALIZER = new DoubleSerializer();
 
-    class ArbitrarySerializableSerializer implements Serializer<ArbitrarySerializable> {
+    class ArbitrarySerializableSerializer<T extends ArbitrarySerializable<T>> implements Serializer<T> {
         private static final Logger LOGGER = LoggerFactory.getLogger(ArbitrarySerializableSerializer.class);
 
         @Override
-        public JsonNode serialize(ArbitrarySerializable serializable) {
-            ArbitrarySerializable.Serializable serialized = serializable.serialize();
+        public JsonNode serialize(T serializable) {
+            ArbitrarySerializable.Serializable<T> serialized = serializable.serialize();
             ObjectNode serializedJson = JsonNodeFactory.instance.objectNode();
             serializedJson.put("factory", serialized.getFactory().getName());
             serializedJson.replace("value", serialized.getValue().toJson());
@@ -272,14 +272,14 @@ public interface Serializer<T> {
         }
 
         @Override
-        public Optional<ArbitrarySerializable> deserialize(JsonNode json) {
+        public Optional<T> deserialize(JsonNode json) {
             return Optional.of(json)
                     .filter(ObjectNode.class::isInstance)
                     .map(ObjectNode.class::cast)
                     .flatMap(this::instantiate);
         }
 
-        public Optional<ArbitrarySerializable> instantiate(ObjectNode fields) {
+        public Optional<T> instantiate(ObjectNode fields) {
             return Optional.ofNullable(fields.get("factory"))
                 .flatMap(serializer ->
                     Optional.ofNullable(fields.get("value"))
@@ -287,15 +287,15 @@ public interface Serializer<T> {
         }
 
         @SuppressWarnings("unchecked")
-        private Optional<ArbitrarySerializable> deserialize(String serializer, AttributeValue<?> value) {
+        private Optional<T> deserialize(String serializer, AttributeValue<?> value) {
             try {
                 Class<?> factoryClass = Class.forName(serializer);
                 if (ArbitrarySerializable.Factory.class.isAssignableFrom(factoryClass)) {
-                    ArbitrarySerializable.Factory factory = (ArbitrarySerializable.Factory) factoryClass.newInstance();
-                    return factory.deserialize(new ArbitrarySerializable.Serializable(value, (Class<ArbitrarySerializable.Factory>) factoryClass));
+                    ArbitrarySerializable.Factory<T> factory = (ArbitrarySerializable.Factory<T>) factoryClass.newInstance();
+                    return factory.deserialize(new ArbitrarySerializable.Serializable<>(value, (Class<ArbitrarySerializable.Factory<T>>) factoryClass));
                 }
             } catch (Exception e) {
-                LOGGER.error("Error while deserializing", e);
+                LOGGER.error("Error while deserializing using serializer {} and value {}", serializer, value, e);
             }
 
             return Optional.empty();
@@ -311,8 +311,6 @@ public interface Serializer<T> {
             return this.getClass() == other.getClass();
         }
     }
-
-    Serializer<ArbitrarySerializable> ARIBITRARY_SERIALIZABLE_SERIALIZER = new ArbitrarySerializableSerializer();
 
     class UrlSerializer implements Serializer<URL> {
         @Override

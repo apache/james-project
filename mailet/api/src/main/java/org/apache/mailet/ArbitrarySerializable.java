@@ -21,17 +21,17 @@ package org.apache.mailet;
 
 import java.util.Optional;
 
-public interface ArbitrarySerializable {
-    public class Serializable {
+public interface ArbitrarySerializable<T> {
+    public class Serializable<U> {
         private final AttributeValue<?> value;
-        private final Class<? extends Factory> factory;
+        private final Class<? extends Factory<U>> factory;
 
-        public Serializable(AttributeValue<?> value, Class<? extends Factory> factory) {
+        public Serializable(AttributeValue<?> value, Class<? extends Factory<U>> factory) {
             this.value = value;
             this.factory = factory;
         }
 
-        public Class<? extends Factory> getFactory() {
+        public Class<? extends Factory<U>> getFactory() {
             return factory;
         }
 
@@ -40,9 +40,9 @@ public interface ArbitrarySerializable {
         }
     }
 
-    public interface Factory {
-        Optional<ArbitrarySerializable> deserialize(Serializable serializable);
+    public interface Factory<U> {
+        Optional<U> deserialize(Serializable<U> serializable);
     }
     
-    Serializable serialize();
+    Serializable<T> serialize();
 }

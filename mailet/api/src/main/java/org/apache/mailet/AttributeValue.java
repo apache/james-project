@@ -69,8 +69,8 @@ public class AttributeValue<T> {
         return new AttributeValue<>(value, Serializer.DOUBLE_SERIALIZER);
     }
 
-    public static AttributeValue<ArbitrarySerializable> of(ArbitrarySerializable value) {
-        return new AttributeValue<>(value, Serializer.ARIBITRARY_SERIALIZABLE_SERIALIZER);
+    public static <T extends ArbitrarySerializable<T>> AttributeValue<T> of(T value) {
+        return new AttributeValue<>(value, new Serializer.ArbitrarySerializableSerializer<>());
     }
 
     public static AttributeValue<URL> of(URL value) {
