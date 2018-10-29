@@ -84,11 +84,9 @@ public interface HeaderExtractor extends ThrowingFunction<Mail, Stream<String>> 
     }
 
     static Stream<String> toAddressContents(String[] headers) {
-        return Stream.concat(
-            StreamUtils.ofNullable(headers),
-            StreamUtils.ofNullable(headers)
+        return StreamUtils.ofNullable(headers)
                 .map(Throwing.function(string -> InternetAddress.parseHeader(string, !STRICT_PARSING)))
-                .flatMap(AddressHelper::asStringStream));
+                .flatMap(AddressHelper::asStringStream);
     }
 
     static Optional<HeaderExtractor> asHeaderExtractor(Rule.Condition.Field field) {

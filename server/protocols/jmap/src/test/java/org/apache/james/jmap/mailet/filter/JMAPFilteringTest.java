@@ -335,6 +335,11 @@ class JMAPFilteringTest {
                     argumentBuilder(fieldAndHeader.field)
                         .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure")
                         .header(fieldAndHeader.headerName, "Benoit <invalid")
+                        .valueToMatch("Benoit <invalid"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Full header exact match in a full " + fieldAndHeader.headerName + " with an invalid structure - multi address")
+                        .header(fieldAndHeader.headerName, "Valid <toto@domain.tld>, Benoit <invalid")
                         .valueToMatch("Benoit <invalid"))
                     .flatMap(JMAPFilteringTest::forBothCase)),
 
