@@ -57,6 +57,8 @@ public class HealthCheckRoutes implements PublicRoutes {
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
 
     public static final String HEALTHCHECK = "/healthcheck";
+    
+    private static final String PARAM_COMPONENT_NAME = "componentName";
 
     private final JsonTransformer jsonTransformer;
     private final Set<HealthCheck> healthChecks;
@@ -75,7 +77,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     @Override
     public void define(Service service) {
         service.get(HEALTHCHECK, this::validateHealthchecks, jsonTransformer);
-        service.get(HEALTHCHECK + "/checks/:componentName", this::performHealthCheckForComponent, jsonTransformer);
+        service.get(HEALTHCHECK + "/checks/:" + PARAM_COMPONENT_NAME, this::performHealthCheckForComponent, jsonTransformer);
     }
 
     @GET
@@ -94,11 +96,11 @@ public class HealthCheckRoutes implements PublicRoutes {
     }
     
     @GET
-    @Path("/checks/{componentName}")
+    @Path("/checks/{" + PARAM_COMPONENT_NAME + "}")
     @ApiOperation(value = "Perform the component's health check")
     @ApiImplicitParams({
         @ApiImplicitParam(
-            name = "componentName",
+            name = PARAM_COMPONENT_NAME,
             required = true,
             paramType = "path",
             dataType = "String",
@@ -107,7 +109,7 @@ public class HealthCheckRoutes implements PublicRoutes {
             value = "The URL encoded name of the component to check.")
     })
     public Object performHealthCheckForComponent(Request request, Response response) {
-        String componentName = request.params("componentName");
+        String componentName = request.params(PARAM_COMPONENT_NAME);
         Optional<HealthCheck> optHealthCheck = healthChecks.stream()
             .filter(c -> c.componentName().getName().equals(componentName))
             .findFirst();
