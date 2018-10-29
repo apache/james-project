@@ -46,10 +46,15 @@ import org.junit.Test;
 import io.restassured.RestAssured;
 
 public class HealthCheckRoutesTest {
+    
+    private static final String NAME_1 = "component-1";
+    private static final String NAME_2 = "component-2";
+    private static final String NAME_3 = "component 3";
+    private static final String NAME_3_ESCAPED = "component&203";
 
-    private static final ComponentName COMPONENT_NAME_1 = new ComponentName("component-1");
-    private static final ComponentName COMPONENT_NAME_2 = new ComponentName("component-2");
-    private static final ComponentName COMPONENT_NAME_3 = new ComponentName("component 3"); // mind the space
+    private static final ComponentName COMPONENT_NAME_1 = new ComponentName(NAME_1);
+    private static final ComponentName COMPONENT_NAME_2 = new ComponentName(NAME_2);
+    private static final ComponentName COMPONENT_NAME_3 = new ComponentName(NAME_3); // mind the space
 
     private static HealthCheck healthCheck(Result result) {
         return new HealthCheck() {
@@ -150,8 +155,8 @@ public class HealthCheckRoutesTest {
             .get("/checks/{componentName}")
         .then()
             .statusCode(HttpStatus.OK_200)
-            .body("componentName", equalTo("component-1"))
-            .body("escapedComponentName", equalTo("component-1"))
+            .body("componentName", equalTo(NAME_1))
+            .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
             .body("cause", is(nullValue()));
     }
@@ -181,8 +186,8 @@ public class HealthCheckRoutesTest {
             .get("/checks/{componentName}")
         .then()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-            .body("componentName", equalTo("component-1"))
-            .body("escapedComponentName", equalTo("component-1"))
+            .body("componentName", equalTo(NAME_1))
+            .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.DEGRADED.getValue()))
             .body("cause", equalTo("the cause"));
     }
@@ -197,8 +202,8 @@ public class HealthCheckRoutesTest {
             .get("/checks/{componentName}")
         .then()
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
-            .body("componentName", equalTo("component-1"))
-            .body("escapedComponentName", equalTo("component-1"))
+            .body("componentName", equalTo(NAME_1))
+            .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.UNHEALTHY.getValue()))
             .body("cause", is(nullValue()));
     }
@@ -212,8 +217,8 @@ public class HealthCheckRoutesTest {
         .when()
             .get("/checks/{componentName}")
         .then()
-            .body("componentName", equalTo("component 3"))
-            .body("escapedComponentName", equalTo("component%203"))
+            .body("componentName", equalTo(NAME_3))
+            .body("escapedComponentName", equalTo(NAME_3_ESCAPED))
             .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
             .body("cause", is(nullValue()));
     }
@@ -226,12 +231,12 @@ public class HealthCheckRoutesTest {
         RestAssured.requestSpecification.urlEncodingEnabled(false);
 
         given()
-            .pathParam("componentName", "component%203")
+            .pathParam("componentName", NAME_3_ESCAPED)
         .when()
             .get("/checks/{componentName}")
         .then()
-            .body("componentName", equalTo("component 3"))
-            .body("escapedComponentName", equalTo("component%203"))
+            .body("componentName", equalTo(NAME_3))
+            .body("escapedComponentName", equalTo(NAME_3_ESCAPED))
             .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
             .body("cause", is(nullValue()));
     }
