@@ -45,6 +45,7 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
 
     public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
         MailboxCapabilities.Namespace,
+        MailboxCapabilities.Move,
         MailboxCapabilities.Annotation);
 
     public JPAMailboxManager(JPAMailboxSessionMapperFactory mailboxSessionMapperFactory,
