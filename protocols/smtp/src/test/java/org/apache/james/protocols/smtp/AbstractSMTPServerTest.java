@@ -695,7 +695,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
                     return HookResult.DENY;
                 } else {
@@ -759,7 +759,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+            public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
                     return HookResult.DENYSOFT;
                 } else {

@@ -149,7 +149,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     }
 
     @Override
-    public HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+    public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
         if (!session.isRelayingAllowed()) {
             // Check if session is blocklisted
             if (session.getAttachment(SPF_BLOCKLISTED, State.Transaction) != null) {

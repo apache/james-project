@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -228,10 +229,10 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     }
 
     @Override
-    protected HookResult callHook(RcptHook rawHook, SMTPSession session,
-                                  String parameters) {
+    protected HookResult callHook(RcptHook rawHook, SMTPSession session, String parameters) {
+        MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
         return rawHook.doRcpt(session,
-                (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction),
+                MaybeSender.of(sender),
                 (MailAddress) session.getAttachment(CURRENT_RECIPIENT, State.Transaction));
     }
 

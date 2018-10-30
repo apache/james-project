@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -126,7 +127,7 @@ public class ResolvableEhloHeloHandlerTest {
         handler.doHelo(session, INVALID_HOST);
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Invalid HELO").isNotNull();
 
-        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
@@ -140,7 +141,7 @@ public class ResolvableEhloHeloHandlerTest {
         handler.doHelo(session, VALID_HOST);
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Valid HELO").isNull();
 
-        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
         assertThat(HookReturnCode.declined()).describedAs("Not reject").isEqualTo(result);
     }
    
@@ -155,7 +156,7 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isNotNull();
 
 
-        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
     
@@ -171,7 +172,7 @@ public class ResolvableEhloHeloHandlerTest {
         assertThat(session.getAttachment(BAD_EHLO_HELO, Transaction)).withFailMessage("Value stored").isNotNull();
 
 
-        HookReturnCode result = handler.doRcpt(session,null, mailAddress).getResult();
+        HookReturnCode result = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
         assertThat(HookReturnCode.deny()).describedAs("Reject").isEqualTo(result);
     }
 }
