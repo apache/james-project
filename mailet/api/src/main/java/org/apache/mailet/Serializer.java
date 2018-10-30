@@ -442,8 +442,7 @@ public interface Serializer<T> {
 
         @Override
         public JsonNode serialize(Serializable object) {
-            FSTConfiguration conf = CONFIGURATION;
-            String json = conf.asJsonString(object);
+            String json = CONFIGURATION.asJsonString(object);
             try {
                 return new ObjectMapper().reader().readTree(json);
             } catch (IOException e) {
@@ -453,9 +452,8 @@ public interface Serializer<T> {
 
         @Override
         public Optional<Serializable> deserialize(JsonNode json) {
-            FSTConfiguration conf = FSTConfiguration.createJsonConfiguration();
             try {
-                return Optional.of((Serializable) conf.asObject(new ObjectMapper().writer().writeValueAsBytes(json)));
+                return Optional.of((Serializable) CONFIGURATION.asObject(new ObjectMapper().writer().writeValueAsBytes(json)));
             } catch (JsonProcessingException e) {
                 throw new UncheckedIOException(e);
             }
