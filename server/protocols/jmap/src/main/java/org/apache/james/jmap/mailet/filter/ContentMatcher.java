@@ -62,10 +62,18 @@ public interface ContentMatcher {
             }
         }
 
-        boolean exactMatch(AddressHeader other) {
+        boolean matchesIgnoreCase(AddressHeader other) {
+            boolean sameAddress = OptionalUtils.matches(address, other.address, String::equalsIgnoreCase);
+            boolean samePersonal = OptionalUtils.matches(personal, other.personal, String::equalsIgnoreCase);
+            boolean personalMatchesAddress = OptionalUtils.matches(personal, other.address, String::equalsIgnoreCase);
+            boolean addressMatchesPersonal = OptionalUtils.matches(address, other.personal, String::equalsIgnoreCase);
+
             return fullAddress.equalsIgnoreCase(other.fullAddress)
-                || OptionalUtils.matches(address, other.address, String::equalsIgnoreCase)
-                || OptionalUtils.matches(personal, other.personal, String::equalsIgnoreCase);
+                || (sameAddress && samePersonal)
+                || (sameAddress && !personal.isPresent())
+                || (samePersonal && !address.isPresent())
+                || (personalMatchesAddress && sameAddress)
+                || (addressMatchesPersonal && samePersonal);
         }
     }
 
@@ -78,7 +86,7 @@ public interface ContentMatcher {
                 .orElse(new AddressHeader(valueToMatch));
 
             return contents.map(ContentMatcher::asAddressHeader)
-                .anyMatch(addressHeaderToMatch::exactMatch);
+                .anyMatch(addressHeaderToMatch::matchesIgnoreCase);
         }
 
     }

@@ -292,6 +292,11 @@ class JMAPFilteringTest {
                         .valueToMatch(USER_1_FULL_ADDRESS),
 
                     argumentBuilder(fieldAndHeader.field)
+                        .description("Exact match in a full " + fieldAndHeader.headerName + " header with a symetric emailer")
+                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                        .valueToMatch("toto@domain.tld"),
+
+                    argumentBuilder(fieldAndHeader.field)
                         .description("Username exact match in a username only " + fieldAndHeader.headerName + " header")
                         .header(fieldAndHeader.headerName, USER_1_USERNAME)
                         .valueToMatch(USER_1_USERNAME),
@@ -489,6 +494,26 @@ class JMAPFilteringTest {
                         .description("Nomatch in a " + fieldAndHeader.headerName + " empty header")
                         .header(fieldAndHeader.headerName, EMPTY)
                         .valueToMatch(SHOULD_NOT_MATCH),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Nomatch when different address in a fully specified emailer for " + fieldAndHeader.headerName + " field")
+                        .header(fieldAndHeader.headerName, "\"me\" <notme@example.com>")
+                        .valueToMatch("\"me\" <me@example.com>"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("Nomatch when different username in a fully specified emailer for " + fieldAndHeader.headerName + " field")
+                        .header(fieldAndHeader.headerName, "\"notme\" <me@example.com>")
+                        .valueToMatch("\"definitlyme\" <me@example.com>"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different personal")
+                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                        .valueToMatch("\"tata@domain.tld\" <toto@domain.tld>"),
+
+                    argumentBuilder(fieldAndHeader.field)
+                        .description("No match in a full " + fieldAndHeader.headerName + " header with a symetric emailer - different address")
+                        .header(fieldAndHeader.headerName, "\"toto@domain.tld\" <toto@domain.tld>")
+                        .valueToMatch("\"toto@domain.tld\" <tata@domain.tld>"),
 
                     argumentBuilder(fieldAndHeader.field)
                         .description("Nomatch in a missing " + fieldAndHeader.headerName + " header")
