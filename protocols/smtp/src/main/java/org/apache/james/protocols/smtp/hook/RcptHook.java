@@ -19,6 +19,7 @@
 package org.apache.james.protocols.smtp.hook;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
@@ -28,12 +29,27 @@ public interface RcptHook extends Hook {
     
     /**
      * Return the HookResult after run the hook
+     *
+     * @deprecated Use {@link #doRcpt(SMTPSession, MaybeSender, MailAddress)} instead
      * 
      * @param session the SMTPSession
      * @param sender the sender MailAddress
      * @param rcpt the recipient MailAddress
      * @return HookResult
      */
-    HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt);
+    @Deprecated
+    default HookResult doRcpt(SMTPSession session, MailAddress sender, MailAddress rcpt) {
+        return doRcpt(session, MaybeSender.of(sender), rcpt);
+    }
+
+    /**
+     * Return the HookResult after run the hook
+     *
+     * this strongly typed version smoothly handle null sender and should be prefered.
+     */
+    @SuppressWarnings("deprecated")
+    default HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
+        return doRcpt(session, sender.asOptional().orElse(null), rcpt);
+    }
 
 }
