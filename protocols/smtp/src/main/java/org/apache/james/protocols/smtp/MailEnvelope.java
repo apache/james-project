@@ -25,6 +25,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 
 /**
  * The MailEnvelope of a SMTP-Transaction
@@ -51,10 +52,32 @@ public interface MailEnvelope {
     /**
      * Return the sender of the mail which was supplied int the MAIL FROM:
      * command. If its a "null" sender, null will get returned
-     * 
+     *
+     * @deprecated @see {@link #getMaybeSender()}
+     *
+     * Note that SMTP null sender ( "&lt;&gt;" ) needs to be implicitly handled by the caller under the form of 'null' or
+     * {@link MailAddress#nullSender()}. Replacement method adds type safety on this operation.
+     *
      * @return sender
      */
-    MailAddress getSender();
+    @Deprecated
+    default MailAddress getSender() {
+        return getMaybeSender().asOptional().orElse(MailAddress.nullSender());
+    }
+
+    /**
+     * Returns the sender of the message, as specified by the SMTP "MAIL FROM" command,
+     * or internally defined.
+     *
+     * 'null' or {@link MailAddress#nullSender()} are handled with {@link MaybeSender}.
+     *
+     * @since Mailet API v3.2.0
+     * @return the sender of this message wrapped in an optional
+     */
+    @SuppressWarnings("deprecated")
+    default MaybeSender getMaybeSender() {
+        return MaybeSender.of(getSender());
+    }
 
     /**
      * Return the OutputStream of the message

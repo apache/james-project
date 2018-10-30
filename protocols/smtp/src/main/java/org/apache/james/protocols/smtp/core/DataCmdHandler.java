@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.protocols.api.ProtocolSession;
@@ -171,14 +172,15 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
-        MailEnvelope env = createEnvelope(session, (MailAddress) session.getAttachment(SMTPSession.SENDER,ProtocolSession.State.Transaction), new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
+        MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
+        MailEnvelope env = createEnvelope(session, MaybeSender.of(sender), new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
         session.setAttachment(MAILENV, env,ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         
         return DATA_READY;
     }
     
-    protected MailEnvelope createEnvelope(SMTPSession session, MailAddress sender, List<MailAddress> recipients) {
+    protected MailEnvelope createEnvelope(SMTPSession session, MaybeSender sender, List<MailAddress> recipients) {
         MailEnvelopeImpl env = new MailEnvelopeImpl();
         env.setRecipients(recipients);
         env.setSender(sender);

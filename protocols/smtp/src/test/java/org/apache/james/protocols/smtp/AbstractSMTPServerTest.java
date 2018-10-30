@@ -1115,7 +1115,7 @@ public abstract class AbstractSMTPServerTest {
     }
     
     protected static void checkEnvelope(MailEnvelope env, String sender, List<String> recipients, String msg) throws IOException {
-        assertThat(env.getSender().toString()).isEqualTo(sender);
+        assertThat(env.getMaybeSender().asString()).isEqualTo(sender);
 
         List<MailAddress> envRecipients = env.getRecipients();
         assertThat(envRecipients.size()).isEqualTo(recipients.size());

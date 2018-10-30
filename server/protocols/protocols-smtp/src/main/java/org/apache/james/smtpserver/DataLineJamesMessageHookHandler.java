@@ -31,6 +31,7 @@ import javax.mail.MessagingException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -259,10 +260,9 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
             return ImmutableList.copyOf(mail.getRecipients());
         }
 
-        @SuppressWarnings("deprecated") // This will be handled in a followup pull request See JAMES-2557
         @Override
-        public MailAddress getSender() {
-            return mail.getSender();
+        public MaybeSender getMaybeSender() {
+            return mail.getMaybeSender();
         }
 
         @Override
