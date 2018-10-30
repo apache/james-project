@@ -20,31 +20,16 @@
 package org.apache.james.mpt.imapmailbox.jpa;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
+import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.AuthenticatedState;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Rule;
 
 public class JpaAuthenticatedStateTest extends AuthenticatedState {
-
-    private ImapHostSystem system;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        system = JPAHostSystem.build();
-        system.beforeTest();
-        super.setUp();
-    }
+    @Rule
+    public JPAHostSystemRule hostSystemRule = new JPAHostSystemRule();
     
     @Override
     protected ImapHostSystem createImapHostSystem() {
-        return system;
+        return hostSystemRule.getHostSystem();
     }
-
-    @After
-    public void tearDown() throws Exception {
-        system.afterTest();
-    }
-    
 }

@@ -20,26 +20,16 @@
 package org.apache.james.mpt.imapmailbox.jpa;
 
 import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystem;
+import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.QuotaTest;
-import org.junit.Before;
+import org.junit.Rule;
 
 public class JpaQuotaTest extends QuotaTest {
+    @Rule
+    public JPAHostSystemRule hostSystemRule = new JPAHostSystemRule();
 
-    private ImapHostSystem system;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        system = JPAHostSystem.build();
-        system.beforeTest();
-        super.setUp();
-    }
-    
     @Override
     protected ImapHostSystem createImapHostSystem() {
-        return system;
+        return hostSystemRule.getHostSystem();
     }
-
-    
 }

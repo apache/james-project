@@ -17,19 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mpt.imapmailbox.jpa;
+package org.apache.james.mpt.imapmailbox.jpa.host;
 
-import org.apache.james.mpt.api.ImapHostSystem;
-import org.apache.james.mpt.imapmailbox.jpa.host.JPAHostSystemRule;
-import org.apache.james.mpt.imapmailbox.suite.FetchBodyStructure;
-import org.junit.Rule;
+import org.apache.james.mpt.host.JamesImapHostSystem;
+import org.junit.rules.ExternalResource;
 
-public class JpaFetchBodyStructureTest extends FetchBodyStructure {
-    @Rule
-    public JPAHostSystemRule hostSystemRule = new JPAHostSystemRule();
+public class JPAHostSystemRule extends ExternalResource {
+    private final JamesImapHostSystem hostSystem;
+
+    public JPAHostSystemRule() {
+        try {
+            hostSystem = JPAHostSystem.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
-    protected ImapHostSystem createImapHostSystem() {
-        return hostSystemRule.getHostSystem();
+    protected void before() throws Throwable {
+        hostSystem.beforeTest();
+    }
+
+    @Override
+    protected void after() {
+        try {
+            hostSystem.afterTest();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public JamesImapHostSystem getHostSystem() {
+        return hostSystem;
     }
 }
