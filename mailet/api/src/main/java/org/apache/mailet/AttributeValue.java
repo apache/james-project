@@ -176,9 +176,12 @@ public class AttributeValue<T> {
     }
 
     public static Optional<?> deserialize(ObjectNode fields) {
-        return Optional.ofNullable(fields.get("serializer"))
-                .flatMap(serializer ->  Optional.ofNullable(fields.get("value"))
-                        .flatMap(value -> findSerializerAndDeserialize(serializer, value)));
+        Preconditions.checkNotNull(fields);
+        Optional<JsonNode> maybeSerializer = Optional.ofNullable(fields.get("serializer"));
+        Optional<JsonNode> maybeValue = Optional.ofNullable(fields.get("value"));
+
+        return maybeSerializer.flatMap(serializer -> maybeValue
+            .flatMap(value -> findSerializerAndDeserialize(serializer, value)));
     }
 
     public static Optional<?> findSerializerAndDeserialize(JsonNode serializer, JsonNode value) {
