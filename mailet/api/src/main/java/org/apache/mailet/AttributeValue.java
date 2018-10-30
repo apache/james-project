@@ -105,6 +105,7 @@ public class AttributeValue<T> {
     }
 
     public static AttributeValue<Serializable> ofSerializable(Serializable value) {
+        Preconditions.checkNotNull(value, "value should not be null");
         return new AttributeValue<>(value, new Serializer.FSTSerializer());
     }
 

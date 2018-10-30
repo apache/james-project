@@ -547,6 +547,34 @@ class AttributeValueTest {
         }
     }
 
+    @Nested
+    class SerializableSerialization {
+        @Test
+        void filledSerializabletrueShouldBeSerializedAndBack() {
+            AttributeValue<java.io.Serializable> expected = AttributeValue.ofSerializable(new TestSerializable("me"));
+
+            JsonNode json = expected.toJson();
+            AttributeValue<?> actual = AttributeValue.fromJson(json);
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void nullSerializableShouldThrowAnException() {
+            assertThatNullPointerException().
+                isThrownBy(() -> AttributeValue.ofSerializable((java.io.Serializable) null));
+        }
+
+        @Test
+        void fromJsonStringShouldReturnBooleanAttributeValueWhenBoolean() throws Exception {
+            AttributeValue<java.io.Serializable> expected = AttributeValue.ofSerializable(new TestSerializable("me"));
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"FSTSerializer\",\"value\":{\"typ\":\"org.apache.mailet.AttributeValueTest$TestSerializable\",\"obj\":{\"name\":\"me\"}}}");
+
+            assertThat(actual).isEqualTo(expected);
+        }
+    }
+
     @Test
     void fromJsonStringShouldThrowOnUnknownSerializer() {
         assertThatIllegalStateException()
@@ -606,6 +634,29 @@ class AttributeValueTest {
         @Override
         public final int hashCode() {
             return Objects.hash(value);
+        }
+    }
+
+    private static class TestSerializable implements java.io.Serializable {
+        private final String name;
+
+        public TestSerializable(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof TestSerializable) {
+                TestSerializable that = (TestSerializable) o;
+
+                return Objects.equals(this.name, that.name);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(name);
         }
     }
 }
