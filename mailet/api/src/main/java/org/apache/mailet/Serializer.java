@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import org.apache.james.mailbox.model.MessageIdDto;
 import org.apache.james.util.streams.Iterators;
 import org.nustaq.serialization.FSTConfiguration;
 import org.slf4j.Logger;
@@ -78,6 +79,7 @@ public interface Serializer<T> {
                     LONG_SERIALIZER,
                     FLOAT_SERIALIZER,
                     DOUBLE_SERIALIZER,
+                    MESSAGE_ID_DTO_SERIALIZER,
                     new Serializer.ArbitrarySerializableSerializer(),
                     URL_SERIALIZER,
                     new CollectionSerializer<>(),
@@ -263,6 +265,34 @@ public interface Serializer<T> {
     }
 
     Serializer<Double> DOUBLE_SERIALIZER = new DoubleSerializer();
+
+    class MessageIdDtoSerializer implements Serializer<MessageIdDto> {
+
+        @Override
+        public JsonNode serialize(MessageIdDto serializable) {
+            return STRING_SERIALIZER
+                    .serialize(serializable.asString());
+        }
+
+        @Override
+        public Optional<MessageIdDto> deserialize(JsonNode json) {
+            return STRING_SERIALIZER
+                    .deserialize(json)
+                    .map(MessageIdDto::new);
+        }
+
+        @Override
+        public String getName() {
+            return "MessageIdDtoSerializer";
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return this.getClass() == other.getClass();
+        }
+    }
+
+    Serializer<MessageIdDto> MESSAGE_ID_DTO_SERIALIZER = new MessageIdDtoSerializer();
 
     class ArbitrarySerializableSerializer<T extends ArbitrarySerializable<T>> implements Serializer<T> {
         private static final Logger LOGGER = LoggerFactory.getLogger(ArbitrarySerializableSerializer.class);

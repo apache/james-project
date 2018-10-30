@@ -30,6 +30,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.MessageIdDto;
+import org.apache.james.mailbox.model.TestMessageId;
+
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -385,6 +388,40 @@ class AttributeValueTest {
         void fromJsonStringShouldThrowOnMalformedFormattedJson() {
             assertThatIllegalStateException()
                 .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"UrlSerializer\",\"value\": {}}"));
+        }
+    }
+
+    @Nested
+    class MessageIdDtoSerialization {
+        @Test
+        void messageIdShouldBeSerializedAndBack() {
+            AttributeValue<MessageIdDto> expected = AttributeValue.of(new MessageIdDto(TestMessageId.of(42)));
+
+            JsonNode json = expected.toJson();
+            AttributeValue<?> actual = AttributeValue.fromJson(json);
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void nullMessageIdDtoShouldThrowAnException() {
+            assertThatNullPointerException().
+                isThrownBy(() -> AttributeValue.of((MessageIdDto) null));
+        }
+
+        @Test
+        void fromJsonStringShouldReturnMessageIdAttributeValue() throws Exception {
+            AttributeValue<MessageIdDto> expected = AttributeValue.of(new MessageIdDto(TestMessageId.of(42)));
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"MessageIdDtoSerializer\",\"value\":\"42\"}");
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnMalformedFormattedJson() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"MessageIdDtoSerializer\",\"value\": {}}"));
         }
     }
 
