@@ -446,6 +446,58 @@ class AttributeValueTest {
         }
     }
 
+    @Nested
+    class OptionalSerialization {
+        @Test
+        void nullMapShouldThrowAnException() {
+            assertThatNullPointerException().
+                isThrownBy(() -> AttributeValue.of((Optional) null));
+        }
+
+        @Test
+        void emptyOptionalShouldBeSerializedAndBack() {
+            AttributeValue<?> expected = AttributeValue.of(Optional.empty());
+            JsonNode json = expected.toJson();
+            AttributeValue<?> actual = AttributeValue.fromJson(json);
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void optionalShouldBeSerializedAndBack() {
+            AttributeValue<?> expected = AttributeValue.of(Optional.of(AttributeValue.of(42)));
+            JsonNode json = expected.toJson();
+            AttributeValue<?> actual = AttributeValue.fromJson(json);
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldReturnEmptyOptionalWhenEmptyOptional() throws Exception {
+            AttributeValue<?> expected = AttributeValue.of(Optional.empty());
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"OptionalSerializer\",\"value\":null}");
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldReturnOptional() throws Exception {
+            AttributeValue<Optional<AttributeValue<Integer>>> expected = AttributeValue.of(
+                Optional.of(AttributeValue.of(1)));
+
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"OptionalSerializer\",\"value\":{\"serializer\":\"IntSerializer\",\"value\":1}}");
+
+            assertThat(actual).isEqualTo(expected);
+        }
+
+        @Test
+        void fromJsonStringShouldThrowOnMalformedFormattedJson() {
+            assertThatIllegalStateException()
+                .isThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"OptionalSerializer\",\"value\": []}"));
+        }
+    }
+
     @Test
     void fromJsonStringShouldThrowOnUnknownSerializer() {
         assertThatIllegalStateException()

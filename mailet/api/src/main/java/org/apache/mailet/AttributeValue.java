@@ -87,6 +87,12 @@ public class AttributeValue<T> {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static <T> AttributeValue<Optional<AttributeValue<T>>> of(Optional<AttributeValue<T>> value) {
+        Preconditions.checkNotNull(value, "value should not be null");
+        return new AttributeValue<>(value, new Serializer.OptionalSerializer<>());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static AttributeValue<Collection<AttributeValue<?>>> of(Collection<AttributeValue<?>> value) {
         Preconditions.checkNotNull(value, "value should not be null");
         return new AttributeValue<>(value, new Serializer.CollectionSerializer());
@@ -134,6 +140,9 @@ public class AttributeValue<T> {
         }
         if (value instanceof URL) {
             return of((URL) value);
+        }
+        if (value instanceof Optional) {
+            return of((Optional) value);
         }
         if (value instanceof Serializable) {
             return ofSerializable((Serializable) value);
