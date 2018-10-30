@@ -22,6 +22,7 @@ package org.apache.james.protocols.smtp.hook;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
 
@@ -65,7 +66,7 @@ public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
      * Return {@link HookResult} with {@link HookReturnCode#DECLINED}
      */
     @Override
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         return HookResult.DECLINED;
 
     }

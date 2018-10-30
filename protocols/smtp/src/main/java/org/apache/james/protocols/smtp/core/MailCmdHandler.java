@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
@@ -257,10 +258,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     @Override
     protected HookResult callHook(MailHook rawHook, SMTPSession session, String parameters) {
         MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-        if (sender.isNullSender()) {
-            sender = null;
-        }
-        return rawHook.doMail(session, sender);
+        return rawHook.doMail(session, MaybeSender.of(sender));
     }
 
     

@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSRequest;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.TimeoutException;
@@ -169,7 +170,7 @@ public class SPFHandlerTest {
 
     @Test
     public void testSPFpass() throws Exception {
-        MailAddress sender = new MailAddress("test@spf1.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf1.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf1.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -177,12 +178,12 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
     }
 
     @Test
     public void testSPFfail() throws Exception {
-        MailAddress sender = new MailAddress("test@spf2.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf2.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf2.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -190,12 +191,12 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("fail").isEqualTo(HookReturnCode.deny());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("fail").isEqualTo(HookReturnCode.deny());
     }
 
     @Test
     public void testSPFsoftFail() throws Exception {
-        MailAddress sender = new MailAddress("test@spf3.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf3.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf3.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -203,12 +204,12 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("softfail declined").isEqualTo(HookReturnCode.declined());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("softfail declined").isEqualTo(HookReturnCode.declined());
     }
 
     @Test
     public void testSPFsoftFailRejectEnabled() throws Exception {
-        MailAddress sender = new MailAddress("test@spf3.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf3.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf3.james.apache.org");
@@ -219,12 +220,12 @@ public class SPFHandlerTest {
         spf.setBlockSoftFail(true);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("softfail reject").isEqualTo(HookReturnCode.deny());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("softfail reject").isEqualTo(HookReturnCode.deny());
     }
 
     @Test
     public void testSPFpermError() throws Exception {
-        MailAddress sender = new MailAddress("test@spf4.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf4.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf4.james.apache.org");
@@ -235,12 +236,12 @@ public class SPFHandlerTest {
         spf.setBlockSoftFail(true);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("permerror reject").isEqualTo(HookReturnCode.deny());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("permerror reject").isEqualTo(HookReturnCode.deny());
     }
 
     @Test
     public void testSPFtempError() throws Exception {
-        MailAddress sender = new MailAddress("test@spf5.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf5.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf5.james.apache.org");
@@ -250,12 +251,12 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("temperror denysoft").isEqualTo(HookReturnCode.denySoft());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("temperror denysoft").isEqualTo(HookReturnCode.denySoft());
     }
 
     @Test
     public void testSPFNoRecord() throws Exception {
-        MailAddress sender = new MailAddress("test@spf6.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf6.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
 
         setupMockedSMTPSession("192.168.100.1", "spf6.james.apache.org");
@@ -264,12 +265,12 @@ public class SPFHandlerTest {
         spf.setDNSService(mockedDnsService);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
     }
 
     @Test
     public void testSPFpermErrorRejectDisabled() throws Exception {
-        MailAddress sender = new MailAddress("test@spf4.james.apache.org");
+        MaybeSender sender = MaybeSender.of(new MailAddress("test@spf4.james.apache.org"));
         MailAddress rcpt = new MailAddress("test@localhost");
         setupMockedSMTPSession("192.168.100.1", "spf4.james.apache.org");
         SPFHandler spf = new SPFHandler();
@@ -279,6 +280,6 @@ public class SPFHandlerTest {
         spf.setBlockPermError(false);
 
         assertThat(spf.doMail(mockedSMTPSession, sender).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
-        assertThat(spf.doRcpt(mockedSMTPSession, sender, rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
+        assertThat(spf.doRcpt(mockedSMTPSession, sender.get(), rcpt).getResult()).describedAs("declined").isEqualTo(HookReturnCode.declined());
     }
 }

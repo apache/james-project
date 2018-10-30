@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.jspf.core.DNSService;
 import org.apache.james.jspf.core.exceptions.SPFErrorConstants;
 import org.apache.james.jspf.executor.SPFResult;
@@ -109,17 +110,17 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
      * @param session
      *            SMTP session object
      */
-    private void doSPFCheck(SMTPSession session, MailAddress sender) {
+    private void doSPFCheck(SMTPSession session, MaybeSender sender) {
         String heloEhlo = (String) session.getAttachment(SMTPSession.CURRENT_HELO_NAME, State.Transaction);
 
         // We have no Sender or HELO/EHLO yet return false
-        if (sender == null || heloEhlo == null) {
+        if (sender.isNullSender() || heloEhlo == null) {
             LOGGER.info("No Sender or HELO/EHLO present");
         } else {
 
             String ip = session.getRemoteAddress().getAddress().getHostAddress();
 
-            SPFResult result = spf.checkSPF(ip, sender.toString(), heloEhlo);
+            SPFResult result = spf.checkSPF(ip, sender.asString(), heloEhlo);
 
             String spfResult = result.getResult();
 
@@ -128,7 +129,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
             // Store the header
             session.setAttachment(SPF_HEADER, result.getHeaderText(), State.Transaction);
 
-            LOGGER.info("Result for {} - {} - {} = {}", ip, sender, heloEhlo, spfResult);
+            LOGGER.info("Result for {} - {} - {} = {}", ip, sender.asString(), heloEhlo, spfResult);
 
             // Check if we should block!
             if ((spfResult.equals(SPFErrorConstants.FAIL_CONV)) || (spfResult.equals(SPFErrorConstants.SOFTFAIL_CONV) && blockSoftFail) || (spfResult.equals(SPFErrorConstants.PERM_ERROR_CONV) && blockPermError)) {
@@ -169,7 +170,7 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
     }
 
     @Override
-    public HookResult doMail(SMTPSession session, MailAddress sender) {
+    public HookResult doMail(SMTPSession session, MaybeSender sender) {
         doSPFCheck(session, sender);
         return HookResult.DECLINED;
     }

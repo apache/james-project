@@ -37,6 +37,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
@@ -593,7 +594,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENY;
             }
         };
@@ -643,7 +644,7 @@ public abstract class AbstractSMTPServerTest {
             }
 
             @Override
-            public HookResult doMail(SMTPSession session, MailAddress sender) {
+            public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENYSOFT;
             }
         };
