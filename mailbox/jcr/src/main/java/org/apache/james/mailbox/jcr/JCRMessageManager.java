@@ -47,7 +47,10 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 /**
  * JCR implementation of a {@link org.apache.james.mailbox.MessageManager}
  *
+ * @Deprecated: See JAMES-2571 The JCR implementation is not enough maintained and thus will be removed from James in version 3.3.0. Please prefer using
+ * other MailboxManagers or contribute the JCR mailbox maintenance.
  */
+@Deprecated
 public class JCRMessageManager extends StoreMessageManager {
 
     public JCRMessageManager(MailboxSessionMapperFactory mapperFactory,
