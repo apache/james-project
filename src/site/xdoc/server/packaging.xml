@@ -171,7 +171,8 @@
                     </tr>
                     <tr>
                         <td>Server data implementation</td>
-                        <td>JPA/File/JCR</td>
+                        <td>JPA/File</td>
+                        <td>JPA/File</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>

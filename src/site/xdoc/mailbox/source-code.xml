@@ -30,8 +30,8 @@
       <a href="mailbox-store.html">Mailbox Store</a>(the base and utility classes) 
       and the different implementations we propose (<a href="mailbox-memory.html">Memory</a>, 
       <a href="mailbox-maildir.html">Maildir</a>, 
-      <a href="mailbox-jpa.html">JPA</a>, 
-      <a href="mailbox-jcr.html">JCR</a> and
+      <a href="mailbox-jpa.html">JPA</a>,
+      <a href="mailbox-jcr.html">JCR (Deprecated)</a> and
       <a href="mailbox-hbase.html">HBase (Deprecated)</a>).
     </p>
     <p>A module for <a href="mailbox-tool.html">tooling</a> is also available.
