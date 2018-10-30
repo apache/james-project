@@ -106,6 +106,7 @@
                                 <exclude>**/*.iml</exclude>
                                 <exclude>**/*.ics</exclude>
                                 <exclude>**/*.mime</exclude>
+                                <exclude>**/*.eml</exclude>
                                 <exclude>src/site/**</exclude>
                             </excludes>
                         </configuration>
