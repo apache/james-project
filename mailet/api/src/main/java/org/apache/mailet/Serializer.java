@@ -48,7 +48,6 @@ import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.LongNode;
 import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.NumericNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.google.common.collect.ImmutableList;
@@ -157,7 +156,7 @@ public interface Serializer<T> {
 
         @Override
         public Optional<Integer> deserialize(JsonNode json) {
-            if (json instanceof NumericNode) {
+            if (json instanceof IntNode) {
                 return Optional.of(json.asInt());
             } else {
                 return Optional.empty();
@@ -185,8 +184,10 @@ public interface Serializer<T> {
 
         @Override
         public Optional<Long> deserialize(JsonNode json) {
-            if (json instanceof NumericNode) {
+            if (json instanceof LongNode) {
                 return Optional.of(json.asLong());
+            } else if (json instanceof IntNode) {
+                return Optional.of(Long.valueOf(json.asInt()));
             } else {
                 return Optional.empty();
             }
@@ -213,7 +214,9 @@ public interface Serializer<T> {
 
         @Override
         public Optional<Float> deserialize(JsonNode json) {
-            if (json instanceof NumericNode) {
+            if (json instanceof FloatNode) {
+                return Optional.of(json.floatValue());
+            } else if (json instanceof DoubleNode) {
                 return Optional.of(json.floatValue());
             } else {
                 return Optional.empty();
@@ -241,7 +244,7 @@ public interface Serializer<T> {
 
         @Override
         public Optional<Double> deserialize(JsonNode json) {
-            if (json instanceof NumericNode) {
+            if (json instanceof DoubleNode || json instanceof FloatNode) {
                 return Optional.of(json.asDouble());
             } else {
                 return Optional.empty();
