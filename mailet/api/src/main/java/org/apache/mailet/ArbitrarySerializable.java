@@ -24,14 +24,14 @@ import java.util.Optional;
 public interface ArbitrarySerializable<T> {
     public class Serializable<U> {
         private final AttributeValue<?> value;
-        private final Class<? extends Factory<U>> factory;
+        private final Class<? extends Deserializer<U>> factory;
 
-        public Serializable(AttributeValue<?> value, Class<? extends Factory<U>> factory) {
+        public Serializable(AttributeValue<?> value, Class<? extends Deserializer<U>> factory) {
             this.value = value;
             this.factory = factory;
         }
 
-        public Class<? extends Factory<U>> getFactory() {
+        public Class<? extends Deserializer<U>> getDeserializer() {
             return factory;
         }
 
@@ -40,7 +40,7 @@ public interface ArbitrarySerializable<T> {
         }
     }
 
-    public interface Factory<U> {
+    public interface Deserializer<U> {
         Optional<U> deserialize(Serializable<U> serializable);
     }
     

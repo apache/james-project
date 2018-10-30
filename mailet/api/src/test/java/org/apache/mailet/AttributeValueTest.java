@@ -342,7 +342,7 @@ class AttributeValueTest {
         void fromJsonStringShouldReturnQueueSerializableAttributeValueWhenQueueSerializable() throws Exception {
             AttributeValue<TestArbitrarySerializable> expected = AttributeValue.of(new TestArbitrarySerializable(42));
 
-            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"ArbitrarySerializableSerializer\",\"value\":{\"factory\":\"org.apache.mailet.AttributeValueTest$TestArbitrarySerializable$Factory\",\"value\":{\"serializer\":\"IntSerializer\",\"value\":42}}}");
+            AttributeValue<?> actual = AttributeValue.fromJsonString("{\"serializer\":\"ArbitrarySerializableSerializer\",\"value\":{\"deserializer\":\"org.apache.mailet.AttributeValueTest$TestArbitrarySerializable$Factory\",\"value\":{\"serializer\":\"IntSerializer\",\"value\":42}}}");
 
             assertThat(actual).isEqualTo(expected);
         }
@@ -572,7 +572,7 @@ class AttributeValueTest {
     }
 
     private static class TestArbitrarySerializable implements ArbitrarySerializable<TestArbitrarySerializable> {
-        public static class Factory implements ArbitrarySerializable.Factory<TestArbitrarySerializable> {
+        public static class Factory implements ArbitrarySerializable.Deserializer<TestArbitrarySerializable> {
             @Override
             public Optional<TestArbitrarySerializable> deserialize(Serializable<TestArbitrarySerializable> serializable) {
                 return Optional.of(serializable.getValue().value())

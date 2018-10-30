@@ -271,7 +271,7 @@ public interface Serializer<T> {
         public JsonNode serialize(T serializable) {
             ArbitrarySerializable.Serializable<T> serialized = serializable.serialize();
             ObjectNode serializedJson = JsonNodeFactory.instance.objectNode();
-            serializedJson.put("factory", serialized.getFactory().getName());
+            serializedJson.put("deserializer", serialized.getDeserializer().getName());
             serializedJson.replace("value", serialized.getValue().toJson());
             return serializedJson;
         }
@@ -285,7 +285,7 @@ public interface Serializer<T> {
         }
 
         public Optional<T> instantiate(ObjectNode fields) {
-            return Optional.ofNullable(fields.get("factory"))
+            return Optional.ofNullable(fields.get("deserializer"))
                 .flatMap(serializer ->
                     Optional.ofNullable(fields.get("value"))
                         .flatMap(value -> deserialize(serializer.asText(), AttributeValue.fromJson(value))));
@@ -294,10 +294,10 @@ public interface Serializer<T> {
         @SuppressWarnings("unchecked")
         private Optional<T> deserialize(String serializer, AttributeValue<?> value) {
             try {
-                Class<?> factoryClass = Class.forName(serializer);
-                if (ArbitrarySerializable.Factory.class.isAssignableFrom(factoryClass)) {
-                    ArbitrarySerializable.Factory<T> factory = (ArbitrarySerializable.Factory<T>) factoryClass.newInstance();
-                    return factory.deserialize(new ArbitrarySerializable.Serializable<>(value, (Class<ArbitrarySerializable.Factory<T>>) factoryClass));
+                Class<?> deserializerClass = Class.forName(serializer);
+                if (ArbitrarySerializable.Deserializer.class.isAssignableFrom(deserializerClass)) {
+                    ArbitrarySerializable.Deserializer<T> deserializer = (ArbitrarySerializable.Deserializer<T>) deserializerClass.newInstance();
+                    return deserializer.deserialize(new ArbitrarySerializable.Serializable<>(value, (Class<ArbitrarySerializable.Deserializer<T>>) deserializerClass));
                 }
             } catch (Exception e) {
                 LOGGER.error("Error while deserializing using serializer {} and value {}", serializer, value, e);
