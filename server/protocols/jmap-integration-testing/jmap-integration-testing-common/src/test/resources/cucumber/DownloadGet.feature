@@ -26,6 +26,7 @@ Feature: Download GET
     And a user "bob@domain.tld"
     And "alice@domain.tld" has a mailbox "INBOX"
 
+  @BasicFeature
   Scenario: Getting an attachment previously stored
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1" with an attachment "2"
     When "alice@domain.tld" downloads "2"
@@ -49,6 +50,7 @@ Feature: Download GET
     Then she can read that blob
     And the attachment is named "ديناصور.odt"
 
+  @BasicFeature
   Scenario: Getting a message blob previously stored
     Given "alice@domain.tld" mailbox "INBOX" contains a message "1"
     When "alice@domain.tld" downloads "1"

@@ -33,6 +33,7 @@ Feature: Set flag and sharing
     Then the mailbox "shared" has 1 message
     And the mailbox "shared" has 0 unseen messages
 
+  @BasicFeature
   Scenario: Set flags by sharer should update unseen count when read by sharee
     When "alice@domain.tld" sets flags "$Seen" on message "m1"
     And "bob@domain.tld" lists mailboxes

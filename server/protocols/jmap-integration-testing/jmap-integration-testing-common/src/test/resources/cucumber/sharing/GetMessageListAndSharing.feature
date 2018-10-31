@@ -35,6 +35,7 @@ Feature: Listing message from shared mailbox
     Then the mailbox "shared" has 2 messages
     And the mailbox "shared" has 2 unseen messages
 
+  @BasicFeature
   Scenario: Sharee can read the total and unread counts on a shared folder
     Given "alice@domain.tld" has a message "m1" in "shared" mailbox
     And "alice@domain.tld" has a message "m2" in "shared" mailbox with subject "my test subject 2", content "testmail 2"

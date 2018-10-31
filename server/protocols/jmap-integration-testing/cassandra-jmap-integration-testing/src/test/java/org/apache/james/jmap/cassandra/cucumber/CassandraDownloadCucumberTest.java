@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.cassandra.cucumber;
 
+import org.apache.james.jmap.categories.EnableCucumber;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import cucumber.api.CucumberOptions;
@@ -27,7 +29,8 @@ import cucumber.api.junit.Cucumber;
 @RunWith(Cucumber.class)
 @CucumberOptions(features = {"classpath:cucumber/DownloadEndpoint.feature", "classpath:cucumber/DownloadGet.feature", "classpath:cucumber/DownloadPost.feature"},
                 glue = {"org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber"},
-                tags = {"not @Ignore"},
+                tags = {"not @Ignore", "@BasicFeature"},
                 strict = true)
+@Category(EnableCucumber.class)
 public class CassandraDownloadCucumberTest {
 }

@@ -70,6 +70,7 @@ Feature: Download endpoint
     When "usera@domain.tld" downloads "a1" with wrong blobId
     Then the user should not be authorized
 
+  @BasicFeature
   Scenario: A user should have access to the download endpoint when an authentication token is valid
     Given "usera@domain.tld" is trusted for attachment "a1"
     When "usera@domain.tld" downloads "a1"

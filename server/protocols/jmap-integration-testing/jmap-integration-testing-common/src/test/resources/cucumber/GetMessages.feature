@@ -58,6 +58,7 @@ Feature: GetMessages method
     Then no error is returned
     And the notFound list should contain the requested message id
 
+  @BasicFeature
   Scenario: Retrieving message should return messages when exists
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with subject "my test subject", content "testmail"
     When "alice@domain.tld" ask for messages "m1"
@@ -154,6 +155,7 @@ Feature: GetMessages method
     And the id of the message is "m1"
     And the subject of the message is "my test subject"
 
+  @BasicFeature
   Scenario: Retrieving message should return attachments when some
     Given "alice@domain.tld" has a message "m1" in "INBOX" mailbox with two attachments
     When "alice@domain.tld" ask for messages "m1"
@@ -334,6 +336,7 @@ Feature: GetMessages method
             |content-type                                       |tranfer-encoding   |content                                                                                                     |preview                                                                                      |
             |"text/html; charset=iso-8859-1"                    |quoted-printable   |"Dans le cadre du stage effectu=E9 Mlle 2017, =E0 sign=E9e d=E8s que possible, =E0, tr=E8s, journ=E9e.."    |effectué, à, signée dès, très, journée                                                                        |
 
+  @BasicFeature
   Scenario Outline: Retrieving message should display keywords as jmap flag
     Given "alice@domain.tld" has a message "m1" in the "INBOX" mailbox with flags <flags>
     When "alice@domain.tld" ask for messages "m1"
@@ -434,7 +437,6 @@ Feature: GetMessages method
     |name     |"IMG_6112.JPG"                |
     |isInline |false                         |
 
-  @Only
   Scenario: Header only text calendar should be read as normal calendar attachment by JMAP
     Given "alice@domain.tld" receives a SMTP message specified in file "eml/ics_in_header.eml" as message "m1"
     When "alice@domain.tld" ask for messages "m1"
@@ -446,5 +448,5 @@ Feature: GetMessages method
     |key      | value                        |
     |type     |"text/calendar"               |
     |size     |1056                          |
-    |name     |"event.ics"                |
+    |name     |"event.ics"                   |
     |isInline |false                         |
