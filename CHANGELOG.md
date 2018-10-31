@@ -7,13 +7,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 - Mail filtering configured via the JMAP protocol
 - WebAdmin exposed mail re-indexing tasks
+- WebAdmin exposed health checks. This includes:
+   - Possibility to perform a single healthcheck, thanks to [mschnitzler](https://github.com/mschnitzler)
+   - Cassandra health checks thanks to [matzepan](https://github.com/matzepan)
+- IMAP MOVE commend (RFC-6851) On top of JPA. Thanks to [mschnitzler](https://github.com/mschnitzler)
 - JPA support for Sieve script storage thanks to [Sebast26](https://github.com/sebast26)
+- Sieve script upload via the CLI thanks to [matzepan](https://github.com/matzepan)
 - Mailet DOC: Exclude from documentation annotation thanks to [mschnitzler](https://github.com/mschnitzler)
 - `cassandra.pooling.max.queue.size` configuration option Thanks to [matzepan](https://github.com/matzepan)
 - `RecipentDomainIs` and `SenderDomainIs` matchers by [athulyaraj](https://github.com/athulyaraj)
-- IMAP MOVE commend (RFC-6851) On top of JPA. Thanks to [mschnitzler](https://github.com/mschnitzler)
-- Cassandra health checks thanks to [matzepan](https://github.com/matzepan)
-- Sieve script upload via the CLI thanks to [matzepan](https://github.com/matzepan)
 
 ### Changed
 - Multiple libraries updates
