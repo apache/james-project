@@ -16,34 +16,30 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.core.healthcheck;
 
-import com.google.common.base.Preconditions;
+package org.apache.james.webadmin.dto;
 
-public enum ResultStatus {
-    HEALTHY("healthy"), 
-    DEGRADED("degraded"), 
-    UNHEALTHY("unhealthy");
-    
-    private final String value;
-    
-    ResultStatus(String value) {
-        this.value = value;
+import java.util.List;
+
+import org.apache.james.core.healthcheck.ResultStatus;
+
+import com.google.common.collect.ImmutableList;
+
+public class HeathCheckAggregationExecutionResultDto {
+
+    private final ResultStatus status;
+    private final ImmutableList<HealthCheckExecutionResultDto> checks;
+
+    public HeathCheckAggregationExecutionResultDto(ResultStatus status, ImmutableList<HealthCheckExecutionResultDto> checks) {
+        this.status = status;
+        this.checks = checks;
     }
-    
-    public String getValue() {
-        return value;
+
+    public String getStatus() {
+        return status.getValue();
     }
 
-    public static ResultStatus merge(ResultStatus resultStatus1, ResultStatus resultStatus2) {
-        Preconditions.checkNotNull(resultStatus1);
-        Preconditions.checkNotNull(resultStatus2);
-        if (resultStatus1 == UNHEALTHY || resultStatus2 == UNHEALTHY) {
-            return UNHEALTHY;
-        }
-        if (resultStatus1 == DEGRADED || resultStatus2 == DEGRADED) {
-            return DEGRADED;
-        }
-        return HEALTHY;
+    public List<HealthCheckExecutionResultDto> getChecks() {
+        return checks;
     }
 }

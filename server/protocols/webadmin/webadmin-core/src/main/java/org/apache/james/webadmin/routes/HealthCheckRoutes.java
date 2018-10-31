@@ -28,9 +28,11 @@ import javax.ws.rs.Path;
 
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
+import org.apache.james.core.healthcheck.ResultStatus;
 import org.apache.james.webadmin.PublicRoutes;
 import org.apache.james.webadmin.dto.HealthCheckDto;
 import org.apache.james.webadmin.dto.HealthCheckExecutionResultDto;
+import org.apache.james.webadmin.dto.HeathCheckAggregationExecutionResultDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
@@ -38,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -77,7 +80,7 @@ public class HealthCheckRoutes implements PublicRoutes {
 
     @Override
     public void define(Service service) {
-        service.get(HEALTHCHECK, this::validateHealthchecks, jsonTransformer);
+        service.get(HEALTHCHECK, this::validateHealthChecks, jsonTransformer);
         service.get(HEALTHCHECK + "/checks/:" + PARAM_COMPONENT_NAME, this::performHealthCheckForComponent, jsonTransformer);
         service.get(HEALTHCHECK + CHECKS, this::getHealthChecks, jsonTransformer);
     }
@@ -89,12 +92,11 @@ public class HealthCheckRoutes implements PublicRoutes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - When one check has failed.")
     })
-    public Object validateHealthchecks(Request request, Response response) {
-        List<Result> anyUnhealthyOrDegraded = retrieveUnhealthyOrDegradedHealthChecks();
-
-        anyUnhealthyOrDegraded.forEach(this::logFailedCheck);
-        response.status(getCorrespondingStatusCode(anyUnhealthyOrDegraded));
-        return response;
+    public Object validateHealthChecks(Request request, Response response) {
+        ImmutableList<Result> results = executeHealthChecks();
+        ResultStatus status = retrieveAggregationStatus(results);
+        response.status(getCorrespondingStatusCode(status));
+        return new HeathCheckAggregationExecutionResultDto(status, mapResultToDto(results));
     }
     
     @GET
@@ -119,7 +121,7 @@ public class HealthCheckRoutes implements PublicRoutes {
         
         Result result = healthCheck.check();
         logFailedCheck(result);
-        response.status(getCorrespondingStatusCode(result));
+        response.status(getCorrespondingStatusCode(result.getStatus()));
         return new HealthCheckExecutionResultDto(result);
     }
 
@@ -133,17 +135,9 @@ public class HealthCheckRoutes implements PublicRoutes {
                 .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
                 .collect(Guavate.toImmutableList());
     }
-
-    private int getCorrespondingStatusCode(List<Result> anyUnhealthy) {
-        if (anyUnhealthy.isEmpty()) {
-            return HttpStatus.OK_200;
-        } else {
-            return HttpStatus.INTERNAL_SERVER_ERROR_500;
-        }
-    }
     
-    private int getCorrespondingStatusCode(Result result) {
-        switch (result.getStatus()) {
+    private int getCorrespondingStatusCode(ResultStatus resultStatus) {
+        switch (resultStatus) {
         case HEALTHY:
             return HttpStatus.OK_200;
         case DEGRADED:
@@ -171,11 +165,24 @@ public class HealthCheckRoutes implements PublicRoutes {
         }
     }
 
-    private List<Result> retrieveUnhealthyOrDegradedHealthChecks() {
+    private ImmutableList<Result> executeHealthChecks() {
         return healthChecks.stream()
             .map(HealthCheck::check)
-            .filter(result -> result.isUnHealthy() || result.isDegraded())
-            .collect(Guavate.toImmutableList());
+            .peek(this::logFailedCheck)
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    private ResultStatus retrieveAggregationStatus(List<Result> results) {
+        return results.stream()
+            .map(Result::getStatus)
+            .reduce(ResultStatus::merge)
+            .orElse(ResultStatus.HEALTHY);
+    }
+
+    private ImmutableList<HealthCheckExecutionResultDto> mapResultToDto(List<Result> results) {
+        return results.stream()
+            .map(HealthCheckExecutionResultDto::new)
+            .collect(ImmutableList.toImmutableList());
     }
     
     private HaltException throw404(String componentName) {

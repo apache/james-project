@@ -21,6 +21,7 @@ package org.apache.james.webadmin.routes;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.equalTo;
@@ -45,6 +46,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import io.restassured.RestAssured;
+import net.javacrumbs.jsonunit.core.Option;
 
 public class HealthCheckRoutesTest {
     
@@ -95,55 +97,211 @@ public class HealthCheckRoutesTest {
     }
 
     @Test
-    public void validateHealthchecksShouldReturnOkWhenNoHealthChecks() {
-        when()
+    public void validateHealthChecksShouldReturnOkWhenNoHealthChecks() {
+        String healthCheckBody =
+            "{\"status\":\"healthy\"," +
+            " \"checks\":[]}";
+
+        String retrieveBody = when()
             .get()
         .then()
-            .statusCode(HttpStatus.OK_200);
+            .statusCode(HttpStatus.OK_200)
+            .extract()
+            .body().asString();
+
+        assertThatJson(retrieveBody)
+            .isEqualTo(healthCheckBody);
     }
 
     @Test
-    public void validateHealthchecksShouldReturnOkWhenHealthChecksAreHealthy() {
+    public void validateHealthChecksShouldReturnOkWhenHealthChecksAreHealthy() {
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_1)));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
+        String healthCheckBody =
+            "{\"status\": \"healthy\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"healthy\"," +
+            "    \"cause\": null" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"healthy\"," +
+            "    \"cause\": null" +
+            "}]}";
 
-        when()
-            .get()
-        .then()
-            .statusCode(HttpStatus.OK_200);
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
     }
 
     @Test
-    public void validateHealthchecksShouldReturnInternalErrorWhenOneHealthCheckIsUnhealthy() {
+    public void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
+        String healthCheckBody =
+            "{\"status\": \"unhealthy\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"unhealthy\"," +
+            "    \"cause\": \"cause\"" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"healthy\"," +
+            "    \"cause\": null" +
+            "}]}";
 
-        when()
-            .get()
-        .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
     }
 
     @Test
-    public void validateHealthchecksShouldReturnInternalErrorWhenAllHealthChecksAreUnhealthy() {
+    public void validateHealthChecksShouldReturnInternalErrorWhenAllHealthChecksAreUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2)));
+        String healthCheckBody =
+            "{\"status\": \"unhealthy\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"unhealthy\"," +
+            "    \"cause\": \"cause\"" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"unhealthy\"," +
+            "    \"cause\": null" +
+            "}]}";
 
-        when()
-            .get()
-        .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
     }
 
     @Test
-    public void validateHealthchecksShouldReturnInternalErrorWhenOneHealthCheckIsDegraded() {
+    public void validateHealthChecksShouldReturnInternalErrorWhenOneHealthCheckIsDegraded() {
         healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
         healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
+        String healthCheckBody =
+            "{\"status\": \"degraded\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"degraded\"," +
+            "    \"cause\": \"cause\"" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"healthy\"," +
+            "    \"cause\": null" +
+            "}]}";
 
-        when()
-            .get()
-        .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
+    }
+
+    @Test
+    public void validateHealthChecksShouldReturnInternalErrorWhenAllHealthCheckAreDegraded() {
+        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
+        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_2, "cause")));
+        String healthCheckBody =
+            "{\"status\": \"degraded\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"degraded\"," +
+            "    \"cause\": \"cause\"" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"degraded\"," +
+            "    \"cause\": \"cause\"" +
+            "}]}";
+
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
+    }
+
+    @Test
+    public void validateHealthChecksShouldReturnStatusUnHealthyWhenOneIsUnHealthyAndOtherIsDegraded() {
+        healthChecks.add(healthCheck(Result.degraded(COMPONENT_NAME_1, "cause")));
+        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2, "cause")));
+        String healthCheckBody =
+            "{\"status\": \"unhealthy\"," +
+            " \"checks\": [" +
+            "  {" +
+            "    \"componentName\": \"component-1\"," +
+            "    \"escapedComponentName\": \"component-1\"," +
+            "    \"status\": \"degraded\"," +
+            "    \"cause\": \"cause\"" +
+            "  }," +
+            "  {" +
+            "    \"componentName\": \"component-2\"," +
+            "    \"escapedComponentName\": \"component-2\"," +
+            "    \"status\": \"unhealthy\"," +
+            "    \"cause\": \"cause\"" +
+            "}]}";
+        String retrieveBody = when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .extract()
+                .body().asString();
+
+        assertThatJson(retrieveBody)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .isEqualTo(healthCheckBody);
     }
     
     @Test
