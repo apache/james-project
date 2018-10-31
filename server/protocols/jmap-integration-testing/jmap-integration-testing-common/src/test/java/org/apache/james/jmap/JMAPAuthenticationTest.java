@@ -33,12 +33,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.model.ContinuationToken;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -186,6 +188,7 @@ public abstract class JMAPAuthenticationTest {
             .body("methods", hasItem(userCredentials.getPassword()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void mustReturnContinuationTokenWhenValidResquest() throws Exception {
         given()
@@ -199,6 +202,7 @@ public abstract class JMAPAuthenticationTest {
             .body("continuationToken", isA(String.class));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void mustReturnAuthenticationFailedWhenBadPassword() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -271,6 +275,7 @@ public abstract class JMAPAuthenticationTest {
             .statusCode(201);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void mustSendJsonContainingAccessTokenAndEndpointsWhenGoodPassword() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -291,7 +296,7 @@ public abstract class JMAPAuthenticationTest {
     }
     
     @Test
-    public void getMustReturnUnauthorizedWithoutAuthroizationHeader() throws Exception {
+    public void getMustReturnUnauthorizedWithoutAuthorizationHeader() throws Exception {
         given()
         .when()
             .get("/authentication")
@@ -300,7 +305,7 @@ public abstract class JMAPAuthenticationTest {
     }
 
     @Test
-    public void getMustReturnUnauthorizedWithoutAValidAuthroizationHeader() throws Exception {
+    public void getMustReturnUnauthorizedWithoutAValidAuthorizationHeader() throws Exception {
         given()
             .header("Authorization", UUID.randomUUID())
         .when()
@@ -309,6 +314,7 @@ public abstract class JMAPAuthenticationTest {
             .statusCode(401);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMustReturnEndpointsWhenValidAuthorizationHeader() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -326,6 +332,7 @@ public abstract class JMAPAuthenticationTest {
             .body("download", equalTo("/download"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMustReturnEndpointsWhenValidJwtAuthorizationHeader() throws Exception {
         String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
@@ -357,7 +364,7 @@ public abstract class JMAPAuthenticationTest {
         .then()
             .statusCode(200);
     }
-    
+
     @Test
     public void getMustReturnBadCredentialsWhenInvalidJwtAuthorizationHeader() throws Exception {
         String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0.T04BTk" +
@@ -417,7 +424,7 @@ public abstract class JMAPAuthenticationTest {
         .then()
             .statusCode(401);
     }
-    
+
     @Test
     public void deleteMustReturnOKNoContentOnValidAuthorizationToken() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();
@@ -430,6 +437,7 @@ public abstract class JMAPAuthenticationTest {
             .statusCode(204);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void deleteMustInvalidAuthorizationOnCorrectAuthorization() throws Exception {
         String continuationToken = fromGoodContinuationTokenRequest();

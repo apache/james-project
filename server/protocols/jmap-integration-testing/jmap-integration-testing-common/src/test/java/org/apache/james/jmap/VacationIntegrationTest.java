@@ -42,6 +42,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
@@ -52,6 +53,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -99,6 +101,7 @@ public abstract class VacationIntegrationTest {
         guiceJamesServer.stop();
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void jmapVacationShouldGenerateAReplyWhenActive() throws Exception {
         /* Test scenario :

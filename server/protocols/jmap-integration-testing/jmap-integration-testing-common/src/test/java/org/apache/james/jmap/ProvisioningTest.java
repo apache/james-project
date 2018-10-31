@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -41,6 +42,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -98,6 +100,7 @@ public abstract class ProvisioningTest {
             .body(ARGUMENTS + ".list.name", hasItems(DefaultMailboxes.DEFAULT_MAILBOXES.toArray()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void provisionMailboxesShouldSubscribeToThem() throws Exception {
         String token = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD).serialize();

@@ -33,6 +33,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
@@ -47,6 +48,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 public abstract class VacationRelayIntegrationTest {
 
@@ -97,6 +99,7 @@ public abstract class VacationRelayIntegrationTest {
         guiceJamesServer.stop();
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void forwardingAnEmailShouldWork() throws Exception {
         jmapGuiceProbe.modifyVacation(AccountId.fromString(USER_WITH_DOMAIN), VacationPatch

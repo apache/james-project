@@ -40,6 +40,7 @@ import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
@@ -47,6 +48,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -90,6 +92,7 @@ public abstract class GetVacationResponseTest {
         jmapServer.stop();
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getVacationResponseShouldReturnDefaultValue() {
         given()
@@ -115,6 +118,7 @@ public abstract class GetVacationResponseTest {
             .body(ARGUMENTS + ".list[0].htmlBody", nullValue());
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getVacationResponseShouldReturnStoredValue() {
         jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),

@@ -50,6 +50,7 @@ import javax.mail.Flags;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
@@ -75,6 +76,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -142,8 +144,9 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", empty());
     }
 
+    @Category(BasicFeature.class)
     @Test
-    public void getMessageListShouldListMessageWhenTheUserHasOnlyReadRight() throws Exception {
+    public void getMessagesListShouldListMessageWhenTheUserHasOnlyReadRight() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, BOB, "delegated");
         MailboxPath delegatedMailboxPath = MailboxPath.forUser(BOB, "delegated");
         ComposedMessageId message = mailboxProbe.appendMessage(BOB, delegatedMailboxPath,
@@ -235,6 +238,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldNotDuplicateMessagesInSeveralMailboxes() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -498,6 +502,7 @@ public abstract class GetMessageListMethodTest {
                 not(containsInAnyOrder(messageForwarded.getMessageId().serialize()))));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListANDOperatorShouldReturnMessagesWhichMatchAllConditions() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -748,6 +753,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", containsInAnyOrder(message1.getMessageId().serialize(), message2.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldReturnAllMessagesOfCurrentUserOnlyWhenMultipleMailboxesAndNoParameters() throws Exception {
         String otherUser = "other@" + DOMAIN;
@@ -779,6 +785,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", containsInAnyOrder(message1.getMessageId().serialize(), message2.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldExcludeMessagesWhenInMailboxesFilterMatches() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -859,7 +866,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
-    public void getMessageListShouldExcludeMessagesWhenIdenticalNotInMailboxesAndInmailboxesFilterMatch() throws Exception {
+    public void getMessageListShouldExcludeMessagesWhenIdenticalNotInMailboxesAndInMailboxesFilterMatch() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
         mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags());
@@ -952,6 +959,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", empty());
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBody() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -1178,6 +1186,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(composedMessageId.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldSortMessagesWhenSortedByDateDefault() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -1472,6 +1481,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(message3.getMessageId().serialize(), message2.getMessageId().serialize(), message1.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldSupportIdSorting() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -1584,6 +1594,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", contains(message2.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldReturnSkipMessagesWhenPositionAndLimitGiven() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -1678,6 +1689,7 @@ public abstract class GetMessageListMethodTest {
             .body(ARGUMENTS + ".messageIds", containsInAnyOrder(message1.getMessageId().serialize(), message2.getMessageId().serialize(), message3.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldChainFetchingMessagesWhenAskedFor() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
@@ -1702,6 +1714,7 @@ public abstract class GetMessageListMethodTest {
             .body("[1][1].list[0].id", equalTo(message.getMessageId().serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMessageListShouldComputeTextBodyWhenNoTextBodyButHtmlBody() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");

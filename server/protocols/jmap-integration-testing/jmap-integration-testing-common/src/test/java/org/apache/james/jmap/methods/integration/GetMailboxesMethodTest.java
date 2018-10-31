@@ -58,6 +58,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
@@ -80,6 +81,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -175,6 +177,7 @@ public abstract class GetMailboxesMethodTest {
             .body(ARGUMENTS + ".type", equalTo("invalidArguments"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnMailboxesWhenIdsMatch() {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, DefaultMailboxes.INBOX).serialize();
@@ -225,6 +228,7 @@ public abstract class GetMailboxesMethodTest {
             .body(ARGUMENTS + ".list", empty());
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnAllMailboxesWhenIdsIsNull() {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "myMailbox");
@@ -344,6 +348,7 @@ public abstract class GetMailboxesMethodTest {
             .body(ARGUMENTS + ".description", containsString("{\"ids\":true}"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnDefaultMailboxesWhenAuthenticatedUserDoesntHaveAnAccountYet() {
         String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzM3QGRvbWFpbi50bGQiLCJuYW1lIjoiTmV3IFVzZXIif"
@@ -526,6 +531,7 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".role", equalTo(DefaultMailboxes.OUTBOX.toLowerCase(Locale.US)));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnMailboxesWithFilteredSharedWithWhenShared() throws Exception {
         String mailboxName = "name";
@@ -574,6 +580,7 @@ public abstract class GetMailboxesMethodTest {
         assertThat(sharedWith).containsOnlyKeys(ALICE, CEDRIC);
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnAllAccessibleMailboxesWhenEmptyIds() throws Exception {
         String sharedMailboxName = "BobShared";
@@ -778,6 +785,7 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].max", nullValue());
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnMaxStorageQuotasForInboxWhenSet() throws Exception {
         quotaProbe.setGlobalMaxStorage(SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(42))));
@@ -867,6 +875,7 @@ public abstract class GetMailboxesMethodTest {
             .body(FIRST_MAILBOX + ".quotas['#private&alice@domain.tld']['MESSAGE'].used", equalTo(0));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnUpdatedQuotasForInboxWhenMailReceived() throws Exception {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, DefaultMailboxes.INBOX).serialize();

@@ -46,6 +46,7 @@ import java.util.Locale;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapCommonRequests;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -55,6 +56,7 @@ import org.apache.james.utils.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -155,6 +157,7 @@ public abstract class FilterTest {
             .body(ARGUMENTS + ".description", equalTo("The field 'accountId' of 'GetFilterRequest' is not supported"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setFilterShouldOverwritePreviouslyStoredRules() {
         MailboxId mailbox1 = randomMailboxId();
@@ -436,6 +439,7 @@ public abstract class FilterTest {
             .body(ARGUMENTS + ".updated", hasSize(1));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void getFilterShouldRetrievePreviouslyStoredRules() {
         MailboxId mailbox1 = randomMailboxId();
@@ -510,6 +514,7 @@ public abstract class FilterTest {
             .body(ARGUMENTS + ".singleton[1].action.appendIn.mailboxIds", containsInAnyOrder(mailbox2.serialize()));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void setFilterShouldClearPreviouslyStoredRulesWhenEmptyBody() {
         MailboxId mailbox = randomMailboxId();
@@ -689,6 +694,7 @@ public abstract class FilterTest {
             .body(ARGUMENTS + ".singleton[4].condition.comparator", equalTo("contains"));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenFromRuleMatches() {
         given()
@@ -1020,6 +1026,7 @@ public abstract class FilterTest {
             () -> JmapCommonRequests.isAnyMessageFoundInRecipientsMailbox(accessToken, matchedMailbox));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void messageShouldBeAppendedInInboxWhenFromDoesNotMatchRule() {
         given()
@@ -1299,7 +1306,7 @@ public abstract class FilterTest {
 
 
     @Test
-    public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRuleBecaseOfCase() {
+    public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRuleBecauseOfCase() {
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[" +
