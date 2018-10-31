@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Apache James Server 3.2.0"
-date:   2018-11-01 16:13:22 +0200
+date:   2018-11-14 12:13:22 +0700
 categories: james update
 ---
 

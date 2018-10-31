@@ -10,7 +10,7 @@
 
 ### Download the artifacts
 
-Download james-jpa-smtp-guice-3.1.0.zip from [the download page](http://james.apache.org/download.cgi#Apache_James_Server) and deflate it.
+Download james-jpa-smtp-guice-3.2.0.zip from [the download page](http://james.apache.org/download.cgi#Apache_James_Server) and deflate it.
 
 ### (alternative) Building the artifacts
 

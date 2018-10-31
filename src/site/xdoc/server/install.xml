@@ -72,8 +72,8 @@
   </section>
 
   <section name="Build instructions">
-      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/james-project-3.1.0">
-          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/james-project-3.1.0/README.adoc">README instructions</a> about compilation.</p>
+      <p>Checkout code from the chosen version on <a href="https://github.com/apache/james-project/tree/james-project-3.2.0">
+          GitHub</a>. Follow <a href="https://github.com/apache/james-project/blob/james-project-3.2.0/README.adoc">README instructions</a> about compilation.</p>
 
       <ul>Using these instructions, you can build the following images:
           <li>Guice + JPA + Lucene</li>
@@ -89,7 +89,7 @@
           <a href="install/jpa-guice.html">JPA-Guice</a> and <a href="install/jpa-smtp-guice.html">JPA-SMTP-Guice</a>.
       </p>
 
-      <p>A <a href="https://github.com/apache/james-project/blob/james-project-3.1.0/dockerfiles/run/docker-compose.yml">
+      <p>A <a href="https://github.com/apache/james-project/blob/james-project-3.2.0/dockerfiles/run/docker-compose.yml">
           docker-compose</a> is available for Guice + Cassandra + ElasticSearch</p>
   </section>
 
