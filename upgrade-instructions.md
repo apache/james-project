@@ -12,12 +12,38 @@ software documentation. Do not follow this guide blindly!
 
 Note: this section is in progress. It will be updated during all the development process until the release.
 
-Changes to apply between 3.1.x and 3.2.x will be reported here.
+Changes to apply between 3.2.x and 3.3.x will be reported here.
+
+## 3.2.0 version
+
+Changes to apply between 3.1.0 and 3.2.0 had been reported here.
 
 Changelist:
 
  - [JMAPFiltering mailet is required for JMAP capable servers](#jmapfiltering-mailet-is-required-for-jmap-capable-servers)
  - [Cassandra 3.11.3 upgrade](#cassandra-3113-upgrade)
+
+### Noticeable changes in Mail API: Mail::getMaybeSender
+
+Date: 31/10/2018
+
+SHA-1: 485406252d82c2d23a4078c76b26d6fc8973bbd7
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2557
+
+Required: Yes
+
+Concerned products: User developed extensions - mailet/matcher
+
+As part of the SMTP protocol, a mail can be sent without sender. This was represented implicitly in James by a potentially null MailAddress
+(`null` or `MailAddress.nullSender()`). This means that mailet/matcher implementers needs to be aware, and handle these cases. This implicit
+handling makes nullSender hard to work with, and prooved to be error prone as part of the 3.2.0 development process.
+
+Hence we propose an alternative API returning a `MaybeSender` object, requiring the caller to explicitly handle missing sender.
+
+`Mail::getSender` had then been deprecated. We strongly encourage our users to rely on `Mail::getMaybeSender`.
+
+Note: thanks to java-8 default API methods, this is not a breaking change.
 
 ### JMAPFiltering mailet is required for JMAP capable servers
 
