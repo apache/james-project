@@ -48,6 +48,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
 
    - [Check all components](#Check_all_components)
    - [Check single component](#Check_single_component)
+   - [List all health checks](#List_all_health_checks)
    
 
 ### Check all components
@@ -88,6 +89,29 @@ Response codes:
  - 200: The check has answered with a Healthy status.
  - 404: A component with the given name was not found.
  - 500: The check has anwered with a Unhealthy or Degraded status.
+ 
+### List all health checks
+ 
+This endpoint lists all the available health checks.
+ 
+```
+curl -XGET http://ip:port/healthcheck/checks
+```
+ 
+Will return the list of all available health checks.
+ 
+```
+[
+    {
+        "componentName": "Cassandra Backend",
+        "escapedComponentName": "Cassandra%20Backend"
+    }
+]
+```
+ 
+Response codes:
+ 
+  - 200: List of available health checks
 
 ## Administrating domains
 

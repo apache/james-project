@@ -29,6 +29,7 @@ import javax.ws.rs.Path;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.webadmin.PublicRoutes;
+import org.apache.james.webadmin.dto.HealthCheckDto;
 import org.apache.james.webadmin.dto.HealthCheckExecutionResultDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -56,6 +57,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     private static final Logger LOGGER = LoggerFactory.getLogger(HealthCheckRoutes.class);
 
     public static final String HEALTHCHECK = "/healthcheck";
+    public static final String CHECKS = "/checks";
     
     private static final String PARAM_COMPONENT_NAME = "componentName";
 
@@ -77,6 +79,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     public void define(Service service) {
         service.get(HEALTHCHECK, this::validateHealthchecks, jsonTransformer);
         service.get(HEALTHCHECK + "/checks/:" + PARAM_COMPONENT_NAME, this::performHealthCheckForComponent, jsonTransformer);
+        service.get(HEALTHCHECK + CHECKS, this::getHealthChecks, jsonTransformer);
     }
 
     @GET
@@ -118,6 +121,17 @@ public class HealthCheckRoutes implements PublicRoutes {
         logFailedCheck(result);
         response.status(getCorrespondingStatusCode(result));
         return new HealthCheckExecutionResultDto(result);
+    }
+
+    @GET
+    @Path(CHECKS)
+    @ApiOperation(value = "List all health checks")
+    @ApiResponse(code = HttpStatus.OK_200, message = "List of all health checks",
+            response = HealthCheckDto.class, responseContainer = "List")
+    public Object getHealthChecks(Request request, Response response) {
+        return healthChecks.stream()
+                .map(healthCheck -> new HealthCheckDto(healthCheck.componentName()))
+                .collect(Guavate.toImmutableList());
     }
 
     private int getCorrespondingStatusCode(List<Result> anyUnhealthy) {

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
@@ -240,4 +241,38 @@ public class HealthCheckRoutesTest {
             .body("status", equalTo(ResultStatus.HEALTHY.getValue()))
             .body("cause", is(nullValue()));
     }
+
+    @Test
+    public void getHealthchecksShouldReturnEmptyWhenNoHealthChecks() {
+        when()
+           .get(HealthCheckRoutes.CHECKS)
+        .then()
+           .body(is("[]"))
+           .body("", hasSize(0))
+           .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    public void getHealthchecksShouldReturnHealthCheckWhenHealthCheckPresent() {
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
+        when()
+           .get(HealthCheckRoutes.CHECKS)
+        .then()
+            .body("", hasSize(1))
+            .body("componentName[0]", equalTo(NAME_3))
+            .body("escapedComponentName[0]", equalTo(NAME_3_ESCAPED))
+            .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    public void getHealthchecksShouldReturnHealthChecksWhenHealthChecksPresent() {
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_2)));
+        healthChecks.add(healthCheck(Result.healthy(COMPONENT_NAME_3)));
+        when()
+           .get(HealthCheckRoutes.CHECKS)
+        .then()
+           .body("", hasSize(2))
+           .statusCode(HttpStatus.OK_200);
+    }
+
 }
