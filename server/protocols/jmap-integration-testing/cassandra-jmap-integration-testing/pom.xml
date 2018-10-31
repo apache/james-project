@@ -215,5 +215,35 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.0</version>
+                <configuration>
+                    <argLine>-Xms512m -Xmx1024m</argLine>
+                    <reuseForks>false</reuseForks>
+                    <!-- Fail tests longer than 2 hours, prevent form random locking tests -->
+                    <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
+                    <!-- Run only Cassandra Jmap Integration tests-->
+                    <groups>org.apache.james.jmap.categories.BasicFeature</groups>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.junit.jupiter</groupId>
+                        <artifactId>junit-jupiter-engine</artifactId>
+                        <version>${junit.jupiter.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.junit.vintage</groupId>
+                        <artifactId>junit-vintage-engine</artifactId>
+                        <version>${junit.vintage.version}</version>
+                     </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
     
 </project>
