@@ -35,8 +35,8 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import io.restassured.RestAssured;
@@ -44,10 +44,10 @@ import io.restassured.RestAssured;
 public class ErrorRoutesTest {
     private static final String NOT_FOUND = "notFound";
 
-    private static WebAdminServer webAdminServer;
+    private WebAdminServer webAdminServer;
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new NoopMetricFactory(),
                 new ErrorRoutes());
@@ -60,8 +60,8 @@ public class ErrorRoutesTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    @AfterClass
-    public static void tearDown() {
+    @After
+    public void tearDown() {
         webAdminServer.destroy();
     }
 
