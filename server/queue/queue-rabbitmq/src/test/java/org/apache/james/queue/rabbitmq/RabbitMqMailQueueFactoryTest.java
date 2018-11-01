@@ -54,6 +54,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
     static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
+    private RabbitMQManagementApi mqManagementApi;
 
     @BeforeEach
     void setup() throws URISyntaxException {
@@ -78,13 +79,13 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             Clock.systemUTC());
-        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
 
     @AfterEach
-    void tearDown(DockerRabbitMQ rabbitMQ) throws Exception {
-        rabbitMQ.reset();
+    void tearDown() {
+        mqManagementApi.deleteAllQueues();
     }
 
     @Override
