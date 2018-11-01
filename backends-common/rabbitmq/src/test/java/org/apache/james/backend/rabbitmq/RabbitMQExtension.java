@@ -57,7 +57,6 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         simpleChannelPool.close();
-       // rabbitMQ.reset();
     }
 
     @Override
