@@ -54,6 +54,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTest
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -84,6 +85,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
+    private RabbitMQManagementApi mqManagementApi;
 
     @Override
     public void enQueue(Mail mail) throws MailQueue.MailQueueException {
@@ -121,9 +123,14 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             clock);
-        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
+    }
+
+    @AfterEach
+    void tearDown() {
+        mqManagementApi.deleteAllQueues();
     }
 
     @Override
