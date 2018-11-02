@@ -22,10 +22,12 @@ package org.apache.mailet;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.Serializable;
+
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -35,6 +37,9 @@ public abstract class ContractMailTest {
     private final static Attribute ATTRIBUTE_1 = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of(true));
     private final static Attribute ATTRIBUTE_2 = new Attribute(ATTRIBUTE_NAME_2, AttributeValue.of("value2"));
     private final static Attribute ATTRIBUTE_1_BIS = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of("value1"));
+    private static final String VALUE = "value";
+    private static final String KEY = "key";
+    private static final String NEW_VALUE = "newValue";
 
     public abstract Mail newMail();
 
@@ -143,6 +148,108 @@ public abstract class ContractMailTest {
         @Test
         void shouldHaveTwoAttributesMap() {
             assertThat(mail.attributesMap()).isEqualTo(ImmutableMap.of(ATTRIBUTE_NAME_1, ATTRIBUTE_1, ATTRIBUTE_NAME_2, ATTRIBUTE_2));
+        }
+    }
+
+    @SuppressWarnings("deprecated")
+    @Nested
+    public class DeprecatedtedAttributes {
+        @Test
+        void setAttributeShouldReturnNullWhenNoPreviousValue() {
+            Mail mail = newMail();
+
+            Serializable previous = mail.setAttribute(KEY, VALUE);
+
+            assertThat(previous).isNull();
+        }
+
+        @Test
+        void setAttributeShouldReturnPreviousValue() {
+            Mail mail = newMail();
+
+            mail.setAttribute(KEY, VALUE);
+            Serializable previous = mail.setAttribute(KEY, NEW_VALUE);
+
+            assertThat(previous).isEqualTo(VALUE);
+        }
+
+        @Test
+        void getAttributeShouldReturnNullWhenNoAssociatedValue() {
+            Mail mail = newMail();
+
+            assertThat(mail.getAttribute(KEY)).isNull();
+        }
+
+        @Test
+        void setAttributeShouldReturnValue() {
+            Mail mail = newMail();
+
+            mail.setAttribute(KEY, VALUE);
+
+            assertThat(mail.getAttribute(KEY)).isEqualTo(VALUE);
+        }
+
+        @Test
+        void setAttributeShouldReturnLatestValue() {
+            Mail mail = newMail();
+            mail.setAttribute(KEY, VALUE);
+
+            mail.setAttribute(KEY, NEW_VALUE);
+
+            assertThat(mail.getAttribute(KEY)).isEqualTo(NEW_VALUE);
+        }
+
+        @Test
+        void getAttributeShouldNotReturnedNotStoreRemovedItems() {
+            Mail mail = newMail();
+
+            mail.removeAttribute(KEY);
+
+            assertThat(mail.getAttribute(KEY)).isNull();
+        }
+
+        @Test
+        void getAttributeShouldNotReturnDeletedElements() {
+            Mail mail = newMail();
+            mail.setAttribute(KEY, VALUE);
+
+            mail.removeAttribute(KEY);
+
+            assertThat(mail.getAttribute(KEY)).isNull();
+        }
+
+        @Test
+        void removeAttributeShouldReturnNullWhenNoPreviousValue() {
+            Mail mail = newMail();
+
+            Serializable previous = mail.removeAttribute(KEY);
+
+            assertThat(previous).isNull();
+        }
+
+        @Test
+        void removeAttributeShouldReturnPreviousValue() {
+            Mail mail = newMail();
+            mail.setAttribute(KEY, VALUE);
+
+            Serializable previous = mail.removeAttribute(KEY);
+
+            assertThat(previous).isEqualTo(VALUE);
+        }
+
+        @Test
+        void getAttributeNamesShouldReturnEmptyByDefault() {
+            Mail mail = newMail();
+
+            assertThat(mail.getAttributeNames()).isEmpty();
+        }
+
+        @Test
+        void getAttributeNamesShouldReturnAttributeNames() {
+            Mail mail = newMail();
+            mail.setAttribute(KEY, VALUE);
+
+            assertThat(mail.getAttributeNames()).containsOnly(KEY);
         }
     }
 }
