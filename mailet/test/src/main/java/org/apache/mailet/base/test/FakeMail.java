@@ -20,11 +20,14 @@
 
 package org.apache.mailet.base.test;
 
+import java.io.IOException;
+import java.io.OptionalDataException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +40,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -59,7 +63,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class FakeMail implements Mail, Serializable {
+public class FakeMail implements Mail {
 
     private static final String DEFAULT_REMOTE_HOST = "111.222.333.444";
     public static final String DEFAULT_REMOTE_ADDRESS = "127.0.0.1";
@@ -298,12 +302,13 @@ public class FakeMail implements Mail, Serializable {
         return FakeMail.builder().build();
     }
 
-    private static Map<String, Serializable> attributes(Mail mail) {
-        ImmutableMap.Builder<String, Serializable> builder = ImmutableMap.builder();
-        for (String attributeName: ImmutableList.copyOf(mail.getAttributeNames())) {
-            builder.put(attributeName, mail.getAttribute(attributeName));
-        }
-        return builder.build();
+    private static ImmutableMap<AttributeName, Attribute> toAttributeMap(Map<String, ?> attributes) {
+        return attributes.entrySet()
+            .stream()
+            .map(entry -> Attribute.convertToAttribute(entry.getKey(), entry.getValue()))
+            .collect(ImmutableMap.toImmutableMap(
+                Attribute::getName,
+                Function.identity()));
     }
 
     private transient MimeMessage msg;
@@ -509,6 +514,72 @@ public class FakeMail implements Mail, Serializable {
 
     public void setMessageSize(long size) {
         this.size = size;
+    }
+
+    /**
+     * Read the FakeMail from an <code>ObjectInputStream</code>.
+     */
+    @SuppressWarnings("unchecked")
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        try {
+            Object obj = in.readObject();
+            if (obj == null) {
+                sender = null;
+            } else if (obj instanceof String) {
+                sender = new MailAddress((String) obj);
+            } else if (obj instanceof MailAddress) {
+                sender = (MailAddress) obj;
+            }
+        } catch (ParseException pe) {
+            throw new IOException("Error parsing sender address: " + pe.getMessage());
+        }
+        recipients = (Collection<MailAddress>) in.readObject();
+        state = (String) in.readObject();
+        errorMessage = (String) in.readObject();
+        name = (String) in.readObject();
+        remoteHost = (String) in.readObject();
+        remoteAddr = (String) in.readObject();
+        setLastUpdated((Date) in.readObject());
+        // the following is under try/catch to be backwards compatible
+        // with messages created with James version <= 2.2.0a8
+        try {
+            setAttributesRaw((Map<String, Object>) in.readObject());
+        } catch (OptionalDataException ode) {
+            if (ode.eof) {
+                attributes = new HashMap<>();
+            } else {
+                throw ode;
+            }
+        }
+        perRecipientHeaders = (PerRecipientHeaders) in.readObject();
+    }
+
+    public void setAttributesRaw(Map<String, Object> attr) {
+        this.attributes = toAttributeMap(attr);
+    }
+
+    public Map<String, Object> getAttributesRaw() {
+        return attributes.entrySet()
+            .stream()
+            .collect(ImmutableMap.toImmutableMap(
+                a -> a.getKey().asString(),
+                b -> b.getValue().getValue().value()));
+    }
+
+    /**
+     * Write the FakeMail to an <code>ObjectOutputStream</code>.
+     */
+    private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+        out.writeObject(sender);
+        out.writeObject(recipients);
+        out.writeObject(state);
+        out.writeObject(errorMessage);
+        out.writeObject(name);
+        out.writeObject(remoteHost);
+        out.writeObject(remoteAddr);
+        out.writeObject(lastUpdated);
+        out.writeObject(getAttributesRaw());
+        out.writeObject(perRecipientHeaders);
     }
 
     @Override
