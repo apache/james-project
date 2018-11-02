@@ -32,6 +32,13 @@ import com.google.common.base.Preconditions;
  * @since Mailet API v3.2
  */
 public class Attribute {
+    public static Attribute convertToAttribute(String name, Object value) {
+        AttributeName attributeName = AttributeName.of(name);
+        AttributeValue<?> attributeValue = AttributeValue.ofAny(value);
+
+        return new Attribute(attributeName, attributeValue);
+    }
+
     private final AttributeName name;
     private final AttributeValue<?> value;
 

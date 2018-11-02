@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.mailet;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,14 @@ class AttributeTest {
     void constructorShouldThrowOnNullValue() {
         assertThatNullPointerException()
             .isThrownBy(() -> new Attribute(AttributeName.of("name"), null));
+    }
+
+    @Test
+    void convertToAttributeShouldReturnCorrespondingAttribute() {
+        assertThat(Attribute.convertToAttribute("name", "value"))
+            .isEqualTo(new Attribute(
+                AttributeName.of("name"),
+                AttributeValue.of("value")));
     }
 
 }
