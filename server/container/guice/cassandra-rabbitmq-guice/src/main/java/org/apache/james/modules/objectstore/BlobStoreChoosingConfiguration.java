@@ -37,7 +37,7 @@ public class BlobStoreChoosingConfiguration {
         static String supportedImplNames() {
             return Stream.of(BlobStoreImplName.values())
                 .map(BlobStoreImplName::getName)
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(", "));
         }
 
         static BlobStoreImplName from(String name) {

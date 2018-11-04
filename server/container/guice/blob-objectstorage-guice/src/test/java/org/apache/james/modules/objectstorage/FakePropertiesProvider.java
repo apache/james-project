@@ -55,7 +55,7 @@ public class FakePropertiesProvider extends PropertiesProvider {
         return new FakePropertiesProviderBuilder();
     }
 
-    static class FakePropertiesProviderBuilder {
+    public static class FakePropertiesProviderBuilder {
         private final ImmutableMap.Builder<String, Configuration> configurations;
 
         public FakePropertiesProviderBuilder() {

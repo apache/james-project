@@ -36,17 +36,17 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra,swift");
+            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
     }
 
     @Test
-    void fromShouldReturnSwiftWhenBlobStoreImplIsNull() {
+    void fromShouldThrowWhenBlobStoreImplIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("objectstore.implementation", null);
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra,swift");
+            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
     }
 
     @Test
@@ -56,7 +56,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra,swift");
+            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
     }
 
     @Test
@@ -66,7 +66,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra,swift");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, swift");
     }
 
     @Test
