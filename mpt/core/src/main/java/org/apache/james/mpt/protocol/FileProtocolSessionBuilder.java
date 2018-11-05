@@ -134,6 +134,8 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                     }
                 } else if (next.startsWith(REINIT)) {
                     session.reinit(sessionNumber);
+                }  else if (next.startsWith(AWAIT)) {
+                    session.await(sessionNumber);
                 } else if (next.startsWith(OPEN_UNORDERED_BLOCK_TAG)) {
                     List<String> unorderedLines = new ArrayList<>(5);
                     next = reader.readLine();

@@ -91,6 +91,8 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
     }
 
     protected abstract MailboxManager getMailboxManager();
+
+    protected abstract void await() throws Exception;
     
     @Override
     public void createMailbox(MailboxPath mailboxPath) throws Exception {
@@ -166,6 +168,10 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
             in.nextLine(line);
         }
 
+        @Override
+        public void await() throws Exception {
+            JamesImapHostSystem.this.await();
+        }
     }
 
     private HierarchicalConfiguration userRepositoryConfiguration() {

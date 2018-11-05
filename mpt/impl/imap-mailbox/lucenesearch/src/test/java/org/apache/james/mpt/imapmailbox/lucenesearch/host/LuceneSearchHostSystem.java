@@ -66,6 +66,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
     private File tempFile;
     private InMemoryMailboxManager mailboxManager;
+    private LuceneMessageSearchIndex searchIndex;
 
     @Override
     public void beforeTest() throws Exception {
@@ -115,7 +116,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 rightManager);
 
             FSDirectory fsDirectory = FSDirectory.open(tempFile);
-            LuceneMessageSearchIndex searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory);
+            searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory);
             searchIndex.setEnableSuffixMatch(true);
             mailboxManager.setMessageSearchIndex(searchIndex);
 
@@ -155,4 +156,8 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
         throw new NotImplementedException();
     }
 
+    @Override
+    protected void await() throws Exception {
+        searchIndex.commit();
+    }
 }
