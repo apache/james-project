@@ -19,14 +19,15 @@
 package org.apache.james.server.core.filesystem;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SimpleUrlTest {
 
-    @Test(expected = NullPointerException.class)
+    @Test()
     public void simplifyPathShouldThrowOnNull() {
-        SimpleUrl.simplifyPath(null);
+        assertThatThrownBy(() -> SimpleUrl.simplifyPath(null)).isInstanceOf(NullPointerException.class);
     }
     
     @Test
@@ -52,9 +53,9 @@ public class SimpleUrlTest {
         assertThat(new SimpleUrl("").getSimplified()).isEmpty();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void simplifiedShouldThrowWhenNullInput() {
-        new SimpleUrl(null);
+        assertThatThrownBy(() -> new SimpleUrl(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test

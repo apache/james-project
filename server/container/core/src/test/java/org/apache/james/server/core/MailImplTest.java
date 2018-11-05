@@ -33,20 +33,26 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.MailUtil;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
-public class MailImplTest {
+public class MailImplTest extends ContractMailTest {
+
+    @Override
+    public MailImpl newMail() {
+        return new MailImpl();
+    }
 
     private MimeMessage emptyMessage;
 
-    @Before
+    @BeforeEach
     public void setup() throws MessagingException {
         emptyMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setText("")
@@ -55,7 +61,7 @@ public class MailImplTest {
 
     @Test
     public void mailImplShouldHaveSensibleInitialValues() throws MessagingException {
-        MailImpl mail = new MailImpl();
+        MailImpl mail = newMail();
 
         assertThat(mail.hasAttributes()).describedAs("no initial attributes").isFalse();
         assertThat(mail.getErrorMessage()).describedAs("no initial error").isNull();
@@ -71,7 +77,7 @@ public class MailImplTest {
 
     @Test
     public void mailImplShouldThrowWhenComputingSizeOnDefaultInstance() throws MessagingException {
-        MailImpl mail = new MailImpl();
+        MailImpl mail = newMail();
 
         assertThatThrownBy(mail::getMessageSize).isInstanceOf(NullPointerException.class);
     }
@@ -85,7 +91,7 @@ public class MailImplTest {
         MailImpl mail = new MailImpl(name, senderMailAddress, recipients);
 
 
-        MailImpl expected = new MailImpl();
+        MailImpl expected = newMail();
         assertThat(mail).isEqualToIgnoringGivenFields(expected, "sender", "name", "recipients", "lastUpdated");
         assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
     }
@@ -161,7 +167,7 @@ public class MailImplTest {
 
     @Test
     public void setAttributeShouldThrowOnNullAttributeName() throws MessagingException {
-        MailImpl mail = new MailImpl();
+        MailImpl mail = newMail();
 
         assertThatThrownBy(() -> mail.setAttribute(null, "toto"))
             .isInstanceOf(NullPointerException.class);

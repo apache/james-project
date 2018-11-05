@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
@@ -40,6 +41,9 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
@@ -117,6 +121,11 @@ public class FakeMail implements Mail, Serializable {
             remoteAddr = Optional.empty();
             remoteHost = Optional.empty();
             perRecipientHeaders = new PerRecipientHeaders();
+        }
+
+        public Builder attribute(Attribute attribute) {
+            this.attributes.put(attribute.getName().asString(), (Serializable) attribute.getValue().value());
+            return this;
         }
 
         public Builder size(long size) {
@@ -399,13 +408,28 @@ public class FakeMail implements Mail, Serializable {
     }
 
     @Override
+    public Stream<Attribute> attributes() {
+        return attributes.entrySet().stream().map(entry -> new Attribute(AttributeName.of(entry.getKey()), AttributeValue.ofAny(entry.getValue())));
+    }
+
+    @Override
     public Serializable getAttribute(String name) {
-        return attributes.get(name);
+        return (Serializable) attributes.get(name);
+    }
+
+    @Override
+    public Optional<Attribute> getAttribute(AttributeName name) {
+        return Optional.ofNullable(attributes.get(name.asString())).map(value -> new Attribute(name, AttributeValue.ofAny(value)));
     }
 
     @Override
     public Iterator<String> getAttributeNames() {
         return attributes.keySet().iterator();
+    }
+
+    @Override
+    public Stream<AttributeName> attributeNames() {
+        return attributes.keySet().stream().map(AttributeName::of);
     }
 
     @Override
@@ -415,8 +439,13 @@ public class FakeMail implements Mail, Serializable {
 
     @Override
     public Serializable removeAttribute(String name) {
-        return attributes.remove(name);
+        return (Serializable) attributes.remove(name);
+    }
 
+    @Override
+    public Optional<Attribute> removeAttribute(AttributeName attributeName) {
+        AttributeValue<?> previous = AttributeValue.ofAny(attributes.remove(attributeName.asString()));
+        return Optional.ofNullable(previous).map(value -> new Attribute(attributeName, value));
     }
 
     @Override
@@ -427,6 +456,12 @@ public class FakeMail implements Mail, Serializable {
     @Override
     public Serializable setAttribute(String name, Serializable object) {
         return attributes.put(name, object);
+    }
+
+    @Override
+    public Optional<Attribute> setAttribute(Attribute attribute) {
+        Serializable previous = this.attributes.put(attribute.getName().asString(), (Serializable) attribute.getValue().value());
+        return Optional.ofNullable(previous).map(value -> new Attribute(attribute.getName(), AttributeValue.ofAny(value)));
     }
 
     @Override

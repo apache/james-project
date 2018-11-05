@@ -25,8 +25,8 @@ import java.io.IOException;
 import javax.mail.MessagingException;
 
 import org.apache.james.util.ZeroedInputStream;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageInputStreamSourceTest {
 
@@ -34,7 +34,7 @@ public class MimeMessageInputStreamSourceTest {
     private static final int _10KB = 10 * 1024;
     private MimeMessageInputStreamSource testee;
 
-    @After
+    @AfterEach
     public void tearDown() {
         testee.dispose();
     }

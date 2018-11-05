@@ -27,13 +27,23 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.mailet.ContractMailTest;
 import org.apache.mailet.base.MailAddressFixture;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class FakeMailTest {
+public class FakeMailTest extends ContractMailTest {
+
+    @Override
+    public FakeMail newMail() {
+        try {
+            return FakeMail.builder().build();
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test
     public void beanShouldRespectBeanContract() {
@@ -100,5 +110,4 @@ public class FakeMailTest {
                 .hasSender())
             .isTrue();
     }
-
 }
