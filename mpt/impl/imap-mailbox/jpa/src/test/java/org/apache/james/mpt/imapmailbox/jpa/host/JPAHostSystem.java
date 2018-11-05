@@ -170,4 +170,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
         maxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
 
+    @Override
+    protected void await() throws Exception {
+
+    }
 }

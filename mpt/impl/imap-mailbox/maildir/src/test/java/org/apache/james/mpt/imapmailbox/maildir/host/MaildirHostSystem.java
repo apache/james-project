@@ -127,8 +127,12 @@ public class MaildirHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         throw new NotImplementedException();
     }
 
+    @Override
+    protected void await() {
+
+    }
 }

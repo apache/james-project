@@ -38,7 +38,6 @@ import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -131,7 +130,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws MailboxException {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
@@ -139,5 +138,10 @@ public class CassandraHostSystem extends JamesImapHostSystem {
     @Override
     public MailboxManager getMailboxManager() {
         return mailboxManager;
+    }
+
+    @Override
+    protected void await() {
+
     }
 }

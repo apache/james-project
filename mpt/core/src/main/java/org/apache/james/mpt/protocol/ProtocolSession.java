@@ -219,6 +219,11 @@ public class ProtocolSession implements ProtocolInteractor {
         testElements.add(new ReinitElement(sessionNumber));
     }
 
+    public void await(int sessionNumber) {
+        this.maxSessionNumber = Math.max(this.maxSessionNumber, sessionNumber);
+        testElements.add(new AwaitElement(sessionNumber));
+    }
+
     public void timer(TimerCommand timerCommand, String timerName) {
         testElements.add(new TimerElement(timerCommand, timerName));
     }
@@ -622,6 +627,24 @@ public class ProtocolSession implements ProtocolInteractor {
         @Override
         public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
             Thread.sleep(timeToWaitInMs);
+        }
+
+        @Override
+        public boolean isClient() {
+            return false;
+        }
+    }
+
+    private class AwaitElement implements ProtocolElement {
+        private final int sessionNumber;
+
+        private AwaitElement(int sessionNumber) {
+            this.sessionNumber = Math.max(0, sessionNumber);
+        }
+
+        @Override
+        public void testProtocol(Session[] sessions, boolean continueAfterFailure) throws Exception {
+            sessions[sessionNumber].await();
         }
 
         @Override

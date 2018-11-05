@@ -103,4 +103,9 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
+
+    @Override
+    protected void await() {
+
+    }
 }
