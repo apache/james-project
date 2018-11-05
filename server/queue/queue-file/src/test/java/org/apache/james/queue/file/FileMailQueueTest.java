@@ -23,11 +23,17 @@ import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
+
+import static org.apache.james.queue.api.Mails.defaultMail;
+import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_LOCAL;
+import static org.apache.mailet.base.MailAddressFixture.SENDER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     private static final boolean SYNC = true;

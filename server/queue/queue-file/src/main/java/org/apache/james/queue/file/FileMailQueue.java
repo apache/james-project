@@ -50,6 +50,7 @@ import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
@@ -59,17 +60,17 @@ import org.apache.james.server.core.MimeMessageSource;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.document.SetBasedFieldSelector;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.Version;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,7 @@ import com.github.fge.lambdas.Throwing;
  */
 public class FileMailQueue implements ManageableMailQueue {
     private static final String FILE_PATH_KEY = "key";
-    private static final Set<String> FIELDS_TO_LOAD = Collections.singleton(FILE_PATH_KEY);
+    private static final SetBasedFieldSelector FIELDS_TO_LOAD = new SetBasedFieldSelector(Collections.singleton(FILE_PATH_KEY), Collections.emptySet());
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
     private static final AtomicLong COUNTER = new AtomicLong();
     private static final String MSG_EXTENSION = ".msg";
@@ -109,9 +110,9 @@ public class FileMailQueue implements ManageableMailQueue {
         this.queueName = queuename;
         this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
-        StandardAnalyzer analyzer = new StandardAnalyzer();
-        this.indexWriter = new IndexWriter(FSDirectory.open(new File(queueDir, "index").toPath()),
-                new IndexWriterConfig(analyzer));
+        StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
+        this.indexWriter = new IndexWriter(FSDirectory.open(new File(queueDir, "index")),
+                new IndexWriterConfig(Version.LUCENE_36, analyzer));
 
         init();
     }
@@ -223,17 +224,22 @@ public class FileMailQueue implements ManageableMailQueue {
     private Document toIndexDocument(Mail mail, String key) {
         Document doc = new Document();
 
-        doc.add(new StringField(FILE_PATH_KEY, key, Field.Store.YES));
-        doc.add(new StringField(Type.Name.name(), mail.getName(), Field.Store.YES));
-        doc.add(new StringField(Type.Sender.name(), mail.getSender().asString(), Field.Store.YES));
+        doc.add(analyzedField(key, FILE_PATH_KEY));
+        doc.add(analyzedField(mail.getName(), Type.Name.name()));
+        doc.add(analyzedField(mail.getSender().asString(), Type.Sender.name()));
 
         if (mail.getRecipients() != null) {
-            mail.getRecipients().forEach(mailAddress -> {
-                doc.add(new StringField(Type.Recipient.name(), mailAddress.asString(), Field.Store.YES));
-            });
+            mail.getRecipients()
+                    .stream()
+                    .map(MailAddress::asString)
+                    .forEach(mailAddress -> doc.add(analyzedField(mailAddress, Type.Recipient.name())));
         }
 
         return doc;
+    }
+
+    private Field analyzedField(String key, String filePathKey) {
+        return new Field(filePathKey, key, Field.Store.YES, Field.Index.NOT_ANALYZED);
     }
 
     @Override
@@ -344,7 +350,7 @@ public class FileMailQueue implements ManageableMailQueue {
         private final File objectfile;
         private final File messagefile;
 
-        public FileItem(File objectfile, File messagefile) {
+        FileItem(File objectfile, File messagefile) {
             this.objectfile = objectfile;
             this.messagefile = messagefile;
         }
@@ -353,15 +359,15 @@ public class FileMailQueue implements ManageableMailQueue {
             return new FileItem(new File(objectFileName), new File(messageFileName));
         }
 
-        public File getObjectFile() {
+        File getObjectFile() {
             return objectfile;
         }
 
-        public File getMessageFile() {
+        File getMessageFile() {
             return messagefile;
         }
 
-        public void delete() throws MailQueueException {
+        void delete() throws MailQueueException {
             try {
                 FileUtils.forceDelete(getObjectFile());
             } catch (IOException e) {
@@ -406,12 +412,9 @@ public class FileMailQueue implements ManageableMailQueue {
         return count;
     }
 
-    /**
-     * TODO: implement me
-     */
     @Override
     public long remove(Type type, String value) throws MailQueueException {
-        try (IndexReader indexReader = DirectoryReader.open(indexWriter)) {
+        try (IndexReader indexReader = IndexReader.open(indexWriter, true)) {
             int maxCount = Math.max(1, indexReader.maxDoc());
             IndexSearcher searcher = new IndexSearcher(indexReader);
             MutableLong count = new MutableLong();
@@ -435,8 +438,7 @@ public class FileMailQueue implements ManageableMailQueue {
                     .ifPresent(scoreDocStream -> scoreDocStream
                             .mapToInt(scoreDoc -> scoreDoc.doc)
                             .forEach(id -> Optional.ofNullable(Throwing.supplier(() -> searcher.doc(id, FIELDS_TO_LOAD)).get())
-                                    .map(doc -> doc.getField(FILE_PATH_KEY))
-                                    .map(IndexableField::stringValue)
+                                    .map(doc -> doc.get(FILE_PATH_KEY))
                                     .map(keyMappings::remove)
                                     .ifPresent(fileItem -> {
                                         Throwing.runnable(fileItem::delete).run();
