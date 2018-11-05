@@ -160,6 +160,7 @@ public class WebAdminServer implements Configurable {
     public void destroy() {
         if (configuration.isEnabled()) {
             service.stop();
+            service.awaitStop();
             LOGGER.info("Web admin server stopped");
         }
     }
