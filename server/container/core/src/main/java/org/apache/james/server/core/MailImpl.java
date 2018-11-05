@@ -410,7 +410,7 @@ public class MailImpl implements Disposable, Mail {
         setErrorMessage(mail.getErrorMessage());
         try {
             if (mail instanceof MailImpl) {
-                setAttributesRaw((HashMap<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
+                setAttributesRaw((Map<String, Object>) cloneSerializableObject(((MailImpl) mail).getAttributesRaw()));
             } else {
                 HashMap<String, Object> attribs = new HashMap<>();
                 for (Iterator<String> i = mail.getAttributeNames(); i.hasNext(); ) {
@@ -783,7 +783,7 @@ public class MailImpl implements Disposable, Mail {
 
     @Override
     public Stream<AttributeName> attributeNames() {
-        return attributes.keySet().stream().map(AttributeName::of);
+        return attributes().map(Attribute::getName);
     }
 
     @Override

@@ -39,7 +39,7 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.base.RFC2822Headers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageTest {
 

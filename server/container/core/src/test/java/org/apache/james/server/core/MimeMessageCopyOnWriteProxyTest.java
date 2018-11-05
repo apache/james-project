@@ -31,7 +31,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.mailet.Mail;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MimeMessageCopyOnWriteProxyTest extends MimeMessageFromStreamTest {
 

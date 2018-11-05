@@ -26,7 +26,7 @@ import java.util.Enumeration;
 import javax.mail.MessagingException;
 
 import org.apache.mailet.base.RFC2822Headers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class MailHeadersTest {
 
