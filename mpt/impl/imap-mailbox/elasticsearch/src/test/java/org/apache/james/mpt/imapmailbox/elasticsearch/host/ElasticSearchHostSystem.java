@@ -114,7 +114,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         this.mailboxManager.setMessageSearchIndex(searchIndex);
         this.mailboxManager.addGlobalListener(searchIndex, new MockMailboxSession("admin"));
 
-        final ImapProcessor defaultImapProcessorFactory =
+        ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,
                 new StoreSubscriptionManager(factory),
                 new NoQuotaManager(),
@@ -123,8 +123,6 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
             defaultImapProcessorFactory);
-
-        embeddedElasticSearch.awaitForElasticSearch();
     }
 
     @Override
