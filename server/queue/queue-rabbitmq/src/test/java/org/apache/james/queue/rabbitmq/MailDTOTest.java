@@ -31,6 +31,9 @@ import javax.mail.MessagingException;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.server.core.MailImpl;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -85,7 +88,7 @@ class MailDTOTest {
             FakeMail.builder()
                 .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
                 .sender(MailAddressFixture.SENDER)
-                .attribute("att1", "value")
+                .attribute(new Attribute(AttributeName.of("att1"), AttributeValue.of("value")))
                 .errorMessage("an error")
                 .lastUpdated(LAST_UPDATED)
                 .remoteHost("toto.com")

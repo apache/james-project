@@ -40,12 +40,10 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TIME_RANGE_START;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
@@ -65,7 +63,9 @@ import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.streams.Iterators;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
@@ -132,20 +132,19 @@ public class EnqueuedMailsDaoUtil {
             .build();
     }
 
-    private static Map<String, Serializable> toAttributes(Map<String, ByteBuffer> rowAttributes) {
+    private static List<Attribute> toAttributes(Map<String, ByteBuffer> rowAttributes) {
         return rowAttributes.entrySet()
             .stream()
-            .collect(ImmutableMap.toImmutableMap(
-                Map.Entry::getKey,
-                entry -> fromByteBuffer(entry.getValue())));
+            .map(entry -> new Attribute(AttributeName.of(entry.getKey()), fromByteBuffer(entry.getValue())))
+            .collect(ImmutableList.toImmutableList());
     }
 
-    private static Serializable fromByteBuffer(ByteBuffer byteBuffer) {
+    private static AttributeValue<?> fromByteBuffer(ByteBuffer byteBuffer) {
         try {
             byte[] data = new byte[byteBuffer.remaining()];
             byteBuffer.get(data);
             ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return (Serializable) objectInputStream.readObject();
+            return AttributeValue.fromJsonString((String) objectInputStream.readObject());
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -177,20 +176,13 @@ public class EnqueuedMailsDaoUtil {
     }
 
     static ImmutableMap<String, ByteBuffer> toRawAttributeMap(Mail mail) {
-        return Iterators.toStream(mail.getAttributeNames())
-            .map(name -> Pair.of(name, mail.getAttribute(name)))
-            .map(pair -> Pair.of(pair.getLeft(), toByteBuffer(pair.getRight())))
+        return mail.attributes()
+            .map(attribute -> Pair.of(attribute.getName().asString(), toByteBuffer(attribute.getValue())))
             .collect(ImmutableMap.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
-    private static ByteBuffer toByteBuffer(Serializable serializable) {
-        try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            new ObjectOutputStream(outputStream).writeObject(serializable);
-            return ByteBuffer.wrap(outputStream.toByteArray());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    private static ByteBuffer toByteBuffer(AttributeValue<?> attributeValue) {
+        return ByteBuffer.wrap(attributeValue.toJson().toString().getBytes(StandardCharsets.UTF_8));
     }
 
     static ImmutableMap<String, UDTValue> toHeaderMap(CassandraTypesProvider cassandraTypesProvider,

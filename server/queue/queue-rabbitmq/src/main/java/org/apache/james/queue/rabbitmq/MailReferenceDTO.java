@@ -19,13 +19,13 @@
 
 package org.apache.james.queue.rabbitmq;
 
-import java.io.Serializable;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
@@ -35,14 +35,16 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.util.SerializationUtil;
-import org.apache.james.util.streams.Iterators;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.consumers.ThrowingBiConsumer;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,10 +81,11 @@ class MailReferenceDTO {
     }
 
     private static ImmutableMap<String, String> serializedAttributes(Mail mail) {
-        return Iterators.toStream(mail.getAttributeNames())
-            .collect(Guavate.toImmutableMap(
-                name -> name,
-                name -> SerializationUtil.serialize(mail.getAttribute(name))));
+        Function<Attribute, String> name = attribute -> attribute.getName().asString();
+        Function<Attribute, String> value = attribute -> attribute.getValue().toJson().toString();
+        return mail
+                .attributes()
+                .collect(Guavate.toImmutableMap(name, value));
     }
 
     private final ImmutableList<String> recipients;
@@ -202,8 +205,11 @@ class MailReferenceDTO {
             .map(Date::new)
             .ifPresent(mail::setLastUpdated);
 
+        ThrowingBiConsumer<String, String> attributeSetter = (name, value) ->
+            mail.setAttribute(new Attribute(AttributeName.of(name), AttributeValue.fromJsonString(value)));
+
         attributes
-            .forEach((name, value) -> mail.setAttribute(name, SerializationUtil.<Serializable>deserialize(value)));
+            .forEach(Throwing.biConsumer(attributeSetter).sneakyThrow());
 
         mail.addAllSpecificHeaderForRecipient(retrievePerRecipientHeaders());
 
