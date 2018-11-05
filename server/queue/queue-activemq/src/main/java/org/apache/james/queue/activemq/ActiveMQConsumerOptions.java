@@ -86,6 +86,10 @@ public final class ActiveMQConsumerOptions implements ConsumerOptions {
             return this;
         }
 
+        public Builder noPrefetchSize() {
+            return prefetchSize(0);
+        }
+
         public Builder priority(int priority) {
             optionsMap.put(ActiveMQSupport.CONSUMER_PRIORITY, String.valueOf(priority));
             return this;

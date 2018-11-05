@@ -28,9 +28,7 @@ public interface ConsumerOptions {
     /**
      * The empty consumer options.
      */
-    static ConsumerOptions empty() {
-        return queueName -> queueName;
-    }
+    ConsumerOptions EMPTY = queueName -> queueName;
 
     /**
      * The queue name with options for performing {@link MailQueue#deQueue()} operation. The implementation may

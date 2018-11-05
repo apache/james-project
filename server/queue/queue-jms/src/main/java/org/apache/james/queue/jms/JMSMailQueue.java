@@ -161,7 +161,7 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory,
                         String queueName, MetricFactory metricFactory,
                         GaugeRegistry gaugeRegistry) {
-        this(connectionFactory, mailQueueItemDecoratorFactory, queueName, ConsumerOptions.empty(), metricFactory, gaugeRegistry);
+        this(connectionFactory, mailQueueItemDecoratorFactory, queueName, ConsumerOptions.EMPTY, metricFactory, gaugeRegistry);
     }
 
     public JMSMailQueue(ConnectionFactory connectionFactory, MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, String queueName, ConsumerOptions consumerOptions, MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
