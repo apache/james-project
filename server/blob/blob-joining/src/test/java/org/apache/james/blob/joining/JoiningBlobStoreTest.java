@@ -33,6 +33,7 @@ import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.util.CompletableFutureUtil;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -107,6 +108,71 @@ class JoiningBlobStoreTest implements BlobStoreContract {
     @Override
     public BlobId.Factory blobIdFactory() {
         return BLOB_ID_FACTORY;
+    }
+
+    @Nested
+    class PrimarySaveThrowsExceptionDirectly {
+
+        @Test
+        void saveShouldFallBackToSecondaryWhenPrimaryGotException() throws Exception {
+            MemoryBlobStore secondaryBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            JoiningBlobStore joiningBlobStore = new JoiningBlobStore(new ThrowingBlobStore(), secondaryBlobStore);
+            BlobId blobId = joiningBlobStore.save(BLOB_CONTENT).get();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(joiningBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                softly.assertThat(secondaryBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+            });
+        }
+
+        @Test
+        void saveInputStreamShouldFallBackToSecondaryWhenPrimaryGotException() throws Exception {
+            MemoryBlobStore secondaryBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            JoiningBlobStore joiningBlobStore = new JoiningBlobStore(new ThrowingBlobStore(), secondaryBlobStore);
+            BlobId blobId = joiningBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(joiningBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                softly.assertThat(secondaryBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+            });
+        }
+    }
+
+    @Nested
+    class PrimarySaveCompletesExceptionally {
+
+        @Test
+        void saveShouldFallBackToSecondaryWhenPrimaryCompletedExceptionally() throws Exception {
+            MemoryBlobStore secondaryBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            JoiningBlobStore joiningBlobStore = new JoiningBlobStore(new FutureThrowingBlobStore(), secondaryBlobStore);
+            BlobId blobId = joiningBlobStore.save(BLOB_CONTENT).get();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(joiningBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                softly.assertThat(secondaryBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+            });
+        }
+
+        @Test
+        void saveInputStreamShouldFallBackToSecondaryWhenPrimaryCompletedExceptionally() throws Exception {
+            MemoryBlobStore secondaryBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            JoiningBlobStore joiningBlobStore = new JoiningBlobStore(new FutureThrowingBlobStore(), secondaryBlobStore);
+            BlobId blobId = joiningBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThat(joiningBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+                softly.assertThat(secondaryBlobStore.read(blobId))
+                    .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+            });
+        }
+
     }
 
     @Nested

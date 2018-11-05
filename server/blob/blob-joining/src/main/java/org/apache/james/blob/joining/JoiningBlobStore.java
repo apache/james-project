@@ -25,6 +25,7 @@ import java.io.PushbackInputStream;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -50,12 +51,26 @@ public class JoiningBlobStore implements BlobStore {
 
     @Override
     public CompletableFuture<BlobId> save(byte[] data) {
-        return primaryBlobStore.save(data);
+        try {
+            return saveToPrimaryFallbackIfFails(
+                primaryBlobStore.save(data),
+                () -> secondaryBlobStore.save(data));
+        } catch (Exception e) {
+            LOGGER.error("exception directly happens while saving bytes data, fall back to secondary blob store", e);
+            return secondaryBlobStore.save(data);
+        }
     }
 
     @Override
     public CompletableFuture<BlobId> save(InputStream data) {
-        return primaryBlobStore.save(data);
+        try {
+            return saveToPrimaryFallbackIfFails(
+                primaryBlobStore.save(data),
+                () -> secondaryBlobStore.save(data));
+        } catch (Exception e) {
+            LOGGER.error("exception directly happens while saving InputStream data, fall back to secondary blob store", e);
+            return secondaryBlobStore.save(data);
+        }
     }
 
     @Override
@@ -103,9 +118,26 @@ public class JoiningBlobStore implements BlobStore {
             .thenCompose(maybeBytes -> readFromSecondaryIfNeeded(maybeBytes, blobId));
     }
 
+    private CompletableFuture<BlobId> saveToPrimaryFallbackIfFails(
+        CompletableFuture<BlobId> primarySavingOperation,
+        Supplier<CompletableFuture<BlobId>> fallbackSavingOperationSupplier) {
+
+        return primarySavingOperation
+            .thenApply(Optional::ofNullable)
+            .exceptionally(this::logAndReturnEmptyOptional)
+            .thenCompose(maybeBlobId -> saveToSecondaryIfNeeded(maybeBlobId, fallbackSavingOperationSupplier));
+    }
+
     private <T> Optional<T> logAndReturnEmptyOptional(Throwable throwable) {
         LOGGER.error("primary completed exceptionally, fall back to second blob store", throwable);
         return Optional.empty();
+    }
+
+    private CompletableFuture<BlobId> saveToSecondaryIfNeeded(Optional<BlobId> maybeBlobId,
+                                                              Supplier<CompletableFuture<BlobId>> saveToSecondarySupplier) {
+        return maybeBlobId
+            .map(CompletableFuture::completedFuture)
+            .orElseGet(saveToSecondarySupplier);
     }
 
     private CompletableFuture<byte[]> readFromSecondaryIfNeeded(Optional<byte[]> readFromPrimaryResult, BlobId blodId) {
