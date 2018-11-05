@@ -36,7 +36,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -67,7 +66,6 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.Version;
@@ -226,7 +224,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
         doc.add(analyzedField(key, FILE_PATH_KEY));
         doc.add(analyzedField(mail.getName(), Type.Name.name()));
-        doc.add(analyzedField(mail.getSender().asString(), Type.Sender.name()));
+        doc.add(analyzedField(mail.getMaybeSender().asString(), Type.Sender.name()));
 
         if (mail.getRecipients() != null) {
             mail.getRecipients()

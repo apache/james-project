@@ -23,17 +23,9 @@ import org.apache.james.queue.api.DelayedManageableMailQueueContract;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
-import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
-
-import static org.apache.james.queue.api.Mails.defaultMail;
-import static org.apache.mailet.base.MailAddressFixture.OTHER_AT_LOCAL;
-import static org.apache.mailet.base.MailAddressFixture.SENDER;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     private static final boolean SYNC = true;
@@ -42,7 +34,7 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     private FileMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         temporaryFolder.create();
         mailQueue = new FileMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
     }
@@ -60,68 +52,5 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentClearShouldNotAlterBrowsingWhenDequeue() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentDequeueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentEnqueueShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsingWhenDequeueWhileIterating() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentFlushShouldNotAlterBrowsing() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2299 No snapshot isolation")
-    public void concurrentRemoveShouldNotAlterBrowsingWhenDequeue() {
-
     }
 }
