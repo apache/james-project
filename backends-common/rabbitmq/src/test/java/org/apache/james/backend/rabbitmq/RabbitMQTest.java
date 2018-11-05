@@ -104,8 +104,9 @@ class RabbitMQTest {
         }
 
         @AfterEach
-        void tearDown() {
+        void tearDown(DockerRabbitMQ rabbitMQ) throws Exception {
             closeQuietly(connection, channel);
+            rabbitMQ.reset();
         }
 
         @Test

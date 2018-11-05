@@ -33,8 +33,6 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import javax.mail.internet.MimeMessage;
-
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
@@ -42,10 +40,8 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.api.Store;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
-import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
@@ -58,6 +54,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTest
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -108,6 +105,11 @@ class RabbitMQMailQueueConfigurationChangeTest {
             .build();
         rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+    }
+
+    @AfterEach
+    void tearDown() {
+        mqManagementApi.deleteAllQueues();
     }
 
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {

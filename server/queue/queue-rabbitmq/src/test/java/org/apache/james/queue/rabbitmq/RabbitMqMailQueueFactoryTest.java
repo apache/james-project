@@ -31,6 +31,7 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.HashBlobId;
@@ -41,6 +42,7 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -52,6 +54,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
     static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
+    private RabbitMQManagementApi mqManagementApi;
 
     @BeforeEach
     void setup() throws URISyntaxException {
@@ -76,8 +79,13 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             Clock.systemUTC());
-        RabbitMQManagementApi mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
+    }
+
+    @AfterEach
+    void tearDown() {
+        mqManagementApi.deleteAllQueues();
     }
 
     @Override

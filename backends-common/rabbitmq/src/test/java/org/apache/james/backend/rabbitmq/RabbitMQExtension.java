@@ -36,6 +36,9 @@ import com.nurkiewicz.asyncretry.AsyncRetryExecutor;
 
 public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
 
+    private static final int THREE_RETRIES = 3;
+    private static final int ONE_HUNDRED_MILLISECONDS = 100;
+
     private DockerRabbitMQ rabbitMQ;
     private SimpleChannelPool simpleChannelPool;
 
@@ -54,7 +57,6 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
         simpleChannelPool.close();
-        rabbitMQ.reset();
     }
 
     @Override
@@ -85,6 +87,8 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
             .amqpUri(rabbitMQ.amqpUri())
             .managementUri(rabbitMQ.managementUri())
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+            .maxRetries(THREE_RETRIES)
+            .minDelay(ONE_HUNDRED_MILLISECONDS)
             .build();
 
         return new RabbitMQConnectionFactory(
