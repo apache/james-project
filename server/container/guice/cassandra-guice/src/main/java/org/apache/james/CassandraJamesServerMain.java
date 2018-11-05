@@ -54,7 +54,7 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MessageIdReIndexingModule;
 import org.apache.james.modules.server.ReIndexingModule;
-import org.apache.james.modules.server.SieveQuotaRoutesModule;
+import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
@@ -74,7 +74,7 @@ public class CassandraJamesServerMain {
         new SwaggerRoutesModule(),
         new WebAdminServerModule(),
         new DLPRoutesModule(),
-        new SieveQuotaRoutesModule(),
+        new SieveRoutesModule(),
         new ReIndexingModule(),
         new MessageIdReIndexingModule());
 

@@ -21,15 +21,20 @@ package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.SieveQuotaRoutes;
+import org.apache.james.webadmin.routes.SieveScriptRoutes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-public class SieveQuotaRoutesModule extends AbstractModule {
+public class SieveRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), Routes.class)
             .addBinding()
             .to(SieveQuotaRoutes.class);
+
+        Multibinder.newSetBinder(binder(), Routes.class)
+            .addBinding()
+            .to(SieveScriptRoutes.class);
     }
 }

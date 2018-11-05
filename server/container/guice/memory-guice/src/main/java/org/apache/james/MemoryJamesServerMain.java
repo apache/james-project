@@ -41,7 +41,7 @@ import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
 import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
-import org.apache.james.modules.server.SieveQuotaRoutesModule;
+import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
@@ -60,7 +60,7 @@ public class MemoryJamesServerMain {
         new MailRepositoriesRoutesModule(),
         new SwaggerRoutesModule(),
         new DLPRoutesModule(),
-        new SieveQuotaRoutesModule());
+        new SieveRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new IMAPServerModule(),
