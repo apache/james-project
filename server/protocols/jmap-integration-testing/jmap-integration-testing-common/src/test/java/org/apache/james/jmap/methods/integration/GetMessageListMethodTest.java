@@ -51,6 +51,7 @@ import javax.mail.Flags;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.categories.CassandraAndElasticSearchCategory;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
@@ -1131,6 +1132,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void getMessageListShouldExcludeMessagesWhenAttachmentFilterDoesntMatch() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
@@ -1159,6 +1161,7 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void getMessageListShouldIncludeMessagesWhenAttachmentFilterMatches() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
