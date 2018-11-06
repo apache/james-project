@@ -979,6 +979,25 @@ public abstract class GetMessageListMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
+    public void getMessageListShouldIncludeMessagesWhenTextFilterMatchesBodyWithStemming() throws Exception {
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+        ComposedMessageId message = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+                ClassLoader.getSystemResourceAsStream("eml/htmlMail.eml"), new Date(), false, new Flags());
+        await();
+        // text/html contains: "This is a mail with beautifull html content which contains a banana."
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"text\":\"contain banana\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Test
     public void getMessageListShouldIncludeMessagesWhenSubjectFilterMatchesSubject() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
         ComposedMessageId message = mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
