@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class ContentTypeFilteringTextExtractorTest {
 
@@ -51,9 +51,7 @@ public class ContentTypeFilteringTextExtractorTest {
     public void extractContentReturnEmptyWithContentTypeInBlacklist() throws Exception {
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
-                TextExtractorConfiguration.builder()
-                    .contentTypeBlacklist(ImmutableList.of("application/ics", "application/zip"))
-                    .build());
+                ImmutableSet.of("application/ics", "application/zip"));
 
         assertThat(contentTypeFilteringTextExtractor
             .extractContent(IOUtils.toInputStream(""), "application/ics"))
@@ -66,9 +64,7 @@ public class ContentTypeFilteringTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
-                TextExtractorConfiguration.builder()
-                    .contentTypeBlacklist(ImmutableList.of("application/ics", "application/zip"))
-                    .build());
+                ImmutableSet.of("application/ics", "application/zip"));
         contentTypeFilteringTextExtractor.extractContent(inputStream, "text/plain");
 
         verify(textExtractor, times(1)).extractContent(any(), any());

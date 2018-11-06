@@ -20,15 +20,15 @@
 package org.apache.james.mailbox.tika;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.Port;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Ints;
 
 public class TikaConfiguration {
@@ -41,7 +41,7 @@ public class TikaConfiguration {
         private Optional<Integer> timeoutInMillis;
         private Optional<Duration> cacheEvictionPeriod;
         private Optional<Long> cacheWeightInBytes;
-        private ImmutableList.Builder<String> contentTypeBlacklist;
+        private ImmutableSet.Builder<String> contentTypeBlacklist;
 
         private Builder() {
             isEnabled = Optional.empty();
@@ -51,7 +51,7 @@ public class TikaConfiguration {
             timeoutInMillis = Optional.empty();
             cacheEvictionPeriod = Optional.empty();
             cacheWeightInBytes = Optional.empty();
-            contentTypeBlacklist = ImmutableList.builder();
+            contentTypeBlacklist = ImmutableSet.builder();
         }
 
         public Builder enable(Optional<Boolean> isEnabled) {
@@ -140,7 +140,7 @@ public class TikaConfiguration {
             return this;
         }
 
-        public Builder contentTypeBlacklist(List<String> contentTypeBlacklist) {
+        public Builder contentTypeBlacklist(Set<String> contentTypeBlacklist) {
             Preconditions.checkNotNull(contentTypeBlacklist);
             this.contentTypeBlacklist.addAll(contentTypeBlacklist);
             return this;
@@ -179,9 +179,9 @@ public class TikaConfiguration {
     private final int timeoutInMillis;
     private final Duration cacheEvictionPeriod;
     private final long cacheWeightInBytes;
-    private final ImmutableList<String> contentTypeBlacklist;
+    private final ImmutableSet<String> contentTypeBlacklist;
 
-    private TikaConfiguration(boolean enabled, boolean cacheEnabled, String host, int port, int timeoutInMillis, Duration cacheEvictionPeriod, long cacheWeightInBytes,  ImmutableList<String> contentTypeBlacklist) {
+    private TikaConfiguration(boolean enabled, boolean cacheEnabled, String host, int port, int timeoutInMillis, Duration cacheEvictionPeriod, long cacheWeightInBytes,  ImmutableSet<String> contentTypeBlacklist) {
         this.enabled = enabled;
         this.cacheEnabled = cacheEnabled;
         this.host = host;
@@ -220,7 +220,7 @@ public class TikaConfiguration {
         return cacheWeightInBytes;
     }
 
-    public List<String> getContentTypeBlacklist() {
+    public ImmutableSet<String> getContentTypeBlacklist() {
         return contentTypeBlacklist;
     }
 

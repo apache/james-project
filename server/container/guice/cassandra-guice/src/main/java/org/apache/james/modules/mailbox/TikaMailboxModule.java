@@ -30,7 +30,6 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.tika.CachingTextExtractor;
 import org.apache.james.mailbox.tika.ContentTypeFilteringTextExtractor;
-import org.apache.james.mailbox.tika.TextExtractorConfiguration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaHttpClient;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
@@ -41,7 +40,6 @@ import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -51,27 +49,10 @@ public class TikaMailboxModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(TikaMailboxModule.class);
 
     private static final String TIKA_CONFIGURATION_NAME = "tika";
-    private static final String TEXT_EXTRACTOR_NAME = "text_extractor";
-
 
     @Override
     protected void configure() {
         bind(TikaTextExtractor.class).in(Scopes.SINGLETON);
-    }
-
-    @Provides
-    @Singleton
-    private TextExtractorConfiguration getTextExtractorConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
-        try {
-            Configuration configuration = propertiesProvider.getConfiguration(TEXT_EXTRACTOR_NAME);
-
-            return TextExtractorConfiguration.readTextExtractorConfiguration(configuration);
-        } catch (FileNotFoundException e) {
-            LOGGER.warn("Could not find {} configuration file.", TEXT_EXTRACTOR_NAME);
-            return TextExtractorConfiguration.builder()
-                .contentTypeBlacklist(ImmutableList.of())
-                .build();
-        }
     }
 
     @Provides
@@ -97,8 +78,7 @@ public class TikaMailboxModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private TextExtractor provideTextExtractor(TextExtractorConfiguration textExtractorConfiguration,
-                                               TikaTextExtractor textExtractor, TikaConfiguration configuration,
+    private TextExtractor provideTextExtractor(TikaTextExtractor textExtractor, TikaConfiguration configuration,
                                                MetricFactory metricFactory, GaugeRegistry gaugeRegistry) {
         if (configuration.isEnabled() && configuration.isCacheEnabled()) {
             LOGGER.info("Tika cache has been enabled.");
@@ -108,10 +88,10 @@ public class TikaMailboxModule extends AbstractModule {
                     configuration.getCacheEvictionPeriod(),
                     configuration.getCacheWeightInBytes(),
                     metricFactory,
-                    gaugeRegistry), textExtractorConfiguration);
+                    gaugeRegistry), configuration.getContentTypeBlacklist());
         }
         if (configuration.isEnabled()) {
-            return new ContentTypeFilteringTextExtractor(textExtractor, textExtractorConfiguration);
+            return new ContentTypeFilteringTextExtractor(textExtractor, configuration.getContentTypeBlacklist());
         }
         LOGGER.info("Tika text extraction has been disabled." +
             " Using DefaultTextExtractor instead. " +

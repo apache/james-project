@@ -20,19 +20,20 @@
 package org.apache.james.mailbox.tika;
 
 import java.io.InputStream;
-import java.util.Objects;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 
+import com.google.common.collect.ImmutableSet;
+
 public class ContentTypeFilteringTextExtractor implements TextExtractor {
 
     private final TextExtractor textExtractor;
-    private final TextExtractorConfiguration textExtractorConfiguration;
+    private final ImmutableSet<String> contentTypeBlacklist;
 
-    public ContentTypeFilteringTextExtractor(TextExtractor textExtractor, TextExtractorConfiguration textExtractorConfiguration) {
+    public ContentTypeFilteringTextExtractor(TextExtractor textExtractor, ImmutableSet<String> contentTypeBlacklist) {
         this.textExtractor = textExtractor;
-        this.textExtractorConfiguration = textExtractorConfiguration;
+        this.contentTypeBlacklist = contentTypeBlacklist;
     }
 
     @Override
@@ -44,10 +45,7 @@ public class ContentTypeFilteringTextExtractor implements TextExtractor {
     }
 
     private boolean isBlacklisted(String contentType) {
-        return textExtractorConfiguration
-            .getContentTypeBlacklist()
-            .stream()
-            .anyMatch(blackListItem -> Objects.equals(blackListItem, contentType));
+        return contentTypeBlacklist.contains(contentType);
     }
 
 }

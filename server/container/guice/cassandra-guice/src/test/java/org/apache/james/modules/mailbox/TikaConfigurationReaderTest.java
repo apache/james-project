@@ -29,7 +29,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class TikaConfigurationReaderTest {
 
@@ -247,7 +247,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheWeightInBytes(1520000)
-                    .contentTypeBlacklist(ImmutableList.of())
+                    .contentTypeBlacklist(ImmutableSet.of())
                     .build());
     }
 
@@ -272,7 +272,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheWeightInBytes(1520000)
-                    .contentTypeBlacklist(ImmutableList.of("application/ics", "application/zip"))
+                    .contentTypeBlacklist(ImmutableSet.of("application/ics", "application/zip"))
                     .build());
     }
 
@@ -297,7 +297,7 @@ public class TikaConfigurationReaderTest {
                     .port(889)
                     .timeoutInMillis(500)
                     .cacheWeightInBytes(1520000)
-                    .contentTypeBlacklist(ImmutableList.of("application/ics", "application/zip"))
+                    .contentTypeBlacklist(ImmutableSet.of("application/ics", "application/zip"))
                     .build());
     }
 }

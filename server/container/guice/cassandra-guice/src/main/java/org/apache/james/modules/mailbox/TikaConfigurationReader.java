@@ -20,9 +20,10 @@
 package org.apache.james.modules.mailbox;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.util.Size;
@@ -30,7 +31,7 @@ import org.apache.james.util.StreamUtils;
 import org.apache.james.util.TimeConverter;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class TikaConfigurationReader {
     public static final String TIKA_ENABLED = "tika.enabled";
@@ -43,6 +44,7 @@ public class TikaConfigurationReader {
     public static final String TIKA_CONTENT_TYPE_BLACKLIST = "tika.contentType.blacklist";
 
     public static TikaConfiguration readTikaConfiguration(Configuration configuration) {
+        AbstractConfiguration.setDefaultListDelimiter(',');
         Optional<Boolean> enabled = Optional.ofNullable(
             configuration.getBoolean(TIKA_ENABLED, null));
 
@@ -69,10 +71,10 @@ public class TikaConfigurationReader {
             .map(Throwing.function(Size::parse))
             .map(Size::asBytes);
 
-        List<String> contentTypeBlacklist = StreamUtils
+        Set<String> contentTypeBlacklist = StreamUtils
             .ofNullable(configuration.getStringArray(TIKA_CONTENT_TYPE_BLACKLIST))
             .map(String::trim)
-            .collect(ImmutableList.toImmutableList());
+            .collect(ImmutableSet.toImmutableSet());
 
         return TikaConfiguration.builder()
             .enable(enabled)
