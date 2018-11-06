@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.joining;
+package org.apache.james.blob.union;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,41 +35,41 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
-public class JoiningBlobStore implements BlobStore {
+public class UnionBlobStore implements BlobStore {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JoiningBlobStore.class);
-    private static final int UN_AVAILABLE = -1;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UnionBlobStore.class);
+    private static final int UNAVAILABLE = -1;
 
-    private final BlobStore primaryBlobStore;
-    private final BlobStore secondaryBlobStore;
+    private final BlobStore currentBlobStore;
+    private final BlobStore legacyBlobStore;
 
     @VisibleForTesting
-    JoiningBlobStore(BlobStore primaryBlobStore, BlobStore secondaryBlobStore) {
-        this.primaryBlobStore = primaryBlobStore;
-        this.secondaryBlobStore = secondaryBlobStore;
+    UnionBlobStore(BlobStore currentBlobStore, BlobStore legacyBlobStore) {
+        this.currentBlobStore = currentBlobStore;
+        this.legacyBlobStore = legacyBlobStore;
     }
 
     @Override
     public CompletableFuture<BlobId> save(byte[] data) {
         try {
-            return saveToPrimaryFallbackIfFails(
-                primaryBlobStore.save(data),
-                () -> secondaryBlobStore.save(data));
+            return saveToCurrentFallbackIfFails(
+                currentBlobStore.save(data),
+                () -> legacyBlobStore.save(data));
         } catch (Exception e) {
-            LOGGER.error("exception directly happens while saving bytes data, fall back to secondary blob store", e);
-            return secondaryBlobStore.save(data);
+            LOGGER.error("exception directly happens while saving bytes data, fall back to legacy blob store", e);
+            return legacyBlobStore.save(data);
         }
     }
 
     @Override
     public CompletableFuture<BlobId> save(InputStream data) {
         try {
-            return saveToPrimaryFallbackIfFails(
-                primaryBlobStore.save(data),
-                () -> secondaryBlobStore.save(data));
+            return saveToCurrentFallbackIfFails(
+                currentBlobStore.save(data),
+                () -> legacyBlobStore.save(data));
         } catch (Exception e) {
-            LOGGER.error("exception directly happens while saving InputStream data, fall back to secondary blob store", e);
-            return secondaryBlobStore.save(data);
+            LOGGER.error("exception directly happens while saving InputStream data, fall back to legacy blob store", e);
+            return legacyBlobStore.save(data);
         }
     }
 
@@ -78,8 +78,8 @@ public class JoiningBlobStore implements BlobStore {
         try {
             return readBytesFallBackIfFailsOrEmptyResult(blobId);
         } catch (Exception e) {
-            LOGGER.error("exception directly happens while readBytes, fall back to secondary blob store", e);
-            return secondaryBlobStore.readBytes(blobId);
+            LOGGER.error("exception directly happens while readBytes, fall back to legacy blob store", e);
+            return legacyBlobStore.readBytes(blobId);
         }
     }
 
@@ -88,23 +88,23 @@ public class JoiningBlobStore implements BlobStore {
         try {
             return readFallBackIfEmptyResult(blobId);
         } catch (Exception e) {
-            LOGGER.error("exception directly happens while read, fall back to secondary blob store", e);
-            return secondaryBlobStore.read(blobId);
+            LOGGER.error("exception directly happens while read, fall back to legacy blob store", e);
+            return legacyBlobStore.read(blobId);
         }
     }
 
     private InputStream readFallBackIfEmptyResult(BlobId blobId) {
-        return Optional.ofNullable(primaryBlobStore.read(blobId))
+        return Optional.ofNullable(currentBlobStore.read(blobId))
             .map(PushbackInputStream::new)
             .filter(Throwing.predicate(this::streamHasContent).sneakyThrow())
             .<InputStream>map(Function.identity())
-            .orElseGet(() -> secondaryBlobStore.read(blobId));
+            .orElseGet(() -> legacyBlobStore.read(blobId));
     }
 
     @VisibleForTesting
     boolean streamHasContent(PushbackInputStream pushBackIS) throws IOException {
         int byteRead = pushBackIS.read();
-        if (byteRead != UN_AVAILABLE) {
+        if (byteRead != UNAVAILABLE) {
             pushBackIS.unread(byteRead);
             return true;
         }
@@ -112,39 +112,39 @@ public class JoiningBlobStore implements BlobStore {
     }
 
     private CompletableFuture<byte[]> readBytesFallBackIfFailsOrEmptyResult(BlobId blobId) {
-        return primaryBlobStore.readBytes(blobId)
+        return currentBlobStore.readBytes(blobId)
             .thenApply(Optional::ofNullable)
             .exceptionally(this::logAndReturnEmptyOptional)
-            .thenCompose(maybeBytes -> readFromSecondaryIfNeeded(maybeBytes, blobId));
+            .thenCompose(maybeBytes -> readFromLegacyIfNeeded(maybeBytes, blobId));
     }
 
-    private CompletableFuture<BlobId> saveToPrimaryFallbackIfFails(
-        CompletableFuture<BlobId> primarySavingOperation,
+    private CompletableFuture<BlobId> saveToCurrentFallbackIfFails(
+        CompletableFuture<BlobId> currentSavingOperation,
         Supplier<CompletableFuture<BlobId>> fallbackSavingOperationSupplier) {
 
-        return primarySavingOperation
+        return currentSavingOperation
             .thenApply(Optional::ofNullable)
             .exceptionally(this::logAndReturnEmptyOptional)
-            .thenCompose(maybeBlobId -> saveToSecondaryIfNeeded(maybeBlobId, fallbackSavingOperationSupplier));
+            .thenCompose(maybeBlobId -> saveToLegacyIfNeeded(maybeBlobId, fallbackSavingOperationSupplier));
     }
 
     private <T> Optional<T> logAndReturnEmptyOptional(Throwable throwable) {
-        LOGGER.error("primary completed exceptionally, fall back to second blob store", throwable);
+        LOGGER.error("error happens from current blob store, fall back to legacy blob store", throwable);
         return Optional.empty();
     }
 
-    private CompletableFuture<BlobId> saveToSecondaryIfNeeded(Optional<BlobId> maybeBlobId,
-                                                              Supplier<CompletableFuture<BlobId>> saveToSecondarySupplier) {
+    private CompletableFuture<BlobId> saveToLegacyIfNeeded(Optional<BlobId> maybeBlobId,
+                                                           Supplier<CompletableFuture<BlobId>> saveToLegacySupplier) {
         return maybeBlobId
             .map(CompletableFuture::completedFuture)
-            .orElseGet(saveToSecondarySupplier);
+            .orElseGet(saveToLegacySupplier);
     }
 
-    private CompletableFuture<byte[]> readFromSecondaryIfNeeded(Optional<byte[]> readFromPrimaryResult, BlobId blodId) {
-        return readFromPrimaryResult
+    private CompletableFuture<byte[]> readFromLegacyIfNeeded(Optional<byte[]> readFromCurrentResult, BlobId blodId) {
+        return readFromCurrentResult
             .filter(this::hasContent)
             .map(CompletableFuture::completedFuture)
-            .orElseGet(() -> secondaryBlobStore.readBytes(blodId));
+            .orElseGet(() -> legacyBlobStore.readBytes(blodId));
     }
 
     private boolean hasContent(byte [] bytes) {

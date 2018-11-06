@@ -27,13 +27,13 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blob-joining</artifactId>
+    <artifactId>blob-union</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: Blob :: Joining Blob Storages</name>
+    <name>Apache James :: Server :: Blob :: Union Blob Storage</name>
     <description>
-        An implementation of BlobStore which relies on a primary and a secondary BlobStore by order for reading.
-        And using primary BlobStore for writing
+        An implementation of BlobStore which relies on a current and a legacy BlobStore by order for reading and writing
+        blobs with fallback mechanism.
     </description>
 
     <dependencies>

@@ -35,9 +35,9 @@
     <modules>
         <module>blob-api</module>
         <module>blob-cassandra</module>
-        <module>blob-joining</module>
         <module>blob-memory</module>
         <module>blob-objectstorage</module>
+        <module>blob-union</module>
 
         <module>mail-store</module>
     </modules>

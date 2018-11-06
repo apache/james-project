@@ -1067,11 +1067,6 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>blob-joining</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
                 <artifactId>blob-objectstorage</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1100,6 +1095,11 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>blob-memory</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>blob-union</artifactId>
                 <version>${project.version}</version>
             </dependency>
              <dependency>
