@@ -17,50 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.extractor;
+package org.apache.james.mailbox.tika;
 
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
 import java.util.Objects;
-import java.util.Optional;
 
-import com.google.common.collect.ImmutableMap;
+import org.apache.james.mailbox.extractor.ParsedContent;
+import org.apache.james.mailbox.extractor.TextExtractor;
 
-public class ParsedContent {
+public class ContentTypeFilteringTextExtractor implements TextExtractor {
 
-    private final Optional<String> textualContent;
-    private final Map<String, List<String>> metadata;
+    private final TextExtractor textExtractor;
+    private final TextExtractorConfiguration textExtractorConfiguration;
 
-    public ParsedContent(Optional<String> textualContent, Map<String, List<String>> metadata) {
-        this.textualContent = textualContent;
-        this.metadata = metadata;
-    }
-
-    public Optional<String> getTextualContent() {
-        return textualContent;
-    }
-
-    public  Map<String, List<String>> getMetadata() {
-        return metadata;
-    }
-
-    public static ParsedContent empty() {
-        return new ParsedContent(Optional.empty(), ImmutableMap.of());
+    public ContentTypeFilteringTextExtractor(TextExtractor textExtractor, TextExtractorConfiguration textExtractorConfiguration) {
+        this.textExtractor = textExtractor;
+        this.textExtractorConfiguration = textExtractorConfiguration;
     }
 
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof  ParsedContent) {
-            ParsedContent that = (ParsedContent) o;
-
-            return Objects.equals(this.textualContent, that.textualContent)
-                && Objects.equals(this.metadata, that.metadata);
+    public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        if (isBlacklisted(contentType)) {
+            return ParsedContent.empty();
         }
-        return false;
+        return textExtractor.extractContent(inputStream, contentType);
     }
 
-    @Override
-    public final int hashCode() {
-        return Objects.hash(textualContent, metadata);
+    private boolean isBlacklisted(String contentType) {
+        return textExtractorConfiguration
+            .getContentTypeBlacklist()
+            .stream()
+            .anyMatch(blackListItem -> Objects.equals(blackListItem, contentType));
     }
+
 }
