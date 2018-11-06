@@ -20,9 +20,11 @@
 package org.apache.james.blob.joining;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.blob.api.BlobId;
@@ -219,5 +221,47 @@ class JoiningBlobStoreTest implements BlobStoreContract {
 
         assertThat(secondaryBlobStore.readBytes(blobId).get())
             .isEmpty();
+    }
+
+    @Test
+    void streamHasContentShouldReturnTrueWhenStreamHasContent() throws Exception {
+        PushbackInputStream pushBackIS = new PushbackInputStream(new ByteArrayInputStream(BLOB_CONTENT));
+
+        assertThat(joiningBlobStore.streamHasContent(pushBackIS))
+            .isTrue();
+    }
+
+    @Test
+    void streamHasContentShouldReturnFalseWhenStreamHasNoContent() throws Exception {
+        PushbackInputStream pushBackIS = new PushbackInputStream(new ByteArrayInputStream(new byte[0]));
+
+        assertThat(joiningBlobStore.streamHasContent(pushBackIS))
+            .isFalse();
+    }
+
+    @Test
+    void streamHasContentShouldNotThrowWhenStreamHasNoContent() {
+        PushbackInputStream pushBackIS = new PushbackInputStream(new ByteArrayInputStream(new byte[0]));
+
+        assertThatCode(() -> joiningBlobStore.streamHasContent(pushBackIS))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void streamHasContentShouldNotDrainPushBackStreamContent() throws Exception {
+        PushbackInputStream pushBackIS = new PushbackInputStream(new ByteArrayInputStream(BLOB_CONTENT));
+        joiningBlobStore.streamHasContent(pushBackIS);
+
+        assertThat(pushBackIS)
+            .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
+    }
+
+    @Test
+    void streamHasContentShouldKeepStreamEmptyWhenStreamIsEmpty() throws Exception {
+        PushbackInputStream pushBackIS = new PushbackInputStream(new ByteArrayInputStream(new byte[0]));
+        joiningBlobStore.streamHasContent(pushBackIS);
+
+        assertThat(pushBackIS)
+            .hasSameContentAs(new ByteArrayInputStream(new byte[0]));
     }
 }

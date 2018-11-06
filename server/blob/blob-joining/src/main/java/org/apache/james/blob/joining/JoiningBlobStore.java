@@ -19,12 +19,13 @@
 
 package org.apache.james.blob.joining;
 
-import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 public class JoiningBlobStore implements BlobStore {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JoiningBlobStore.class);
+    private static final int UN_AVAILABLE = -1;
 
     private final BlobStore primaryBlobStore;
     private final BlobStore secondaryBlobStore;
@@ -78,10 +80,20 @@ public class JoiningBlobStore implements BlobStore {
 
     private InputStream readFallBackIfEmptyResult(BlobId blobId) {
         return Optional.ofNullable(primaryBlobStore.read(blobId))
-            .map(Throwing.<InputStream, byte[]>function(IOUtils::toByteArray).sneakyThrow())
-            .filter(this::hasContent)
-            .<InputStream>map(ByteArrayInputStream::new)
+            .map(PushbackInputStream::new)
+            .filter(Throwing.predicate(this::streamHasContent).sneakyThrow())
+            .<InputStream>map(Function.identity())
             .orElseGet(() -> secondaryBlobStore.read(blobId));
+    }
+
+    @VisibleForTesting
+    boolean streamHasContent(PushbackInputStream pushBackIS) throws IOException {
+        int byteRead = pushBackIS.read();
+        if (byteRead != UN_AVAILABLE) {
+            pushBackIS.unread(byteRead);
+            return true;
+        }
+        return false;
     }
 
     private CompletableFuture<byte[]> readBytesFallBackIfFailsOrEmptyResult(BlobId blobId) {
