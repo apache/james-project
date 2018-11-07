@@ -1,6 +1,6 @@
 $JAMES_ROOT/var/store
 
-     This folder contains the files related to database, jcr, activemq,... needed by James.
+     This folder contains the files related to database, activemq,... needed by James.
      James Server default settings comes with a embedded Derby database that stores the 
      users, domains and mailboxes (the user mails) (see store/derby folder).
 
@@ -26,8 +26,3 @@ $JAMES_ROOT/var/store
          mailboxes. Use var/store/maildir folder to contain the user's
          mails.
 
-     * jackrabbit
-     
-         You can configure James to use JCR (Java Content Repository, based
-         on Apache Jackrabbit) as storage for the user mailboxes. Use 
-         var/store/jackrabbit folder to contain the user's mails.

@@ -201,7 +201,6 @@
                     <item name="Mailbox Cassandra" href="/mailbox/mailbox-cassandra.html" />
                     <item name="Mailbox Maildir" href="/mailbox/mailbox-maildir.html" />
                     <item name="Mailbox JPA" href="/mailbox/mailbox-jpa.html" />
-                    <item name="Mailbox JCR" href="/mailbox/mailbox-jcr.html" />
                 </item>
                 <item name="Wiring" href="/mailbox/mailbox-spring.html" />
                 <item name="Download releases" href="http://james.apache.org/download.cgi" />

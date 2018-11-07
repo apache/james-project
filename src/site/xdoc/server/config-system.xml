@@ -40,7 +40,7 @@
             <subsection name="spring-server.xml">
 
                 <p>In James distribution, the spring files are located under conf/context folder and splitted into a main
-                    file (james-server-context.xml) which imports 4 other files (1 per mailbox type): james-mailbox-jcr-context.xml, james-mailbox-jpa-context.xml,
+                    file (james-server-context.xml) which imports 3 other files (1 per mailbox type): james-mailbox-jpa-context.xml,
                     james-mailbox-maildir-context.xml, james-mailbox-memory-context.xml.</p>
 
                 <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/container/spring/src/main/resources/META-INF/org/apache/james/spring-server.xml">spring-server.xml</a> in GIT to
@@ -148,14 +148,6 @@
                 <p>Also, if the database tables are not created a priori, but rather are to be created by James
                     upon startup, special attention should be paid to the "create table" statements in this file.  Such
                     statements tend to be both very database and very database instance specific.</p>
-
-            </subsection>
-
-            <subsection name="JCR Repository Configuration">
-
-                <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/jcr-repository.xml">jcr-repository.xml</a> in GIT to get some examples and hints.</p>
-
-                <p>Used to configure the JCR mailbox (if configure in mailbox.xml).</p>
 
             </subsection>
 

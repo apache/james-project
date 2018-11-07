@@ -44,7 +44,6 @@
             <ul>
                 <li>spring-mailbox-memory.xml</li>
                 <li>spring-mailbox-maildir.xml</li>
-                <li>spring-mailbox-jcr.xml</li>
                 <li>spring-mailbox-jpa.xml</li>
                 <li>spring-mailbox-authenticator.xml</li>
                 <li>spring-mailbox-locker.xml</li>

@@ -73,17 +73,6 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-jcr</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-jpa</artifactId>
             <scope>runtime</scope>
             <exclusions>
@@ -158,17 +147,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-file</artifactId>
-            <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.mail</groupId>
-                    <artifactId>mail</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-jcr</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>

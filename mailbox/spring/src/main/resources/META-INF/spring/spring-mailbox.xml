@@ -28,14 +28,10 @@
      -->
 
     <import resource="classpath:META-INF/spring/mailbox-locker.xml"/>
-    <!-- TODO: fix dependency issues with lucene and JCR and re-enable -->
     <import resource="classpath:META-INF/spring/mailbox-jpa.xml"/>
 
     <import resource="classpath:META-INF/spring/mailbox-index-lucene.xml" />
 <!--    <import resource="classpath:META-INF/spring/mailbox-elasticsearch.xml"/> -->
-
-    <!-- TODO: update spring context creation to match new Jackrabbit version -->
-    <!--<import resource="classpath:META-INF/spring/mailbox-jcr.xml" />-->
 
     <import resource="classpath:META-INF/spring/mailbox-maildir.xml"/>
     <import resource="classpath:META-INF/spring/mailbox-memory.xml"/>

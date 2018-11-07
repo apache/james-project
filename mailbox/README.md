@@ -13,7 +13,6 @@ Apache James Mailbox has the following project (Maven) structure:
 
 ~~~
 |-- api             -- Mailbox API
-|-- jcr             -- Mailbox implementation over Java Content Repository (JCR)
 |-- jpa             -- Database Mailbox implementation using Java Persistence API
 |-- lucene          -- Email indexing module with Apache Lucene
 |-- maildir         -- Email storage using Maildir format http://en.wikipedia.org/wiki/Maildir
@@ -35,12 +34,6 @@ Mailbox 'In memory' message store
 
 In module **memory**, does not persist emails. It just keeps them in memory. Fast, and good for testing.
 **Note:** Not to be used in production.
-
-Mailbox JCR
-===========
-
-Uses Java Content Repository as a persistence layer. Uses Jackrabbit as a provider (http://jackrabbit.apache.org/),
-but you could swap in any provider. Comes with all the nice features that Jackrabbit has.
 
 
 Mailbox Maildir

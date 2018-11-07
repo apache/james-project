@@ -12,7 +12,7 @@ There should be two folders in var:
       
   * store
   
-     This folder contains the files related to database, jcr, activemq,... needed by James.
+     This folder contains the files related to database, activemq,... needed by James.
      James Server default settings comes with a embedded Derby database that stores the 
      users, domains and mailboxes (the user mails) (see store/derby folder).
      Of course, if you changed database.properties and still use a database for the mailboxes,

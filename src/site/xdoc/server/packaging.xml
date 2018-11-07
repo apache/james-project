@@ -155,7 +155,7 @@
                     </tr>
                     <tr>
                         <td>Mailbox implementation</td>
-                        <td>JPA/MailDir/JCR/Memory</td>
+                        <td>JPA/MailDir/Memory</td>
                         <td>Cassandra</td>
                         <td>Cassandra</td>
                         <td>JPA</td>
