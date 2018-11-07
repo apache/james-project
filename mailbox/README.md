@@ -13,7 +13,6 @@ Apache James Mailbox has the following project (Maven) structure:
 
 ~~~
 |-- api             -- Mailbox API
-|-- hbase           -- Mailbox implementation over HBase
 |-- jcr             -- Mailbox implementation over Java Content Repository (JCR)
 |-- jpa             -- Database Mailbox implementation using Java Persistence API
 |-- lucene          -- Email indexing module with Apache Lucene
@@ -50,16 +49,6 @@ Mailbox Maildir
 Implements the Maildir standard for email storage (http://en.wikipedia.org/wiki/Maildir). Works only on GNU/Linux and other
 *Nix systems.
 
-
-Mailbox HBase
-=============
-
-Uses Apache HBase (http://hbase.apache.org/) for storing email messages. Provides a scalable email storage. To have a fully
-distributed email server you will also need, among others:
-
-* distributed UID generation, look at Zookeeper Sequence Provider (**zoo-seq-provider**) for distributed locking and Mailbox manipulation
-* distributed SMTP/IMAP access
-* other
 
 Zookeeper Sequence Provider
 ==========================

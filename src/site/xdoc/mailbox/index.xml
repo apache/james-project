@@ -50,7 +50,6 @@
           <li><a href="mailbox-maildir.html">Maildir</a></li>
           <li><a href="mailbox-jpa.html">JPA</a> </li>
           <li><a href="mailbox-jcr.html">JCR</a> </li>
-          <li><a href="mailbox-hbase.html">HBase</a>)</li>
       </ul>
   </section>
 

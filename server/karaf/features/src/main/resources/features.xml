@@ -151,10 +151,6 @@
         </bundle>
     </feature>
 
-    <!--<feature name="james-server-data-hbase" version="${project.version}">-->
-    <!--<bundle>mvn:org.apache.james/james-server-data-hbase/${project.version}</bundle>-->
-    <!--</feature>-->
-
     <!--<feature name="james-server-data-jcr" version="${project.version}">-->
     <!--<bundle>mvn:org.apache.james/james-server-data-jcr/${project.version}</bundle>-->
     <!--</feature>-->

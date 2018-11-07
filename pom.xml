@@ -591,7 +591,6 @@
         <camel.version>2.22.1</camel.version>
         <derby.version>10.14.2.0</derby.version>
         <hadoop.version>1.1.1</hadoop.version>
-        <hbase.version>0.94.27</hbase.version>
         <javax.inject.version>1</javax.inject.version>
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
@@ -754,17 +753,6 @@
                 <artifactId>apache-james-mailbox-elasticsearch</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-hbase</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mailbox-hbase</artifactId>
-                <version>${project.version}</version>
-                <classifier>tests</classifier>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
@@ -1224,11 +1212,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-data-file</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-data-hbase</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -2182,29 +2165,6 @@
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-test</artifactId>
                 <version>${hadoop.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase</artifactId>
-                <version>${hbase.version}</version>
-                <type>test-jar</type>
-                <exclusions>
-                    <exclusion>
-                        <groupId>commons-logging</groupId>
-                        <artifactId>commons-logging</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

@@ -40,7 +40,6 @@
         <module>caching</module>
         <module>cassandra</module>
         <module>elasticsearch</module>
-        <module>hbase</module>
         <module>jcr</module>
         <module>jpa</module>
         <module>lucene</module>

@@ -38,7 +38,6 @@
         <module>cyrus</module>
         <module>elasticsearch</module>
         <module>external-james</module>
-        <module>hbase</module>
         <module>inmemory</module>
         <module>jcr</module>
         <module>jpa</module>
@@ -69,12 +68,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-mpt-imapmailbox-elasticsearch</artifactId>
-                <version>${project.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>apache-james-mpt-imapmailbox-hbase</artifactId>
                 <version>${project.version}</version>
                 <scope>test</scope>
             </dependency>

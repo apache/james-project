@@ -39,8 +39,6 @@
 
     <import resource="classpath:META-INF/spring/mailbox-maildir.xml"/>
     <import resource="classpath:META-INF/spring/mailbox-memory.xml"/>
-    <!-- TODO: Fix hbase build and re-enable -->
-    <!--<import resource="classpath:META-INF/spring/mailbox-hbase.xml" />-->
 
     <!-- 
       Mailbox Copier

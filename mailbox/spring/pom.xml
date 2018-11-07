@@ -42,11 +42,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- TODO: enable after fix maibox-hbase -->
-        <!--<dependency>-->
-        <!--<groupId>${james.groupId}</groupId>-->
-        <!--<artifactId>apache-james-mailbox-hbase</artifactId>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-james-mailbox-jcr</artifactId>
@@ -120,26 +115,6 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-test</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jruby</groupId>
-                    <artifactId>jruby-complete</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-log4j12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
