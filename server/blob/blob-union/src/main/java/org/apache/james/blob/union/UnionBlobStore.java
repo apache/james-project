@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 
 public class UnionBlobStore implements BlobStore {
 
@@ -149,5 +150,13 @@ public class UnionBlobStore implements BlobStore {
 
     private boolean hasContent(byte [] bytes) {
         return bytes.length > 0;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("currentBlobStore", currentBlobStore)
+            .add("legacyBlobStore", legacyBlobStore)
+            .toString();
     }
 }

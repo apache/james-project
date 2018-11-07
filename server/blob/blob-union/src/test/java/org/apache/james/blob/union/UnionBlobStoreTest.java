@@ -21,11 +21,15 @@ package org.apache.james.blob.union;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -33,10 +37,17 @@ import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.util.CompletableFutureUtil;
+import org.apache.james.util.StreamUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.testcontainers.shaded.com.google.common.base.MoreObjects;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 class UnionBlobStoreTest implements BlobStoreContract {
 
@@ -61,6 +72,12 @@ class UnionBlobStoreTest implements BlobStoreContract {
         public InputStream read(BlobId blobId) {
             throw new RuntimeException("broken everywhere");
         }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .toString();
+        }
     }
 
     private static class ThrowingBlobStore implements BlobStore {
@@ -83,6 +100,12 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Override
         public InputStream read(BlobId blobId) {
             throw new RuntimeException("broken everywhere");
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .toString();
         }
     }
 
@@ -224,6 +247,61 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
     }
 
+    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+    @Nested
+    class CurrentAndLegacyCouldNotComplete {
+
+
+        Stream<Function<UnionBlobStore, CompletableFuture>> blobStoreOperationsReturnFutures() {
+            return Stream.of(
+                blobStore -> blobStore.save(BLOB_CONTENT),
+                blobStore -> blobStore.save(new ByteArrayInputStream(BLOB_CONTENT)),
+                blobStore -> blobStore.readBytes(BLOB_ID_FACTORY.randomId()));
+        }
+
+        Stream<Function<UnionBlobStore, InputStream>> blobStoreOperationsNotReturnFutures() {
+            return Stream.of(
+                blobStore -> blobStore.read(BLOB_ID_FACTORY.randomId()));
+        }
+
+        Stream<Arguments> blobStoresCauseReturnExceptionallyFutures() {
+            List<UnionBlobStore> futureThrowingUnionBlobStores = ImmutableList.of(
+                new UnionBlobStore(new ThrowingBlobStore(), new FutureThrowingBlobStore()),
+                new UnionBlobStore(new FutureThrowingBlobStore(), new ThrowingBlobStore()),
+                new UnionBlobStore(new FutureThrowingBlobStore(), new FutureThrowingBlobStore()));
+
+            return blobStoreOperationsReturnFutures()
+                .flatMap(blobStoreFunction -> futureThrowingUnionBlobStores
+                    .stream()
+                    .map(blobStore -> Arguments.of(blobStore, blobStoreFunction)));
+        }
+
+        Stream<Arguments> blobStoresCauseThrowExceptions() {
+            UnionBlobStore throwingUnionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), new ThrowingBlobStore());
+
+            return StreamUtils.flatten(
+                blobStoreOperationsReturnFutures()
+                    .map(blobStoreFunction -> Arguments.of(throwingUnionBlobStore, blobStoreFunction)),
+                blobStoreOperationsNotReturnFutures()
+                    .map(blobStoreFunction -> Arguments.of(throwingUnionBlobStore, blobStoreFunction)));
+        }
+
+        @ParameterizedTest
+        @MethodSource("blobStoresCauseThrowExceptions")
+        void operationShouldThrow(UnionBlobStore blobStoreThrowsException,
+                                  Function<UnionBlobStore, CompletableFuture> blobStoreOperation) {
+            assertThatThrownBy(() -> blobStoreOperation.apply(blobStoreThrowsException))
+                .isInstanceOf(RuntimeException.class);
+        }
+
+        @ParameterizedTest
+        @MethodSource("blobStoresCauseReturnExceptionallyFutures")
+        void operationShouldReturnExceptionallyFuture(UnionBlobStore blobStoreReturnsExceptionallyFuture,
+                                                      Function<UnionBlobStore, CompletableFuture> blobStoreOperation) {
+            assertThat(blobStoreOperation.apply(blobStoreReturnsExceptionallyFuture))
+                .isCompletedExceptionally();
+        }
+    }
 
     @Test
     void readShouldReturnFromCurrentWhenAvailable() throws Exception {
