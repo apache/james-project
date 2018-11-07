@@ -20,9 +20,9 @@
 package org.apache.james.modules.objectstore;
 
 import java.io.FileNotFoundException;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
@@ -49,7 +49,7 @@ import com.google.inject.multibindings.Multibinder;
 
 public class BlobStoreChoosingModule extends AbstractModule {
 
-    interface BlobStoreFactory extends Supplier<BlobStore> {}
+    interface BlobStoreFactory extends Provider<BlobStore> {}
 
     static class CassandraBlobStoreFactory implements BlobStoreFactory {
         private final Session session;
@@ -98,36 +98,31 @@ public class BlobStoreChoosingModule extends AbstractModule {
         bind(CassandraBlobStoreFactory.class).in(Scopes.SINGLETON);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
+
+        bind(BlobStore.class).toProvider(BlobStoreFactory.class).in(Scopes.SINGLETON);
     }
 
     @VisibleForTesting
     @Provides
     @Singleton
     BlobStoreFactory provideBlobStoreFactory(PropertiesProvider propertiesProvider,
-                                             CassandraBlobStoreFactory cassandraBlobStoreFactory,
-                                             SwiftBlobStoreFactory swiftBlobStoreFactory) throws ConfigurationException {
+                                             Provider<CassandraBlobStoreFactory> cassandraBlobStoreFactoryProvider,
+                                             Provider<SwiftBlobStoreFactory> swiftBlobStoreFactoryProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(BLOBSTORE_CONFIGURATION_NAME);
             BlobStoreChoosingConfiguration choosingConfiguration = BlobStoreChoosingConfiguration.from(configuration);
             switch (choosingConfiguration.getImplementation()) {
                 case SWIFT:
-                    return swiftBlobStoreFactory;
+                    return swiftBlobStoreFactoryProvider.get();
                 case CASSANDRA:
-                    return cassandraBlobStoreFactory;
+                    return cassandraBlobStoreFactoryProvider.get();
                 default:
                     throw new RuntimeException(String.format("can not get the right blobstore provider with configuration %s",
                         choosingConfiguration.toString()));
             }
         } catch (FileNotFoundException e) {
             LOGGER.warn("Could not find " + BLOBSTORE_CONFIGURATION_NAME + " configuration file, using cassandra blobstore as the default");
-            return cassandraBlobStoreFactory;
+            return cassandraBlobStoreFactoryProvider.get();
         }
     }
-
-    @Provides
-    @Singleton
-    private BlobStore provideBlobStore(BlobStoreFactory blobStoreFactory) {
-        return blobStoreFactory.get();
-    }
-
 }

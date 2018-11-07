@@ -45,7 +45,7 @@ class BlobStoreChoosingModuleTest {
             .register(BLOBSTORE_CONFIGURATION_NAME, configuration)
             .build();
 
-        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -58,7 +58,7 @@ class BlobStoreChoosingModuleTest {
             .register(BLOBSTORE_CONFIGURATION_NAME, configuration)
             .build();
 
-        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isInstanceOf(IllegalStateException.class);
     }
 
@@ -71,7 +71,7 @@ class BlobStoreChoosingModuleTest {
             .register(BLOBSTORE_CONFIGURATION_NAME, configuration)
             .build();
 
-        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThatThrownBy(() -> module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -82,7 +82,7 @@ class BlobStoreChoosingModuleTest {
             .register("other_configuration_file", new PropertiesConfiguration())
             .build();
 
-        assertThat(module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThat(module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isEqualTo(CASSANDRA_BLOBSTORE_FACTORY);
     }
 
@@ -95,7 +95,7 @@ class BlobStoreChoosingModuleTest {
             .register(BLOBSTORE_CONFIGURATION_NAME, configuration)
             .build();
 
-        assertThat(module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThat(module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isEqualTo(SWIFT_BLOBSTORE_FACTORY);
     }
 
@@ -108,7 +108,7 @@ class BlobStoreChoosingModuleTest {
             .register(BLOBSTORE_CONFIGURATION_NAME, configuration)
             .build();
 
-        assertThat(module.provideBlobStoreFactory(propertyProvider, CASSANDRA_BLOBSTORE_FACTORY, SWIFT_BLOBSTORE_FACTORY))
+        assertThat(module.provideBlobStoreFactory(propertyProvider, () -> CASSANDRA_BLOBSTORE_FACTORY, () -> SWIFT_BLOBSTORE_FACTORY))
             .isEqualTo(CASSANDRA_BLOBSTORE_FACTORY);
     }
 }
