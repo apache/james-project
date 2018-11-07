@@ -20,7 +20,7 @@
 package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -30,6 +30,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
@@ -49,18 +50,18 @@ public class ObjectStorageBlobsDAOProvider implements Provider<ObjectStorageBlob
 
     private final Configuration configuration;
     private final BlobId.Factory blobIdFactory;
-    private final ImmutableMap<String, Function<ContainerName, ObjectStorageBlobsDAO>> providersByName;
-    private final ImmutableMap<String, Function<ContainerName, ObjectStorageBlobsDAO>> swiftAuthApiByName;
+    private final ImmutableMap<String, Supplier<ObjectStorageBlobsDAOBuilder.RequireContainerName>> providersByName;
+    private final ImmutableMap<String, Supplier<ObjectStorageBlobsDAOBuilder.RequireContainerName>> swiftAuthApiByName;
 
     @Inject
     public ObjectStorageBlobsDAOProvider(PropertiesProvider propertiesProvider,
                                          BlobId.Factory blobIdFactory) throws ConfigurationException {
         //This provider map will allow to implement S3 provider
-        providersByName = ImmutableMap.of(OBJECTSTORAGE_PROVIDER_SWIFT, this::getSwiftObjectStorageBlobsDao);
+        providersByName = ImmutableMap.of(OBJECTSTORAGE_PROVIDER_SWIFT, this::selectSwiftAuthApi);
         swiftAuthApiByName = ImmutableMap.of(
-            SwiftTempAuthObjectStorage.AUTH_API_NAME, this::getTempAuthBlobsDao,
-            SwiftKeystone2ObjectStorage.AUTH_API_NAME, this::getKeystone2BlobsDao,
-            SwiftKeystone3ObjectStorage.AUTH_API_NAME, this::getKeystone3Configuration);
+            SwiftTempAuthObjectStorage.AUTH_API_NAME, this::swiftTempAuth,
+            SwiftKeystone2ObjectStorage.AUTH_API_NAME, this::swiftKeystone2Auth,
+            SwiftKeystone3ObjectStorage.AUTH_API_NAME, this::swiftKeystone3Auth);
 
         this.blobIdFactory = blobIdFactory;
         try {
@@ -80,35 +81,25 @@ public class ObjectStorageBlobsDAOProvider implements Provider<ObjectStorageBlob
         Preconditions.checkArgument(namespace != null,
             "Mandatory configuration value " + OBJECTSTORAGE_NAMESPACE + " is missing from " + OBJECTSTORAGE_CONFIGURATION_NAME + " configuration");
 
-        return providersByName.get(provider).apply(ContainerName.of(namespace));
+        return providersByName.get(provider).get().container(ContainerName.of(namespace)).blobIdFactory(blobIdFactory).build();
     }
 
-    private ObjectStorageBlobsDAO getSwiftObjectStorageBlobsDao(ContainerName containerName) {
+    private ObjectStorageBlobsDAOBuilder.RequireContainerName selectSwiftAuthApi() {
         String authApi = configuration.getString(OBJECTSTORAGE_SWIFT_AUTH_API, null);
         Preconditions.checkArgument(authApi != null,
             "Mandatory configuration value " + OBJECTSTORAGE_PROVIDER + " is missing from " + OBJECTSTORAGE_CONFIGURATION_NAME + " configuration");
-        return swiftAuthApiByName.get(authApi).apply(containerName);
+        return swiftAuthApiByName.get(authApi).get();
     }
 
-    private ObjectStorageBlobsDAO getTempAuthBlobsDao(ContainerName containerName) {
-        return ObjectStorageBlobsDAO.builder(SwiftTmpAuthConfigurationReader.readSwiftConfiguration(configuration))
-            .container(containerName)
-            .blobIdFactory(blobIdFactory)
-            .build();
-
+    private ObjectStorageBlobsDAOBuilder.RequireContainerName swiftTempAuth() {
+        return ObjectStorageBlobsDAO.builder(SwiftTmpAuthConfigurationReader.readSwiftConfiguration(configuration));
     }
 
-    private ObjectStorageBlobsDAO getKeystone2BlobsDao(ContainerName containerName) {
-        return ObjectStorageBlobsDAO.builder(SwiftKeystone2ConfigurationReader.readSwiftConfiguration(configuration))
-            .container(containerName)
-            .blobIdFactory(blobIdFactory)
-            .build();
+    private ObjectStorageBlobsDAOBuilder.RequireContainerName swiftKeystone2Auth() {
+        return ObjectStorageBlobsDAO.builder(SwiftKeystone2ConfigurationReader.readSwiftConfiguration(configuration));
     }
 
-    private ObjectStorageBlobsDAO getKeystone3Configuration(ContainerName containerName) {
-        return ObjectStorageBlobsDAO.builder(SwiftKeystone3ConfigurationReader.readSwiftConfiguration(configuration))
-            .container(containerName)
-            .blobIdFactory(blobIdFactory)
-            .build();
+    private ObjectStorageBlobsDAOBuilder.RequireContainerName swiftKeystone3Auth() {
+        return ObjectStorageBlobsDAO.builder(SwiftKeystone3ConfigurationReader.readSwiftConfiguration(configuration));
     }
 }
