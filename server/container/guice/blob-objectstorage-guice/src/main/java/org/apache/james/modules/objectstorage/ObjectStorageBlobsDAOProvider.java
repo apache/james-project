@@ -55,14 +55,12 @@ public class ObjectStorageBlobsDAOProvider implements Provider<ObjectStorageBlob
     @Inject
     public ObjectStorageBlobsDAOProvider(PropertiesProvider propertiesProvider,
                                          BlobId.Factory blobIdFactory) throws ConfigurationException {
-        providersByName = ImmutableMap.<String, Function<ContainerName, ObjectStorageBlobsDAO>>builder()
-            .put(OBJECTSTORAGE_PROVIDER_SWIFT, this::getSwiftObjectStorageBlobsDao)
-            .build();
-        swiftAuthApiByName = ImmutableMap.<String, Function<ContainerName, ObjectStorageBlobsDAO>>builder()
-            .put(SwiftTempAuthObjectStorage.AUTH_API_NAME, this::getTempAuthBlobsDao)
-            .put(SwiftKeystone2ObjectStorage.AUTH_API_NAME, this::getKeystone2BlobsDao)
-            .put(SwiftKeystone3ObjectStorage.AUTH_API_NAME, this::getKeystone3Configuration)
-            .build();
+        //This provider map will allow to implement S3 provider
+        providersByName = ImmutableMap.of(OBJECTSTORAGE_PROVIDER_SWIFT, this::getSwiftObjectStorageBlobsDao);
+        swiftAuthApiByName = ImmutableMap.of(
+            SwiftTempAuthObjectStorage.AUTH_API_NAME, this::getTempAuthBlobsDao,
+            SwiftKeystone2ObjectStorage.AUTH_API_NAME, this::getKeystone2BlobsDao,
+            SwiftKeystone3ObjectStorage.AUTH_API_NAME, this::getKeystone3Configuration);
 
         this.blobIdFactory = blobIdFactory;
         try {
