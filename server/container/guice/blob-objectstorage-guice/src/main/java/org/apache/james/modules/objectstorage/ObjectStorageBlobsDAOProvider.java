@@ -92,23 +92,23 @@ public class ObjectStorageBlobsDAOProvider implements Provider<ObjectStorageBlob
 
     private ObjectStorageBlobsDAO getTempAuthBlobsDao(ContainerName containerName) {
         return ObjectStorageBlobsDAO.builder(SwiftTmpAuthConfigurationReader.readSwiftConfiguration(configuration))
-            .blobIdFactory(blobIdFactory)
             .container(containerName)
+            .blobIdFactory(blobIdFactory)
             .build();
 
     }
 
     private ObjectStorageBlobsDAO getKeystone2BlobsDao(ContainerName containerName) {
         return ObjectStorageBlobsDAO.builder(SwiftKeystone2ConfigurationReader.readSwiftConfiguration(configuration))
-            .blobIdFactory(blobIdFactory)
             .container(containerName)
+            .blobIdFactory(blobIdFactory)
             .build();
     }
 
     private ObjectStorageBlobsDAO getKeystone3Configuration(ContainerName containerName) {
         return ObjectStorageBlobsDAO.builder(SwiftKeystone3ConfigurationReader.readSwiftConfiguration(configuration))
-            .blobIdFactory(blobIdFactory)
             .container(containerName)
+            .blobIdFactory(blobIdFactory)
             .build();
     }
 }

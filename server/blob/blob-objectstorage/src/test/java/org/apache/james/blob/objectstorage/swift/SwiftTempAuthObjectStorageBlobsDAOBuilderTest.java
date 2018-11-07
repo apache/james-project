@@ -66,8 +66,9 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
 
     @Test
     void containerNameIsMandatoryToBuildBlobsDAO() throws Exception {
-        ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
+            .container(null)
             .blobIdFactory(new HashBlobId.Factory());
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
@@ -75,16 +76,17 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
 
     @Test
     void blobIdFactoryIsMandatoryToBuildBlobsDAO() throws Exception {
-        ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
-            .container(containerName);
+            .container(containerName)
+            .blobIdFactory(null);
 
         assertThatThrownBy(builder::build).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void builtBlobsDAOCanStoreAndRetrieve() throws Exception {
-        ObjectStorageBlobsDAOBuilder builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
             .blobIdFactory(new HashBlobId.Factory());
