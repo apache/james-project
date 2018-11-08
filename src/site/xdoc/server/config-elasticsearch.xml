@@ -153,6 +153,9 @@
             A value of <b>0</b> disables the cache<br/>
             Please note that units are supported (K for KB, M for MB, G for GB). Defaults is no units, so in bytes.<br/>
             Default value is <b>100 MB</b>.</dd>
+
+            <dt><strong>tika.contentType.blacklist</strong></dt>
+            <dd>Blacklist of content type is known-to-be-failing with Tika. Specify the list with comma separator.</dd>
         </dl>
 
         Note: You can launch a tika server using this command line:
