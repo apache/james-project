@@ -80,8 +80,8 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
         ObjectStorageBlobsDAO dao = SwiftKeystone2ObjectStorage.daoBuilder(configuration)
-            .blobIdFactory(new HashBlobId.Factory())
             .container(containerName)
+            .blobIdFactory(new HashBlobId.Factory())
             .payloadCodec(payloadCodec)
             .build();
 

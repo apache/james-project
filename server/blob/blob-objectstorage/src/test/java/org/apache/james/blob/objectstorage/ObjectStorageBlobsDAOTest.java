@@ -74,7 +74,7 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
             .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
             .build();
         BlobId.Factory blobIdFactory = blobIdFactory();
-        ObjectStorageBlobsDAOBuilder daoBuilder = ObjectStorageBlobsDAO
+        ObjectStorageBlobsDAOBuilder.ReadyToBuild daoBuilder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
             .blobIdFactory(blobIdFactory);

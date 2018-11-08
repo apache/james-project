@@ -43,8 +43,8 @@ public class SwiftKeystone2ObjectStorage {
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
 
-    public static ObjectStorageBlobsDAOBuilder daoBuilder(Configuration testConfig) {
-        return new ObjectStorageBlobsDAOBuilder(new BlobStoreBuilder(testConfig));
+    public static ObjectStorageBlobsDAOBuilder.RequireContainerName daoBuilder(Configuration testConfig) {
+        return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
     }
 
     public static Configuration.Builder configBuilder() {

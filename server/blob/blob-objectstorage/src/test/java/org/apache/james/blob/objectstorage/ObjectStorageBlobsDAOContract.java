@@ -36,7 +36,7 @@ public interface ObjectStorageBlobsDAOContract {
 
     ContainerName containerName();
 
-    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder builder)
+    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder)
         throws InterruptedException, ExecutionException, TimeoutException {
         ObjectStorageBlobsDAO dao = builder.build();
         dao.createContainer(containerName());
