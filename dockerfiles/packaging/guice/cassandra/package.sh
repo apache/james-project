@@ -20,8 +20,10 @@ ITERATION=$2
 SHA1=$3
 DIRECTORY=$4
 
-# Compile James
+# Build Compiler environment
 docker build -t james/project dockerfiles/compilation/java-8
+
+# Compile James with Cassandra
 docker run \
    --rm \
    --volume $PWD/.m2:/root/.m2 \
@@ -35,9 +37,20 @@ docker run \
    --volume $PWD/dockerfiles/run/guice/cassandra-ldap/destination:/cassandra/destination \
    -t james/project -s $SHA1
 
-# Build image
+# Compile James with Cassandra + RabbitMQ
+docker run \
+   --rm \
+   --volume $PWD/.m2:/root/.m2 \
+   --volume $PWD:/origin \
+   --volume $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
+   -t james/project -s $SHA1
+
+# Build image James with Cassandra
 docker build -t james_run dockerfiles/run/guice/cassandra
 docker build -t james_run_ldap dockerfiles/run/guice/cassandra-ldap
+
+# Build image James with Cassandra + RabbitMQ
+docker build -t james_rabbitmq_run dockerfiles/run/guice/cassandra-rabbitmq
 
 # Build packages
 docker build -t build-james-packages \
@@ -45,5 +58,6 @@ docker build -t build-james-packages \
   --build-arg ITERATION=$ITERATION \
   --build-arg BASE=james_run \
   --build-arg BASE_LDAP=james_run_ldap \
+  --build-arg BASE_RABBITMQ=james_rabbitmq_run \
   dockerfiles/packaging/guice/cassandra
 docker run --rm --name james-packages -v $DIRECTORY:/result build-james-packages
