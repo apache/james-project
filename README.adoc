@@ -44,6 +44,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  * https://github.com/apache/james-project/#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * https://github.com/apache/james-project/#how-to-check-the-compilation[How to check the compilation]
  * https://github.com/apache/james-project/#how-to-run-james-in-docker[How to run James in Docker]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra-rabbitmq-elasticsearch[Run James with Java 8 + Guice + Cassandra + RabbitMQ + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra--elasticsearch[Run James with Java 8 + Guice + Cassandra + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--jpa--lucene[Run James with Java 8 + Guice + JPA + Lucene]
  ** https://github.com/apache/james-project/#run-james-with-java-8--spring--jpa[Run James with Java 8 + Spring + JPA]
@@ -194,10 +195,79 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
 
 This feature is available for three configurations :
 
+ * Java 8 + Guice + Cassandra + RabbitMQ + ElasticSearch
  * Java 8 + Guice + Cassandra + ElasticSearch
  * Java 8 + Guice + JPA + Lucene
  * Java 8 + Spring + JPA
 
+
+=== Run James with Java 8 + Guice + Cassandra + RabbitMQ + ElasticSearch
+
+
+==== Requirements
+Built artifacts should be in ./dockerfiles/run/guice/cassandra-rabbitmq/destination folder for cassandra.
+If you haven't already:
+
+    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker run -v $HOME/.m2:/root/.m2 -v $PWD:/origin \
+  -v $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
+  -t james/project -s HEAD
+
+
+==== How to ?
+You need a running *cassandra* in docker. To achieve this run:
+
+    $ docker run -d --name=cassandra cassandra:3.11.3
+
+You need a running *rabbitmq* in docker. To achieve this run:
+
+    $ docker run -d --name=rabbitmq rabbitmq:3.7.7-management
+
+You need a running *ElasticSearch* in docker. To achieve this run:
+
+    $ docker run -d --name=elasticsearch elasticsearch:2.4.6
+
+If you want to use all the JMAP search capabilities, you may also need to start Tika:
+
+    $ docker run -d --name=tika logicalspark/docker-tikaserver:1.19.1
+
+You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
+
+We need to provide the key we will use for TLS. For obvious reasons, this is not provided in this git.
+
+Copy your TLS keys to `run/guice/cassandra-rabbitmq/destination/conf/keystore` or generate it using the following command. The password must be `james72laBalle` to match default configuration.
+
+    $ keytool -genkey -alias james -keyalg RSA -keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/keystore
+
+Then we need to build james container :
+
+    $ docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq
+
+To run this container :
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
+   --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
+
+Where :
+
+- HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
+
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+
+To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
+
+==== Handling attachment indexing
+
+You can handle attachment text extraction before indexing in ElasticSearch. This makes attachments searchable. To enable this:
+
+Run tika:
+
+    $ docker run --name tika logicalspark/docker-tikaserver:1.19.1
+
+Add a link for the tika container in the above command line:
+
+    $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
+    --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
 === Run James with Java 8 + Guice + Cassandra + ElasticSearch
 
@@ -245,7 +315,7 @@ Where :
 
 - HOSTNAME: is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that webadmin is not secured by default, unless you configure JWT authentication.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
@@ -291,7 +361,7 @@ To run this container :
 
 HOSTNAME is the hostname you want to give to your James container. This DNS entry will be used to send mail to your James server.
 
-You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
+You can add an optional port binding to port 8000, to expose the webadmin server. Please note that webadmin is not secured by default, unless you configure JWT authentication.
 
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 

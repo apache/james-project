@@ -14,6 +14,7 @@ printUsage() {
 
 ORIGIN=/origin
 CASSANDRA_DESTINATION=/cassandra/destination
+CASSANDRA_RABBITMQ_DESTINATION=/cassandra-rabbitmq/destination
 JPA_DESTINATION=/jpa/destination
 JPA_SMTP_DESTINATION=/jpa-smpt/destination
 SPRING_DESTINATION=/spring/destination
@@ -59,6 +60,14 @@ fi
 # Retrieve result
 
 if [ $? -eq 0 ]; then
+   if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
+      echo "Copying cassandra JARs"
+      cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_DESTINATION || true
+   fi
+
    if [ -d "$CASSANDRA_DESTINATION" ]; then
       echo "Copying cassandra JARs"
       cp server/container/guice/cassandra-guice/target/james-server-cassandra-guice.jar $CASSANDRA_DESTINATION || true
