@@ -37,15 +37,4 @@
         <module>jmap-integration-testing-common</module>
         <module>memory-jmap-integration-testing</module>
     </modules>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>memory-jmap-integration-testing</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 </project>

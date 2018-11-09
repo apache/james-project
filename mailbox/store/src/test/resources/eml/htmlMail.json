@@ -23,14 +23,14 @@
       "engagement"
     ],
     "return-path":[
-      "<bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com>"
+      "<bounces+1453977-062b-mister=james.org@email.airbnb.com>"
     ],
     "subject":[
       "Text and Html not similar"
     ],"x-sg-id":["pQ7zy0fBcyQB3Gm22dZtqT6AR3zbAquH5ABZFkQfSKaxWRhz0YhtD36Li5uybRUjnPsuB21NpreKvG t8iQBUn2ygs6hx6sMcgyI7L7bAY28p14Qj47KqA3JXbtMa0Xa3wdZaUUjZpemCg078XxMM5VaSHdDO ChUhSV+z9RAJ38wAdUfXkpbO+m97vpU+mtWzVBoOrSiWCVYoNxPhvE4yIQ=="
     ],
     "received":[
-      "by 10.28.170.202 with SMTP id t193csp327634wme;        Thu, 4 Jun 2015 00:36:15 -0700 (PDT)","from o7.email.airbnb.com (o7.email.airbnb.com. [167.89.32.249])        by mx.google.com with ESMTPS id i2si5691730wjz.123.2015.06.04.00.36.13        for <benoittellier3@gmail.com>        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);        Thu, 04 Jun 2015 00:36:15 -0700 (PDT)","by filter0490p1mdw1.sendgrid.net with SMTP id filter0490p1mdw1.13271.556FFFE7B        2015-06-04 07:36:09.249601779 +0000 UTC","from i-dee0850e.inst.aws.airbnb.com (ec2-54-90-154-187.compute-1.amazonaws.com [54.90.154.187])\tby ismtpd-017 (SG) with ESMTP id 14dbd7fa6b4.779a.254b43\tfor <benoittellier3@gmail.com>; Thu, 04 Jun 2015 07:36:09 +0000 (UTC)","by i-dee0850e.inst.aws.airbnb.com (Postfix, from userid 1041)\tid 19CBA24C60; Thu,  4 Jun 2015 07:36:09 +0000 (UTC)"
+      "by 10.28.170.202 with SMTP id t193csp327634wme;        Thu, 4 Jun 2015 00:36:15 -0700 (PDT)","from o7.email.airbnb.com (o7.email.airbnb.com. [167.89.32.249])        by mx.google.com with ESMTPS id i2si5691730wjz.123.2015.06.04.00.36.13        for <mister@james.org>        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);        Thu, 04 Jun 2015 00:36:15 -0700 (PDT)","by filter0490p1mdw1.sendgrid.net with SMTP id filter0490p1mdw1.13271.556FFFE7B        2015-06-04 07:36:09.249601779 +0000 UTC","from i-dee0850e.inst.aws.airbnb.com (ec2-54-90-154-187.compute-1.amazonaws.com [54.90.154.187])\tby ismtpd-017 (SG) with ESMTP id 14dbd7fa6b4.779a.254b43\tfor <mister@james.org>; Thu, 04 Jun 2015 07:36:09 +0000 (UTC)","by i-dee0850e.inst.aws.airbnb.com (Postfix, from userid 1041)\tid 19CBA24C60; Thu,  4 Jun 2015 07:36:09 +0000 (UTC)"
     ],
     "x-user-id":[
       "32692788"
@@ -45,10 +45,10 @@
       "fr"
     ],
     "received-spf":[
-      "pass (google.com: domain of bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com designates 167.89.32.249 as permitted sender) client-ip=167.89.32.249;"
+      "pass (google.com: domain of bounces+1453977-062b-mister=james.org@email.airbnb.com designates 167.89.32.249 as permitted sender) client-ip=167.89.32.249;"
     ],
     "delivered-to":[
-      "benoittellier3@gmail.com"
+      "mister@james.org"
     ],
     "x-received":[
       "by 10.180.77.195 with SMTP id u3mr5042880wiw.30.1433403375307;        Thu, 04 Jun 2015 00:36:15 -0700 (PDT)"
@@ -69,10 +69,10 @@
       "multipart/alternative; boundary=\"--==_mimepart_556fffe8c7e84_7ed0e0fe20445637\"; charset=UTF-8"
     ],
     "authentication-results":[
-      "mx.google.com;       spf=pass (google.com: domain of bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com designates 167.89.32.249 as permitted sender) smtp.mail=bounces+1453977-062b-benoittellier3=gmail.com@email.airbnb.com;       dkim=pass header.i=@email.airbnb.com;       dmarc=pass (p=REJECT dis=NONE) header.from=airbnb.com"
+      "mx.google.com;       spf=pass (google.com: domain of bounces+1453977-062b-mister=james.org@email.airbnb.com designates 167.89.32.249 as permitted sender) smtp.mail=bounces+1453977-062b-mister=james.org@email.airbnb.com;       dkim=pass header.i=@email.airbnb.com;       dmarc=pass (p=REJECT dis=NONE) header.from=airbnb.com"
     ],
     "to":[
-      "benoittellier3@gmail.com"
+      "mister@james.org"
     ],
     "sent-on":[
       ""
@@ -89,8 +89,8 @@
   ],
   "to":[
     {
-      "name":"benoittellier3@gmail.com",
-      "address":"benoittellier3@gmail.com"
+      "name":"mister@james.org",
+      "address":"mister@james.org"
     }
   ],
   "cc":[],
@@ -163,5 +163,5 @@
   "users": [
     "username"
   ],
-  "text": "Airbnb discover@airbnb.com benoittellier3@gmail.com benoittellier3@gmail.com Text and Html not similar The text/plain part is not matching the html one.\r\n <html>\r\n  <head>\r\n\r\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n  </head>\r\n  <body bgcolor=\"#FFFFFF\" text=\"#000000\">\r\n    <i>This is a mail with <b>beautifull</b> html content which contains a banana.</i><br>\r\n  </body>\r\n</html>\r\n"
+  "text": "Airbnb discover@airbnb.com mister@james.org mister@james.org Text and Html not similar The text/plain part is not matching the html one.\r\n <html>\r\n  <head>\r\n\r\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n  </head>\r\n  <body bgcolor=\"#FFFFFF\" text=\"#000000\">\r\n    <i>This is a mail with <b>beautifull</b> html content which contains a banana.</i><br>\r\n  </body>\r\n</html>\r\n"
 }

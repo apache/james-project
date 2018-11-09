@@ -49,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.categories.CassandraAndElasticSearchCategory;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -117,6 +118,7 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void setMailboxesShouldNotCreateWhenOverLimitName() {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
         String requestBody =
@@ -148,6 +150,7 @@ public abstract class SetMailboxesMethodTest {
     }
 
     @Test
+    @Category(CassandraAndElasticSearchCategory.class)
     public void setMailboxesShouldNotUpdateMailboxWhenOverLimitName() {
         String overLimitName = StringUtils.repeat("a", MAILBOX_NAME_LENGTH_64K);
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username, "myBox");
