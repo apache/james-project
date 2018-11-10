@@ -152,8 +152,7 @@
       
         <li>As mentioned above, SMTP AUTH requires that Apache James Server be able to distinguish between mail intended 
             for local delivery and mail intended for remote delivery.  Apache James Server makes this determination by matching the 
-            domain to which the mail was sent against the &lt;servernames&gt; element of the Apache James Server configuration block.  Any 
-            local domains should be explicitly listed as &lt;servername&gt; elements in this section.</li>
+            domain to which the mail was sent against the &lt;DomainList&gt; component, configured by <a href="/server/config-domainlist.html">Domain List Configuration</a>.</li>
 <!-- 
 Correct this.
       <li>Apache James Server is configured out of the box so as to not serve as an open relay for spammers.  This is done 
