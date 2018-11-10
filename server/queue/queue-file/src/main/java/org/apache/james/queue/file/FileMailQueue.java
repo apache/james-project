@@ -42,33 +42,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.mutable.MutableLong;
-import org.apache.james.core.MailAddress;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
 import org.apache.james.server.core.MimeMessageSource;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.SetBasedFieldSelector;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.Version;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,8 +66,6 @@ import com.github.fge.lambdas.Throwing;
  * meta-data into memory for fast access.
  */
 public class FileMailQueue implements ManageableMailQueue {
-    private static final String FILE_PATH_KEY = "key";
-    private static final SetBasedFieldSelector FIELDS_TO_LOAD = new SetBasedFieldSelector(Collections.singleton(FILE_PATH_KEY), Collections.emptySet());
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
     private static final AtomicLong COUNTER = new AtomicLong();
     private static final String MSG_EXTENSION = ".msg";
@@ -100,7 +82,7 @@ public class FileMailQueue implements ManageableMailQueue {
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     private final boolean sync;
     private final String queueName;
-    private final IndexWriter indexWriter;
+    private final MailQueueIndex mailQueueIndex;
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -108,9 +90,7 @@ public class FileMailQueue implements ManageableMailQueue {
         this.queueName = queuename;
         this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
-        StandardAnalyzer analyzer = new StandardAnalyzer(Version.LUCENE_36);
-        this.indexWriter = new IndexWriter(FSDirectory.open(new File(queueDir, "index")),
-                new IndexWriterConfig(Version.LUCENE_36, analyzer));
+        this.mailQueueIndex = new MailQueueIndex(new File(queueDir, "index"));
 
         init();
     }
@@ -191,9 +171,7 @@ public class FileMailQueue implements ManageableMailQueue {
                 }
             }
 
-            indexWriter.addDocument(toIndexDocument(mail, key));
-            indexWriter.commit();
-
+            mailQueueIndex.index(mail, key);
             keyMappings.put(key, item);
 
             if (delay > 0) {
@@ -217,27 +195,6 @@ public class FileMailQueue implements ManageableMailQueue {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Unable to init", e);
         }
-    }
-
-    private Document toIndexDocument(Mail mail, String key) {
-        Document doc = new Document();
-
-        doc.add(analyzedField(key, FILE_PATH_KEY));
-        doc.add(analyzedField(mail.getName(), Type.Name.name()));
-        doc.add(analyzedField(mail.getMaybeSender().asString(), Type.Sender.name()));
-
-        if (mail.getRecipients() != null) {
-            mail.getRecipients()
-                    .stream()
-                    .map(MailAddress::asString)
-                    .forEach(mailAddress -> doc.add(analyzedField(mailAddress, Type.Recipient.name())));
-        }
-
-        return doc;
-    }
-
-    private Field analyzedField(String key, String filePathKey) {
-        return new Field(filePathKey, key, Field.Store.YES, Field.Index.NOT_ANALYZED);
     }
 
     @Override
@@ -406,47 +363,19 @@ public class FileMailQueue implements ManageableMailQueue {
         keyMappings.values().forEach(Throwing.consumer(FileItem::delete));
         keyMappings.clear();
         inmemoryQueue.clear();
+        Throwing.runnable(mailQueueIndex::deleteAll).run();
 
         return count;
     }
 
     @Override
     public long remove(Type type, String value) throws MailQueueException {
-        try (IndexReader indexReader = IndexReader.open(indexWriter, true)) {
-            int maxCount = Math.max(1, indexReader.maxDoc());
-            IndexSearcher searcher = new IndexSearcher(indexReader);
-            MutableLong count = new MutableLong();
-            Term term;
-            Query query;
-
-            switch (type) {
-                case Name:
-                case Sender:
-                case Recipient:
-                    term = new Term(type.name(), value);
-                    query = new TermQuery(term);
-                    break;
-                default:
-                    throw new MailQueueException("Not supported yet");
-            }
-
-            Optional.ofNullable(searcher.search(query, maxCount).scoreDocs)
-                    .filter(hits -> hits.length > 0)
-                    .map(Stream::of)
-                    .ifPresent(scoreDocStream -> scoreDocStream
-                            .mapToInt(scoreDoc -> scoreDoc.doc)
-                            .forEach(id -> Optional.ofNullable(Throwing.supplier(() -> searcher.doc(id, FIELDS_TO_LOAD)).get())
-                                    .map(doc -> doc.get(FILE_PATH_KEY))
-                                    .map(keyMappings::remove)
-                                    .ifPresent(fileItem -> {
-                                        Throwing.runnable(fileItem::delete).run();
-                                        Throwing.<Query>consumer(indexWriter::deleteDocuments).accept(query);
-
-                                        count.increment();
-                                    })
-                    ));
-
-            return count.longValue();
+        try {
+            return mailQueueIndex.pop(type, value)
+                    .stream()
+                    .map(keyMappings::remove)
+                    .peek(fileItem -> Throwing.runnable(fileItem::delete).run())
+                    .count();
         } catch (IOException e) {
             throw new MailQueueException("Cannot perform remove operation.", e);
         }
