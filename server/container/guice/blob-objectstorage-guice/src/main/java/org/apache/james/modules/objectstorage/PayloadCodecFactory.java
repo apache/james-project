@@ -19,41 +19,25 @@
 
 package org.apache.james.modules.objectstorage;
 
-import org.apache.commons.configuration.Configuration;
 import org.apache.james.blob.objectstorage.AESPayloadCodec;
 import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 
-import com.amazonaws.util.StringUtils;
-import com.google.common.base.Preconditions;
-
-public enum PayloadCodecs {
+public enum PayloadCodecFactory {
     DEFAULT {
         @Override
-        public PayloadCodec codec(Configuration configuration) {
+        public PayloadCodec create(ObjectStorageBlobConfiguration configuration) {
             return new DefaultPayloadCodec();
         }
     },
     AES256 {
         @Override
-        public PayloadCodec codec(Configuration configuration) {
-            String salt = configuration.getString(OBJECTSTORAGE_AES256_HEXSALT);
-            String password = configuration.getString(OBJECTSTORAGE_AES256_PASSWORD);
-            Preconditions.checkArgument(!StringUtils.isNullOrEmpty(salt),
-                OBJECTSTORAGE_AES256_HEXSALT + " is a " +
-                    "mandatory configuration value");
-            Preconditions.checkArgument(!StringUtils.isNullOrEmpty(password),
-                OBJECTSTORAGE_AES256_PASSWORD + " is a " +
-                    "mandatory configuration value");
-            return new AESPayloadCodec(new CryptoConfig(salt, password.toCharArray()));
+        public PayloadCodec create(ObjectStorageBlobConfiguration configuration) {
+            return new AESPayloadCodec(new CryptoConfig(configuration.getAesSalt().get(), configuration.getAesPassword().get()));
         }
     };
 
-    public static final String OBJECTSTORAGE_AES256_HEXSALT = "objectstorage.aes256.hexsalt";
-    public static final String OBJECTSTORAGE_AES256_PASSWORD = "objectstorage.aes256.password";
-
-    public abstract PayloadCodec codec(Configuration configuration);
-
+    public abstract PayloadCodec create(ObjectStorageBlobConfiguration configuration);
 
 }

@@ -19,19 +19,19 @@
 
 package org.apache.james.modules.objectstorage;
 
+import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.PayloadCodec;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 public class ObjectStorageBlobStoreModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(PayloadCodec.class).toProvider(PayloadCodecProvider.class).in(Scopes.SINGLETON);
-        bind(ObjectStorageBlobsDAO.class).toProvider(ObjectStorageBlobsDAOProvider.class).in(Scopes.SINGLETON);
-        bind(BlobStore.class).toProvider(ObjectStorageBlobsDAOProvider.class).in(Scopes.SINGLETON);
+        install(new ObjectStorageDependenciesModule());
+        bind(BlobStore.class).to(ObjectStorageBlobsDAO.class);
     }
+
 }

@@ -31,8 +31,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.PayloadCodec;
-import org.apache.james.modules.objectstorage.PayloadCodecProvider;
+import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
 public class BlobStoreChoosingModule extends AbstractModule {
@@ -51,7 +49,7 @@ public class BlobStoreChoosingModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(PayloadCodec.class).toProvider(PayloadCodecProvider.class).in(Scopes.SINGLETON);
+        install(new ObjectStorageDependenciesModule());
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraBlobModule.MODULE);
@@ -80,4 +78,5 @@ public class BlobStoreChoosingModule extends AbstractModule {
             return cassandraBlobStoreProvider.get();
         }
     }
+
 }
