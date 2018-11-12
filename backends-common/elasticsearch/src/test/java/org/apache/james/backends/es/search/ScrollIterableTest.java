@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.james.backends.es.ClientProvider;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
@@ -67,7 +68,7 @@ public class ScrollIterableTest {
     @Before
     public void setUp() throws Exception {
         clientProvider = new TestingClientProvider(embeddedElasticSearch.getNode());
-        new IndexCreationFactory()
+        new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(clientProvider.get());

@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.concurrent.Executors;
 
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
@@ -59,7 +60,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         try {
             Client client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-                new TestingClientProvider(embeddedElasticSearch.getNode()).get());
+                new TestingClientProvider(embeddedElasticSearch.getNode()).get(), ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
             InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
 

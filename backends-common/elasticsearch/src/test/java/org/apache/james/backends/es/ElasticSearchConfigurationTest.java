@@ -509,4 +509,27 @@ public class ElasticSearchConfigurationTest {
     }
 
 
+    @Test
+    public void nbReplicaShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+                ElasticSearchConfiguration.builder()
+                        .nbReplica(-1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void nbShardsShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+                ElasticSearchConfiguration.builder()
+                        .nbShards(-1))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void nbShardsShouldThrowWhenZero() {
+        assertThatThrownBy(() ->
+                ElasticSearchConfiguration.builder()
+                        .nbShards(0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

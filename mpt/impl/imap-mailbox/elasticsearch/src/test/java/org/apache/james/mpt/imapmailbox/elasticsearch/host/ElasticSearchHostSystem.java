@@ -26,6 +26,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
@@ -89,7 +90,8 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     private void initFields() throws MailboxException {
         Client client = MailboxIndexCreationUtil.prepareDefaultClient(
-            new TestingClientProvider(embeddedElasticSearch.getNode()).get());
+            new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
+                ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
         InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();

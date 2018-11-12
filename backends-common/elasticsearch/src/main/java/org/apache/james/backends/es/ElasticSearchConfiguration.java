@@ -137,13 +137,15 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
-        public Builder nbShards(Optional<Integer> nbShards) {
-            this.nbShards = nbShards;
+        public Builder nbShards(int nbShards) {
+            Preconditions.checkArgument(nbShards > 0, "You need the number of shards to be strictly positive");
+            this.nbShards = Optional.of(nbShards);
             return this;
         }
 
-        public Builder nbReplica(Optional<Integer> nbReplica) {
-            this.nbReplica = nbReplica;
+        public Builder nbReplica(int nbReplica) {
+            Preconditions.checkArgument(nbReplica >= 0, "You need the number of replica to be positive");
+            this.nbReplica = Optional.of(nbReplica);
             return this;
         }
 
@@ -220,8 +222,8 @@ public class ElasticSearchConfiguration {
             .indexQuotaRatioName(computeQuotaSearchIndexName(configuration))
             .readAliasQuotaRatioName(computeQuotaSearchReadAlias(configuration))
             .writeAliasQuotaRatioName(computeQuotaSearchWriteAlias(configuration))
-            .nbShards(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, null)))
-            .nbReplica(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, null)))
+            .nbShards(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
+            .nbReplica(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
             .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .indexAttachment(provideIndexAttachments(configuration))
