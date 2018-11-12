@@ -21,6 +21,7 @@ package org.apache.james.mailbox.elasticsearch;
 
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
+import org.apache.james.backends.es.MailboxElasticSearchConstants;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;

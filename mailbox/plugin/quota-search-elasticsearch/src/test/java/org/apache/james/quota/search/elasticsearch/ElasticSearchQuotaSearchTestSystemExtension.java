@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;

@@ -27,6 +27,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
+import org.apache.james.backends.es.IndexAttachments;
+import org.apache.james.backends.es.MailboxElasticSearchConstants;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;

@@ -31,11 +31,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.mailbox.elasticsearch.IndexAttachments;
+import org.apache.james.backends.es.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.modules.mailbox.ElasticSearchConfiguration;
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.Images;

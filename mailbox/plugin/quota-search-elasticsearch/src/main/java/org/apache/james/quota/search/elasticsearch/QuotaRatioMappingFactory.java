@@ -32,6 +32,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
 import java.io.IOException;
 
+import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 public class QuotaRatioMappingFactory {
