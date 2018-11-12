@@ -27,6 +27,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
 
 import java.util.concurrent.Executors;
 
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
@@ -63,7 +64,7 @@ public class ElasticSearchQuotaMailboxListenerTest {
     @Before
     public void setUp() {
         client = QuotaSearchIndexCreationUtil.prepareDefaultClient(
-            new TestingClientProvider(embeddedElasticSearch.getNode()).get());
+            new TestingClientProvider(embeddedElasticSearch.getNode()).get(), ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
         quotaMailboxListener = new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
