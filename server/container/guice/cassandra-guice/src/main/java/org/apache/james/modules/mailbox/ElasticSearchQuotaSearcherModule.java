@@ -23,11 +23,12 @@ import java.util.concurrent.ExecutorService;
 
 import javax.inject.Named;
 
+import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
-import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.elasticsearch.client.Client;

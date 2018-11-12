@@ -22,10 +22,10 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession.User;
-import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
