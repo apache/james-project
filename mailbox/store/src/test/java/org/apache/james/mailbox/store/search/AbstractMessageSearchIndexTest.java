@@ -1051,11 +1051,11 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsExactly(m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid());
-        // 2 : jira2@apache.org
-        // 3 : jira1@apache.org
-        // 4 : jira@apache.org
-        // 5 : mailet-api@james.apache.org
+            .containsExactly(m3.getUid(), m2.getUid(), m4.getUid(), m5.getUid());
+        // m3 : jira1@apache.org
+        // m2 : jira2@apache.org
+        // m4 : jira@apache.org
+        // m5 : mailet-api@james.apache.org
     }
 
     @Test
@@ -1065,11 +1065,11 @@ public abstract class AbstractMessageSearchIndexTest {
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo)));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .containsExactly(m5.getUid(), m2.getUid(), m3.getUid(), m4.getUid());
-        // 2 : server-dev@james.apache.org
-        // 3 : server-dev@james.apache.org
-        // 4 : server-dev@james.apache.org
-        // 5 : mailet-api@james.apache.org
+            .containsExactly(m5.getUid(), m3.getUid(), m2.getUid(), m4.getUid());
+        // 5 : "zzz" <mailet-api@james.apache.org>
+        // 3 : "aaa" <server-dev@james.apache.org>
+        // 2 : "abc" <server-dev@james.apache.org>
+        // 4 : "server" <server-dev@james.apache.org>
     }
 
     @Test
