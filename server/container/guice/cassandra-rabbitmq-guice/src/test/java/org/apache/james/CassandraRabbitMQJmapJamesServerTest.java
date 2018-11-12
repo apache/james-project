@@ -32,7 +32,7 @@ public class CassandraRabbitMQJmapJamesServerTest implements JmapJamesServerCont
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(CassandraRabbitMQJamesServerMain.ALL_BUT_JMX_CASSANDRA_RABBITMQ_MODULE)
+                    .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                     .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
                     .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();

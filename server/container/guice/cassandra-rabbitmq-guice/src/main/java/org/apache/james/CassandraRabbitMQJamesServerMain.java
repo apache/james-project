@@ -29,7 +29,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class CassandraRabbitMQJamesServerMain {
-    public static final Module ALL_BUT_JMX_CASSANDRA_RABBITMQ_MODULE = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
+    public static final Module MODULES = Modules.override(ALL_BUT_JMX_CASSANDRA_MODULE)
         .with(new RabbitMQModule());
 
     public static void main(String[] args) throws Exception {
@@ -38,7 +38,7 @@ public class CassandraRabbitMQJamesServerMain {
             .build();
 
         GuiceJamesServer server = GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(ALL_BUT_JMX_CASSANDRA_RABBITMQ_MODULE, new JMXServerModule());
+                    .combineWith(MODULES, new JMXServerModule());
         server.start();
     }
 }
