@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -31,6 +32,7 @@ public class CassandraRabbitMQJmapJamesServerTest implements JmapJamesServerCont
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
+            .extension(new SwiftBlobStoreExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                     .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                     .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))

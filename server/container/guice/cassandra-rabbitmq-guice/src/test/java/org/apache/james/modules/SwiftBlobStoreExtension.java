@@ -17,26 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.objectstorage;
+package org.apache.james.modules;
 
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.GuiceModuleTestExtension;
+import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.google.inject.Module;
 
-public class ObjectStorageBlobStoreModule extends AbstractModule {
+public class SwiftBlobStoreExtension implements GuiceModuleTestExtension {
+
+    private final DockerSwiftTestRule swiftRule = new DockerSwiftTestRule();
 
     @Override
-    protected void configure() {
-        install(new ObjectStorageDependenciesModule());
+    public void beforeAll(ExtensionContext extensionContext) {
+        swiftRule.start();
     }
 
-    @Provides
-    @Singleton
-    private BlobStore provideBlobStore(ObjectStorageBlobsDAO dao, ObjectStorageBlobConfiguration configuration) {
-        dao.createContainer(configuration.getNamespace());
-        return dao;
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        swiftRule.stop();
+    }
+
+    @Override
+    public Module getModule() {
+        return swiftRule.getModule();
     }
 }

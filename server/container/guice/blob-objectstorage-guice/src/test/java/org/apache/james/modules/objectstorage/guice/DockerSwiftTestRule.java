@@ -47,6 +47,7 @@ import com.google.inject.util.Modules;
 
 public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
+    private final PayloadCodecFactory payloadCodecFactory;
     private org.apache.james.blob.objectstorage.DockerSwiftRule swiftContainer =
         new org.apache.james.blob.objectstorage.DockerSwiftRule();
     private PayloadCodec payloadCodec;
@@ -56,7 +57,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
     }
 
     public DockerSwiftTestRule(PayloadCodecFactory payloadCodecFactory) {
-        //Will be fixed in next commit
+        this.payloadCodecFactory = payloadCodecFactory;
     }
 
     @Override
@@ -70,7 +71,7 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
     @Override
     public Module getModule() {
-        SwiftKeystone2ObjectStorage.Configuration configuration = SwiftKeystone2ObjectStorage.configBuilder()
+        SwiftKeystone2ObjectStorage.Configuration authConfiguration = SwiftKeystone2ObjectStorage.configBuilder()
             .credentials(Credentials.of("demo"))
             .tenantName(TenantName.of("test"))
             .userName(UserName.of("demo"))
@@ -78,14 +79,16 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
             .build();
 
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
-        ObjectStorageBlobsDAO dao = SwiftKeystone2ObjectStorage.daoBuilder(configuration)
+        ObjectStorageBlobConfiguration configuration = ObjectStorageBlobConfiguration.builder()
+            .codec(payloadCodecFactory)
+            .swift()
             .container(containerName)
-            .blobIdFactory(new HashBlobId.Factory())
-            .payloadCodec(payloadCodec)
+            .keystone2(authConfiguration)
+            .aesSalt("c603a7327ee3dcbc031d8d34b1096c605feca5e1")
+            .aesPassword("dockerSwiftEncryption".toCharArray())
             .build();
 
-        Throwing.supplier(() -> dao.createContainer(containerName).get()).sneakyThrow().get();
-        return Modules.combine((binder) -> binder.bind(BlobStore.class).toInstance(dao));
+        return binder -> binder.bind(ObjectStorageBlobConfiguration.class).toInstance(configuration);
     }
 
 
@@ -95,10 +98,6 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
     public void stop() {
         swiftContainer.stop();
-    }
-
-    public GenericContainer<?> getRawContainer() {
-        return swiftContainer.getRawContainer();
     }
 
 }
