@@ -144,7 +144,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
                                     ElasticSearchQuotaConfiguration quotaConfiguration) {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
 
-        Client client = ClientProviderImpl.fromHosts(configuration.getHosts()).get();
+        Client client = ClientProviderImpl.fromHosts(configuration.getHosts(), configuration.getClusterName()).get();
 
         MailboxIndexCreationUtil.prepareClient(client,
             mailboxConfiguration.getReadAliasMailboxName(),

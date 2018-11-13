@@ -21,6 +21,7 @@ package org.apache.james.metric.es;
 
 import static org.awaitility.Awaitility.await;
 
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,7 +68,7 @@ public class ESReporterTest {
 
     @Before
     public void setUp() {
-        clientProvider = ClientProviderImpl.forHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_APPLICATIVE_PORT));
+        clientProvider = ClientProviderImpl.forHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_APPLICATIVE_PORT), Optional.empty());
         await().atMost(Duration.ONE_MINUTE)
             .until(() -> elasticSearchStarted(clientProvider));
 

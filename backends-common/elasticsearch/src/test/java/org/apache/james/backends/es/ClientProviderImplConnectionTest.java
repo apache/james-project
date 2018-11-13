@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.es;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.docker.SwarmGenericContainer;
@@ -52,7 +53,7 @@ public class ClientProviderImplConnectionTest {
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
             .pollInterval(5, TimeUnit.SECONDS)
-            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300)));
+            .until(() -> isConnected(ClientProviderImpl.forHost(es1.getContainerIp(), 9300, Optional.empty())));
     }
 
     @Test
@@ -62,8 +63,9 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                            es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                            + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT
+                        , Optional.empty())));
     }
 
     @Test
@@ -75,8 +77,9 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                    + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT)));
+                            es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                            + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT
+                        , Optional.empty())));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {
