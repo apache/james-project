@@ -184,6 +184,51 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
+    public void clusterNameShouldBeEmptyWhenNotGiven() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String hostname = "myHost";
+        configuration.addProperty("elasticsearch.masterHost", hostname);
+        int port = 9300;
+        configuration.addProperty("elasticsearch.port", port);
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getClusterName())
+                .isEmpty();
+    }
+
+    @Test
+    public void clusterNameShouldBeEmptyWhenNull() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String hostname = "myHost";
+        configuration.addProperty("elasticsearch.masterHost", hostname);
+        int port = 9300;
+        configuration.addProperty("elasticsearch.port", port);
+        configuration.addProperty("elasticsearch.clusterName", null);
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getClusterName())
+                .isEmpty();
+    }
+
+    @Test
+    public void clusterNameShouldKeepTheVAlueWhenGiven() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        String hostname = "myHost";
+        configuration.addProperty("elasticsearch.masterHost", hostname);
+        int port = 9300;
+        configuration.addProperty("elasticsearch.port", port);
+        String clusterName = "myClusterName";
+        configuration.addProperty("elasticsearch.clusterName", clusterName);
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getClusterName())
+                .contains(clusterName);
+    }
+
+    @Test
     public void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
