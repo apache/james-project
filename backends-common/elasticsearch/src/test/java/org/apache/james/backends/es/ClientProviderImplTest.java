@@ -19,9 +19,14 @@
 
 package org.apache.james.backends.es;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.elasticsearch.common.settings.Settings;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
+import java.util.Optional;
 
 public class ClientProviderImplTest {
 
@@ -32,111 +37,126 @@ public class ClientProviderImplTest {
     public void fromHostsStringShouldThrowOnNullString() {
         expectedException.expect(NullPointerException.class);
 
-        ClientProviderImpl.fromHostsString(null);
+        ClientProviderImpl.fromHostsString(null, Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnEmptyString() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("");
+        ClientProviderImpl.fromHostsString("", Optional.empty());
     }
 
     @Test
     public void forHostShouldThrowOnNullHost() {
         expectedException.expect(NullPointerException.class);
 
-        ClientProviderImpl.forHost(null, 9200);
+        ClientProviderImpl.forHost(null, 9200, Optional.empty());
     }
 
     @Test
     public void forHostShouldThrowOnEmptyHost() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.forHost("", 9200);
+        ClientProviderImpl.forHost("", 9200, Optional.empty());
     }
 
     @Test
     public void forHostShouldThrowOnNegativePort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.forHost("localhost", -1);
+        ClientProviderImpl.forHost("localhost", -1, Optional.empty());
     }
 
     @Test
     public void forHostShouldThrowOnZeroPort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.forHost("localhost", 0);
+        ClientProviderImpl.forHost("localhost", 0, Optional.empty());
     }
 
     @Test
     public void forHostShouldThrowOnTooBigPort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.forHost("localhost", 65536);
+        ClientProviderImpl.forHost("localhost", 65536, Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldEmptyAddress() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString(":9200");
+        ClientProviderImpl.fromHostsString(":9200", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnAbsentPort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost");
+        ClientProviderImpl.fromHostsString("localhost", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowWhenTooMuchParts() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:9200:9200");
+        ClientProviderImpl.fromHostsString("localhost:9200:9200", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnEmptyPort() {
         expectedException.expect(NumberFormatException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:");
+        ClientProviderImpl.fromHostsString("localhost:", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnInvalidPort() {
         expectedException.expect(NumberFormatException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:invalid");
+        ClientProviderImpl.fromHostsString("localhost:invalid", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnNegativePort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:-1");
+        ClientProviderImpl.fromHostsString("localhost:-1", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnZeroPort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:0");
+        ClientProviderImpl.fromHostsString("localhost:0", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowOnTooBigPort() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:65536");
+        ClientProviderImpl.fromHostsString("localhost:65536", Optional.empty());
     }
 
     @Test
     public void fromHostsStringShouldThrowIfOneHostIsInvalid() {
         expectedException.expect(IllegalArgumentException.class);
 
-        ClientProviderImpl.fromHostsString("localhost:9200,localhost");
+        ClientProviderImpl.fromHostsString("localhost:9200,localhost", Optional.empty());
+    }
+
+    @Test
+    public void settingsShouldBeEmptyWhenClusterNameIsEmpty() {
+        ClientProviderImpl clientProvider = ClientProviderImpl.fromHostsString("localhost:9200", Optional.empty());
+
+        assertThat(clientProvider.settings()).isEqualTo(Settings.EMPTY);
+    }
+
+    @Test
+    public void settingsShouldContainClusterNameSettingWhenClusterNameIsGiven() {
+        String clusterName = "myClusterName";
+        ClientProviderImpl clientProvider = ClientProviderImpl.fromHostsString("localhost:9200", Optional.of(clusterName));
+
+        assertThat(clientProvider.settings().get("cluster.name")).isEqualTo(clusterName);
     }
 }
