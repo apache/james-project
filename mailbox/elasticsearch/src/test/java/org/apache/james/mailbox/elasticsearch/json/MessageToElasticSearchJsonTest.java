@@ -35,7 +35,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.backends.es.IndexAttachments;
+import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
