@@ -19,7 +19,7 @@
 
 package org.apache.james.quota.search.elasticsearch;
 
-import static org.apache.james.backends.es.QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE;
+import static org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE;
 import static org.apache.james.quota.search.elasticsearch.json.JsonMessageConstants.USER;
 
 import java.util.Arrays;

@@ -24,7 +24,6 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.IndexCreationFactory;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.NodeMappingFactory;
-import org.apache.james.backends.es.QuotaRatioElasticSearchConstants;
 import org.elasticsearch.client.Client;
 
 public class QuotaSearchIndexCreationUtil {

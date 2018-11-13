@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.james.backends.es;
+package org.apache.james.mailbox.elasticsearch;
 
 public enum IndexAttachments {
     NO, YES

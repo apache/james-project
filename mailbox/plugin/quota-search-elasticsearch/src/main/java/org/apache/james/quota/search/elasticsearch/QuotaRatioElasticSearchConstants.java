@@ -17,21 +17,21 @@
  * under the License.
  */
 
-package org.apache.james.backends.es;
+package org.apache.james.quota.search.elasticsearch;
 
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.TypeName;
 import org.apache.james.backends.es.WriteAliasName;
 
-public interface MailboxElasticSearchConstants {
+public interface QuotaRatioElasticSearchConstants {
 
     interface InjectionNames {
-        String MAILBOX = "mailbox";
+        String QUOTA_RATIO = "quotaRatio";
     }
 
-    WriteAliasName DEFAULT_MAILBOX_WRITE_ALIAS = new WriteAliasName("mailboxWriteAlias");
-    ReadAliasName DEFAULT_MAILBOX_READ_ALIAS = new ReadAliasName("mailboxReadAlias");
-    IndexName DEFAULT_MAILBOX_INDEX = new IndexName("mailbox_v1");
-    TypeName MESSAGE_TYPE = new TypeName("message");
+    WriteAliasName DEFAULT_QUOTA_RATIO_WRITE_ALIAS = new WriteAliasName("quotaRatioWriteAlias");
+    ReadAliasName DEFAULT_QUOTA_RATIO_READ_ALIAS = new ReadAliasName("quotaRatioReadAlias");
+    IndexName DEFAULT_QUOTA_RATIO_INDEX = new IndexName("quota_ratio_v1");
+    TypeName QUOTA_RATIO_TYPE = new TypeName("quotaRatio");
 }
