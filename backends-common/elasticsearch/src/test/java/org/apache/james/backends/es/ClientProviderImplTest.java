@@ -20,129 +20,109 @@
 package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.elasticsearch.common.settings.Settings;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import java.util.Optional;
 
 public class ClientProviderImplTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
     public void fromHostsStringShouldThrowOnNullString() {
-        expectedException.expect(NullPointerException.class);
-
-        ClientProviderImpl.fromHostsString(null, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString(null, Optional.empty()))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnEmptyString() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forHostShouldThrowOnNullHost() {
-        expectedException.expect(NullPointerException.class);
-
-        ClientProviderImpl.forHost(null, 9200, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.forHost(null, 9200, Optional.empty()))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void forHostShouldThrowOnEmptyHost() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.forHost("", 9200, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.forHost("", 9200, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forHostShouldThrowOnNegativePort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.forHost("localhost", -1, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.forHost("localhost", -1, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forHostShouldThrowOnZeroPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.forHost("localhost", 0, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.forHost("localhost", 0, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void forHostShouldThrowOnTooBigPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.forHost("localhost", 65536, Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.forHost("localhost", 65536, Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldEmptyAddress() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString(":9200", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString(":9200", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnAbsentPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowWhenTooMuchParts() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:9200:9200", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:9200:9200", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnEmptyPort() {
-        expectedException.expect(NumberFormatException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:", Optional.empty()))
+                .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnInvalidPort() {
-        expectedException.expect(NumberFormatException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:invalid", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:invalid", Optional.empty()))
+                .isInstanceOf(NumberFormatException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnNegativePort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:-1", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:-1", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnZeroPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:0", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:0", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowOnTooBigPort() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:65536", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:65536", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromHostsStringShouldThrowIfOneHostIsInvalid() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        ClientProviderImpl.fromHostsString("localhost:9200,localhost", Optional.empty());
+        assertThatThrownBy(() -> ClientProviderImpl.fromHostsString("localhost:9200,localhost", Optional.empty()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
