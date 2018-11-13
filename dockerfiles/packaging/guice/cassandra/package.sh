@@ -37,7 +37,7 @@ docker run \
    --volume $PWD/dockerfiles/run/guice/cassandra-ldap/destination:/cassandra/destination \
    -t james/project -s $SHA1
 
-# Compile James with Cassandra + RabbitMQ
+# Compile James with Cassandra + RabbitMQ + Swift BlobStore
 docker run \
    --rm \
    --volume $PWD/.m2:/root/.m2 \

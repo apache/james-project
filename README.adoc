@@ -522,7 +522,8 @@ Where:
 - ITERATION is the release number used after the last hyphen (e.g. 3.0.1, 3.1.0, 3.2.0...)
 - BASE is the image jar and executable are copied from. Defaults to linagora/james-project
 - BASE_LDAP is the image jar and executable are copied from for a deployment with an LDAP user repository. Defaults to linagora/james-ldap-project
-- BASE_RABBITMQ is the image jar and executable are copied from for a deployment of linagora/james-project + RabbitMQ. Defaults to linagora/james-rabbitmq-project
+- BASE_RABBITMQ is the image jar and executable are copied from for a deployment of linagora/james-project + RabbitMQ + Swift BlobStore.
+Defaults to linagora/james-rabbitmq-project
 - TAG is the tag of these docker images. Defaults to latest.
 
 Then, you have to run the container:
