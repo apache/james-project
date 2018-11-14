@@ -62,6 +62,7 @@ public interface MailboxMessageFixture {
     MessageUid MESSAGE_UID_1 = MessageUid.of(MESSAGE_UID_1_VALUE);
     MessageUid MESSAGE_UID_2 = MessageUid.of(MESSAGE_UID_2_VALUE);
     MailboxId MAILBOX_ID_1 = TestId.of(1L);
+    Flags flags1 = new Flags("myFlags");
 
     MailboxSession MAILBOX_SESSION = new MockMailboxSession("user");
     
@@ -76,7 +77,7 @@ public interface MailboxMessageFixture {
         .size(SIZE_1)
         .internalDate(new Date(DATE_1.toEpochSecond()))
         .bodyStartOctet(0)
-        .flags(new Flags())
+        .flags(flags1)
         .propertyBuilder(new PropertyBuilder())
         .mailboxId(MAILBOX_ID_1)
         .build();
