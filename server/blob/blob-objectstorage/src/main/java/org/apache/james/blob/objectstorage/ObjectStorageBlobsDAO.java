@@ -37,6 +37,7 @@ import org.jclouds.domain.Location;
 import org.jclouds.io.Payload;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
@@ -137,6 +138,11 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                 cause);
         }
 
+    }
+
+    @VisibleForTesting
+    public void deleteContainer() {
+        blobStore.deleteContainer(containerName.value());
     }
 }
 

@@ -21,8 +21,12 @@ package org.apache.james.modules.objectstorage.guice;
 
 import java.util.UUID;
 
+import javax.inject.Inject;
+
+import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
@@ -33,8 +37,26 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
 
 public class DockerSwiftTestRule implements GuiceModuleTestRule {
+
+    private static class ContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
+
+        private final ObjectStorageBlobsDAO blobsDAO;
+
+        @Inject
+        public ContainerCleanUp(ObjectStorageBlobsDAO blobsDAO) {
+            this.blobsDAO = blobsDAO;
+        }
+
+        @Override
+        public Result run() {
+            blobsDAO.deleteContainer();
+
+            return Result.COMPLETED;
+        }
+    }
 
     private final PayloadCodecFactory payloadCodecFactory;
     private org.apache.james.blob.objectstorage.DockerSwiftRule swiftContainer =
@@ -76,7 +98,13 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
             .aesPassword("dockerSwiftEncryption".toCharArray())
             .build();
 
-        return binder -> binder.bind(ObjectStorageBlobConfiguration.class).toInstance(configuration);
+        return binder -> {
+            binder.bind(ObjectStorageBlobConfiguration.class).toInstance(configuration);
+
+            Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
+                .addBinding()
+                .to(ContainerCleanUp.class);
+        };
     }
 
 

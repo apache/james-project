@@ -52,6 +52,8 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
     private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
     private static final Identity SWIFT_IDENTITY = Identity.of(TENANT_NAME, USER_NAME);
+    private static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[]{});
+
     public static final String SAMPLE_SALT = "c603a7327ee3dcbc031d8d34b1096c605feca5e1";
 
     private ContainerName containerName;
@@ -148,6 +150,13 @@ public class ObjectStorageBlobsDAOTest implements BlobStoreContract {
 
         InputStream clearTextIs = encryptedDao.read(blobId);
         assertThat(clearTextIs).hasSameContentAs(new ByteArrayInputStream(bytes));
+    }
+
+    @Test
+    void deleteContainerShouldDeleteSwiftContainer() {
+        testee.deleteContainer();
+        assertThat(blobStore.containerExists(containerName.value()))
+            .isFalse();
     }
 }
 
