@@ -94,6 +94,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
         elasticSearch.after();
 
         Runnables.runParallel(
+            () -> spamAssassinExtension.afterAll(context),
             cassandra::stop,
             elasticSearch::after);
     }
@@ -101,14 +102,14 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         james = james();
-        spamAssassinExtension.beforeEach(context);
+        spamAssassinExtension.start();
         james.getJmapServer().start();
     }
 
     @Override
     public void afterEach(ExtensionContext context) {
         james.getJmapServer().stop();
-        spamAssassinExtension.afterEach(context);
+        spamAssassinExtension.stop();
     }
 
     @Override
