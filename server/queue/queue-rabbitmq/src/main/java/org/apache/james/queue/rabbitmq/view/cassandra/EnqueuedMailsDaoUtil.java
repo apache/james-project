@@ -39,9 +39,8 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.STATE;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.EnqueuedMailsTable.TIME_RANGE_START;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -72,6 +71,7 @@ import org.apache.mailet.PerRecipientHeaders;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.UDTValue;
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -132,7 +132,8 @@ public class EnqueuedMailsDaoUtil {
             .build();
     }
 
-    private static List<Attribute> toAttributes(Map<String, ByteBuffer> rowAttributes) {
+    @VisibleForTesting
+    static List<Attribute> toAttributes(Map<String, ByteBuffer> rowAttributes) {
         return rowAttributes.entrySet()
             .stream()
             .map(entry -> new Attribute(AttributeName.of(entry.getKey()), fromByteBuffer(entry.getValue())))
@@ -141,12 +142,9 @@ public class EnqueuedMailsDaoUtil {
 
     private static AttributeValue<?> fromByteBuffer(ByteBuffer byteBuffer) {
         try {
-            byte[] data = new byte[byteBuffer.remaining()];
-            byteBuffer.get(data);
-            ObjectInputStream objectInputStream = new ObjectInputStream(new ByteArrayInputStream(data));
-            return AttributeValue.fromJsonString((String) objectInputStream.readObject());
-        } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException(e);
+            return AttributeValue.fromJsonString(StandardCharsets.UTF_8.decode(byteBuffer).toString());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
