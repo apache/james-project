@@ -26,7 +26,7 @@ import org.apache.james.mailbox.model.MessageId;
 
 public class MessageIdExtraField extends StringExtraField {
 
-    public static final ZipShort ID = new ZipShort(0x6C61); // "al" in little-endian
+    public static final ZipShort ID_AL = new ZipShort(0x6C61); // "al" in little-endian
 
     public MessageIdExtraField() {
         super();
@@ -46,6 +46,6 @@ public class MessageIdExtraField extends StringExtraField {
 
     @Override
     public ZipShort getHeaderId() {
-        return ID;
+        return ID_AL;
     }
 }

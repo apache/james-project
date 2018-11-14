@@ -23,7 +23,7 @@ import java.util.Optional;
 import org.apache.commons.compress.archivers.zip.ZipShort;
 
 public class SizeExtraField extends LongExtraField {
-    public static final ZipShort ID = new ZipShort(0x6A61); // "aj" in little-endian
+    public static final ZipShort ID_AJ = new ZipShort(0x6A61); // "aj" in little-endian
 
     public SizeExtraField() {
         super();
@@ -39,6 +39,6 @@ public class SizeExtraField extends LongExtraField {
 
     @Override
     public ZipShort getHeaderId() {
-        return ID;
+        return ID_AJ;
     }
 }

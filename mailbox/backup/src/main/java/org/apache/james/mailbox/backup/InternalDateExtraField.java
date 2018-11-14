@@ -26,7 +26,7 @@ import org.apache.commons.compress.archivers.zip.ZipShort;
 
 public class InternalDateExtraField extends LongExtraField {
 
-    public static final ZipShort ID = new ZipShort(0x6F61); // "ao" in little-endian
+    public static final ZipShort ID_AO = new ZipShort(0x6F61); // "ao" in little-endian
 
     public InternalDateExtraField() {
         super();
@@ -47,7 +47,7 @@ public class InternalDateExtraField extends LongExtraField {
 
     @Override
     public ZipShort getHeaderId() {
-        return ID;
+        return ID_AO;
     }
 
     public Optional<Date> getDateValue() {
