@@ -33,10 +33,12 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 public interface ManageableMailQueueContract extends MailQueueContract {
@@ -442,6 +444,25 @@ public interface ManageableMailQueueContract extends MailQueueContract {
         assertSoftly(softly ->  {
             softly.assertThat(subject).isEqualTo("mail subject");
             softly.assertThat(content).isEqualTo("mail body");
+        });
+    }
+
+    @Test
+    default void browseShouldReturnMailsWithAttributes() throws Exception {
+        ManageableMailQueue mailQueue = getManageableMailQueue();
+        mailQueue.enQueue(defaultMail()
+            .attributes(ImmutableList.of(
+                Attribute.convertToAttribute("Attribute Name 1", "Attribute Value 1"),
+                Attribute.convertToAttribute("Attribute Name 2", "Attribute Value 2")))
+            .name("mail with blob")
+            .build());
+
+        Mail mail = mailQueue.browse().next().getMail();
+        assertSoftly(softly ->  {
+            softly.assertThat(mail.getAttribute("Attribute Name 1"))
+                .isEqualTo("Attribute Value 1");
+            softly.assertThat(mail.getAttribute("Attribute Name 2"))
+                .isEqualTo("Attribute Value 2");
         });
     }
 
