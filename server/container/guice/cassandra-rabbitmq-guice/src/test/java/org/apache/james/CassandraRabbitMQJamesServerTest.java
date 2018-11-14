@@ -20,6 +20,7 @@
 package org.apache.james;
 
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.junit.jupiter.api.TestInstance.*;
 
 import org.apache.james.core.Domain;
 import org.apache.james.modules.RabbitMQExtension;
@@ -32,53 +33,76 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraRabbitMQJamesServerTest implements JmapJamesServerContract {
+class CassandraRabbitMQJamesServerTest {
+
+    interface MailsShouldBeWellReceived {
+        String JAMES_SERVER_HOST = "127.0.0.1";
+
+        @Test
+        default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+            server.getProbe(DataProbeImpl.class).fluent()
+                .addDomain(DOMAIN)
+                .addUser(JAMES_USER, PASSWORD);
+
+            new SMTPMessageSender(Domain.LOCALHOST.asString()).connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage("bob@any.com", JAMES_USER);
+
+            CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
+
+            new IMAPMessageReader().connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(JAMES_USER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessage(CALMLY_AWAIT);
+        }
+    }
+
+    interface ContratSuite extends JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {}
+
     private static final String DOMAIN = "domain";
     private static final String JAMES_USER = "james-user@" + DOMAIN;
     private static final String PASSWORD = "secret";
-    private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-    private static ConditionFactory calmlyAwait = Awaitility.with()
-        .pollInterval(slowPacedPollInterval)
-        .and()
-        .with()
-        .pollDelay(slowPacedPollInterval)
-        .await();
     private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    private IMAPMessageReader imapMessageReader = new IMAPMessageReader();
-    private SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
+    private static final ConditionFactory CALMLY_AWAIT = Awaitility
+        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .await();
 
-    @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+    private static final JamesServerExtensionBuilder.ServerProvider CONFIGURATION_BUILDER =
+        configuration -> GuiceJamesServer
+            .forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
+
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    class WithSwift implements ContratSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
             .extension(new SwiftBlobStoreExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                    .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-                    .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                    .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+            .server(CONFIGURATION_BUILDER)
             .build();
+    }
 
-    @Test
-    void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
-        server.getProbe(DataProbeImpl.class).fluent()
-            .addDomain(DOMAIN)
-            .addUser(JAMES_USER, PASSWORD);
-
-        messageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage("bob@any.com", JAMES_USER);
-
-        calmlyAwait.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
-
-        imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
-            .login(JAMES_USER, PASSWORD)
-            .select(IMAPMessageReader.INBOX)
-            .awaitMessage(calmlyAwait);
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    class WithoutSwift implements ContratSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new CassandraExtension())
+            .extension(new RabbitMQExtension())
+            .server(CONFIGURATION_BUILDER)
+            .build();
     }
 }
