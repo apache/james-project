@@ -201,6 +201,16 @@ public interface ManageableMailQueueContract extends MailQueueContract {
     }
 
     @Test
+    default void dequeueShouldReturnDecoratedMailItem() throws Exception {
+        enQueue(defaultMail()
+            .name("name1")
+            .build());
+
+        assertThat(getManageableMailQueue().deQueue())
+            .isInstanceOf(MailQueueItemDecoratorFactory.MailQueueItemDecorator.class);
+    }
+
+    @Test
     default void browseShouldNotFailWhenConcurrentDequeueWhenIterating() throws Exception {
         enQueue(defaultMail()
             .name("name1")
