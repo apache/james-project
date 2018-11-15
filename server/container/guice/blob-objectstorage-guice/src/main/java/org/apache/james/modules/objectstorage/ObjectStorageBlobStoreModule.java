@@ -23,20 +23,13 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 
 public class ObjectStorageBlobStoreModule extends AbstractModule {
 
     @Override
     protected void configure() {
         install(new ObjectStorageDependenciesModule());
+        bind(BlobStore.class).to(ObjectStorageBlobsDAO.class);
     }
 
-    @Provides
-    @Singleton
-    private BlobStore provideBlobStore(ObjectStorageBlobsDAO dao, ObjectStorageBlobConfiguration configuration) {
-        dao.createContainer(configuration.getNamespace());
-        return dao;
-    }
 }

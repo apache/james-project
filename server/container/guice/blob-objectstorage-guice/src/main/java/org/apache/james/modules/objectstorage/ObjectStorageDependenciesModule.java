@@ -20,6 +20,9 @@
 package org.apache.james.modules.objectstorage;
 
 import java.io.FileNotFoundException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Singleton;
 
@@ -68,11 +71,13 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory) {
-        return selectDaoBuilder(configuration)
+    private ObjectStorageBlobsDAO buildObjectStore(ObjectStorageBlobConfiguration configuration, BlobId.Factory blobIdFactory) throws InterruptedException, ExecutionException, TimeoutException {
+        ObjectStorageBlobsDAO dao = selectDaoBuilder(configuration)
             .container(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
             .build();
+        dao.createContainer(configuration.getNamespace()).get(1, TimeUnit.MINUTES);
+        return dao;
     }
 
     private ObjectStorageBlobsDAOBuilder.RequireContainerName selectDaoBuilder(ObjectStorageBlobConfiguration configuration) {
