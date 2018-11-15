@@ -48,6 +48,7 @@ import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueueContract;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
@@ -122,7 +123,8 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
-            clock);
+            clock,
+            new RawMailQueueItemDecoratorFactory());
         mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);

@@ -22,6 +22,7 @@ package org.apache.james.queue.rabbitmq;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
@@ -41,15 +42,17 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     private final Enqueuer enqueuer;
     private final Dequeuer dequeuer;
     private final MailQueueView mailQueueView;
+    private final MailQueueItemDecoratorFactory decoratorFactory;
 
     RabbitMQMailQueue(MetricFactory metricFactory, MailQueueName name,
                       Enqueuer enqueuer, Dequeuer dequeuer,
-                      MailQueueView mailQueueView) {
+                      MailQueueView mailQueueView, MailQueueItemDecoratorFactory decoratorFactory) {
         this.metricFactory = metricFactory;
         this.name = name;
         this.enqueuer = enqueuer;
         this.dequeuer = dequeuer;
         this.mailQueueView = mailQueueView;
+        this.decoratorFactory = decoratorFactory;
     }
 
     @Override
@@ -58,7 +61,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     }
 
     @Override
-    public void enQueue(Mail mail, long delay, TimeUnit unit) throws MailQueueException {
+    public void enQueue(Mail mail, long delay, TimeUnit unit) {
         if (delay > 0) {
             LOGGER.info("Ignored delay upon enqueue of {} : {} {}.", mail.getName(), delay, unit);
         }
@@ -74,7 +77,7 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
     @Override
     public MailQueueItem deQueue() {
         return metricFactory.runPublishingTimerMetric(DEQUEUED_TIMER_METRIC_NAME_PREFIX + name.asString(),
-            Throwing.supplier(dequeuer::deQueue).sneakyThrow());
+            Throwing.supplier(() -> decoratorFactory.decorate(dequeuer.deQueue())).sneakyThrow());
     }
 
     @Override

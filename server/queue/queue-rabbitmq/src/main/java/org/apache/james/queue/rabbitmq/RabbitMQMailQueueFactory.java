@@ -37,6 +37,7 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
 
@@ -55,6 +56,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         private final Function<MailReferenceDTO, Mail> mailLoader;
         private final MailQueueView.Factory mailQueueViewFactory;
         private final Clock clock;
+        private final MailQueueItemDecoratorFactory decoratorFactory;
 
         @Inject
         @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
@@ -63,13 +65,15 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                                           MimeMessageStore.Factory mimeMessageStoreFactory,
                                           BlobId.Factory blobIdFactory,
                                           MailQueueView.Factory mailQueueViewFactory,
-                                          Clock clock) {
+                                          Clock clock,
+                                          MailQueueItemDecoratorFactory decoratorFactory) {
             this.metricFactory = metricFactory;
             this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
             this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
             this.mailQueueViewFactory = mailQueueViewFactory;
             this.clock = clock;
+            this.decoratorFactory = decoratorFactory;
             this.mailReferenceSerializer = new MailReferenceSerializer();
             this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
         }
@@ -85,7 +89,8 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                     metricFactory, mailQueueView, clock),
                 new Dequeuer(mailQueueName, rabbitClient, mailLoader, mailReferenceSerializer,
                     metricFactory, mailQueueView),
-                mailQueueView);
+                mailQueueView,
+                decoratorFactory);
 
             registerGaugeFor(rabbitMQMailQueue);
             return rabbitMQMailQueue;

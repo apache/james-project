@@ -39,6 +39,7 @@ import org.apache.james.metrics.api.NoopGaugeRegistry;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
+import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -77,7 +78,8 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
-            Clock.systemUTC());
+            Clock.systemUTC(),
+            new RawMailQueueItemDecoratorFactory());
         mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
