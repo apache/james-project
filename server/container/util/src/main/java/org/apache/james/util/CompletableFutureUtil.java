@@ -40,6 +40,7 @@ public class CompletableFutureUtil {
                 .orElse(CompletableFuture.completedFuture(Optional.empty())));
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> CompletableFuture<Stream<T>> allOf(Stream<CompletableFuture<T>> futureStream) {
         CompletableFuture<T>[] arrayOfFutures = futureStream.toArray(CompletableFuture[]::new);
 
@@ -48,17 +49,16 @@ public class CompletableFutureUtil {
                 .map(CompletableFuture::join));
     }
 
-    @SuppressWarnings("unchecked")
     public static <R, T> CompletableFuture<Stream<R>> chainAll(Stream<T> futureStream, Function<T, CompletableFuture<R>> transformationToChain) {
         ImmutableList<T> elements = futureStream.collect(ImmutableList.toImmutableList());
         ArrayList<R> results = new ArrayList<>(elements.size());
 
         CompletableFuture<Void> futureEmptyStream = CompletableFuture.completedFuture(null);
 
-        BiFunction<CompletableFuture, Supplier<CompletableFuture<R>>, CompletableFuture> accumulator =
+        BiFunction<CompletableFuture<?>, Supplier<CompletableFuture<R>>, CompletableFuture<?>> accumulator =
             (future, supplier) -> future.thenCompose(any -> supplier.get().thenAccept(results::add));
 
-        BinaryOperator<CompletableFuture> combiner = (f1, f2) -> f1.thenCompose(any -> f2);
+        BinaryOperator<CompletableFuture<?>> combiner = (f1, f2) -> f1.thenCompose(any -> f2);
 
         return elements.stream()
             .map(t -> (Supplier<CompletableFuture<R>>) (() -> transformationToChain.apply(t)))

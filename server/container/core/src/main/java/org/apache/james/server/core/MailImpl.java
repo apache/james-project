@@ -427,7 +427,7 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    @SuppressWarnings({"unchecked", "deprecated"})
+    @SuppressWarnings({"unchecked", "deprecation"})
     private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());

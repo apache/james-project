@@ -50,15 +50,19 @@ class CassandraRabbitMQJamesServerTest {
                 .addDomain(DOMAIN)
                 .addUser(JAMES_USER, PASSWORD);
 
-            new SMTPMessageSender(Domain.LOCALHOST.asString()).connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessage("bob@any.com", JAMES_USER);
+            try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+                sender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                    .sendMessage("bob@any.com", JAMES_USER);
+            }
 
             CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
-            new IMAPMessageReader().connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
-                .login(JAMES_USER, PASSWORD)
-                .select(IMAPMessageReader.INBOX)
-                .awaitMessage(CALMLY_AWAIT);
+            try (IMAPMessageReader reader = new IMAPMessageReader()) {
+                reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                    .login(JAMES_USER, PASSWORD)
+                    .select(IMAPMessageReader.INBOX)
+                    .awaitMessage(CALMLY_AWAIT);
+            }
         }
     }
 

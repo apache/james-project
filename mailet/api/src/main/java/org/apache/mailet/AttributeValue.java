@@ -93,7 +93,6 @@ public class AttributeValue<T> {
         return new AttributeValue<>(value, Serializer.URL_SERIALIZER);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> AttributeValue<Optional<AttributeValue<T>>> of(Optional<AttributeValue<T>> value) {
         Preconditions.checkNotNull(value, "value should not be null");
         return new AttributeValue<>(value, new Serializer.OptionalSerializer<>());
@@ -116,7 +115,7 @@ public class AttributeValue<T> {
         return new AttributeValue<>(value, new Serializer.FSTSerializer());
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static AttributeValue<?> ofAny(Object value) {
         Preconditions.checkNotNull(value, "value should not be null");
         if (value instanceof Boolean) {
@@ -153,7 +152,7 @@ public class AttributeValue<T> {
             return of((URL) value);
         }
         if (value instanceof Optional) {
-            return of((Optional<?>) value);
+            return of((Optional) value);
         }
         if (value instanceof Serializable) {
             return ofSerializable((Serializable) value);
@@ -213,6 +212,7 @@ public class AttributeValue<T> {
     }
 
     //FIXME : poor performance
+    @SuppressWarnings("unchecked")
     public AttributeValue<T> duplicate() {
         return (AttributeValue<T>) fromJson(toJson());
     }

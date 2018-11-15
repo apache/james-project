@@ -86,6 +86,7 @@ public class RabbitMQModule extends AbstractModule {
         cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewModule.MODULE);
 
         bind(EventsourcingConfigurationManagement.class).in(Scopes.SINGLETON);
+        @SuppressWarnings("rawtypes")
         Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
     }

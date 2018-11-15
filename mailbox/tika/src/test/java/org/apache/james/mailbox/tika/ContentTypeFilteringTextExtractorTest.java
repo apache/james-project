@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -54,7 +55,7 @@ public class ContentTypeFilteringTextExtractorTest {
                 ImmutableSet.of("application/ics", "application/zip"));
 
         assertThat(contentTypeFilteringTextExtractor
-            .extractContent(IOUtils.toInputStream(""), "application/ics"))
+            .extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "application/ics"))
             .isEqualTo(ParsedContent.empty());
         verifyNoMoreInteractions(textExtractor);
     }

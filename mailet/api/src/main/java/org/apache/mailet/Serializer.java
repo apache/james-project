@@ -80,7 +80,7 @@ public interface Serializer<T> {
                     FLOAT_SERIALIZER,
                     DOUBLE_SERIALIZER,
                     MESSAGE_ID_DTO_SERIALIZER,
-                    new Serializer.ArbitrarySerializableSerializer(),
+                    new Serializer.ArbitrarySerializableSerializer<>(),
                     URL_SERIALIZER,
                     new CollectionSerializer<>(),
                     new MapSerializer<>(),
@@ -386,6 +386,7 @@ public interface Serializer<T> {
             return new ArrayNode(JsonNodeFactory.instance, jsons);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Optional<Collection<AttributeValue<U>>> deserialize(JsonNode json) {
             if (json instanceof ArrayNode) {
@@ -416,6 +417,7 @@ public interface Serializer<T> {
             return new ObjectNode(JsonNodeFactory.instance, jsonMap);
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Optional<Map<String, AttributeValue<U>>> deserialize(JsonNode json) {
             if (json instanceof ObjectNode) {
@@ -447,6 +449,7 @@ public interface Serializer<T> {
                 .orElse(NullNode.getInstance());
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public Optional<Optional<AttributeValue<U>>> deserialize(JsonNode json) {
             if (json instanceof ObjectNode) {

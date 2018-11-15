@@ -50,7 +50,6 @@ public interface MailHook extends Hook {
      *
      * @since James 3.2.0
      */
-    @SuppressWarnings("deprecated")
     default HookResult doMail(SMTPSession session, MaybeSender sender) {
         return doMail(session, sender.asOptional().orElse(MailAddress.nullSender()));
     }

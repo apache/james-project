@@ -252,7 +252,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
     class CurrentAndLegacyCouldNotComplete {
 
 
-        Stream<Function<UnionBlobStore, CompletableFuture>> blobStoreOperationsReturnFutures() {
+        Stream<Function<UnionBlobStore, CompletableFuture<?>>> blobStoreOperationsReturnFutures() {
             return Stream.of(
                 blobStore -> blobStore.save(BLOB_CONTENT),
                 blobStore -> blobStore.save(new ByteArrayInputStream(BLOB_CONTENT)),
@@ -289,7 +289,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @ParameterizedTest
         @MethodSource("blobStoresCauseThrowExceptions")
         void operationShouldThrow(UnionBlobStore blobStoreThrowsException,
-                                  Function<UnionBlobStore, CompletableFuture> blobStoreOperation) {
+                                  Function<UnionBlobStore, CompletableFuture<?>> blobStoreOperation) {
             assertThatThrownBy(() -> blobStoreOperation.apply(blobStoreThrowsException))
                 .isInstanceOf(RuntimeException.class);
         }
@@ -297,7 +297,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @ParameterizedTest
         @MethodSource("blobStoresCauseReturnExceptionallyFutures")
         void operationShouldReturnExceptionallyFuture(UnionBlobStore blobStoreReturnsExceptionallyFuture,
-                                                      Function<UnionBlobStore, CompletableFuture> blobStoreOperation) {
+                                                      Function<UnionBlobStore, CompletableFuture<?>> blobStoreOperation) {
             assertThat(blobStoreOperation.apply(blobStoreReturnsExceptionallyFuture))
                 .isCompletedExceptionally();
         }

@@ -19,38 +19,26 @@
 
 package org.apache.james.modules.objectstorage.guice;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
 
 import org.apache.james.GuiceModuleTestRule;
-import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ContainerName;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.PayloadCodec;
-import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
-import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage.Configuration;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserName;
+import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.testcontainers.containers.GenericContainer;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.inject.Module;
-import com.google.inject.util.Modules;
 
 public class DockerSwiftTestRule implements GuiceModuleTestRule {
 
     private final PayloadCodecFactory payloadCodecFactory;
     private org.apache.james.blob.objectstorage.DockerSwiftRule swiftContainer =
         new org.apache.james.blob.objectstorage.DockerSwiftRule();
-    private PayloadCodec payloadCodec;
 
     public DockerSwiftTestRule() {
         this(PayloadCodecFactory.DEFAULT);
