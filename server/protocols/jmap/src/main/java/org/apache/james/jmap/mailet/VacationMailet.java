@@ -70,16 +70,14 @@ public class VacationMailet extends GenericMailet {
             if (! automaticallySentMailDetector.isAutomaticallySent(mail)) {
                 ZonedDateTime processingDate = zonedDateTimeProvider.get();
                 mail.getRecipients()
-                    .stream()
-                    .map(mailAddress -> manageVacation(mailAddress, mail, processingDate))
-                    .forEach(CompletableFuture::join);
+                    .forEach(mailAddress -> manageVacation(mailAddress, mail, processingDate));
             }
         } catch (Throwable e) {
             LOGGER.warn("Can not process vacation for one or more recipients in {}", mail.getRecipients(), e);
         }
     }
 
-    private CompletableFuture<Void> manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
+    private void manageVacation(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate) {
         AccountId accountId = AccountId.fromString(recipient.toString());
 
         CompletableFuture<Vacation> vacationFuture = vacationRepository.retrieveVacation(accountId);
@@ -87,15 +85,16 @@ public class VacationMailet extends GenericMailet {
             AccountId.fromString(recipient.toString()),
             RecipientId.fromMailAddress(processedMail.getMaybeSender().get()));
 
-        return vacationFuture.thenCombine(alreadySentFuture, Pair::of)
-            .thenCompose(pair -> sendNotificationIfRequired(recipient, processedMail, processingDate, pair.getKey(), pair.getValue()));
+        Pair<Vacation, Boolean> pair = vacationFuture.thenCombine(alreadySentFuture, Pair::of)
+            .join();
+
+        sendNotificationIfRequired(recipient, processedMail, processingDate, pair.getKey(), pair.getValue());
     }
 
-    private CompletableFuture<Void> sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
+    private void sendNotificationIfRequired(MailAddress recipient, Mail processedMail, ZonedDateTime processingDate, Vacation vacation, Boolean alreadySent) {
         if (shouldSendNotification(vacation, processingDate, alreadySent)) {
-            return sendNotification(recipient, processedMail, vacation);
+            sendNotification(recipient, processedMail, vacation);
         }
-        return CompletableFuture.completedFuture(null);
     }
 
     private boolean shouldSendNotification(Vacation vacation, ZonedDateTime processingDate, boolean alreadySent) {
@@ -103,19 +102,21 @@ public class VacationMailet extends GenericMailet {
             && ! alreadySent;
     }
 
-    private CompletableFuture<Void> sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
+    private void sendNotification(MailAddress recipient, Mail processedMail, Vacation vacation) {
         try {
             VacationReply vacationReply = VacationReply.builder(processedMail)
                 .receivedMailRecipient(recipient)
                 .vacation(vacation)
                 .build(mimeMessageBodyGenerator);
+
             sendNotification(vacationReply);
-            return notificationRegistry.register(AccountId.fromString(recipient.toString()),
+
+            notificationRegistry.register(AccountId.fromString(recipient.toString()),
                 RecipientId.fromMailAddress(processedMail.getMaybeSender().get()),
-                vacation.getToDate());
+                vacation.getToDate())
+                .join();
         } catch (MessagingException e) {
             LOGGER.warn("Failed to send JMAP vacation notification from {} to {}", recipient, processedMail.getMaybeSender(), e);
-            return CompletableFuture.completedFuture(null);
         }
     }
 
