@@ -32,6 +32,7 @@
 
     <modules>
         <module>cassandra</module>
+        <module>cassandra-rabbitmq-swift</module>
         <module>core</module>
     </modules>
 
