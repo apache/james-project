@@ -51,8 +51,8 @@ class AttributeValueTest {
 
     @Test
     void ofShouldThrowAnExceptionOnNullValue() {
-        assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((String) null));
+        assertThatNullPointerException()
+            .isThrownBy(() -> AttributeValue.of((String) null));
     }
 
     @Nested
@@ -79,8 +79,8 @@ class AttributeValueTest {
 
         @Test
         void nullStringShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((String) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((String) null));
         }
 
         @Test
@@ -123,8 +123,8 @@ class AttributeValueTest {
 
         @Test
         void nullBooleanShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Boolean) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Boolean) null));
         }
 
         @Test
@@ -157,8 +157,8 @@ class AttributeValueTest {
 
         @Test
         void nullIntShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Integer) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Integer) null));
         }
 
         @Test
@@ -201,6 +201,7 @@ class AttributeValueTest {
 
             assertThat(actual).isEqualTo(expected);
         }
+
         @Test
         void longShouldBeSerializedAndBackForLongMaxValue() {
             AttributeValue<Long> expected = AttributeValue.of(Long.MAX_VALUE);
@@ -213,8 +214,8 @@ class AttributeValueTest {
 
         @Test
         void nullLongShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Long) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Long) null));
         }
 
         @Test
@@ -253,8 +254,8 @@ class AttributeValueTest {
 
         @Test
         void nullFloatShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Float) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Float) null));
         }
 
         @Test
@@ -290,6 +291,7 @@ class AttributeValueTest {
 
             assertThat(actual).isEqualTo(expected);
         }
+
         @Test
         void doubleShouldBeSerializedAndBackForMaxValue() {
             AttributeValue<Double> expected = AttributeValue.of(Double.MAX_VALUE);
@@ -302,8 +304,8 @@ class AttributeValueTest {
 
         @Test
         void nullDoubleShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Double) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Double) null));
         }
 
         @Test
@@ -365,8 +367,8 @@ class AttributeValueTest {
 
         @Test
         void nullURLShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((URL) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((URL) null));
         }
 
         @Test
@@ -405,8 +407,8 @@ class AttributeValueTest {
 
         @Test
         void nullMessageIdDtoShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((MessageIdDto) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((MessageIdDto) null));
         }
 
         @Test
@@ -429,8 +431,8 @@ class AttributeValueTest {
     class ListSerialization {
         @Test
         void nullStringListShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.ofAny((List<String>) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.ofAny((List<String>) null));
         }
 
         @Test
@@ -480,10 +482,11 @@ class AttributeValueTest {
 
     @Nested
     class MapSerialization {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         @Test
         void nullMapShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Map) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Map) null));
         }
 
         @Test
@@ -534,10 +537,11 @@ class AttributeValueTest {
 
     @Nested
     class OptionalSerialization {
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Test
         void nullMapShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.of((Optional) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.of((Optional) null));
         }
 
         @Test
@@ -598,8 +602,8 @@ class AttributeValueTest {
 
         @Test
         void nullSerializableShouldThrowAnException() {
-            assertThatNullPointerException().
-                isThrownBy(() -> AttributeValue.ofSerializable((java.io.Serializable) null));
+            assertThatNullPointerException()
+                .isThrownBy(() -> AttributeValue.ofSerializable((java.io.Serializable) null));
         }
 
         @Test
@@ -620,7 +624,7 @@ class AttributeValueTest {
 
     @Test
     void fromJsonStringShouldThrowOnBrokenJson() {
-        assertThatThrownBy(() ->AttributeValue.fromJsonString("{\"serializer\":\"StringSerializer\",\"value\": \"Missing closing bracket\""))
+        assertThatThrownBy(() -> AttributeValue.fromJsonString("{\"serializer\":\"StringSerializer\",\"value\": \"Missing closing bracket\""))
             .isInstanceOf(JsonEOFException.class);
     }
 

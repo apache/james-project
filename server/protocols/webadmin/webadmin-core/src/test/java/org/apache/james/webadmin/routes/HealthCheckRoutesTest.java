@@ -23,8 +23,8 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 

@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra.utils;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -26,8 +28,6 @@ import org.apache.james.core.healthcheck.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(DockerCassandraExtension.class)
 public class CassandraHealthCheckTest {
@@ -49,7 +49,7 @@ public class CassandraHealthCheckTest {
 
     @Test
     void checkShouldReturnUnhealthyWhenCassandraIsNotRunning(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        try{
+        try {
             cassandraServer.getContainer().pause();
             Result check = healthCheck.check();
 

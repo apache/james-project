@@ -63,9 +63,9 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                            es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                            + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT
-                        , Optional.empty())));
+                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     @Test
@@ -77,9 +77,9 @@ public class ClientProviderImplConnectionTest {
             .pollInterval(5, TimeUnit.SECONDS)
             .until(() -> isConnected(
                 ClientProviderImpl.fromHostsString(
-                            es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
-                            + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT
-                        , Optional.empty())));
+                    es1.getContainerIp() + ":" + ES_APPLICATIVE_PORT + ","
+                        + es2.getContainerIp() + ":" + ES_APPLICATIVE_PORT,
+                    Optional.empty())));
     }
 
     private boolean isConnected(ClientProvider clientProvider) {

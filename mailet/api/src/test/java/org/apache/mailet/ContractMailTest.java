@@ -19,7 +19,6 @@
 
 package org.apache.mailet;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.Serializable;
@@ -32,11 +31,11 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableMap;
 
 public abstract class ContractMailTest {
-    private final static AttributeName ATTRIBUTE_NAME_1 = AttributeName.of("name1");
-    private final static AttributeName ATTRIBUTE_NAME_2 = AttributeName.of("name2");
-    private final static Attribute ATTRIBUTE_1 = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of(true));
-    private final static Attribute ATTRIBUTE_2 = new Attribute(ATTRIBUTE_NAME_2, AttributeValue.of("value2"));
-    private final static Attribute ATTRIBUTE_1_BIS = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of("value1"));
+    private static final AttributeName ATTRIBUTE_NAME_1 = AttributeName.of("name1");
+    private static final AttributeName ATTRIBUTE_NAME_2 = AttributeName.of("name2");
+    private static final Attribute ATTRIBUTE_1 = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of(true));
+    private static final Attribute ATTRIBUTE_2 = new Attribute(ATTRIBUTE_NAME_2, AttributeValue.of("value2"));
+    private static final Attribute ATTRIBUTE_1_BIS = new Attribute(ATTRIBUTE_NAME_1, AttributeValue.of("value1"));
     private static final String VALUE = "value";
     private static final String KEY = "key";
     private static final String NEW_VALUE = "newValue";
@@ -151,7 +150,7 @@ public abstract class ContractMailTest {
         }
     }
 
-    @SuppressWarnings("deprecated")
+    @SuppressWarnings("deprecation")
     @Nested
     public class DeprecatedtedAttributes {
         @Test

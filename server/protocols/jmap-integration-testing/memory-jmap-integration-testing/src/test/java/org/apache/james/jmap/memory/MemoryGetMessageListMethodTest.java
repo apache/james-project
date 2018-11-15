@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import java.io.IOException;
+
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.jmap.methods.integration.GetMessageListMethodTest;
@@ -26,8 +28,6 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
 

@@ -111,8 +111,8 @@ class SenderDomainIsTest {
     void initShouldThrowWhenEmptyCondition() {
         assertThatThrownBy(() -> 
                matcher.init(FakeMatcherConfig.builder()
-                       .matcherName("SenderDomainIs").
-                       build()))
+                       .matcherName("SenderDomainIs")
+                       .build()))
                 .isInstanceOf(NullPointerException.class);
     }
     

@@ -153,7 +153,7 @@ public class AttributeValue<T> {
             return of((URL) value);
         }
         if (value instanceof Optional) {
-            return of((Optional) value);
+            return of((Optional<?>) value);
         }
         if (value instanceof Serializable) {
             return ofSerializable((Serializable) value);

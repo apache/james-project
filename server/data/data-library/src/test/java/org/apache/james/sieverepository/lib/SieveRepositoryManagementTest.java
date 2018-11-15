@@ -18,6 +18,12 @@
  ****************************************************************/
 package org.apache.james.sieverepository.lib;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.User;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -27,12 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 public class SieveRepositoryManagementTest {
 

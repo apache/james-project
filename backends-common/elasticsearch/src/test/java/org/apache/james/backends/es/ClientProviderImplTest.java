@@ -22,10 +22,10 @@ package org.apache.james.backends.es;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
 import org.elasticsearch.common.settings.Settings;
 import org.junit.Test;
-
-import java.util.Optional;
 
 public class ClientProviderImplTest {
 
