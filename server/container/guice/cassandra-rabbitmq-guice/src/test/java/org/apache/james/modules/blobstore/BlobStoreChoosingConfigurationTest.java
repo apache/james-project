@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.objectstore;
+package org.apache.james.modules.blobstore;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,10 +25,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class BlobStoreChoosingConfigurationTest {
 
-    private static final String SWIFT = "swift";
+    private static final String OBJECT_STORAGE = "objectstorage";
     private static final String CASSANDRA = "cassandra";
+
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(BlobStoreChoosingConfiguration.class)
+            .verify();
+    }
 
     @Test
     void fromShouldThrowWhenBlobStoreImplIsMissing() {
@@ -36,43 +44,43 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
     void fromShouldThrowWhenBlobStoreImplIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", null);
+        configuration.addProperty("implementation", null);
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
     void fromShouldThrowWhenBlobStoreImplIsEmpty() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", "");
+        configuration.addProperty("implementation", "");
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("objectstore.implementation property is missing please use one of supported values in: cassandra, swift");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
     void fromShouldThrowWhenBlobStoreImplIsNotInSupportedList() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", "un_supported");
+        configuration.addProperty("implementation", "un_supported");
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, swift");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage");
     }
 
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsCassandra() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", CASSANDRA);
+        configuration.addProperty("implementation", CASSANDRA);
 
         assertThat(
             BlobStoreChoosingConfiguration.from(configuration)
@@ -84,31 +92,31 @@ class BlobStoreChoosingConfigurationTest {
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSwift() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", SWIFT);
+        configuration.addProperty("implementation", OBJECT_STORAGE);
 
         assertThat(
             BlobStoreChoosingConfiguration.from(configuration)
                 .getImplementation()
                 .getName())
-            .isEqualTo(SWIFT);
+            .isEqualTo(OBJECT_STORAGE);
     }
 
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSupportedAndCaseInsensitive() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", "SWifT");
+        configuration.addProperty("implementation", "OBjecTStorAGE");
 
         assertThat(
             BlobStoreChoosingConfiguration.from(configuration)
                 .getImplementation()
                 .getName())
-            .isEqualTo(SWIFT);
+            .isEqualTo(OBJECT_STORAGE);
     }
 
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSupportedAndHasExtraSpaces() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("objectstore.implementation", " cassandra ");
+        configuration.addProperty("implementation", " cassandra ");
 
         assertThat(
             BlobStoreChoosingConfiguration.from(configuration)

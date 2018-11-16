@@ -36,6 +36,7 @@ import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
+import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.inject.AbstractModule;
@@ -44,7 +45,6 @@ import com.google.inject.Scopes;
 
 public class ObjectStorageDependenciesModule extends AbstractModule {
 
-    private static final String OBJECTSTORAGE_CONFIGURATION_NAME = "objectstorage";
     private static final String OBJECTSTORAGE_PROVIDER_SWIFT = "swift";
 
     @Override
@@ -62,10 +62,10 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
     @Singleton
     private ObjectStorageBlobConfiguration getObjectStorageConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(OBJECTSTORAGE_CONFIGURATION_NAME);
+            Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
             return ObjectStorageBlobConfiguration.from(configuration);
         } catch (FileNotFoundException e) {
-            throw new ConfigurationException(OBJECTSTORAGE_CONFIGURATION_NAME + " configuration was not found");
+            throw new ConfigurationException(ConfigurationComponent.NAME + " configuration was not found");
         }
     }
 

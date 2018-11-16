@@ -21,7 +21,7 @@ package org.apache.james;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 
-import org.apache.james.modules.objectstore.BlobStoreChoosingModule;
+import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
 import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.server.core.configuration.Configuration;

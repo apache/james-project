@@ -17,8 +17,9 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.objectstore;
+package org.apache.james.modules.blobstore;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -32,7 +33,7 @@ public class BlobStoreChoosingConfiguration {
 
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
-        SWIFT("swift");
+        OBJECTSTORAGE("objectstorage");
 
         static String supportedImplNames() {
             return Stream.of(BlobStoreImplName.values())
@@ -59,7 +60,7 @@ public class BlobStoreChoosingConfiguration {
         }
     }
 
-    static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "objectstore.implementation";
+    static final String BLOBSTORE_IMPLEMENTATION_PROPERTY = "implementation";
 
     static BlobStoreChoosingConfiguration from(Configuration configuration) {
         BlobStoreImplName blobStoreImplName = Optional.ofNullable(configuration.getString(BLOBSTORE_IMPLEMENTATION_PROPERTY))
@@ -72,6 +73,14 @@ public class BlobStoreChoosingConfiguration {
         return new BlobStoreChoosingConfiguration(blobStoreImplName);
     }
 
+    public static BlobStoreChoosingConfiguration cassandra() {
+        return new BlobStoreChoosingConfiguration(BlobStoreImplName.CASSANDRA);
+    }
+
+    public static BlobStoreChoosingConfiguration objectStorage() {
+        return new BlobStoreChoosingConfiguration(BlobStoreImplName.OBJECTSTORAGE);
+    }
+
     private final BlobStoreImplName implementation;
 
     BlobStoreChoosingConfiguration(BlobStoreImplName implementation) {
@@ -80,6 +89,21 @@ public class BlobStoreChoosingConfiguration {
 
     BlobStoreImplName getImplementation() {
         return implementation;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof BlobStoreChoosingConfiguration) {
+            BlobStoreChoosingConfiguration that = (BlobStoreChoosingConfiguration) o;
+
+            return Objects.equals(this.implementation, that.implementation);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(implementation);
     }
 
     @Override
