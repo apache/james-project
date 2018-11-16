@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.api;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
@@ -105,6 +106,8 @@ public interface RecipientRewriteTable {
      * @throws RecipientRewriteTableException
      */
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
+
+    List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException;
 
     class ErrorMappingException extends Exception {
 

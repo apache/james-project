@@ -21,6 +21,7 @@ package org.apache.james.user.lib;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.ConfigurationException;
@@ -41,6 +42,8 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.DefaultJamesUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
 
 /**
  * A partial implementation of a Repository to store users.
@@ -287,5 +290,10 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     @Override
     public void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+    }
+
+    @Override
+    public List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        return ImmutableList.of();
     }
 }

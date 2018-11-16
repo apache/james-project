@@ -354,4 +354,32 @@ public abstract class AbstractRecipientRewriteTableTest {
         assertThat(virtualUserTable.getMappings(user, domain))
             .isEqualTo(MappingsImpl.empty());
     }
+
+    @Test
+    public void listSourcesShouldReturnWhenHasMapping() throws RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.LOCALHOST;
+        String address = "test@localhost2";
+        MappingSource source = MappingSource.fromUser(user, domain);
+        Mapping mapping = Mapping.group(address);
+        virtualUserTable.addMapping(source, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping)).contains(source);
+    }
+
+    @Test
+    public void listSourceShouldReturnWhenMultipleSourceMapping() throws RecipientRewriteTableException {
+        String user = "test";
+        Domain domain = Domain.of("james");
+        String address = "test@localhost2";
+
+        MappingSource source = MappingSource.fromUser(user, domain);
+        MappingSource source2 = MappingSource.fromDomain(Domain.LOCALHOST);
+        Mapping mapping = Mapping.group(address);
+
+        virtualUserTable.addMapping(source, mapping);
+        virtualUserTable.addMapping(source2, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping)).contains(source, source2);
+    }
 }
