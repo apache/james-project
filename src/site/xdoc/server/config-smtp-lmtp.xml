@@ -51,7 +51,7 @@
     
     <dl>
       <dt><strong>bind</strong></dt>
-      <dd>A list of address:port - This is an optional value.  If present, this value is a string describing 
+      <dd>A list of address:port separed by comma - This is an optional value.  If present, this value is a string describing 
       the IP address to which this service should be bound.  If the tag or value is absent then the service 
       will bind to all network interfaces for the machine on port 25. Port 25 is the well-known/IANA registered port for SMTP. 
             Port 465 is the well-known/IANA registered port for SMTP over TLS.</dd>
