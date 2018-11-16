@@ -31,6 +31,7 @@ class BlobStoreChoosingConfigurationTest {
 
     private static final String OBJECT_STORAGE = "objectstorage";
     private static final String CASSANDRA = "cassandra";
+    private static final String UNION = "union";
 
     @Test
     void shouldMatchBeanContract() {
@@ -44,7 +45,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, union");
     }
 
     @Test
@@ -54,7 +55,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, union");
     }
 
     @Test
@@ -64,7 +65,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage, union");
     }
 
     @Test
@@ -74,7 +75,7 @@ class BlobStoreChoosingConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreChoosingConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage, union");
     }
 
     @Test
@@ -87,6 +88,18 @@ class BlobStoreChoosingConfigurationTest {
                 .getImplementation()
                 .getName())
             .isEqualTo(CASSANDRA);
+    }
+
+    @Test
+    void fromShouldReturnConfigurationWhenBlobStoreImplIsUnion() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", UNION);
+
+        assertThat(
+            BlobStoreChoosingConfiguration.from(configuration)
+                .getImplementation()
+                .getName())
+            .isEqualTo(UNION);
     }
 
     @Test

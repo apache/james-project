@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration.BlobStoreImplName;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.modules.objectstorage.FakePropertiesProvider;
@@ -104,6 +105,19 @@ class BlobStoreChoosingModuleTest {
     }
 
     @Test
+    void provideChoosingConfigurationShouldReturnUnionConfigurationWhenConfigurationImplIsUnion() throws Exception {
+        BlobStoreChoosingModule module = new BlobStoreChoosingModule();
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("implementation", BlobStoreImplName.UNION.getName());
+        FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
+            .register(ConfigurationComponent.NAME, configuration)
+            .build();
+
+        assertThat(module.provideChoosingConfiguration(propertyProvider))
+            .isEqualTo(BlobStoreChoosingConfiguration.union());
+    }
+
+    @Test
     void provideChoosingConfigurationShouldReturnCassandraFactoryWhenConfigurationImplIsCassandra() throws Exception {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
         PropertiesConfiguration configuration = new PropertiesConfiguration();
@@ -132,5 +146,14 @@ class BlobStoreChoosingModuleTest {
         assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.cassandra(),
             CASSANDRA_BLOBSTORE_PROVIDER, SWIFT_BLOBSTORE_PROVIDER))
             .isEqualTo(CASSANDRA_BLOBSTORE);
+    }
+
+    @Test
+    void provideBlobStoreShouldReturnUnionBlobStoreWhenUnionConfigured() {
+        BlobStoreChoosingModule module = new BlobStoreChoosingModule();
+
+        assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.union(),
+            CASSANDRA_BLOBSTORE_PROVIDER, SWIFT_BLOBSTORE_PROVIDER))
+            .isInstanceOf(UnionBlobStore.class);
     }
 }

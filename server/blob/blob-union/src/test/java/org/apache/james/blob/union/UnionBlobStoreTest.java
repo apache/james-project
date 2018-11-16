@@ -120,7 +120,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
     void setup() {
         currentBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
         legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-        unionBlobStore = new UnionBlobStore(currentBlobStore, legacyBlobStore);
+        unionBlobStore = UnionBlobStore.builder()
+            .current(currentBlobStore)
+            .legacy(legacyBlobStore)
+            .build();
     }
 
     @Override
@@ -139,7 +142,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void saveShouldFallBackToLegacyWhenCurrentGotException() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new ThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
 
             SoftAssertions.assertSoftly(softly -> {
@@ -153,7 +159,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void saveInputStreamShouldFallBackToLegacyWhenCurrentGotException() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new ThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
 
             SoftAssertions.assertSoftly(softly -> {
@@ -171,7 +180,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void saveShouldFallBackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new FutureThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new FutureThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
 
             SoftAssertions.assertSoftly(softly -> {
@@ -185,7 +197,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void saveInputStreamShouldFallBackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new FutureThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new FutureThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
 
             SoftAssertions.assertSoftly(softly -> {
@@ -204,7 +219,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void readShouldReturnFallbackToLegacyWhenCurrentGotException() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new ThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
 
             assertThat(unionBlobStore.read(blobId))
@@ -214,7 +232,11 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void readBytesShouldReturnFallbackToLegacyWhenCurrentGotException() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), legacyBlobStore);
+
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new ThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
 
             assertThat(unionBlobStore.readBytes(blobId).get())
@@ -229,7 +251,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void readShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new FutureThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new FutureThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
 
             assertThat(unionBlobStore.read(blobId))
@@ -239,7 +264,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         @Test
         void readBytesShouldReturnFallbackToLegacyWhenCurrentCompletedExceptionally() throws Exception {
             MemoryBlobStore legacyBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-            UnionBlobStore unionBlobStore = new UnionBlobStore(new FutureThrowingBlobStore(), legacyBlobStore);
+            UnionBlobStore unionBlobStore = UnionBlobStore.builder()
+                .current(new FutureThrowingBlobStore())
+                .legacy(legacyBlobStore)
+                .build();
             BlobId blobId = legacyBlobStore.save(BLOB_CONTENT).get();
 
             assertThat(unionBlobStore.readBytes(blobId).get())
@@ -266,9 +294,18 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
         Stream<Arguments> blobStoresCauseReturnExceptionallyFutures() {
             List<UnionBlobStore> futureThrowingUnionBlobStores = ImmutableList.of(
-                new UnionBlobStore(new ThrowingBlobStore(), new FutureThrowingBlobStore()),
-                new UnionBlobStore(new FutureThrowingBlobStore(), new ThrowingBlobStore()),
-                new UnionBlobStore(new FutureThrowingBlobStore(), new FutureThrowingBlobStore()));
+                UnionBlobStore.builder()
+                    .current(new ThrowingBlobStore())
+                    .legacy(new FutureThrowingBlobStore())
+                    .build(),
+                UnionBlobStore.builder()
+                    .current(new FutureThrowingBlobStore())
+                    .legacy(new ThrowingBlobStore())
+                    .build(),
+                UnionBlobStore.builder()
+                    .current(new FutureThrowingBlobStore())
+                    .legacy(new FutureThrowingBlobStore())
+                    .build());
 
             return blobStoreOperationsReturnFutures()
                 .flatMap(blobStoreFunction -> futureThrowingUnionBlobStores
@@ -277,7 +314,10 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         Stream<Arguments> blobStoresCauseThrowExceptions() {
-            UnionBlobStore throwingUnionBlobStore = new UnionBlobStore(new ThrowingBlobStore(), new ThrowingBlobStore());
+            UnionBlobStore throwingUnionBlobStore = UnionBlobStore.builder()
+                .current(new ThrowingBlobStore())
+                .legacy(new ThrowingBlobStore())
+                .build();
 
             return StreamUtils.flatten(
                 blobStoreOperationsReturnFutures()

@@ -31,6 +31,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
 import org.apache.james.utils.PropertiesProvider;
@@ -44,9 +45,6 @@ import com.google.inject.multibindings.Multibinder;
 
 public class BlobStoreChoosingModule extends AbstractModule {
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobStoreChoosingModule.class);
-
-    @VisibleForTesting
-    static final String BLOB_STORE_CONFIGURATION_FILE = "blobstore";
 
     @Override
     protected void configure() {
@@ -81,6 +79,11 @@ public class BlobStoreChoosingModule extends AbstractModule {
                 return swiftBlobStoreProvider.get();
             case CASSANDRA:
                 return cassandraBlobStoreProvider.get();
+            case UNION:
+                return UnionBlobStore.builder()
+                    .current(swiftBlobStoreProvider.get())
+                    .legacy(cassandraBlobStoreProvider.get())
+                    .build();
             default:
                 throw new RuntimeException(String.format("can not get the right blobstore provider with configuration %s",
                     choosingConfiguration.toString()));

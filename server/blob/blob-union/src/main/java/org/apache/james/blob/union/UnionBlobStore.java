@@ -38,14 +38,43 @@ import com.google.common.base.MoreObjects;
 
 public class UnionBlobStore implements BlobStore {
 
+    @FunctionalInterface
+    public interface RequireCurrent {
+        RequireLegacy current(BlobStore blobStore);
+    }
+
+    @FunctionalInterface
+    public interface RequireLegacy {
+        Builder legacy(BlobStore blobStore);
+    }
+
+    public static class Builder {
+        private final BlobStore currentBlobStore;
+        private final BlobStore legacyBlobStore;
+
+        Builder(BlobStore currentBlobStore, BlobStore legacyBlobStore) {
+            this.currentBlobStore = currentBlobStore;
+            this.legacyBlobStore = legacyBlobStore;
+        }
+
+        public UnionBlobStore build() {
+            return new UnionBlobStore(
+                currentBlobStore,
+                legacyBlobStore);
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UnionBlobStore.class);
     private static final int UNAVAILABLE = -1;
+
+    public static RequireCurrent builder() {
+        return current -> legacy -> new Builder(current, legacy);
+    }
 
     private final BlobStore currentBlobStore;
     private final BlobStore legacyBlobStore;
 
-    @VisibleForTesting
-    UnionBlobStore(BlobStore currentBlobStore, BlobStore legacyBlobStore) {
+    private UnionBlobStore(BlobStore currentBlobStore, BlobStore legacyBlobStore) {
         this.currentBlobStore = currentBlobStore;
         this.legacyBlobStore = legacyBlobStore;
     }
