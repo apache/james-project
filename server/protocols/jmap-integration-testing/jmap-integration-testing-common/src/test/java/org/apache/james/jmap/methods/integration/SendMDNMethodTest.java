@@ -32,7 +32,7 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
-import static org.awaitility.Duration.ONE_MINUTE;
+import static org.awaitility.Duration.TWO_MINUTES;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -68,7 +68,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.google.common.collect.Iterables;
-
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 
@@ -308,7 +307,7 @@ public abstract class SendMDNMethodTest {
             .post("/jmap");
 
         // BART should have received it
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
+        calmlyAwait.atMost(TWO_MINUTES).until(() -> !listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)).isEmpty());
         String bartInboxMessageIds = Iterables.getOnlyElement(listMessageIdsInMailbox(bartAccessToken, getInboxId(bartAccessToken)));
 
         String firstMessage = ARGUMENTS + ".list[0]";
