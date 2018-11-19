@@ -225,7 +225,7 @@ You need a running *rabbitmq* in docker. To achieve this run:
 
 You need a running *swift* objectstorage in docker. To achieve this run:
 
-    $ docker run -d --name=swift jeantil/openstack-keystone-swift:pike
+    $ docker run -d --name=swift linagora/openstack-keystone-swift:pike
 
 You need a running *ElasticSearch* in docker. To achieve this run:
 

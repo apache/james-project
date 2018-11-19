@@ -36,7 +36,7 @@ import com.github.fge.lambdas.Throwing;
 
 public class DockerSwiftContainer {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerSwiftContainer.class);
-    private static final String SWIFT_DOCKER_IMAGE = "jeantil/openstack-keystone-swift:pike";
+    private static final String SWIFT_DOCKER_IMAGE = "linagora/openstack-keystone-swift:pike";
     private static final int SWIFT_PORT = 8080;
     private static final int KEYSTONE_ADMIN_PORT = 35357;
     private final GenericContainer<?> swiftContainer;

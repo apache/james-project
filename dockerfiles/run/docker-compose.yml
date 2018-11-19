@@ -37,7 +37,7 @@ services:
       - "5672:5672"
       - "15672:15672"
   swift:
-    image: jeantil/openstack-keystone-swift:pike
+    image: linagora/openstack-keystone-swift:pike
     ports:
       - "5000:5000"
       - "8080:8080"
