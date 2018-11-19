@@ -21,6 +21,7 @@ package org.apache.james;
 
 import java.util.Set;
 
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.task.Task;
@@ -41,6 +42,7 @@ public class CleanupTasksPerformer {
         this.cleanupTasks = cleanupTasks;
     }
 
+    @PreDestroy
     public void clean() {
         Runnables
             .runParallel(

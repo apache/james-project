@@ -23,6 +23,7 @@ import java.util.function.Function;
 
 import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.CassandraJamesServerMain;
+import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
@@ -169,7 +170,8 @@ public class CassandraRabbitMQSwiftSmtpTestRule implements TestRule, SmtpHostSys
                         .keyspace("testing")
                         .replicationFactor(1)
                         .build()),
-                binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService));
+                binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
     }
 
     private void createSessionFactory() {
