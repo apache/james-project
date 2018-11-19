@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
@@ -54,7 +55,8 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
                 .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
                 .withFileFromClasspath("spamd.sh", "docker/spamassassin/spamd.sh")
                 .withFileFromClasspath("rule-update.sh", "docker/spamassassin/rule-update.sh")
-                .withFileFromClasspath("bayes_pg.sql", "docker/spamassassin/bayes_pg.sql"));
+                .withFileFromClasspath("bayes_pg.sql", "docker/spamassassin/bayes_pg.sql"))
+            .withCreateContainerCmdModifier(cmd -> cmd.withName(containerName()));
         spamAssassinContainer.withStartupTimeout(STARTUP_TIMEOUT);
         spamAssassinContainer.waitingFor(new SpamAssassinWaitStrategy(spamAssassinContainer, STARTUP_TIMEOUT));
     }
@@ -95,6 +97,10 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
 
     public SpamAssassin getSpamAssassin() {
         return spamAssassin;
+    }
+
+    private String containerName() {
+        return "spam-assassin-" + UUID.randomUUID().toString();
     }
 
     public static class SpamAssassin {

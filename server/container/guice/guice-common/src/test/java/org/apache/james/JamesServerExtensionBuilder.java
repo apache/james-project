@@ -34,12 +34,12 @@ public class JamesServerExtensionBuilder {
     private static final boolean DEFAULT_AUTO_START = true;
 
     @FunctionalInterface
-    interface ConfigurationProvider {
+    public interface ConfigurationProvider {
         Configuration buildConfiguration(File tempDirectory);
     }
 
     @FunctionalInterface
-    interface ServerProvider {
+    public interface ServerProvider {
         GuiceJamesServer buildServer(Configuration configuration);
     }
 
@@ -49,7 +49,7 @@ public class JamesServerExtensionBuilder {
     private Optional<ConfigurationProvider> configuration;
     private Optional<Boolean> autoStart;
 
-    JamesServerExtensionBuilder() {
+    public JamesServerExtensionBuilder() {
         configuration = Optional.empty();
         extensions = ImmutableList.builder();
         folderRegistrableExtension = new TemporaryFolderRegistrableExtension();

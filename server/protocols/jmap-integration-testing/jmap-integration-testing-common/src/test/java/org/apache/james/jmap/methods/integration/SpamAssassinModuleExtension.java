@@ -16,26 +16,39 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.jmap.methods.integration;
 
-import org.apache.james.GuiceJamesServer;
+import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.spamassassin.SpamAssassinExtension;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class JamesWithSpamAssassin {
+import com.google.inject.Module;
 
-    private final GuiceJamesServer jmapServer;
-    private final SpamAssassinExtension spamAssassinExtension;
+public class SpamAssassinModuleExtension implements GuiceModuleTestExtension {
 
-    public JamesWithSpamAssassin(GuiceJamesServer jmapServer, SpamAssassinExtension spamAssassinExtension) {
-        this.jmapServer = jmapServer;
-        this.spamAssassinExtension = spamAssassinExtension;
+    private final SpamAssassinExtension spamAssassin;
+
+    public SpamAssassinModuleExtension() {
+        this.spamAssassin = new org.apache.james.spamassassin.SpamAssassinExtension();
     }
 
-    public GuiceJamesServer getJmapServer() {
-        return jmapServer;
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+        spamAssassin.beforeAll(extensionContext);
     }
 
-    public SpamAssassinExtension getSpamAssassinExtension() {
-        return spamAssassinExtension;
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        spamAssassin.afterAll(extensionContext);
+    }
+
+    @Override
+    public Module getModule() {
+        return new SpamAssassinModule(spamAssassin);
+    }
+
+    public SpamAssassinExtension spamAssassinExtension() {
+        return spamAssassin;
     }
 }

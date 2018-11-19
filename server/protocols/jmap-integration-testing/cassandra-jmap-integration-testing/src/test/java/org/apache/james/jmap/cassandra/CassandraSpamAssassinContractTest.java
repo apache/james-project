@@ -18,10 +18,39 @@
  ****************************************************************/
 package org.apache.james.jmap.cassandra;
 
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+
+import org.apache.james.CassandraExtension;
+import org.apache.james.EmbeddedElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.JamesServerExtensionBuilder;
 import org.apache.james.jmap.methods.integration.SpamAssassinContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.spamassassin.SpamAssassinExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(CassandraJmapExtension.class)
-public class CassandraSpamAssassinContractTest implements SpamAssassinContract {
+class CassandraSpamAssassinContractTest implements SpamAssassinContract {
 
+    private static final int LIMIT_TO_20_MESSAGES = 20;
+    private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
+
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(new EmbeddedElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(spamAssassinExtension)
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
+        .build();
+
+    @Override
+    public SpamAssassinExtension.SpamAssassin spamAssassin() {
+        return spamAssassinExtension.spamAssassinExtension().getSpamAssassin();
+    }
 }

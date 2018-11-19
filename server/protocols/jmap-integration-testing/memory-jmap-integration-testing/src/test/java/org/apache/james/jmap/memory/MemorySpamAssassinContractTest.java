@@ -18,10 +18,40 @@
  ****************************************************************/
 package org.apache.james.jmap.memory;
 
+import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.JamesServerExtensionBuilder;
+import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jmap.methods.integration.SpamAssassinContract;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
+import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.spamassassin.SpamAssassinExtension;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-@ExtendWith(MemoryJmapExtension.class)
-public class MemorySpamAssassinContractTest implements SpamAssassinContract {
+class MemorySpamAssassinContractTest implements SpamAssassinContract {
 
+    private static final int LIMIT_TO_20_MESSAGES = 20;
+
+    private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        .extension(spamAssassinExtension)
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
+            .overrideWith(binder -> binder.bind(PersistenceAdapter.class).to(MemoryPersistenceAdapter.class))
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
+        .build();
+
+    @Override
+    public SpamAssassinExtension.SpamAssassin spamAssassin() {
+        return spamAssassinExtension.spamAssassinExtension().getSpamAssassin();
+    }
 }
