@@ -30,7 +30,6 @@ import org.apache.james.jmap.methods.integration.SpamAssassinModuleExtension;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSpamAssassinContractTest implements SpamAssassinContract {
@@ -48,9 +47,4 @@ class CassandraSpamAssassinContractTest implements SpamAssassinContract {
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
         .build();
-
-    @Override
-    public SpamAssassinExtension.SpamAssassin spamAssassin() {
-        return spamAssassinExtension.spamAssassinExtension().getSpamAssassin();
-    }
 }

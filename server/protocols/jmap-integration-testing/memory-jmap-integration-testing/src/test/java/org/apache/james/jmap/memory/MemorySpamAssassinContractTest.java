@@ -31,7 +31,6 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemorySpamAssassinContractTest implements SpamAssassinContract {
@@ -49,9 +48,4 @@ class MemorySpamAssassinContractTest implements SpamAssassinContract {
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(binder -> binder.bind(MessageSearchIndex.class).to(SimpleMessageSearchIndex.class)))
         .build();
-
-    @Override
-    public SpamAssassinExtension.SpamAssassin spamAssassin() {
-        return spamAssassinExtension.spamAssassinExtension().getSpamAssassin();
-    }
 }

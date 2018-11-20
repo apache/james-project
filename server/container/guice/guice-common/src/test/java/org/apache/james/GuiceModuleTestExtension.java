@@ -19,6 +19,12 @@
 
 package org.apache.james;
 
+import java.util.Optional;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+
 import com.google.inject.Module;
 
 public interface GuiceModuleTestExtension extends RegistrableExtension {
@@ -28,4 +34,15 @@ public interface GuiceModuleTestExtension extends RegistrableExtension {
     }
 
     default void await() {}
+
+    default Optional<Class<?>> supportedParameterClass() {
+        return Optional.empty();
+    }
+
+    @Override
+    default boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return supportedParameterClass()
+            .map(clazz -> parameterContext.getParameter().getType() == clazz)
+            .orElse(false);
+    }
 }

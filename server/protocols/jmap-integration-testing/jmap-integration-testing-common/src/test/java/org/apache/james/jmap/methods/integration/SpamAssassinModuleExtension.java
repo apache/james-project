@@ -19,9 +19,13 @@
 
 package org.apache.james.jmap.methods.integration;
 
+import java.util.Optional;
+
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 
 import com.google.inject.Module;
 
@@ -48,7 +52,13 @@ public class SpamAssassinModuleExtension implements GuiceModuleTestExtension {
         return new SpamAssassinModule(spamAssassin);
     }
 
-    public SpamAssassinExtension spamAssassinExtension() {
-        return spamAssassin;
+    @Override
+    public Optional<Class<?>> supportedParameterClass() {
+        return Optional.of(SpamAssassinExtension.SpamAssassin.class);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return spamAssassin.getSpamAssassin();
     }
 }

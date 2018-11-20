@@ -20,9 +20,12 @@
 package org.apache.james;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.james.util.Runnables;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Lists;
@@ -63,4 +66,22 @@ public class AggregateJunitExtension implements RegistrableExtension {
             .map(ext -> Throwing.runnable(() -> ext.afterAll(extensionContext))));
     }
 
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return extensionSupportParam(parameterContext, extensionContext)
+            .isPresent();
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return extensionSupportParam(parameterContext, extensionContext)
+            .map(extension -> extension.resolveParameter(parameterContext, extensionContext))
+            .orElseThrow(() -> new IllegalArgumentException("parameter is not resolved by registrableExtensions"));
+    }
+
+    private Optional<? extends RegistrableExtension> extensionSupportParam(ParameterContext parameterContext, ExtensionContext extensionContext) {
+        return registrableExtensions.stream()
+            .filter(extension -> extension.supportsParameter(parameterContext, extensionContext))
+            .findFirst();
+    }
 }

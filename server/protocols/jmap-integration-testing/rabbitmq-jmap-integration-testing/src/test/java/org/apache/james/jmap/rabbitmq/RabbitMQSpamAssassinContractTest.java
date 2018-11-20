@@ -32,7 +32,6 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
-import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQSpamAssassinContractTest implements SpamAssassinContract {
@@ -54,9 +53,4 @@ class RabbitMQSpamAssassinContractTest implements SpamAssassinContract {
                 .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
         .build();
-
-    @Override
-    public SpamAssassinExtension.SpamAssassin spamAssassin() {
-        return spamAssassinExtension.spamAssassinExtension().getSpamAssassin();
-    }
 }
