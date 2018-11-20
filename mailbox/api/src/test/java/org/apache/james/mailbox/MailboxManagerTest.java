@@ -90,9 +90,6 @@ public abstract class MailboxManagerTest {
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
 
     @Rule
-    public ExpectedException expected = ExpectedException.none();
-
-    @Rule
     public JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     private MailboxManager mailboxManager;
@@ -156,12 +153,13 @@ public abstract class MailboxManagerTest {
 
     @Test
     public void user1ShouldNotBeAbleToCreateInboxTwice() throws MailboxException, UnsupportedEncodingException {
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
-        mailboxManager.createMailbox(inbox, session);
+
+        assertThatThrownBy(() -> mailboxManager.createMailbox(inbox, session))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
@@ -319,11 +317,11 @@ public abstract class MailboxManagerTest {
     @Test
     public void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
 
-        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION));
+        assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION)))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
@@ -351,11 +349,11 @@ public abstract class MailboxManagerTest {
     @Test
     public void getAllAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
 
-        mailboxManager.getAllAnnotations(inbox, session);
+        assertThatThrownBy(() -> mailboxManager.getAllAnnotations(inbox, session))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
@@ -374,11 +372,11 @@ public abstract class MailboxManagerTest {
     @Test
     public void getAnnotationsByKeysShouldThrowExceptionIfMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
 
-        mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY));
+        assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
@@ -397,11 +395,11 @@ public abstract class MailboxManagerTest {
     @Test
     public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
 
-        mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY));
+        assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
@@ -420,12 +418,12 @@ public abstract class MailboxManagerTest {
     @Test
     public void updateAnnotationsShouldThrowExceptionIfAnnotationDataIsOverLimitation() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(AnnotationException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
 
-        mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30")));
+        assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30"))))
+            .isInstanceOf(AnnotationException.class);
     }
 
     @Test
@@ -446,7 +444,6 @@ public abstract class MailboxManagerTest {
     @Test
     public void updateAnnotationsShouldThrowExceptionIfRequestCreateNewButMailboxIsOverLimit() throws MailboxException {
         Assume.assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
-        expected.expect(MailboxException.class);
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
         mailboxManager.createMailbox(inbox, session);
@@ -457,7 +454,8 @@ public abstract class MailboxManagerTest {
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment3"), "AnyValue"));
         builder.add(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/comment4"), "AnyValue"));
 
-        mailboxManager.updateAnnotations(inbox, session, builder.build());
+        assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, builder.build()))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
