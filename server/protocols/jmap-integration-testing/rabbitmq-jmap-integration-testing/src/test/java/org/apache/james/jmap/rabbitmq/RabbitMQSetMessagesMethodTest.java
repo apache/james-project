@@ -55,13 +55,6 @@ public class RabbitMQSetMessagesMethodTest extends SetMessagesMethodTest {
         return new CassandraMessageId.Factory().generate();
     }
 
-    @Ignore("JAMES-2221 Temporally ignored failed test")
-    @Override
-    @Test
-    public void attachmentsShouldBeRetrievedWhenChainingSetMessagesAndGetMessagesTextAttachment() throws Exception {
-
-    }
-
 
     @Ignore("Temporally ignored CI failing test")
     @Override
