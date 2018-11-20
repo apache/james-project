@@ -58,6 +58,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -364,14 +365,18 @@ public abstract class MailboxManagerTest {
         private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
         private EventCollector listener;
         private MailboxPath inbox;
+        private MessageManager inboxManager;
+        private MailboxPath newPath;
 
         @BeforeEach
         void setUp() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             inbox = MailboxPath.inbox(session);
+            newPath = MailboxPath.forUser(USER_1, "specialMailbox");
 
             listener = new EventCollector();
             mailboxManager.createMailbox(inbox, session);
+            inboxManager = mailboxManager.getMailbox(inbox, session);
         }
 
         @Test
@@ -385,10 +390,26 @@ public abstract class MailboxManagerTest {
                 .filteredOn(event -> event instanceof MailboxListener.MailboxDeletion)
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.MailboxDeletion) event)
-                .satisfies(events -> assertThat(events.get(0).getMailboxPath()).isEqualTo(inbox))
-                .satisfies(events -> assertThat(events.get(0).getQuotaRoot()).isEqualTo(quotaRoot))
-                .satisfies(events -> assertThat(events.get(0).getDeletedMessageCount()).isEqualTo(QuotaCount.count(0)))
-                .satisfies(events -> assertThat(events.get(0).getTotalDeletedSize()).isEqualTo(QuotaSize.size(0)));
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
+                .satisfies(event -> assertThat(event.getDeletedMessageCount()).isEqualTo(QuotaCount.count(0)))
+                .satisfies(event -> assertThat(event.getTotalDeletedSize()).isEqualTo(QuotaSize.size(0)));
+        }
+
+        @Test
+        void createMailboxShouldFireMailboxAddedEvent() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
+            mailboxManager.addGlobalListener(listener, session);
+
+            mailboxManager.createMailbox(newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.MailboxAdded)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.MailboxAdded) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath));
         }
 
         @Test
@@ -396,23 +417,138 @@ public abstract class MailboxManagerTest {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
             mailboxManager.addGlobalListener(listener, session);
 
-            mailboxManager.getMailbox(inbox, session)
-                .appendMessage(MessageManager.AppendCommand.builder()
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
 
             assertThat(listener.getEvents())
                 .filteredOn(event -> event instanceof MailboxListener.QuotaUsageUpdatedEvent)
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.QuotaUsageUpdatedEvent) event)
-                .satisfies(events -> assertThat(events.get(0).getQuotaRoot()).isEqualTo(quotaRoot))
-                .satisfies(events -> assertThat(events.get(0).getSizeQuota()).isEqualTo(Quota.<QuotaSize>builder()
+                .element(0)
+                .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
+                .satisfies(event -> assertThat(event.getSizeQuota()).isEqualTo(Quota.<QuotaSize>builder()
                     .used(QuotaSize.size(85))
                     .computedLimit(QuotaSize.unlimited())
                     .build()))
-                .satisfies(events -> assertThat(events.get(0).getCountQuota()).isEqualTo(Quota.<QuotaCount>builder()
+                .satisfies(event -> assertThat(event.getCountQuota()).isEqualTo(Quota.<QuotaCount>builder()
                     .used(QuotaCount.count(1))
                     .computedLimit(QuotaCount.unlimited())
                     .build()));
+        }
+
+        @Test
+        void addingMessageShouldFireAddedEvent() throws Exception {
+            mailboxManager.addGlobalListener(listener, session);
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder()
+                    .build(message), session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Added)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Added) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void expungeMessageShouldFireExpungedEvent() throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+            inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            inboxManager.expunge(MessageRange.all(), session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Expunged)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Expunged) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void setFlagsShouldFireFlagsUpdatedEvent() throws Exception {
+            inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            inboxManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.FlagsUpdated)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.FlagsUpdated) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void moveShouldFireAddedEventInTargetMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Move));
+            mailboxManager.createMailbox(newPath, session);
+            inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Added)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Added) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void moveShouldFireExpungedEventInOriginMailbox() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Move));
+            mailboxManager.createMailbox(newPath, session);
+            inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Expunged)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Expunged) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Disabled("This event is fired two times. Will be addressed in a next commit")
+        @Test
+        void copyShouldFireAddedEventInTargetMailbox() throws Exception {
+            mailboxManager.createMailbox(newPath, session);
+            inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Added)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.Added) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath))
+                .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void copyShouldNotFireExpungedEventInOriginMailbox() throws Exception {
+            mailboxManager.createMailbox(newPath, session);
+            inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.Expunged)
+                .isEmpty();
         }
     }
 
