@@ -38,6 +38,7 @@
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>cassandra-rabbitmq-guice</module>
+        <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
         <module>custom-mailets</module>
         <module>es-metric-reporter</module>
@@ -74,6 +75,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>james-server-cassandra-ldap-guice</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-configuration</artifactId>
