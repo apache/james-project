@@ -64,7 +64,8 @@ public class ReIndexerManagement implements ReIndexerManagementMBean {
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
                      .addContext(MDCBuilder.ACTION, "reIndex")
                      .build()) {
-            reIndexer.reIndex();
+            TaskId taskId = taskManager.submit(reIndexer.reIndex());
+            taskManager.await(taskId);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
