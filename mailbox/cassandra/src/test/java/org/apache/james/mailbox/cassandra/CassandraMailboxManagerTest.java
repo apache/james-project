@@ -18,48 +18,20 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest {
-
-    @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
-    
-    private static CassandraCluster cassandra;
-
-    @BeforeClass
-    public static void setUpClass() {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE_WITH_QUOTA, cassandraServer.getHost());
-    }
-
-    @Before
-    public void setup() throws Exception {
-        super.setUp();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
 
     @Override
     protected MailboxManager provideMailboxManager() {
-        return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getConf(), cassandra.getTypesProvider());
+        return CassandraMailboxManagerProvider.provideMailboxManager(
+            cassandra.getCassandraCluster().getConf(),
+            cassandra.getCassandraCluster().getTypesProvider());
     }
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        super.tearDown();
-        cassandra.clearTables();
-    }
-
-    @AfterClass
-    public static void tearDownClass() {
-        cassandra.closeCluster();
-    }
-
 }

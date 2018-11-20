@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.maildir;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
@@ -40,7 +41,11 @@ import org.junit.rules.TemporaryFolder;
 
 public class MaildirMailboxManagerProvider {
     public static StoreMailboxManager createMailboxManager(String configuration, TemporaryFolder temporaryFolder) throws MailboxException, IOException {
-        MaildirStore store = new MaildirStore(temporaryFolder.newFolder().getPath() + configuration, new JVMMailboxPathLocker());
+        return createMailboxManager(configuration, temporaryFolder.newFolder());
+    }
+
+    public static StoreMailboxManager createMailboxManager(String configuration, File tempFile) throws MailboxException {
+        MaildirStore store = new MaildirStore(tempFile.getPath() + configuration, new JVMMailboxPathLocker());
         MaildirMailboxSessionMapperFactory mf = new MaildirMailboxSessionMapperFactory(store);
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();

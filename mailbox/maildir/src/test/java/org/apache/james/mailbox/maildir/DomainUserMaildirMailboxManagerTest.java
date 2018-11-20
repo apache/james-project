@@ -20,35 +20,28 @@ package org.apache.james.mailbox.maildir;
 
 import java.io.UnsupportedEncodingException;
 
+import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest {
 
-    @Rule
-    public TemporaryFolder tmpFolder = new TemporaryFolder();
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+    @RegisterExtension
+    TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
     
     @Override
     protected MailboxManager provideMailboxManager() {
         try {
-            return MaildirMailboxManagerProvider.createMailboxManager("/%domain/%user", tmpFolder);
+            return MaildirMailboxManagerProvider.createMailboxManager("/%domain/%user", temporaryFolder.getTemporaryFolder().getTempDir());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Ignore("https://issues.apache.org/jira/browse/MAILBOX-292")
+    @Disabled("https://issues.apache.org/jira/browse/MAILBOX-292")
     @Override
     public void createMailboxShouldReturnRightId() throws MailboxException, UnsupportedEncodingException {
 
