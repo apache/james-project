@@ -44,6 +44,7 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.JmapGuiceProbe;
 import org.awaitility.Duration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +81,11 @@ public interface SpamAssassinContract {
             .addUser(BOB, BOB_PASSWORD)
             .addUser(ALICE, ALICE_PASSWORD)
             .addUser(PAUL, PAUL_PASSWORD);
+    }
+
+    @AfterEach
+    default void tearDown(SpamAssassinExtension.SpamAssassin spamAssassin) throws Exception {
+        spamAssassin.clear(ALICE);
     }
 
     default AccessToken accessTokenFor(GuiceJamesServer james, String user, String password) {

@@ -61,7 +61,8 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
 
     @Override
     public void beforeAll(ExtensionContext context) {
-        start();
+        spamAssassinContainer.start();
+        spamAssassin = new SpamAssassin(spamAssassinContainer);
     }
 
     @Override
@@ -71,24 +72,15 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
 
     @Override
     public void afterAll(ExtensionContext context) {
-        stop();
+        spamAssassinContainer.close();
     }
 
-    public void start() {
-        spamAssassinContainer.start();
-        spamAssassin = new SpamAssassin(spamAssassinContainer);
-    }
-
-    public void clearSpamAssassinDatabase() {
+    private void clearSpamAssassinDatabase() {
         try {
             spamAssassin.clearSpamAssassinDatabase();
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public void stop() {
-        spamAssassinContainer.close();
     }
 
     @Override
@@ -169,8 +161,12 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
             spamAssassinContainer.execInContainer("sa-learn", "--dump", "magic", "-u", user);
         }
 
+        public void clear(String user) throws UnsupportedOperationException, IOException, InterruptedException {
+            spamAssassinContainer.execInContainer("sa-learn", "--clear", "-u", user);
+        }
+
         public void clearSpamAssassinDatabase() throws UnsupportedOperationException, IOException, InterruptedException {
-            spamAssassinContainer.execInContainer("sa-learn", "--dump", "magic");
+            spamAssassinContainer.execInContainer("sa-learn", "--clear");
         }
     }
 
