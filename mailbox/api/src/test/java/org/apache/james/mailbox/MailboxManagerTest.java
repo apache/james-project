@@ -58,7 +58,6 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -520,7 +519,6 @@ public abstract class MailboxManagerTest {
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
-        @Disabled("This event is fired two times. Will be addressed in a next commit")
         @Test
         void copyShouldFireAddedEventInTargetMailbox() throws Exception {
             mailboxManager.createMailbox(newPath, session);

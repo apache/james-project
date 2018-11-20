@@ -709,7 +709,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 .tryAddition(1, originalMessage.getFullContentOctets());
             MessageMetaData data = messageMapper.execute(
                 () -> messageMapper.copy(getMailboxEntity(), originalMessage));
-            dispatcher.added(session, this.getMailboxEntity(), immutableMailboxMessageFactory.from(getMailboxEntity().getMailboxId(), originalMessage));
             copiedRows.add(data);
         }
         return copiedRows.iterator();
