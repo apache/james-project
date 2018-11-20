@@ -95,7 +95,7 @@ public abstract class MailboxManagerTest {
     protected abstract MailboxManager provideMailboxManager() throws MailboxException;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         this.mailboxManager = provideMailboxManager();
 
         this.message = Message.Builder.of()
@@ -104,20 +104,20 @@ public abstract class MailboxManagerTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    void tearDown() throws Exception {
         mailboxManager.logout(session, false);
         mailboxManager.endProcessingRequest(session);
     }
     
     @Test
-    public void createUser1SystemSessionShouldReturnValidSession() throws Exception {
+    void createUser1SystemSessionShouldReturnValidSession() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         
         assertThat(session.getUser().getUserName()).isEqualTo(USER_1);
     }
 
     @Test
-    public void user1ShouldNotHaveAnInbox() throws Exception {
+    void user1ShouldNotHaveAnInbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
         
@@ -139,7 +139,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void user1ShouldBeAbleToCreateInbox() throws Exception {
+    void user1ShouldBeAbleToCreateInbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
      
@@ -150,7 +150,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void user1ShouldNotBeAbleToCreateInboxTwice() throws Exception {
+    void user1ShouldNotBeAbleToCreateInboxTwice() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -161,7 +161,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void user1ShouldNotHaveTestSubmailbox() throws Exception {
+    void user1ShouldNotHaveTestSubmailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
 
@@ -172,7 +172,7 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user1ShouldBeAbleToCreateTestSubmailbox() throws Exception {
+    void user1ShouldBeAbleToCreateTestSubmailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -185,7 +185,7 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user1ShouldBeAbleToDeleteInbox() throws Exception {
+    void user1ShouldBeAbleToDeleteInbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
      
@@ -201,7 +201,7 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user1ShouldBeAbleToDeleteSubmailbox() throws Exception {
+    void user1ShouldBeAbleToDeleteSubmailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
      
@@ -217,7 +217,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void closingSessionShouldWork() throws Exception {
+    void closingSessionShouldWork() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.startProcessingRequest(session);
 
@@ -228,7 +228,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void listShouldReturnMailboxes() throws Exception {
+    void listShouldReturnMailboxes() throws Exception {
         session = mailboxManager.createSystemSession("manager");
         mailboxManager.startProcessingRequest(session);
 
@@ -238,7 +238,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void user2ShouldBeAbleToCreateRootlessFolder() throws MailboxException {
+    void user2ShouldBeAbleToCreateRootlessFolder() throws MailboxException {
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath trash = MailboxPath.forUser(USER_2, "Trash");
         mailboxManager.createMailbox(trash, session);
@@ -247,7 +247,7 @@ public abstract class MailboxManagerTest {
     }
     
     @Test
-    public void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws Exception {
+    void user2ShouldBeAbleToCreateNestedFoldersWithoutTheirParents() throws Exception {
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath nestedFolder = MailboxPath.forUser(USER_2, "INBOX.testfolder");
         mailboxManager.createMailbox(nestedFolder, session);
@@ -258,7 +258,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldNotReturnResultsFromOtherNamespaces() throws Exception {
+    void searchShouldNotReturnResultsFromOtherNamespaces() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Namespace));
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.createMailbox(new MailboxPath("other_namespace", USER_1, "Other"), session);
@@ -273,7 +273,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldNotReturnResultsFromOtherUsers() throws Exception {
+    void searchShouldNotReturnResultsFromOtherUsers() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
         mailboxManager.createMailbox(MailboxPath.forUser(USER_2, "Other"), session);
         mailboxManager.createMailbox(MailboxPath.inbox(session), session);
@@ -287,7 +287,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldUpdateStoredAnnotation() throws Exception {
+    void updateAnnotationsShouldUpdateStoredAnnotation() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -300,7 +300,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldDeleteAnnotationWithNilValue() throws Exception {
+    void updateAnnotationsShouldDeleteAnnotationWithNilValue() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -313,7 +313,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
+    void updateAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -323,7 +323,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws Exception {
+    void getAnnotationsShouldReturnEmptyForNonStoredAnnotation() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -333,7 +333,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws Exception {
+    void getAllAnnotationsShouldRetrieveStoredAnnotations() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -345,7 +345,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAllAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
+    void getAllAnnotationsShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -355,7 +355,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysShouldRetrieveStoresAnnotationsByKeys() throws Exception {
+    void getAnnotationsByKeysShouldRetrieveStoresAnnotationsByKeys() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -368,7 +368,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
+    void getAnnotationsByKeysShouldThrowExceptionIfMailboxDoesNotExist() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -378,7 +378,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws Exception {
+    void getAnnotationsByKeysWithOneDepthShouldRetriveAnnotationsWithOneDepth() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -391,7 +391,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws Exception {
+    void getAnnotationsByKeysWithAllDepthShouldThrowExceptionWhenMailboxDoesNotExist() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -401,7 +401,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws Exception {
+    void getAnnotationsByKeysWithAllDepthShouldRetriveAnnotationsWithAllDepth() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -414,7 +414,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldThrowExceptionIfAnnotationDataIsOverLimitation() throws Exception {
+    void updateAnnotationsShouldThrowExceptionIfAnnotationDataIsOverLimitation() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -425,7 +425,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void shouldUpdateAnnotationWhenRequestCreatesNewAndMailboxIsNotOverLimit() throws Exception {
+    void shouldUpdateAnnotationWhenRequestCreatesNewAndMailboxIsNotOverLimit() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -440,7 +440,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void updateAnnotationsShouldThrowExceptionIfRequestCreateNewButMailboxIsOverLimit() throws Exception {
+    void updateAnnotationsShouldThrowExceptionIfRequestCreateNewButMailboxIsOverLimit() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Annotation));
         session = mailboxManager.createSystemSession(USER_2);
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -457,7 +457,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldNotDuplicateMailboxWhenReportedAsUserMailboxesAndUserHasRightOnMailboxes() throws Exception {
+    void searchShouldNotDuplicateMailboxWhenReportedAsUserMailboxesAndUserHasRightOnMailboxes() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxPath inbox1 = MailboxPath.inbox(session1);
@@ -480,7 +480,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldIncludeDelegatedMailboxes() throws Exception {
+    void searchShouldIncludeDelegatedMailboxes() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -503,7 +503,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldCombinePrivateAndDelegatedMailboxes() throws Exception {
+    void searchShouldCombinePrivateAndDelegatedMailboxes() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -528,7 +528,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldAllowUserFiltering() throws Exception {
+    void searchShouldAllowUserFiltering() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -554,7 +554,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldAllowNamespaceFiltering() throws Exception {
+    void searchShouldAllowNamespaceFiltering() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -587,7 +587,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesAreSpecified() throws Exception {
+    void searchForMessageShouldReturnMessagesFromAllMyMailboxesIfNoMailboxesAreSpecified() throws Exception {
         assumeTrue(mailboxManager
             .getSupportedMessageCapabilities()
             .contains(MailboxManager.MessageCapabilities.UniqueID));
@@ -619,7 +619,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws Exception {
+    void searchForMessageShouldReturnMessagesFromMyDelegatedMailboxes() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -648,7 +648,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws Exception {
+    void searchForMessageShouldNotReturnMessagesFromMyDelegatedMailboxesICanNotRead() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -675,7 +675,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldOnlySearchInMailboxICanRead() throws Exception {
+    void searchForMessageShouldOnlySearchInMailboxICanRead() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -695,7 +695,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws Exception {
+    void searchForMessageShouldIgnoreMailboxThatICanNotRead() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -716,7 +716,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldCorrectlyExcludeMailbox() throws Exception {
+    void searchForMessageShouldCorrectlyExcludeMailbox() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -736,7 +736,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldPriorizeExclusionFromInclusion() throws Exception {
+    void searchForMessageShouldPriorizeExclusionFromInclusion() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -757,7 +757,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchForMessageShouldOnlySearchInGivenMailbox() throws Exception {
+    void searchForMessageShouldOnlySearchInGivenMailbox() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
 
         session = mailboxManager.createSystemSession(USER_1);
@@ -786,7 +786,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void searchShouldNotReturnNoMoreDelegatedMailboxes() throws Exception {
+    void searchShouldNotReturnNoMoreDelegatedMailboxes() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -815,7 +815,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
+    void getMailboxCountersShouldReturnDefaultValueWhenNoReadRight() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -841,7 +841,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void getMailboxCountersShouldReturnStoredValueWhenReadRight() throws Exception {
+    void getMailboxCountersShouldReturnStoredValueWhenReadRight() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -871,7 +871,7 @@ public abstract class MailboxManagerTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws Exception {
+    void getMetaDataShouldReturnDefaultValueWhenNoReadRight() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
         MailboxSession session1 = mailboxManager.createSystemSession(USER_1);
         MailboxSession session2 = mailboxManager.createSystemSession(USER_2);
@@ -917,7 +917,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void addingMessageShouldFireQuotaUpdateEvent() throws Exception {
+    void addingMessageShouldFireQuotaUpdateEvent() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
         session = mailboxManager.createSystemSession(USER_1);
 
@@ -936,7 +936,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
+    void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
         assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
         session = mailboxManager.createSystemSession(USER_1);
 
@@ -953,7 +953,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void moveMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
+    void moveMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
 
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -964,7 +964,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void copyMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
+    void copyMessagesShouldNotThrowWhenMovingAllMessagesOfAnEmptyMailbox() throws Exception {
         session = mailboxManager.createSystemSession(USER_1);
 
         MailboxPath inbox = MailboxPath.inbox(session);
@@ -986,7 +986,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void creatingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
+    void creatingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
         String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
@@ -996,7 +996,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void renamingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
+    void renamingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
         String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
@@ -1009,7 +1009,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void creatingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
+    void creatingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
         String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
@@ -1019,7 +1019,7 @@ public abstract class MailboxManagerTest {
     }
 
     @Test
-    public void renamingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
+    void renamingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
         String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
