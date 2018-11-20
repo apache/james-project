@@ -28,7 +28,7 @@
     </parent>
 
     <artifactId>james-server-cli-integration</artifactId>
-    <name>Apache James :: Server :: Cli :: Integretion</name>
+    <name>Apache James :: Server :: Cli :: Integration</name>
 
     <dependencies>
         <dependency>
