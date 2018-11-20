@@ -31,6 +31,8 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.AnnotationException;
@@ -47,6 +49,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
+import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.util.EventCollector;
@@ -357,40 +361,58 @@ public abstract class MailboxManagerTest {
 
     @Nested
     class EventTests {
+        private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
+        private EventCollector listener;
+        private MailboxPath inbox;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            inbox = MailboxPath.inbox(session);
+
+            listener = new EventCollector();
+            mailboxManager.createMailbox(inbox, session);
+        }
+
         @Test
         void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            session = mailboxManager.createSystemSession(USER_1);
-
-            EventCollector listener = new EventCollector();
             mailboxManager.addGlobalListener(listener, session);
 
-            MailboxPath inbox = MailboxPath.inbox(session);
-            mailboxManager.createMailbox(inbox, session);
             mailboxManager.deleteMailbox(inbox, session);
 
             assertThat(listener.getEvents())
                 .filteredOn(event -> event instanceof MailboxListener.MailboxDeletion)
-                .isNotEmpty();
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.MailboxDeletion) event)
+                .satisfies(events -> assertThat(events.get(0).getMailboxPath()).isEqualTo(inbox))
+                .satisfies(events -> assertThat(events.get(0).getQuotaRoot()).isEqualTo(quotaRoot))
+                .satisfies(events -> assertThat(events.get(0).getDeletedMessageCount()).isEqualTo(QuotaCount.count(0)))
+                .satisfies(events -> assertThat(events.get(0).getTotalDeletedSize()).isEqualTo(QuotaSize.size(0)));
         }
 
         @Test
         void addingMessageShouldFireQuotaUpdateEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            session = mailboxManager.createSystemSession(USER_1);
-
-            EventCollector listener = new EventCollector();
             mailboxManager.addGlobalListener(listener, session);
 
-            MailboxPath inbox = MailboxPath.inbox(session);
-            mailboxManager.createMailbox(inbox, session);
             mailboxManager.getMailbox(inbox, session)
                 .appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
 
             assertThat(listener.getEvents())
                 .filteredOn(event -> event instanceof MailboxListener.QuotaUsageUpdatedEvent)
-                .isNotEmpty();
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.QuotaUsageUpdatedEvent) event)
+                .satisfies(events -> assertThat(events.get(0).getQuotaRoot()).isEqualTo(quotaRoot))
+                .satisfies(events -> assertThat(events.get(0).getSizeQuota()).isEqualTo(Quota.<QuotaSize>builder()
+                    .used(QuotaSize.size(85))
+                    .computedLimit(QuotaSize.unlimited())
+                    .build()))
+                .satisfies(events -> assertThat(events.get(0).getCountQuota()).isEqualTo(Quota.<QuotaCount>builder()
+                    .used(QuotaCount.count(1))
+                    .computedLimit(QuotaCount.unlimited())
+                    .build()));
         }
     }
 
