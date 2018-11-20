@@ -364,6 +364,20 @@ public class UidMsnConverterTest {
     }
 
     @Test
+    public void removeShouldBeIdempotent() {
+        testee.addUid(messageUid1);
+        testee.addUid(messageUid2);
+        testee.addUid(messageUid3);
+
+        testee.remove(messageUid2);
+        testee.remove(messageUid2);
+
+        assertThat(mapTesteeInternalDataToMsnByUid())
+            .isEqualTo(ImmutableMap.of(1, messageUid1,
+                2, messageUid3));
+    }
+
+    @Test
     public void addAndRemoveShouldLeadToMonoticMSNToUIDConversionWhenMixed() throws Exception {
         int initialCount = 1000;
         for (int i = 1; i <= initialCount; i++) {
