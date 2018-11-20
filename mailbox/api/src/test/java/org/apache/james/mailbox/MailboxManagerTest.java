@@ -21,6 +21,7 @@ package org.apache.james.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -50,9 +51,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
-import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.common.base.Strings;
@@ -86,9 +85,6 @@ public abstract class MailboxManagerTest {
     private static final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
 
     private static final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
-
-    @Rule
-    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
 
     private MailboxManager mailboxManager;
     private MailboxSession session;
@@ -893,24 +889,27 @@ public abstract class MailboxManagerTest {
         MessageManager.MetaData metaData = mailboxManager.getMailbox(inbox1, session2)
             .getMetaData(resetRecent, session2, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT);
 
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getHighestModSeq)
-            .contains(0L);
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getUidNext)
-            .contains(MessageUid.MIN_VALUE);
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getMessageCount)
-            .contains(0L);
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getUnseenCount)
-            .contains(0L);
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getRecent)
-            .contains(ImmutableList.of());
-        softly.assertThat(metaData)
-            .extracting(MessageManager.MetaData::getPermanentFlags)
-            .contains(new Flags());
+        assertSoftly(
+            softly -> {
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getHighestModSeq)
+                    .contains(0L);
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getUidNext)
+                    .contains(MessageUid.MIN_VALUE);
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getMessageCount)
+                    .contains(0L);
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getUnseenCount)
+                    .contains(0L);
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getRecent)
+                    .contains(ImmutableList.of());
+                softly.assertThat(metaData)
+                    .extracting(MessageManager.MetaData::getPermanentFlags)
+                    .contains(new Flags());
+            });
     }
 
     @Test
