@@ -19,55 +19,34 @@
 
 package org.apache.james;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.james.user.ldap.LdapGenericContainer;
-import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
 
-public class LdapTestExtention implements GuiceModuleTestExtension {
-    private static final String DOMAIN = "james.org";
-    private static final String ADMIN_PASSWORD = "mysecretpassword";
+public class LdapTestExtension implements GuiceModuleTestExtension {
 
-    private LdapGenericContainer ldapContainer;
+    private DockerLdapRule ldapRule;
+
+    LdapTestExtension() {
+        this(new DockerLdapRule());
+    }
+
+    LdapTestExtension(DockerLdapRule ldapRule) {
+        this.ldapRule = ldapRule;
+    }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        ldapContainer = LdapGenericContainer.builder()
-            .domain(DOMAIN)
-            .password(ADMIN_PASSWORD)
-            .build();
-        ldapContainer.start();
+        ldapRule.start();
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        ldapContainer.stop();
+        ldapRule.stop();
     }
 
     @Override
     public Module getModule() {
-        return binder -> binder.bind(LdapRepositoryConfiguration.class)
-            .toInstance(computeConfiguration(ldapContainer.getLdapHost()));
-    }
-
-    private LdapRepositoryConfiguration computeConfiguration(String ldapIp) {
-        try {
-            return LdapRepositoryConfiguration.builder()
-                .ldapHost(ldapIp)
-                .principal("cn=admin,dc=james,dc=org")
-                .credentials("mysecretpassword")
-                .userBase("ou=People,dc=james,dc=org")
-                .userIdAttribute("uid")
-                .userObjectClass("inetOrgPerson")
-                .maxRetries(4)
-                .retryStartInterval(0)
-                .retryMaxInterval(8)
-                .scale(1000)
-                .build();
-        } catch (ConfigurationException e) {
-            throw new RuntimeException(e);
-        }
+        return ldapRule.getModule();
     }
 }

@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -17,22 +17,20 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.user.ldap;
 
-import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.extension.RegisterExtension;
+public class DockerLdapSingleton {
+    public static final String JAMES_USER = "james-user";
+    public static final String PASSWORD = "secret";
+    public static final String DOMAIN = "james.org";
+    public static final String ADMIN_PASSWORD = "mysecretpassword";
 
-class CassandraLdapJmapJamesServerTest implements JmapJamesServerContract {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
-    @RegisterExtension
-    static JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-        .extension(new EmbeddedElasticSearchExtension())
-        .extension(new CassandraExtension())
-        .extension(new LdapTestExtension())
-        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraLdapJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
+    public static final LdapGenericContainer ldapContainer = LdapGenericContainer.builder()
+        .domain(DOMAIN)
+        .password(ADMIN_PASSWORD)
         .build();
+
+    static {
+        ldapContainer.start();
+    }
 }

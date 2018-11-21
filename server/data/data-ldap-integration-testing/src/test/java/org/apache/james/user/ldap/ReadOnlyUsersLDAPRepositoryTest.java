@@ -18,6 +18,10 @@
  ****************************************************************/
 package org.apache.james.user.ldap;
 
+import static org.apache.james.user.ldap.DockerLdapSingleton.ADMIN_PASSWORD;
+import static org.apache.james.user.ldap.DockerLdapSingleton.DOMAIN;
+import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
+import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -34,12 +38,8 @@ import org.slf4j.LoggerFactory;
 public class ReadOnlyUsersLDAPRepositoryTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
-    private static final String DOMAIN = "james.org";
-    private static final String ADMIN_PASSWORD = "mysecretpassword";
-    private static final String JAMES_USER = "james-user";
-    private static final String JAMES_USER_MAIL = "james-user" + "@" + DOMAIN;
+    private static final String JAMES_USER_MAIL = JAMES_USER + "@" + DOMAIN;
     private static final String UNKNOWN = "unknown";
-    private static final String PASSWORD = "secret";
     private static final String BAD_PASSWORD = "badpassword";
 
     @ClassRule

@@ -85,7 +85,8 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         }
     }
 
-    interface ContractSuite extends JmapJamesServerContract, MailsShouldBeWellReceived, UserFromLdapShouldLogin {}
+    interface ContractSuite extends JmapJamesServerContract, MailsShouldBeWellReceived,
+        UserFromLdapShouldLogin, JamesServerContract {}
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -95,7 +96,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .extension(new LdapTestExtention())
+            .extension(new LdapTestExtension())
             .extension(new SwiftBlobStoreExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
@@ -114,7 +115,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .extension(new LdapTestExtention())
+            .extension(new LdapTestExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
                 .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
