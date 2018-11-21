@@ -46,7 +46,7 @@ public class JPAMailboxManagerTest extends MailboxManagerTest {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 
-    @Disabled("MAILBOX-343")
+    @Disabled("MAILBOX-353 Creating concurrently mailboxes with the same parents with JPA")
     @Test
     @Override
     public void creatingConcurrentlyMailboxesWithSameParentShouldNotFail() {
