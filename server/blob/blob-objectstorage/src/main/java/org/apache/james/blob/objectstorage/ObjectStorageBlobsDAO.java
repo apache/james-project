@@ -35,6 +35,8 @@ import org.jclouds.blobstore.domain.Blob;
 import org.jclouds.blobstore.options.CopyOptions;
 import org.jclouds.domain.Location;
 import org.jclouds.io.Payload;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -44,7 +46,8 @@ import com.google.common.hash.HashingInputStream;
 
 public class ObjectStorageBlobsDAO implements BlobStore {
     private static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
-    public static final Location DEFAULT_LOCATION = null;
+    private static final Location DEFAULT_LOCATION = null;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectStorageBlobsDAO.class);
 
 
     private final BlobId.Factory blobIdFactory;
@@ -76,11 +79,10 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     public CompletableFuture<ContainerName> createContainer(ContainerName name) {
         return CompletableFuture.supplyAsync(() -> blobStore.createContainerInLocation(DEFAULT_LOCATION, name.value()))
             .thenApply(created -> {
-                if (created) {
-                    return name;
-                } else {
-                    throw new ObjectStoreException("Unable to create container " + name.value());
+                if (!created) {
+                    LOGGER.debug("{} already existed", name);
                 }
+                return name;
             });
     }
 

@@ -20,7 +20,7 @@
 package org.apache.james.blob.objectstorage;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -33,7 +33,6 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
-import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.Identity;
@@ -110,12 +109,12 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     }
 
     @Test
-    void createContainerShouldFailWithRuntimeExceptionWhenCreateContainerTwice() throws Exception {
+    void createContainerShouldNotFailWithRuntimeExceptionWhenCreateContainerTwice() throws Exception {
         ContainerName containerName = ContainerName.of(UUID.randomUUID().toString());
+
         objectStorageBlobsDAO.createContainer(containerName).get();
-        assertThatThrownBy(() -> objectStorageBlobsDAO.createContainer(containerName).get())
-            .hasCauseInstanceOf(ObjectStoreException.class)
-            .hasMessageContaining("Unable to create container");
+        assertThatCode(() -> objectStorageBlobsDAO.createContainer(containerName).get())
+            .doesNotThrowAnyException();
     }
 
     @Test
