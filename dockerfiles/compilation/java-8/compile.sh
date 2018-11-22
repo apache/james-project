@@ -15,6 +15,7 @@ printUsage() {
 ORIGIN=/origin
 CASSANDRA_DESTINATION=/cassandra/destination
 CASSANDRA_RABBITMQ_DESTINATION=/cassandra-rabbitmq/destination
+CASSANDRA_RABBITMQ_LDAP_DESTINATION=/cassandra-rabbitmq-ldap/destination
 JPA_DESTINATION=/jpa/destination
 JPA_SMTP_DESTINATION=/jpa-smpt/destination
 SPRING_DESTINATION=/spring/destination
@@ -60,6 +61,14 @@ fi
 # Retrieve result
 
 if [ $? -eq 0 ]; then
+   if [ -d "$CASSANDRA_RABBITMQ_LDAP_DESTINATION" ]; then
+      echo "Copying cassandra - rabbitMQ - Ldap JARs"
+      cp server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp -r server/container/guice/cassandra-rabbitmq-ldap-guice/target/james-server-cassandra-rabbitmq-ldap-guice.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp server/container/cli/target/james-server-cli.jar $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+      cp -r server/container/cli/target/james-server-cli.lib $CASSANDRA_RABBITMQ_LDAP_DESTINATION || true
+   fi
+
    if [ -d "$CASSANDRA_RABBITMQ_DESTINATION" ]; then
       echo "Copying cassandra JARs"
       cp server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.jar $CASSANDRA_RABBITMQ_DESTINATION || true
