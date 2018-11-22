@@ -21,9 +21,14 @@ package org.apache.james.blob.api;
 import java.io.InputStream;
 import java.util.concurrent.CompletableFuture;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.james.metrics.api.MetricFactory;
 
 public class MetricableBlobStore implements BlobStore {
+
+    public static final String BLOB_STORE_IMPLEMENTATION = "blobStoreImplementation";
 
     static final String BLOB_STORE_METRIC_PREFIX = "blobStore:";
     static final String SAVE_BYTES_TIMER_NAME = BLOB_STORE_METRIC_PREFIX + "saveBytes";
@@ -34,7 +39,9 @@ public class MetricableBlobStore implements BlobStore {
     private final MetricFactory metricFactory;
     private final BlobStore blobStoreImpl;
 
-    public MetricableBlobStore(MetricFactory metricFactory, BlobStore blobStoreImpl) {
+    @Inject
+    public MetricableBlobStore(MetricFactory metricFactory,
+                               @Named(BLOB_STORE_IMPLEMENTATION) BlobStore blobStoreImpl) {
         this.metricFactory = metricFactory;
         this.blobStoreImpl = blobStoreImpl;
     }

@@ -25,6 +25,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
@@ -51,6 +52,8 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
 @ExtendWith(DockerSwiftExtension.class)
@@ -122,7 +125,7 @@ class ObjectStorageBlobStoreModuleTest {
         ObjectStorageBlobsDAO dao = injector.getInstance(ObjectStorageBlobsDAO.class);
         dao.createContainer(configuration.getNamespace());
 
-        BlobStore blobStore = injector.getInstance(BlobStore.class);
+        BlobStore blobStore = injector.getInstance(Key.get(BlobStore.class, Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)));
 
         assertThatCode(() -> blobStore.save(new byte[] {0x00})).doesNotThrowAnyException();
     }

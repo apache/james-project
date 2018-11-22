@@ -21,6 +21,7 @@ package org.apache.james.modules.blobstore;
 
 import java.io.FileNotFoundException;
 
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
@@ -28,6 +29,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
@@ -69,6 +71,7 @@ public class BlobStoreChoosingModule extends AbstractModule {
 
     @VisibleForTesting
     @Provides
+    @Named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)
     @Singleton
     BlobStore provideBlobStore(BlobStoreChoosingConfiguration choosingConfiguration,
                                Provider<CassandraBlobsDAO> cassandraBlobStoreProvider,
