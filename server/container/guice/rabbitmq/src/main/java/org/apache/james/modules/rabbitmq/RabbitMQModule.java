@@ -20,9 +20,9 @@ package org.apache.james.modules.rabbitmq;
 
 import java.io.FileNotFoundException;
 import java.time.Clock;
-import java.time.Duration;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration.Configuration;
@@ -65,12 +65,6 @@ public class RabbitMQModule extends AbstractModule {
     protected void configure() {
         bind(Clock.class).toInstance(Clock.systemUTC());
         bind(ThreadLocalRandom.class).toInstance(ThreadLocalRandom.current());
-        bind(CassandraMailQueueViewConfiguration.class).toInstance(CassandraMailQueueViewConfiguration
-                .builder()
-                .bucketCount(1)
-                .updateBrowseStartPace(1000)
-                .sliceWindow(Duration.ofHours(1))
-                .build());
 
         bind(EnqueuedMailsDAO.class).in(Scopes.SINGLETON);
         bind(DeletedMailsDAO.class).in(Scopes.SINGLETON);
@@ -104,14 +98,26 @@ public class RabbitMQModule extends AbstractModule {
     }
 
     @Provides
+    @Named(RABBITMQ_CONFIGURATION_NAME)
     @Singleton
-    private RabbitMQConfiguration getMailQueueConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
+    private Configuration getConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
-            Configuration configuration = propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
-            return RabbitMQConfiguration.from(configuration);
+            return propertiesProvider.getConfiguration(RABBITMQ_CONFIGURATION_NAME);
         } catch (FileNotFoundException e) {
             LOGGER.error("Could not find " + RABBITMQ_CONFIGURATION_NAME + " configuration file.");
             throw new RuntimeException(e);
         }
+    }
+
+    @Provides
+    @Singleton
+    private RabbitMQConfiguration getMailQueueConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Configuration configuration) {
+        return RabbitMQConfiguration.from(configuration);
+    }
+
+    @Provides
+    @Singleton
+    private CassandraMailQueueViewConfiguration getMailQueueViewConfiguration(@Named(RABBITMQ_CONFIGURATION_NAME) Configuration configuration) {
+        return CassandraMailQueueViewConfiguration.from(configuration);
     }
 }
