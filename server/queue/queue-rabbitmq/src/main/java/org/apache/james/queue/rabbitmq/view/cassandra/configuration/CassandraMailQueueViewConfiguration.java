@@ -21,11 +21,16 @@ package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.Optional;
+
+import org.apache.commons.configuration.Configuration;
+import org.apache.james.util.TimeConverter;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class CassandraMailQueueViewConfiguration {
+
     interface Builder {
         @FunctionalInterface
         interface RequireBucketCount {
@@ -65,6 +70,34 @@ public class CassandraMailQueueViewConfiguration {
 
     public static Builder.RequireBucketCount builder() {
         return bucketCount -> updateBrowseStartPace -> sliceWindow -> new Builder.ReadyToBuild(bucketCount, updateBrowseStartPace, sliceWindow);
+    }
+
+    public static int DEFAULT_BUCKET_COUNT = 1;
+    public static Duration DEFAULT_SLICE_WINDOW = Duration.ofHours(1);
+    public static int DEFAULT_UPDATE_BROWSE_START_PACE = 1000;
+    public static CassandraMailQueueViewConfiguration DEFAULT = builder()
+        .bucketCount(DEFAULT_BUCKET_COUNT)
+        .updateBrowseStartPace(DEFAULT_UPDATE_BROWSE_START_PACE)
+        .sliceWindow(DEFAULT_SLICE_WINDOW)
+        .build();
+
+    public static final String BUCKET_COUNT_PROPERTY = "mailqueue.view.bucketCount";
+    public static final String UPDATE_BROWSE_START_PACE_PROPERTY = "mailqueue.view.updateBrowseStartPace";
+    public static final String SLICE_WINDOW_PROPERTY = "mailqueue.view.sliceWindow";
+
+    public static CassandraMailQueueViewConfiguration from(Configuration configuration) {
+        int bucketCount = configuration.getInteger(BUCKET_COUNT_PROPERTY, DEFAULT_BUCKET_COUNT);
+        int updateBrowseStartPace = configuration.getInteger(UPDATE_BROWSE_START_PACE_PROPERTY, DEFAULT_UPDATE_BROWSE_START_PACE);
+        Optional<String> sliceWindowAsString = Optional.ofNullable(configuration.getString(SLICE_WINDOW_PROPERTY, null));
+
+        return builder()
+            .bucketCount(bucketCount)
+            .updateBrowseStartPace(updateBrowseStartPace)
+            .sliceWindow(sliceWindowAsString
+                .map(TimeConverter::getMilliSeconds)
+                .map(Duration::ofMillis)
+                .orElse(DEFAULT_SLICE_WINDOW))
+            .build();
     }
 
     private final int bucketCount;

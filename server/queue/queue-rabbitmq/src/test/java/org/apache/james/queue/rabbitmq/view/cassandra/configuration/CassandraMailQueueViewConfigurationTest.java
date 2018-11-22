@@ -19,11 +19,14 @@
 
 package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 
+import org.apache.commons.configuration.PropertiesConfiguration;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -113,4 +116,43 @@ class CassandraMailQueueViewConfigurationTest {
                 .build()))
             .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Nested
+    class FromConfiguration {
+        @Test
+        void fromShouldReturnDefaultForEmptyConfiguration() {
+            CassandraMailQueueViewConfiguration actual = CassandraMailQueueViewConfiguration.from(new PropertiesConfiguration());
+
+            assertThat(actual)
+                .isEqualTo(CassandraMailQueueViewConfiguration.DEFAULT);
+        }
+
+        @Test
+        void fromShouldReturnConfiguredBucketCount() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty(CassandraMailQueueViewConfiguration.BUCKET_COUNT_PROPERTY, "8");
+            CassandraMailQueueViewConfiguration actual = CassandraMailQueueViewConfiguration.from(configuration);
+
+            assertThat(actual.getBucketCount()).isEqualTo(8);
+        }
+
+        @Test
+        void fromShouldReturnConfiguredUpdateBrowseStartPace() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty(CassandraMailQueueViewConfiguration.UPDATE_BROWSE_START_PACE_PROPERTY, "100");
+            CassandraMailQueueViewConfiguration actual = CassandraMailQueueViewConfiguration.from(configuration);
+
+            assertThat(actual.getUpdateBrowseStartPace()).isEqualTo(100);
+        }
+
+        @Test
+        void fromShouldReturnConfiguredSliceWindow() {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty(CassandraMailQueueViewConfiguration.SLICE_WINDOW_PROPERTY, "20min");
+            CassandraMailQueueViewConfiguration actual = CassandraMailQueueViewConfiguration.from(configuration);
+
+            assertThat(actual.getSliceWindow()).isEqualTo(Duration.ofMinutes(20));
+        }
+    }
+
 }
