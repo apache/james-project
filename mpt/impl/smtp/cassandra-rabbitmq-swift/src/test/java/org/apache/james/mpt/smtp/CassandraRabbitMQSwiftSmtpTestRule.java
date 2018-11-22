@@ -30,7 +30,6 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.TestSwiftBlobStoreModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
@@ -163,7 +162,6 @@ public class CassandraRabbitMQSwiftSmtpTestRule implements TestRule, SmtpHostSys
                     .toInstance(DefaultConfigurationBuilder::new))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new TestSwiftBlobStoreModule())
-            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class).toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .overrideWith(
                 binder -> binder.bind(ClusterConfiguration.class).toInstance(
                     ClusterConfiguration.builder()

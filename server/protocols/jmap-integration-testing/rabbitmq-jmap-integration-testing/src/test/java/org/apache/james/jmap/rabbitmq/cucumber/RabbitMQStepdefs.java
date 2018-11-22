@@ -41,7 +41,6 @@ import org.apache.james.modules.TestElasticSearchModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.TestSwiftBlobStoreModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.apache.james.server.core.configuration.Configuration;
@@ -91,8 +90,6 @@ public class RabbitMQStepdefs {
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
             .overrideWith(new TestSwiftBlobStoreModule())
-            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .overrideWith(new TestElasticSearchModule(embeddedElasticSearch))
             .overrideWith(cassandraServer.getModule())
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(DefaultTextExtractor.class))

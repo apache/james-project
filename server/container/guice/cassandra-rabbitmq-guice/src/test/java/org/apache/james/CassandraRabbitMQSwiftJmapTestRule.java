@@ -28,7 +28,6 @@ import org.apache.james.modules.TestESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.TestSwiftBlobStoreModule;
-import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.server.core.configuration.Configuration;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.TestRule;
@@ -68,8 +67,6 @@ public class CassandraRabbitMQSwiftJmapTestRule implements TestRule {
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new TestSwiftBlobStoreModule())
-            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestESMetricReporterModule())
             .overrideWith(guiceModuleTestRule.getModule())

@@ -19,9 +19,12 @@
 
 package org.apache.james.modules;
 
+import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 public class TestSwiftBlobStoreModule extends AbstractModule {
 
@@ -33,6 +36,11 @@ public class TestSwiftBlobStoreModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(dockerSwiftTestRule.getModule());
+        Module testSwiftBlobStoreModule = Modules
+            .override(dockerSwiftTestRule.getModule())
+            .with(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(BlobStoreChoosingConfiguration.objectStorage()));
+
+        install(testSwiftBlobStoreModule);
     }
 }
