@@ -28,30 +28,33 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.MetricableBlobStore;
+import org.apache.james.blob.api.MetricableBlobStoreContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.base.Strings;
 
-public class CassandraBlobsDAOTest implements BlobStoreContract {
+public class CassandraBlobsDAOTest implements MetricableBlobStoreContract {
     private static final int CHUNK_SIZE = 10240;
     private static final int MULTIPLE_CHUNK_SIZE = 3;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraBlobModule.MODULE);
 
-    private CassandraBlobsDAO testee;
+    private BlobStore testee;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        testee = new CassandraBlobsDAO(cassandra.getConf(),
-            CassandraConfiguration.builder()
-                .blobPartSize(CHUNK_SIZE)
-                .build(),
-            new HashBlobId.Factory());
+        testee = new MetricableBlobStore(
+            metricsTestExtension.getMetricFactory(),
+            new CassandraBlobsDAO(cassandra.getConf(),
+                CassandraConfiguration.builder()
+                    .blobPartSize(CHUNK_SIZE)
+                    .build(),
+                new HashBlobId.Factory()));
     }
 
     @Override
