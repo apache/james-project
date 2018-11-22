@@ -72,10 +72,11 @@ public class CassandraMailQueueViewConfiguration {
         return bucketCount -> updateBrowseStartPace -> sliceWindow -> new Builder.ReadyToBuild(bucketCount, updateBrowseStartPace, sliceWindow);
     }
 
-    public static int DEFAULT_BUCKET_COUNT = 1;
-    public static Duration DEFAULT_SLICE_WINDOW = Duration.ofHours(1);
-    public static int DEFAULT_UPDATE_BROWSE_START_PACE = 1000;
-    public static CassandraMailQueueViewConfiguration DEFAULT = builder()
+    private static final int DEFAULT_BUCKET_COUNT = 1;
+    private static final Duration DEFAULT_SLICE_WINDOW = Duration.ofHours(1);
+    private static final int DEFAULT_UPDATE_BROWSE_START_PACE = 1000;
+
+    public static final CassandraMailQueueViewConfiguration DEFAULT = builder()
         .bucketCount(DEFAULT_BUCKET_COUNT)
         .updateBrowseStartPace(DEFAULT_UPDATE_BROWSE_START_PACE)
         .sliceWindow(DEFAULT_SLICE_WINDOW)
