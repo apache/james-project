@@ -19,6 +19,7 @@
 
 package org.apache.james.metrics.api;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public interface MetricFactory {
@@ -41,5 +42,10 @@ public interface MetricFactory {
             runnable.run();
             return null;
         });
+    }
+
+    default <T> CompletableFuture<T> runPublishingTimerMetric(String name, CompletableFuture<T> future) {
+        TimeMetric timer = timer(name);
+        return future.whenComplete((result, throwable) -> timer.stopAndPublish());
     }
 }
