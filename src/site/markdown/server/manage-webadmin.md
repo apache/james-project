@@ -2204,10 +2204,10 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing a mailbox mails
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com/mailboxes/{mailboxId}?task=reIndex
+curl -XPOST http://ip:port/mailboxIndex/mailboxes/{mailboxId}?task=reIndex
 ```
 
-Will schedule a task for reIndexing all the mails in one mailbox belonging to "bob@domain.com".
+Will schedule a task for reIndexing all the mails in one mailbox.
 
 Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
 
@@ -2250,7 +2250,7 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing a single mail
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com/mailboxes/{mailboxId}/uid/36?task=reIndex
+curl -XPOST http://ip:port/mailboxIndex/mailboxes/{mailboxId}/uid/36?task=reIndex
 ```
 
 Will schedule a task for reIndexing a single email.

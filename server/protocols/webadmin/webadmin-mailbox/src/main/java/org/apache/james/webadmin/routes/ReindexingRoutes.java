@@ -63,7 +63,7 @@ public class ReindexingRoutes implements Routes {
     private static final String MAILBOX_PARAM = ":mailbox";
     private static final String UID_PARAM = ":uid";
     private static final String USER_PATH = BASE_PATH + "/users/" + USER_PARAM;
-    private static final String MAILBOX_PATH = USER_PATH + "/mailboxes/" + MAILBOX_PARAM;
+    private static final String MAILBOX_PATH = BASE_PATH + "/mailboxes/" + MAILBOX_PARAM;
     private static final String MESSAGE_PATH = MAILBOX_PATH + "/mails/" + UID_PARAM;
 
     private final TaskManager taskManager;
@@ -147,7 +147,7 @@ public class ReindexingRoutes implements Routes {
     }
 
     @POST
-    @Path("/users/{user}/mailboxes/{mailboxId}")
+    @Path("/mailboxes/{mailboxId}")
     @ApiOperation(value = "Re-indexes all the mails in a mailbox")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -185,7 +185,7 @@ public class ReindexingRoutes implements Routes {
     }
 
     @POST
-    @Path("/users/{user}/mailboxes/{mailboxId}/mails/{uid}")
+    @Path("/mailboxes/{mailboxId}/mails/{uid}")
     @ApiOperation(value = "Re-indexes a single email")
     @ApiImplicitParams({
         @ApiImplicitParam(
