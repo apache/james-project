@@ -46,6 +46,14 @@ public class Keywords {
 
     public static final Keywords DEFAULT_VALUE = new Keywords(ImmutableSet.of());
     private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
+    private static final KeywordsFactory STRICT_KEYWORDS_FACTORY = new KeywordsFactory(
+        KeywordsFactory.KeywordsValidator.THROW_ON_IMAP_NON_EXPOSED_KEYWORDS,
+        KeywordsFactory.KeywordFilter.KEEP_ALL,
+        KeywordsFactory.ToKeyword.STRICT);
+    private static final KeywordsFactory LENIENT_KEYWORDS_FACTORY = new KeywordsFactory(
+        KeywordsFactory.KeywordsValidator.IGNORE_NON_EXPOSED_IMAP_KEYWORDS,
+        KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS,
+        KeywordsFactory.ToKeyword.LENIENT);
 
     private FlagsBuilder combiner(FlagsBuilder firstBuilder, FlagsBuilder secondBuilder) {
         return firstBuilder.add(secondBuilder.build());
@@ -140,15 +148,11 @@ public class Keywords {
     }
 
     public static KeywordsFactory strictFactory() {
-        return new KeywordsFactory(KeywordsFactory.KeywordsValidator.THROW_ON_IMAP_NON_EXPOSED_KEYWORDS,
-            KeywordsFactory.KeywordFilter.KEEP_ALL,
-            KeywordsFactory.ToKeyword.STRICT);
+        return STRICT_KEYWORDS_FACTORY;
     }
 
     public static KeywordsFactory lenientFactory() {
-        return new KeywordsFactory(KeywordsFactory.KeywordsValidator.IGNORE_NON_EXPOSED_IMAP_KEYWORDS,
-            KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS,
-            KeywordsFactory.ToKeyword.LENIENT);
+        return LENIENT_KEYWORDS_FACTORY;
     }
 
     private final ImmutableSet<Keyword> keywords;
