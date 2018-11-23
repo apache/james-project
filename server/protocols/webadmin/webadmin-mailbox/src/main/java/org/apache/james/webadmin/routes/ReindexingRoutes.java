@@ -25,14 +25,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.User;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
@@ -41,8 +38,6 @@ import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
-
-import com.github.fge.lambdas.supplier.ThrowingSupplier;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -58,6 +53,11 @@ import spark.Service;
 @Path("/mailboxIndex")
 @Produces("application/json")
 public class ReindexingRoutes implements Routes {
+    @FunctionalInterface
+    interface TaskGenerator {
+        Task generate() throws MailboxException;
+    }
+
     static final String BASE_PATH = "/mailboxIndex";
     private static final String USER_PARAM = ":user";
     private static final String MAILBOX_PARAM = ":mailbox";
@@ -67,15 +67,13 @@ public class ReindexingRoutes implements Routes {
     private static final String MESSAGE_PATH = MAILBOX_PATH + "/mails/" + UID_PARAM;
 
     private final TaskManager taskManager;
-    private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
     private final ReIndexer reIndexer;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    public ReindexingRoutes(TaskManager taskManager, MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    public ReindexingRoutes(TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
         this.taskManager = taskManager;
-        this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
         this.reIndexer = reIndexer;
         this.jsonTransformer = jsonTransformer;
@@ -183,7 +181,7 @@ public class ReindexingRoutes implements Routes {
     })
     private TaskIdDto reIndexMailbox(Request request, Response response) {
         return wrap(request, response,
-            () -> reIndexer.reIndex(retrievePath(request)));
+            () -> reIndexer.reIndex(extractMailboxId(request)));
     }
 
     @POST
@@ -223,14 +221,25 @@ public class ReindexingRoutes implements Routes {
     })
     private TaskIdDto reIndexMessage(Request request, Response response) {
         return wrap(request, response,
-            () -> reIndexer.reIndex(retrievePath(request), extractUid(request)));
+            () -> reIndexer.reIndex(extractMailboxId(request), extractUid(request)));
     }
 
-    private TaskIdDto wrap(Request request, Response response, ThrowingSupplier<Task> taskGenerator) {
+    private TaskIdDto wrap(Request request, Response response, TaskGenerator taskGenerator) {
         ReIndexingRoutesUtil.enforceTaskParameter(request);
-        Task task = taskGenerator.get();
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
+        try {
+            Task task = taskGenerator.generate();
+            TaskId taskId = taskManager.submit(task);
+            return TaskIdDto.respond(response, taskId);
+        } catch (MailboxNotFoundException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("mailbox not found")
+                .cause(e)
+                .haltError();
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private User extractUser(Request request) {
@@ -244,10 +253,6 @@ public class ReindexingRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
-    }
-
-    private MailboxPath retrievePath(Request request) throws MailboxException {
-        return toMailboxPath(extractUser(request), extractMailboxId(request));
     }
 
     private MailboxId extractMailboxId(Request request) {
@@ -271,20 +276,6 @@ public class ReindexingRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("'uid' needs to be a parsable long")
-                .cause(e)
-                .haltError();
-        }
-    }
-
-    private MailboxPath toMailboxPath(User user, MailboxId mailboxId) throws MailboxException {
-        try {
-            MailboxSession systemSession = mailboxManager.createSystemSession(user.asString());
-            return mailboxManager.getMailbox(mailboxId, systemSession).getMailboxPath();
-        } catch (MailboxNotFoundException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("mailbox not found")
                 .cause(e)
                 .haltError();
         }

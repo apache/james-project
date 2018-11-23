@@ -61,6 +61,7 @@ import org.apache.mailbox.tools.indexer.UserReindexingTask;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -95,7 +96,6 @@ class ReindexingRoutesTest {
             new TasksRoutes(taskManager, jsonTransformer),
             new ReindexingRoutes(
                 taskManager,
-                mailboxManager,
                 mailboxIdFactory,
                 reIndexer,
                 jsonTransformer),
@@ -401,6 +401,7 @@ class ReindexingRoutesTest {
                     .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
             }
 
+            @Disabled("Using user here makes no sens from an API perspective, and will be removed")
             @Test
             void mailboxReprocessingShouldFailWithBadUser() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
@@ -580,6 +581,7 @@ class ReindexingRoutesTest {
                     .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
             }
 
+            @Disabled("Using user here makes no sens from an API perspective, and will be removed")
             @Test
             void messageReprocessingShouldFailWithBadUser() throws Exception {
                 MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
@@ -624,7 +626,7 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("mailbox not found"));
+                    .body("message", is("'uid' needs to be a parsable long"));
             }
         }
 
