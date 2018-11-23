@@ -24,7 +24,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -33,16 +33,20 @@ public class SingleMailboxReindexingTask implements Task {
     public static final String MAILBOX_RE_INDEXING = "mailboxReIndexing";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final MailboxPath mailboxPath;
+        private final Mailbox mailbox;
         private final ReprocessingContext reprocessingContext;
 
-        AdditionalInformation(MailboxPath mailboxPath, ReprocessingContext reprocessingContext) {
-            this.mailboxPath = mailboxPath;
+        AdditionalInformation(Mailbox mailbox, ReprocessingContext reprocessingContext) {
+            this.mailbox = mailbox;
             this.reprocessingContext = reprocessingContext;
         }
 
         public String getMailboxPath() {
-            return mailboxPath.asString();
+            return mailbox.generateAssociatedPath().asString();
+        }
+
+        public String getMailboxId() {
+            return mailbox.getMailboxId().serialize();
         }
 
         public int getSuccessfullyReprocessMailCount() {
@@ -55,22 +59,22 @@ public class SingleMailboxReindexingTask implements Task {
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final MailboxPath path;
+    private final Mailbox mailbox;
     private final AdditionalInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
 
     @Inject
-    public SingleMailboxReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxPath path) {
+    public SingleMailboxReindexingTask(ReIndexerPerformer reIndexerPerformer, Mailbox mailbox) {
         this.reIndexerPerformer = reIndexerPerformer;
-        this.path = path;
+        this.mailbox = mailbox;
         this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new AdditionalInformation(path, reprocessingContext);
+        this.additionalInformation = new AdditionalInformation(mailbox, reprocessingContext);
     }
 
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.reIndex(path, reprocessingContext);
+            return reIndexerPerformer.reIndex(mailbox, reprocessingContext);
         } catch (MailboxException e) {
             return Result.PARTIAL;
         }

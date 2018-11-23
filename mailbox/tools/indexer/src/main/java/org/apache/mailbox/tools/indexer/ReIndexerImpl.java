@@ -22,9 +22,15 @@ package org.apache.mailbox.tools.indexer;
 import javax.inject.Inject;
 
 import org.apache.james.core.User;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.task.Task;
 
 /**
@@ -39,15 +45,28 @@ import org.apache.james.task.Task;
 public class ReIndexerImpl implements ReIndexer {
 
     private final ReIndexerPerformer reIndexerPerformer;
+    private final MailboxManager mailboxManager;
+    private final MailboxSessionMapperFactory mapperFactory;
 
     @Inject
-    public ReIndexerImpl(ReIndexerPerformer reIndexerPerformer) {
+    public ReIndexerImpl(ReIndexerPerformer reIndexerPerformer, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) {
         this.reIndexerPerformer = reIndexerPerformer;
+        this.mailboxManager = mailboxManager;
+        this.mapperFactory = mapperFactory;
     }
 
     @Override
-    public Task reIndex(MailboxPath path) {
-        return new SingleMailboxReindexingTask(reIndexerPerformer, path);
+    public Task reIndex(MailboxPath path) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailbox);
+    }
+
+    @Override
+    public Task reIndex(MailboxId mailboxId) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailbox);
     }
 
     @Override

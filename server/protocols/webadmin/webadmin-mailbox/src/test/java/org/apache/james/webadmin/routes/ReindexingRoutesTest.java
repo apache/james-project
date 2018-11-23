@@ -85,7 +85,9 @@ class ReindexingRoutesTest {
             new ReIndexerPerformer(
                 mailboxManager,
                 searchIndex,
-                mailboxManager.getMapperFactory()));
+                mailboxManager.getMapperFactory()),
+            mailboxManager,
+            mailboxManager.getMapperFactory());
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
