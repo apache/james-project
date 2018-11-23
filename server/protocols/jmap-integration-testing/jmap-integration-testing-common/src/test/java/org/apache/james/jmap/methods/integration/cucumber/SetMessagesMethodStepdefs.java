@@ -292,7 +292,7 @@ public class SetMessagesMethodStepdefs {
 
     @When("^message \"([^\"]*)\" has flags (.*) in mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void setMessageFlagsInSpecifiedMailbox(String message, List<String> flags, String mailbox, String mailboxOwner) throws Exception {
-        Flags newFlags = Keywords.lenientFactory().fromList(flags).asFlags();
+        Flags newFlags = Keywords.lenientFactory().fromCollection(flags).asFlags();
         String username = userStepdefs.getConnectedUser();
         MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.getMailboxId(mailboxOwner, mailbox);

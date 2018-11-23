@@ -180,7 +180,7 @@ public class KeywordsTest {
     @Test
     public void fromListShouldReturnKeywordsFromListOfStrings() {
         Keywords keywords = Keywords.lenientFactory()
-            .fromList(ImmutableList.of("$Answered", "$Flagged"));
+            .fromCollection(ImmutableList.of("$Answered", "$Flagged"));
 
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED, Keyword.FLAGGED);
@@ -189,7 +189,7 @@ public class KeywordsTest {
     @Test
     public void fromListShouldNotThrowOnInvalidKeywordForLenientFactory() {
         assertThat(Keywords.lenientFactory()
-            .fromList(ImmutableList.of("in&valid")))
+            .fromCollection(ImmutableList.of("in&valid")))
             .isEqualTo(Keywords.DEFAULT_VALUE);
     }
 

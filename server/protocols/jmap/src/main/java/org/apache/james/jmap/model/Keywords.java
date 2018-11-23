@@ -20,7 +20,7 @@
 package org.apache.james.jmap.model;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -114,7 +114,7 @@ public class Keywords {
                     .collect(Guavate.toImmutableSet()));
         }
 
-        public Keywords fromList(List<String> keywords) {
+        public Keywords fromCollection(Collection<String> keywords) {
             return fromSet(keywords.stream()
                     .flatMap(toKeyword::asKeywordStream)
                     .collect(Guavate.toImmutableSet()));
@@ -126,12 +126,7 @@ public class Keywords {
                 .stream()
                 .allMatch(keywordValue -> keywordValue), "Keyword must be true");
 
-            Set<Keyword> setKeywords = mapKeywords.keySet()
-                .stream()
-                .flatMap(toKeyword::asKeywordStream)
-                .collect(Guavate.toImmutableSet());
-
-            return fromSet(setKeywords);
+            return fromCollection(mapKeywords.keySet());
         }
 
         public Keywords fromFlags(Flags flags) {
