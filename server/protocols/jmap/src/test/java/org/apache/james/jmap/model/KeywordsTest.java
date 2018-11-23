@@ -48,7 +48,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void fromMapShouldThrowWhenWrongKeywordValue() throws Exception {
+    public void fromMapShouldThrowWhenWrongKeywordValue() {
         expectedException.expect(IllegalArgumentException.class);
 
         Keywords.factory()
@@ -56,7 +56,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void fromMapShouldReturnKeywordsFromMapStringAndBoolean() throws Exception {
+    public void fromMapShouldReturnKeywordsFromMapStringAndBoolean() {
         Keywords keywords = Keywords.factory()
             .fromMap(ImmutableMap.of(ANY_KEYWORD, Keyword.FLAG_VALUE));
 
@@ -65,7 +65,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void fromFlagsShouldReturnKeywordsFromAllFlag() throws Exception {
+    public void fromFlagsShouldReturnKeywordsFromAllFlag() {
         Keywords keywords = Keywords.factory()
             .fromFlags(new Flags(Flags.Flag.ANSWERED));
 
@@ -74,7 +74,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void fromSetShouldReturnKeywordsFromSetOfKeywords() throws Exception {
+    public void fromSetShouldReturnKeywordsFromSetOfKeywords() {
         Keywords keywords = Keywords.factory()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED));
 
@@ -83,7 +83,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void asFlagsShouldBuildFlagsFromKeywords() throws Exception {
+    public void asFlagsShouldBuildFlagsFromKeywords() {
         assertThat(Keywords.factory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlags())
@@ -91,7 +91,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void asFlagsWithRecentAndDeletedFromShouldBuildFlagsFromKeywordsAndRecentOriginFlags() throws Exception {
+    public void asFlagsWithRecentAndDeletedFromShouldBuildFlagsFromKeywordsAndRecentOriginFlags() {
         Flags originFlags = FlagsBuilder.builder()
             .add(Flag.RECENT, Flag.DRAFT)
             .build();
@@ -107,7 +107,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void asFlagsWithRecentAndDeletedFromShouldBuildFlagsFromKeywordsWithDeletedAndRecentOriginFlags() throws Exception {
+    public void asFlagsWithRecentAndDeletedFromShouldBuildFlagsFromKeywordsWithDeletedAndRecentOriginFlags() {
         Flags originFlags = FlagsBuilder.builder()
             .add(Flag.RECENT, Flag.DELETED, Flag.DRAFT)
             .build();
@@ -123,15 +123,15 @@ public class KeywordsTest {
     }
 
     @Test
-    public void asMapShouldReturnEmptyWhenEmptyMapOfStringAndBoolean() throws Exception {
+    public void asMapShouldReturnEmptyWhenEmptyMapOfStringAndBoolean() {
         assertThat(Keywords.factory()
                 .fromSet(ImmutableSet.of())
                 .asMap())
-            .isEmpty();;
+            .isEmpty();
     }
 
     @Test
-    public void asMapShouldReturnMapOfStringAndBoolean() throws Exception {
+    public void asMapShouldReturnMapOfStringAndBoolean() {
         Map<String, Boolean> expectedMap = ImmutableMap.of("$Answered", Keyword.FLAG_VALUE);
         assertThat(Keywords.factory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
@@ -140,7 +140,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void throwWhenUnsupportedKeywordShouldThrowWhenHaveUnsupportedKeywords() throws Exception {
+    public void throwWhenUnsupportedKeywordShouldThrowWhenHaveUnsupportedKeywords() {
         expectedException.expect(IllegalArgumentException.class);
 
         Keywords.factory()
@@ -149,7 +149,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void throwWhenUnsupportedKeywordShouldNotThrowWhenHaveDraft() throws Exception {
+    public void throwWhenUnsupportedKeywordShouldNotThrowWhenHaveDraft() {
         Keywords keywords = Keywords.factory()
             .throwOnImapNonExposedKeywords()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DRAFT));
@@ -159,7 +159,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void filterUnsupportedShouldFilter() throws Exception {
+    public void filterUnsupportedShouldFilter() {
         Keywords keywords = Keywords.factory()
             .filterImapNonExposedKeywords()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT));
@@ -185,7 +185,7 @@ public class KeywordsTest {
     }
 
     @Test
-    public void fromListShouldReturnKeywordsFromListOfStrings() throws Exception {
+    public void fromListShouldReturnKeywordsFromListOfStrings() {
         Keywords keywords = Keywords.factory()
             .fromList(ImmutableList.of("$Answered", "$Flagged"));
 

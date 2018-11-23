@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class KeywordsCombinerTest {
 
-    public static final Keywords.KeywordsFactory FACTORY = Keywords.factory();
+    private static final Keywords.KeywordsFactory FACTORY = Keywords.factory();
 
     @Test
     public void applyShouldUnionSeenKeyword() {
