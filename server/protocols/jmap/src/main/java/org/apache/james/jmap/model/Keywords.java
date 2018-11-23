@@ -147,10 +147,20 @@ public class Keywords {
         }
     }
 
+    /**
+     * This Keywords factory will filter out invalid keywords (containing inavlid character, being too long or being non
+     * exposed IMAP flags)
+     */
     public static KeywordsFactory strictFactory() {
         return STRICT_KEYWORDS_FACTORY;
     }
 
+    /**
+     * This Keywords factory will throw upon invalid keywords (containing inavlid character, being too long or being non
+     * exposed IMAP flags)
+     *
+     * @throws IllegalArgumentException
+     */
     public static KeywordsFactory lenientFactory() {
         return LENIENT_KEYWORDS_FACTORY;
     }
