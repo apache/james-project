@@ -185,4 +185,24 @@ public class KeywordsTest {
         assertThat(keywords.getKeywords())
             .containsOnly(Keyword.ANSWERED, Keyword.FLAGGED);
     }
+
+    @Test
+    public void fromListShouldNotThrowOnInvalidKeywordForLenientFactory() {
+        assertThat(Keywords.lenientFactory()
+            .fromList(ImmutableList.of("in&valid")))
+            .isEqualTo(Keywords.DEFAULT_VALUE);
+    }
+
+    @Test
+    public void fromMapShouldNotThrowOnInvalidKeywordForLenientFactory() {
+        assertThat(Keywords.lenientFactory()
+            .fromMap(ImmutableMap.of("in&valid", true)))
+            .isEqualTo(Keywords.DEFAULT_VALUE);
+    }
+    @Test
+    public void fromFlagsShouldNotThrowOnInvalidKeywordForLenientFactory() {
+        assertThat(Keywords.lenientFactory()
+            .fromFlags(new Flags("in&valid")))
+            .isEqualTo(Keywords.DEFAULT_VALUE);
+    }
 }

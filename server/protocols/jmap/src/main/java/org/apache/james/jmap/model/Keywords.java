@@ -22,6 +22,7 @@ package org.apache.james.jmap.model;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
+import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,12 +73,32 @@ public class Keywords {
             KeywordFilter KEEP_ALL = keyword -> true;
         }
 
+        @FunctionalInterface
+        interface ToKeyword {
+            ToKeyword STRICT = value -> Optional.of(Keyword.of(value));
+            ToKeyword LENIENT = value -> {
+                Optional<Keyword> result = Keyword.parse(value);
+                if (!result.isPresent()) {
+                    LOGGER.warn("Fail to parse {} flag", value);
+                }
+                return result;
+            };
+
+            Optional<Keyword> toKeyword(String value);
+
+            default Stream<Keyword> asKeywordStream(String value) {
+                return OptionalUtils.toStream(toKeyword(value));
+            }
+        }
+
         private final KeywordsValidator validator;
         private final Predicate<Keyword> filter;
+        private final ToKeyword toKeyword;
 
-        public KeywordsFactory(KeywordsValidator validator, Predicate<Keyword> filter) {
+        public KeywordsFactory(KeywordsValidator validator, Predicate<Keyword> filter, ToKeyword toKeyword) {
             this.validator = validator;
             this.filter = filter;
+            this.toKeyword = toKeyword;
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
@@ -94,7 +116,7 @@ public class Keywords {
 
         public Keywords fromList(List<String> keywords) {
             return fromSet(keywords.stream()
-                    .map(Keyword::of)
+                    .flatMap(toKeyword::asKeywordStream)
                     .collect(Guavate.toImmutableSet()));
         }
 
@@ -103,9 +125,10 @@ public class Keywords {
             Preconditions.checkArgument(mapKeywords.values()
                 .stream()
                 .allMatch(keywordValue -> keywordValue), "Keyword must be true");
+
             Set<Keyword> setKeywords = mapKeywords.keySet()
                 .stream()
-                .map(Keyword::of)
+                .flatMap(toKeyword::asKeywordStream)
                 .collect(Guavate.toImmutableSet());
 
             return fromSet(setKeywords);
@@ -114,30 +137,23 @@ public class Keywords {
         public Keywords fromFlags(Flags flags) {
             return fromSet(Stream.concat(
                         Stream.of(flags.getUserFlags())
-                            .flatMap(this::asKeyword),
+                            .flatMap(toKeyword::asKeywordStream),
                         Stream.of(flags.getSystemFlags())
                             .map(Keyword::fromFlag))
                     .collect(Guavate.toImmutableSet()));
-        }
-
-        private Stream<Keyword> asKeyword(String flagName) {
-            try {
-                return Stream.of(Keyword.of(flagName));
-            } catch (IllegalArgumentException e) {
-                LOGGER.warn("Fail to parse {} flag", flagName, e);
-                return Stream.of();
-            }
         }
     }
 
     public static KeywordsFactory strictFactory() {
         return new KeywordsFactory(KeywordsFactory.KeywordsValidator.THROW_ON_IMAP_NON_EXPOSED_KEYWORDS,
-            KeywordsFactory.KeywordFilter.KEEP_ALL);
+            KeywordsFactory.KeywordFilter.KEEP_ALL,
+            KeywordsFactory.ToKeyword.STRICT);
     }
 
     public static KeywordsFactory lenientFactory() {
         return new KeywordsFactory(KeywordsFactory.KeywordsValidator.IGNORE_NON_EXPOSED_IMAP_KEYWORDS,
-            KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS);
+            KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS,
+            KeywordsFactory.ToKeyword.LENIENT);
     }
 
     private final ImmutableSet<Keyword> keywords;
