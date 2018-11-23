@@ -31,7 +31,7 @@
     <name>Apache James :: Server :: Cassandra/Ldap with RabbitMQ - guice injection</name>
     <description>An advanced email server - Cassandra/Ldap backend and RabbitMQ messaging with guice injection</description>
 
-    <artifactId>james-server-cassandra-rabbitmq-ldap</artifactId>
+    <artifactId>james-server-cassandra-rabbitmq-ldap-guice</artifactId>
     <dependencies>
         <dependency>
             <groupId>org.apache.james</groupId>
