@@ -59,4 +59,13 @@ $ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-guice.j
 ```
 
 ## Guice-cassandra-rabbitmq-ldap
-### Note: this product is not supported yet
+
+You can follow the same guide to build and run guice-cassandra-rabbitmq-swift-ldap artifact, except that:
+ - The **jar** and **libs** needs to be retrieve from server/container/guice/cassandra-rabbitmq-ldap-guice/target after compilation
+ - The sample configuration can be found in [dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf)
+ - You need to configure James to be connecting to a running LDAP server. The configuration file is located in [dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml](https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination/conf/usersrepository.xml)
+ - You can then launch James via this command:
+
+```bash
+$ java -Dworking.directory=. -jar target/james-server-cassandra-rabbitmq-ldap-guice.jar
+```
