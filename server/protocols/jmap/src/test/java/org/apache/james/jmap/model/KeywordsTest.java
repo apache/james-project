@@ -20,6 +20,7 @@
 package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Map;
 
@@ -27,9 +28,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.FlagsBuilder;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,8 +38,6 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class KeywordsTest {
     public static final String ANY_KEYWORD = "AnyKeyword";
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void shouldRespectBeanContract() {
@@ -49,10 +46,9 @@ public class KeywordsTest {
 
     @Test
     public void fromMapShouldThrowWhenWrongKeywordValue() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Keywords.lenientFactory()
-            .fromMap(ImmutableMap.of(ANY_KEYWORD, false));
+        assertThatThrownBy(() -> Keywords.lenientFactory()
+            .fromMap(ImmutableMap.of(ANY_KEYWORD, false)))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -141,10 +137,10 @@ public class KeywordsTest {
 
     @Test
     public void throwWhenUnsupportedKeywordShouldThrowWhenHaveUnsupportedKeywords() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Keywords.strictFactory()
-            .fromSet(ImmutableSet.of(Keyword.DRAFT, Keyword.DELETED));
+        assertThatThrownBy(() ->
+            Keywords.strictFactory()
+                .fromSet(ImmutableSet.of(Keyword.DRAFT, Keyword.DELETED)))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
