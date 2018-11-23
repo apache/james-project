@@ -31,7 +31,6 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -99,10 +98,8 @@ public class ReIndexerPerformer {
         }
     }
 
-    Task.Result handleMessageReIndexing(MailboxPath path, MessageUid uid) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
-        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession)
-            .findMailboxByPath(path);
+    Task.Result handleMessageReIndexing(Mailbox mailbox, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailbox.getUser());
 
         return handleMessageReIndexing(mailboxSession, mailbox, uid);
     }

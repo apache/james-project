@@ -38,4 +38,6 @@ public interface ReIndexer {
 
     Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException;
 
+    Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException;
+
 }

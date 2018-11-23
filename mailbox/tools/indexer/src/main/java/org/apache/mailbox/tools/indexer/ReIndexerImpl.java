@@ -80,7 +80,16 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     @Override
-    public Task reIndex(MailboxPath path, MessageUid uid) {
-        return new SingleMessageReindexingTask(reIndexerPerformer, path, uid);
+    public Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailbox, uid);
+    }
+
+    @Override
+    public Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailbox, uid);
     }
 }

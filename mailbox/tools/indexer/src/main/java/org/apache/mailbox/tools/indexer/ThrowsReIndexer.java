@@ -28,7 +28,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.Task;
 
 public class ThrowsReIndexer implements ReIndexer {
-
     @Override
     public Task reIndex(MailboxPath path) throws MailboxException {
         throw new MailboxException("Not implemented");
@@ -51,6 +50,11 @@ public class ThrowsReIndexer implements ReIndexer {
 
     @Override
     public Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException {
+        throw new MailboxException("Not implemented");
+    }
+
+    @Override
+    public Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException {
         throw new MailboxException("Not implemented");
     }
 }

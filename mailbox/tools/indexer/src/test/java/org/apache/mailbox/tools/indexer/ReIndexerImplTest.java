@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -158,6 +159,47 @@ public class ReIndexerImplTest {
         assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
         assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
             && message.getUid().equals(createdMessage.getUid()));
+    }
+
+    @Test
+    void messageReIndexUsingMailboxIdShouldBeWellPerformed() throws Exception {
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+        MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+        ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
+            .appendMessage(
+                MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
+                systemSession);
+
+        reIndexer.reIndex(mailboxId, createdMessage.getUid()).run();
+        ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
+        ArgumentCaptor<Mailbox> mailboxCaptor = ArgumentCaptor.forClass(Mailbox.class);
+
+        verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
+        verifyNoMoreInteractions(messageSearchIndex);
+
+        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
+            && message.getUid().equals(createdMessage.getUid()));
+    }
+
+    @Test
+    void messageReIndexUsingMailboxIdShouldDoNothingWhenUidNotFound() throws Exception {
+        MailboxSession systemSession = mailboxManager.createSystemSession(USERNAME);
+        MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
+        MessageUid uid = MessageUid.of(36);
+
+        reIndexer.reIndex(mailboxId, uid).run();
+
+        verifyNoMoreInteractions(messageSearchIndex);
+    }
+
+    @Test
+    void messageReIndexUsingMailboxIdShouldFailWhenMailboxNotFound() {
+        MailboxId mailboxId = InMemoryId.of(42);
+        MessageUid uid = MessageUid.of(36);
+
+        assertThatThrownBy(() -> reIndexer.reIndex(mailboxId, uid))
+            .isInstanceOf(MailboxNotFoundException.class);
     }
 
     @Test
