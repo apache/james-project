@@ -21,21 +21,21 @@ package org.apache.james.modules;
 
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
-import com.google.inject.Module;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.util.Modules;
+import java.net.URISyntaxException;
+
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.net.URISyntaxException;
+import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.util.Modules;
 
 public class DockerRabbitMQRule implements GuiceModuleTestRule {
-
-    private DockerRabbitMQ rabbitMQ = DockerRabbitMQ.withoutCookie();
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -52,8 +52,8 @@ public class DockerRabbitMQRule implements GuiceModuleTestRule {
                 try {
                     binder.bind(RabbitMQConfiguration.class)
                         .toInstance(RabbitMQConfiguration.builder()
-                            .amqpUri(rabbitMQ.amqpUri())
-                            .managementUri(rabbitMQ.managementUri())
+                            .amqpUri(DockerRabbitMQSingleton.SINGLETON.amqpUri())
+                            .managementUri(DockerRabbitMQSingleton.SINGLETON.managementUri())
                             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
                             .build());
                 } catch (URISyntaxException e) {
@@ -66,14 +66,13 @@ public class DockerRabbitMQRule implements GuiceModuleTestRule {
     }
 
     public DockerRabbitMQ dockerRabbitMQ() {
-        return rabbitMQ;
+        return DockerRabbitMQSingleton.SINGLETON;
     }
 
     public void start() {
-        rabbitMQ.start();
+        DockerRabbitMQSingleton.SINGLETON.start();
     }
 
     public void stop() {
-        rabbitMQ.stop();
     }
 }

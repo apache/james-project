@@ -20,25 +20,19 @@
 package org.apache.james;
 
 import static org.apache.james.JmapJamesServerContract.JAMES_SERVER_HOST;
+import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
+import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
-import org.apache.james.core.Domain;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
-import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.utils.IMAPMessageReader;
-import org.apache.james.utils.SMTPMessageSender;
-import org.apache.james.utils.SpoolerProbe;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
-import org.awaitility.core.ConditionFactory;
+import org.apache.james.server.core.configuration.Configuration;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -46,33 +40,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraRabbitMQLdapJmapJamesServerTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
-    private static final String JAMES_USER = "james-user";
-    private static final String PASSWORD = "secret";
-    private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
-
-    private static ConditionFactory calmlyAwait = Awaitility
-        .with().pollInterval(slowPacedPollInterval)
-        .and().with().pollDelay(slowPacedPollInterval)
-        .await();
-
-    interface MailsShouldBeWellReceived {
-        @RegisterExtension
-        IMAPMessageReader imapMessageReader = new IMAPMessageReader();
-        SMTPMessageSender messageSender = new SMTPMessageSender(Domain.LOCALHOST.asString());
-
-        @Test
-        default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
-            messageSender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessage("bob@any.com", JAMES_USER + "@localhost");
-
-            calmlyAwait.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
-
-            imapMessageReader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
-                .login(JAMES_USER, PASSWORD)
-                .select("INBOX")
-                .awaitMessage(calmlyAwait);
-        }
-    }
 
     interface UserFromLdapShouldLogin {
 
@@ -85,25 +52,15 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
         }
     }
 
-    interface ContractSuite extends JmapJamesServerContract, MailsShouldBeWellReceived,
-        UserFromLdapShouldLogin, JamesServerContract {}
+    interface ContractSuite extends JmapJamesServerContract, UserFromLdapShouldLogin, JamesServerContract {}
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithSwift implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
-            .extension(new EmbeddedElasticSearchExtension())
-            .extension(new CassandraExtension())
-            .extension(new RabbitMQExtension())
-            .extension(new LdapTestExtension())
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
             .extension(new SwiftBlobStoreExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
-                .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                    .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
+            .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.objectStorage()))
             .build();
     }
 
@@ -111,17 +68,25 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithoutSwift implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder()
+            .server(configuration -> buildGuiceServer(configuration, BlobStoreChoosingConfiguration.cassandra()))
+            .build();
+    }
+
+    JamesServerExtensionBuilder baseJamesServerExtensionBuilder() {
+        return new JamesServerExtensionBuilder()
             .extension(new EmbeddedElasticSearchExtension())
             .extension(new CassandraExtension())
             .extension(new RabbitMQExtension())
-            .extension(new LdapTestExtension())
-            .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
-                .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
-                    .toInstance(BlobStoreChoosingConfiguration.cassandra()))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-                .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
-            .build();
+            .extension(new LdapTestExtension());
+    }
+
+    GuiceJamesServer buildGuiceServer(Configuration configuration, BlobStoreChoosingConfiguration choosingConfiguration) {
+        return GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
+            .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
+                .toInstance(choosingConfiguration))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE);
     }
 }
