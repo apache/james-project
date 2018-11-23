@@ -94,7 +94,7 @@ public class Keywords {
 
         public Keywords fromList(List<String> keywords) {
             return fromSet(keywords.stream()
-                    .map(Keyword::new)
+                    .map(Keyword::of)
                     .collect(Guavate.toImmutableSet()));
         }
 
@@ -105,7 +105,7 @@ public class Keywords {
                 .allMatch(keywordValue -> keywordValue), "Keyword must be true");
             Set<Keyword> setKeywords = mapKeywords.keySet()
                 .stream()
-                .map(Keyword::new)
+                .map(Keyword::of)
                 .collect(Guavate.toImmutableSet());
 
             return fromSet(setKeywords);
@@ -122,7 +122,7 @@ public class Keywords {
 
         private Stream<Keyword> asKeyword(String flagName) {
             try {
-                return Stream.of(new Keyword(flagName));
+                return Stream.of(Keyword.of(flagName));
             } catch (IllegalArgumentException e) {
                 LOGGER.warn("Fail to parse {} flag", flagName, e);
                 return Stream.of();

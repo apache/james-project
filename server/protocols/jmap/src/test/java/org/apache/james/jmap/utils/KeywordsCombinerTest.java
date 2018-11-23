@@ -76,7 +76,7 @@ public class KeywordsCombinerTest {
     public void applyShouldUnionCustomKeyword() {
         KeywordsCombiner keywordsCombiner = new KeywordsCombiner();
 
-        Keyword customKeyword = new Keyword("$Any");
+        Keyword customKeyword = Keyword.of("$Any");
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
             Keywords.factory().from(customKeyword)))
@@ -110,8 +110,8 @@ public class KeywordsCombinerTest {
             Keyword.DRAFT,
             Keyword.FLAGGED,
             Keyword.SEEN,
-            new Keyword("$Forwarded"),
-            new Keyword("$Any"));
+            Keyword.of("$Forwarded"),
+            Keyword.of("$Any"));
 
         ImmutableSet<Keywords> values = ImmutableSet.of(
             FACTORY.from(Keyword.ANSWERED),
@@ -120,8 +120,8 @@ public class KeywordsCombinerTest {
             FACTORY.from(Keyword.FLAGGED),
             FACTORY.from(Keyword.SEEN),
             FACTORY.from(),
-            FACTORY.from(new Keyword("$Forwarded")),
-            FACTORY.from(new Keyword("$Any")),
+            FACTORY.from(Keyword.of("$Forwarded")),
+            FACTORY.from(Keyword.of("$Any")),
             allKeyword);
 
         assertThat(

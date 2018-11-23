@@ -212,8 +212,8 @@ public class FilterCondition implements Filter {
         }
 
         public FilterCondition build() {
-            Preconditions.checkArgument(!hasKeyword.isPresent() || (new Keyword(hasKeyword.get()) != null), "hasKeyword is not valid");
-            Preconditions.checkArgument(!notKeyword.isPresent() || (new Keyword(notKeyword.get()) != null), "notKeyword is not valid");
+            Preconditions.checkArgument(!hasKeyword.isPresent() || (Keyword.of(hasKeyword.get()) != null), "hasKeyword is not valid");
+            Preconditions.checkArgument(!notKeyword.isPresent() || (Keyword.of(notKeyword.get()) != null), "notKeyword is not valid");
             return new FilterCondition(inMailboxes, notInMailboxes, Optional.ofNullable(before), Optional.ofNullable(after), Optional.ofNullable(minSize), Optional.ofNullable(maxSize),
                     Optional.ofNullable(isFlagged), Optional.ofNullable(isUnread), Optional.ofNullable(isAnswered), Optional.ofNullable(isDraft), Optional.ofNullable(isForwarded),
                     Optional.ofNullable(hasAttachment),

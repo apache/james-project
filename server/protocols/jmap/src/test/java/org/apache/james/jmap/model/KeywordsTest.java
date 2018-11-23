@@ -61,7 +61,7 @@ public class KeywordsTest {
             .fromMap(ImmutableMap.of(ANY_KEYWORD, Keyword.FLAG_VALUE));
 
         assertThat(keywords.getKeywords())
-            .containsOnly(new Keyword(ANY_KEYWORD));
+            .containsOnly(Keyword.of(ANY_KEYWORD));
     }
 
     @Test

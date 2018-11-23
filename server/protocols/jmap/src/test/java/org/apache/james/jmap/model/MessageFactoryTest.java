@@ -749,7 +749,7 @@ public class MessageFactoryTest {
 
     @Test
     public void keywordWithUserFlagShouldBeSetIntoMessage() throws Exception {
-        Keywords keywords = Keywords.factory().from(Keyword.ANSWERED, new Keyword(FORWARDED));
+        Keywords keywords = Keywords.factory().from(Keyword.ANSWERED, Keyword.of(FORWARDED));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))

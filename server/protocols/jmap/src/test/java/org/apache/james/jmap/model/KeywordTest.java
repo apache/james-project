@@ -48,19 +48,19 @@ public class KeywordTest {
     @Test
     public void keywordShouldThrowWhenFlagNameLengthLessThanMinLength() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("");
+        Keyword.of("");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameLengthMoreThanMaxLength() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword(StringUtils.repeat("a", FLAG_NAME_MAX_LENTH + 1));
+        Keyword.of(StringUtils.repeat("a", FLAG_NAME_MAX_LENTH + 1));
     }
 
     @Test
     public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMaxLength() throws Exception {
         String maxLengthFlagName = StringUtils.repeat("a", FLAG_NAME_MAX_LENTH);
-        Keyword keyword = new Keyword(maxLengthFlagName);
+        Keyword keyword = Keyword.of(maxLengthFlagName);
 
         assertThat(keyword.getFlagName()).isEqualTo(maxLengthFlagName);
     }
@@ -68,7 +68,7 @@ public class KeywordTest {
     @Test
     public void keywordShouldCreateNewOneWhenFlagNameLengthEqualsMinLength() throws Exception {
         String minLengthFlagName = "a";
-        Keyword keyword = new Keyword(minLengthFlagName);
+        Keyword keyword = Keyword.of(minLengthFlagName);
 
         assertThat(keyword.getFlagName()).isEqualTo(minLengthFlagName);
     }
@@ -76,61 +76,61 @@ public class KeywordTest {
     @Test
     public void keywordShouldThrowWhenFlagNameContainsPercentageCharacter() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a%");
+        Keyword.of("a%");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsLeftBracket() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a[");
+        Keyword.of("a[");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsRightBracket() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a]");
+        Keyword.of("a]");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsLeftBrace() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a{");
+        Keyword.of("a{");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsSlash() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a\\");
+        Keyword.of("a\\");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsStar() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a*");
+        Keyword.of("a*");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsQuote() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a\"");
+        Keyword.of("a\"");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsOpeningParenthesis() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a(");
+        Keyword.of("a(");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsClosingParenthesis() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a)");
+        Keyword.of("a)");
     }
 
     @Test
     public void keywordShouldThrowWhenFlagNameContainsSpaceCharacter() throws Exception {
         expectedException.expect(IllegalArgumentException.class);
-        new Keyword("a b");
+        Keyword.of("a b");
     }
 
     @Test
@@ -150,7 +150,7 @@ public class KeywordTest {
 
     @Test
     public void isNotNonExposedImapKeywordShouldReturnTrueWhenAnyUserFlag() throws Exception {
-        Keyword keyword = new Keyword(ANY_KEYWORD);
+        Keyword keyword = Keyword.of(ANY_KEYWORD);
         assertThat(keyword.isExposedImapKeyword()).isTrue();
     }
 
@@ -166,13 +166,13 @@ public class KeywordTest {
 
     @Test
     public void asSystemFlagShouldReturnSystemFlag() throws Exception {
-        assertThat(new Keyword("$Draft").asSystemFlag())
+        assertThat(Keyword.of("$Draft").asSystemFlag())
             .isEqualTo(Optional.of(Flags.Flag.DRAFT));
     }
 
     @Test
     public void asSystemFlagShouldReturnEmptyWhenNonSystemFlag() throws Exception {
-        assertThat(new Keyword(ANY_KEYWORD).asSystemFlag().isPresent())
+        assertThat(Keyword.of(ANY_KEYWORD).asSystemFlag().isPresent())
             .isFalse();
     }
 
@@ -184,7 +184,7 @@ public class KeywordTest {
 
     @Test
     public void asFlagsShouldReturnFlagsWhenUserFlag() throws Exception {
-        Keyword keyword = new Keyword(ANY_KEYWORD);
+        Keyword keyword = Keyword.of(ANY_KEYWORD);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(ANY_KEYWORD));
     }
@@ -192,7 +192,7 @@ public class KeywordTest {
     @Test
     public void asFlagsShouldReturnFlagsWhenUserFlagContainsUnderscore() throws Exception {
         String userFlag = "$has_cal";
-        Keyword keyword = new Keyword(userFlag);
+        Keyword keyword = Keyword.of(userFlag);
         assertThat(keyword.asFlags())
             .isEqualTo(new Flags(userFlag));
     }
@@ -201,7 +201,7 @@ public class KeywordTest {
     public void hyphenMinusShouldBeAllowedInKeyword() {
         String userFlag = "aa-bb";
 
-        assertThatCode(() -> new Keyword(userFlag))
+        assertThatCode(() -> Keyword.of(userFlag))
             .doesNotThrowAnyException();
     }
 }
