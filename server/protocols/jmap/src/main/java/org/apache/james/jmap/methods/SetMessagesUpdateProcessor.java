@@ -209,7 +209,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
 
         boolean isDraft = messagesToBeUpdated.stream()
             .map(MessageResult::getFlags)
-            .map(Keywords.factory().filterImapNonExposedKeywords()::fromFlags)
+            .map(Keywords.lenientFactory()::fromFlags)
             .reduce(new KeywordsCombiner())
             .orElse(Keywords.DEFAULT_VALUE)
             .contains(Keyword.DRAFT);

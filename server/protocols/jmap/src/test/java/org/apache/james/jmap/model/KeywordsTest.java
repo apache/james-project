@@ -51,13 +51,13 @@ public class KeywordsTest {
     public void fromMapShouldThrowWhenWrongKeywordValue() {
         expectedException.expect(IllegalArgumentException.class);
 
-        Keywords.factory()
+        Keywords.lenientFactory()
             .fromMap(ImmutableMap.of(ANY_KEYWORD, false));
     }
 
     @Test
     public void fromMapShouldReturnKeywordsFromMapStringAndBoolean() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromMap(ImmutableMap.of(ANY_KEYWORD, Keyword.FLAG_VALUE));
 
         assertThat(keywords.getKeywords())
@@ -66,7 +66,7 @@ public class KeywordsTest {
 
     @Test
     public void fromFlagsShouldReturnKeywordsFromAllFlag() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromFlags(new Flags(Flags.Flag.ANSWERED));
 
         assertThat(keywords.getKeywords())
@@ -75,7 +75,7 @@ public class KeywordsTest {
 
     @Test
     public void fromSetShouldReturnKeywordsFromSetOfKeywords() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED));
 
         assertThat(keywords.getKeywords())
@@ -84,7 +84,7 @@ public class KeywordsTest {
 
     @Test
     public void asFlagsShouldBuildFlagsFromKeywords() {
-        assertThat(Keywords.factory()
+        assertThat(Keywords.lenientFactory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlags())
             .isEqualTo(new Flags(Flags.Flag.ANSWERED));
@@ -100,7 +100,7 @@ public class KeywordsTest {
             .add(Flag.ANSWERED, Flag.RECENT)
             .build();
 
-        assertThat(Keywords.factory()
+        assertThat(Keywords.lenientFactory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlagsWithRecentAndDeletedFrom(originFlags))
             .isEqualTo(expectedFlags);
@@ -116,7 +116,7 @@ public class KeywordsTest {
             .add(Flag.ANSWERED, Flag.RECENT, Flag.DELETED)
             .build();
 
-        assertThat(Keywords.factory()
+        assertThat(Keywords.lenientFactory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asFlagsWithRecentAndDeletedFrom(originFlags))
             .isEqualTo(expectedFlags);
@@ -124,7 +124,7 @@ public class KeywordsTest {
 
     @Test
     public void asMapShouldReturnEmptyWhenEmptyMapOfStringAndBoolean() {
-        assertThat(Keywords.factory()
+        assertThat(Keywords.lenientFactory()
                 .fromSet(ImmutableSet.of())
                 .asMap())
             .isEmpty();
@@ -133,7 +133,7 @@ public class KeywordsTest {
     @Test
     public void asMapShouldReturnMapOfStringAndBoolean() {
         Map<String, Boolean> expectedMap = ImmutableMap.of("$Answered", Keyword.FLAG_VALUE);
-        assertThat(Keywords.factory()
+        assertThat(Keywords.lenientFactory()
                 .fromSet(ImmutableSet.of(Keyword.ANSWERED))
                 .asMap())
             .isEqualTo(expectedMap);
@@ -143,15 +143,13 @@ public class KeywordsTest {
     public void throwWhenUnsupportedKeywordShouldThrowWhenHaveUnsupportedKeywords() {
         expectedException.expect(IllegalArgumentException.class);
 
-        Keywords.factory()
-            .throwOnImapNonExposedKeywords()
+        Keywords.strictFactory()
             .fromSet(ImmutableSet.of(Keyword.DRAFT, Keyword.DELETED));
     }
 
     @Test
     public void throwWhenUnsupportedKeywordShouldNotThrowWhenHaveDraft() {
-        Keywords keywords = Keywords.factory()
-            .throwOnImapNonExposedKeywords()
+        Keywords keywords = Keywords.strictFactory()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DRAFT));
 
         assertThat(keywords.getKeywords())
@@ -160,8 +158,7 @@ public class KeywordsTest {
 
     @Test
     public void filterUnsupportedShouldFilter() {
-        Keywords keywords = Keywords.factory()
-            .filterImapNonExposedKeywords()
+        Keywords keywords = Keywords.lenientFactory()
             .fromSet(ImmutableSet.of(Keyword.ANSWERED, Keyword.DELETED, Keyword.RECENT, Keyword.DRAFT));
 
         assertThat(keywords.getKeywords())
@@ -170,7 +167,7 @@ public class KeywordsTest {
 
     @Test
     public void containsShouldReturnTrueWhenKeywordsContainKeyword() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromSet(ImmutableSet.of(Keyword.SEEN));
 
         assertThat(keywords.contains(Keyword.SEEN)).isTrue();
@@ -178,7 +175,7 @@ public class KeywordsTest {
 
     @Test
     public void containsShouldReturnFalseWhenKeywordsDoNotContainKeyword() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromSet(ImmutableSet.of());
 
         assertThat(keywords.contains(Keyword.SEEN)).isFalse();
@@ -186,7 +183,7 @@ public class KeywordsTest {
 
     @Test
     public void fromListShouldReturnKeywordsFromListOfStrings() {
-        Keywords keywords = Keywords.factory()
+        Keywords keywords = Keywords.lenientFactory()
             .fromList(ImmutableList.of("$Answered", "$Flagged"));
 
         assertThat(keywords.getKeywords())

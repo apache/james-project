@@ -30,7 +30,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class KeywordsCombinerTest {
 
-    private static final Keywords.KeywordsFactory FACTORY = Keywords.factory();
+    public static final Keywords.KeywordsFactory KEYWORDS_FACTORY = Keywords.lenientFactory();
 
     @Test
     public void applyShouldUnionSeenKeyword() {
@@ -38,8 +38,8 @@ public class KeywordsCombinerTest {
 
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
-            Keywords.factory().from(Keyword.SEEN)))
-            .isEqualTo(Keywords.factory().from(Keyword.SEEN));
+            KEYWORDS_FACTORY.from(Keyword.SEEN)))
+            .isEqualTo(KEYWORDS_FACTORY.from(Keyword.SEEN));
     }
 
     @Test
@@ -48,8 +48,8 @@ public class KeywordsCombinerTest {
 
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
-            Keywords.factory().from(Keyword.ANSWERED)))
-            .isEqualTo(Keywords.factory().from(Keyword.ANSWERED));
+            KEYWORDS_FACTORY.from(Keyword.ANSWERED)))
+            .isEqualTo(KEYWORDS_FACTORY.from(Keyword.ANSWERED));
     }
 
     @Test
@@ -58,8 +58,8 @@ public class KeywordsCombinerTest {
 
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
-            Keywords.factory().from(Keyword.FLAGGED)))
-            .isEqualTo(Keywords.factory().from(Keyword.FLAGGED));
+            KEYWORDS_FACTORY.from(Keyword.FLAGGED)))
+            .isEqualTo(KEYWORDS_FACTORY.from(Keyword.FLAGGED));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class KeywordsCombinerTest {
 
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
-            Keywords.factory().from(Keyword.DRAFT)))
+            KEYWORDS_FACTORY.from(Keyword.DRAFT)))
             .isEqualTo(Keywords.DEFAULT_VALUE);
     }
 
@@ -79,8 +79,8 @@ public class KeywordsCombinerTest {
         Keyword customKeyword = Keyword.of("$Any");
         assertThat(keywordsCombiner.apply(
             Keywords.DEFAULT_VALUE,
-            Keywords.factory().from(customKeyword)))
-            .isEqualTo(Keywords.factory().from(customKeyword));
+            KEYWORDS_FACTORY.from(customKeyword)))
+            .isEqualTo(KEYWORDS_FACTORY.from(customKeyword));
     }
 
     @Test
@@ -98,14 +98,14 @@ public class KeywordsCombinerTest {
         KeywordsCombiner keywordsCombiner = new KeywordsCombiner();
 
         assertThat(keywordsCombiner.apply(
-            Keywords.factory().from(Keyword.FLAGGED),
-            Keywords.factory().from(Keyword.ANSWERED)))
-            .isEqualTo(Keywords.factory().from(Keyword.FLAGGED, Keyword.ANSWERED));
+            KEYWORDS_FACTORY.from(Keyword.FLAGGED),
+            KEYWORDS_FACTORY.from(Keyword.ANSWERED)))
+            .isEqualTo(KEYWORDS_FACTORY.from(Keyword.FLAGGED, Keyword.ANSWERED));
     }
 
     @Test
     public void keywordsCombinerShouldBeCommutative() {
-        Keywords allKeyword = FACTORY.from(Keyword.ANSWERED,
+        Keywords allKeyword = KEYWORDS_FACTORY.from(Keyword.ANSWERED,
             Keyword.DELETED,
             Keyword.DRAFT,
             Keyword.FLAGGED,
@@ -114,14 +114,14 @@ public class KeywordsCombinerTest {
             Keyword.of("$Any"));
 
         ImmutableSet<Keywords> values = ImmutableSet.of(
-            FACTORY.from(Keyword.ANSWERED),
-            FACTORY.from(Keyword.DELETED),
-            FACTORY.from(Keyword.DRAFT),
-            FACTORY.from(Keyword.FLAGGED),
-            FACTORY.from(Keyword.SEEN),
-            FACTORY.from(),
-            FACTORY.from(Keyword.of("$Forwarded")),
-            FACTORY.from(Keyword.of("$Any")),
+            KEYWORDS_FACTORY.from(Keyword.ANSWERED),
+            KEYWORDS_FACTORY.from(Keyword.DELETED),
+            KEYWORDS_FACTORY.from(Keyword.DRAFT),
+            KEYWORDS_FACTORY.from(Keyword.FLAGGED),
+            KEYWORDS_FACTORY.from(Keyword.SEEN),
+            KEYWORDS_FACTORY.from(),
+            KEYWORDS_FACTORY.from(Keyword.of("$Forwarded")),
+            KEYWORDS_FACTORY.from(Keyword.of("$Any")),
             allKeyword);
 
         assertThat(

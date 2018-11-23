@@ -22,7 +22,6 @@ package org.apache.james.jmap.model;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -43,12 +42,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class Keywords {
 
-    public static final Keywords DEFAULT_VALUE = factory().fromSet(ImmutableSet.of());
+    public static final Keywords DEFAULT_VALUE = new Keywords(ImmutableSet.of());
     private static final Logger LOGGER = LoggerFactory.getLogger(Keywords.class);
-
-    public interface KeywordsValidator {
-        void validate(Set<Keyword> keywords);
-    }
 
     private FlagsBuilder combiner(FlagsBuilder firstBuilder, FlagsBuilder secondBuilder) {
         return firstBuilder.add(secondBuilder.build());
@@ -59,31 +54,36 @@ public class Keywords {
     }
 
     public static class KeywordsFactory {
-        private Optional<KeywordsValidator> validator;
-        private Optional<Predicate<Keyword>> filter;
+        @FunctionalInterface
+        interface KeywordsValidator {
+            KeywordsValidator THROW_ON_IMAP_NON_EXPOSED_KEYWORDS = keywords -> Preconditions.checkArgument(
+                keywords.stream().allMatch(Keyword::isExposedImapKeyword),
+                "Does not allow to update 'Deleted' or 'Recent' flag");
 
-        private KeywordsFactory() {
-            validator = Optional.empty();
-            filter = Optional.empty();
+            KeywordsValidator IGNORE_NON_EXPOSED_IMAP_KEYWORDS = keywords -> { };
+
+            void validate(Set<Keyword> keywords);
         }
 
-        public KeywordsFactory throwOnImapNonExposedKeywords() {
-            validator = Optional.of(keywords -> Preconditions.checkArgument(
-                keywords.stream().allMatch(Keyword::isExposedImapKeyword), "Does not allow to update 'Deleted' or 'Recent' flag"));
-            return this;
+        @FunctionalInterface
+        interface KeywordFilter extends Predicate<Keyword> {
+            KeywordFilter FILTER_IMAP_NON_EXPOSED_KEYWORDS = Keyword::isExposedImapKeyword;
+            KeywordFilter KEEP_ALL = keyword -> true;
         }
 
-        public KeywordsFactory filterImapNonExposedKeywords() {
-            filter = Optional.of(Keyword::isExposedImapKeyword);
-            return this;
+        private final KeywordsValidator validator;
+        private final Predicate<Keyword> filter;
+
+        public KeywordsFactory(KeywordsValidator validator, Predicate<Keyword> filter) {
+            this.validator = validator;
+            this.filter = filter;
         }
 
         public Keywords fromSet(Set<Keyword> setKeywords) {
-            validator.orElse(keywords -> { })
-                .validate(setKeywords);
+            validator.validate(setKeywords);
 
             return new Keywords(setKeywords.stream()
-                    .filter(filter.orElse(keyword -> true))
+                    .filter(filter)
                     .collect(Guavate.toImmutableSet()));
         }
 
@@ -130,8 +130,14 @@ public class Keywords {
         }
     }
 
-    public static KeywordsFactory factory() {
-        return new KeywordsFactory();
+    public static KeywordsFactory strictFactory() {
+        return new KeywordsFactory(KeywordsFactory.KeywordsValidator.THROW_ON_IMAP_NON_EXPOSED_KEYWORDS,
+            KeywordsFactory.KeywordFilter.KEEP_ALL);
+    }
+
+    public static KeywordsFactory lenientFactory() {
+        return new KeywordsFactory(KeywordsFactory.KeywordsValidator.IGNORE_NON_EXPOSED_IMAP_KEYWORDS,
+            KeywordsFactory.KeywordFilter.FILTER_IMAP_NON_EXPOSED_KEYWORDS);
     }
 
     private final ImmutableSet<Keyword> keywords;

@@ -79,8 +79,7 @@ public class GetMessagesMethod implements Method {
         this.messageFactory = messageFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
-        this.keywordsFactory = Keywords.factory()
-            .filterImapNonExposedKeywords();
+        this.keywordsFactory = Keywords.lenientFactory();
     }
     
     @Override

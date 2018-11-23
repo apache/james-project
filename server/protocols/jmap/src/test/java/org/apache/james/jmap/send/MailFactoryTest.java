@@ -74,7 +74,7 @@ public class MailFactoryTest {
         
         message = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
-                .keywords(Keywords.factory().from(Keyword.SEEN))
+                .keywords(Keywords.strictFactory().from(Keyword.SEEN))
                 .size(content.length())
                 .internalDate(Instant.now())
                 .sharedContent(new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)))
