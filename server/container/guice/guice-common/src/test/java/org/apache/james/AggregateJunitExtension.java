@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.Lists;
+import reactor.core.publisher.Flux;
 
 public class AggregateJunitExtension implements RegistrableExtension {
 
@@ -40,30 +41,26 @@ public class AggregateJunitExtension implements RegistrableExtension {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        Runnables.runParrallelStream(registrableExtensions
-            .stream()
-            .map(ext -> Throwing.runnable(() -> ext.beforeAll(extensionContext))));
+        Runnables.runParallel(Flux.fromIterable(registrableExtensions)
+                    .map(ext -> Throwing.runnable(() -> ext.beforeAll(extensionContext))));
     }
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
-        Runnables.runParrallelStream(registrableExtensions
-            .stream()
-            .map(ext -> Throwing.runnable(() -> ext.beforeEach(extensionContext))));
+        Runnables.runParallel(Flux.fromIterable(registrableExtensions)
+                    .map(ext -> Throwing.runnable(() -> ext.beforeEach(extensionContext))));
     }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) {
-        Runnables.runParrallelStream(Lists.reverse(registrableExtensions)
-            .stream()
-            .map(ext -> Throwing.runnable(() -> ext.afterEach(extensionContext))));
+        Runnables.runParallel(Flux.fromIterable(Lists.reverse(registrableExtensions))
+                    .map(ext -> Throwing.runnable(() -> ext.afterEach(extensionContext))));
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
-        Runnables.runParrallelStream(Lists.reverse(registrableExtensions)
-            .stream()
-            .map(ext -> Throwing.runnable(() -> ext.afterAll(extensionContext))));
+        Runnables.runParallel(Flux.fromIterable(Lists.reverse(registrableExtensions))
+                    .map(ext -> Throwing.runnable(() -> ext.afterAll(extensionContext))));
     }
 
     @Override
