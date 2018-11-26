@@ -62,7 +62,7 @@ class Enqueuer {
     void enQueue(Mail mail) throws MailQueue.MailQueueException {
         saveMail(mail)
             .thenApply(Throwing.<MimeMessagePartsId, EnqueuedItem>function(partsId -> publishReferenceToRabbit(mail, partsId)).sneakyThrow())
-            .thenApply(mailQueueView::storeMail)
+            .thenCompose(mailQueueView::storeMail)
             .thenRun(enqueueMetric::increment)
             .join();
     }
