@@ -26,6 +26,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
@@ -46,8 +47,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.google.common.base.Strings;
+
 @ExtendWith(DockerSwiftExtension.class)
 public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
+    private static final String BIG_STRING = Strings.repeat("big blob content", 10 * 1024);
     private static final TenantName TENANT_NAME = TenantName.of("test");
     private static final UserName USER_NAME = UserName.of("tester");
     private static final Credentials PASSWORD = Credentials.of("testing");
@@ -157,6 +161,29 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         objectStorageBlobsDAO.deleteContainer();
         assertThat(blobStore.containerExists(containerName.value()))
             .isFalse();
+    }
+
+    @Test
+    void saveBytesShouldNotCompleteWhenDoesNotAwait() {
+        // String need to be big enough to get async thread busy hence could not return result instantly
+        CompletableFuture<BlobId> blobIdFuture = testee.save(BIG_STRING.getBytes(StandardCharsets.UTF_8));
+        assertThat(blobIdFuture)
+            .isNotCompleted();
+    }
+
+    @Test
+    void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
+        CompletableFuture<BlobId> blobIdFuture = testee.save(new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)));
+        assertThat(blobIdFuture)
+            .isNotCompleted();
+    }
+
+    @Test
+    void readBytesShouldNotCompleteWhenDoesNotAwait() {
+        BlobId blobId = testee().save(BIG_STRING.getBytes(StandardCharsets.UTF_8)).join();
+        CompletableFuture<byte[]> resultFuture = testee.readBytes(blobId);
+        assertThat(resultFuture)
+            .isNotCompleted();
     }
 }
 

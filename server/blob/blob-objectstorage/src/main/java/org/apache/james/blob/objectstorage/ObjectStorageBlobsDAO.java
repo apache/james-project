@@ -96,26 +96,27 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         Preconditions.checkNotNull(data);
 
         BlobId tmpId = blobIdFactory.randomId();
-        BlobId id = save(data, tmpId);
-        updateBlobId(tmpId, id);
-
-        return CompletableFuture.completedFuture(id);
+        return save(data, tmpId)
+            .thenCompose(id -> updateBlobId(tmpId, id));
     }
 
-    private void updateBlobId(BlobId from, BlobId to) {
+    private CompletableFuture<BlobId> updateBlobId(BlobId from, BlobId to) {
         String containerName = this.containerName.value();
-        blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(),
-            CopyOptions.NONE);
-        blobStore.removeBlob(containerName, from.asString());
+        return CompletableFuture
+            .supplyAsync(() -> blobStore.copyBlob(containerName, from.asString(), containerName, to.asString(), CopyOptions.NONE))
+            .thenAcceptAsync(any -> blobStore.removeBlob(containerName, from.asString()))
+            .thenApply(any -> to);
     }
 
-    private BlobId save(InputStream data, BlobId id) {
+    private CompletableFuture<BlobId> save(InputStream data, BlobId id) {
         String containerName = this.containerName.value();
         HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
         Payload payload = payloadCodec.write(hashingInputStream);
         Blob blob = blobStore.blobBuilder(id.asString()).payload(payload).build();
-        blobStore.putBlob(containerName, blob);
-        return blobIdFactory.from(hashingInputStream.hash().toString());
+
+        return CompletableFuture
+            .supplyAsync(() -> blobStore.putBlob(containerName, blob))
+            .thenApply(any -> blobIdFactory.from(hashingInputStream.hash().toString()));
     }
 
     @Override
@@ -147,4 +148,3 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         blobStore.deleteContainer(containerName.value());
     }
 }
-
