@@ -46,6 +46,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -416,6 +417,22 @@ public interface MailRepositoryContract {
         testee.store(mail);
 
         assertThat(testee.list()).hasSize(1);
+        assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
+    }
+
+
+    @Disabled("JAMES-2608")
+    @Test
+    default void storingMessageWithPerRecipientHeadersShouldAllowMultipleHeadersPerUser() throws Exception {
+
+        MailRepository testee = retrieveRepository();
+        Mail mail = createMail(MAIL_1);
+        MailAddress recipient1 = new MailAddress("rec1@domain.com");
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("foo").value("bar").build(), recipient1);
+        mail.addSpecificHeaderForRecipient(PerRecipientHeaders.Header.builder().name("fizz").value("buzz").build(), recipient1);
+        testee.store(mail);
+
+        assertThat(testee.list()).hasSize(1).containsOnly(MAIL_1);
         assertThat(testee.retrieve(MAIL_1)).satisfies(actual -> checkMailEquality(actual, mail));
     }
 
