@@ -384,7 +384,7 @@ public interface MailQueueContract {
             })
             .threadCount(threadCount)
             .operationCount(operationCount)
-            .runSuccessfullyWithin(Duration.ofMinutes(1));
+            .runSuccessfullyWithin(Duration.ofMinutes(5));
 
         assertThat(
             dequeuedMails.stream()
