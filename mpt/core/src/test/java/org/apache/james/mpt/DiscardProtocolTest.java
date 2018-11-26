@@ -68,6 +68,8 @@ class DiscardProtocolTest {
         protocol.start();
         socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort().getValue());
         record = protocol.recordNext();
+
+        assertThat(socket.isConnected()).isTrue();
     }
 
     @AfterEach
@@ -77,15 +79,17 @@ class DiscardProtocolTest {
 
     @Test
     void testRecord() throws Exception {
-        assertThat(socket.isConnected()).isTrue();
         input();
+
         String output = record.complete();
+
         assertThat(output).isEqualTo(INPUT);
     }
 
     private void input() throws IOException {
         Writer out = new OutputStreamWriter(socket.getOutputStream());
         out.append(INPUT);
+        out.flush();
         out.close();
         socket.close();
     }
@@ -95,7 +99,9 @@ class DiscardProtocolTest {
         InputLater inputLater = new InputLater();
         Thread thread = new Thread(inputLater);
         thread.start();
+
         String output = record.complete();
+
         assertThat(output).isEqualTo(INPUT);
         inputLater.assertExecutedSuccessfully();
     }
