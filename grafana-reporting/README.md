@@ -35,3 +35,5 @@ Note that you need to run a guice version of James.
  - Tika HTTP client statistics
  - SpamAssassin TCP client statistics
  - Mailbox listeners statistics
+ - MailQueue enqueue/dequeue timer & counter statistics
+ - BlobStore timer statistics
