@@ -23,33 +23,14 @@ DIRECTORY=$4
 # Build Compiler environment
 docker build -t james/project dockerfiles/compilation/java-8
 
-# Compile James with Cassandra
+# Compile James
 docker run \
    --rm \
    --volume $PWD/.m2:/root/.m2 \
    --volume $PWD:/origin \
    --volume $PWD/dockerfiles/run/guice/cassandra/destination:/cassandra/destination \
-   -t james/project -s $SHA1
-docker run \
-   --rm \
-   --volume $PWD/.m2:/root/.m2 \
-   --volume $PWD:/origin \
    --volume $PWD/dockerfiles/run/guice/cassandra-ldap/destination:/cassandra/destination \
-   -t james/project -s $SHA1
-
-# Compile James with Cassandra + RabbitMQ + Swift BlobStore
-docker run \
-   --rm \
-   --volume $PWD/.m2:/root/.m2 \
-   --volume $PWD:/origin \
    --volume $PWD/dockerfiles/run/guice/cassandra-rabbitmq/destination:/cassandra-rabbitmq/destination \
-   -t james/project -s $SHA1
-
-# Compile James with Cassandra + RabbitMQ + Swift + Ldap
-docker run \
-   --rm \
-   --volume PWD/.m2:/root/.m2 \
-   --volume $PWD:/origin \
    --volume $PWD/dockerfiles/run/guice/cassandra-rabbitmq-ldap/destination:/cassandra-rabbitmq-ldap/destination \
    -t james/project -s $SHA1
 

@@ -3,3 +3,4 @@
 update-alternatives --remove james /usr/share/james/james-ldap-server.jar
 update-alternatives --remove james /usr/share/james/james-withoutldap-server.jar
 update-alternatives --remove james /usr/share/james/james-rabbitmq-withoutldap-server.jar
+update-alternatives --remove james /usr/share/james/james-rabbitmq-ldap-server.jar
