@@ -28,11 +28,11 @@ import java.net.Socket;
 
 import javax.net.SocketFactory;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class TestDiscardProtocol {
+class DiscardProtocolTest {
 
     private final class InputLater implements Runnable {
         private Exception e;
@@ -47,7 +47,7 @@ public class TestDiscardProtocol {
             }
         }
         
-        public void assertExecutedSuccessfully() throws Exception {
+        void assertExecutedSuccessfully() throws Exception {
             if (e != null) {
                 e.printStackTrace();
                 throw e;
@@ -62,21 +62,21 @@ public class TestDiscardProtocol {
 
     private DiscardProtocol.Record record;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         protocol = new DiscardProtocol();
         protocol.start();
         socket = SocketFactory.getDefault().createSocket("127.0.0.1", protocol.getPort().getValue());
         record = protocol.recordNext();
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void tearDown() {
         protocol.stop();
     }
 
     @Test
-    public void testRecord() throws Exception {
+    void testRecord() throws Exception {
         assertThat(socket.isConnected()).isTrue();
         input();
         String output = record.complete();
@@ -91,7 +91,7 @@ public class TestDiscardProtocol {
     }
 
     @Test
-    public void testComplete() throws Exception {
+    void testComplete() throws Exception {
         InputLater inputLater = new InputLater();
         Thread thread = new Thread(inputLater);
         thread.start();
