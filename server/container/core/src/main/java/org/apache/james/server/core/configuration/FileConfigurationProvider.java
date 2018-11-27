@@ -44,7 +44,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
     private static final char SEMICOLON = ';';
 
-    public static final HierarchicalConfiguration EMTY_CONFIGURATION = new HierarchicalConfiguration();
+    public static final HierarchicalConfiguration EMPTY_CONFIGURATION = new HierarchicalConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
         PropertiesConfiguration.setDefaultListDelimiter(SEMICOLON);
@@ -74,7 +74,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
             return selectConfigurationPart(configPathParts,
                 getConfig(inputStream.get()));
         }
-        return EMTY_CONFIGURATION;
+        return EMPTY_CONFIGURATION;
     }
 
     private HierarchicalConfiguration selectConfigurationPart(List<String> configPathParts, HierarchicalConfiguration config) {
