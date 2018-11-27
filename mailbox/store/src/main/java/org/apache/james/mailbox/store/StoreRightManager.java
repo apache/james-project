@@ -138,7 +138,7 @@ public class StoreRightManager implements RightManager {
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         ACLDiff aclDiff = mapper.updateACL(mailbox, mailboxACLCommand);
 
-        dispatcher.aclUpdated(session, mailboxPath, aclDiff);
+        dispatcher.aclUpdated(session, mailboxPath, aclDiff, mailbox.getMailboxId());
     }
 
     private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -216,7 +216,7 @@ public class StoreRightManager implements RightManager {
     private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
         ACLDiff aclDiff = mapper.setACL(mailbox, mailboxACL);
 
-        dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff);
+        dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff, mailbox.getMailboxId());
     }
 
     /**

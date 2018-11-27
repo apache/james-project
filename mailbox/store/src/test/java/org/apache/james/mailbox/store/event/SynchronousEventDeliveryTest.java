@@ -42,14 +42,14 @@ public class SynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWork() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
         synchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener).event(event);
     }
 
     @Test
     public void deliverShouldNotPropagateException() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null, null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         synchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener).event(event);

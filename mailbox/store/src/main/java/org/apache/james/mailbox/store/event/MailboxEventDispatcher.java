@@ -33,6 +33,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
@@ -157,8 +158,8 @@ public class MailboxEventDispatcher {
         listener.event(eventFactory.mailboxAdded(session, mailbox));
     }
 
-    public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
-        listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff));
+    public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
+        listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff, mailboxId));
     }
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {

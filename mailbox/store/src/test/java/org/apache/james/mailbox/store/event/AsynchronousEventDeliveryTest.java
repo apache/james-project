@@ -53,14 +53,14 @@ public class AsynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWork() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
 
     @Test
     public void deliverShouldNotPropagateException() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null, null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
@@ -68,7 +68,7 @@ public class AsynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWorkWhenThePoolIsFull() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null, null) {};
         int operationCount = 10;
         for (int i = 0; i < operationCount; i++) {
             asynchronousEventDelivery.deliver(mailboxListener, event);

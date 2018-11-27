@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -35,8 +36,8 @@ public class FakeMailboxListenerAdded extends MailboxListener.Added {
 
     public List<MessageUid> uids;
 
-    public FakeMailboxListenerAdded(MailboxSession session, List<MessageUid> uids, MailboxPath path) {
-        super(session, path);
+    public FakeMailboxListenerAdded(MailboxSession session, List<MessageUid> uids, MailboxPath path, MailboxId mailboxId) {
+        super(session, path, mailboxId);
         this.uids = uids;
     }
 

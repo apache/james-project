@@ -49,6 +49,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxEventAnalyserTest {
+
     public static class SingleMessageResultIterator implements MessageResultIterator {
         private final MessageResult messageResult;
         private boolean done;
@@ -86,6 +87,7 @@ public class MailboxEventAnalyserTest {
     private static final MockMailboxSession OTHER_MAILBOX_SESSION = new MockMailboxSession("user");
     private static final char PATH_DELIMITER = '.';
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
+    private static final TestId MAILBOX_ID = TestId.of(36);
 
     private SelectedMailboxImpl testee;
 
@@ -105,7 +107,7 @@ public class MailboxEventAnalyserTest {
             .thenReturn(messageManager);
 
         MessageResult messageResult = mock(MessageResult.class);
-        when(messageResult.getMailboxId()).thenReturn(TestId.of(36));
+        when(messageResult.getMailboxId()).thenReturn(MAILBOX_ID);
         when(messageResult.getUid()).thenReturn(MESSAGE_UID);
 
         when(messageManager.getApplicableFlags(any()))
@@ -120,7 +122,7 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION, MAILBOX_PATH) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION, MAILBOX_PATH, MAILBOX_ID) {};
       
         testee.event(event);
 
@@ -129,13 +131,13 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnAdded() {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
+        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
     public void testShouldNoSizeChangeAfterReset() {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH));
+        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
         testee.resetEvents();
 
         assertThat(testee.isSizeChanged()).isFalse();
@@ -151,7 +153,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags())
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         testee.event(update);
 
         assertThat(testee.flagUpdateUids()).isEmpty();
@@ -169,7 +172,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.ANSWERED))
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         testee.event(update);
 
        assertThat(testee.flagUpdateUids().iterator()).containsExactly(uid);
@@ -188,7 +192,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.ANSWERED))
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         analyser.event(update);
         analyser.event(update);
         analyser.deselect();
@@ -208,7 +213,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.ANSWERED))
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
@@ -226,7 +232,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags())
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
@@ -244,7 +251,8 @@ public class MailboxEventAnalyserTest {
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.RECENT))
                 .build()),
-            MAILBOX_PATH);
+            MAILBOX_PATH,
+            MAILBOX_ID);
         testee.event(update);
 
         assertThat(testee.flagUpdateUids().iterator()).isEmpty();

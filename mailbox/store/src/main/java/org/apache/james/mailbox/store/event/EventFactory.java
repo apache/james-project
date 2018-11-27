@@ -29,6 +29,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
@@ -53,7 +54,7 @@ public class EventFactory {
         private final Mailbox mailbox;
 
         public AddedImpl(MailboxSession session, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids, Map<MessageUid, MailboxMessage> availableMessages) {
-            super(session, new StoreMailboxPath(mailbox));
+            super(session, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.added = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
             this.availableMessages = ImmutableMap.copyOf(availableMessages);
@@ -84,7 +85,7 @@ public class EventFactory {
         private final Mailbox mailbox;
 
         public ExpungedImpl(MailboxSession session, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
-            super(session,  new StoreMailboxPath(mailbox));
+            super(session,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
         }
@@ -113,7 +114,7 @@ public class EventFactory {
         private final List<UpdatedFlags> uFlags;
 
         public FlagsUpdatedImpl(MailboxSession session, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
-            super(session, new StoreMailboxPath(mailbox));
+            super(session, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableList.copyOf(uids);
             this.uFlags = ImmutableList.copyOf(uFlags);
             this.mailbox = mailbox;
@@ -140,7 +141,7 @@ public class EventFactory {
         private final Mailbox mailbox;
 
         public MailboxDeletionImpl(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-            super(session, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize);
+            super(session, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
             this.mailbox = mailbox;
         }
 
@@ -157,7 +158,7 @@ public class EventFactory {
         private final Mailbox mailbox;
 
         public MailboxAddedImpl(MailboxSession session, Mailbox mailbox) {
-            super(session,  new StoreMailboxPath(mailbox));
+            super(session,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.mailbox = mailbox;
         }
 
@@ -175,7 +176,7 @@ public class EventFactory {
         private final Mailbox newMailbox;
 
         public MailboxRenamedEventImpl(MailboxSession session, MailboxPath oldPath, Mailbox newMailbox) {
-            super(session, oldPath);
+            super(session, oldPath, newMailbox.getMailboxId());
             this.newPath = new StoreMailboxPath(newMailbox);
             this.newMailbox = newMailbox;
         }
@@ -216,8 +217,8 @@ public class EventFactory {
         return new MailboxAddedImpl(session, mailbox);
     }
 
-    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff) {
-        return new MailboxListener.MailboxACLUpdated(session, mailboxPath, aclDiff);
+    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
+        return new MailboxListener.MailboxACLUpdated(session, mailboxPath, aclDiff, mailboxId);
     }
 
     public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
