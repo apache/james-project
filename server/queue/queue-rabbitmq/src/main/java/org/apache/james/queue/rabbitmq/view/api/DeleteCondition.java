@@ -86,6 +86,10 @@ public interface DeleteCondition {
             this.name = name;
         }
 
+        public String getName() {
+            return name;
+        }
+
         @Override
         public boolean shouldBeDeleted(Mail mail) {
             Preconditions.checkNotNull(mail);

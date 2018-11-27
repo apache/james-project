@@ -32,6 +32,7 @@ import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
+import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
@@ -105,6 +106,16 @@ public class CassandraMailQueueView implements MailQueueView {
 
     @Override
     public CompletableFuture<Long> delete(DeleteCondition deleteCondition) {
+        if (deleteCondition instanceof DeleteCondition.WithName) {
+            DeleteCondition.WithName nameDeleteCondition = (DeleteCondition.WithName) deleteCondition;
+
+            return delete(MailKey.of(nameDeleteCondition.getName())).thenApply(any -> 1L);
+        }
+
+        return browseThenDelete(deleteCondition);
+    }
+
+    private CompletableFuture<Long> browseThenDelete(DeleteCondition deleteCondition) {
         CompletableFuture<Long> result = cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
             .filter(mailReference -> deleteCondition.shouldBeDeleted(mailReference.getMail()))
@@ -116,6 +127,10 @@ public class CassandraMailQueueView implements MailQueueView {
         result.thenRunAsync(() -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName));
 
         return result;
+    }
+
+    private CompletableFuture<Void> delete(MailKey mailKey) {
+        return cassandraMailQueueMailDelete.considerDeleted(mailKey, mailQueueName);
     }
 
     @Override
