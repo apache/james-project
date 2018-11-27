@@ -19,11 +19,8 @@
 
 package org.apache.james.mpt.imapmailbox.jpa.host;
 
-import java.io.File;
-
 import javax.persistence.EntityManagerFactory;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -72,7 +69,6 @@ public class JPAHostSystem extends JamesImapHostSystem {
             .addAll(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES)
             .build());
 
-    public static final String META_DATA_DIRECTORY = "target/user-meta-data";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of(Feature.NAMESPACE_SUPPORT,
         Feature.USER_FLAGS_SUPPORT,
         Feature.ANNOTATION_SUPPORT,
@@ -80,7 +76,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         Feature.MOVE_SUPPORT,
         Feature.MOD_SEQ_SEARCH);
 
-    public static JamesImapHostSystem build() throws Exception {
+    static JamesImapHostSystem build() {
         return new JPAHostSystem();
     }
     
@@ -121,7 +117,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mapperFactory);
         
-        final ImapProcessor defaultImapProcessorFactory = 
+        ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
                         mailboxManager, 
                         subscriptionManager, 
@@ -136,7 +132,6 @@ public class JPAHostSystem extends JamesImapHostSystem {
 
     @Override
     public void afterTest() throws Exception {
-        resetUserMetaData();
         if (mailboxManager != null) {
             MailboxSession session = mailboxManager.createSystemSession("test");
             mailboxManager.startProcessingRequest(session);
@@ -144,14 +139,6 @@ public class JPAHostSystem extends JamesImapHostSystem {
             mailboxManager.endProcessingRequest(session);
             mailboxManager.logout(session, false);
         }
-    }
-    
-    public void resetUserMetaData() throws Exception {
-        File dir = new File(META_DATA_DIRECTORY);
-        if (dir.exists()) {
-            FileUtils.deleteDirectory(dir);
-        }
-        dir.mkdirs();
     }
 
     @Override
@@ -165,13 +152,13 @@ public class JPAHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         maxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         maxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }
 
     @Override
-    protected void await() throws Exception {
+    protected void await() {
 
     }
 }
