@@ -30,7 +30,6 @@ import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.task.Task;
 
 /**
@@ -57,16 +56,18 @@ public class ReIndexerImpl implements ReIndexer {
 
     @Override
     public Task reIndex(MailboxPath path) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
-        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
-        return new SingleMailboxReindexingTask(reIndexerPerformer, mailbox);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
+
+        MailboxId mailboxId = mailboxManager.getMailbox(path, mailboxSession).getId();
+
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
     }
 
     @Override
     public Task reIndex(MailboxId mailboxId) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
-        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        return new SingleMailboxReindexingTask(reIndexerPerformer, mailbox);
+        validateIdExists(mailboxId);
+
+        return new SingleMailboxReindexingTask(reIndexerPerformer, mailboxId);
     }
 
     @Override
@@ -81,15 +82,22 @@ public class ReIndexerImpl implements ReIndexer {
 
     @Override
     public Task reIndex(MailboxPath path, MessageUid uid) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
-        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxByPath(path);
-        return new SingleMessageReindexingTask(reIndexerPerformer, mailbox, uid);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(path.getUser());
+
+        MailboxId mailboxId = mailboxManager.getMailbox(path, mailboxSession).getId();
+
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailboxId, uid);
     }
 
     @Override
     public Task reIndex(MailboxId mailboxId, MessageUid uid) throws MailboxException {
+        validateIdExists(mailboxId);
+
+        return new SingleMessageReindexingTask(reIndexerPerformer, mailboxId, uid);
+    }
+
+    private void validateIdExists(MailboxId mailboxId) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
-        Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        return new SingleMessageReindexingTask(reIndexerPerformer, mailbox, uid);
+        mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
     }
 }

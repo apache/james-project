@@ -65,8 +65,23 @@ public class ReIndexerPerformer {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
     }
 
-    Task.Result reIndex(Mailbox mailbox, ReprocessingContext reprocessingContext) throws MailboxException {
-        return reIndexSingleMailbox(mailbox.getMailboxId(), reprocessingContext);
+    Task.Result reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext) throws MailboxException {
+        LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
+        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
+        messageSearchIndex.deleteAll(mailboxSession, mailbox);
+        try {
+            return Iterators.toStream(
+                mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
+                    .findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, NO_LIMIT))
+                .map(MailboxMessage::getUid)
+                .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid))
+                .peek(reprocessingContext::updateAccordingToReprocessingResult)
+                .reduce(Task::combine)
+                .orElse(Task.Result.COMPLETED);
+        } finally {
+            LOGGER.info("Finish to reindex mailbox with mailboxId {}", mailboxId.serialize());
+        }
     }
 
     Task.Result reIndex(ReprocessingContext reprocessingContext) throws MailboxException {
@@ -98,9 +113,10 @@ public class ReIndexerPerformer {
         }
     }
 
-    Task.Result handleMessageReIndexing(Mailbox mailbox, MessageUid uid) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(mailbox.getUser());
+    Task.Result handleMessageReIndexing(MailboxId mailboxId, MessageUid uid) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
 
+        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
         return handleMessageReIndexing(mailboxSession, mailbox, uid);
     }
 
@@ -108,7 +124,7 @@ public class ReIndexerPerformer {
         return mailboxIds
             .map(mailboxId -> {
                 try {
-                    return reIndexSingleMailbox(mailboxId, reprocessingContext);
+                    return reIndex(mailboxId, reprocessingContext);
                 } catch (Throwable e) {
                     LOGGER.error("Error while proceeding to full reindexing on mailbox with mailboxId {}", mailboxId.serialize(), e);
                     return Task.Result.PARTIAL;
@@ -116,25 +132,6 @@ public class ReIndexerPerformer {
             })
             .reduce(Task::combine)
             .orElse(Task.Result.COMPLETED);
-    }
-
-    private Task.Result reIndexSingleMailbox(MailboxId mailboxId, ReprocessingContext reprocessingContext) throws MailboxException {
-        LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
-        Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        messageSearchIndex.deleteAll(mailboxSession, mailbox);
-        try {
-            return Iterators.toStream(
-                mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
-                    .findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, NO_LIMIT))
-                .map(MailboxMessage::getUid)
-                .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid))
-                .peek(reprocessingContext::updateAccordingToReprocessingResult)
-                .reduce(Task::combine)
-                .orElse(Task.Result.COMPLETED);
-        } finally {
-            LOGGER.info("Finish to reindex mailbox with mailboxId {}", mailboxId.serialize());
-        }
     }
 
     private Task.Result handleMessageReIndexing(MailboxSession mailboxSession, Mailbox mailbox, MessageUid uid) {

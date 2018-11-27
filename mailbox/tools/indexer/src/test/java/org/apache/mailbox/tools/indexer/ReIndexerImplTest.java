@@ -63,8 +63,7 @@ public class ReIndexerImplTest {
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
         reIndexer = new ReIndexerImpl(new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory),
-            mailboxManager,
-            mailboxSessionMapperFactory);
+            mailboxManager, mailboxSessionMapperFactory);
     }
 
     @Test

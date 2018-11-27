@@ -25,7 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.slf4j.Logger;
@@ -37,20 +37,16 @@ public class SingleMessageReindexingTask implements Task {
     public static final String MESSAGE_RE_INDEXING = "messageReIndexing";
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final Mailbox mailbox;
+        private final MailboxId mailboxId;
         private final MessageUid uid;
 
-        AdditionalInformation(Mailbox mailbox, MessageUid uid) {
-            this.mailbox = mailbox;
+        AdditionalInformation(MailboxId mailboxId, MessageUid uid) {
+            this.mailboxId = mailboxId;
             this.uid = uid;
         }
 
-        public String getMailboxPath() {
-            return mailbox.generateAssociatedPath().asString();
-        }
-
         public String getMailboxId() {
-            return mailbox.getMailboxId().serialize();
+            return mailboxId.serialize();
         }
 
         public long getUid() {
@@ -59,24 +55,24 @@ public class SingleMessageReindexingTask implements Task {
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final Mailbox mailbox;
+    private final MailboxId mailboxId;
     private final MessageUid uid;
     private final AdditionalInformation additionalInformation;
 
     @Inject
-    public SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, Mailbox mailbox, MessageUid uid) {
+    public SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxId mailboxId, MessageUid uid) {
         this.reIndexerPerformer = reIndexerPerformer;
-        this.mailbox = mailbox;
+        this.mailboxId = mailboxId;
         this.uid = uid;
-        this.additionalInformation = new AdditionalInformation(mailbox, uid);
+        this.additionalInformation = new AdditionalInformation(mailboxId, uid);
     }
 
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.handleMessageReIndexing(mailbox, uid);
+            return reIndexerPerformer.handleMessageReIndexing(mailboxId, uid);
         } catch (MailboxException e) {
-            LOGGER.warn("Error encounteres while reindexing {} {} : {}", mailbox.getMailboxId(), mailbox.generateAssociatedPath(), uid, e);
+            LOGGER.warn("Error encounteres while reindexing {} : {}",mailboxId, uid, e);
             return Result.PARTIAL;
         }
     }
