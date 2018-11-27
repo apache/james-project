@@ -378,7 +378,6 @@ public class MailAddress implements java.io.Serializable {
      * @returns true if the given object is equal to this one, false otherwise
      */
     @Override
-    @SuppressWarnings("deprecated")
     public final boolean equals(Object obj) {
         if (obj == null) {
             return false;

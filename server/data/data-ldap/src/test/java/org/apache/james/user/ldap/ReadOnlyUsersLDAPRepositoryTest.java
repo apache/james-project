@@ -92,7 +92,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
 
-            assertThatThrownBy(()-> usersLDAPRepository.configure(configuration))
+            assertThatThrownBy(() -> usersLDAPRepository.configure(configuration))
                 .isInstanceOf(ConversionException.class);
         }
     }
