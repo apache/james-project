@@ -35,17 +35,17 @@ public class MessageBatcher {
         List<MessageRange> execute(MessageRange messageRange) throws MailboxException;
     }
 
-    private final int moveBatchSize;
+    private final int batchSize;
 
-    public MessageBatcher(int moveBatchSize) {
-        Preconditions.checkArgument(moveBatchSize >= NO_BATCH_SIZE);
-        this.moveBatchSize = moveBatchSize;
+    public MessageBatcher(int batchSize) {
+        Preconditions.checkArgument(batchSize >= NO_BATCH_SIZE);
+        this.batchSize = batchSize;
     }
 
     public List<MessageRange> batchMessages(MessageRange set, BatchedOperation batchedOperation) throws MailboxException {
-        if (moveBatchSize > 0) {
+        if (batchSize > 0) {
             List<MessageRange> movedRanges = new ArrayList<>();
-            for (MessageRange messageRange : set.split(moveBatchSize)) {
+            for (MessageRange messageRange : set.split(batchSize)) {
                 movedRanges.addAll(batchedOperation.execute(messageRange));
             }
             return movedRanges;
