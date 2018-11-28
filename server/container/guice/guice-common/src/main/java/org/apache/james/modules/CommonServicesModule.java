@@ -63,6 +63,7 @@ public class CommonServicesModule extends AbstractModule {
         install(new CleanupTaskModule());
 
         bind(FileSystem.class).toInstance(fileSystem);
+        bind(Configuration.class).toInstance(configuration);
 
         bind(ConfigurationProvider.class).toInstance(new FileConfigurationProvider(fileSystem, configuration));
 
