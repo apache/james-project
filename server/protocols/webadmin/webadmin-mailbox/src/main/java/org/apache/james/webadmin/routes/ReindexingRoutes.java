@@ -232,8 +232,8 @@ public class ReindexingRoutes implements Routes {
             return TaskIdDto.respond(response, taskId);
         } catch (MailboxNotFoundException e) {
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorResponder.ErrorType.NOT_FOUND)
                 .message("mailbox not found")
                 .cause(e)
                 .haltError();

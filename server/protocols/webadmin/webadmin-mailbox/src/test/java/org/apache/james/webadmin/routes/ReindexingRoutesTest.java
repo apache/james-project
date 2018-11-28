@@ -416,9 +416,9 @@ class ReindexingRoutesTest {
                 when()
                     .post("/mailboxIndex/mailboxes/36?task=reIndex")
                 .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
                     .body("message", is("mailbox not found"));
             }
         }
@@ -570,9 +570,9 @@ class ReindexingRoutesTest {
                 when()
                     .post("/mailboxIndex/mailboxes/36/mails/7?task=reIndex")
                 .then()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .body("statusCode", is(400))
-                    .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .body("statusCode", is(404))
+                    .body("type", is(ErrorResponder.ErrorType.NOT_FOUND.getType()))
                     .body("message", is("mailbox not found"));
             }
 
