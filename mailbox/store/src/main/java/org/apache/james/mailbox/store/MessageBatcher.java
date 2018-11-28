@@ -42,6 +42,10 @@ public class MessageBatcher {
         this.batchSize = batchSize;
     }
 
+    public int getBatchSize() {
+        return batchSize;
+    }
+
     public List<MessageRange> batchMessages(MessageRange set, BatchedOperation batchedOperation) throws MailboxException {
         if (batchSize > 0) {
             List<MessageRange> movedRanges = new ArrayList<>();
