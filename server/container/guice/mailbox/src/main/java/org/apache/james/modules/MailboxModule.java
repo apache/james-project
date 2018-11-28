@@ -36,6 +36,7 @@ public class MailboxModule extends AbstractModule {
         probeMultiBinder.addBinding().to(MailboxProbeImpl.class);
         probeMultiBinder.addBinding().to(QuotaProbesImpl.class);
         probeMultiBinder.addBinding().to(ACLProbeImpl.class);
+        probeMultiBinder.addBinding().to(ConfigurationProbe.class);
 
         bind(UnionMailboxACLResolver.class).in(Scopes.SINGLETON);
         bind(MailboxACLResolver.class).to(UnionMailboxACLResolver.class);
