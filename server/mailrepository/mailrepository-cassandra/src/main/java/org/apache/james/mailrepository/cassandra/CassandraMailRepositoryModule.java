@@ -30,6 +30,10 @@ import static com.datastax.driver.core.schemabuilder.SchemaBuilder.frozen;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 
+import com.datastax.driver.core.CodecRegistry;
+import com.datastax.driver.core.ProtocolVersion;
+import com.datastax.driver.core.TupleType;
+
 public interface CassandraMailRepositoryModule {
     CassandraModule MODULE = CassandraModule.builder()
         .type(MailRepositoryTable.HEADER_TYPE)
@@ -64,5 +68,24 @@ public interface CassandraMailRepositoryModule {
             .addColumn(MailRepositoryTable.REMOTE_ADDR, text())
             .addColumn(MailRepositoryTable.LAST_UPDATED, timestamp())
             .addUDTMapColumn(MailRepositoryTable.PER_RECIPIENT_SPECIFIC_HEADERS, text(), frozen(MailRepositoryTable.HEADER_TYPE)))
+        .table(MailRepositoryTableV2.CONTENT_TABLE_NAME)
+        .comment("Stores the mails for a given repository. " +
+            "Content is stored with other blobs. " +
+            "This v2 version was introduced to support multiple headers for each user")
+        .statement(statement -> statement
+            .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
+            .addPartitionKey(MailRepositoryTable.MAIL_KEY, text())
+            .addColumn(MailRepositoryTable.MESSAGE_SIZE, bigint())
+            .addColumn(MailRepositoryTable.STATE, text())
+            .addColumn(MailRepositoryTable.HEADER_BLOB_ID, text())
+            .addColumn(MailRepositoryTable.BODY_BLOB_ID, text())
+            .addColumn(MailRepositoryTable.ATTRIBUTES, map(text(), blob()))
+            .addColumn(MailRepositoryTable.ERROR_MESSAGE, text())
+            .addColumn(MailRepositoryTable.SENDER, text())
+            .addColumn(MailRepositoryTable.RECIPIENTS, list(text()))
+            .addColumn(MailRepositoryTable.REMOTE_HOST, text())
+            .addColumn(MailRepositoryTable.REMOTE_ADDR, text())
+            .addColumn(MailRepositoryTable.LAST_UPDATED, timestamp())
+            .addColumn(MailRepositoryTable.PER_RECIPIENT_SPECIFIC_HEADERS, list(TupleType.of(ProtocolVersion.NEWEST_SUPPORTED, CodecRegistry.DEFAULT_INSTANCE, text(), text(), text()))))
         .build();
 }

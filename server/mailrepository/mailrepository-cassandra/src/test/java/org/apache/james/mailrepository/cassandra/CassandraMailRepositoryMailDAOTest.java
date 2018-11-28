@@ -171,4 +171,20 @@ class CassandraMailRepositoryMailDAOTest {
             return testee;
         }
     }
+
+    @Nested
+    class v2 extends TestSuite {
+
+        private CassandraMailRepositoryMailDaoV2 testee;
+
+        @BeforeEach
+        void setUp(CassandraCluster cassandra) {
+            testee = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+        }
+
+        @Override
+        CassandraMailRepositoryMailDaoAPI testee() {
+            return testee;
+        }
+    }
 }
