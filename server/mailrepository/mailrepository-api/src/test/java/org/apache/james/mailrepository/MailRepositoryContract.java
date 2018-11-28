@@ -46,7 +46,6 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
@@ -421,7 +420,6 @@ public interface MailRepositoryContract {
     }
 
 
-    @Disabled("JAMES-2608")
     @Test
     default void storingMessageWithPerRecipientHeadersShouldAllowMultipleHeadersPerUser() throws Exception {
 
