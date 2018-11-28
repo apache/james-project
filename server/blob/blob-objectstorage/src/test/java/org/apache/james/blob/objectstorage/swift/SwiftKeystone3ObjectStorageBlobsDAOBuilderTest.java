@@ -76,7 +76,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     private Map<String, SwiftKeystone3ObjectStorage.Configuration.Builder> configBuilders;
 
     @BeforeEach
-    void setUp(DockerSwift dockerSwift) throws Exception {
+    void setUp(DockerSwift dockerSwift) {
         this.dockerSwift = dockerSwift;
         containerName = ContainerName.of(UUID.randomUUID().toString());
         testConfig = PROJECT_CONFIG
@@ -96,7 +96,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     }
 
     @Test
-    void containerNameIsMandatoryToBuildBlobsDAO() throws Exception {
+    void containerNameIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(null)
@@ -106,7 +106,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     }
 
     @Test
-    void blobIdFactoryIsMandatoryToBuildBlobsDAO() throws Exception {
+    void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
@@ -117,7 +117,7 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
 
     @ParameterizedTest
     @ValueSource(strings = {PROJECT_CONFIG_KEY, PROJECT_DOMAIN_ID_KEY, PROJECT_DOMAIN_NAME_KEY})
-    public void builtBlobsDAOCanStoreAndRetrieve(String key) throws Exception {
+    void builtBlobsDAOCanStoreAndRetrieve(String key) {
         SwiftKeystone3ObjectStorage.Configuration config =
             configBuilders.get(key).endpoint(dockerSwift.keystoneV3Endpoint()).build();
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO

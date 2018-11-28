@@ -47,7 +47,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     private SwiftTempAuthObjectStorage.Configuration testConfig;
 
     @BeforeEach
-    void setUp(DockerSwift dockerSwift) throws Exception {
+    void setUp(DockerSwift dockerSwift) {
         containerName = ContainerName.of(UUID.randomUUID().toString());
         endpoint = dockerSwift.swiftEndpoint();
         testConfig = SwiftTempAuthObjectStorage.configBuilder()
@@ -65,7 +65,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     }
 
     @Test
-    void containerNameIsMandatoryToBuildBlobsDAO() throws Exception {
+    void containerNameIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(null)
@@ -75,7 +75,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     }
 
     @Test
-    void blobIdFactoryIsMandatoryToBuildBlobsDAO() throws Exception {
+    void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
@@ -85,7 +85,7 @@ class SwiftTempAuthObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlob
     }
 
     @Test
-    public void builtBlobsDAOCanStoreAndRetrieve() throws Exception {
+    void builtBlobsDAOCanStoreAndRetrieve() {
         ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
             .builder(testConfig)
             .container(containerName)
