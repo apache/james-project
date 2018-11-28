@@ -22,6 +22,10 @@ package org.apache.james.mailrepository.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.util.Optional;
+
+import javax.mail.MessagingException;
+
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
@@ -157,7 +161,7 @@ class CassandraMailRepositoryMailDAOTest {
     }
 
     @Nested
-    class v1 extends TestSuite {
+    class V1 extends TestSuite {
 
         private CassandraMailRepositoryMailDAO testee;
 
@@ -173,7 +177,7 @@ class CassandraMailRepositoryMailDAOTest {
     }
 
     @Nested
-    class v2 extends TestSuite {
+    class V2 extends TestSuite {
 
         private CassandraMailRepositoryMailDaoV2 testee;
 
@@ -185,6 +189,133 @@ class CassandraMailRepositoryMailDAOTest {
         @Override
         CassandraMailRepositoryMailDaoAPI testee() {
             return testee;
+        }
+    }
+
+    @Nested
+    class Merging extends TestSuite {
+
+        private MergingCassandraMailRepositoryMailDao testee;
+        private CassandraMailRepositoryMailDAO v1;
+        private CassandraMailRepositoryMailDaoV2 v2;
+
+        @BeforeEach
+        void setUp(CassandraCluster cassandra) {
+            v1 = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            v2 = new CassandraMailRepositoryMailDaoV2(cassandra.getConf(), BLOB_ID_FACTORY);
+            testee = new MergingCassandraMailRepositoryMailDao(v1, v2);
+        }
+
+        @Override
+        CassandraMailRepositoryMailDaoAPI testee() {
+            return testee;
+        }
+
+        @Test
+        void readShouldReturnV1Value() throws MessagingException {
+            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+
+            v1.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader,
+                blobIdBody)
+                .join();
+
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            Mail partialMail = actual.getMailBuilder().build();
+            assertSoftly(softly -> {
+                softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody);
+                softly.assertThat(actual.getHeaderBlobId()).isEqualTo(blobIdHeader);
+                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+            });
+        }
+
+        @Test
+        void readShouldReturnV2Value() throws MessagingException {
+            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+
+            v2.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader,
+                blobIdBody)
+                .join();
+
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            Mail partialMail = actual.getMailBuilder().build();
+            assertSoftly(softly -> {
+                softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody);
+                softly.assertThat(actual.getHeaderBlobId()).isEqualTo(blobIdHeader);
+                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+            });
+        }
+
+        @Test
+        void readShouldReturnV2ValueIfPresentInBoth() throws MessagingException {
+            BlobId blobIdBody1 = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdBody2 = BLOB_ID_FACTORY.from("blobHeader2");
+            BlobId blobIdHeader1 = BLOB_ID_FACTORY.from("blobBody");
+            BlobId blobIdHeader2 = BLOB_ID_FACTORY.from("blobBody2");
+
+            v1.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader1,
+                blobIdBody1)
+                .join();
+
+            v2.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader2,
+                blobIdBody2)
+                .join();
+
+            CassandraMailRepositoryMailDaoAPI.MailDTO actual = testee.read(URL, KEY_1).join().get();
+            Mail partialMail = actual.getMailBuilder().build();
+            assertSoftly(softly -> {
+                softly.assertThat(actual.getBodyBlobId()).isEqualTo(blobIdBody2);
+                softly.assertThat(actual.getHeaderBlobId()).isEqualTo(blobIdHeader2);
+                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+            });
+        }
+
+        @Test
+        void removeShouldRemoveInBOth() throws MessagingException {
+            BlobId blobIdBody1 = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdBody2 = BLOB_ID_FACTORY.from("blobHeader2");
+            BlobId blobIdHeader1 = BLOB_ID_FACTORY.from("blobBody");
+            BlobId blobIdHeader2 = BLOB_ID_FACTORY.from("blobBody2");
+
+            v1.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader1,
+                blobIdBody1)
+                .join();
+
+            v2.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .build(),
+                blobIdHeader2,
+                blobIdBody2)
+                .join();
+
+            testee.remove(URL, KEY_1).join();
+
+            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v1Entry = v1.read(URL, KEY_1).join();
+            Optional<CassandraMailRepositoryMailDaoAPI.MailDTO> v2Entry = v2.read(URL, KEY_1).join();
+            assertThat(v1Entry).isEmpty();
+            assertThat(v2Entry).isEmpty();
         }
     }
 }
