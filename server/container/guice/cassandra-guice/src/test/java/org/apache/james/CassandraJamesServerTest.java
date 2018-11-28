@@ -20,10 +20,13 @@
 package org.apache.james;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.ConfigurationProbe;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraJamesServerTest implements JamesServerContract {
@@ -39,4 +42,18 @@ class CassandraJamesServerTest implements JamesServerContract {
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
+
+    @Test
+    void moveBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
+        int moveBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getMoveBatchSize();
+        // is 100 in batchsizes.properties configuration file
+        assertThat(moveBatchSize).isEqualTo(200);
+    }
+
+    @Test
+    void copyBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
+        int copyBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getCopyBatchSize();
+        // is 100 in batchsizes.properties configuration file
+        assertThat(copyBatchSize).isEqualTo(200);
+    }
 }
