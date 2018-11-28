@@ -191,8 +191,16 @@ public class StoreMailboxManager implements MailboxManager {
         this.copyBatcher = new MessageBatcher(batchSizes.getCopyBatchSize());
     }
 
+    public int getCopyBatchSize() {
+        return copyBatcher.getBatchSize();
+    }
+
     public void setMoveBatchSize(BatchSizes batchSizes) {
         this.moveBatcher = new MessageBatcher(batchSizes.getMoveBatchSize());
+    }
+
+    public int getMoveBatchSize() {
+        return moveBatcher.getBatchSize();
     }
 
     public void setBatchSizes(BatchSizes batchSizes) {
