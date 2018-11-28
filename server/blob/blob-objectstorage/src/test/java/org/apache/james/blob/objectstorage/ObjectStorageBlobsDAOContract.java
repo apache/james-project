@@ -24,25 +24,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.james.blob.api.BlobId;
 
 
 public interface ObjectStorageBlobsDAOContract {
 
+    byte[] BYTES = "content".getBytes(StandardCharsets.UTF_8);
+
     ContainerName containerName();
 
-    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder)
-        throws InterruptedException, ExecutionException, TimeoutException {
+    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder) {
         ObjectStorageBlobsDAO dao = builder.build();
         dao.createContainer(containerName());
-        byte[] bytes = "content".getBytes(StandardCharsets.UTF_8);
-        CompletableFuture<BlobId> save = dao.save(bytes);
-        InputStream inputStream = save.thenApply(dao::read).get(10, TimeUnit.SECONDS);
-        assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(bytes));
+
+        BlobId blobId = dao.save(BYTES).join();
+
+        InputStream inputStream = dao.read(blobId);
+        assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(BYTES));
     }
 }
