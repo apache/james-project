@@ -35,15 +35,17 @@ import com.google.common.base.Strings;
 public class PropertiesProvider {
 
     private final FileSystem fileSystem;
+    private final String configurationPrefix;
 
     @Inject
-    public PropertiesProvider(FileSystem fileSystem) {
+    public PropertiesProvider(FileSystem fileSystem, org.apache.james.server.core.configuration.Configuration configuration) {
         this.fileSystem = fileSystem;
+        this.configurationPrefix = configuration.configurationPath();
     }
 
     public Configuration getConfiguration(String fileName) throws FileNotFoundException, ConfigurationException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(fileName));
-        File file = fileSystem.getFile(FileSystem.FILE_PROTOCOL_AND_CONF + fileName + ".properties");
+        File file = fileSystem.getFile(configurationPrefix + fileName + ".properties");
         if (!file.exists()) {
             throw new FileNotFoundException();
         }

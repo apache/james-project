@@ -24,15 +24,21 @@ import java.io.FileNotFoundException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.utils.PropertiesProvider;
 
 import com.google.common.collect.ImmutableMap;
 
 public class FakePropertiesProvider extends PropertiesProvider {
+
+    public static final FileSystem NULL_FILE_SYSTEM = null;
+
     private ImmutableMap<String, Configuration> configurations;
 
     public FakePropertiesProvider(ImmutableMap<String, Configuration> configurations) {
-        super(null);
+        super(NULL_FILE_SYSTEM, org.apache.james.server.core.configuration.Configuration.builder()
+            .workingDirectory("fakePath")
+            .build());
         this.configurations = configurations;
     }
 
