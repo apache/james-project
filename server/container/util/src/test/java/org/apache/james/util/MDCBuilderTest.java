@@ -20,13 +20,12 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -37,25 +36,22 @@ public class MDCBuilderTest {
     private static final String VALUE_1 = "value1";
     private static final String VALUE_2 = "value2";
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void addContextShouldThrowOnNullKey() {
-        expectedException.expect(NullPointerException.class);
-
-        MDCBuilder.create()
-            .addContext(null, "any");
+    void addContextShouldThrowOnNullKey() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> 
+                MDCBuilder.create()
+                    .addContext(null, "any"));
     }
 
     @Test
-    public void buildContextMapShouldReturnEmptyWhenNoContext() {
+    void buildContextMapShouldReturnEmptyWhenNoContext() {
         assertThat(MDCBuilder.create().buildContextMap())
             .isEmpty();
     }
 
     @Test
-    public void buildContextMapShouldReturnContext() {
+    void buildContextMapShouldReturnContext() {
         assertThat(
             MDCBuilder.create()
                 .addContext(KEY_1, VALUE_1)
@@ -67,7 +63,7 @@ public class MDCBuilderTest {
     }
 
     @Test
-    public void addContextShouldFilterOutNullValues() {
+    void addContextShouldFilterOutNullValues() {
         assertThat(
             MDCBuilder.create()
                 .addContext(KEY_1, null)
@@ -76,7 +72,7 @@ public class MDCBuilderTest {
     }
 
     @Test
-    public void addContextShouldAllowRecursiveBuild() {
+    void addContextShouldAllowRecursiveBuild() {
         assertThat(
             MDCBuilder.create()
                 .addContext(KEY_1, VALUE_1)
@@ -88,22 +84,20 @@ public class MDCBuilderTest {
             .containsEntry(KEY_2, VALUE_2);
     }
 
-    @SuppressWarnings("resource")
     @Test
-    public void closeablesConstructorShouldThrowOnNullList() {
-        expectedException.expect(NullPointerException.class);
-
-        new MDCBuilder.Closeables(null);
+    void closeablesConstructorShouldThrowOnNullList() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> new MDCBuilder.Closeables(null));
     }
 
     @Test
-    public void closeablesCloseShouldNotThrowWhenEmpty() throws IOException {
+    void closeablesCloseShouldNotThrowWhenEmpty() throws IOException {
         new MDCBuilder.Closeables(ImmutableList.of())
             .close();
     }
 
     @Test
-    public void closeablesCloseShouldCallAllUnderlyingCloseables() throws IOException {
+    void closeablesCloseShouldCallAllUnderlyingCloseables() throws IOException {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         Closeable closeable1 = () -> builder.add(VALUE_1);
@@ -119,7 +113,7 @@ public class MDCBuilderTest {
 
 
     @Test
-    public void closeablesCloseShouldCallAllUnderlyingCloseablesWhenError() throws IOException {
+    void closeablesCloseShouldCallAllUnderlyingCloseablesWhenError() throws IOException {
         ImmutableList.Builder<String> builder = ImmutableList.builder();
 
         Closeable closeable1 = () -> builder.add(VALUE_1);

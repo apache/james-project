@@ -38,8 +38,8 @@ import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class MessageContentExtractorTest {
     private static final String BINARY_CONTENT = "binary";
@@ -74,8 +74,8 @@ public class MessageContentExtractorTest {
     private BodyPartBuilder inlineText;
     private BodyPartBuilder inlineImage;
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    void setup() throws IOException {
         testee = new MessageContentExtractor();
         textPart = BodyPartBuilder.create().setBody(TEXT_CONTENT, "plain", StandardCharsets.UTF_8);
         htmlPart = BodyPartBuilder.create().setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8);
@@ -91,7 +91,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnEmptyWhenBinaryContentOnly() throws IOException {
+    void extractShouldReturnEmptyWhenBinaryContentOnly() throws IOException {
         Message message = Message.Builder.of()
                 .setBody(BasicBodyFactory.INSTANCE.binaryBody(BINARY_CONTENT, StandardCharsets.UTF_8))
                 .build();
@@ -101,7 +101,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnTextOnlyWhenTextOnlyBody() throws IOException {
+    void extractShouldReturnTextOnlyWhenTextOnlyBody() throws IOException {
         Message message = Message.Builder.of()
                 .setBody(TEXT_CONTENT, StandardCharsets.UTF_8)
                 .build();
@@ -111,7 +111,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlOnlyWhenHtmlOnlyBody() throws IOException {
+    void extractShouldReturnHtmlOnlyWhenHtmlOnlyBody() throws IOException {
         Message message = Message.Builder.of()
                 .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
                 .build();
@@ -121,7 +121,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlAndTextWhenMultipartAlternative() throws IOException {
+    void extractShouldReturnHtmlAndTextWhenMultipartAlternative() throws IOException {
         Multipart multipart = MultipartBuilder.create("alternative")
                 .addBodyPart(textPart)
                 .addBodyPart(htmlPart)
@@ -135,7 +135,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlWhenMultipartAlternativeWithoutPlainPart() throws IOException {
+    void extractShouldReturnHtmlWhenMultipartAlternativeWithoutPlainPart() throws IOException {
         Multipart multipart = MultipartBuilder.create("alternative")
                 .addBodyPart(htmlPart)
                 .build();
@@ -148,7 +148,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnTextWhenMultipartAlternativeWithoutHtmlPart() throws IOException {
+    void extractShouldReturnTextWhenMultipartAlternativeWithoutHtmlPart() throws IOException {
         Multipart multipart = MultipartBuilder.create("alternative")
                 .addBodyPart(textPart)
                 .build();
@@ -161,7 +161,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnFirstNonAttachmentPartWhenMultipartMixed() throws IOException {
+    void extractShouldReturnFirstNonAttachmentPartWhenMultipartMixed() throws IOException {
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(textAttachment)
                 .addBodyPart(htmlPart)
@@ -176,7 +176,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnInlinedTextBodyWithoutCIDWhenNoOtherValidParts() throws IOException {
+    void extractShouldReturnInlinedTextBodyWithoutCIDWhenNoOtherValidParts() throws IOException {
         String textBody = "body 1";
         Multipart multipart = MultipartBuilder.create("report")
             .addBodyPart(BodyPartBuilder.create()
@@ -196,7 +196,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnEmptyWhenMultipartMixedAndFirstPartIsATextAttachment() throws IOException {
+    void extractShouldReturnEmptyWhenMultipartMixedAndFirstPartIsATextAttachment() throws IOException {
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(textAttachment)
                 .build();
@@ -209,7 +209,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnFirstPartOnlyWhenMultipartMixedAndFirstPartIsHtml() throws IOException {
+    void extractShouldReturnFirstPartOnlyWhenMultipartMixedAndFirstPartIsHtml() throws IOException {
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(htmlPart)
                 .addBodyPart(textPart)
@@ -223,7 +223,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlAndTextWhenMultipartMixedAndFirstPartIsMultipartAlternative() throws IOException {
+    void extractShouldReturnHtmlAndTextWhenMultipartMixedAndFirstPartIsMultipartAlternative() throws IOException {
         BodyPart multipartAlternative = BodyPartBuilder.create()
             .setBody(MultipartBuilder.create("alternative")
                     .addBodyPart(htmlPart)
@@ -242,7 +242,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlWhenMultipartRelated() throws IOException {
+    void extractShouldReturnHtmlWhenMultipartRelated() throws IOException {
         Multipart multipart = MultipartBuilder.create("related")
                 .addBodyPart(htmlPart)
                 .build();
@@ -255,7 +255,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldReturnHtmlAndTextWhenMultipartAlternativeAndFirstPartIsMultipartRelated() throws IOException {
+    void extractShouldReturnHtmlAndTextWhenMultipartAlternativeAndFirstPartIsMultipartRelated() throws IOException {
         BodyPart multipartRelated = BodyPartBuilder.create()
             .setBody(MultipartBuilder.create("related")
                     .addBodyPart(htmlPart)
@@ -272,7 +272,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithoutCid() throws IOException {
+    void extractShouldRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithoutCid() throws IOException {
         //Given
         BodyPart inlinedHTMLPart = BodyPartBuilder.create()
             .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
@@ -296,7 +296,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldNotRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithCid() throws IOException {
+    void extractShouldNotRetrieveHtmlBodyWithOneInlinedHTMLAttachmentWithCid() throws IOException {
         //Given
         BodyPart inlinedHTMLPart = BodyPartBuilder.create()
             .setBody(HTML_CONTENT, "html", StandardCharsets.UTF_8)
@@ -322,7 +322,7 @@ public class MessageContentExtractorTest {
 
 
     @Test
-    public void extractShouldRetrieveTextBodyWithOneInlinedTextAttachmentWithoutCid() throws IOException {
+    void extractShouldRetrieveTextBodyWithOneInlinedTextAttachmentWithoutCid() throws IOException {
         //Given
         BodyPart inlinedTextPart = BodyPartBuilder.create()
             .setBody(TEXT_CONTENT, "text", StandardCharsets.UTF_8)
@@ -346,7 +346,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldNotRetrieveTextBodyWithOneInlinedTextAttachmentWithCid() throws IOException {
+    void extractShouldNotRetrieveTextBodyWithOneInlinedTextAttachmentWithCid() throws IOException {
         //Given
         BodyPart inlinedTextPart = BodyPartBuilder.create()
             .setBody(TEXT_CONTENT, "text", StandardCharsets.UTF_8)
@@ -371,7 +371,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldRetrieveTextAndHtmlBodyWhenOneInlinedTextAttachmentAndMainContentInMultipart() throws IOException {
+    void extractShouldRetrieveTextAndHtmlBodyWhenOneInlinedTextAttachmentAndMainContentInMultipart() throws IOException {
         BodyPart multipartAlternative = BodyPartBuilder.create()
                 .setBody(MultipartBuilder.create("alternative")
                         .addBodyPart(textPart)
@@ -394,7 +394,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldRetrieveTextBodyAndHtmlBodyWhenTextBodyInMainMultipartAndHtmlBodyInInnerMultipart() throws IOException {
+    void extractShouldRetrieveTextBodyAndHtmlBodyWhenTextBodyInMainMultipartAndHtmlBodyInInnerMultipart() throws IOException {
         BodyPart multipartRelated = BodyPartBuilder.create()
                 .setBody(MultipartBuilder.create("related")
                         .addBodyPart(htmlPart)
@@ -417,7 +417,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnEmptyWhenAllEmpty() {
+    void mergeMessageContentShouldReturnEmptyWhenAllEmpty() {
         MessageContent messageContent1 = MessageContent.empty();
         MessageContent messageContent2 = MessageContent.empty();
         MessageContent expected = MessageContent.empty();
@@ -428,7 +428,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnFirstWhenSecondEmpty() {
+    void mergeMessageContentShouldReturnFirstWhenSecondEmpty() {
         MessageContent messageContent1 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
         MessageContent messageContent2 = MessageContent.empty();
         MessageContent expected = messageContent1;
@@ -439,7 +439,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnSecondWhenFirstEmpty() {
+    void mergeMessageContentShouldReturnSecondWhenFirstEmpty() {
         MessageContent messageContent1 = MessageContent.empty();
         MessageContent messageContent2 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
         MessageContent expected = messageContent2;
@@ -450,7 +450,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnMixWhenFirstTextOnlyAndSecondHtmlOnly() {
+    void mergeMessageContentShouldReturnMixWhenFirstTextOnlyAndSecondHtmlOnly() {
         MessageContent messageContent1 = MessageContent.ofTextOnly(Optional.of(TEXT_CONTENT));
         MessageContent messageContent2 = MessageContent.ofHtmlOnly(Optional.of(HTML_CONTENT));
         MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
@@ -461,7 +461,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnMixWhenFirstHtmlOnlyAndSecondTextOnly() {
+    void mergeMessageContentShouldReturnMixWhenFirstHtmlOnlyAndSecondTextOnly() {
         MessageContent messageContent1 = MessageContent.ofHtmlOnly(Optional.of(HTML_CONTENT));
         MessageContent messageContent2 = MessageContent.ofTextOnly(Optional.of(TEXT_CONTENT));
         MessageContent expected = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
@@ -472,7 +472,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void mergeMessageContentShouldReturnFirstWhenTwiceAreComplete() {
+    void mergeMessageContentShouldReturnFirstWhenTwiceAreComplete() {
         MessageContent messageContent1 = new MessageContent(Optional.of(TEXT_CONTENT), Optional.of(HTML_CONTENT));
         MessageContent messageContent2 = new MessageContent(Optional.of(TEXT_CONTENT2), Optional.of(HTML_CONTENT2));
         MessageContent expected = messageContent1;
@@ -483,7 +483,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldRespectCharsetWhenOtherThanUTF8() throws IOException {
+    void extractShouldRespectCharsetWhenOtherThanUTF8() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
         Message message = Message.Builder.of()
                 .setBody(text, Charset.forName("windows-1252"))
@@ -493,7 +493,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldRespectCharsetWhenUTF8() throws IOException {
+    void extractShouldRespectCharsetWhenUTF8() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
         Message message = Message.Builder.of()
                 .setBody(text, StandardCharsets.UTF_8)
@@ -503,7 +503,7 @@ public class MessageContentExtractorTest {
     }
 
     @Test
-    public void extractShouldUseUSASCIIWhenNoCharset() throws IOException {
+    void extractShouldUseUSASCIIWhenNoCharset() throws IOException {
         String text = "éééé\r\nèèèè\r\nàààà";
         Message message = Message.Builder.of()
                 .setBody(text, null)

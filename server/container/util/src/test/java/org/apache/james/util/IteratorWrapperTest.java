@@ -20,20 +20,16 @@
 package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNullPointerException;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public class IteratorWrapperTest {
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void getEntriesSeenShouldReturnEmptyWhenNotConsumed() {
+    void getEntriesSeenShouldReturnEmptyWhenNotConsumed() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
         IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
@@ -41,7 +37,7 @@ public class IteratorWrapperTest {
     }
 
     @Test
-    public void getEntriesSeenShouldReturnViewOfConsumedData() {
+    void getEntriesSeenShouldReturnViewOfConsumedData() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
         IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
@@ -52,7 +48,7 @@ public class IteratorWrapperTest {
     }
 
     @Test
-    public void getEntriesSeenShouldReturnViewOfConsumedDataWhenPartiallyConsumed() {
+    void getEntriesSeenShouldReturnViewOfConsumedDataWhenPartiallyConsumed() {
         ImmutableList<Integer> originalData = ImmutableList.of(1, 2, 3);
         IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
@@ -64,7 +60,7 @@ public class IteratorWrapperTest {
     }
 
     @Test
-    public void getEntriesSeenShouldReturnEmptyWhenSuppliedEmpty() {
+    void getEntriesSeenShouldReturnEmptyWhenSuppliedEmpty() {
         ImmutableList<Integer> originalData = ImmutableList.of();
         IteratorWrapper<Integer> integerIteratorWrapper = new IteratorWrapper<>(originalData.iterator());
 
@@ -75,10 +71,9 @@ public class IteratorWrapperTest {
     }
 
     @Test
-    public void constructorShouldThrowOnNull() {
-        expectedException.expect(NullPointerException.class);
-
-        new IteratorWrapper<Integer>(null);
+    void constructorShouldThrowOnNull() {
+        assertThatNullPointerException()
+            .isThrownBy(() -> new IteratorWrapper<Integer>(null));
     }
 
     private void consume(IteratorWrapper<Integer> integerIteratorWrapper) {

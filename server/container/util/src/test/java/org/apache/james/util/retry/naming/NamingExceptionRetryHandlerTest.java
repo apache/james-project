@@ -27,8 +27,7 @@ import javax.naming.NamingException;
 import org.apache.james.util.retry.api.ExceptionRetryingProxy;
 import org.apache.james.util.retry.api.RetryHandler;
 import org.apache.james.util.retry.api.RetrySchedule;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class NamingExceptionRetryHandlerTest {
 
@@ -48,19 +47,12 @@ public class NamingExceptionRetryHandlerTest {
         }
     }
 
-    private Class<?>[] exceptionClasses;
-    private ExceptionRetryingProxy proxy;
-    private RetrySchedule schedule;
-
-    @Before
-    public void setUp() throws Exception {
-        exceptionClasses = new Class<?>[]{NamingException.class};
-        proxy = new TestRetryingProxy();
-        schedule = i -> i;
-    }
+    private static final Class<?>[] exceptionClasses = new Class<?>[]{NamingException.class};
+    private static final ExceptionRetryingProxy proxy = new TestRetryingProxy();
+    private static final RetrySchedule schedule = i -> i;
 
     @Test
-    public void testExceptionRetryHandler() {
+    void testExceptionRetryHandler() {
         assertThat(RetryHandler.class.isAssignableFrom(new NamingExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
@@ -72,7 +64,7 @@ public class NamingExceptionRetryHandlerTest {
     }
 
     @Test
-    public void testPerform() throws NamingException {
+    void testPerform() throws NamingException {
         Object result = new NamingExceptionRetryHandler(
             exceptionClasses, proxy, schedule, 0) {
 
