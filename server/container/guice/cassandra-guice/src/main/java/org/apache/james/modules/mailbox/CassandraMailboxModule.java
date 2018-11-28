@@ -200,6 +200,8 @@ public class CassandraMailboxModule extends AbstractModule {
         cassandraMailboxManager.setQuotaManager(quotaManager);
         cassandraMailboxManager.setQuotaRootResolver(quotaRootResolver);
         cassandraMailboxManager.setBatchSizes(batchSizes);
+        cassandraMailboxManager.setMoveBatchSize(batchSizes);
+        cassandraMailboxManager.setCopyBatchSize(batchSizes);
         cassandraMailboxManager.init();
         return cassandraMailboxManager;
     }

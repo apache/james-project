@@ -46,14 +46,12 @@ class CassandraJamesServerTest implements JamesServerContract {
     @Test
     void moveBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
         int moveBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getMoveBatchSize();
-        // is 100 in batchsizes.properties configuration file
-        assertThat(moveBatchSize).isEqualTo(200);
+        assertThat(moveBatchSize).isEqualTo(100);
     }
 
     @Test
     void copyBatchSizeShouldEqualsConfigurationValue(GuiceJamesServer jamesServer) {
         int copyBatchSize = jamesServer.getProbe(ConfigurationProbe.class).getCopyBatchSize();
-        // is 100 in batchsizes.properties configuration file
-        assertThat(copyBatchSize).isEqualTo(200);
+        assertThat(copyBatchSize).isEqualTo(100);
     }
 }
