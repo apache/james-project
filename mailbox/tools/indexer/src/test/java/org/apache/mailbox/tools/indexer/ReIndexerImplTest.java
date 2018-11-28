@@ -85,10 +85,12 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor1.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(mailboxCaptor2.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -109,10 +111,12 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor1.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(mailboxCaptor2.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -133,10 +137,12 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor1.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(mailboxCaptor2.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -155,9 +161,11 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -176,9 +184,11 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -218,9 +228,11 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).add(any(MailboxSession.class), mailboxCaptor.capture(), messageCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
-        assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
-            && message.getUid().equals(createdMessage.getUid()));
+        assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
+        assertThat(messageCaptor.getValue()).satisfies(message -> {
+            assertThat(message.getMailboxId()).isEqualTo(mailboxId);
+            assertThat(message.getUid()).isEqualTo(createdMessage.getUid());
+        });
     }
 
     @Test
@@ -234,7 +246,7 @@ public class ReIndexerImplTest {
         verify(messageSearchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor.capture());
         verifyNoMoreInteractions(messageSearchIndex);
 
-        assertThat(mailboxCaptor.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+        assertThat(mailboxCaptor.getValue()).satisfies(mailbox -> assertThat(mailbox.getMailboxId()).isEqualTo(mailboxId));
     }
 
     @Test
