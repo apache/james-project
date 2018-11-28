@@ -24,15 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
@@ -82,7 +81,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @BeforeEach
         void setup(CassandraCluster cassandra) {
-            CassandraMailRepositoryMailDAO mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
 
@@ -134,7 +133,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @BeforeEach
         void setup(CassandraCluster cassandra) {
-            FailingMailDAO mailDAO = new FailingMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            FailingMailDAO mailDAO = new FailingMailDAO();
             keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -143,16 +142,30 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
                     keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobsDAO).mimeMessageStore());
         }
 
-        class FailingMailDAO extends CassandraMailRepositoryMailDAO {
+        class FailingMailDAO implements CassandraMailRepositoryMailDaoAPI {
 
-            public FailingMailDAO(Session session, BlobId.Factory blobIdFactory, CassandraTypesProvider cassandraTypesProvider) {
-                super(session, blobIdFactory, cassandraTypesProvider);
+            FailingMailDAO() {
             }
 
             @Override
-            public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException {
+            public CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) {
                 return CompletableFuture.supplyAsync(() -> {
                     throw new RuntimeException("Expected failure while storing mail parts");
+                });
+            }
+
+            @Override
+            public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
+                return CompletableFuture.supplyAsync(() -> {
+                    throw new RuntimeException("Expected failure while remeving mail parts");
+                });
+
+            }
+
+            @Override
+            public CompletableFuture<Optional<CassandraMailRepositoryMailDAO.MailDTO>> read(MailRepositoryUrl url, MailKey key) {
+                return CompletableFuture.supplyAsync(() -> {
+                    throw new RuntimeException("Expected failure while reading mail parts");
                 });
             }
         }
@@ -205,7 +218,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         @BeforeEach
         void setup(CassandraCluster cassandra) {
-            CassandraMailRepositoryMailDAO mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
+            CassandraMailRepositoryMailDaoAPI mailDAO = new CassandraMailRepositoryMailDAO(cassandra.getConf(), BLOB_ID_FACTORY, cassandra.getTypesProvider());
             FailingKeysDAO keysDAO = new FailingKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
             countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
             CassandraBlobsDAO blobsDAO = new CassandraBlobsDAO(cassandra.getConf());
@@ -216,7 +229,7 @@ class CassandraMailRepositoryWithFakeImplementationsTest {
 
         class FailingKeysDAO extends CassandraMailRepositoryKeysDAO {
 
-            public FailingKeysDAO(Session session, CassandraUtils cassandraUtils) {
+            FailingKeysDAO(Session session, CassandraUtils cassandraUtils) {
                 super(session, cassandraUtils);
             }
 
