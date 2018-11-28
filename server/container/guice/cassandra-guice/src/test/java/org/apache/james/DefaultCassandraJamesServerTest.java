@@ -44,7 +44,7 @@ class DefaultCassandraJamesServerTest {
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(binder -> binder.bind(PropertiesProvider.class).to(FailingPropertiesProvider.class))
-            .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance(s -> new HierarchicalConfiguration())))
+            .overrideWith(binder -> binder.bind(ConfigurationProvider.class).toInstance((s, l) -> new HierarchicalConfiguration())))
         .build();
 
     @Test
