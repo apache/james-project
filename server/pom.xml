@@ -63,7 +63,6 @@
         <module>data/data-jmap-cassandra</module>
         <module>data/data-jpa</module>
         <module>data/data-ldap</module>
-        <module>data/data-ldap-integration-testing</module>
         <module>data/data-library</module>
         <module>data/data-memory</module>
 
