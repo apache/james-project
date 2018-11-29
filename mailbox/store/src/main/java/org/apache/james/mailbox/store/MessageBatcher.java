@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.store;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 
 public class MessageBatcher {
@@ -48,11 +49,11 @@ public class MessageBatcher {
 
     public List<MessageRange> batchMessages(MessageRange set, BatchedOperation batchedOperation) throws MailboxException {
         if (batchSize > 0) {
-            List<MessageRange> movedRanges = new ArrayList<>();
-            for (MessageRange messageRange : set.split(batchSize)) {
-                movedRanges.addAll(batchedOperation.execute(messageRange));
-            }
-            return movedRanges;
+            return set.split(batchSize)
+                .stream()
+                .flatMap(Throwing.function(range -> batchedOperation.execute(range)
+                                                                    .stream()))
+                .collect(Guavate.toImmutableList());
         } else {
             return batchedOperation.execute(set);
         }
