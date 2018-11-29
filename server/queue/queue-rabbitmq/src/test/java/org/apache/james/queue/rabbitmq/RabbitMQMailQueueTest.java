@@ -57,6 +57,7 @@ import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -215,6 +216,14 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
         boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
         assertThat(initialized).isTrue();
+    }
+
+    @Disabled("JAMES-2614 RabbitMQMailQueueTest::concurrentEnqueueDequeueShouldNotFail is unstable." +
+        "The related test is disabled, and need to be re-enabled after investigation and a fix.")
+    @Test
+    @Override
+    public void concurrentEnqueueDequeueShouldNotFail() {
+
     }
 
     private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
