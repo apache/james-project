@@ -1,7 +1,7 @@
 ARG BASE=linagora/james-project
 ARG BASE_LDAP=linagora/james-ldap-project
 ARG BASE_RABBITMQ=linagora/james-rabbitmq-project
-ARG BASE_RABBITMQ_LDAP=linagora/james-rabbitmq-ldap-project
+ARG BASE_RABBITMQ_LDAP=linagora/james-cassandra-rabbitmq-ldap-project
 ARG TAG=latest
 FROM ${BASE}:${TAG} as source
 FROM ${BASE_LDAP}:${TAG} as sourceLdap
