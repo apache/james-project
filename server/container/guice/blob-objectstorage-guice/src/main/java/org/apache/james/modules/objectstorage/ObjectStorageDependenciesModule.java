@@ -32,7 +32,6 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
@@ -54,12 +53,6 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
 
     @Provides
     @Singleton
-    private PayloadCodec buildPayloadCodec(ObjectStorageBlobConfiguration configuration) {
-        return configuration.getPayloadCodecFactory().create(configuration);
-    }
-
-    @Provides
-    @Singleton
     private ObjectStorageBlobConfiguration getObjectStorageConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration(ConfigurationComponent.NAME);
@@ -75,6 +68,7 @@ public class ObjectStorageDependenciesModule extends AbstractModule {
         ObjectStorageBlobsDAO dao = selectDaoBuilder(configuration)
             .container(configuration.getNamespace())
             .blobIdFactory(blobIdFactory)
+            .payloadCodec(configuration.getPayloadCodec())
             .build();
         dao.createContainer(configuration.getNamespace()).get(1, TimeUnit.MINUTES);
         return dao;

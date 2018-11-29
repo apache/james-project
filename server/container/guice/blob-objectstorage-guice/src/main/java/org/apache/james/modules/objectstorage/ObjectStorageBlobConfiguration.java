@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.blob.objectstorage.ContainerName;
+import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
@@ -257,6 +258,9 @@ public class ObjectStorageBlobConfiguration {
         return payloadCodec;
     }
 
+    public PayloadCodec getPayloadCodec() {
+        return payloadCodec.create(this);
+    }
 
     public Optional<String> getAesSalt() {
         return aesSalt;
