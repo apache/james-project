@@ -19,13 +19,18 @@
 
 package org.apache.james;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-import static org.junit.jupiter.api.TestInstance.*;
+import static org.junit.jupiter.api.TestInstance.Lifecycle;
 
+import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
+import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.core.Domain;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
@@ -66,7 +71,7 @@ class CassandraRabbitMQJamesServerTest {
         }
     }
 
-    interface ContratSuite extends JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {}
+    interface ContractSuite extends JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {}
 
     private static final String DOMAIN = "domain";
     private static final String JAMES_USER = "james-user@" + DOMAIN;
@@ -87,7 +92,29 @@ class CassandraRabbitMQJamesServerTest {
 
     @Nested
     @TestInstance(Lifecycle.PER_CLASS)
-    class WithSwift implements ContratSuite {
+    class WithEncryptedSwift implements ContractSuite {
+        @RegisterExtension
+        JamesServerExtension testExtension = new JamesServerExtensionBuilder()
+            .extension(new EmbeddedElasticSearchExtension())
+            .extension(new CassandraExtension())
+            .extension(new RabbitMQExtension())
+            .extension(new SwiftBlobStoreExtension(PayloadCodecFactory.AES256))
+            .server(CONFIGURATION_BUILDER)
+            .build();
+
+        @Test
+        void encryptedPayloadShouldBeConfiguredWhenProvidingEncryptedPayloadConfigurationButNot(GuiceJamesServer jamesServer) {
+            PayloadCodec payloadCodec = jamesServer.getProbe(DockerSwiftTestRule.TestSwiftBlobStoreProbe.class)
+                .getSwiftPayloadCodec();
+
+            assertThat(payloadCodec)
+                .isInstanceOf(DefaultPayloadCodec.class);
+        }
+    }
+
+    @Nested
+    @TestInstance(Lifecycle.PER_CLASS)
+    class WithDefaultSwift implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = new JamesServerExtensionBuilder()
             .extension(new EmbeddedElasticSearchExtension())
@@ -96,11 +123,20 @@ class CassandraRabbitMQJamesServerTest {
             .extension(new SwiftBlobStoreExtension())
             .server(CONFIGURATION_BUILDER)
             .build();
+
+        @Test
+        void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
+            PayloadCodec payloadCodec = jamesServer.getProbe(DockerSwiftTestRule.TestSwiftBlobStoreProbe.class)
+                .getSwiftPayloadCodec();
+
+            assertThat(payloadCodec)
+                .isInstanceOf(DefaultPayloadCodec.class);
+        }
     }
 
     @Nested
     @TestInstance(Lifecycle.PER_CLASS)
-    class WithoutSwift implements ContratSuite {
+    class WithoutSwift implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = new JamesServerExtensionBuilder()
             .extension(new EmbeddedElasticSearchExtension())

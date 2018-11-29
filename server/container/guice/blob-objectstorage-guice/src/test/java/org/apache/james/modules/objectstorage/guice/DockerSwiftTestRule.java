@@ -27,12 +27,14 @@ import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
 import org.apache.james.blob.objectstorage.ContainerName;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.TenantName;
 import org.apache.james.blob.objectstorage.swift.UserName;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.modules.objectstorage.PayloadCodecFactory;
+import org.apache.james.utils.GuiceProbe;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -40,6 +42,20 @@ import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
 
 public class DockerSwiftTestRule implements GuiceModuleTestRule {
+
+    public static class TestSwiftBlobStoreProbe implements GuiceProbe {
+
+        private final ObjectStorageBlobsDAO swiftBlobStore;
+
+        @Inject
+        TestSwiftBlobStoreProbe(ObjectStorageBlobsDAO swiftBlobStore) {
+            this.swiftBlobStore = swiftBlobStore;
+        }
+
+        public PayloadCodec getSwiftPayloadCodec() {
+            return swiftBlobStore.getPayloadCodec();
+        }
+    }
 
     private static class ContainerCleanUp implements CleanupTasksPerformer.CleanupTask {
 
@@ -104,6 +120,8 @@ public class DockerSwiftTestRule implements GuiceModuleTestRule {
             Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                 .addBinding()
                 .to(ContainerCleanUp.class);
+
+            Multibinder.newSetBinder(binder, GuiceProbe.class).addBinding().to(TestSwiftBlobStoreProbe.class);
         };
     }
 

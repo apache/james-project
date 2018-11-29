@@ -21,6 +21,7 @@ package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration;
+import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.guice.DockerSwiftTestRule;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -29,7 +30,15 @@ import com.google.inject.util.Modules;
 
 public class SwiftBlobStoreExtension implements GuiceModuleTestExtension {
 
-    private final DockerSwiftTestRule swiftRule = new DockerSwiftTestRule();
+    private final DockerSwiftTestRule swiftRule;
+
+    public SwiftBlobStoreExtension() {
+        this.swiftRule = new DockerSwiftTestRule();
+    }
+
+    public SwiftBlobStoreExtension(PayloadCodecFactory payloadCodecFactory) {
+        this.swiftRule = new DockerSwiftTestRule(payloadCodecFactory);
+    }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
