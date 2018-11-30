@@ -21,9 +21,7 @@ package org.apache.james.user.lib;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -43,8 +41,6 @@ import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.model.DefaultJamesUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * A partial implementation of a Repository to store users.
