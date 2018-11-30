@@ -18,7 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import org.apache.james.core.User;
+
 public interface Event {
 
     MailboxSession getSession();
+
+    default User getUser() {
+        return getSession().getUser().getCoreUser();
+    }
 }
