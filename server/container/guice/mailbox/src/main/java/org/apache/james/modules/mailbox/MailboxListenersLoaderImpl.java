@@ -23,7 +23,6 @@ import java.util.Set;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
@@ -64,12 +63,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
     @Override
     public void register(MailboxListener listener) {
-        try {
-            registry.addGlobalListener(listener);
-        } catch (MailboxException e) {
-            LOGGER.error("Error while registering global listener {}", listener, e);
-            throw new RuntimeException(e);
-        }
+        registry.addGlobalListener(listener);
     }
 
     @Override

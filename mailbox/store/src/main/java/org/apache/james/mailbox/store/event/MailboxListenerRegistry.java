@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
 import com.google.common.collect.HashMultimap;
@@ -38,22 +37,22 @@ public class MailboxListenerRegistry {
 
     public MailboxListenerRegistry() {
         this.globalListeners = new ConcurrentLinkedQueue<>();
-        this.listeners = Multimaps.synchronizedMultimap(HashMultimap.<MailboxPath, MailboxListener>create());
+        this.listeners = Multimaps.synchronizedMultimap(HashMultimap.create());
     }
 
-    public void addListener(MailboxPath path, MailboxListener listener) throws MailboxException {
+    public void addListener(MailboxPath path, MailboxListener listener) {
         listeners.put(path, listener);
     }
 
-    public void addGlobalListener(MailboxListener listener) throws MailboxException {
+    public void addGlobalListener(MailboxListener listener) {
         globalListeners.add(listener);
     }
 
-    public void removeListener(MailboxPath mailboxPath, MailboxListener listener) throws MailboxException {
+    public void removeListener(MailboxPath mailboxPath, MailboxListener listener) {
         listeners.remove(mailboxPath, listener);
     }
 
-    public void removeGlobalListener(MailboxListener listener) throws MailboxException {
+    public void removeGlobalListener(MailboxListener listener) {
         globalListeners.remove(listener);
     }
 
