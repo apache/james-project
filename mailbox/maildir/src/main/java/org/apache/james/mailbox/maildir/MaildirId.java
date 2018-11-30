@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.maildir;
 
 import java.io.Serializable;
+import java.security.SecureRandom;
 
 import org.apache.james.mailbox.model.MailboxId;
 
@@ -29,6 +30,12 @@ public class MaildirId implements MailboxId, Serializable {
         public MaildirId fromString(String serialized) {
             return of(Integer.valueOf(serialized));
         }
+    }
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    public static MaildirId random() {
+        return MaildirId.of(Math.abs(RANDOM.nextInt()));
     }
 
     public static MaildirId of(int id) {

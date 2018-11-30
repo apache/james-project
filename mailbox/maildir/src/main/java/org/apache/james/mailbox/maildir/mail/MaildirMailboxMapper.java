@@ -23,6 +23,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -55,18 +57,12 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
      * The {@link MaildirStore} the mailboxes reside in
      */
     private final MaildirStore maildirStore;
-    
-    /**
-     * A request-scoped list of mailboxes in order to refer to them via id
-     */
-    private final MailboxCache mailboxCache;
 
     private final MailboxSession session;
     
     public MaildirMailboxMapper(MaildirStore maildirStore, MailboxSession session) {
         this.maildirStore = maildirStore;
         this.session = session;
-        this.mailboxCache = new MailboxCache();
     }
 
     @Override
@@ -109,14 +105,18 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     @Override
     public Mailbox findMailboxByPath(MailboxPath mailboxPath)
             throws MailboxException, MailboxNotFoundException {      
-        Mailbox mailbox = maildirStore.loadMailbox(session, mailboxPath);
-        return mailboxCache.cacheMailbox(mailbox);
+        return maildirStore.loadMailbox(session, mailboxPath);
     }
     
     @Override
     public Mailbox findMailboxById(MailboxId id) throws MailboxException, MailboxNotFoundException {
-        MaildirId mailboxId = (MaildirId)id;
-        return mailboxCache.getCachedMailbox(mailboxId);
+        if (id == null) {
+            throw new MailboxNotFoundException("null");
+        }
+        return list().stream()
+            .filter(mailbox -> mailbox.getMailboxId().equals(id))
+            .findAny()
+            .orElseThrow(() -> new MailboxNotFoundException(id));
     }
     
     @Override
@@ -131,13 +131,13 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         for (File folder : folders) {
             if (folder.isDirectory()) {
                 Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
-                mailboxList.add(mailboxCache.cacheMailbox(mailbox));
+                mailboxList.add(mailbox);
             }
         }
         // INBOX is in the root of the folder
         if (Pattern.matches(mailboxPath.getName().replace(MaildirStore.WILDCARD, ".*"), MailboxConstants.INBOX)) {
             Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), "");
-            mailboxList.add(0, mailboxCache.cacheMailbox(mailbox));
+            mailboxList.add(0, mailbox);
         }
         return mailboxList;
     }
@@ -152,8 +152,11 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
 
     @Override
     public MailboxId save(Mailbox mailbox) throws MailboxException {
+        MaildirId maildirId = Optional.ofNullable(mailbox.getMailboxId())
+            .map(mailboxId -> (MaildirId) mailboxId)
+            .orElseGet(MaildirId::random);
         try {
-            Mailbox originalMailbox = mailboxCache.getCachedMailbox((MaildirId) mailbox.getMailboxId());
+            Mailbox originalMailbox = findMailboxById(mailbox.getMailboxId());
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
             // equals with null check
             if (originalMailbox.getName() == null ? mailbox.getName() != null : !originalMailbox.getName().equals(mailbox.getName())) {
@@ -169,6 +172,9 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                         File newFolder = folder.getRootFile();
                         FileUtils.forceMkdir(newFolder);
                         if (!originalFolder.getCurFolder().renameTo(folder.getCurFolder())) {
+                            throw new IOException("Could not rename folder " + originalFolder.getCurFolder() + " to " + folder.getCurFolder());
+                        }
+                        if (!originalFolder.getMailboxIdFile().renameTo(folder.getMailboxIdFile())) {
                             throw new IOException("Could not rename folder " + originalFolder.getCurFolder() + " to " + folder.getCurFolder());
                         }
                         if (!originalFolder.getNewFolder().renameTo(folder.getNewFolder())) {
@@ -192,6 +198,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                         FileUtils.forceMkdir(originalFolder.getCurFolder());
                         FileUtils.forceMkdir(originalFolder.getNewFolder());
                         FileUtils.forceMkdir(originalFolder.getTmpFolder());
+                        originalFolder.setMailboxId(MaildirId.of(Math.abs(new Random().nextInt())));
                     } catch (IOException e) {
                         throw new MailboxException("Failed to save Mailbox " + mailbox, e);
                     }
@@ -224,14 +231,14 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             }
             try {
                 folder.setUidValidity(mailbox.getUidValidity());
+                folder.setMailboxId(maildirId);
             } catch (IOException ioe) {
                 throw new MailboxException("Failed to save Mailbox " + mailbox, ioe);
 
             }
             folder.setACL(session, mailbox.getACL());
         }
-        mailboxCache.cacheMailbox(mailbox);
-        return mailbox.getMailboxId();
+        return maildirId;
     }
 
     @Override
@@ -240,26 +247,28 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
        File maildirRoot = maildirStore.getMaildirRoot();
        List<Mailbox> mailboxList = new ArrayList<>();
         
-       if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_FULLUSER)) {
-           File[] users = maildirRoot.listFiles();
-           visitUsersForMailboxList(null, users, mailboxList);
+
+
+       if (maildirStore.getMaildirLocation().endsWith("/" + MaildirStore.PATH_DOMAIN + "/" + MaildirStore.PATH_USER)) {
+           File[] domains = maildirRoot.listFiles();
+           for (File domain : domains) {
+               File[] users = domain.listFiles();
+               visitUsersForMailboxList(domain, users, mailboxList);
+           }
            return mailboxList;
        }
-       
-       File[] domains = maildirRoot.listFiles();
-       for (File domain: domains) {
-           File[] users = domain.listFiles();
-           visitUsersForMailboxList(domain, users, mailboxList);
-       }
-       return mailboxList;
+
+        File[] users = maildirRoot.listFiles();
+        visitUsersForMailboxList(null, users, mailboxList);
+        return mailboxList;
         
     }
 
     @Override
     public void endRequest() {
-        mailboxCache.clear();
+
     }
-    
+
     private void visitUsersForMailboxList(File domain, File[] users, List<Mailbox> mailboxList) throws MailboxException {
         
         String userName = null;

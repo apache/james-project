@@ -18,13 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
-import java.io.UnsupportedEncodingException;
-
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest {
@@ -41,9 +37,4 @@ public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest {
         }
     }
 
-    @Disabled("https://issues.apache.org/jira/browse/MAILBOX-292")
-    @Override
-    public void createMailboxShouldReturnRightId() throws MailboxException, UnsupportedEncodingException {
-
-    }
 }
