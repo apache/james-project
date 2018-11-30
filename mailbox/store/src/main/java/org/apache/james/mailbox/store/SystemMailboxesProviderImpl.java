@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -50,12 +51,13 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
     }
 
     @Override
-    public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) throws MailboxException {
-        MailboxPath mailboxPath = MailboxPath.forUser(session.getUser().getUserName(), aRole.getDefaultMailbox());
+    public Stream<MessageManager> getMailboxByRole(Role aRole, User user) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+        MailboxPath mailboxPath = MailboxPath.forUser(user.asString(), aRole.getDefaultMailbox());
         try {
             return Stream.of(mailboxManager.getMailbox(mailboxPath, session));
         } catch (MailboxNotFoundException e) {
-            return searchMessageManagerByMailboxRole(aRole, session);
+            return searchMessageManagerByMailboxRole(aRole, user);
         }
     }
 
@@ -65,7 +67,8 @@ public class SystemMailboxesProviderImpl implements SystemMailboxesProvider {
             .orElse(false);
     }
 
-    private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, MailboxSession session) throws MailboxException {
+    private Stream<MessageManager> searchMessageManagerByMailboxRole(Role aRole, User user) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(user.asString());
         ThrowingFunction<MailboxPath, MessageManager> loadMailbox = path -> mailboxManager.getMailbox(path, session);
         MailboxQuery mailboxQuery = MailboxQuery.privateMailboxesBuilder(session)
             .expression(new PrefixedWildcard(aRole.getDefaultMailbox()))

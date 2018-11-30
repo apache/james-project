@@ -21,8 +21,10 @@ package org.apache.james.mailbox.spamassassin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -61,6 +63,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class SpamAssassinListenerTest {
+
     public static final String USER = "user";
     private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession(USER);
     private static final int UID_VALIDITY = 43;
@@ -78,8 +81,10 @@ public class SpamAssassinListenerTest {
 
     @Before
     public void setup() throws Exception {
-        StoreMailboxManager mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        StoreMailboxManager mailboxManager = spy(new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver()));
         SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
+        when(mailboxManager.createSystemSession(USER))
+            .thenReturn(MAILBOX_SESSION);
 
         spamAssassin = mock(SpamAssassin.class);
         MailboxSessionMapperFactory mapperFactory = mailboxManager.getMapperFactory();

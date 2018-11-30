@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.apache.james.core.User;
 import org.apache.james.jmap.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.model.CreationMessage;
 import org.apache.james.jmap.model.CreationMessage.DraftEmailer;
@@ -390,7 +391,7 @@ public class SetMessagesCreationProcessorTest {
         }
 
         @Override
-        public Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) {
+        public Stream<MessageManager> getMailboxByRole(Role aRole, User user) {
             if (aRole.equals(Role.OUTBOX)) {
                 return OptionalUtils.toStream(outboxSupplier.get());
             } else if (aRole.equals(Role.DRAFTS)) {

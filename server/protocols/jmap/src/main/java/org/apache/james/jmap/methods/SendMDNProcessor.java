@@ -189,7 +189,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession)
+        return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser().getCoreUser())
             .findAny()
             .orElseThrow(() -> new IllegalStateException("User don't have an Outbox"));
     }

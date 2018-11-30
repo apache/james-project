@@ -309,7 +309,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession).findFirst();
+        return systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser().getCoreUser()).findFirst();
     }
     
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {
