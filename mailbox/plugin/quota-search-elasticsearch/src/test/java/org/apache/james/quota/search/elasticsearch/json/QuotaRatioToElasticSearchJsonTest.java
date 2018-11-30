@@ -26,8 +26,8 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaFixture;
 import org.apache.james.util.ClassLoaderUtils;
@@ -39,7 +39,7 @@ public class QuotaRatioToElasticSearchJsonTest {
     public void quotaRatioShouldBeWellConvertedToJson() throws IOException {
         String user = "user@domain.org";
         QuotaUsageUpdatedEvent event = new QuotaUsageUpdatedEvent(
-                new MockMailboxSession(user), 
+                User.fromUsername(user),
                 QuotaRoot.quotaRoot("any", Optional.of(Domain.of("domain.org"))),
                 QuotaFixture.Counts._52_PERCENT,
                 QuotaFixture.Sizes._55_PERCENT,
@@ -58,7 +58,7 @@ public class QuotaRatioToElasticSearchJsonTest {
     public void quotaRatioShouldBeWellConvertedToJsonWhenNoDomain() throws IOException {
         String user = "user";
         QuotaUsageUpdatedEvent event = new QuotaUsageUpdatedEvent(
-                new MockMailboxSession(user),
+                User.fromUsername(user),
                 QuotaRoot.quotaRoot("any", Optional.empty()),
                 QuotaFixture.Counts._52_PERCENT,
                 QuotaFixture.Sizes._55_PERCENT,

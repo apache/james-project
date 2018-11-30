@@ -23,7 +23,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.mailet.base.MailAddressFixture;
@@ -45,7 +45,7 @@ public interface QuotaThresholdFixture {
             .gracePeriod(GRACE_PERIOD)
             .build();
         String BOB = "bob@domain";
-        MockMailboxSession BOB_SESSION = new MockMailboxSession(BOB);
+        User BOB_USER = User.fromUsername(BOB);
         Instant NOW = Instant.now();
         QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("any", Optional.empty());
         Instant ONE_HOUR_AGO = NOW.minus(Duration.ofHours(1));

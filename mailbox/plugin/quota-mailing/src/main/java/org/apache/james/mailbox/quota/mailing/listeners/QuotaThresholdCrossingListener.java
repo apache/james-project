@@ -70,7 +70,7 @@ public class QuotaThresholdCrossingListener implements MailboxListener {
     public void event(Event event) {
         try {
             if (event instanceof QuotaUsageUpdatedEvent) {
-                handleEvent(getUser(event), (QuotaUsageUpdatedEvent) event);
+                handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
             }
         } catch (Exception e) {
             LOGGER.error("Can not re-emmit quota threshold events", e);
@@ -81,12 +81,4 @@ public class QuotaThresholdCrossingListener implements MailboxListener {
         eventSourcingSystem.dispatch(
             new DetectThresholdCrossing(user, event.getCountQuota(), event.getSizeQuota(), event.getInstant()));
     }
-
-    private User getUser(Event event) {
-        return User.fromUsername(
-            event.getSession()
-                .getUser()
-                .getUserName());
-    }
-
 }

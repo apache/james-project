@@ -19,7 +19,7 @@
 
 package org.apache.james.quota.search.elasticsearch.events;
 
-import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.BOB_SESSION;
+import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.BOB_USER;
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.NOW;
 import static org.apache.james.quota.search.QuotaSearchFixture.TestConstants.QUOTAROOT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,7 +94,7 @@ public class ElasticSearchQuotaMailboxListenerTest {
 
     @Test
     public void eventShouldIndexEventWhenQuotaEvent() throws Exception {
-        quotaMailboxListener.event(new QuotaUsageUpdatedEvent(BOB_SESSION, QUOTAROOT, Counts._52_PERCENT, Sizes._55_PERCENT, NOW));
+        quotaMailboxListener.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._55_PERCENT, NOW));
 
         embeddedElasticSearch.awaitForElasticSearch();
 
