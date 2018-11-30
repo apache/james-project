@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -47,9 +48,11 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
     public static final int UNLIMITED = -1;
     private final MessageMapperFactory factory;
+    private final MailboxManager mailboxManager;
 
-    public ListeningMessageSearchIndex(MessageMapperFactory factory) {
+    public ListeningMessageSearchIndex(MessageMapperFactory factory, MailboxManager mailboxManager) {
         this.factory = factory;
+        this.mailboxManager = mailboxManager;
     }
 
     /**
@@ -60,17 +63,24 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     protected MessageMapperFactory getFactory() {
         return factory;
     }
-    
-    
+
+    /**
+     * Return the {@link MailboxManager}
+     *
+     * @return mailboxManager
+     */
+    protected MailboxManager getMailboxManager() {
+        return mailboxManager;
+    }
+
     /**
      * Process the {@link org.apache.james.mailbox.Event} and update the index if
      * something relevant is received
      */
     @Override
     public void event(Event event) {
-        final MailboxSession session = event.getSession();
-
         try {
+            MailboxSession session = mailboxManager.createSystemSession(event.getUser().asString());
             if (event instanceof MessageEvent) {
                 if (event instanceof EventFactory.AddedImpl) {
                     EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;

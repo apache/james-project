@@ -116,7 +116,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 rightManager);
 
             FSDirectory fsDirectory = FSDirectory.open(tempFile);
-            searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory);
+            searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory, mailboxManager);
             searchIndex.setEnableSuffixMatch(true);
             mailboxManager.setMessageSearchIndex(searchIndex);
 

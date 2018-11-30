@@ -102,7 +102,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         id3 = factory.generate();
         id4 = factory.generate();
         id5 = factory.generate();
-        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory);
+        index = new LuceneMessageSearchIndex(null, new TestId.Factory(), new RAMDirectory(), true, useLenient(), factory, null);
         index.setEnableSuffixMatch(true);
         Map<String, String> headersSubject = new HashMap<>();
         headersSubject.put("Subject", "test (fwd)");

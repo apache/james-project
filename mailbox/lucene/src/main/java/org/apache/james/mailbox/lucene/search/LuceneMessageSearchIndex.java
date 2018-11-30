@@ -366,9 +366,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         MessageMapperFactory factory,
         MailboxId.Factory mailboxIdFactory,
         Directory directory,
-        MessageId.Factory messageIdFactory
+        MessageId.Factory messageIdFactory,
+        MailboxManager mailboxManager
     ) throws IOException {
-        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory);
+        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, mailboxManager);
     }
 
     public LuceneMessageSearchIndex(
@@ -377,9 +378,10 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             Directory directory,
             boolean dropIndexOnStart,
             boolean lenient,
-            MessageId.Factory messageIdFactory
+            MessageId.Factory messageIdFactory,
+            MailboxManager mailboxManager
     ) throws IOException {
-        super(factory);
+        super(factory, mailboxManager);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.directory = directory;

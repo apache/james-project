@@ -113,7 +113,8 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                 new InMemoryId.Factory(), storeMailboxManager.getMessageIdFactory(),
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
                 MailboxElasticSearchConstants.MESSAGE_TYPE),
-            new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES));
+            new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
+            storeMailboxManager);
 
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,

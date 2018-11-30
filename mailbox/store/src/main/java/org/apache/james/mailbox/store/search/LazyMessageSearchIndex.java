@@ -61,7 +61,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     
     
     public LazyMessageSearchIndex(ListeningMessageSearchIndex index) {
-        super(index.getFactory());
+        super(index.getFactory(), index.getMailboxManager());
         this.index = index;
     }
 
