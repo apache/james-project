@@ -44,7 +44,7 @@ public class PropagateLookupRightListener implements MailboxListener {
     private final MailboxManager mailboxManager;
 
     @Inject
-    PropagateLookupRightListener(RightManager rightManager, MailboxManager mailboxManager) {
+    public PropagateLookupRightListener(RightManager rightManager, MailboxManager mailboxManager) {
         this.rightManager = rightManager;
         this.mailboxManager = mailboxManager;
     }
@@ -57,7 +57,7 @@ public class PropagateLookupRightListener implements MailboxListener {
     @Override
     public void event(Event event) {
         try {
-            MailboxSession mailboxSession = event.getSession();
+            MailboxSession mailboxSession = createMailboxSession(event);
 
             if (event instanceof MailboxACLUpdated) {
                 MailboxACLUpdated aclUpdateEvent = (MailboxACLUpdated) event;
@@ -70,6 +70,14 @@ public class PropagateLookupRightListener implements MailboxListener {
             }
         } catch (MailboxException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private MailboxSession createMailboxSession(Event event) {
+        try {
+            return mailboxManager.createSystemSession(event.getUser().asString());
+        } catch (MailboxException e) {
+            throw new RuntimeException("unable to create system session of user:" + event.getUser().toString(), e);
         }
     }
 
