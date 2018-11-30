@@ -22,9 +22,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener {
     public void event(Event event) {
         try {
             if (event instanceof QuotaUsageUpdatedEvent) {
-                handleEvent(getUser(event), (QuotaUsageUpdatedEvent) event);
+                handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
             }
         } catch (Exception e) {
             LOGGER.error("Can not index quota ratio", e);
@@ -64,12 +64,7 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener {
     }
 
     private void handleEvent(User user, QuotaUsageUpdatedEvent event) throws JsonProcessingException {
-        indexer.index(user.getUserName(), 
-                quotaRatioToElasticSearchJson.convertToJson(user.getUserName(), event));
-    }
-
-    private User getUser(Event event) {
-        return event.getSession()
-                .getUser();
+        indexer.index(user.asString(),
+                quotaRatioToElasticSearchJson.convertToJson(user.asString(), event));
     }
 }
