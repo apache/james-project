@@ -27,4 +27,8 @@ public interface Event {
     default User getUser() {
         return getSession().getUser().getCoreUser();
     }
+
+    default long getSessionId() {
+        return getSession().getSessionId();
+    }
 }
