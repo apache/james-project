@@ -41,6 +41,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -61,6 +62,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     private final MailboxManager mailboxManager;
 
+    private final MailboxId mailboxId;
     private MailboxPath path;
 
     private final ImapSession session;
@@ -94,6 +96,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         mailboxManager.addListener(path, this, mailboxSession);
 
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
+        mailboxId = messageManager.getId();
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
         uidMsnConverter.addAll(ImmutableList.copyOf(
             messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)));
@@ -160,6 +163,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     @Override
     public synchronized MailboxPath getPath() {
         return path;
+    }
+
+    @Override
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
 
     private void checkExpungedRecents() {
