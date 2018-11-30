@@ -29,6 +29,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -58,14 +59,14 @@ public class MixedEventDeliveryTest {
     @Test
     public void deliverShouldWorkOnSynchronousListeners() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent((MailboxSession) null, null, null) {};
         mixedEventDelivery.deliver(listener, event);
         verify(listener).event(event);
     }
 
     @Test
     public void deliverShouldEventuallyDeliverOnAsynchronousListeners() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent((MailboxSession) null, null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         mixedEventDelivery.deliver(listener, event);
         verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
@@ -73,7 +74,7 @@ public class MixedEventDeliveryTest {
 
     @Test(timeout = ONE_MINUTE)
     public void deliverShouldNotBlockOnAsynchronousListeners() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent((MailboxSession) null, null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         final CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {

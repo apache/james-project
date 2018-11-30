@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
@@ -53,7 +54,7 @@ public class AsynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWork() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent((MailboxSession) null, null, null) {};
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }

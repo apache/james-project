@@ -21,8 +21,11 @@ package org.apache.james.mailbox;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -91,6 +94,11 @@ public interface MailboxListener {
             throw new UnsupportedOperationException("this method will be removed");
         }
 
+        @Override
+        public User getUser() {
+            return user;
+        }
+
         public Quota<QuotaCount> getCountQuota() {
             return countQuota;
         }
@@ -133,15 +141,93 @@ public interface MailboxListener {
      * A mailbox event.
      */
     abstract class MailboxEvent implements Event, Serializable {
+        public static class DummyMailboxSession implements MailboxSession {
+
+            @Override
+            public SessionType getType() {
+                return null;
+            }
+
+            @Override
+            public long getSessionId() {
+                return 0;
+            }
+
+            @Override
+            public boolean isOpen() {
+                return false;
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public User getUser() {
+                return null;
+            }
+
+            @Override
+            public String getPersonalSpace() {
+                return null;
+            }
+
+            @Override
+            public String getOtherUsersSpace() {
+                return null;
+            }
+
+            @Override
+            public Collection<String> getSharedSpaces() {
+                return null;
+            }
+
+            @Override
+            public Map<Object, Object> getAttributes() {
+                return null;
+            }
+
+            @Override
+            public char getPathDelimiter() {
+                return 0;
+            }
+        }
+
         private final MailboxSession session;
         private final MailboxPath path;
         private final MailboxId mailboxId;
+        private final User user;
 
         public MailboxEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             this.session = session;
             this.path = path;
             this.mailboxId = mailboxId;
+            // To pass some tests, which pass null MailboxSession to the constructors
+            this.user = Optional.ofNullable(session)
+                .map(MailboxSession::getUser)
+                .map(MailboxSession.User::getCoreUser)
+                .orElse(null);
         }
+
+        public MailboxEvent(User user, MailboxPath path, MailboxId mailboxId) {
+            this.user = user;
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.session = new DummyMailboxSession();
+        }
+
+        /**
+         * Gets the {@link User} in which's context the {@link MailboxEvent}
+         * happened
+         *
+         * @return user
+         */
+        @Override
+        public User getUser() {
+            return user;
+        }
+
 
         /**
          * Gets the {@link MailboxSession} in which's context the {@link MailboxEvent}
@@ -195,6 +281,14 @@ public interface MailboxListener {
             this.totalDeletedSize = totalDeletedSize;
         }
 
+        public MailboxDeletion(User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
+                               MailboxId mailboxId) {
+            super(user, path, mailboxId);
+            this.quotaRoot = quotaRoot;
+            this.deletedMessageCOunt = deletedMessageCOunt;
+            this.totalDeletedSize = totalDeletedSize;
+        }
+
         public QuotaRoot getQuotaRoot() {
             return quotaRoot;
         }
@@ -220,6 +314,10 @@ public interface MailboxListener {
         public MailboxAdded(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
+
+        public MailboxAdded(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+        }
     }
 
     /**
@@ -233,6 +331,10 @@ public interface MailboxListener {
 
         public MailboxRenamed(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
+        }
+
+        public MailboxRenamed(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
         }
 
         /**
@@ -256,6 +358,11 @@ public interface MailboxListener {
             this.aclDiff = aclDiff;
         }
 
+        public MailboxACLUpdated(User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+            this.aclDiff = aclDiff;
+        }
+
         public ACLDiff getAclDiff() {
             return aclDiff;
         }
@@ -276,6 +383,10 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
+        public MessageEvent(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+        }
+
         /**
          * Gets the message UIDs for the subject of this event.
          * 
@@ -288,6 +399,10 @@ public interface MailboxListener {
 
         public MetaDataHoldingEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
+        }
+
+        public MetaDataHoldingEvent(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
         }
 
         /**
@@ -309,7 +424,11 @@ public interface MailboxListener {
         public Expunged(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
-        
+
+        public Expunged(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+        }
+
         /**
          * Return the flags which were set for the added message
          * 
@@ -333,6 +452,10 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
+        public FlagsUpdated(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+        }
+
         public abstract List<UpdatedFlags> getUpdatedFlags();
     }
 
@@ -349,7 +472,11 @@ public interface MailboxListener {
         public Added(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
-        
+
+        public Added(User user, MailboxPath path, MailboxId mailboxId) {
+            super(user, path, mailboxId);
+        }
+
         /**
          * Return the flags which were set for the added message
          * 
