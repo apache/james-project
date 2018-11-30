@@ -20,6 +20,7 @@
 package org.apache.james.mailbox;
 
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 /**
@@ -37,7 +38,7 @@ public interface MailboxListenerSupport {
      * everyone has removed itself.
      * </p>
      * 
-     * @param mailboxPath
+     * @param mailboxId
      *            not null
      * @param listener
      *            not null
@@ -45,17 +46,17 @@ public interface MailboxListenerSupport {
      *            not null
      * @throws MailboxException
      */
-    void addListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException;
+    void addListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException;
 
     /**
      * Remove the {@link MailboxListener}
      * 
-     * @param mailboxPath
+     * @param mailboxId
      * @param listner
      * @param session
      * @throws MailboxException
      */
-    void removeListener(MailboxPath mailboxPath, MailboxListener listner, MailboxSession session) throws MailboxException;
+    void removeListener(MailboxId mailboxId, MailboxListener listner, MailboxSession session) throws MailboxException;
     
     /**
      * Add a {@link MailboxListener} which get fired for ever

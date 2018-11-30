@@ -23,15 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.TestId;
 import org.junit.Before;
 import org.junit.Test;
 
-
 public class MailboxListenerRegistryTest {
+    private static final MailboxId MAILBOX_ID = TestId.of(42);
+    private static final MailboxId OTHER_MAILBOX_ID = TestId.of(43);
 
-    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("user", "INBOX");
-    private static final MailboxPath OTHER_MAILBOX_PATH = MailboxPath.forUser("user", "other");
     private MailboxListenerRegistry testee;
     private MailboxListener mailboxListener;
     private MailboxListener otherMailboxListener;
@@ -50,36 +50,36 @@ public class MailboxListenerRegistryTest {
 
     @Test
     public void getLocalMailboxListenersShouldReturnEmptyList() {
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).isEmpty();
     }
 
     @Test
-    public void addGlobalListenerShouldAddAGlobalListener() throws Exception {
+    public void addGlobalListenerShouldAddAGlobalListener() {
         testee.addGlobalListener(mailboxListener);
 
         assertThat(testee.getGlobalListeners()).containsOnly(mailboxListener);
     }
 
     @Test
-    public void addListenerShouldAddAListener() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
+    public void addListenerShouldAddAListener() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
 
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).containsOnly(mailboxListener);
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).containsOnly(mailboxListener);
     }
 
     @Test
-    public void addListenerTwiceShouldAddAListenerOnlyOnce() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
-        testee.addListener(MAILBOX_PATH, mailboxListener);
+    public void addListenerTwiceShouldAddAListenerOnlyOnce() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
+        testee.addListener(MAILBOX_ID, mailboxListener);
 
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).containsExactly(mailboxListener);
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).containsExactly(mailboxListener);
     }
 
     @Test
-    public void addListenerShouldAddAListenerOnCorrectPath() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
+    public void addListenerShouldAddAListenerOnCorrectPath() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
 
-        assertThat(testee.getLocalMailboxListeners(OTHER_MAILBOX_PATH)).isEmpty();
+        assertThat(testee.getLocalMailboxListeners(OTHER_MAILBOX_ID)).isEmpty();
     }
 
     @Test
@@ -92,16 +92,16 @@ public class MailboxListenerRegistryTest {
     }
 
     @Test
-    public void removeListenerShouldWork() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
+    public void removeListenerShouldWork() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
 
-        testee.removeListener(MAILBOX_PATH, mailboxListener);
+        testee.removeListener(MAILBOX_ID, mailboxListener);
 
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).isEmpty();
     }
 
     @Test
-    public void removeGlobalListenerShouldNotRemoveOtherListeners() throws Exception {
+    public void removeGlobalListenerShouldNotRemoveOtherListeners() {
         testee.addGlobalListener(mailboxListener);
         testee.addGlobalListener(otherMailboxListener);
 
@@ -111,64 +111,32 @@ public class MailboxListenerRegistryTest {
     }
 
     @Test
-    public void removeListenerShouldNotRemoveOtherListeners() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
-        testee.addListener(MAILBOX_PATH, otherMailboxListener);
+    public void removeListenerShouldNotRemoveOtherListeners() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
+        testee.addListener(MAILBOX_ID, otherMailboxListener);
 
-        testee.removeListener(MAILBOX_PATH, mailboxListener);
+        testee.removeListener(MAILBOX_ID, mailboxListener);
 
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).containsOnly(otherMailboxListener);
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).containsOnly(otherMailboxListener);
     }
 
     @Test
-    public void deleteRegistryForShouldRemoveAllListeners() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
-        testee.addListener(MAILBOX_PATH, otherMailboxListener);
+    public void deleteRegistryForShouldRemoveAllListeners() {
+        testee.addListener(MAILBOX_ID, mailboxListener);
+        testee.addListener(MAILBOX_ID, otherMailboxListener);
 
-        testee.deleteRegistryFor(MAILBOX_PATH);
+        testee.deleteRegistryFor(MAILBOX_ID);
 
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
+        assertThat(testee.getLocalMailboxListeners(MAILBOX_ID)).isEmpty();
     }
 
     @Test
-    public void handleRenameShouldMoveListeners() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
-        testee.addListener(MAILBOX_PATH, otherMailboxListener);
-
-        testee.handleRename(MAILBOX_PATH, OTHER_MAILBOX_PATH);
-
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
-        assertThat(testee.getLocalMailboxListeners(OTHER_MAILBOX_PATH)).containsOnly(mailboxListener, otherMailboxListener);
-    }
-
-    @Test
-    public void handleRenameShouldPreservePreviouslyRegisteredListeners() throws Exception {
-        testee.addListener(OTHER_MAILBOX_PATH, mailboxListener);
-
-        testee.handleRename(MAILBOX_PATH, OTHER_MAILBOX_PATH);
-
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
-        assertThat(testee.getLocalMailboxListeners(OTHER_MAILBOX_PATH)).containsOnly(mailboxListener);
-    }
-
-    @Test
-    public void handleRenameShouldMergeListenersIfNeeded() throws Exception {
-        testee.addListener(MAILBOX_PATH, mailboxListener);
-        testee.addListener(OTHER_MAILBOX_PATH, otherMailboxListener);
-
-        testee.handleRename(MAILBOX_PATH, OTHER_MAILBOX_PATH);
-
-        assertThat(testee.getLocalMailboxListeners(MAILBOX_PATH)).isEmpty();
-        assertThat(testee.getLocalMailboxListeners(OTHER_MAILBOX_PATH)).containsOnly(mailboxListener, otherMailboxListener);
-    }
-
-    @Test
-    public void removeGlobalListenerShouldNotThrowOnAbsentListener() throws Exception {
+    public void removeGlobalListenerShouldNotThrowOnAbsentListener() {
         testee.removeGlobalListener(mailboxListener);
     }
 
     @Test
-    public void removeListenerShouldNotThrowOnAbsentListener() throws Exception {
-        testee.removeListener(MAILBOX_PATH, mailboxListener);
+    public void removeListenerShouldNotThrowOnAbsentListener() {
+        testee.removeListener(MAILBOX_ID, mailboxListener);
     }
 }

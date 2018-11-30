@@ -93,10 +93,11 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
         uidMsnConverter = new UidMsnConverter();
 
-        mailboxManager.addListener(path, this, mailboxSession);
-
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         mailboxId = messageManager.getId();
+
+        mailboxManager.addListener(mailboxId, this, mailboxSession);
+
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
         uidMsnConverter.addAll(ImmutableList.copyOf(
             messageManager.search(new SearchQuery(SearchQuery.all()), mailboxSession)));
@@ -122,7 +123,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
         try {
-            mailboxManager.removeListener(path, this, mailboxSession);
+            mailboxManager.removeListener(mailboxId, this, mailboxSession);
         } catch (MailboxException e) {
             LOGGER.error("Unable to remove listener {} from mailbox while closing it", this, e);
         }

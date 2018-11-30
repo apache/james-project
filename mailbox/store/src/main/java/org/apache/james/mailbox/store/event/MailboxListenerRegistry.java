@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +32,7 @@ import com.google.common.collect.Multimaps;
 
 public class MailboxListenerRegistry {
 
-    private final Multimap<MailboxPath, MailboxListener> listeners;
+    private final Multimap<MailboxId, MailboxListener> listeners;
     private final ConcurrentLinkedQueue<MailboxListener> globalListeners;
 
     public MailboxListenerRegistry() {
@@ -40,36 +40,32 @@ public class MailboxListenerRegistry {
         this.listeners = Multimaps.synchronizedMultimap(HashMultimap.create());
     }
 
-    public void addListener(MailboxPath path, MailboxListener listener) {
-        listeners.put(path, listener);
+    public void addListener(MailboxId mailboxId, MailboxListener listener) {
+        listeners.put(mailboxId, listener);
     }
 
     public void addGlobalListener(MailboxListener listener) {
         globalListeners.add(listener);
     }
 
-    public void removeListener(MailboxPath mailboxPath, MailboxListener listener) {
-        listeners.remove(mailboxPath, listener);
+    public void removeListener(MailboxId mailboxId, MailboxListener listener) {
+        listeners.remove(mailboxId, listener);
     }
 
     public void removeGlobalListener(MailboxListener listener) {
         globalListeners.remove(listener);
     }
 
-    public List<MailboxListener> getLocalMailboxListeners(MailboxPath path) {
-        return ImmutableList.copyOf(listeners.get(path));
+    public List<MailboxListener> getLocalMailboxListeners(MailboxId mailboxId) {
+        return ImmutableList.copyOf(listeners.get(mailboxId));
     }
 
     public List<MailboxListener> getGlobalListeners() {
         return ImmutableList.copyOf(globalListeners);
     }
 
-    public void deleteRegistryFor(MailboxPath path) {
-        listeners.removeAll(path);
-    }
-
-    public void handleRename(MailboxPath oldName, MailboxPath newName) {
-        listeners.putAll(newName, listeners.removeAll(oldName));
+    public void deleteRegistryFor(MailboxId mailboxId) {
+        listeners.removeAll(mailboxId);
     }
 
 }

@@ -93,7 +93,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
             final IdleMailboxListener idleListener;
             if (sm != null) {
                 idleListener = new IdleMailboxListener(session, responder);
-                mailboxManager.addListener(sm.getPath(), idleListener, mailboxSession);
+                mailboxManager.addListener(sm.getMailboxId(), idleListener, mailboxSession);
             } else {
                 idleListener = null;
             }
@@ -112,7 +112,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
 
                     if (idleListener != null) {
                         try {
-                            mailboxManager.removeListener(sm.getPath(), idleListener, mailboxSession);
+                            mailboxManager.removeListener(sm.getMailboxId(), idleListener, mailboxSession);
                         } catch (MailboxException e) {
                                 LOGGER.error("Unable to remove idle listener for mailbox {}", sm.getPath(), e);
                         }

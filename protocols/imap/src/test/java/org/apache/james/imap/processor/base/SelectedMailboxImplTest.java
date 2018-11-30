@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -74,6 +75,7 @@ public class SelectedMailboxImplTest {
     private MailboxPath mailboxPath;
     private ImapSession imapSession;
     private Mailbox mailbox;
+    private TestId mailboxId;
 
     @Before
     public void setUp() throws Exception {
@@ -83,6 +85,7 @@ public class SelectedMailboxImplTest {
         messageManager = mock(MessageManager.class);
         imapSession = mock(ImapSession.class);
         mailbox = mock(Mailbox.class);
+        mailboxId = TestId.of(42);
 
         when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class)))
             .thenReturn(messageManager);
@@ -90,6 +93,7 @@ public class SelectedMailboxImplTest {
             .thenReturn(new Flags());
         when(messageManager.search(any(SearchQuery.class), any(MailboxSession.class)))
             .then(delayedSearchAnswer());
+        when(messageManager.getId()).thenReturn(mailboxId);
 
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mock(MailboxSession.class));
 
@@ -107,7 +111,7 @@ public class SelectedMailboxImplTest {
         final AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
-            .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
+            .addListener(eq(mailboxId), any(MailboxListener.class), any(MailboxSession.class));
 
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
             mailboxManager,
@@ -122,7 +126,7 @@ public class SelectedMailboxImplTest {
         final AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
-            .addListener(eq(mailboxPath), any(MailboxListener.class), any(MailboxSession.class));
+            .addListener(eq(mailboxId), any(MailboxListener.class), any(MailboxSession.class));
 
         new SelectedMailboxImpl(
             mailboxManager,

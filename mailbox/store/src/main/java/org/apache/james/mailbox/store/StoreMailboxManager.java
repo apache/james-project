@@ -768,8 +768,8 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public void addListener(MailboxPath path, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.addListener(path, listener, session);
+    public void addListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
+        delegatingListener.addListener(mailboxId, listener, session);
     }
 
     /**
@@ -803,8 +803,8 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public void removeListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.removeListener(mailboxPath, listener, session);
+    public void removeListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
+        delegatingListener.removeListener(mailboxId, listener, session);
 
     }
 

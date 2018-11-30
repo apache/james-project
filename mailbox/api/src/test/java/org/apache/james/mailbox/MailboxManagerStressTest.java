@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
 import org.junit.Test;
@@ -61,9 +63,8 @@ public abstract class MailboxManagerStressTest {
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
         final MailboxPath path = MailboxPath.forUser(username, "INBOX");
-        mailboxManager.createMailbox(path, session);
-        mailboxManager.addListener(path, new MailboxListener() {
-
+        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(path, session);
+        mailboxManager.addListener(mailboxId.get(), new MailboxListener() {
             @Override
             public ListenerType getType() {
                 return ListenerType.MAILBOX;

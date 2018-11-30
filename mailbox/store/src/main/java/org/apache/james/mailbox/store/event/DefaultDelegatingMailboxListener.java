@@ -27,14 +27,14 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Receive a {@link org.apache.james.mailbox.MailboxListener.MailboxEvent} and delegate it to an other
- * {@link MailboxListener} depending on the registered name
+ * {@link MailboxListener} depending on the registered mailboxId
  *
  * This is a mono instance Thread safe implementation for DelegatingMailboxListener
  */
@@ -61,11 +61,11 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     @Override
-    public void addListener(MailboxPath path, MailboxListener listener, MailboxSession session) throws MailboxException {
+    public void addListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
         if (listener.getType() != ListenerType.MAILBOX) {
             throw new MailboxException(listener.getClass().getCanonicalName() + " registred on specific MAILBOX operation while its listener type was " + listener.getType());
         }
-        registry.addListener(path, listener);
+        registry.addListener(mailboxId, listener);
     }
 
     @Override
@@ -77,12 +77,12 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     @Override
-    public void removeListener(MailboxPath mailboxPath, MailboxListener listener, MailboxSession session) throws MailboxException {
-        registry.removeListener(mailboxPath, listener);
+    public void removeListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) {
+        registry.removeListener(mailboxId, listener);
     }
 
     @Override
-    public void removeGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
+    public void removeGlobalListener(MailboxListener listener, MailboxSession session) {
         registry.removeGlobalListener(listener);
     }
 
@@ -95,12 +95,9 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
     }
 
     private void mailboxEvent(MailboxEvent mailboxEvent) {
-        Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(mailboxEvent.getMailboxPath());
+        Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(mailboxEvent.getMailboxId());
         if (mailboxEvent instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
-            registry.deleteRegistryFor(mailboxEvent.getMailboxPath());
-        } else if (mailboxEvent instanceof MailboxRenamed && listenerSnapshot.size() > 0) {
-            MailboxRenamed renamed = (MailboxRenamed) mailboxEvent;
-            registry.handleRename(renamed.getMailboxPath(), renamed.getNewPath());
+            registry.deleteRegistryFor(mailboxEvent.getMailboxId());
         }
         deliverEventToMailboxListeners(mailboxEvent, listenerSnapshot);
     }
