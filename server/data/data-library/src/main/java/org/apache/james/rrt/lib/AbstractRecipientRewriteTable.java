@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -97,8 +96,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     @Override
     public Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
-        Mappings mappings = getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
-        return mappings;
+        return getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
     }
 
     private Mappings getMappings(User user, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
@@ -297,11 +295,6 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         LOGGER.info("Remove group mapping => {} for source: {}", mapping, source.asString());
         removeMapping(source, mapping);
-    }
-
-    @Override
-    public List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
-        return null;
     }
 
     /**

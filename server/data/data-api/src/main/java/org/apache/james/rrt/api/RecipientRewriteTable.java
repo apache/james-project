@@ -26,6 +26,8 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Interface which should be implemented of classes which map recipients.
  */
@@ -107,7 +109,30 @@ public interface RecipientRewriteTable {
      */
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
-    List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException;
+    default List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
+        if (!isSupportedListSources(mapping)) {
+            return ImmutableList.of();
+        }
+
+        return getAllMappings().entrySet().stream()
+            .filter(entry -> filterMapping(entry, mapping))
+            .map(Map.Entry::getKey)
+            .collect(ImmutableList.toImmutableList());
+    }
+
+    default boolean filterMapping(Map.Entry<MappingSource, Mappings> entry, Mapping mapping) {
+        return entry.getValue()
+            .asStream()
+            .anyMatch(map -> map.equals(mapping));
+    }
+
+    default boolean isSupportedListSources(Mapping mapping) {
+        return listSourcesSupportedType.stream()
+            .anyMatch(type -> type.equals(mapping.getType()));
+    }
+
+    List<Mapping.Type> listSourcesSupportedType = ImmutableList
+        .of(Mapping.Type.Group, Mapping.Type.Forward, Mapping.Type.Address);
 
     class ErrorMappingException extends Exception {
 

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.HierarchicalConfiguration;
@@ -290,10 +291,5 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     @Override
     public void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
-    }
-
-    @Override
-    public List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
-        return ImmutableList.of();
     }
 }
