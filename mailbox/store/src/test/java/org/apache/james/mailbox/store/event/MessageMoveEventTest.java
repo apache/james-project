@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Map;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageMoves;
@@ -87,7 +88,8 @@ public class MessageMoveEventTest {
 
     @Test
     public void builderShouldBuildWhenFieldsAreGiven() {
-        MockMailboxSession session = new MockMailboxSession("user@james.org");
+        String username = "user@james.org";
+        MockMailboxSession session = new MockMailboxSession(username);
         MessageMoves messageMoves = MessageMoves.builder()
             .targetMailboxIds(TestId.of(2))
             .previousMailboxIds(TestId.of(1))
@@ -100,7 +102,7 @@ public class MessageMoveEventTest {
             .messages(messages)
             .build();
 
-        softly.assertThat(event.getSession()).isEqualTo(session);
+        softly.assertThat(event.getUser()).isEqualTo(User.fromUsername(username));
         softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
         softly.assertThat(event.getMessages()).isEqualTo(messages);
     }
