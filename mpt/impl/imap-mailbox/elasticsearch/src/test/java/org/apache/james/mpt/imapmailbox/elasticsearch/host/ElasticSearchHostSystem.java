@@ -123,7 +123,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,
                 new StoreSubscriptionManager(factory),
                 new NoQuotaManager(),
-                new DefaultUserQuotaRootResolver(factory),
+                new DefaultUserQuotaRootResolver(mailboxManager, factory),
                 new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),

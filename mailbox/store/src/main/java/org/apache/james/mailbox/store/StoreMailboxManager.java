@@ -236,7 +236,7 @@ public class StoreMailboxManager implements MailboxManager {
             quotaManager = new NoQuotaManager();
         }
         if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxSessionMapperFactory);
+            quotaRootResolver = new DefaultUserQuotaRootResolver(this, mailboxSessionMapperFactory);
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);

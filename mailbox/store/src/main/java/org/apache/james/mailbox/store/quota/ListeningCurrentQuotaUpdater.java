@@ -60,11 +60,11 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         try {
             if (event instanceof Added) {
                 Added addedEvent = (Added) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxId(), event.getSession());
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxId());
                 handleAddedEvent(addedEvent, quotaRoot);
             } else if (event instanceof Expunged) {
                 Expunged expungedEvent = (Expunged) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxId(), event.getSession());
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxId());
                 handleExpungedEvent(expungedEvent, quotaRoot);
             } else if (event instanceof MailboxDeletion) {
                 MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;
@@ -87,7 +87,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.decrease(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(expunged.getSession(),
+        dispatcher.quota(expunged.getUser(),
             quotaRoot,
             quotaManager.getMessageQuota(quotaRoot),
             quotaManager.getStorageQuota(quotaRoot));
@@ -104,7 +104,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(added.getSession(),
+        dispatcher.quota(added.getUser(),
             quotaRoot,
             quotaManager.getMessageQuota(quotaRoot),
             quotaManager.getStorageQuota(quotaRoot));

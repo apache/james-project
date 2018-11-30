@@ -65,7 +65,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
         super.beforeTest();
         this.mailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver(), authenticator, authorizator);
-        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getMapperFactory());
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mailboxManager.getMapperFactory());
 
         perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
 

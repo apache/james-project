@@ -76,7 +76,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             dispatcher,
             messageIdFactory,
             quotaManager,
-            new DefaultUserQuotaRootResolver(mapperFactory));
+            new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory));
         return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
     }
 }

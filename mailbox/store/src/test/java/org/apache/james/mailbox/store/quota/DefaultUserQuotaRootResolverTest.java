@@ -20,11 +20,13 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -41,7 +43,7 @@ import com.google.common.collect.Lists;
 
 public class DefaultUserQuotaRootResolverTest {
 
-    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
     private static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
     private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
@@ -55,8 +57,9 @@ public class DefaultUserQuotaRootResolverTest {
 
     @Before
     public void setUp() {
+        MailboxManager mailboxManager = mock(MailboxManager.class);
         mockedFactory = mock(MailboxSessionMapperFactory.class);
-        testee = new DefaultUserQuotaRootResolver(mockedFactory);
+        testee = new DefaultUserQuotaRootResolver(mailboxManager, mockedFactory);
     }
 
     @Test
@@ -90,18 +93,18 @@ public class DefaultUserQuotaRootResolverTest {
         assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX_PATH, MAILBOX_PATH_2);
     }
 
-    @Test
-    public void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
-        MailboxMapper mockedMapper = mock(MailboxMapper.class);
-        when(mockedFactory.getMailboxMapper(MAILBOX_SESSION)).thenReturn(mockedMapper);
-        when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(MAILBOX);
-
-        assertThat(testee.getQuotaRoot(MAILBOX_ID, MAILBOX_SESSION)).isEqualTo(QUOTA_ROOT);
-    }
-
     @Test(expected = MailboxException.class)
     public void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
         testee.retrieveAssociatedMailboxes(QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION);
+    }
+
+    @Test
+    public void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
+        MailboxMapper mockedMapper = mock(MailboxMapper.class);
+        when(mockedFactory.getMailboxMapper(any())).thenReturn(mockedMapper);
+        when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(MAILBOX);
+
+        assertThat(testee.getQuotaRoot(MAILBOX_ID)).isEqualTo(QUOTA_ROOT);
     }
 
 }

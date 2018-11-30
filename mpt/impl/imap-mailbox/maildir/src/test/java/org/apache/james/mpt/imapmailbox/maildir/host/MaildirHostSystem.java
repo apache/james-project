@@ -84,12 +84,12 @@ public class MaildirHostSystem extends JamesImapHostSystem {
             mailboxEventDispatcher, delegatingListener, storeRightManager);
         mailboxManager.init();
 
-        final ImapProcessor defaultImapProcessorFactory = 
+        ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
                         mailboxManager, 
                         sm, 
                         new NoQuotaManager(), 
-                        new DefaultUserQuotaRootResolver(mailboxSessionMapperFactory),
+                        new DefaultUserQuotaRootResolver(mailboxManager, mailboxSessionMapperFactory),
                         new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),

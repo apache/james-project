@@ -73,13 +73,14 @@ public class CassandraTestSystemFixture {
     }
 
     public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+        CassandraMailboxManager mailboxManager = createMailboxManager(mapperFactory);
         return new StoreMessageIdManager(
-            createMailboxManager(mapperFactory),
+            mailboxManager,
             mapperFactory,
             dispatcher,
             new CassandraMessageId.Factory(),
             quotaManager,
-            new DefaultUserQuotaRootResolver(mapperFactory));
+            new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory));
     }
 
     public static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {

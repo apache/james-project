@@ -38,7 +38,7 @@ public interface QuotaRootResolver {
      */
     QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
 
-    QuotaRoot getQuotaRoot(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException;
+    QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException;
 
     QuotaRoot fromString(String serializedQuotaRoot) throws MailboxException;
 

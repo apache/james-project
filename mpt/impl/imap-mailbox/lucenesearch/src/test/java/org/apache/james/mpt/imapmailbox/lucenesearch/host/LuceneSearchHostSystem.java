@@ -124,12 +124,12 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
             SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
 
-            final ImapProcessor defaultImapProcessorFactory =
+            ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
                     mailboxManager,
                     subscriptionManager,
                     new NoQuotaManager(),
-                    new DefaultUserQuotaRootResolver(mapperFactory),
+                    new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory),
                     new DefaultMetricFactory());
 
             configure(new DefaultImapDecoderFactory().buildImapDecoder(),

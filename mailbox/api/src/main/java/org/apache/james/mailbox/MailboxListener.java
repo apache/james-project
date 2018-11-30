@@ -24,6 +24,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -71,14 +72,14 @@ public interface MailboxListener {
     }
 
     class QuotaUsageUpdatedEvent implements QuotaEvent, Serializable {
-        private final MailboxSession session;
+        private final User user;
         private final QuotaRoot quotaRoot;
         private final Quota<QuotaCount> countQuota;
         private final Quota<QuotaSize> sizeQuota;
         private final Instant instant;
 
-        public QuotaUsageUpdatedEvent(MailboxSession session, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
-            this.session = session;
+        public QuotaUsageUpdatedEvent(User user, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
+            this.user = user;
             this.quotaRoot = quotaRoot;
             this.countQuota = countQuota;
             this.sizeQuota = sizeQuota;
@@ -87,7 +88,7 @@ public interface MailboxListener {
 
         @Override
         public MailboxSession getSession() {
-            return session;
+            throw new UnsupportedOperationException("this method will be removed");
         }
 
         public Quota<QuotaCount> getCountQuota() {
@@ -112,7 +113,7 @@ public interface MailboxListener {
             if (o instanceof QuotaUsageUpdatedEvent) {
                 QuotaUsageUpdatedEvent that = (QuotaUsageUpdatedEvent) o;
 
-                return Objects.equals(this.session, that.session)
+                return Objects.equals(this.user, that.user)
                     && Objects.equals(this.quotaRoot, that.quotaRoot)
                     && Objects.equals(this.countQuota, that.countQuota)
                     && Objects.equals(this.sizeQuota, that.sizeQuota)
@@ -123,7 +124,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(session, quotaRoot, countQuota, sizeQuota, instant);
+            return Objects.hash(user, quotaRoot, countQuota, sizeQuota, instant);
         }
 
     }
