@@ -248,7 +248,7 @@ public class StoreMailboxManager implements MailboxManager {
             moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
         }
         if (hasCapability(MailboxCapabilities.Annotation)) {
-            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory), session);
+            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, this), session);
         }
     }
 

@@ -31,6 +31,7 @@ import java.util.Optional;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -63,6 +64,7 @@ public class MailboxAnnotationListenerTest {
     public static final int UID_VALIDITY = 145;
     public static final TestId MAILBOX_ID = TestId.of(45);
 
+    @Mock private MailboxManager mailboxManager;
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private AnnotationMapper annotationMapper;
     @Mock private MailboxId mailboxId;
@@ -77,7 +79,7 @@ public class MailboxAnnotationListenerTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         mailboxSession = new MockMailboxSession("test");
-        listener = new MailboxAnnotationListener(mailboxSessionMapperFactory);
+        listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, mailboxManager);
         eventFactory = new EventFactory();
         mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, mailboxId);
 
@@ -86,7 +88,9 @@ public class MailboxAnnotationListenerTest {
         QuotaSize quotaSize = QuotaSize.size(456);
         deleteEvent = eventFactory.mailboxDeleted(mailboxSession, mailbox, quotaRoot, quotaCount, quotaSize);
 
-        when(mailboxSessionMapperFactory.getAnnotationMapper(eq(deleteEvent.getSession()))).thenReturn(annotationMapper);
+        when(mailboxManager.createSystemSession(deleteEvent.getUser().asString()))
+            .thenReturn(mailboxSession);
+        when(mailboxSessionMapperFactory.getAnnotationMapper(eq(mailboxSession))).thenReturn(annotationMapper);
     }
 
     @Test
@@ -104,7 +108,7 @@ public class MailboxAnnotationListenerTest {
 
         listener.event(deleteEvent);
 
-        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(deleteEvent.getSession()));
+        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotations(eq(mailboxId));
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
@@ -118,7 +122,7 @@ public class MailboxAnnotationListenerTest {
 
         listener.event(deleteEvent);
 
-        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(deleteEvent.getSession()));
+        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotations(eq(mailboxId));
         verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
         verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(SHARED_KEY));
@@ -135,7 +139,7 @@ public class MailboxAnnotationListenerTest {
 
         listener.event(deleteEvent);
 
-        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(deleteEvent.getSession()));
+        verify(mailboxSessionMapperFactory).getAnnotationMapper(eq(mailboxSession));
         verify(annotationMapper).getAllAnnotations(eq(mailboxId));
         verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(PRIVATE_KEY));
         verify(annotationMapper).deleteAnnotation(eq(mailboxId), eq(SHARED_KEY));

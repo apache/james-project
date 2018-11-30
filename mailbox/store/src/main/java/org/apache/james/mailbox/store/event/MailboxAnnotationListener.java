@@ -24,6 +24,8 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
@@ -34,11 +36,13 @@ import org.slf4j.LoggerFactory;
 
 public class MailboxAnnotationListener implements MailboxListener {
     private static final Logger logger = LoggerFactory.getLogger(MailboxAnnotationListener.class);
-    private MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final MailboxManager mailboxManager;
 
     @Inject
-    public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory) {
+    public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory, MailboxManager mailboxManager) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
+        this.mailboxManager = mailboxManager;
     }
     
     @Override
@@ -50,7 +54,8 @@ public class MailboxAnnotationListener implements MailboxListener {
     public void event(Event event) {
         if (event instanceof EventFactory.MailboxDeletionImpl) {
             try {
-                AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(event.getSession());
+                MailboxSession mailboxSession = mailboxManager.createSystemSession(event.getUser().asString());
+                AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);
                 MailboxId mailboxId = ((EventFactory.MailboxDeletionImpl) event).getMailbox().getMailboxId();
 
                 deleteRelatedAnnotations(mailboxId, annotationMapper);
