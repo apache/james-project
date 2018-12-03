@@ -149,8 +149,8 @@ public interface MailboxListener {
             }
 
             @Override
-            public long getSessionId() {
-                return 0;
+            public SessionId getSessionId() {
+                return MailboxSession.SessionId.random();
             }
 
             @Override
@@ -198,7 +198,7 @@ public interface MailboxListener {
         private final MailboxPath path;
         private final MailboxId mailboxId;
         private final User user;
-        private final long sessionId;
+        private final Optional<MailboxSession.SessionId> sessionId;
 
         @Deprecated
         public MailboxEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
@@ -211,11 +211,10 @@ public interface MailboxListener {
                 .map(MailboxSession.User::getCoreUser)
                 .orElse(null);
             this.sessionId = Optional.ofNullable(session)
-                .map(MailboxSession::getSessionId)
-                .orElse(0L);
+                .map(MailboxSession::getSessionId);
         }
 
-        public MailboxEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public MailboxEvent(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             this.user = user;
             this.path = path;
             this.mailboxId = mailboxId;
@@ -253,7 +252,7 @@ public interface MailboxListener {
          * @return sessionId
          */
         @Override
-        public long getSessionId() {
+        public Optional<MailboxSession.SessionId> getSessionId() {
             return sessionId;
         }
 
@@ -299,7 +298,7 @@ public interface MailboxListener {
             this.totalDeletedSize = totalDeletedSize;
         }
 
-        public MailboxDeletion(long sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
+        public MailboxDeletion(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
                                MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
             this.quotaRoot = quotaRoot;
@@ -334,7 +333,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MailboxAdded(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public MailboxAdded(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
     }
@@ -353,7 +352,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MailboxRenamed(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public MailboxRenamed(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 
@@ -379,7 +378,7 @@ public interface MailboxListener {
             this.aclDiff = aclDiff;
         }
 
-        public MailboxACLUpdated(long sessionId, User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
+        public MailboxACLUpdated(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
             this.aclDiff = aclDiff;
         }
@@ -405,7 +404,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MessageEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public MessageEvent(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 
@@ -424,7 +423,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MetaDataHoldingEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public MetaDataHoldingEvent(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 
@@ -449,7 +448,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public Expunged(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public Expunged(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 
@@ -477,7 +476,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public FlagsUpdated(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public FlagsUpdated(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 
@@ -499,7 +498,7 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public Added(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+        public Added(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
         }
 

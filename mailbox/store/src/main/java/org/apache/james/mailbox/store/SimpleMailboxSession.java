@@ -40,7 +40,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
 
     private final String personalSpace;
     
-    private final long sessionId;
+    private final SessionId sessionId;
 
     private final String userName;
     
@@ -57,12 +57,12 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     private final SessionType type;
 
     
-    public SimpleMailboxSession(long sessionId, String userName, String password,
+    public SimpleMailboxSession(SessionId sessionId, String userName, String password,
                                 List<Locale> localePreferences, char pathSeparator, SessionType type) {
         this(sessionId, userName, password, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
-    public SimpleMailboxSession(long sessionId, String userName, String password,
+    public SimpleMailboxSession(SessionId sessionId, String userName, String password,
                                 List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
@@ -88,7 +88,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     }
 
     @Override
-    public long getSessionId() {
+    public SessionId getSessionId() {
         return sessionId;
     }
 

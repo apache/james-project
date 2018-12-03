@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.event;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
@@ -40,7 +41,7 @@ public class MessageMoveEvent implements Event {
 
     public static class Builder {
 
-        private long sessionId;
+        private Optional<MailboxSession.SessionId> sessionId;
         private User user;
         private MessageMoves messageMoves;
         private ImmutableMap.Builder<MessageUid, MailboxMessage> messagesBuilder;
@@ -50,12 +51,12 @@ public class MessageMoveEvent implements Event {
         }
 
         public Builder session(MailboxSession session) {
-            this.sessionId = session.getSessionId();
+            this.sessionId = Optional.ofNullable(session.getSessionId());
             this.user = session.getUser().getCoreUser();
             return this;
         }
 
-        public Builder sessionId(long sessionId) {
+        public Builder sessionId(Optional<MailboxSession.SessionId> sessionId) {
             this.sessionId = sessionId;
             return this;
         }
@@ -86,13 +87,13 @@ public class MessageMoveEvent implements Event {
         }
     }
 
-    private final long sessionId;
+    private final Optional<MailboxSession.SessionId> sessionId;
     private final User user;
     private final MessageMoves messageMoves;
     private final Map<MessageUid, MailboxMessage> messages;
 
     @VisibleForTesting
-    MessageMoveEvent(long sessionId, User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+    MessageMoveEvent(Optional<MailboxSession.SessionId> sessionId, User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
         this.sessionId = sessionId;
         this.user = user;
         this.messageMoves = messageMoves;
@@ -114,7 +115,7 @@ public class MessageMoveEvent implements Event {
     }
 
     @Override
-    public long getSessionId() {
+    public Optional<MailboxSession.SessionId> getSessionId() {
         return sessionId;
     }
 

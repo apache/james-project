@@ -32,15 +32,15 @@ public class MockMailboxSession implements MailboxSession {
     private final User user;
     private final Map<Object, Object> attrs = new HashMap<>();
     private static final Random RANDOM = new Random();
-    private final long sessionId;
+    private final SessionId sessionId;
     private final SessionType type;
     private boolean open;
     
     public MockMailboxSession(String username) {
-        this(username, RANDOM.nextLong());
+        this(username, SessionId.of(RANDOM.nextLong()));
     }
 
-    public MockMailboxSession(String username, long sessionId) {
+    public MockMailboxSession(String username, SessionId sessionId) {
         this.user = new User() {
 
             @Override
@@ -92,7 +92,7 @@ public class MockMailboxSession implements MailboxSession {
     }
 
     @Override
-    public long getSessionId() {
+    public SessionId getSessionId() {
         return sessionId;
     }
 

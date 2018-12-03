@@ -48,7 +48,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class MailboxEventDispatcherTest {
-    private static final int sessionId = 10;
+    private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(10);
     private static final int MOD_SEQ = -1;
     public static final Condition<Event> INSTANCE_OF_EVENT_FLAGS_UPDATED = new Condition<Event>() {
         @Override
@@ -64,7 +64,7 @@ public class MailboxEventDispatcherTest {
     private MessageResult result;
     private Mailbox mailbox;
 
-    private MailboxSession session = new MockMailboxSession("test", sessionId);
+    private MailboxSession session = new MockMailboxSession("test", SESSION_ID);
 
     @Before
     public void setUp() throws Exception {

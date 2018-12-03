@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import java.util.Optional;
+
 import org.apache.james.core.User;
 
 public interface Event {
@@ -28,7 +30,7 @@ public interface Event {
         return getSession().getUser().getCoreUser();
     }
 
-    default long getSessionId() {
-        return getSession().getSessionId();
+    default Optional<MailboxSession.SessionId> getSessionId() {
+        return Optional.ofNullable(getSession().getSessionId());
     }
 }

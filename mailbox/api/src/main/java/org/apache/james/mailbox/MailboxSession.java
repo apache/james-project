@@ -23,12 +23,53 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+
+import com.google.common.base.MoreObjects;
 
 /**
  * Mailbox session.
  */
 public interface MailboxSession {
 
+    class SessionId {
+
+        public static SessionId of(long sessionId) {
+            return new SessionId(sessionId);
+        }
+
+        private final long sessionId;
+
+        private SessionId(long sessionId) {
+            this.sessionId = sessionId;
+        }
+
+        public long getValue() {
+            return sessionId;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SessionId) {
+                SessionId that = (SessionId) o;
+
+                return Objects.equals(this.sessionId, that.sessionId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("sessionId", sessionId)
+                .toString();
+        }
+    }
 
     /**
      * Id which will be used for a System session
@@ -59,7 +100,7 @@ public interface MailboxSession {
      * 
      * @return session id
      */
-    long getSessionId();
+    SessionId getSessionId();
 
     /**
      * Is this session open?

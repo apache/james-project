@@ -60,6 +60,7 @@ import com.google.common.collect.Lists;
 public class MoveProcessorTest {
 
     public static final String TAG = "TAG";
+    private static final MailboxSession.SessionId SESSION_ID_42 = MailboxSession.SessionId.of(42L);
 
     private MoveProcessor testee;
     private ImapProcessor mockNextProcessor;
@@ -102,7 +103,7 @@ public class MoveProcessorTest {
         MailboxSession.User user = mock(MailboxSession.User.class);
         when(user.getUserName()).thenReturn("username");
         when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
+        when(mockMailboxSession.getSessionId()).thenReturn(SESSION_ID_42);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
@@ -142,7 +143,7 @@ public class MoveProcessorTest {
         MailboxSession.User user = mock(MailboxSession.User.class);
         when(user.getUserName()).thenReturn("username");
         when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
+        when(mockMailboxSession.getSessionId()).thenReturn(SESSION_ID_42);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
@@ -180,7 +181,7 @@ public class MoveProcessorTest {
         MailboxSession.User user = mock(MailboxSession.User.class);
         when(user.getUserName()).thenReturn("username");
         when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
+        when(mockMailboxSession.getSessionId()).thenReturn(SESSION_ID_42);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);
@@ -211,7 +212,7 @@ public class MoveProcessorTest {
         MailboxSession.User user = mock(MailboxSession.User.class);
         when(user.getUserName()).thenReturn("username");
         when(mockMailboxSession.getUser()).thenReturn(user);
-        when(mockMailboxSession.getSessionId()).thenReturn(42L);
+        when(mockMailboxSession.getSessionId()).thenReturn(SESSION_ID_42);
         when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
         MailboxPath inbox = MailboxPath.inbox(mockMailboxSession);

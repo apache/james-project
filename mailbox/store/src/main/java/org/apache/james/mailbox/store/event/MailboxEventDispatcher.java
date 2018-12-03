@@ -22,6 +22,7 @@ package org.apache.james.mailbox.store.event;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 
 import javax.inject.Inject;

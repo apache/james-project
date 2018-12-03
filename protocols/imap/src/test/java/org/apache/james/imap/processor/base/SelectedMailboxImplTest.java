@@ -26,6 +26,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.TreeMap;
@@ -166,8 +167,10 @@ public class SelectedMailboxImplTest {
     }
 
     private void emitEvent(MailboxListener mailboxListener) {
+        SecureRandom random = new SecureRandom();
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
         result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        mailboxListener.event(new EventFactory().added(0L, mock(User.class), result, mailbox, ImmutableMap.of()));
+        mailboxListener.event(new EventFactory().added(MailboxSession.SessionId.of(random.nextLong()),
+            mock(User.class), result, mailbox, ImmutableMap.of()));
     }
 }
