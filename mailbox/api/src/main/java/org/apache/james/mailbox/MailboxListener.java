@@ -200,6 +200,7 @@ public interface MailboxListener {
         private final User user;
         private final long sessionId;
 
+        @Deprecated
         public MailboxEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             this.session = session;
             this.path = path;
@@ -289,6 +290,7 @@ public interface MailboxListener {
         private final QuotaCount deletedMessageCOunt;
         private final QuotaSize totalDeletedSize;
 
+        @Deprecated
         public MailboxDeletion(MailboxSession session, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
                                MailboxId mailboxId) {
             super(session, path, mailboxId);
@@ -327,6 +329,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public MailboxAdded(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -345,6 +348,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public MailboxRenamed(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -369,6 +373,7 @@ public interface MailboxListener {
         private final ACLDiff aclDiff;
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public MailboxACLUpdated(MailboxSession session, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
             super(session, path, mailboxId);
             this.aclDiff = aclDiff;
@@ -395,6 +400,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public MessageEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -413,6 +419,7 @@ public interface MailboxListener {
 
     abstract class MetaDataHoldingEvent extends MessageEvent {
 
+        @Deprecated
         public MetaDataHoldingEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -437,6 +444,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public Expunged(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -464,6 +472,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public FlagsUpdated(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
@@ -485,6 +494,7 @@ public interface MailboxListener {
          */
         private static final long serialVersionUID = 1L;
 
+        @Deprecated
         public Added(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             super(session, path, mailboxId);
         }
