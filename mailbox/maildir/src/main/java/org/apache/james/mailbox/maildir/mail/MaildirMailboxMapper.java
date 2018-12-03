@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
@@ -198,7 +197,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                         FileUtils.forceMkdir(originalFolder.getCurFolder());
                         FileUtils.forceMkdir(originalFolder.getNewFolder());
                         FileUtils.forceMkdir(originalFolder.getTmpFolder());
-                        originalFolder.setMailboxId(MaildirId.of(Math.abs(new Random().nextInt())));
+                        originalFolder.setMailboxId(MaildirId.random());
                     } catch (IOException e) {
                         throw new MailboxException("Failed to save Mailbox " + mailbox, e);
                     }

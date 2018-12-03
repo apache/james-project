@@ -21,6 +21,8 @@ package org.apache.james.mailbox.maildir;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.UUID;
+
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
 import org.junit.Before;
@@ -28,9 +30,9 @@ import org.junit.Test;
 
 public class MaildirMailboxIdDeserializerTest {
 
-    private static final String SERIALIZED_ID = "123";
+    private static final String SERIALIZED_ID = "2f3a4fcc-ca64-36e3-9bcf-33e92dd93135";
     private static final String MALFORMED_SERIALIZED_ID = "az";
-    private static final MaildirId MAILDIR_ID = MaildirId.of(Integer.valueOf(SERIALIZED_ID));
+    private static final MaildirId MAILDIR_ID = MaildirId.of(UUID.fromString(SERIALIZED_ID));
 
     private MailboxIdDeserializer mailboxIdDeserializer;
 

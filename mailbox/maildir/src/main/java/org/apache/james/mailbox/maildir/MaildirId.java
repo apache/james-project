@@ -19,7 +19,8 @@
 package org.apache.james.mailbox.maildir;
 
 import java.io.Serializable;
-import java.security.SecureRandom;
+import java.util.Objects;
+import java.util.UUID;
 
 import org.apache.james.mailbox.model.MailboxId;
 
@@ -28,64 +29,50 @@ public class MaildirId implements MailboxId, Serializable {
     public static class Factory implements MailboxId.Factory {
         @Override
         public MaildirId fromString(String serialized) {
-            return of(Integer.valueOf(serialized));
+            return MaildirId.fromString(serialized);
         }
     }
 
-    private static final SecureRandom RANDOM = new SecureRandom();
-
     public static MaildirId random() {
-        return MaildirId.of(Math.abs(RANDOM.nextInt()));
+        return MaildirId.of(UUID.randomUUID());
     }
 
-    public static MaildirId of(int id) {
+    public static MaildirId of(UUID id) {
         return new MaildirId(id);
     }
 
-    private final int id;
-
-    private MaildirId(int id) {
-        this.id = id;
+    public static MaildirId fromString(String serialized) {
+        return of(UUID.fromString(serialized));
     }
 
-    public int getRawId() {
-        return id;
+    private final UUID id;
+
+    private MaildirId(UUID id) {
+        this.id = id;
     }
 
     @Override
     public String serialize() {
-        return String.valueOf(id);
+        return id.toString();
     }
 
     @Override
     public String toString() {
-        return String.valueOf(id);
-    }
-    
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + id;
-        return result;
+        return id.toString();
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    public final boolean equals(Object o) {
+        if (o instanceof MaildirId) {
+            MaildirId maildirId = (MaildirId) o;
+
+            return Objects.equals(this.id, maildirId.id);
         }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        MaildirId other = (MaildirId) obj;
-        if (id != other.id) {
-            return false;
-        }
-        return true;
+        return false;
     }
 
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
+    }
 }

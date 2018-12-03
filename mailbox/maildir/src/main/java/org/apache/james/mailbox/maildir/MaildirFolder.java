@@ -27,6 +27,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -39,6 +40,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
@@ -324,12 +326,9 @@ public class MaildirFolder {
             saveMailboxId(maildirId);
             return maildirId;
         }
-        try (FileInputStream fis = new FileInputStream(mailboxIdFile);
-             InputStreamReader isr = new InputStreamReader(fis)) {
-            char[] mailboxId = new char[20];
-            int len = isr.read(mailboxId);
-            int idAsInt = Integer.parseInt(String.valueOf(mailboxId, 0, len).trim());
-            return MaildirId.of(idAsInt);
+        try (FileInputStream fileInputStream = new FileInputStream(mailboxIdFile)) {
+            String serializedMaildirId = IOUtils.toString(fileInputStream, StandardCharsets.UTF_8);
+            return MaildirId.fromString(serializedMaildirId);
         }
     }
 
@@ -343,7 +342,7 @@ public class MaildirFolder {
             throw new IOException("Could not create file " + mailboxIdFile);
         }
         try (FileOutputStream fos = new FileOutputStream(mailboxIdFile)) {
-            fos.write(String.valueOf(id.getRawId()).getBytes());
+            fos.write(id.serialize().getBytes(StandardCharsets.UTF_8));
         }
     }
     
