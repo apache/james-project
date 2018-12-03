@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.User;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxListener;
@@ -167,6 +168,6 @@ public class SelectedMailboxImplTest {
     private void emitEvent(MailboxListener mailboxListener) {
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
         result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        mailboxListener.event(new EventFactory().added(mock(MailboxSession.class), result, mailbox, ImmutableMap.of()));
+        mailboxListener.event(new EventFactory().added(0L, mock(User.class), result, mailbox, ImmutableMap.of()));
     }
 }

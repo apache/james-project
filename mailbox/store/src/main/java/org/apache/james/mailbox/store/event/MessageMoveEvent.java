@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.event;
 
 import java.util.Map;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -39,7 +40,8 @@ public class MessageMoveEvent implements Event {
 
     public static class Builder {
 
-        private MailboxSession session;
+        private long sessionId;
+        private User user;
         private MessageMoves messageMoves;
         private ImmutableMap.Builder<MessageUid, MailboxMessage> messagesBuilder;
 
@@ -48,7 +50,18 @@ public class MessageMoveEvent implements Event {
         }
 
         public Builder session(MailboxSession session) {
-            this.session = session;
+            this.sessionId = session.getSessionId();
+            this.user = session.getUser().getCoreUser();
+            return this;
+        }
+
+        public Builder sessionId(long sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+
+        public Builder user(User user) {
+            this.user = user;
             return this;
         }
 
@@ -63,22 +76,25 @@ public class MessageMoveEvent implements Event {
         }
 
         public MessageMoveEvent build() {
-            Preconditions.checkNotNull(session, "'session' is mandatory");
+            Preconditions.checkNotNull(sessionId, "'sessionId' is mandatory");
+            Preconditions.checkNotNull(user, "'user' is mandatory");
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
             ImmutableMap<MessageUid, MailboxMessage> messages = messagesBuilder.build();
 
-            return new MessageMoveEvent(session, messageMoves, messages);
+            return new MessageMoveEvent(sessionId, user, messageMoves, messages);
         }
     }
 
-    private final MailboxSession session;
+    private final long sessionId;
+    private final User user;
     private final MessageMoves messageMoves;
     private final Map<MessageUid, MailboxMessage> messages;
 
     @VisibleForTesting
-    MessageMoveEvent(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
-        this.session = session;
+    MessageMoveEvent(long sessionId, User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+        this.sessionId = sessionId;
+        this.user = user;
         this.messageMoves = messageMoves;
         this.messages = messages;
     }
@@ -89,7 +105,17 @@ public class MessageMoveEvent implements Event {
 
     @Override
     public MailboxSession getSession() {
-        return session;
+        throw new UnsupportedOperationException("wiil be removed");
+    }
+
+    @Override
+    public User getUser() {
+        return user;
+    }
+
+    @Override
+    public long getSessionId() {
+        return sessionId;
     }
 
     public MessageMoves getMessageMoves() {

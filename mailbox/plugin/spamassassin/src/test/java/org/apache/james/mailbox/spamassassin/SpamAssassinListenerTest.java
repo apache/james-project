@@ -251,7 +251,8 @@ public class SpamAssassinListenerTest {
         SimpleMailboxMessage message = createMessage(inboxId);
         EventFactory eventFactory = new EventFactory();
         AddedImpl addedEvent = eventFactory.new AddedImpl(
-                MAILBOX_SESSION,
+                MAILBOX_SESSION.getSessionId(),
+                MAILBOX_SESSION.getUser().getCoreUser(),
                 inbox,
                 ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
                 ImmutableMap.of(MessageUid.of(45), message));
@@ -266,7 +267,8 @@ public class SpamAssassinListenerTest {
         SimpleMailboxMessage message = createMessage(mailboxId1);
         EventFactory eventFactory = new EventFactory();
         AddedImpl addedEvent = eventFactory.new AddedImpl(
-                MAILBOX_SESSION,
+                MAILBOX_SESSION.getSessionId(),
+                MAILBOX_SESSION.getUser().getCoreUser(),
                 mailbox1,
                 ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
                 ImmutableMap.of(MessageUid.of(45), message));

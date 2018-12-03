@@ -64,12 +64,12 @@ public interface MailboxListener {
 
     /**
      * Informs this listener about the given event.
-     * 
+     *
      * @param event
      *            not null
      */
     void event(Event event);
-    
+
     interface QuotaEvent extends Event {
         QuotaRoot getQuotaRoot();
     }
@@ -198,6 +198,7 @@ public interface MailboxListener {
         private final MailboxPath path;
         private final MailboxId mailboxId;
         private final User user;
+        private final long sessionId;
 
         public MailboxEvent(MailboxSession session, MailboxPath path, MailboxId mailboxId) {
             this.session = session;
@@ -208,13 +209,17 @@ public interface MailboxListener {
                 .map(MailboxSession::getUser)
                 .map(MailboxSession.User::getCoreUser)
                 .orElse(null);
+            this.sessionId = Optional.ofNullable(session)
+                .map(MailboxSession::getSessionId)
+                .orElse(0L);
         }
 
-        public MailboxEvent(User user, MailboxPath path, MailboxId mailboxId) {
+        public MailboxEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             this.user = user;
             this.path = path;
             this.mailboxId = mailboxId;
             this.session = new DummyMailboxSession();
+            this.sessionId = sessionId;
         }
 
         /**
@@ -232,7 +237,7 @@ public interface MailboxListener {
         /**
          * Gets the {@link MailboxSession} in which's context the {@link MailboxEvent}
          * happened
-         * 
+         *
          * @return session
          */
         @Override
@@ -241,8 +246,19 @@ public interface MailboxListener {
         }
 
         /**
+         * Gets the sessionId in which's context the {@link MailboxEvent}
+         * happened
+         *
+         * @return sessionId
+         */
+        @Override
+        public long getSessionId() {
+            return sessionId;
+        }
+
+        /**
          * Return the path of the Mailbox this event belongs to.
-         * 
+         *
          * @return path
          */
         public MailboxPath getMailboxPath() {
@@ -265,7 +281,7 @@ public interface MailboxListener {
     class MailboxDeletion extends MailboxEvent {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -281,9 +297,9 @@ public interface MailboxListener {
             this.totalDeletedSize = totalDeletedSize;
         }
 
-        public MailboxDeletion(User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
+        public MailboxDeletion(long sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
                                MailboxId mailboxId) {
-            super(user, path, mailboxId);
+            super(sessionId, user, path, mailboxId);
             this.quotaRoot = quotaRoot;
             this.deletedMessageCOunt = deletedMessageCOunt;
             this.totalDeletedSize = totalDeletedSize;
@@ -307,7 +323,7 @@ public interface MailboxListener {
      */
     class MailboxAdded extends MailboxEvent {
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -315,8 +331,8 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MailboxAdded(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public MailboxAdded(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
     }
 
@@ -325,7 +341,7 @@ public interface MailboxListener {
      */
     abstract class MailboxRenamed extends MailboxEvent {
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -333,13 +349,13 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MailboxRenamed(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public MailboxRenamed(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         /**
          * Gets the new name for this mailbox.
-         * 
+         *
          * @return name, not null
          */
         public abstract MailboxPath getNewPath();
@@ -358,8 +374,8 @@ public interface MailboxListener {
             this.aclDiff = aclDiff;
         }
 
-        public MailboxACLUpdated(User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public MailboxACLUpdated(long sessionId, User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
             this.aclDiff = aclDiff;
         }
 
@@ -368,14 +384,14 @@ public interface MailboxListener {
         }
 
     }
-    
+
     /**
      * A mailbox event related to a message.
      */
     abstract class MessageEvent extends MailboxEvent {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -383,13 +399,13 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MessageEvent(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public MessageEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         /**
          * Gets the message UIDs for the subject of this event.
-         * 
+         *
          * @return message uids
          */
         public abstract List<MessageUid> getUids();
@@ -401,8 +417,8 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public MetaDataHoldingEvent(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public MetaDataHoldingEvent(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         /**
@@ -417,7 +433,7 @@ public interface MailboxListener {
     abstract class Expunged extends MetaDataHoldingEvent {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -425,13 +441,13 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public Expunged(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public Expunged(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         /**
          * Return the flags which were set for the added message
-         * 
+         *
          * @return flags
          */
         @Override
@@ -444,7 +460,7 @@ public interface MailboxListener {
     abstract class FlagsUpdated extends MessageEvent {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -452,8 +468,8 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public FlagsUpdated(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public FlagsUpdated(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         public abstract List<UpdatedFlags> getUpdatedFlags();
@@ -465,7 +481,7 @@ public interface MailboxListener {
     abstract class Added extends MetaDataHoldingEvent {
 
         /**
-         * 
+         *
          */
         private static final long serialVersionUID = 1L;
 
@@ -473,8 +489,8 @@ public interface MailboxListener {
             super(session, path, mailboxId);
         }
 
-        public Added(User user, MailboxPath path, MailboxId mailboxId) {
-            super(user, path, mailboxId);
+        public Added(long sessionId, User user, MailboxPath path, MailboxId mailboxId) {
+            super(sessionId, user, path, mailboxId);
         }
 
         /**
