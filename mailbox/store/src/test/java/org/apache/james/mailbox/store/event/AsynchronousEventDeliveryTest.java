@@ -24,10 +24,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
@@ -53,23 +53,27 @@ public class AsynchronousEventDeliveryTest {
     }
 
     @Test
-    public void deliverShouldWork() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent((MailboxSession) null, null, null) {};
+    public void deliverShouldWork() {
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
 
     @Test
-    public void deliverShouldNotPropagateException() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null, null) {};
+    public void deliverShouldNotPropagateException() {
+        MockMailboxSession session = new MockMailboxSession("test");
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(session.getSessionId()),
+            session.getUser().getCoreUser(), null, null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
 
     @Test
-    public void deliverShouldWorkWhenThePoolIsFull() throws Exception {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(new MockMailboxSession("test"), null, null) {};
+    public void deliverShouldWorkWhenThePoolIsFull() {
+        MockMailboxSession session = new MockMailboxSession("test");
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(session.getSessionId()),
+            session.getUser().getCoreUser(), null, null) {};
         int operationCount = 10;
         for (int i = 0; i < operationCount; i++) {
             asynchronousEventDelivery.deliver(mailboxListener, event);

@@ -87,7 +87,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.decrease(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(expunged.getUser(),
+        dispatcher.quota(
+            expunged.getUser(),
             quotaRoot,
             quotaManager.getMessageQuota(quotaRoot),
             quotaManager.getStorageQuota(quotaRoot));
@@ -104,7 +105,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(added.getUser(),
+        dispatcher.quota(
+            added.getUser(),
             quotaRoot,
             quotaManager.getMessageQuota(quotaRoot),
             quotaManager.getStorageQuota(quotaRoot));

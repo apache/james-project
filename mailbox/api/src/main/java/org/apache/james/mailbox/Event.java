@@ -24,13 +24,9 @@ import org.apache.james.core.User;
 
 public interface Event {
 
-    MailboxSession getSession();
-
-    default User getUser() {
-        return getSession().getUser().getCoreUser();
-    }
+    User getUser();
 
     default Optional<MailboxSession.SessionId> getSessionId() {
-        return Optional.ofNullable(getSession().getSessionId());
+        return Optional.empty();
     }
 }

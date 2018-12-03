@@ -24,6 +24,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -124,7 +126,8 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION, MAILBOX_PATH, MAILBOX_ID) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(MAILBOX_SESSION.getSessionId()),
+            MAILBOX_SESSION.getUser().getCoreUser(), MAILBOX_PATH, MAILBOX_ID) {};
       
         testee.event(event);
 
@@ -133,13 +136,16 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnAdded() {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
+        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION.getSessionId(),
+            MAILBOX_SESSION.getUser().getCoreUser(),
+            ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
     public void testShouldNoSizeChangeAfterReset() {
-        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION, ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
+        testee.event(new FakeMailboxListenerAdded(MAILBOX_SESSION.getSessionId(),
+            MAILBOX_SESSION.getUser().getCoreUser(), ImmutableList.of(MessageUid.of(11)), MAILBOX_PATH, MAILBOX_ID));
         testee.resetEvents();
 
         assertThat(testee.isSizeChanged()).isFalse();
