@@ -121,7 +121,7 @@ class ReindexingRoutesTest {
             @Test
             void fullReprocessingShouldFailWithNoTask() {
                 when()
-                    .post("/mailboxIndex")
+                    .post("/mailboxes")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -132,7 +132,7 @@ class ReindexingRoutesTest {
             @Test
             void fullReprocessingShouldFailWithBadTask() {
                 when()
-                    .post("/mailboxIndex?task=bad")
+                    .post("/mailboxes?task=bad")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -146,7 +146,7 @@ class ReindexingRoutesTest {
             @Test
             void fullReprocessingShouldNotFailWhenNoMail() {
                 String taskId = with()
-                    .post("/mailboxIndex?task=reIndex")
+                    .post("/mailboxes?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -175,7 +175,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = with()
-                    .post("/mailboxIndex?task=reIndex")
+                    .post("/mailboxes?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -207,7 +207,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = with()
-                    .post("/mailboxIndex?task=reIndex")
+                    .post("/mailboxes?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -240,8 +240,10 @@ class ReindexingRoutesTest {
         class Validation {
             @Test
             void userReprocessingShouldFailWithNoTask() {
-                when()
-                    .post("/mailboxIndex/users/" + USERNAME)
+                given()
+                    .queryParam("user", USERNAME)
+                .when()
+                    .post("/mailboxes")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -251,8 +253,11 @@ class ReindexingRoutesTest {
 
             @Test
             void userReprocessingShouldFailWithBadTask() {
-                when()
-                    .post("/mailboxIndex/users/" + USERNAME + "?task=bad")
+                given()
+                    .queryParam("user", USERNAME)
+                    .queryParam("task", "bad")
+                .when()
+                    .post("/mailboxes")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -262,8 +267,11 @@ class ReindexingRoutesTest {
 
             @Test
             void userReprocessingShouldFailWithBadUser() {
-                when()
-                    .post("/mailboxIndex/users/bad@bad@bad?task=reIndex")
+                given()
+                    .queryParam("user", "bad@bad@bad")
+                    .queryParam("task", "reIndex")
+                .when()
+                    .post("/mailboxes")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -276,8 +284,11 @@ class ReindexingRoutesTest {
         class TaskDetails {
             @Test
             void userReprocessingShouldNotFailWhenNoMail() {
-                String taskId = with()
-                    .post("/mailboxIndex/users/" + USERNAME + "?task=reIndex")
+                String taskId = given()
+                    .queryParam("user", USERNAME)
+                    .queryParam("task", "reIndex")
+                .when()
+                    .post("/mailboxes")
                     .jsonPath()
                     .get("taskId");
 
@@ -306,8 +317,11 @@ class ReindexingRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession);
 
-                String taskId = with()
-                    .post("/mailboxIndex/users/" + USERNAME + "?task=reIndex")
+                String taskId = given()
+                    .queryParam("user", USERNAME)
+                    .queryParam("task", "reIndex")
+                .when()
+                    .post("/mailboxes")
                     .jsonPath()
                     .get("taskId");
 
@@ -339,8 +353,11 @@ class ReindexingRoutesTest {
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                         systemSession);
 
-                String taskId = with()
-                    .post("/mailboxIndex/users/" + USERNAME + "?task=reIndex")
+                String taskId = given()
+                    .queryParam("user", USERNAME)
+                    .queryParam("task", "reIndex")
+                .when()
+                    .post("/mailboxes")
                     .jsonPath()
                     .get("taskId");
 
@@ -378,7 +395,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize())
+                    .post("/mailboxes/" + mailboxId.serialize())
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -392,7 +409,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "?task=bad")
+                    .post("/mailboxes/" + mailboxId.serialize() + "?task=bad")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -403,7 +420,7 @@ class ReindexingRoutesTest {
             @Test
             void mailboxReprocessingShouldFailWithBadMailboxId() {
                 when()
-                    .post("/mailboxIndex/mailboxes/bad?task=reIndex")
+                    .post("/mailboxes/bad?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -414,7 +431,7 @@ class ReindexingRoutesTest {
             @Test
             void mailboxReprocessingShouldFailWithNonExistentMailboxId() {
                 when()
-                    .post("/mailboxIndex/mailboxes/36?task=reIndex")
+                    .post("/mailboxes/36?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .body("statusCode", is(404))
@@ -431,7 +448,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -461,7 +478,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -494,7 +511,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -532,7 +549,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "/mails/7")
+                    .post("/mailboxes/" + mailboxId.serialize() + "/mails/7")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -546,7 +563,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "/mails/7?task=bad")
+                    .post("/mailboxes/" + mailboxId.serialize() + "/mails/7?task=bad")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -557,7 +574,7 @@ class ReindexingRoutesTest {
             @Test
             void messageReprocessingShouldFailWithBadMailboxId() {
                 when()
-                    .post("/mailboxIndex/mailboxes/bad/mails/7?task=reIndex")
+                    .post("/mailboxes/bad/mails/7?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -568,7 +585,7 @@ class ReindexingRoutesTest {
             @Test
             void messageReprocessingShouldFailWithNonExistentMailboxId() {
                 when()
-                    .post("/mailboxIndex/mailboxes/36/mails/7?task=reIndex")
+                    .post("/mailboxes/36/mails/7?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .body("statusCode", is(404))
@@ -579,7 +596,7 @@ class ReindexingRoutesTest {
             @Test
             void messageReprocessingShouldFailWithBadUid() {
                 when()
-                    .post("/mailboxIndex/mailboxes/36/mails/bad?task=reIndex")
+                    .post("/mailboxes/36/mails/bad?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -596,7 +613,7 @@ class ReindexingRoutesTest {
                 MailboxId mailboxId = mailboxManager.createMailbox(INBOX, systemSession).get();
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "/mails/1?task=reIndex")
+                    .post("/mailboxes/" + mailboxId.serialize() + "/mails/1?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -625,7 +642,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "/mails/"
+                    .post("/mailboxes/" + mailboxId.serialize() + "/mails/"
                         + composedMessageId.getUid().asLong() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
@@ -658,7 +675,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/mailboxes/" + mailboxId.serialize() + "/mails/"
+                    .post("/mailboxes/" + mailboxId.serialize() + "/mails/"
                         + createdMessage.getUid().asLong() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
@@ -691,7 +708,7 @@ class ReindexingRoutesTest {
             @Test
             void messageIdReprocessingShouldFailWithNoTask() {
                 when()
-                    .post("/mailboxIndex/messages/7")
+                    .post("/messages/7")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -702,7 +719,7 @@ class ReindexingRoutesTest {
             @Test
             void messageIdReprocessingShouldFailWithBadTask() {
                 when()
-                    .post("/mailboxIndex/messages/7?task=bad")
+                    .post("/messages/7?task=bad")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -713,7 +730,7 @@ class ReindexingRoutesTest {
             @Test
             void messageIdReprocessingShouldFailWithBadMessageId() {
                 when()
-                    .post("/mailboxIndex/messages/bad?task=reIndex")
+                    .post("/messages/bad?task=reIndex")
                 .then()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
@@ -727,7 +744,7 @@ class ReindexingRoutesTest {
             @Test
             void messageIdReprocessingShouldNotFailWhenUidNotFound() {
                 String taskId = when()
-                    .post("/mailboxIndex/messages/1?task=reIndex")
+                    .post("/messages/1?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -755,7 +772,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
+                    .post("/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 
@@ -786,7 +803,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = when()
-                    .post("/mailboxIndex/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
+                    .post("/messages/" + composedMessageId.getMessageId().serialize() + "?task=reIndex")
                     .jsonPath()
                     .get("taskId");
 

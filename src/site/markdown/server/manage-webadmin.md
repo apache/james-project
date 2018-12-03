@@ -2117,7 +2117,7 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing all mails
 
 ```
-curl -XPOST http://ip:port/mailboxIndex?task=reIndex
+curl -XPOST http://ip:port/mailboxes?task=reIndex
 ```
 
 Will schedule a task for reIndexing all the mails stored on this James server.
@@ -2160,10 +2160,10 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing a user mails
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/users/bob@domain.com?task=reIndex
+curl -XPOST http://ip:port/mailboxes?task=reIndex,user=bob%40domain.com
 ```
 
-Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes.
+Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
 
 The response to that request will be the scheduled `taskId` :
 
@@ -2204,7 +2204,7 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing a mailbox mails
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/mailboxes/{mailboxId}?task=reIndex
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
 ```
 
 Will schedule a task for reIndexing all the mails in one mailbox.
@@ -2234,7 +2234,7 @@ The scheduled task will have the following type `mailboxReIndexing` and the foll
 
 ```
 {
-  "mailboxPath":"#private:bob@domain.com:INBOX",
+  "mailboxId":"{mailboxId}",
   "successfullyReprocessMailCount":18,
   "failedReprocessedMailCount": 1
 }
@@ -2250,7 +2250,7 @@ concurrent changes done during the reIndexing might be ignored.
 ### ReIndexing a single mail
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/mailboxes/{mailboxId}/uid/36?task=reIndex
+curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
 ```
 
 Will schedule a task for reIndexing a single email.
@@ -2280,7 +2280,7 @@ The scheduled task will have the following type `messageReIndexing` and the foll
 
 ```
 {
-  "mailboxPath":"#private:bob@domain.com:INBOX",
+  "mailboxId":"{mailboxId}",
   "uid":18
 }
 ```
@@ -2292,7 +2292,7 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 ### ReIndexing a single mail by messageId
 
 ```
-curl -XPOST http://ip:port/mailboxIndex/messages/{messageId}?task=reIndex
+curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
 ```
 
 Will schedule a task for reIndexing a single email in all the mailboxes containing it.

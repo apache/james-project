@@ -19,8 +19,6 @@
 
 package org.apache.james.webadmin.routes;
 
-import static org.apache.james.webadmin.routes.ReindexingRoutes.BASE_PATH;
-
 import javax.inject.Inject;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -50,11 +48,12 @@ import spark.Response;
 import spark.Service;
 
 @Api(tags = "MessageIdReIndexing")
-@Path("/mailboxIndex")
+@Path("/messages")
 @Produces("application/json")
 public class MessageIdReindexingRoutes implements Routes {
     private static final String MESSAGE_ID_PARAM = ":messageId";
-    private static final String MESSAGE_PATH = BASE_PATH + "/messages/" + MESSAGE_ID_PARAM;
+    private static final String BASE_PATH = "/messages";
+    private static final String MESSAGE_PATH = BASE_PATH + "/" + MESSAGE_ID_PARAM;
 
     private final TaskManager taskManager;
     private final MessageId.Factory messageIdFactory;
@@ -62,7 +61,7 @@ public class MessageIdReindexingRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    public MessageIdReindexingRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    MessageIdReindexingRoutes(TaskManager taskManager, MessageId.Factory messageIdFactory, MessageIdReIndexer reIndexer, JsonTransformer jsonTransformer) {
         this.taskManager = taskManager;
         this.messageIdFactory = messageIdFactory;
         this.reIndexer = reIndexer;
@@ -80,7 +79,7 @@ public class MessageIdReindexingRoutes implements Routes {
     }
 
     @POST
-    @Path("/messages/{messageId}")
+    @Path("/{messageId}")
     @ApiOperation(value = "Re-indexes one email in the different mailboxes containing it")
     @ApiImplicitParams({
         @ApiImplicitParam(

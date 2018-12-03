@@ -39,6 +39,8 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.base.Strings;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -49,8 +51,8 @@ import spark.Request;
 import spark.Response;
 import spark.Service;
 
-@Api(tags = "ReIndexing")
-@Path("/mailboxIndex")
+@Api(tags = "ReIndexing (mailboxes)")
+@Path("/mailboxes")
 @Produces("application/json")
 public class ReindexingRoutes implements Routes {
     @FunctionalInterface
@@ -58,12 +60,11 @@ public class ReindexingRoutes implements Routes {
         Task generate() throws MailboxException;
     }
 
-    static final String BASE_PATH = "/mailboxIndex";
-    private static final String USER_PARAM = ":user";
+    private static final String BASE_PATH = "/mailboxes";
+    private static final String USER_QUERY_PARAM = "user";
     private static final String MAILBOX_PARAM = ":mailbox";
     private static final String UID_PARAM = ":uid";
-    private static final String USER_PATH = BASE_PATH + "/users/" + USER_PARAM;
-    private static final String MAILBOX_PATH = BASE_PATH + "/mailboxes/" + MAILBOX_PARAM;
+    private static final String MAILBOX_PATH = BASE_PATH + "/" + MAILBOX_PARAM;
     private static final String MESSAGE_PATH = MAILBOX_PATH + "/mails/" + UID_PARAM;
 
     private final TaskManager taskManager;
@@ -72,7 +73,7 @@ public class ReindexingRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    public ReindexingRoutes(TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    ReindexingRoutes(TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
         this.taskManager = taskManager;
         this.mailboxIdFactory = mailboxIdFactory;
         this.reIndexer = reIndexer;
@@ -87,7 +88,6 @@ public class ReindexingRoutes implements Routes {
     @Override
     public void define(Service service) {
         service.post(BASE_PATH, this::reIndexAll, jsonTransformer);
-        service.post(USER_PATH, this::reIndexUser, jsonTransformer);
         service.post(MAILBOX_PATH, this::reIndexMailbox, jsonTransformer);
         service.post(MESSAGE_PATH, this::reIndexMessage, jsonTransformer);
     }
@@ -103,7 +103,14 @@ public class ReindexingRoutes implements Routes {
             dataType = "String",
             defaultValue = "none",
             example = "?task=reIndex",
-            value = "Compulsory. Only supported value is `reIndex`")
+            value = "Compulsory. Only supported value is `reIndex`"),
+        @ApiImplicitParam(
+            name = "user",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?user=toto%40domain.tld",
+            value = "optional. If present, only mailboxes of that user will be reIndexed.")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
@@ -111,43 +118,14 @@ public class ReindexingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
     private TaskIdDto reIndexAll(Request request, Response response) {
-        return wrap(request, response,
-            () -> reIndexer.reIndex());
+        if (Strings.isNullOrEmpty(request.queryParams(USER_QUERY_PARAM))) {
+            return wrap(request, response, reIndexer::reIndex);
+        }
+        return wrap(request, response, () -> reIndexer.reIndex(extractUser(request)));
     }
 
     @POST
-    @Path("/users/{user}")
-    @ApiOperation(value = "Re-indexes all the mails of a user")
-    @ApiImplicitParams({
-        @ApiImplicitParam(
-            required = true,
-            name = "task",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?task=reIndex",
-            value = "Compulsory. Only supported value is `reIndex`"),
-        @ApiImplicitParam(
-            required = true,
-            name = "user",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "benoit@apache.org",
-            value = "Compulsory. Needs to be a valid username")
-    })
-    @ApiResponses(value = {
-        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
-        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
-    })
-    private TaskIdDto reIndexUser(Request request, Response response) {
-        return wrap(request, response,
-            () -> reIndexer.reIndex(extractUser(request)));
-    }
-
-    @POST
-    @Path("/mailboxes/{mailboxId}")
+    @Path("/{mailboxId}")
     @ApiOperation(value = "Re-indexes all the mails in a mailbox")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -185,7 +163,7 @@ public class ReindexingRoutes implements Routes {
     }
 
     @POST
-    @Path("/mailboxes/{mailboxId}/mails/{uid}")
+    @Path("/{mailboxId}/mails/{uid}")
     @ApiOperation(value = "Re-indexes a single email")
     @ApiImplicitParams({
         @ApiImplicitParam(
@@ -244,7 +222,7 @@ public class ReindexingRoutes implements Routes {
 
     private User extractUser(Request request) {
         try {
-            return User.fromUsername(request.params(USER_PARAM));
+            return User.fromUsername(request.queryParams(USER_QUERY_PARAM));
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

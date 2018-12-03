@@ -71,7 +71,7 @@ public class WebAdminServerIntegrationTest {
 
     @ClassRule
     public static DockerCassandraRule cassandra = new DockerCassandraRule();
-    
+
     @Rule
     public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
 
@@ -327,7 +327,7 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
             .body(containsString("\"tags\":[\"Address Groups\"]"))
-            .body(containsString("{\"name\":\"ReIndexing\"}"))
+            .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
             .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 
