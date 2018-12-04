@@ -35,6 +35,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.User;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,12 +93,12 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error on scanning is detected
      */
-    public SpamAssassinResult scanMail(MimeMessage message, String user) throws MessagingException {
+    public SpamAssassinResult scanMail(MimeMessage message, User user) throws MessagingException {
         return metricFactory.runPublishingTimerMetric(
             "spamAssassin-check",
             Throwing.supplier(
                 () -> scanMailWithAdditionalHeaders(message,
-                    "User: " + user))
+                    "User: " + user.asString()))
                 .sneakyThrow());
     }
 
@@ -187,7 +188,7 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error occured during learning.
      */
-    public boolean learnAsSpam(InputStream message, String user) throws MessagingException {
+    public boolean learnAsSpam(InputStream message, User user) throws MessagingException {
         return metricFactory.runPublishingTimerMetric(
             "spamAssassin-spam-report",
             Throwing.supplier(
@@ -203,7 +204,7 @@ public class SpamAssassinInvoker {
      * @throws MessagingException
      *             if an error occured during learning.
      */
-    public boolean learnAsHam(InputStream message, String user) throws MessagingException {
+    public boolean learnAsHam(InputStream message, User user) throws MessagingException {
         return metricFactory.runPublishingTimerMetric(
             "spamAssassin-ham-report",
             Throwing.supplier(
@@ -211,7 +212,7 @@ public class SpamAssassinInvoker {
                 .sneakyThrow());
     }
 
-    private boolean reportMessageAs(InputStream message, String user, MessageClass messageClass) throws MessagingException {
+    private boolean reportMessageAs(InputStream message, User user, MessageClass messageClass) throws MessagingException {
         try (Socket socket = new Socket(spamdHost, spamdPort);
              OutputStream out = socket.getOutputStream();
              BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out);
@@ -227,7 +228,7 @@ public class SpamAssassinInvoker {
             writer.write(CRLF);
             writer.write("Set: local, remote");
             writer.write(CRLF);
-            writer.write("User: " + user);
+            writer.write("User: " + user.asString());
             writer.write(CRLF);
             writer.write(CRLF);
             writer.flush();

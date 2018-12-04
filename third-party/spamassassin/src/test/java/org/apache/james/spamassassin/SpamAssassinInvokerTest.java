@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.User;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(SpamAssassinExtension.class)
 public class SpamAssassinInvokerTest {
 
-    public static final String USER = "any@james";
+    public static final User USER = User.fromUsername("any@james");
     private SpamAssassin spamAssassin;
     private SpamAssassinInvoker testee;
 

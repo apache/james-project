@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.spamassassin.SpamAssassinInvoker;
 import org.apache.james.spamassassin.SpamAssassinResult;
@@ -106,7 +107,7 @@ public class SpamAssassin extends GenericMailet {
     }
 
     private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
-        SpamAssassinResult result = sa.scanMail(message, usersRepository.getUser(recipient));
+        SpamAssassinResult result = sa.scanMail(message, User.fromUsername(usersRepository.getUser(recipient)));
 
         // Add headers per recipient to mail object
         for (String key : result.getHeadersAsAttribute().keySet()) {
