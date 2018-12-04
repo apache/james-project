@@ -364,6 +364,7 @@ public abstract class MailboxManagerTest {
         private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
         private EventCollector listener;
         private MailboxPath inbox;
+        private MailboxId inboxId;
         private MessageManager inboxManager;
         private MailboxPath newPath;
 
@@ -374,7 +375,7 @@ public abstract class MailboxManagerTest {
             newPath = MailboxPath.forUser(USER_1, "specialMailbox");
 
             listener = new EventCollector();
-            mailboxManager.createMailbox(inbox, session);
+            inboxId = mailboxManager.createMailbox(inbox, session).get();
             inboxManager = mailboxManager.getMailbox(inbox, session);
         }
 
@@ -390,7 +391,7 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.MailboxDeletion) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
                 .satisfies(event -> assertThat(event.getDeletedMessageCount()).isEqualTo(QuotaCount.count(0)))
                 .satisfies(event -> assertThat(event.getTotalDeletedSize()).isEqualTo(QuotaSize.size(0)));
@@ -401,14 +402,14 @@ public abstract class MailboxManagerTest {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
             mailboxManager.addGlobalListener(listener, session);
 
-            mailboxManager.createMailbox(newPath, session);
+            Optional<MailboxId> newId = mailboxManager.createMailbox(newPath, session);
 
             assertThat(listener.getEvents())
                 .filteredOn(event -> event instanceof MailboxListener.MailboxAdded)
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.MailboxAdded) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath));
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(newId.get()));
         }
 
         @Test
@@ -446,7 +447,7 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.Added) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
@@ -463,7 +464,7 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.Expunged) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
@@ -479,14 +480,14 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.FlagsUpdated) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
         @Test
         void moveShouldFireAddedEventInTargetMailbox() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Move));
-            mailboxManager.createMailbox(newPath, session);
+            Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
             mailboxManager.addGlobalListener(listener, session);
@@ -497,7 +498,7 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.Added) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(targetMailboxId.get()))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
@@ -515,13 +516,13 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.Expunged) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(inbox))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
         @Test
         void copyShouldFireAddedEventInTargetMailbox() throws Exception {
-            mailboxManager.createMailbox(newPath, session);
+            Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
             mailboxManager.addGlobalListener(listener, session);
@@ -532,7 +533,7 @@ public abstract class MailboxManagerTest {
                 .hasSize(1)
                 .extracting(event -> (MailboxListener.Added) event)
                 .element(0)
-                .satisfies(event -> assertThat(event.getMailboxPath()).isEqualTo(newPath))
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(targetMailboxId.get()))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
         }
 
