@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.store.event;
 
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
@@ -41,7 +40,6 @@ public class MessageMoveEvent implements Event {
 
     public static class Builder {
 
-        private Optional<MailboxSession.SessionId> sessionId;
         private User user;
         private MessageMoves messageMoves;
         private ImmutableMap.Builder<MessageUid, MailboxMessage> messagesBuilder;
@@ -51,13 +49,7 @@ public class MessageMoveEvent implements Event {
         }
 
         public Builder session(MailboxSession session) {
-            this.sessionId = Optional.ofNullable(session.getSessionId());
             this.user = session.getUser().getCoreUser();
-            return this;
-        }
-
-        public Builder sessionId(Optional<MailboxSession.SessionId> sessionId) {
-            this.sessionId = sessionId;
             return this;
         }
 
@@ -77,24 +69,21 @@ public class MessageMoveEvent implements Event {
         }
 
         public MessageMoveEvent build() {
-            Preconditions.checkNotNull(sessionId, "'sessionId' is mandatory");
             Preconditions.checkNotNull(user, "'user' is mandatory");
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
             ImmutableMap<MessageUid, MailboxMessage> messages = messagesBuilder.build();
 
-            return new MessageMoveEvent(sessionId, user, messageMoves, messages);
+            return new MessageMoveEvent(user, messageMoves, messages);
         }
     }
 
-    private final Optional<MailboxSession.SessionId> sessionId;
     private final User user;
     private final MessageMoves messageMoves;
     private final Map<MessageUid, MailboxMessage> messages;
 
     @VisibleForTesting
-    MessageMoveEvent(Optional<MailboxSession.SessionId> sessionId, User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
-        this.sessionId = sessionId;
+    MessageMoveEvent(User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
         this.user = user;
         this.messageMoves = messageMoves;
         this.messages = messages;
@@ -107,11 +96,6 @@ public class MessageMoveEvent implements Event {
     @Override
     public User getUser() {
         return user;
-    }
-
-    @Override
-    public Optional<MailboxSession.SessionId> getSessionId() {
-        return sessionId;
     }
 
     public MessageMoves getMessageMoves() {

@@ -21,7 +21,6 @@ package org.apache.james.imap.processor.base;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -39,7 +38,7 @@ public class FakeMailboxListenerAdded extends MailboxListener.Added {
     public List<MessageUid> uids;
 
     public FakeMailboxListenerAdded(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, MailboxPath path, MailboxId mailboxId) {
-        super(Optional.ofNullable(sessionId), user, path, mailboxId);
+        super(sessionId, user, path, mailboxId);
         this.uids = uids;
     }
 

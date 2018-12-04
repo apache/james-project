@@ -25,7 +25,6 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -59,14 +58,14 @@ public class MixedEventDeliveryTest {
     @Test
     public void deliverShouldWorkOnSynchronousListeners() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null, null) {};
         mixedEventDelivery.deliver(listener, event);
         verify(listener).event(event);
     }
 
     @Test
     public void deliverShouldEventuallyDeliverOnAsynchronousListeners() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         mixedEventDelivery.deliver(listener, event);
         verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
@@ -74,7 +73,7 @@ public class MixedEventDeliveryTest {
 
     @Test(timeout = ONE_MINUTE)
     public void deliverShouldNotBlockOnAsynchronousListeners() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null, null) {};
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         final CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {

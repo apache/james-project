@@ -23,8 +23,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import java.util.Optional;
-
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -44,7 +42,7 @@ public class SynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWork() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null, null) {};
         synchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener).event(event);
     }
@@ -52,7 +50,7 @@ public class SynchronousEventDeliveryTest {
     @Test
     public void deliverShouldNotPropagateException() {
         MockMailboxSession session = new MockMailboxSession("test");
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(session.getSessionId()),
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session.getSessionId(),
             session.getUser().getCoreUser(),null, null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         synchronousEventDelivery.deliver(mailboxListener, event);

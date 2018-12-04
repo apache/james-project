@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.MailboxListener;
@@ -54,7 +53,7 @@ public class AsynchronousEventDeliveryTest {
 
     @Test
     public void deliverShouldWork() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, null, null) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, null, null) {};
         asynchronousEventDelivery.deliver(mailboxListener, event);
         verify(mailboxListener, timeout(ONE_MINUTE)).event(event);
     }
@@ -62,7 +61,7 @@ public class AsynchronousEventDeliveryTest {
     @Test
     public void deliverShouldNotPropagateException() {
         MockMailboxSession session = new MockMailboxSession("test");
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(session.getSessionId()),
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session.getSessionId(),
             session.getUser().getCoreUser(), null, null) {};
         doThrow(new RuntimeException()).when(mailboxListener).event(event);
         asynchronousEventDelivery.deliver(mailboxListener, event);
@@ -72,7 +71,7 @@ public class AsynchronousEventDeliveryTest {
     @Test
     public void deliverShouldWorkWhenThePoolIsFull() {
         MockMailboxSession session = new MockMailboxSession("test");
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.ofNullable(session.getSessionId()),
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session.getSessionId(),
             session.getUser().getCoreUser(), null, null) {};
         int operationCount = 10;
         for (int i = 0; i < operationCount; i++) {

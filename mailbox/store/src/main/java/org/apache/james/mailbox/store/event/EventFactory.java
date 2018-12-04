@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.event;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.SortedMap;
 
 import org.apache.james.core.User;
@@ -55,7 +54,7 @@ public class EventFactory {
         private final Map<MessageUid, MailboxMessage> availableMessages;
         private final Mailbox mailbox;
 
-        public AddedImpl(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids, Map<MessageUid, MailboxMessage> availableMessages) {
+        public AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids, Map<MessageUid, MailboxMessage> availableMessages) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.added = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
@@ -86,7 +85,7 @@ public class EventFactory {
         private final Map<MessageUid, MessageMetaData> uids;
         private final Mailbox mailbox;
 
-        public ExpungedImpl(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
+        public ExpungedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
@@ -115,7 +114,7 @@ public class EventFactory {
 
         private final List<UpdatedFlags> uFlags;
 
-        public FlagsUpdatedImpl(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
+        public FlagsUpdatedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableList.copyOf(uids);
             this.uFlags = ImmutableList.copyOf(uFlags);
@@ -142,7 +141,7 @@ public class EventFactory {
     public final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion implements MailboxAware {
         private final Mailbox mailbox;
 
-        public MailboxDeletionImpl(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
+        public MailboxDeletionImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
             super(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
             this.mailbox = mailbox;
         }
@@ -159,7 +158,7 @@ public class EventFactory {
 
         private final Mailbox mailbox;
 
-        public MailboxAddedImpl(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox) {
+        public MailboxAddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.mailbox = mailbox;
         }
@@ -177,7 +176,7 @@ public class EventFactory {
         private final MailboxPath newPath;
         private final Mailbox newMailbox;
 
-        public MailboxRenamedEventImpl(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
+        public MailboxRenamedEventImpl(MailboxSession.SessionId sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
             super(sessionId, user, oldPath, newMailbox.getMailboxId());
             this.newPath = new StoreMailboxPath(newMailbox);
             this.newMailbox = newMailbox;
@@ -194,64 +193,67 @@ public class EventFactory {
         }
     }
 
-    public MailboxListener.Added added(Optional<MailboxSession.SessionId> maybeSessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
-        return new AddedImpl(maybeSessionId, user, mailbox, uids, cachedMessages);
+    public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
+        return added(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox, cachedMessages);
     }
 
     public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
-        return added(Optional.ofNullable(sessionId), user, uids, mailbox, cachedMessages);
+        return new AddedImpl(sessionId, user, mailbox, uids, cachedMessages);
     }
 
-    public MailboxListener.Expunged expunged(Optional<MailboxSession.SessionId> sessionId, User user, Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
+    public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
+        return expunged(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox);
+    }
+
+    public MailboxListener.Expunged expunged(MailboxSession.SessionId sessionId, User user, Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         return new ExpungedImpl(sessionId, user, mailbox, uids);
     }
 
-    public MailboxListener.Expunged expunged(MailboxSession.SessionId sessionId, User user,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return expunged(Optional.ofNullable(sessionId), user, uids, mailbox);
-    }
-
-    public MailboxListener.FlagsUpdated flagsUpdated(Optional<MailboxSession.SessionId> sessionId, User user, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return new FlagsUpdatedImpl(sessionId, user, mailbox, uids, uflags);
+    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
+        return flagsUpdated(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox, uflags);
     }
 
     public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return flagsUpdated(Optional.ofNullable(sessionId), user, uids, mailbox, uflags);
+        return new FlagsUpdatedImpl(sessionId, user, mailbox, uids, uflags);
     }
 
-    public MailboxListener.MailboxRenamed mailboxRenamed(Optional<MailboxSession.SessionId> sessionId, User user, MailboxPath from, Mailbox to) {
-        return new MailboxRenamedEventImpl(sessionId, user, from, to);
+    public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
+        return mailboxRenamed(session.getSessionId(), session.getUser().getCoreUser(), from, to);
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath from, Mailbox to) {
-        return mailboxRenamed(Optional.ofNullable(sessionId), user, from, to);
+        return new MailboxRenamedEventImpl(sessionId, user, from, to);
     }
 
-    public MailboxListener.MailboxDeletion mailboxDeleted(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot,
+    public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot,
                                                           QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return new MailboxDeletionImpl(sessionId, user, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
+        return mailboxDeleted(session.getSessionId(), session.getUser().getCoreUser(), mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
     }
 
     public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot,
                                                           QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return new MailboxDeletionImpl(Optional.ofNullable(sessionId), user, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
+        return new MailboxDeletionImpl(sessionId, user, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
     }
 
-    public MailboxListener.MailboxAdded mailboxAdded(Optional<MailboxSession.SessionId> sessionId, User user, Mailbox mailbox) {
-        return new MailboxAddedImpl(sessionId, user, mailbox);
+    public MailboxListener.MailboxAdded mailboxAdded(MailboxSession session, Mailbox mailbox) {
+        return mailboxAdded(session.getSessionId(), session.getUser().getCoreUser(), mailbox);
     }
 
     public MailboxListener.MailboxAdded mailboxAdded(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
-        return new MailboxAddedImpl(Optional.ofNullable(sessionId), user, mailbox);
+        return new MailboxAddedImpl(sessionId, user, mailbox);
+    }
+
+    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
+        return aclUpdated(session.getSessionId(), session.getUser().getCoreUser(), mailboxPath, aclDiff, mailboxId);
     }
 
     public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        return new MailboxListener.MailboxACLUpdated(Optional.ofNullable(sessionId), user, mailboxPath, aclDiff, mailboxId);
+        return new MailboxListener.MailboxACLUpdated(sessionId, user, mailboxPath, aclDiff, mailboxId);
     }
 
-    public MessageMoveEvent moved(MailboxSession.SessionId sessionId, User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+    public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
         return MessageMoveEvent.builder()
-                .sessionId(Optional.ofNullable(sessionId))
-                .user(user)
+                .user(session.getUser().getCoreUser())
                 .messageMoves(messageMoves)
                 .messages(messages)
                 .build();

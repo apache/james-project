@@ -18,15 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
-import java.util.Optional;
-
 import org.apache.james.core.User;
 
 public interface Event {
 
     User getUser();
-
-    default Optional<MailboxSession.SessionId> getSessionId() {
-        return Optional.empty();
-    }
 }

@@ -86,8 +86,7 @@ public class MailboxAnnotationListenerTest {
         QuotaRoot quotaRoot = QuotaRoot.quotaRoot("root", Optional.empty());
         QuotaCount quotaCount = QuotaCount.count(123);
         QuotaSize quotaSize = QuotaSize.size(456);
-        deleteEvent = eventFactory.mailboxDeleted(mailboxSession.getSessionId(), mailboxSession.getUser().getCoreUser(),
-            mailbox, quotaRoot, quotaCount, quotaSize);
+        deleteEvent = eventFactory.mailboxDeleted(mailboxSession, mailbox, quotaRoot, quotaCount, quotaSize);
 
         when(mailboxManager.createSystemSession(deleteEvent.getUser().asString()))
             .thenReturn(mailboxSession);
@@ -96,7 +95,7 @@ public class MailboxAnnotationListenerTest {
 
     @Test
     public void eventShouldDoNothingIfDoNotHaveMailboxDeletionEvent() {
-        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(Optional.empty(), null, MAILBOX_PATH, MAILBOX_ID) {};
+        MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(null, null, MAILBOX_PATH, MAILBOX_ID) {};
         listener.event(event);
 
         verifyNoMoreInteractions(mailboxSessionMapperFactory);
