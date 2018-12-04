@@ -17,15 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.utils;
+package org.apache.james.mailbox;
 
 import java.util.stream.Stream;
 
-import org.apache.james.jmap.exceptions.MailboxRoleNotFoundException;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
 
 public interface SystemMailboxesProvider {
     Stream<MessageManager> getMailboxByRole(Role aRole, MailboxSession session) throws MailboxException;

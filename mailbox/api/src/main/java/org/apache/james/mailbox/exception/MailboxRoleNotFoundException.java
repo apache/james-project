@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.exceptions;
+package org.apache.james.mailbox.exception;
 
 import org.apache.james.mailbox.Role;
 
