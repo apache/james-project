@@ -33,14 +33,18 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
+import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.EventFactory.AddedImpl;
 import org.apache.james.mailbox.store.event.MessageMoveEvent;
@@ -57,10 +61,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class SpamAssassinListenerTest {
-
     public static final String USER = "user";
-    public static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession(USER);
-    public static final int UID_VALIDITY = 43;
+    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession(USER);
+    private static final int UID_VALIDITY = 43;
     private SpamAssassin spamAssassin;
     private SpamAssassinListener listener;
     private SimpleMailbox inbox;
@@ -74,9 +77,12 @@ public class SpamAssassinListenerTest {
     private MailboxMapper mailboxMapper;
 
     @Before
-    public void setup() throws MailboxException {
+    public void setup() throws Exception {
+        StoreMailboxManager mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        SystemMailboxesProviderImpl systemMailboxesProvider = new SystemMailboxesProviderImpl(mailboxManager);
+
         spamAssassin = mock(SpamAssassin.class);
-        InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
+        MailboxSessionMapperFactory mapperFactory = mailboxManager.getMapperFactory();
         mailboxMapper = mapperFactory.getMailboxMapper(MAILBOX_SESSION);
         inbox = new SimpleMailbox(MailboxPath.forUser(USER, DefaultMailboxes.INBOX), UID_VALIDITY);
         inboxId = mailboxMapper.save(inbox);
@@ -87,7 +93,7 @@ public class SpamAssassinListenerTest {
         spamCapitalMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
         trashMailboxId = mailboxMapper.save(new SimpleMailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
-        listener = new SpamAssassinListener(spamAssassin, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
+        listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, MailboxListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @After

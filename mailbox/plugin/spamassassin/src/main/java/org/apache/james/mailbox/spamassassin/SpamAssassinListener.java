@@ -25,10 +25,9 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.Role;
+import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MessageMoveEvent;
 import org.apache.james.mailbox.store.event.SpamEventListener;
@@ -47,13 +46,13 @@ public class SpamAssassinListener implements SpamEventListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListener.class);
 
     private final SpamAssassin spamAssassin;
-    private final MailboxSessionMapperFactory mapperFactory;
+    private final SystemMailboxesProvider systemMailboxesProvider;
     private final ExecutionMode executionMode;
 
     @Inject
-    public SpamAssassinListener(SpamAssassin spamAssassin, MailboxSessionMapperFactory mapperFactory, ExecutionMode executionMode) {
+    SpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, ExecutionMode executionMode) {
         this.spamAssassin = spamAssassin;
-        this.mapperFactory = mapperFactory;
+        this.systemMailboxesProvider = systemMailboxesProvider;
         this.executionMode = executionMode;
     }
 
@@ -83,7 +82,7 @@ public class SpamAssassinListener implements SpamEventListener {
         }
         if (event instanceof EventFactory.AddedImpl) {
             EventFactory.AddedImpl addedEvent = (EventFactory.AddedImpl) event;
-            if (addedEvent.getMailboxPath().isInbox()) {
+            if (isAppendedToInbox(addedEvent)) {
                 List<InputStream> contents = addedEvent.getAvailableMessages()
                     .values()
                     .stream()
@@ -91,6 +90,16 @@ public class SpamAssassinListener implements SpamEventListener {
                     .collect(Guavate.toImmutableList());
                 spamAssassin.learnHam(contents, addedEvent.getSession().getUser().getUserName());
             }
+        }
+    }
+
+    private boolean isAppendedToInbox(EventFactory.AddedImpl addedEvent) {
+        try {
+            return systemMailboxesProvider.findMailbox(Role.INBOX, addedEvent.getSession())
+                .getId().equals(addedEvent.getMailboxId());
+        } catch (MailboxException e) {
+            LOGGER.warn("Could not resolve Inbox mailbox", e);
+            return false;
         }
     }
 
@@ -105,7 +114,7 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedToSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxId spamMailboxId = getMailboxId(event, Role.SPAM);
+            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getSession()).getId();
 
             return event.getMessageMoves().addedMailboxIds().contains(spamMailboxId);
         } catch (MailboxException e) {
@@ -117,8 +126,8 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedOutOfSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxId spamMailboxId = getMailboxId(event, Role.SPAM);
-            MailboxId trashMailboxId = getMailboxId(event, Role.TRASH);
+            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getSession()).getId();
+            MailboxId trashMailboxId = systemMailboxesProvider.findMailbox(Role.TRASH, event.getSession()).getId();
 
             return event.getMessageMoves().removedMailboxIds().contains(spamMailboxId)
                 && !event.getMessageMoves().addedMailboxIds().contains(trashMailboxId);
@@ -126,14 +135,5 @@ public class SpamAssassinListener implements SpamEventListener {
             LOGGER.warn("Could not resolve Spam mailbox", e);
             return false;
         }
-    }
-
-    private MailboxId getMailboxId(MessageMoveEvent event, Role role) throws MailboxException {
-        String userName = event.getSession().getUser().getUserName();
-        MailboxPath mailboxPath = MailboxPath.forUser(userName, role.getDefaultMailbox());
-
-        return mapperFactory.getMailboxMapper(event.getSession())
-            .findMailboxByPath(mailboxPath)
-            .getMailboxId();
     }
 }
