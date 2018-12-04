@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.components.CassandraTable;
+import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 
 import com.datastax.driver.core.KeyspaceMetadata;
@@ -43,17 +44,16 @@ public class CassandraTableManager {
         this.module = module;
     }
 
-    public CassandraTableManager ensureAllTables() {
+    public InitializationStatus initializeTables() {
         KeyspaceMetadata keyspaceMetadata = session.getCluster()
             .getMetadata()
             .getKeyspace(session.getLoggedKeyspace());
 
-        module.moduleTables()
-            .stream()
-            .filter(table -> keyspaceMetadata.getTable(table.getName()) == null)
-            .forEach(table -> session.execute(table.getCreateStatement()));
-
-        return this;
+        return module.moduleTables()
+                .stream()
+                .map(table -> table.initialize(keyspaceMetadata, session))
+                .reduce((left, right) -> left.reduce(right))
+                .orElse(InitializationStatus.ALREADY_DONE);
     }
 
     public void clearAllTables() {
@@ -75,5 +75,4 @@ public class CassandraTableManager {
                 .filter(resultSet -> !resultSet.isExhausted())
                 .flatMap(ignored -> Mono.fromFuture(executor.execute(QueryBuilder.truncate(name))));
     }
-
 }
