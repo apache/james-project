@@ -40,10 +40,10 @@ public class DefaultUserQuotaRootResolverTest {
 
     public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
     public static final SimpleMailbox MAILBOX = new SimpleMailbox(MAILBOX_PATH, 10);
-    public static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
-    public static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
-    public static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
-    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
+    private static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
+    private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
+    private static final SimpleMailbox MAILBOX_2 = new SimpleMailbox(MAILBOX_PATH_2, 10);
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
 
     private DefaultUserQuotaRootResolver testee;
     private MailboxSessionMapperFactory mockedFactory;
@@ -55,22 +55,22 @@ public class DefaultUserQuotaRootResolverTest {
     }
 
     @Test
-    public void getQuotaRootShouldReturnUserRelatedQuotaRoot() throws Exception {
+    public void getQuotaRootShouldReturnUserRelatedQuotaRoot() {
         assertThat(testee.getQuotaRoot(MAILBOX_PATH)).isEqualTo(QUOTA_ROOT);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void getQuotaRootShouldThrowWhenNamespaceContainsSeparator() throws Exception {
+    public void getQuotaRootShouldThrowWhenNamespaceContainsSeparator() {
         testee.getQuotaRoot(new MailboxPath("#pr&ivate", "benwa", "INBOX"));
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void getQuotaRootShouldThrowWhenUserContainsSeparator() throws Exception {
+    public void getQuotaRootShouldThrowWhenUserContainsSeparator() {
         testee.getQuotaRoot(MailboxPath.forUser("ben&wa", "INBOX"));
     }
 
     @Test
-    public void getQuotaRootShouldWorkWhenUserIsNull() throws Exception {
+    public void getQuotaRootShouldWorkWhenUserIsNull() {
         QuotaRoot quotaRoot = testee.getQuotaRoot(new MailboxPath("#private", null, "INBOX"));
 
         assertThat(quotaRoot).isEqualTo(QuotaRoot.quotaRoot("#private", Optional.empty()));
@@ -78,7 +78,7 @@ public class DefaultUserQuotaRootResolverTest {
 
     @Test
     public void retrieveAssociatedMailboxesShouldWork() throws Exception {
-        final MailboxMapper mockedMapper = mock(MailboxMapper.class);
+        MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(null)).thenReturn(mockedMapper);
         when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenReturn(Lists.newArrayList(MAILBOX, MAILBOX_2));
         assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, null)).containsOnly(MAILBOX_PATH, MAILBOX_PATH_2);
