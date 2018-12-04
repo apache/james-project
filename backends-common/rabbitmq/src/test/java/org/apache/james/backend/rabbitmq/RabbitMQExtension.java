@@ -22,7 +22,9 @@ import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEME
 
 import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -91,8 +93,9 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
             .minDelay(ONE_HUNDRED_MILLISECONDS)
             .build();
 
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         return new RabbitMQConnectionFactory(
             rabbitMQConfiguration,
-            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor()));
+            new AsyncRetryExecutor(Executors.newSingleThreadScheduledExecutor(threadFactory)));
     }
 }

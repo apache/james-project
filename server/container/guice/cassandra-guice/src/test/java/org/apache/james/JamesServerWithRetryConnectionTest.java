@@ -29,6 +29,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.es.ElasticSearchConfiguration;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.util.Host;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.junit.jupiter.api.AfterEach;
@@ -104,7 +106,8 @@ class JamesServerWithRetryConnectionTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        executorService = Executors.newFixedThreadPool(1);
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executorService = Executors.newFixedThreadPool(1, threadFactory);
         socketChannel = SocketChannel.open();
     }
 

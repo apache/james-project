@@ -20,8 +20,11 @@ package org.apache.james.modules.server;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.PreDestroy;
+
+import org.apache.james.util.concurrent.NamedThreadFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
@@ -33,9 +36,10 @@ public class AsyncTasksExecutorModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         bind(ExecutorService.class).annotatedWith(Names.named("AsyncExecutor"))
             .toProvider(new LifecycleAwareExecutorServiceProvider(
-                Executors.newFixedThreadPool(THREAD_POOL_SIZE)));
+                Executors.newFixedThreadPool(THREAD_POOL_SIZE, threadFactory)));
     }
 
     public static class LifecycleAwareExecutorServiceProvider implements Provider<ExecutorService> {

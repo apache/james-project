@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -55,9 +57,10 @@ public abstract class MailboxManagerStressTest {
 
     @Test
     public void testStressTest() throws InterruptedException, MailboxException {
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
-        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20);
+        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
         final Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
         final String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);

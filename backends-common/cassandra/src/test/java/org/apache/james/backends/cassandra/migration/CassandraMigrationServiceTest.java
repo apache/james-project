@@ -39,6 +39,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.task.Task;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -74,7 +75,8 @@ public class CassandraMigrationServiceTest {
             .put(LATEST_VERSION, successfulMigration)
             .build();
         testee = new CassandraMigrationService(schemaVersionDAO, allMigrationClazz, LATEST_VERSION);
-        executorService = Executors.newFixedThreadPool(2);
+        executorService = Executors.newFixedThreadPool(2,
+            NamedThreadFactory.withClassName(getClass()));
     }
 
     @After

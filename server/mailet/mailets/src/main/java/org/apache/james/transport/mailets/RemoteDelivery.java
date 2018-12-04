@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.inject.Inject;
@@ -42,6 +43,7 @@ import org.apache.james.transport.mailets.remote.delivery.Bouncer;
 import org.apache.james.transport.mailets.remote.delivery.DeliveryRunnable;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliveryConfiguration;
 import org.apache.james.transport.mailets.remote.delivery.RemoteDeliverySocketFactory;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -171,7 +173,8 @@ public class RemoteDelivery extends GenericMailet {
     }
 
     private void initDeliveryThreads() {
-        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount());
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        executor = Executors.newFixedThreadPool(configuration.getWorkersThreadCount(), threadFactory);
         for (int a = 0; a < configuration.getWorkersThreadCount(); a++) {
             executor.execute(
                 new DeliveryRunnable(queue,

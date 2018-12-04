@@ -27,7 +27,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +51,8 @@ public class RetryExecutorUtilTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor(threadFactory);
     }
 
     @After

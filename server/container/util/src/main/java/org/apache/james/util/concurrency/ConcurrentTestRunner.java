@@ -28,8 +28,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,7 +143,8 @@ public class ConcurrentTestRunner {
         this.operationCount = operationCount;
         this.countDownLatch = new CountDownLatch(threadCount);
         this.biConsumer = biConsumer;
-        this.executorService = Executors.newFixedThreadPool(threadCount);
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        this.executorService = Executors.newFixedThreadPool(threadCount, threadFactory);
         this.futures = new ArrayList<>();
     }
 

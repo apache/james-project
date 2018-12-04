@@ -24,7 +24,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.net.URI;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
+import org.apache.james.util.concurrent.NamedThreadFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +38,7 @@ class RabbitMQConnectionFactoryTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        scheduledExecutor = Executors.newSingleThreadScheduledExecutor();
+        scheduledExecutor = Executors.newSingleThreadScheduledExecutor(NamedThreadFactory.withClassName(getClass()));
     }
 
     @Test
