@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
@@ -58,11 +59,13 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
 
     private final ListeningMessageSearchIndex index;
     private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
+    private final MessageMapperFactory factory;
     
     
-    public LazyMessageSearchIndex(ListeningMessageSearchIndex index) {
-        super(index.getFactory(), index.getMailboxManager());
+    public LazyMessageSearchIndex(ListeningMessageSearchIndex index, MessageMapperFactory factory, MailboxManager mailboxManager) {
+        super(factory, mailboxManager);
         this.index = index;
+        this.factory = factory;
     }
 
     @Override
@@ -109,7 +112,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
                 done = oldDone;
             }
             synchronized (done) {
-                Iterator<MailboxMessage> messages = getFactory().getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
+                Iterator<MailboxMessage> messages = factory.getMessageMapper(session).findInMailbox(mailbox, MessageRange.all(), FetchType.Full, -1);
                 while (messages.hasNext()) {
                     final MailboxMessage message = messages.next();
                     try {

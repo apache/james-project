@@ -56,24 +56,6 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     /**
-     * Return the {@link MessageMapperFactory}
-     * 
-     * @return factory
-     */
-    protected MessageMapperFactory getFactory() {
-        return factory;
-    }
-
-    /**
-     * Return the {@link MailboxManager}
-     *
-     * @return mailboxManager
-     */
-    protected MailboxManager getMailboxManager() {
-        return mailboxManager;
-    }
-
-    /**
      * Process the {@link org.apache.james.mailbox.Event} and update the index if
      * something relevant is received
      */
