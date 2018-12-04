@@ -80,7 +80,7 @@ public class PropagateLookupRightListenerTest {
         storeRightManager = resources.getStoreRightManager();
         mailboxMapper = storeMailboxManager.getMapperFactory();
 
-        testee = new PropagateLookupRightListener(storeRightManager);
+        testee = new PropagateLookupRightListener(storeRightManager, storeMailboxManager);
         storeMailboxManager.addGlobalListener(testee, mailboxSession);
 
         parentMailboxId = storeMailboxManager.createMailbox(PARENT_MAILBOX, mailboxSession).get();
