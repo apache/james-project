@@ -25,8 +25,6 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class FileMailQueueTest implements DelayedManageableMailQueueContract {
@@ -36,7 +34,7 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     private FileMailQueue mailQueue;
 
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         temporaryFolder.create();
         mailQueue = new FileMailQueue(new RawMailQueueItemDecoratorFactory(), temporaryFolder.newFolder(), "test", SYNC);
     }
@@ -54,61 +52,5 @@ public class FileMailQueueTest implements DelayedManageableMailQueueContract {
     @Override
     public ManageableMailQueue getManageableMailQueue() {
         return mailQueue;
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeBySenderShouldRemoveSpecificEmail() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeByNameShouldRemoveSpecificEmail() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeByRecipientShouldRemoveSpecificEmail() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeByRecipientShouldNotFailWhenQueueIsEmpty() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeBySenderShouldNotFailWhenQueueIsEmpty() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2298 Not supported yet")
-    public void removeByRecipientShouldRemoveSpecificEmailWhenMultipleRecipients() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2544 Not supported yet")
-    public void browseShouldReturnMailsWithMimeMessage() {
-
-    }
-
-    @Test
-    @Override
-    @Disabled("JAMES-2544 Mixing concurent operation might lead to a deadlock and missing fiels")
-    public void concurrentEnqueueDequeueWithAckNackShouldNotFail() {
-
     }
 }

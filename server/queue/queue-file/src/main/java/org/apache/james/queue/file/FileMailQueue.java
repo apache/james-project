@@ -62,27 +62,27 @@ import com.github.fge.lambdas.Throwing;
 /**
  * {@link ManageableMailQueue} implementation which use the fs to store {@link Mail}'s
  * <p/>
- * On create of the {@link FileMailQueue} the {@link #init()} will get called. This takes care of
- * loading the needed meta-data into memory for fast access.
+ * On create of the {@link FileMailQueue} the {@link #init()} will get called. This takes care of loading the needed
+ * meta-data into memory for fast access.
  */
 public class FileMailQueue implements ManageableMailQueue {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailQueue.class);
+    private static final AtomicLong COUNTER = new AtomicLong();
+    private static final String MSG_EXTENSION = ".msg";
+    private static final String OBJECT_EXTENSION = ".obj";
+    private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
+    private static final int SPLITCOUNT = 8;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final Map<String, FileItem> keyMappings = Collections.synchronizedMap(new LinkedHashMap<>());
     private final BlockingQueue<String> inmemoryQueue = new LinkedBlockingQueue<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private static final AtomicLong COUNTER = new AtomicLong();
     private final String queueDirName;
     private final File queueDir;
-
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
     private final boolean sync;
-    private static final String MSG_EXTENSION = ".msg";
-    private static final String OBJECT_EXTENSION = ".obj";
-    private static final String NEXT_DELIVERY = "FileQueueNextDelivery";
-    private static final int SPLITCOUNT = 10;
-    private static final SecureRandom RANDOM = new SecureRandom();
     private final String queueName;
+    private final MailQueueIndex mailQueueIndex;
 
     public FileMailQueue(MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory, File parentDir, String queuename, boolean sync) throws IOException {
         this.mailQueueItemDecoratorFactory = mailQueueItemDecoratorFactory;
@@ -90,6 +90,8 @@ public class FileMailQueue implements ManageableMailQueue {
         this.queueName = queuename;
         this.queueDir = new File(parentDir, queueName);
         this.queueDirName = queueDir.getAbsolutePath();
+        this.mailQueueIndex = new MailQueueIndex(new File(queueDir, "index"));
+
         init();
     }
 
@@ -108,55 +110,27 @@ public class FileMailQueue implements ManageableMailQueue {
             String[] files = qDir.list((dir, name) -> name.endsWith(OBJECT_EXTENSION));
 
             for (String name : files) {
+                String msgFileName = name.substring(0, name.length() - OBJECT_EXTENSION.length()) + MSG_EXTENSION;
+                FileItem item = new FileItem(qDir.toPath().resolve(name).toFile(), qDir.toPath().resolve(msgFileName).toFile());
 
-                ObjectInputStream oin = null;
-
-                try {
-
-                    final String msgFileName = name.substring(0, name.length() - OBJECT_EXTENSION.length()) + MSG_EXTENSION;
-
-                    FileItem item = new FileItem(qDir.getAbsolutePath() + File.separator + name, qDir.getAbsolutePath() + File.separator + msgFileName);
-
-                    oin = new ObjectInputStream(new FileInputStream(item.getObjectFile()));
+                try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(item.getObjectFile()))) {
                     Mail mail = (Mail) oin.readObject();
                     Optional<ZonedDateTime> next = getNextDelivery(mail);
 
                     final String key = mail.getName();
                     keyMappings.put(key, item);
                     if (!next.isPresent() || next.get().isBefore(ZonedDateTime.now())) {
-
-                        try {
-                            inmemoryQueue.put(key);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException("Unable to init", e);
-                        }
+                        enqueueInMemory(key);
                     } else {
 
                         // Schedule a task which will put the mail in the queue
                         // for processing after a given delay
                         long nextDeliveryDelay = ZonedDateTime.now().until(next.get(), ChronoUnit.MILLIS);
-                        scheduler.schedule(() -> {
-                            try {
-                                inmemoryQueue.put(key);
-                            } catch (InterruptedException e) {
-                                Thread.currentThread().interrupt();
-                                throw new RuntimeException("Unable to init", e);
-                            }
-                        }, nextDeliveryDelay, TimeUnit.MILLISECONDS);
+                        scheduler.schedule(() -> enqueueInMemory(key), nextDeliveryDelay, TimeUnit.MILLISECONDS);
                     }
                 } catch (ClassNotFoundException | IOException e) {
                     LOGGER.error("Unable to load Mail", e);
-                } finally {
-                    if (oin != null) {
-                        try {
-                            oin.close();
-                        } catch (Exception e) {
-                            // ignore on close
-                        }
-                    }
                 }
-
             }
         }
     }
@@ -177,7 +151,7 @@ public class FileMailQueue implements ManageableMailQueue {
 
             String name = queueDirName + "/" + i + "/" + key;
 
-            final FileItem item = new FileItem(name + OBJECT_EXTENSION, name + MSG_EXTENSION);
+            final FileItem item = FileItem.of(name + OBJECT_EXTENSION, name + MSG_EXTENSION);
             if (delay > 0) {
                 mail.setAttribute(NEXT_DELIVERY, System.currentTimeMillis() + unit.toMillis(delay));
             }
@@ -197,20 +171,12 @@ public class FileMailQueue implements ManageableMailQueue {
                 }
             }
 
+            mailQueueIndex.index(mail, key);
             keyMappings.put(key, item);
 
             if (delay > 0) {
                 // The message should get delayed so schedule it for later
-                scheduler.schedule(() -> {
-                    try {
-                        inmemoryQueue.put(key);
-
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw new RuntimeException("Unable to init", e);
-                    }
-                }, delay, unit);
-
+                scheduler.schedule(() -> enqueueInMemory(key), delay, unit);
             } else {
                 inmemoryQueue.put(key);
             }
@@ -220,6 +186,15 @@ public class FileMailQueue implements ManageableMailQueue {
             throw new MailQueueException("Unable to enqueue mail", e);
         }
 
+    }
+
+    private void enqueueInMemory(String key) {
+        try {
+            inmemoryQueue.put(key);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Unable to init", e);
+        }
     }
 
     @Override
@@ -241,11 +216,9 @@ public class FileMailQueue implements ManageableMailQueue {
             final String key = k;
             final FileItem fitem = item;
             try {
-                final File objectFile = new File(fitem.getObjectFile());
-                final File msgFile = new File(fitem.getMessageFile());
-                try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(objectFile))) {
+                try (ObjectInputStream oin = new ObjectInputStream(new FileInputStream(fitem.getObjectFile()))) {
                     final Mail mail = (Mail) oin.readObject();
-                    mail.setMessage(new MimeMessageCopyOnWriteProxy(new FileMimeMessageSource(msgFile)));
+                    mail.setMessage(new MimeMessageCopyOnWriteProxy(new FileMimeMessageSource(fitem.getMessageFile())));
                     MailQueueItem fileMailQueueItem = new MailQueueItem() {
 
                         @Override
@@ -283,7 +256,7 @@ public class FileMailQueue implements ManageableMailQueue {
         }
     }
 
-    private final class FileMimeMessageSource extends MimeMessageSource implements Disposable {
+    private static final class FileMimeMessageSource extends MimeMessageSource implements Disposable {
 
         private File file;
         private final SharedFileInputStream in;
@@ -328,32 +301,36 @@ public class FileMailQueue implements ManageableMailQueue {
     /**
      * Helper class which is used to reference the path to the object and msg file
      */
-    private final class FileItem {
-        private final String objectfile;
-        private final String messagefile;
+    private static final class FileItem {
+        private final File objectfile;
+        private final File messagefile;
 
-        public FileItem(String objectfile, String messagefile) {
+        FileItem(File objectfile, File messagefile) {
             this.objectfile = objectfile;
             this.messagefile = messagefile;
         }
 
-        public String getObjectFile() {
+        public static FileItem of(String objectFileName, String messageFileName) {
+            return new FileItem(new File(objectFileName), new File(messageFileName));
+        }
+
+        File getObjectFile() {
             return objectfile;
         }
 
-        public String getMessageFile() {
+        File getMessageFile() {
             return messagefile;
         }
 
-        public void delete() throws MailQueueException {
+        void delete() throws MailQueueException {
             try {
-                FileUtils.forceDelete(new File(getObjectFile()));
+                FileUtils.forceDelete(getObjectFile());
             } catch (IOException e) {
                 throw new MailQueueException("Unable to delete mail");
             }
 
             try {
-                FileUtils.forceDelete(new File(getMessageFile()));
+                FileUtils.forceDelete(getMessageFile());
             } catch (IOException e) {
                 LOGGER.debug("Remove of msg file for mail failed");
             }
@@ -386,30 +363,22 @@ public class FileMailQueue implements ManageableMailQueue {
         keyMappings.values().forEach(Throwing.consumer(FileItem::delete));
         keyMappings.clear();
         inmemoryQueue.clear();
+        Throwing.runnable(mailQueueIndex::deleteAll).run();
 
         return count;
     }
 
-    /**
-     * TODO: implement me
-     */
     @Override
     public long remove(Type type, String value) throws MailQueueException {
-        switch (type) {
-            case Name:
-                FileItem item = keyMappings.remove(value);
-                if (item != null) {
-                    item.delete();
-                    return 1;
-                } else {
-                    return 0;
-                }
-
-            default:
-                break;
+        try {
+            return mailQueueIndex.pop(type, value)
+                    .stream()
+                    .map(keyMappings::remove)
+                    .peek(fileItem -> Throwing.runnable(fileItem::delete).run())
+                    .count();
+        } catch (IOException e) {
+            throw new MailQueueException("Cannot perform remove operation.", e);
         }
-        throw new MailQueueException("Not supported yet");
-
     }
 
     @Override
