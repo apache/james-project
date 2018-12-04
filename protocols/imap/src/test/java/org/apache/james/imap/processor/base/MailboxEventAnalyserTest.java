@@ -105,13 +105,15 @@ public class MailboxEventAnalyserTest {
             .thenReturn(messageManager);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
+        when(mailboxManager.getMailbox(any(MailboxId.class), any(MailboxSession.class)))
+            .thenReturn(messageManager);
 
         MessageResult messageResult = mock(MessageResult.class);
         when(messageResult.getMailboxId()).thenReturn(MAILBOX_ID);
         when(messageResult.getUid()).thenReturn(MESSAGE_UID);
 
-        when(messageManager.getApplicableFlags(any()))
-            .thenReturn(new Flags());
+        when(messageManager.getApplicableFlags(any())).thenReturn(new Flags());
+        when(messageManager.getId()).thenReturn(MAILBOX_ID);
         when(messageManager.search(any(), any()))
             .thenReturn(ImmutableList.of(MESSAGE_UID).iterator());
         when(messageManager.getMessages(any(), any(), any()))

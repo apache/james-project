@@ -209,10 +209,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
             }
         } catch (MessageRangeException e) {
-            LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getPath(), idSet, e);
+            LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
             taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getPath(), idSet, e);
+            LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
             no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
         }
     }

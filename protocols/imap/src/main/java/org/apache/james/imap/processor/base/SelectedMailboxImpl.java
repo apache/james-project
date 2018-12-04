@@ -63,7 +63,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private final MailboxManager mailboxManager;
 
     private final MailboxId mailboxId;
-    private MailboxPath path;
 
     private final ImapSession session;
 
@@ -79,6 +78,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private final Flags applicableFlags;
 
     private boolean applicableFlagsChanged;
+    private final MailboxSession mailboxSession;
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
@@ -87,9 +87,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         
         // Ignore events from our session
         setSilentFlagChanges(true);
-        this.path = path;
 
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
         uidMsnConverter = new UidMsnConverter();
 
@@ -162,8 +161,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public synchronized MailboxPath getPath() {
-        return path;
+    public MailboxPath getPath() throws MailboxException {
+        return mailboxManager.getMailbox(mailboxId, mailboxSession).getMailboxPath();
     }
 
     @Override
@@ -329,7 +328,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     private void mailboxEvent(MailboxEvent mailboxEvent) {
         // Check if the event was for the mailbox we are observing
-        if (mailboxEvent.getMailboxPath().equals(getPath())) {
+        if (mailboxEvent.getMailboxId().equals(getMailboxId())) {
             final long eventSessionId = mailboxEvent.getSession().getSessionId();
             if (mailboxEvent instanceof MessageEvent) {
                 final MessageEvent messageEvent = (MessageEvent) mailboxEvent;
@@ -367,8 +366,8 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
    
                             while (flags.hasNext()) {
                                 if (Flag.RECENT.equals(flags.next())) {
-                                    MailboxPath path = sm.getPath();
-                                    if (path != null && path.equals(mailboxEvent.getMailboxPath())) {
+                                    MailboxId id = sm.getMailboxId();
+                                    if (id != null && id.equals(mailboxEvent.getMailboxId())) {
                                         sm.addRecent(u.getUid());
                                     }
                                 }
@@ -404,9 +403,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
                 if (eventSessionId != sessionId) {
                     isDeletedByOtherSession = true;
                 }
-            } else if (mailboxEvent instanceof MailboxRenamed) {
-                final MailboxRenamed mailboxRenamed = (MailboxRenamed) mailboxEvent;
-                path = mailboxRenamed.getNewPath();
             }
         }
     }

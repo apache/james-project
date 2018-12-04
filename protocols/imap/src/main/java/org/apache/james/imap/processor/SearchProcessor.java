@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
+
 import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -203,10 +204,10 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             unsolicitedResponses(session, responder, omitExpunged, useUids);
             okComplete(command, tag, responder);
         } catch (MessageRangeException e) {
-            LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getPath(), e);
+            LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e);
             taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
-            LOGGER.error("Search failed in mailbox {}", session.getSelected().getPath(), e);
+            LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {

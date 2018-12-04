@@ -97,8 +97,8 @@ public class SelectedMailboxImplTest {
 
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mock(MailboxSession.class));
 
-        when(mailbox.generateAssociatedPath())
-            .thenReturn(mailboxPath);
+        when(mailbox.generateAssociatedPath()).thenReturn(mailboxPath);
+        when(mailbox.getMailboxId()).thenReturn(mailboxId);
     }
 
     @After
