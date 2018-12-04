@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.quota;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -33,9 +35,12 @@ import javax.mail.Flags;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.mock.MockMailboxSession;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.SimpleMessageMetaData;
@@ -48,9 +53,10 @@ import com.google.common.collect.Lists;
 
 public class ListeningCurrentQuotaUpdaterTest {
 
-    public static final int SIZE = 45;
-    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
-    public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    private static final int SIZE = 45;
+    private static final MailboxId MAILBOX_ID = TestId.of(42);
+    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
+    private static final MailboxSession MAILBOX_SESSION = new MockMailboxSession("benwa");
 
     private StoreCurrentQuotaManager mockedCurrentQuotaManager;
     private QuotaRootResolver mockedQuotaRootResolver;
@@ -70,9 +76,12 @@ public class ListeningCurrentQuotaUpdaterTest {
         when(added.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
-        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(added.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(added.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
+
         testee.event(added);
+
         verify(mockedCurrentQuotaManager).increase(QUOTA_ROOT, 2, 2 * SIZE);
     }
 
@@ -82,9 +91,12 @@ public class ListeningCurrentQuotaUpdaterTest {
         when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
-        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(expunged.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
+
         testee.event(expunged);
+
         verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 2, 2 * SIZE);
     }
     
@@ -92,9 +104,12 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void emptyExpungedEventShouldNotTriggerDecrease() throws Exception {
         MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
         when(expunged.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
-        when(expunged.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(expunged.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
+
         testee.event(expunged);
+
         verify(mockedCurrentQuotaManager, never()).decrease(QUOTA_ROOT, 0, 0);
     }
 
@@ -102,32 +117,39 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void emptyAddedEventShouldNotTriggerDecrease() throws Exception {
         MailboxListener.Added added = mock(MailboxListener.Added.class);
         when(added.getUids()).thenReturn(Lists.<MessageUid>newArrayList());
-        when(added.getMailboxPath()).thenReturn(MAILBOX_PATH);
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(added.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(added.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
+
         testee.event(added);
+
         verify(mockedCurrentQuotaManager, never()).increase(QUOTA_ROOT, 0, 0);
     }
 
     @Test
     public void mailboxDeletionEventShouldDecreaseCurrentQuotaValues() throws Exception {
         MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
-        when(deletion.getMailboxPath()).thenReturn(MAILBOX_PATH);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
         when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(10));
         when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(5));
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(deletion.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(deletion.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
+
         testee.event(deletion);
+
         verify(mockedCurrentQuotaManager).decrease(QUOTA_ROOT, 10, 5);
     }
 
     @Test
     public void mailboxDeletionEventShouldDoNothingWhenEmptyMailbox() throws Exception {
         MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
-        when(deletion.getMailboxPath()).thenReturn(MAILBOX_PATH);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
         when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(0));
         when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(0));
-        when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
+        when(deletion.getMailboxId()).thenReturn(MAILBOX_ID);
+        when(deletion.getSession()).thenReturn(MAILBOX_SESSION);
+        when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID), any(MailboxSession.class))).thenReturn(QUOTA_ROOT);
 
         testee.event(deletion);
 

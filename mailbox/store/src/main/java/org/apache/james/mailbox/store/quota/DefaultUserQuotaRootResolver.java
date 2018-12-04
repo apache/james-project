@@ -28,6 +28,7 @@ import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
@@ -65,6 +66,17 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
                 })
                 .map(user -> QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(), user.getDomainPart()))
                 .orElseGet(() -> QuotaRoot.quotaRoot(mailboxPath.getNamespace(), Optional.empty()));
+    }
+
+    @Override
+    public QuotaRoot getQuotaRoot(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException {
+        User user = User.fromUsername(
+            factory.getMailboxMapper(mailboxSession)
+                .findMailboxById(mailboxId)
+                .generateAssociatedPath()
+                .getUser());
+
+        return forUser(user);
     }
 
     @Override

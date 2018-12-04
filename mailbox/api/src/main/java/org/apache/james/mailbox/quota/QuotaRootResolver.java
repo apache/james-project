@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 
@@ -36,6 +37,8 @@ public interface QuotaRootResolver {
      * @throws MailboxException
      */
     QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
+
+    QuotaRoot getQuotaRoot(MailboxId mailboxId, MailboxSession mailboxSession) throws MailboxException;
 
     QuotaRoot fromString(String serializedQuotaRoot) throws MailboxException;
 

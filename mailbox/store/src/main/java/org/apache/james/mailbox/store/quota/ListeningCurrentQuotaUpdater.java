@@ -60,11 +60,11 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         try {
             if (event instanceof Added) {
                 Added addedEvent = (Added) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxPath());
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(addedEvent.getMailboxId(), event.getSession());
                 handleAddedEvent(addedEvent, quotaRoot);
             } else if (event instanceof Expunged) {
                 Expunged expungedEvent = (Expunged) event;
-                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxPath());
+                QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(expungedEvent.getMailboxId(), event.getSession());
                 handleExpungedEvent(expungedEvent, quotaRoot);
             } else if (event instanceof MailboxDeletion) {
                 MailboxDeletion mailboxDeletionEvent = (MailboxDeletion) event;
