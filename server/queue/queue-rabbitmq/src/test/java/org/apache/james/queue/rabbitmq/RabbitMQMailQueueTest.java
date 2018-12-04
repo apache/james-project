@@ -23,6 +23,7 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -216,6 +217,14 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
 
         boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
         assertThat(initialized).isTrue();
+    }
+
+    @Test
+    void enQueueShouldNotThrowOnMailNameWithNegativeHash() {
+        String negativehashedString = "this sting will have a negative hash"; //hash value: -1256871313
+        
+        assertThatCode(() -> getMailQueue().enQueue(defaultMail().name(negativehashedString).build()))
+            .doesNotThrowAnyException();
     }
 
     @Disabled("JAMES-2614 RabbitMQMailQueueTest::concurrentEnqueueDequeueShouldNotFail is unstable." +
