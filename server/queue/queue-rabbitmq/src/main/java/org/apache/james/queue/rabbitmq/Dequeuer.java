@@ -103,7 +103,7 @@ class Dequeuer {
                 if (success) {
                     dequeueMetric.increment();
                     rabbitClient.ack(deliveryTag);
-                    mailQueueView.delete(DeleteCondition.withName(mail.getName())).join();
+                    mailQueueView.delete(DeleteCondition.withName(mail.getName()));
                 } else {
                     rabbitClient.nack(deliveryTag);
                 }

@@ -93,12 +93,12 @@ public class RabbitMQMailQueue implements ManageableMailQueue {
 
     @Override
     public long clear() {
-        return mailQueueView.delete(DeleteCondition.all()).join();
+        return mailQueueView.delete(DeleteCondition.all());
     }
 
     @Override
     public long remove(Type type, String value) {
-        return mailQueueView.delete(DeleteCondition.from(type, value)).join();
+        return mailQueueView.delete(DeleteCondition.from(type, value));
     }
 
     @Override

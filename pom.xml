@@ -666,6 +666,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>io.projectreactor</groupId>
+                <artifactId>reactor-bom</artifactId>
+                <version>Bismuth-RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>apache-james-backends-cassandra</artifactId>
                 <version>${project.version}</version>

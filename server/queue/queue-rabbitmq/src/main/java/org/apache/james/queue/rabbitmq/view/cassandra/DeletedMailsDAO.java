@@ -27,8 +27,6 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.QUEUE_NAME;
 import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule.DeletedMailTable.TABLE_NAME;
 
-import java.util.concurrent.CompletableFuture;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -37,6 +35,7 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class DeletedMailsDAO {
 
@@ -64,20 +63,21 @@ public class DeletedMailsDAO {
             .and(eq(MAIL_KEY, bindMarker(MAIL_KEY))));
     }
 
-    CompletableFuture<Void> markAsDeleted(MailQueueName mailQueueName, MailKey mailKey) {
-        return executor.executeVoid(insertOne.bind()
+    Mono<Void> markAsDeleted(MailQueueName mailQueueName, MailKey mailKey) {
+        return Mono.fromCompletionStage(executor.executeVoid(insertOne.bind()
             .setString(QUEUE_NAME, mailQueueName.asString())
-            .setString(MAIL_KEY, mailKey.getMailKey()));
+            .setString(MAIL_KEY, mailKey.getMailKey())));
     }
 
-    CompletableFuture<Boolean> isDeleted(MailQueueName mailQueueName, MailKey mailKey) {
-        return executor.executeReturnExists(
+    Mono<Boolean> isDeleted(MailQueueName mailQueueName, MailKey mailKey) {
+        return Mono.fromCompletionStage(executor.executeReturnExists(
             selectOne.bind()
                 .setString(QUEUE_NAME, mailQueueName.asString())
-                .setString(MAIL_KEY, mailKey.getMailKey()));
+                .setString(MAIL_KEY, mailKey.getMailKey())));
     }
 
-    CompletableFuture<Boolean> isStillEnqueued(MailQueueName mailQueueName, MailKey mailKey) {
-        return isDeleted(mailQueueName, mailKey).thenApply(b -> !b);
+    Mono<Boolean> isStillEnqueued(MailQueueName mailQueueName, MailKey mailKey) {
+        return isDeleted(mailQueueName, mailKey)
+            .map(b -> !b);
     }
 }

@@ -20,7 +20,6 @@
 package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -33,8 +32,9 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.MailKey;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueView implements MailQueueView {
 
@@ -80,62 +80,54 @@ public class CassandraMailQueueView implements MailQueueView {
 
     @Override
     public void initialize(MailQueueName mailQueueName) {
-        storeHelper.initializeBrowseStart(mailQueueName)
-            .join();
+        storeHelper.initializeBrowseStart(mailQueueName).block();
     }
 
     @Override
     public CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem) {
-        return storeHelper.storeMail(enqueuedItem);
+        return storeHelper.storeMail(enqueuedItem).toFuture();
     }
 
     @Override
     public ManageableMailQueue.MailQueueIterator browse() {
         return new CassandraMailQueueBrowser.CassandraMailQueueIterator(
             cassandraMailQueueBrowser.browse(mailQueueName)
-                .join()
+                .toIterable()
                 .iterator());
     }
 
     @Override
     public long getSize() {
-        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
-                .join()
-                .count();
+        return cassandraMailQueueBrowser.browseReferences(mailQueueName).count().block();
     }
 
     @Override
-    public CompletableFuture<Long> delete(DeleteCondition deleteCondition) {
+    public long delete(DeleteCondition deleteCondition) {
         if (deleteCondition instanceof DeleteCondition.WithName) {
             DeleteCondition.WithName nameDeleteCondition = (DeleteCondition.WithName) deleteCondition;
-
-            return delete(MailKey.of(nameDeleteCondition.getName())).thenApply(any -> 1L);
+            return delete(MailKey.of(nameDeleteCondition.getName())).map(any -> 1L).block();
         }
-
         return browseThenDelete(deleteCondition);
     }
 
-    private CompletableFuture<Long> browseThenDelete(DeleteCondition deleteCondition) {
-        CompletableFuture<Long> result = cassandraMailQueueBrowser.browseReferences(mailQueueName)
+    private long browseThenDelete(DeleteCondition deleteCondition) {
+        return cassandraMailQueueBrowser.browseReferences(mailQueueName)
             .map(EnqueuedItemWithSlicingContext::getEnqueuedItem)
             .filter(mailReference -> deleteCondition.shouldBeDeleted(mailReference.getMail()))
-            .map(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getMail(), mailQueueName),
-                FluentFutureStream::unboxFuture)
-            .completableFuture()
-            .thenApply(Stream::count);
-
-        result.thenRunAsync(() -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName));
-
-        return result;
+            .map(mailReference -> cassandraMailQueueMailDelete.considerDeleted(mailReference.getMail(), mailQueueName))
+            .count()
+            .doOnTerminate(() -> cassandraMailQueueMailDelete.updateBrowseStart(mailQueueName))
+            .block();
     }
 
-    private CompletableFuture<Void> delete(MailKey mailKey) {
+    private Mono<Void> delete(MailKey mailKey) {
         return cassandraMailQueueMailDelete.considerDeleted(mailKey, mailQueueName);
     }
 
     @Override
     public CompletableFuture<Boolean> isPresent(Mail mail) {
         return cassandraMailQueueMailDelete.isDeleted(mail, mailQueueName)
-                .thenApply(bool -> !bool);
+                .map(bool -> !bool)
+                .toFuture();
     }
 }

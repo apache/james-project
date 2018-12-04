@@ -31,8 +31,6 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueV
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -43,6 +41,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Mono;
 
 public class BrowseStartDAO {
 
@@ -79,28 +78,29 @@ public class BrowseStartDAO {
             .value(QUEUE_NAME, bindMarker(QUEUE_NAME)));
     }
 
-    CompletableFuture<Optional<Instant>> findBrowseStart(MailQueueName queueName) {
+    Mono<Instant> findBrowseStart(MailQueueName queueName) {
         return selectOne(queueName)
-            .thenApply(optional -> optional.map(this::getBrowseStart));
+            .map(this::getBrowseStart);
     }
 
-    CompletableFuture<Void> updateBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
-        return executor.executeVoid(updateOne.bind()
+    Mono<Void> updateBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
+        return Mono.fromCompletionStage(executor.executeVoid(updateOne.bind()
             .setTimestamp(BROWSE_START, Date.from(sliceStart))
-            .setString(QUEUE_NAME, mailQueueName.asString()));
+            .setString(QUEUE_NAME, mailQueueName.asString())));
     }
 
-    CompletableFuture<Void> insertInitialBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
-        return executor.executeVoid(insertOne.bind()
+    Mono<Void> insertInitialBrowseStart(MailQueueName mailQueueName, Instant sliceStart) {
+        return Mono.fromCompletionStage(executor.executeVoid(insertOne.bind()
             .setTimestamp(BROWSE_START, Date.from(sliceStart))
-            .setString(QUEUE_NAME, mailQueueName.asString()));
+            .setString(QUEUE_NAME, mailQueueName.asString())));
     }
 
     @VisibleForTesting
-    CompletableFuture<Optional<Row>> selectOne(MailQueueName queueName) {
-        return executor.executeSingleRow(
+    Mono<Row> selectOne(MailQueueName queueName) {
+        return Mono.fromCompletionStage(executor.executeSingleRow(
             selectOne.bind()
-                .setString(QUEUE_NAME, queueName.asString()));
+                .setString(QUEUE_NAME, queueName.asString())))
+            .flatMap(Mono::justOrEmpty);
     }
 
     private Instant getBrowseStart(Row row) {

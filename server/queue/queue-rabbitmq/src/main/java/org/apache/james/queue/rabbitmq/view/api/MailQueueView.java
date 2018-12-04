@@ -36,7 +36,7 @@ public interface MailQueueView {
 
     CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem);
 
-    CompletableFuture<Long> delete(DeleteCondition deleteCondition);
+    long delete(DeleteCondition deleteCondition);
 
     CompletableFuture<Boolean> isPresent(Mail mail);
 

@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 import java.time.Instant;
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -86,11 +86,11 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
                 .build())
-            .join();
+            .block();
 
-        Stream<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee
+        List<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee
             .selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
-            .join();
+            .collectList().block();
 
         assertThat(selectedEnqueuedMails).hasSize(1);
     }
@@ -108,7 +108,7 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE), NOW))
                 .build())
-            .join();
+            .block();
 
         testee.insert(EnqueuedItemWithSlicingContext.builder()
                 .enqueuedItem(EnqueuedItem.builder()
@@ -121,10 +121,10 @@ class EnqueuedMailsDaoTest {
                     .build())
                 .slicingContext(EnqueuedItemWithSlicingContext.SlicingContext.of(BucketId.of(BUCKET_ID_VALUE + 1), NOW))
                 .build())
-            .join();
+            .block();
 
-        Stream<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee.selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
-            .join();
+        List<EnqueuedItemWithSlicingContext> selectedEnqueuedMails = testee.selectEnqueuedMails(OUT_GOING_1, SLICE_OF_NOW, BUCKET_ID)
+            .collectList().block();
 
         assertThat(selectedEnqueuedMails)
             .hasSize(1)

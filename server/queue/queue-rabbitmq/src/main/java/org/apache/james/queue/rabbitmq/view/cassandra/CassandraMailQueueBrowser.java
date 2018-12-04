@@ -21,16 +21,12 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
-import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice.allSlicesTill;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.mail.MessagingException;
@@ -44,12 +40,14 @@ import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraMailQueueBrowser {
 
@@ -101,23 +99,24 @@ public class CassandraMailQueueBrowser {
         this.clock = clock;
     }
 
-    CompletableFuture<Stream<ManageableMailQueue.MailQueueItemView>> browse(MailQueueName queueName) {
+    Flux<ManageableMailQueue.MailQueueItemView> browse(MailQueueName queueName) {
         return browseReferences(queueName)
-            .map(this::toMailFuture, FluentFutureStream::unboxFuture)
-            .map(ManageableMailQueue.MailQueueItemView::new)
-            .completableFuture();
+            .flatMapSequential(this::toMailFuture)
+            .map(ManageableMailQueue.MailQueueItemView::new);
     }
 
-    FluentFutureStream<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName) {
-        return FluentFutureStream.of(browseStartDao.findBrowseStart(queueName)
-            .thenApply(this::allSlicesStartingAt))
-            .map(slice -> browseSlice(queueName, slice), FluentFutureStream::unboxFluentFuture);
+    Flux<EnqueuedItemWithSlicingContext> browseReferences(MailQueueName queueName) {
+        return browseStartDao.findBrowseStart(queueName)
+            .flatMapMany(this::allSlicesStartingAt)
+            .flatMapSequential(slice -> browseSlice(queueName, slice))
+            .flatMapSequential(Flux::fromIterable)
+            .subscribeOn(Schedulers.parallel());
     }
 
-    private CompletableFuture<Mail> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
+    private Mono<Mail> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
         EnqueuedItem enqueuedItem = enqueuedItemWithSlicingContext.getEnqueuedItem();
-        return mimeMessageStore.read(enqueuedItem.getPartsId())
-            .thenApply(mimeMessage -> toMail(enqueuedItem, mimeMessage));
+        return Mono.fromCompletionStage(mimeMessageStore.read(enqueuedItem.getPartsId()))
+            .map(mimeMessage -> toMail(enqueuedItem, mimeMessage));
     }
 
     private Mail toMail(EnqueuedItem enqueuedItem, MimeMessage mimeMessage) {
@@ -132,31 +131,25 @@ public class CassandraMailQueueBrowser {
         return mail;
     }
 
-    private FluentFutureStream<EnqueuedItemWithSlicingContext> browseSlice(MailQueueName queueName, Slice slice) {
-        return FluentFutureStream.of(
+    private Mono<List<EnqueuedItemWithSlicingContext>> browseSlice(MailQueueName queueName, Slice slice) {
+        return
             allBucketIds()
-                .map(bucketId ->
-                    browseBucket(queueName, slice, bucketId).completableFuture()),
-            FluentFutureStream::unboxStream)
-            .sorted(Comparator.comparing(enqueuedMail -> enqueuedMail.getEnqueuedItem().getEnqueuedTime()));
+                .flatMap(bucketId -> browseBucket(queueName, slice, bucketId))
+                .collectSortedList(Comparator.comparing(enqueuedMail -> enqueuedMail.getEnqueuedItem().getEnqueuedTime()));
     }
 
-    private FluentFutureStream<EnqueuedItemWithSlicingContext> browseBucket(MailQueueName queueName, Slice slice, BucketId bucketId) {
-        return FluentFutureStream.of(
-            enqueuedMailsDao.selectEnqueuedMails(queueName, slice, bucketId))
-                .thenFilter(mailReference -> deletedMailsDao.isStillEnqueued(queueName, mailReference.getEnqueuedItem().getMailKey()));
+    private Flux<EnqueuedItemWithSlicingContext> browseBucket(MailQueueName queueName, Slice slice, BucketId bucketId) {
+        return enqueuedMailsDao.selectEnqueuedMails(queueName, slice, bucketId)
+            .filterWhen(mailReference -> deletedMailsDao.isStillEnqueued(queueName, mailReference.getEnqueuedItem().getMailKey()));
     }
 
-    private Stream<Slice> allSlicesStartingAt(Optional<Instant> maybeBrowseStart) {
-        return maybeBrowseStart
-            .map(Slice::of)
-            .map(startSlice -> allSlicesTill(startSlice, clock.instant(), configuration.getSliceWindow()))
-            .orElse(Stream.empty());
+    private Flux<Slice> allSlicesStartingAt(Instant browseStart) {
+        return Flux.fromStream(Slice.of(browseStart).allSlicesTill(clock.instant(), configuration.getSliceWindow()));
     }
 
-    private Stream<BucketId> allBucketIds() {
-        return IntStream
+    private Flux<BucketId> allBucketIds() {
+        return Flux
             .range(0, configuration.getBucketCount())
-            .mapToObj(BucketId::of);
+            .map(BucketId::of);
     }
 }

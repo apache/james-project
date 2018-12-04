@@ -21,7 +21,6 @@ package org.apache.james.queue.rabbitmq.view.cassandra;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -31,6 +30,8 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueMailStore {
 
@@ -50,13 +51,13 @@ public class CassandraMailQueueMailStore {
         this.clock = clock;
     }
 
-    CompletableFuture<Void> storeMail(EnqueuedItem enqueuedItem) {
+    Mono<Void> storeMail(EnqueuedItem enqueuedItem) {
         EnqueuedItemWithSlicingContext enqueuedItemAndSlicing = addSliceContext(enqueuedItem);
 
         return enqueuedMailsDao.insert(enqueuedItemAndSlicing);
     }
 
-    CompletableFuture<Void> initializeBrowseStart(MailQueueName mailQueueName) {
+    Mono<Void> initializeBrowseStart(MailQueueName mailQueueName) {
         return browseStartDao
             .insertInitialBrowseStart(mailQueueName, currentSliceStartInstant());
     }

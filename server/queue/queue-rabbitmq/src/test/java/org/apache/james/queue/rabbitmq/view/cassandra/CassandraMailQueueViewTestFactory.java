@@ -25,11 +25,11 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.EventStoreDao;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
-import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
@@ -37,6 +37,8 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.Eventsourcin
 
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableSet;
+
+import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueViewTestFactory {
 
@@ -69,7 +71,9 @@ public class CassandraMailQueueViewTestFactory {
     public static boolean isInitialized(Session session, MailQueueName mailQueueName) {
         BrowseStartDAO browseStartDao = new BrowseStartDAO(session);
         return browseStartDao.findBrowseStart(mailQueueName)
-            .thenApply(Optional::isPresent)
-            .join();
+            .map(Optional::ofNullable)
+            .switchIfEmpty(Mono.just(Optional.empty()))
+            .block()
+            .isPresent();
     }
 }

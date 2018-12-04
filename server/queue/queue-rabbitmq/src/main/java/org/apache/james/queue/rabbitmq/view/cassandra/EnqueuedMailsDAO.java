@@ -47,8 +47,6 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlice
 import static org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice;
 
 import java.util.Date;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -64,6 +62,10 @@ import org.apache.mailet.Mail;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 public class EnqueuedMailsDAO {
 
@@ -73,10 +75,12 @@ public class EnqueuedMailsDAO {
     private final CassandraUtils cassandraUtils;
     private final CassandraTypesProvider cassandraTypesProvider;
     private final BlobId.Factory blobFactory;
+    private Scheduler scheduler;
 
     @Inject
     EnqueuedMailsDAO(Session session, CassandraUtils cassandraUtils, CassandraTypesProvider cassandraTypesProvider,
                      BlobId.Factory blobIdFactory) {
+        this.scheduler = Schedulers.parallel();
         this.executor = new CassandraAsyncExecutor(session);
         this.cassandraUtils = cassandraUtils;
         this.cassandraTypesProvider = cassandraTypesProvider;
@@ -114,13 +118,13 @@ public class EnqueuedMailsDAO {
             .value(PER_RECIPIENT_SPECIFIC_HEADERS, bindMarker(PER_RECIPIENT_SPECIFIC_HEADERS)));
     }
 
-    CompletableFuture<Void> insert(EnqueuedItemWithSlicingContext enqueuedItemWithSlicing) {
+    Mono<Void> insert(EnqueuedItemWithSlicingContext enqueuedItemWithSlicing) {
         EnqueuedItem enqueuedItem = enqueuedItemWithSlicing.getEnqueuedItem();
         EnqueuedItemWithSlicingContext.SlicingContext slicingContext = enqueuedItemWithSlicing.getSlicingContext();
         Mail mail = enqueuedItem.getMail();
         MimeMessagePartsId mimeMessagePartsId = enqueuedItem.getPartsId();
 
-        return executor.executeVoid(insert.bind()
+        return Mono.fromCompletionStage(executor.executeVoid(insert.bind()
             .setString(QUEUE_NAME, enqueuedItem.getMailQueueName().asString())
             .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
@@ -136,19 +140,20 @@ public class EnqueuedMailsDAO {
             .setString(REMOTE_HOST, mail.getRemoteHost())
             .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
             .setMap(ATTRIBUTES, toRawAttributeMap(mail))
-            .setMap(PER_RECIPIENT_SPECIFIC_HEADERS, toHeaderMap(cassandraTypesProvider, mail.getPerRecipientSpecificHeaders())));
+            .setMap(PER_RECIPIENT_SPECIFIC_HEADERS, toHeaderMap(cassandraTypesProvider, mail.getPerRecipientSpecificHeaders()))));
     }
 
-    CompletableFuture<Stream<EnqueuedItemWithSlicingContext>> selectEnqueuedMails(
+    Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(
         MailQueueName queueName, Slice slice, BucketId bucketId) {
 
-        return executor.execute(
+        return Mono.fromCompletionStage(executor.execute(
             selectFrom.bind()
                 .setString(QUEUE_NAME, queueName.asString())
                 .setTimestamp(TIME_RANGE_START, Date.from(slice.getStartSliceInstant()))
-                .setInt(BUCKET_ID, bucketId.getValue()))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
-                .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory)));
+                .setInt(BUCKET_ID, bucketId.getValue())))
+            .map(cassandraUtils::convertToStream)
+            .flatMapMany(Flux::fromStream)
+            .map(row -> EnqueuedMailsDaoUtil.toEnqueuedMail(row, blobFactory));
     }
 
 }
