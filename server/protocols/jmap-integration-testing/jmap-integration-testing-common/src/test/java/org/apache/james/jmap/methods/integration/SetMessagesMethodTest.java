@@ -2334,15 +2334,15 @@ public abstract class SetMessagesMethodTest {
 
 
         calmlyAwait.atMost(5, TimeUnit.SECONDS).until(() -> events.stream()
-            .anyMatch(event -> isAddedToOutboxEvent(messageId, event)));
+            .anyMatch(event -> isAddedToOutboxEvent(messageId, event, outboxId)));
     }
 
-    private boolean isAddedToOutboxEvent(String messageId, Event event) {
+    private boolean isAddedToOutboxEvent(String messageId, Event event, String outboxId) {
         if (!(event instanceof EventFactory.AddedImpl)) {
             return false;
         }
         EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
-        return added.getMailboxPath().equals(MailboxPath.forUser(USERNAME, DefaultMailboxes.OUTBOX))
+        return added.getMailboxId().serialize().equals(outboxId)
             && added.getUids().size() == 1
             && added.getMetaData(added.getUids().get(0)).getMessageId().serialize().equals(messageId);
     }
