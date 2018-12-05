@@ -37,14 +37,12 @@ import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.codahale.metrics.MetricRegistry;
 
 import io.restassured.RestAssured;
 
-@ExtendWith(DockerElasticSearch2Extension.class)
-class ESReporterTest {
+abstract class ESReporterContract {
     public static final String INDEX = "index_name";
     public static final long PERIOD_IN_SECOND = 1L;
     public static final int DELAY_IN_MS = 100;

@@ -35,7 +35,7 @@ public class DockerElasticSearch2Extension implements ParameterResolver, BeforeE
     private DockerElasticSearch2Extension() {
         this.elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
             .withAffinityToContainer()
-            .withExposedPorts(ESReporterTest.ES_HTTP_PORT)
+            .withExposedPorts(ESReporterContract.ES_HTTP_PORT)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
     }
 
