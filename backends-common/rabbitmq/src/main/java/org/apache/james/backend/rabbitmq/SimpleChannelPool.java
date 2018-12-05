@@ -26,28 +26,43 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
+import reactor.core.publisher.Flux;
+import reactor.rabbitmq.AcknowledgableDelivery;
+import reactor.rabbitmq.RabbitFlux;
+import reactor.rabbitmq.Receiver;
+import reactor.rabbitmq.ReceiverOptions;
 
 public class SimpleChannelPool implements RabbitMQChannelPool {
     private final AtomicReference<Channel> channelReference;
     private final AtomicReference<Connection> connectionReference;
     private final RabbitMQConnectionFactory connectionFactory;
+    private final Receiver rabbitFlux;
 
     @Inject
-    public SimpleChannelPool(RabbitMQConnectionFactory factory) {
+    @VisibleForTesting
+    SimpleChannelPool(RabbitMQConnectionFactory factory) {
         this.connectionFactory = factory;
         this.connectionReference = new AtomicReference<>();
         this.channelReference = new AtomicReference<>();
+        this.rabbitFlux = RabbitFlux
+            .createReceiver(new ReceiverOptions().connectionMono(connectionFactory.connectionMono()));
     }
 
     @Override
-    public synchronized  <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
+    public Flux<AcknowledgableDelivery> receive(String queueName) {
+        return rabbitFlux.consumeManualAck(queueName);
+    }
+
+    @Override
+    public synchronized <T, E extends Throwable> T execute(RabbitFunction<T, E> f) throws E, ConnectionFailedException {
         return f.execute(getResilientChannel());
     }
 
     @Override
-    public synchronized  <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
+    public synchronized <E extends Throwable> void execute(RabbitConsumer<E> f) throws E, ConnectionFailedException {
         f.execute(getResilientChannel());
     }
 
