@@ -44,13 +44,13 @@ public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemor
     private String mbeanName;
     
     public JMXEnabledOrderedMemoryAwareThreadPoolExecutor(int corePoolSize, long maxChannelMemorySize, long maxTotalMemorySize, String jmxPath, String name) {
-        super(corePoolSize, maxChannelMemorySize, maxTotalMemorySize, 30, TimeUnit.SECONDS, new NamedThreadFactory(name));
+        super(corePoolSize, maxChannelMemorySize, maxTotalMemorySize, 30, TimeUnit.SECONDS, NamedThreadFactory.withName(name));
         this.jmxPath = jmxPath;
         registerMBean();
     }
     
     public JMXEnabledOrderedMemoryAwareThreadPoolExecutor(int corePoolSize, long maxChannelMemorySize, long maxTotalMemorySize, long keepAliveTime, TimeUnit unit, String jmxPath, String name) {
-        super(corePoolSize, maxChannelMemorySize, maxTotalMemorySize, keepAliveTime, unit, new NamedThreadFactory(name));
+        super(corePoolSize, maxChannelMemorySize, maxTotalMemorySize, keepAliveTime, unit, NamedThreadFactory.withName(name));
         this.jmxPath = jmxPath;
         registerMBean();
     }

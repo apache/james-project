@@ -153,7 +153,7 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
      * 
      */
     public static JMXEnabledThreadPoolExecutor newCachedThreadPool(String jmxPath, String name) {
-        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), new NamedThreadFactory(name), jmxPath);
+        return new JMXEnabledThreadPoolExecutor(0, Integer.MAX_VALUE, 60L, TimeUnit.SECONDS, new SynchronousQueue<>(), NamedThreadFactory.withName(name), jmxPath);
 
     }
 
@@ -174,6 +174,6 @@ public class JMXEnabledThreadPoolExecutor extends ThreadPoolExecutor implements 
     }
     
     public static JMXEnabledThreadPoolExecutor newFixedThreadPool(String jmxPath, String name, int nThreads) {
-        return newFixedThreadPool(jmxPath, nThreads, new NamedThreadFactory(name));
+        return newFixedThreadPool(jmxPath, nThreads, NamedThreadFactory.withName(name));
     }
 }
