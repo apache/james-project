@@ -29,11 +29,12 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
-public class DockerElasticSearch2Extension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
+public class DockerElasticSearch6Extension implements ParameterResolver, BeforeEachCallback, AfterEachCallback {
     private final SwarmGenericContainer elasticSearchContainer;
 
-    private DockerElasticSearch2Extension() {
-        this.elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
+    private DockerElasticSearch6Extension() {
+        this.elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_6)
+            .withEnv("discovery.type", "single-node")
             .withAffinityToContainer()
             .withExposedPorts(ESReporterContract.ES_HTTP_PORT)
             .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));

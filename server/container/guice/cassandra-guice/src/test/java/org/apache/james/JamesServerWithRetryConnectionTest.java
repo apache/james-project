@@ -84,7 +84,7 @@ class JamesServerWithRetryConnectionTest {
     private static final int ELASTIC_SEARCH_PORT = 9300;
     private static final int ELASTIC_SEARCH_HTTP_PORT = 9200;
 
-    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
+    private static SwarmGenericContainer elasticSearchContainer = new SwarmGenericContainer(Images.ELASTICSEARCH_2)
         .withExposedPorts(ELASTIC_SEARCH_HTTP_PORT, ELASTIC_SEARCH_PORT);
     private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
 
