@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Mailet DOC: Exclude from documentation annotation thanks to [mschnitzler](https://github.com/mschnitzler)
 - `cassandra.pooling.max.queue.size` configuration option Thanks to [matzepan](https://github.com/matzepan)
 - `RecipentDomainIs` and `SenderDomainIs` matchers by [athulyaraj](https://github.com/athulyaraj)
+- Metrics for BlobStore
+- New Guice product using Cassandra RabbitMQ ElasticSearch, OpenStack Swift and optional LDAP dependency (experiemental)
+
+### Fixed
+- MAILBOX-350 Potential invalid UID <-> MSN mapping upon IMAP COPY
+- Possibility to better zoom in Grafana boards
 
 ### Changed
 - Multiple libraries updates
