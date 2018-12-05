@@ -19,14 +19,14 @@
 
 package org.apache.james.metric.es;
 
+import static io.restassured.RestAssured.when;
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.Matchers.greaterThan;
 
-import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.james.backends.es.ClientProvider;
-import org.apache.james.backends.es.ClientProviderImpl;
+import org.apache.http.HttpStatus;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
@@ -36,8 +36,6 @@ import org.apache.james.util.docker.Images;
 import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.awaitility.Duration;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -46,31 +44,30 @@ import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 
 import com.codahale.metrics.MetricRegistry;
 
-public class ESReporterTest {
+import io.restassured.RestAssured;
 
+public class ESReporterTest {
     public static final String INDEX = "index_name";
     public static final long PERIOD_IN_SECOND = 1L;
     public static final int DELAY_IN_MS = 100;
     public static final int PERIOD_IN_MS = 100;
-    public static final int ES_APPLICATIVE_PORT = 9300;
     public static final int ES_HTTP_PORT = 9200;
 
     @Rule
     public SwarmGenericContainer esContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
         .withAffinityToContainer()
-        .withExposedPorts(ES_HTTP_PORT, ES_APPLICATIVE_PORT)
+        .withExposedPorts(ES_HTTP_PORT)
         .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
 
-    private ClientProvider clientProvider;
     private ESMetricReporter esMetricReporter;
     private MetricRegistry registry;
     private Timer timer;
 
     @Before
     public void setUp() {
-        clientProvider = ClientProviderImpl.forHost(esContainer.getHostIp(), esContainer.getMappedPort(ES_APPLICATIVE_PORT), Optional.empty());
+        RestAssured.baseURI = String.format("http://%s:%d", esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT));
         await().atMost(Duration.ONE_MINUTE)
-            .until(() -> elasticSearchStarted(clientProvider));
+            .untilAsserted(() -> elasticSearchStarted());
 
         registry = new MetricRegistry();
         timer = new Timer();
@@ -104,7 +101,7 @@ public class ESReporterTest {
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
         await().atMost(Duration.TEN_MINUTES)
-            .until(() -> done(clientProvider));
+            .untilAsserted(() -> done());
     }
 
     @Test
@@ -121,23 +118,22 @@ public class ESReporterTest {
         timer.schedule(timerTask, DELAY_IN_MS, PERIOD_IN_MS);
 
         await().atMost(Duration.TEN_MINUTES)
-            .until(() -> done(clientProvider));
+            .untilAsserted(() -> done());
     }
 
-    private boolean elasticSearchStarted(ClientProvider clientProvider) {
-        try (Client client = clientProvider.get()) {
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    private void elasticSearchStarted() {
+        when()
+            .get("/")
+        .then()
+            .assertThat()
+                .statusCode(HttpStatus.SC_OK);
     }
 
-    private boolean done(ClientProvider clientProvider) {
-        try (Client client = clientProvider.get()) {
-            return client.prepareSearch().setQuery(QueryBuilders.matchAllQuery()).get().getHits().totalHits() > 0;
-        } catch (Exception e) {
-            return false;
-        }
+    private void done() {
+        when()
+            .get("/_search")
+        .then()
+            .assertThat()
+                .body("hits.total", greaterThan(0));
     }
-
 }
