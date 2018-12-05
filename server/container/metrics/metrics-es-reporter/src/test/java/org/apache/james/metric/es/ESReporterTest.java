@@ -32,39 +32,31 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.apache.james.util.docker.Images;
-import org.apache.james.util.docker.RateLimiters;
 import org.apache.james.util.docker.SwarmGenericContainer;
 import org.awaitility.Duration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.codahale.metrics.MetricRegistry;
 
 import io.restassured.RestAssured;
 
-public class ESReporterTest {
+@ExtendWith(DockerElasticSearch2Extension.class)
+class ESReporterTest {
     public static final String INDEX = "index_name";
     public static final long PERIOD_IN_SECOND = 1L;
     public static final int DELAY_IN_MS = 100;
     public static final int PERIOD_IN_MS = 100;
     public static final int ES_HTTP_PORT = 9200;
 
-    @Rule
-    public SwarmGenericContainer esContainer = new SwarmGenericContainer(Images.ELASTICSEARCH)
-        .withAffinityToContainer()
-        .withExposedPorts(ES_HTTP_PORT)
-        .waitingFor(new HostPortWaitStrategy().withRateLimiter(RateLimiters.TWENTIES_PER_SECOND));
-
     private ESMetricReporter esMetricReporter;
     private MetricRegistry registry;
     private Timer timer;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(SwarmGenericContainer esContainer) {
         RestAssured.baseURI = String.format("http://%s:%d", esContainer.getHostIp(), esContainer.getMappedPort(ES_HTTP_PORT));
         await().atMost(Duration.ONE_MINUTE)
             .untilAsserted(() -> elasticSearchStarted());
@@ -79,18 +71,18 @@ public class ESReporterTest {
                 .periodInSecond(PERIOD_IN_SECOND)
                 .build(),
             registry);
+
+        esMetricReporter.start();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         timer.cancel();
         esMetricReporter.stop();
     }
 
     @Test
-    public void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer() {
-        esMetricReporter.start();
-
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainer(SwarmGenericContainer esContainer) {
         Metric metric = new DropWizardMetricFactory(registry).generate("probe");
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -105,9 +97,7 @@ public class ESReporterTest {
     }
 
     @Test
-    public void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric() {
-        esMetricReporter.start();
-
+    void esMetricReporterShouldProduceDocumentsOnAnElasticsearchContainerWhenRecordingTimeMetric(SwarmGenericContainer esContainer) {
         TimeMetric metric = new DropWizardMetricFactory(registry).timer("itstime");
         TimerTask timerTask = new TimerTask() {
             @Override
