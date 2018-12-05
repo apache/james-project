@@ -71,7 +71,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.elasticsearch</groupId>
+            <groupId>com.linagora</groupId>
             <artifactId>metrics-elasticsearch-reporter</artifactId>
         </dependency>
         <dependency>
