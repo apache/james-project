@@ -258,6 +258,11 @@ Where :
 
 You can add an optional port binding to port 8000, to expose the webadmin server. Please note that users are not authenticated on webadmin server, thus you should avoid exposing it in production.
 
+If you want to pass additional options to the underlying java command, you can configure a _JVM_OPTIONS_ env variable, for example add:
+
+    --env JVM_OPTIONS="-Xms256m -Xmx2048m"
+
+
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 ==== Handling attachment indexing
