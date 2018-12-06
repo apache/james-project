@@ -68,6 +68,7 @@ import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MailImpl;
@@ -171,9 +172,9 @@ public class CassandraMailRepositoryMailDAO {
     }
 
     private MailDTO toMail(Row row) {
-        MailAddress sender = Optional.ofNullable(row.getString(SENDER))
-            .map(MailAddress::getMailSender)
-            .orElse(null);
+        MaybeSender sender = Optional.ofNullable(row.getString(SENDER))
+            .map(MaybeSender::getMailSender)
+            .orElse(MaybeSender.nullSender());
         List<MailAddress> recipients = row.getList(RECIPIENTS, String.class)
             .stream()
             .map(Throwing.function(MailAddress::new))

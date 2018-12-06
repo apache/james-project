@@ -113,6 +113,10 @@ public class MailAddress implements java.io.Serializable {
         return NULL_SENDER;
     }
 
+    /**
+     * Prefer using {@link MaybeSender#getMailSender(String)}
+     */
+    @Deprecated
     public static  MailAddress getMailSender(String sender) {
         if (sender == null || sender.trim().length() <= 0) {
             return null;

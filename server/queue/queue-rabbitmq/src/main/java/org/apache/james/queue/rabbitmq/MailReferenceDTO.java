@@ -34,6 +34,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -190,7 +191,7 @@ class MailReferenceDTO {
 
     MailImpl toMailWithMimeMessage(MimeMessage mimeMessage) throws MessagingException {
         MailImpl mail = new MailImpl(name,
-            sender.map(MailAddress::getMailSender).orElse(null),
+            sender.map(MaybeSender::getMailSender).orElse(MaybeSender.nullSender()).asOptional().orElse(null),
             recipients.stream()
                 .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow())
                 .collect(Guavate.toImmutableList()),

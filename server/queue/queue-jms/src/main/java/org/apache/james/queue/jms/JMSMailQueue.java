@@ -51,6 +51,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.collections.iterators.EnumerationIterator;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.metrics.api.GaugeRegistry;
@@ -419,7 +420,8 @@ public class JMSMailQueue implements ManageableMailQueue, JMSSupport, MailPriori
         splitter.split(attributeNames)
                 .forEach(name -> setMailAttribute(message, mail, name));
 
-        mail.setSender(MailAddress.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER)));
+        MaybeSender.getMailSender(message.getStringProperty(JAMES_MAIL_SENDER))
+            .asOptional().ifPresent(mail::setSender);
         mail.setState(message.getStringProperty(JAMES_MAIL_STATE));
     }
 

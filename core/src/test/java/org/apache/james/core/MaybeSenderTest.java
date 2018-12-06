@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MaybeSenderTest {
+    private static final String GOOD_ADDRESS = "server-dev@james.apache.org";
     private static final String MAIL_ADDRESS_STRING = "any@domain.tld";
 
     private MailAddress mailAddress;
@@ -155,4 +156,51 @@ class MaybeSenderTest {
             .isEqualTo("default");
     }
 
+    @Test
+    void getMailSenderShouldReturnNullSenderWhenNullSender() {
+        assertThat(MaybeSender.getMailSender(MailAddress.NULL_SENDER_AS_STRING))
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void getMailSenderShouldReturnParsedAddressWhenNotNullAddress() throws Exception {
+        assertThat(MaybeSender.getMailSender(GOOD_ADDRESS))
+            .isEqualTo(MaybeSender.of(new MailAddress(GOOD_ADDRESS)));
+    }
+
+    @Test
+    void getMailSenderShouldReturnNullSenderWhenNull() {
+        assertThat(MaybeSender.getMailSender(null))
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void getMailSenderShouldReturnNullSenderWhenEmptyString() {
+        assertThat(MaybeSender.getMailSender(""))
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void getMailSenderShouldReturnNullSenderWhenOnlySpaces() {
+        assertThat(MaybeSender.getMailSender("   "))
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void getMailSenderShouldReturnNullSenderWhenBadValue() {
+        assertThat(MaybeSender.getMailSender("this@is@a@bad@address"))
+            .isEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void equalsShouldReturnFalseWhenOnlyFirstMemberIsANullSender() {
+        assertThat(MaybeSender.getMailSender(GOOD_ADDRESS))
+            .isNotEqualTo(MaybeSender.nullSender());
+    }
+
+    @Test
+    void equalsShouldReturnFalseWhenOnlySecondMemberIsANullSender() {
+        assertThat(MaybeSender.nullSender())
+            .isNotEqualTo(MaybeSender.getMailSender(GOOD_ADDRESS));
+    }
 }
