@@ -14,6 +14,22 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.2.x and 3.3.x will be reported here.
 
+Change list:
+
+ - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
+
+### Changes in WebAdmin reIndexing API
+
+Date: 05/12/2018
+
+SHA-1: 985b9a4a75bfa75c331cba6cbf835c043185dbdb
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2555
+
+We made this API introduced in James 3.2.0 a bit more REST friendly. If you developed tools using this API, you will need to update them.
+
+For more details please refer to [the latest WebAdmin documentation](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#ReIndexing).
+
 ## 3.2.0 version
 
 Changes to apply between 3.1.0 and 3.2.0 had been reported here.
