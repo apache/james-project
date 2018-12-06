@@ -53,7 +53,7 @@ import com.google.common.collect.ImmutableSet;
 
 
 /**
-  * handles DATA command
+ * handles DATA command
  */
 public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHandler {
 
