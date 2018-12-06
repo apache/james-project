@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -40,7 +39,7 @@ public class ValidSenderDomainHandlerTest {
         return new ValidSenderDomainHandler() {
 
             @Override
-            public void init(Configuration config) throws ConfigurationException {
+            public void init(Configuration config) {
 
             }
 
@@ -66,7 +65,7 @@ public class ValidSenderDomainHandlerTest {
             @Override
             public Map<String,Object> getState() {
 
-                map.put(SMTPSession.SENDER, sender);
+                map.put(SMTPSession.SENDER, MaybeSender.of(sender));
 
                 return map;
             }
@@ -116,8 +115,8 @@ public class ValidSenderDomainHandlerTest {
     public void testInvalidSenderDomainReject() throws Exception {
         ValidSenderDomainHandler handler = createHandler();
         SMTPSession session = setupMockedSession(new MailAddress("invalid@invalid"));
-        MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, State.Transaction);
-        HookReturnCode response = handler.doMail(session, MaybeSender.of(sender)).getResult();
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, State.Transaction);
+        HookReturnCode response = handler.doMail(session, sender).getResult();
         
         assertThat(HookReturnCode.deny()).describedAs("Blocked cause we use reject action").isEqualTo(response);
     }

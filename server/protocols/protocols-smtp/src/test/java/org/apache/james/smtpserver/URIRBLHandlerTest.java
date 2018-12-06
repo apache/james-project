@@ -29,8 +29,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.mock.MockDNSService;
@@ -78,7 +81,11 @@ public class URIRBLHandlerTest {
 
             @Override
             public Object getAttachment(String key, State state) {
-                sstate.put(SMTPSession.SENDER, "sender@james.apache.org");
+                try {
+                    sstate.put(SMTPSession.SENDER, MaybeSender.of(new MailAddress("sender@james.apache.org")));
+                } catch (AddressException e) {
+                    throw new RuntimeException(e);
+                }
 
                 if (state == State.Connection) {
                     return connectionState.get(key);

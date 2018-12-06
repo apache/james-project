@@ -417,9 +417,13 @@ public class MailImpl implements Disposable, Mail {
      * @param recipients the collection of recipients of this MailImpl
      */
     public MailImpl(String name, MailAddress sender, Collection<MailAddress> recipients) {
+        this(name, Optional.ofNullable(sender), recipients);
+    }
+
+    public MailImpl(String name, Optional<MailAddress> sender, Collection<MailAddress> recipients) {
         this();
         setName(name);
-        setSender(sender);
+        sender.ifPresent(this::setSender);
 
         // Copy the recipient list
         if (recipients != null) {
@@ -427,7 +431,7 @@ public class MailImpl implements Disposable, Mail {
         }
     }
 
-    @SuppressWarnings({"unchecked", "deprecation"})
+    @SuppressWarnings({"unchecked", "deprecated"})
     private MailImpl(Mail mail, String newName) throws MessagingException {
         this(newName, mail.getSender(), mail.getRecipients(), mail.getMessage());
         setRemoteHost(mail.getRemoteHost());

@@ -172,8 +172,8 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
      */
     @SuppressWarnings("unchecked")
     protected Response doDATA(SMTPSession session, String argument) {
-        MailAddress sender = (MailAddress) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
-        MailEnvelope env = createEnvelope(session, MaybeSender.of(sender), new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
+        MaybeSender sender = (MaybeSender) session.getAttachment(SMTPSession.SENDER, ProtocolSession.State.Transaction);
+        MailEnvelope env = createEnvelope(session, sender, new ArrayList<>((Collection<MailAddress>) session.getAttachment(SMTPSession.RCPT_LIST, ProtocolSession.State.Transaction)));
         session.setAttachment(MAILENV, env,ProtocolSession.State.Transaction);
         session.pushLineHandler(lineHandler);
         
