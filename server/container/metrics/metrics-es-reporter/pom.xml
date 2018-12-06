@@ -53,6 +53,10 @@
             <artifactId>guava</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.linagora</groupId>
+            <artifactId>metrics-elasticsearch-reporter</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
@@ -69,10 +73,6 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.linagora</groupId>
-            <artifactId>metrics-elasticsearch-reporter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

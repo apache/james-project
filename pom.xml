@@ -1812,6 +1812,11 @@
                 <version>2.4.0</version>
             </dependency>
             <dependency>
+                <groupId>com.linagora</groupId>
+                <artifactId>metrics-elasticsearch-reporter</artifactId>
+                <version>${es-reporter.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>
                 <version>3.1.0</version>
@@ -2374,11 +2379,6 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
                 <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.linagora</groupId>
-                <artifactId>metrics-elasticsearch-reporter</artifactId>
-                <version>${es-reporter.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.hamcrest</groupId>
