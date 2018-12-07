@@ -105,7 +105,8 @@ public class CassandraMailQueueView implements MailQueueView {
     public long delete(DeleteCondition deleteCondition) {
         if (deleteCondition instanceof DeleteCondition.WithName) {
             DeleteCondition.WithName nameDeleteCondition = (DeleteCondition.WithName) deleteCondition;
-            return delete(MailKey.of(nameDeleteCondition.getName())).map(any -> 1L).block();
+            delete(MailKey.of(nameDeleteCondition.getName())).block();
+            return 1L;
         }
         return browseThenDelete(deleteCondition);
     }
