@@ -215,7 +215,7 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 return SYNTAX_ERROR;
             }
             try {
-                MaybeSender senderAddress = toMaybeSender(removeBrackets(session, sender));
+                MaybeSender senderAddress = toMaybeSender(removeBrackets(sender));
                 // Store the senderAddress in session map
                 session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
             } catch (Exception pe) {
@@ -238,9 +238,8 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
             appendDefaultDomainIfNeeded(senderAsString)));
     }
 
-    private String removeBrackets(SMTPSession session, String input) {
-        if (session.getConfiguration().useAddressBracketsEnforcement()
-            || (input.startsWith("<") && input.endsWith(">"))) {
+    private String removeBrackets(String input) {
+        if (input.startsWith("<") && input.endsWith(">")) {
             // Remove < and >
             return input.substring(1, input.length() - 1);
         }
