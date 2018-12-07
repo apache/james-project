@@ -93,8 +93,15 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
-        return save(bucketName, new ByteArrayInputStream(data));
+    public Mono<BlobId> save(byte[] data) {
+        BlobId blobId = blobIdFactory.forPayload(data);
+
+        Blob blob = blobStore.blobBuilder(blobId.asString())
+            .payload(payloadCodec.write(new ByteArrayInputStream(data)))
+            .build();
+
+        return save(bucketName, blob)
+            .thenApply(any -> blobId);
     }
 
     @Override
@@ -121,8 +128,13 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                             .payload(payload.getPayload())
                             .build();
 
-        return Mono.fromRunnable(() -> putBlobFunction.putBlob(blob))
+        return save(blob)
             .then(Mono.fromCallable(() -> blobIdFactory.from(hashingInputStream.hash().toString())));
+    }
+
+    private Mono<String> save(Blob blob) {
+        String containerName = this.containerName.value();
+        return Mono.fromCallable(() -> blobStore.putBlob(containerName, blob));
     }
 
     @Override
@@ -145,7 +157,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
                 "Failed to readBytes blob " + blobId.asString(),
                 cause);
         }
-
     }
 
     public void deleteContainer() {
