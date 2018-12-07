@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
@@ -213,47 +214,44 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
                 LOGGER.info("Error parsing sender address: {}: did not start and end with < >", sender);
                 return SYNTAX_ERROR;
             }
-            MaybeSender senderAddress = MaybeSender.nullSender();
-
-            if (session.getConfiguration().useAddressBracketsEnforcement()
-                    || (sender.startsWith("<") && sender.endsWith(">"))) {
-                // Remove < and >
-                sender = sender.substring(1, sender.length() - 1);
+            try {
+                MaybeSender senderAddress = toMaybeSender(removeBrackets(session, sender));
+                // Store the senderAddress in session map
+                session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
+            } catch (Exception pe) {
+                LOGGER.info("Error parsing sender address: {}", sender, pe);
+                return SYNTAX_ERROR_ADDRESS;
             }
-
-            if (sender.length() == 0) {
-                // This is the <> case. Let senderAddress == MaybeSender.nullSender()
-            } else {
-
-                if (!sender.contains("@")) {
-                    sender = sender
-                            + "@"
-                            + getDefaultDomain();
-                }
-
-                try {
-                    senderAddress = MaybeSender.of(new MailAddress(sender));
-                } catch (Exception pe) {
-                    LOGGER.info("Error parsing sender address: {}", sender, pe);
-                    return SYNTAX_ERROR_ADDRESS;
-                }
-            }
-            if (isNullSender(senderAddress)) {
-                senderAddress = MaybeSender.nullSender();
-            }
-            // Store the senderAddress in session map
-            session.setAttachment(SMTPSession.SENDER, senderAddress, State.Transaction);
         }
         return null;
     }
 
-    private boolean isNullSender(MaybeSender senderAddress) {
-        if (senderAddress.isNullSender()) {
-            return true;
+    private MaybeSender toMaybeSender(String senderAsString) throws AddressException {
+        if (senderAsString.length() == 0) {
+            // This is the <> case.
+            return MaybeSender.nullSender();
         }
-        boolean hasEmptyLocalPart = senderAddress.get().getLocalPart().length() == 0;
-        boolean hasEmptyDomainPart = senderAddress.get().getDomain().name().length() == 0;
-        return hasEmptyLocalPart && hasEmptyDomainPart;
+        if (senderAsString.equals("@")) {
+            return MaybeSender.nullSender();
+        }
+        return MaybeSender.of(new MailAddress(
+            appendDefaultDomainIfNeeded(senderAsString)));
+    }
+
+    private String removeBrackets(SMTPSession session, String input) {
+        if (session.getConfiguration().useAddressBracketsEnforcement()
+            || (input.startsWith("<") && input.endsWith(">"))) {
+            // Remove < and >
+            return input.substring(1, input.length() - 1);
+        }
+        return input;
+    }
+
+    private String appendDefaultDomainIfNeeded(String address) {
+        if (!address.contains("@")) {
+            return address + "@" + getDefaultDomain();
+        }
+        return address;
     }
 
     @Override
