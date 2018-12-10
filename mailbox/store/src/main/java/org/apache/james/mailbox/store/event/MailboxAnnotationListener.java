@@ -52,11 +52,11 @@ public class MailboxAnnotationListener implements MailboxListener {
 
     @Override
     public void event(Event event) {
-        if (event instanceof EventFactory.MailboxDeletionImpl) {
+        if (event instanceof MailboxDeletion) {
             try {
                 MailboxSession mailboxSession = mailboxManager.createSystemSession(event.getUser().asString());
                 AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);
-                MailboxId mailboxId = ((EventFactory.MailboxDeletionImpl) event).getMailbox().getMailboxId();
+                MailboxId mailboxId = ((MailboxDeletion) event).getMailboxId();
 
                 deleteRelatedAnnotations(mailboxId, annotationMapper);
             } catch (MailboxException e) {
