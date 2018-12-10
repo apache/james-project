@@ -96,7 +96,6 @@ import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
-import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -2338,10 +2337,10 @@ public abstract class SetMessagesMethodTest {
     }
 
     private boolean isAddedToOutboxEvent(String messageId, Event event, String outboxId) {
-        if (!(event instanceof EventFactory.AddedImpl)) {
+        if (!(event instanceof MailboxListener.Added)) {
             return false;
         }
-        EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
+        MailboxListener.Added added = (MailboxListener.Added) event;
         return added.getMailboxId().serialize().equals(outboxId)
             && added.getUids().size() == 1
             && added.getMetaData(added.getUids().get(0)).getMessageId().serialize().equals(messageId);
