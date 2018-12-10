@@ -19,9 +19,7 @@
 
 package org.apache.mailet.base.test;
 
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
@@ -40,12 +38,12 @@ public class FakeMailetConfig implements MailetConfig {
         private static final String DEFAULT_MAILET_NAME = "A Mailet";
         private Optional<String> mailetName;
         private Optional<MailetContext> mailetContext;
-        private Properties properties;
+        private Map<String, Object> properties;
 
         private Builder() {
             mailetName = Optional.empty();
             mailetContext = Optional.empty();
-            properties = new Properties();
+            properties = new HashMap<>();
         }
 
         public Builder mailetName(String mailetName) {
@@ -62,8 +60,8 @@ public class FakeMailetConfig implements MailetConfig {
             return mailetContext(mailetContext.build());
         }
 
-        public Builder setProperty(String key, String value) {
-            this.properties.setProperty(key, value);
+        public <T> Builder setProperty(String key, T value) {
+            this.properties.put(key, value);
             return this;
         }
 
@@ -76,22 +74,37 @@ public class FakeMailetConfig implements MailetConfig {
 
     private final String mailetName;
     private final MailetContext mailetContext;
-    private final Properties properties;
+    private final Map<String, Object> properties;
 
-    private FakeMailetConfig(String mailetName, MailetContext mailetContext, Properties properties) {
+    private FakeMailetConfig(String mailetName, MailetContext mailetContext, Map properties) {
         this.mailetName = mailetName;
         this.mailetContext = mailetContext;
         this.properties = properties;
     }
 
     @Override
-    public String getInitParameter(String name) {
-        return properties.getProperty(name);
+    public <T> T getInitParameter(String name, Class<T> clazz) {
+        Object o = properties.get(name);
+        if (o != null) {
+            if (clazz.isInstance(o)) {
+                return (T) properties.get(name);
+            } else {
+                throw new ClassCastException(name + " property is not of type " + clazz.getCanonicalName());
+            }
+        } else {
+            return null;
+        }
     }
 
     @Override
+    public String getInitParameter(String name) {
+        return (String) properties.get(name);
+    }
+
+
+    @Override
     public Iterator<String> getInitParameterNames() {
-        return properties.stringPropertyNames().iterator();
+        return properties.keySet().iterator();
     }
 
     @Override

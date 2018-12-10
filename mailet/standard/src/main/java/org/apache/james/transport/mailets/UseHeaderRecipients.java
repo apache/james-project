@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
@@ -84,7 +85,7 @@ public class UseHeaderRecipients extends GenericMailet {
      */
     @Override
     public void init() {
-        isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
+        isDebug = Optional.ofNullable(getInitParameter("debug", Boolean.class)).orElse(false);
     }
 
     /**

@@ -29,9 +29,19 @@ import java.util.Iterator;
  * The configuration information consists of mailet-specific initialization
  * parameters in a set of name/value pairs, and a MailetContext object
  * which allows the mailet to interact with the mailet container.
- *
  */
 public interface MailetConfig {
+
+    /**
+     * Returns the value of the named initialization parameter,
+     * or null if the parameter does not exist.
+     *
+     * @param name  the name of the initialization parameter
+     * @param clazz the type of the returned value
+     * @return the value of the initialization parameter, or null
+     * @throws ClassCastException
+     */
+    <T> T getInitParameter(String name, Class<T> clazz) throws ClassCastException;
 
     /**
      * Returns the value of the named initialization parameter,
@@ -48,7 +58,7 @@ public interface MailetConfig {
      * no initialization parameters.
      *
      * @return an Iterator of String objects containing the names of the
-     *      mailet's initialization parameters
+     * mailet's initialization parameters
      */
     Iterator<String> getInitParameterNames();
 
@@ -57,7 +67,7 @@ public interface MailetConfig {
      * executing.
      *
      * @return a MailetContext object which can be used by the mailet
-     *      to interact with the mailet container
+     * to interact with the mailet container
      */
     MailetContext getMailetContext();
 
@@ -70,4 +80,5 @@ public interface MailetConfig {
      * @return the name of the mailet instance
      */
     String getMailetName();
+
 }

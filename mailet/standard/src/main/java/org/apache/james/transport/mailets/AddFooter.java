@@ -114,7 +114,7 @@ public class AddFooter extends GenericMailet {
     /**
      * Prepends the content of the MimePart as text to the existing footer
      *
-     * @param part the MimePart to attach
+     * @param content the MimePart to attach
      */
     private String attachFooterToText(String content) throws MessagingException,
             IOException {
@@ -148,7 +148,7 @@ public class AddFooter extends GenericMailet {
         return new StringBuilder()
                 .append(content.substring(0, insertionIndex))
                 .append(getFooterHTML())
-                .append(content.substring(insertionIndex, content.length()))
+                .append(content.substring(insertionIndex))
                 .toString();
     }
 

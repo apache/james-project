@@ -66,7 +66,7 @@ public class UnwrapText extends GenericMailet {
 
     @Override
     public void init() throws MailetException {
-        quotewidth = Integer.parseInt(getInitParameter(PARAMETER_NAME_QUOTEWIDTH, "-10"));
+        quotewidth = getInitParameter(PARAMETER_NAME_QUOTEWIDTH, Integer.class, -10);
     }
 
     @Override

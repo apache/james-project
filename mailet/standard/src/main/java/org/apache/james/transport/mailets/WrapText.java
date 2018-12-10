@@ -48,7 +48,7 @@ public class WrapText extends GenericMailet {
     @Override
     public void init() throws MailetException {
         optionFlowedDelsp = getBooleanParameter(getInitParameter(PARAMETER_NAME_FLOWED_DELSP), optionFlowedDelsp);
-        optionWidth = Integer.parseInt(getInitParameter(PARAMETER_NAME_WIDTH, "" + optionWidth));
+        optionWidth = getInitParameter(PARAMETER_NAME_WIDTH, Integer.class, optionWidth);
     }
 
     @Override

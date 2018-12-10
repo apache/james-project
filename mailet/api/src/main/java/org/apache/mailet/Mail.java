@@ -389,7 +389,7 @@ public interface Mail extends Serializable, Cloneable {
     void setLastUpdated(Date lastUpdated);
 
     /**
-     * Returns a map of AttribeName Attribute for the currently registered attributes
+     * Returns a map of AttributeName Attribute for the currently registered attributes
      *
      * @since Mailet API v3.2
      */
