@@ -8,10 +8,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 - Metrics for BlobStore
 - New Guice product using Cassandra RabbitMQ ElasticSearch, OpenStack Swift and optional LDAP dependency (experimental)
+- JPA SMTP dockerFile contributed by [matzepan](https://github.com/matzepan)
+- Listing healthchecks, thanks to [Madhu Bhat](https://github.com/kratostaine)
+- Configuring the ElasticSearch clusterName
 
 ### Fixed
 - MAILBOX-350 Potential invalid UID <-> MSN mapping upon IMAP COPY
 - Possibility to better zoom in Grafana boards
+- default ElasticSearch shards & replica configured values
+- Move & copy batch sizes are now loaded from configuration
 
 ### Changed
 - WebAdmin ReIndexing API had been reworked
