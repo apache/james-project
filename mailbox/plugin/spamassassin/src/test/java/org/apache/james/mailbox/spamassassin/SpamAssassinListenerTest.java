@@ -48,7 +48,6 @@ import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.EventFactory.AddedImpl;
 import org.apache.james.mailbox.store.event.MessageMoveEvent;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -249,13 +248,11 @@ public class SpamAssassinListenerTest {
     @Test
     public void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() {
         SimpleMailboxMessage message = createMessage(inboxId);
-        EventFactory eventFactory = new EventFactory();
-        AddedImpl addedEvent = eventFactory.new AddedImpl(
-                MAILBOX_SESSION.getSessionId(),
-                MAILBOX_SESSION.getUser().getCoreUser(),
-                inbox,
+
+        MailboxListener.Added addedEvent = new EventFactory().added(
+                MAILBOX_SESSION,
                 ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
-                ImmutableMap.of(MessageUid.of(45), message));
+                inbox);
 
         listener.event(addedEvent);
 
@@ -265,13 +262,11 @@ public class SpamAssassinListenerTest {
     @Test
     public void eventShouldNotCallSpamAssassinHamLearningWhenTheMessageIsAddedInAMailboxOtherThanInbox() {
         SimpleMailboxMessage message = createMessage(mailboxId1);
-        EventFactory eventFactory = new EventFactory();
-        AddedImpl addedEvent = eventFactory.new AddedImpl(
-                MAILBOX_SESSION.getSessionId(),
-                MAILBOX_SESSION.getUser().getCoreUser(),
-                mailbox1,
-                ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
-                ImmutableMap.of(MessageUid.of(45), message));
+
+        MailboxListener.Added addedEvent = new EventFactory().added(
+            MAILBOX_SESSION,
+            ImmutableSortedMap.of(MessageUid.of(45), new SimpleMessageMetaData(message)),
+            inbox);
 
         listener.event(addedEvent);
 
