@@ -29,9 +29,9 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
@@ -47,10 +47,10 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
     private static final int UNLIMITED = -1;
-    private final MessageMapperFactory factory;
+    private final MailboxSessionMapperFactory factory;
     private final MailboxManager mailboxManager;
 
-    public ListeningMessageSearchIndex(MessageMapperFactory factory, MailboxManager mailboxManager) {
+    public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, MailboxManager mailboxManager) {
         this.factory = factory;
         this.mailboxManager = mailboxManager;
     }

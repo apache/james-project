@@ -42,7 +42,7 @@ import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.mail.MessageMapperFactory;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.elasticsearch.ElasticsearchException;
@@ -74,7 +74,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     
     @Before
     public void setup() {
-        MessageMapperFactory mapperFactory = mock(MessageMapperFactory.class);
+        MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
         messageToElasticSearchJson = mock(MessageToElasticSearchJson.class);
         ElasticSearchSearcher elasticSearchSearcher = mock(ElasticSearchSearcher.class);
         MailboxManager mockMailboxManager = mock(MailboxManager.class);
