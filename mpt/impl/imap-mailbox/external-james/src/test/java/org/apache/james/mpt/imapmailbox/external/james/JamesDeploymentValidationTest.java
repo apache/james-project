@@ -26,7 +26,7 @@ import org.junit.Before;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-public class JamesDeploymentValidation extends DeploymentValidation {
+public class JamesDeploymentValidationTest extends DeploymentValidation {
 
     private ImapHostSystem system;
 

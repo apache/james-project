@@ -53,5 +53,5 @@ git clone $ORIGIN/.
 git checkout $SHA1
 
 
-mvn -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am package
-mvn -Dtest=JamesDeploymentValidation -pl org.apache.james:apache-james-mpt-external-james test
+mvn -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am install
+mvn -Dtest=JamesDeploymentValidationTest -pl org.apache.james:apache-james-mpt-external-james test
