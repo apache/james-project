@@ -30,7 +30,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -63,34 +62,35 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     public void event(Event event) {
         try {
             MailboxSession session = mailboxManager.createSystemSession(event.getUser().asString());
-            if (event instanceof MessageEvent) {
-                if (event instanceof EventFactory.AddedImpl) {
-                    EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
-                    Mailbox mailbox = added.getMailbox();
+            if (event instanceof MailboxEvent) {
+                MailboxEvent mailboxEvent = (MailboxEvent) event;
+                Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
+
+                if (event instanceof Added) {
+                    Added added = (Added) event;
 
                     for (MessageUid uid : added.getUids()) {
                         retrieveMailboxMessage(session, mailbox, uid)
                             .ifPresent(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
                     }
-                } else if (event instanceof EventFactory.ExpungedImpl) {
-                    EventFactory.ExpungedImpl expunged = (EventFactory.ExpungedImpl) event;
+                } else if (event instanceof Expunged) {
+                    Expunged expunged = (Expunged) event;
                     try {
-                        delete(session, expunged.getMailbox(), expunged.getUids());
+                        delete(session, mailbox, expunged.getUids());
                     } catch (MailboxException e) {
-                        LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), expunged.getMailbox(), e);
+                        LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), mailbox, e);
                     }
-                } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
-                    EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
-                    Mailbox mailbox = flagsUpdated.getMailbox();
+                } else if (event instanceof FlagsUpdated) {
+                    FlagsUpdated flagsUpdated = (FlagsUpdated) event;
 
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
                     } catch (MailboxException e) {
                         LOGGER.error("Unable to update flags in index for mailbox {}", mailbox, e);
                     }
+                } else if (event instanceof MailboxDeletion) {
+                    deleteAll(session, mailbox);
                 }
-            } else if (event instanceof EventFactory.MailboxDeletionImpl) {
-                deleteAll(session, ((EventFactory.MailboxDeletionImpl) event).getMailbox());
             }
         } catch (MailboxException e) {
             LOGGER.error("Unable to update index", e);
