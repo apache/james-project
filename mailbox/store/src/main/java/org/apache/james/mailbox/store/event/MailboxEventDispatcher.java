@@ -81,8 +81,8 @@ public class MailboxEventDispatcher {
      * @param uids Sorted map with uids and message meta data
      * @param mailbox The mailbox
      */
-    public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
-        listener.event(eventFactory.added(session, uids, mailbox, cachedMessages));
+    public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
+        listener.event(eventFactory.added(session, uids, mailbox));
     }
 
     public void added(MailboxSession session, Mailbox mailbox, MailboxMessage mailboxMessage) {
@@ -90,14 +90,14 @@ public class MailboxEventDispatcher {
         SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
                 .put(messageMetaData.getUid(), messageMetaData)
                 .build();
-        added(session, metaDataMap, mailbox, ImmutableMap.of(mailboxMessage.getUid(), mailboxMessage));
+        added(session, metaDataMap, mailbox);
     }
 
     public void added(MailboxSession session, MessageMetaData messageMetaData, Mailbox mailbox) {
         SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
             .put(messageMetaData.getUid(), messageMetaData)
             .build();
-        added(session, metaDataMap, mailbox, ImmutableMap.<MessageUid, MailboxMessage>of());
+        added(session, metaDataMap, mailbox);
     }
 
     /**

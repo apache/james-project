@@ -739,7 +739,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
             messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
         }
-        dispatcher.added(session, copiedUids, to.getMailboxEntity(), messagesMap.build());
+        dispatcher.added(session, copiedUids, to.getMailboxEntity());
         dispatcher.moved(session,
             MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
@@ -759,7 +759,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
             messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
         }
-        dispatcher.added(session, moveUids, to.getMailboxEntity(), messagesMap.build());
+        dispatcher.added(session, moveUids, to.getMailboxEntity());
         dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
         dispatcher.moved(session,
             MessageMoves.builder()

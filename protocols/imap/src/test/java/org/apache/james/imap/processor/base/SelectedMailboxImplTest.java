@@ -63,7 +63,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 
 public class SelectedMailboxImplTest {
@@ -171,6 +170,6 @@ public class SelectedMailboxImplTest {
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
         result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
         mailboxListener.event(new EventFactory().added(MailboxSession.SessionId.of(random.nextLong()),
-            mock(User.class), result, mailbox, ImmutableMap.of()));
+            mock(User.class), result, mailbox));
     }
 }

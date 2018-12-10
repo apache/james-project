@@ -51,14 +51,12 @@ public class EventFactory {
 
     public final class AddedImpl extends MailboxListener.Added implements MailboxAware {
         private final Map<MessageUid, MessageMetaData> added;
-        private final Map<MessageUid, MailboxMessage> availableMessages;
         private final Mailbox mailbox;
 
-        public AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids, Map<MessageUid, MailboxMessage> availableMessages) {
+        public AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.added = ImmutableMap.copyOf(uids);
             this.mailbox = mailbox;
-            this.availableMessages = ImmutableMap.copyOf(availableMessages);
         }
 
         @Override
@@ -74,10 +72,6 @@ public class EventFactory {
         @Override
         public Mailbox getMailbox() {
             return mailbox;
-        }
-
-        public Map<MessageUid, MailboxMessage> getAvailableMessages() {
-            return availableMessages;
         }
     }
 
@@ -193,12 +187,12 @@ public class EventFactory {
         }
     }
 
-    public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
-        return added(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox, cachedMessages);
+    public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
+        return added(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox);
     }
 
-    public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox, Map<MessageUid, MailboxMessage> cachedMessages) {
-        return new AddedImpl(sessionId, user, mailbox, uids, cachedMessages);
+    public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
+        return new AddedImpl(sessionId, user, mailbox, uids);
     }
 
     public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {

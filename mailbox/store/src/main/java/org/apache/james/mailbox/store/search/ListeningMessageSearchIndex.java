@@ -69,7 +69,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     Mailbox mailbox = added.getMailbox();
 
                     for (MessageUid uid : added.getUids()) {
-                        retrieveMailboxMessage(session, added, mailbox, uid)
+                        retrieveMailboxMessage(session, mailbox, uid)
                             .ifPresent(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
                     }
                 } else if (event instanceof EventFactory.ExpungedImpl) {
@@ -97,19 +97,14 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         }
     }
 
-    private Optional<MailboxMessage> retrieveMailboxMessage(MailboxSession session, EventFactory.AddedImpl added, Mailbox mailbox, MessageUid next) {
-        Optional<MailboxMessage> firstChoice = Optional.ofNullable(added.getAvailableMessages().get(next));
-        if (firstChoice.isPresent()) {
-            return firstChoice;
-        } else {
-            try {
-                return Optional.of(factory.getMessageMapper(session)
-                    .findInMailbox(mailbox, MessageRange.one(next), FetchType.Full, UNLIMITED)
-                    .next());
-            } catch (Exception e) {
-                LOGGER.error("Could not retrieve message {} in mailbox {}", next, mailbox.getMailboxId().serialize(), e);
-                return Optional.empty();
-            }
+    private Optional<MailboxMessage> retrieveMailboxMessage(MailboxSession session, Mailbox mailbox, MessageUid uid) {
+        try {
+            return Optional.of(factory.getMessageMapper(session)
+                .findInMailbox(mailbox, MessageRange.one(uid), FetchType.Full, UNLIMITED)
+                .next());
+        } catch (Exception e) {
+            LOGGER.error("Could not retrieve message {} in mailbox {}", uid.asLong(), mailbox.getMailboxId().serialize(), e);
+            return Optional.empty();
         }
     }
 
