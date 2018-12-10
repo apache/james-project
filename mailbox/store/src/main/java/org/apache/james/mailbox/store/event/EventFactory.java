@@ -45,10 +45,10 @@ import com.google.common.collect.ImmutableMap;
 
 public class EventFactory {
 
-    public final class AddedImpl extends MailboxListener.Added {
+    private final class AddedImpl extends MailboxListener.Added {
         private final Map<MessageUid, MessageMetaData> added;
 
-        public AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
+        AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.added = ImmutableMap.copyOf(uids);
         }
@@ -64,10 +64,10 @@ public class EventFactory {
         }
     }
 
-    public final class ExpungedImpl extends MailboxListener.Expunged {
+    private final class ExpungedImpl extends MailboxListener.Expunged {
         private final Map<MessageUid, MessageMetaData> uids;
 
-        public ExpungedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
+        ExpungedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, Map<MessageUid, MessageMetaData> uids) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableMap.copyOf(uids);
         }
@@ -83,11 +83,11 @@ public class EventFactory {
         }
     }
 
-    public final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated {
+    private final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated {
         private final List<MessageUid> uids;
         private final List<UpdatedFlags> uFlags;
 
-        public FlagsUpdatedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
+        FlagsUpdatedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableList.copyOf(uids);
             this.uFlags = ImmutableList.copyOf(uFlags);
@@ -104,22 +104,22 @@ public class EventFactory {
         }
     }
 
-    public final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion {
-        public MailboxDeletionImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
+    private final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion {
+        MailboxDeletionImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
             super(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
         }
     }
 
-    public final class MailboxAddedImpl extends MailboxListener.MailboxAdded {
-        public MailboxAddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
+    private final class MailboxAddedImpl extends MailboxListener.MailboxAdded {
+        MailboxAddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
         }
     }
 
-    public final class MailboxRenamedEventImpl extends MailboxListener.MailboxRenamed {
+    private final class MailboxRenamedEventImpl extends MailboxListener.MailboxRenamed {
         private final MailboxPath newPath;
 
-        public MailboxRenamedEventImpl(MailboxSession.SessionId sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
+        MailboxRenamedEventImpl(MailboxSession.SessionId sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
             super(sessionId, user, oldPath, newMailbox.getMailboxId());
             this.newPath = new StoreMailboxPath(newMailbox);
         }
