@@ -35,6 +35,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobStoreContract;
 import org.apache.james.blob.api.HashBlobId;
+import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.util.CompletableFutureUtil;
 import org.apache.james.util.StreamUtils;
@@ -387,8 +388,8 @@ class UnionBlobStoreTest implements BlobStoreContract {
     void saveShouldNotWriteToLegacy() throws Exception {
         BlobId blobId = unionBlobStore.save(BLOB_CONTENT).get();
 
-        assertThat(legacyBlobStore.readBytes(blobId).get())
-            .isEmpty();
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).join())
+            .hasCauseInstanceOf(ObjectStoreException.class);
     }
 
     @Test
@@ -403,8 +404,8 @@ class UnionBlobStoreTest implements BlobStoreContract {
     void saveInputStreamShouldNotWriteToLegacy() throws Exception {
         BlobId blobId = unionBlobStore.save(new ByteArrayInputStream(BLOB_CONTENT)).get();
 
-        assertThat(legacyBlobStore.readBytes(blobId).get())
-            .isEmpty();
+        assertThatThrownBy(() -> legacyBlobStore.readBytes(blobId).join())
+            .isNotInstanceOf(ObjectStoreException.class);
     }
 
     @Test

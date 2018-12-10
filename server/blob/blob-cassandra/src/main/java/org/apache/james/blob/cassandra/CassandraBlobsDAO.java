@@ -31,6 +31,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.Pipe;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -159,24 +160,21 @@ public class CassandraBlobsDAO implements BlobStore {
 
     @Override
     public CompletableFuture<byte[]> readBytes(BlobId blobId) {
-        return cassandraAsyncExecutor.executeSingleRow(
-            select.bind()
-                .setString(BlobTable.ID, blobId.asString()))
-            .thenCompose(row -> toDataParts(row, blobId))
+        CompletableFuture<Row> futureRow = cassandraAsyncExecutor
+            .executeSingleRow(
+                select.bind()
+                    .setString(BlobTable.ID, blobId.asString()))
+            .thenApply(x -> x.orElseThrow(() -> new ObjectStoreException(String.format("Could not retrieve blob metadata for %s", blobId))));
+        return toDataParts(futureRow.join(), blobId)
             .thenApply(this::concatenateDataParts);
     }
 
-    private CompletableFuture<Stream<BlobPart>> toDataParts(Optional<Row> blobRowOptional, BlobId blobId) {
-        return blobRowOptional.map(blobRow -> {
-            int numOfChunk = blobRow.getInt(BlobTable.NUMBER_OF_CHUNK);
-            return FluentFutureStream.of(
-                IntStream.range(0, numOfChunk)
-                    .mapToObj(position -> readPart(blobId, position)))
-                .completableFuture();
-        }).orElseGet(() -> {
-            LOGGER.warn("Could not retrieve blob metadata for {}", blobId);
-            return CompletableFuture.completedFuture(Stream.empty());
-        });
+    private CompletableFuture<Stream<BlobPart>> toDataParts(Row blobRow, BlobId blobId) {
+        int numOfChunk = blobRow.getInt(BlobTable.NUMBER_OF_CHUNK);
+        return FluentFutureStream.of(
+            IntStream.range(0, numOfChunk)
+                .mapToObj(position -> readPart(blobId, position)))
+            .completableFuture();
     }
 
     private byte[] concatenateDataParts(Stream<BlobPart> blobParts) {
@@ -234,6 +232,11 @@ public class CassandraBlobsDAO implements BlobStore {
                 .thenApply(ByteBuffer::wrap)
                 .thenAccept(consumer.sneakyThrow());
             return Channels.newInputStream(pipe.source());
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof ObjectStoreException) {
+                throw (ObjectStoreException)(e.getCause());
+            }
+            throw new RuntimeException(e);
         } catch (IOException cause) {
             throw new ObjectStoreException(
                 "Failed to convert CompletableFuture<byte[]> to InputStream",

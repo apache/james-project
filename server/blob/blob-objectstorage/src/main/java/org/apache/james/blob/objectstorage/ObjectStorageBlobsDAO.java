@@ -137,7 +137,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
             if (blob != null) {
                 return payloadCodec.read(blob.getPayload());
             } else {
-                return EMPTY_STREAM;
+                throw new ObjectStoreException("fail to load blob with id " + blobId);
             }
         } catch (IOException cause) {
             throw new ObjectStoreException(

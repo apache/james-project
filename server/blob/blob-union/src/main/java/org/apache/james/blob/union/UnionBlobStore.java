@@ -172,13 +172,8 @@ public class UnionBlobStore implements BlobStore {
 
     private CompletableFuture<byte[]> readFromLegacyIfNeeded(Optional<byte[]> readFromCurrentResult, BlobId blodId) {
         return readFromCurrentResult
-            .filter(this::hasContent)
             .map(CompletableFuture::completedFuture)
             .orElseGet(() -> legacyBlobStore.readBytes(blodId));
-    }
-
-    private boolean hasContent(byte [] bytes) {
-        return bytes.length > 0;
     }
 
     @Override

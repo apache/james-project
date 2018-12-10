@@ -22,12 +22,15 @@ package org.apache.james.blob.memory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.ObjectStoreException;
 
 import com.google.common.base.Preconditions;
 
@@ -63,7 +66,14 @@ public class MemoryBlobStore implements BlobStore {
 
     @Override
     public CompletableFuture<byte[]> readBytes(BlobId blobId) {
-        return CompletableFuture.completedFuture(retrieveStoredValue(blobId));
+        try {
+            return CompletableFuture.completedFuture(retrieveStoredValue(blobId));
+        } catch (ObjectStoreException e) {
+            Supplier<byte[]> throwing = () -> {
+                throw e;
+            };
+            return CompletableFuture.supplyAsync(throwing);
+        }
     }
 
     @Override
@@ -72,6 +82,7 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     private byte[] retrieveStoredValue(BlobId blobId) {
-        return blobs.getOrDefault(blobId, new byte[]{});
+        return Optional.ofNullable(blobs.get(blobId))
+            .orElseThrow(() -> new ObjectStoreException("unable to find blob with id " + blobId));
     }
 }
