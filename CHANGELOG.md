@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 - WebAdmin ReIndexing API had been reworked
+- MailboxListener and mailbox event system was reworked. Custom listeners will need to be adapted. Please see Upgrade instuctions.
 
 ### Removed
 - Drop HBase and JCR components (mailbox and server/data).

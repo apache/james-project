@@ -18,6 +18,33 @@ Change list:
 
  - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
 
+### Changes to the MailboxListener API
+
+#### Persistent MailboxId for MailDir
+
+Date: 30/11/2018
+
+SHA-1: 7e32da51a29bee1c732b2b13708bb4b986140119
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-292
+
+MailboxId are now persisted in a `james-mailboxId` file. This file is created on the fly, so no action is required for users relying on
+the MailDir mailbox.
+
+#### Registration by MailboxId
+
+Date: 30/11/2018
+
+SHA-1: d9bcebc7dd546bd5f11f3d9b496491e7c9042fe2
+
+JIRA: https://issues.apache.org/jira/browse/MAILBOX-354
+
+Only user written components performing MailboxListener registration will be affected.
+
+The MailboxPath is mutable and thus can be changed upon mailbox rename. This leads to significantly complex code with possible inconsistency windows.
+
+Using the mailboxId, which is immutable, solves these issues.
+
 ### Changes in WebAdmin reIndexing API
 
 Date: 05/12/2018
