@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
-    public static final int UNLIMITED = -1;
+    private static final int UNLIMITED = -1;
     private final MessageMapperFactory factory;
     private final MailboxManager mailboxManager;
 
@@ -66,13 +66,11 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
             if (event instanceof MessageEvent) {
                 if (event instanceof EventFactory.AddedImpl) {
                     EventFactory.AddedImpl added = (EventFactory.AddedImpl) event;
-                    final Mailbox mailbox = added.getMailbox();
+                    Mailbox mailbox = added.getMailbox();
 
-                    for (final MessageUid next : (Iterable<MessageUid>) added.getUids()) {
-                        Optional<MailboxMessage> mailboxMessage = retrieveMailboxMessage(session, added, mailbox, next);
-                        if (mailboxMessage.isPresent()) {
-                            addMessage(session, mailbox, mailboxMessage.get());
-                        }
+                    for (MessageUid uid : added.getUids()) {
+                        retrieveMailboxMessage(session, added, mailbox, uid)
+                            .ifPresent(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
                     }
                 } else if (event instanceof EventFactory.ExpungedImpl) {
                     EventFactory.ExpungedImpl expunged = (EventFactory.ExpungedImpl) event;
@@ -83,7 +81,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     }
                 } else if (event instanceof EventFactory.FlagsUpdatedImpl) {
                     EventFactory.FlagsUpdatedImpl flagsUpdated = (EventFactory.FlagsUpdatedImpl) event;
-                    final Mailbox mailbox = flagsUpdated.getMailbox();
+                    Mailbox mailbox = flagsUpdated.getMailbox();
 
                     try {
                         update(session, mailbox, flagsUpdated.getUpdatedFlags());
@@ -115,7 +113,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         }
     }
 
-    private void addMessage(final MailboxSession session, final Mailbox mailbox, MailboxMessage message) {
+    private void addMessage(MailboxSession session, Mailbox mailbox, MailboxMessage message) {
         try {
             add(session, mailbox, message);
         } catch (MailboxException e) {

@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,14 +59,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class ElasticSearchListeningMessageSearchIndexTest {
-    
-
-    public static final long MODSEQ = 18L;
-    public static final MessageUid MESSAGE_UID = MessageUid.of(1);
-    public static final TestId MAILBOX_ID = TestId.of(12);
-    public static final String ELASTIC_SEARCH_ID = "12:1";
-    public static final String EXPECTED_JSON_CONTENT = "json content";
-    public static final String USERNAME = "username";
+    private static final long MODSEQ = 18L;
+    private static final MessageUid MESSAGE_UID = MessageUid.of(1);
+    private static final TestId MAILBOX_ID = TestId.of(12);
+    private static final String ELASTIC_SEARCH_ID = "12:1";
+    private static final String EXPECTED_JSON_CONTENT = "json content";
+    private static final String USERNAME = "username";
 
     private ElasticSearchIndexer elasticSearchIndexer;
     private MessageToElasticSearchJson messageToElasticSearchJson;
@@ -76,8 +73,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     private List<User> users;
     
     @Before
-    public void setup() throws JsonProcessingException {
-
+    public void setup() {
         MessageMapperFactory mapperFactory = mock(MessageMapperFactory.class);
         messageToElasticSearchJson = mock(MessageToElasticSearchJson.class);
         ElasticSearchSearcher elasticSearchSearcher = mock(ElasticSearchSearcher.class);
@@ -131,7 +127,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         verify(elasticSearchIndexer).index(eq(ELASTIC_SEARCH_ID), eq(EXPECTED_JSON_CONTENT));
     }
 
-    private MailboxMessage mockedMessage(MessageUid messageId) throws IOException {
+    private MailboxMessage mockedMessage(MessageUid messageId) {
         MailboxMessage message = mock(MailboxMessage.class);
         when(message.getUid())
             .thenReturn(messageId);
