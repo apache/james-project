@@ -45,18 +45,12 @@ import com.google.common.collect.ImmutableMap;
 
 public class EventFactory {
 
-    public interface MailboxAware {
-        Mailbox getMailbox();
-    }
-
-    public final class AddedImpl extends MailboxListener.Added implements MailboxAware {
+    public final class AddedImpl extends MailboxListener.Added {
         private final Map<MessageUid, MessageMetaData> added;
-        private final Mailbox mailbox;
 
         public AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.added = ImmutableMap.copyOf(uids);
-            this.mailbox = mailbox;
         }
 
         @Override
@@ -68,21 +62,14 @@ public class EventFactory {
         public MessageMetaData getMetaData(MessageUid uid) {
             return added.get(uid);
         }
-
-        @Override
-        public Mailbox getMailbox() {
-            return mailbox;
-        }
     }
 
-    public final class ExpungedImpl extends MailboxListener.Expunged implements MailboxAware {
+    public final class ExpungedImpl extends MailboxListener.Expunged {
         private final Map<MessageUid, MessageMetaData> uids;
-        private final Mailbox mailbox;
 
         public ExpungedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox,  Map<MessageUid, MessageMetaData> uids) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableMap.copyOf(uids);
-            this.mailbox = mailbox;
         }
 
         @Override
@@ -94,25 +81,16 @@ public class EventFactory {
         public MessageMetaData getMetaData(MessageUid uid) {
             return uids.get(uid);
         }
-
-        @Override
-        public Mailbox getMailbox() {
-            return mailbox;
-        }
     }
 
-    public final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated implements MailboxAware {
+    public final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated {
         private final List<MessageUid> uids;
-
-        private final Mailbox mailbox;
-
         private final List<UpdatedFlags> uFlags;
 
         public FlagsUpdatedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
             super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
             this.uids = ImmutableList.copyOf(uids);
             this.uFlags = ImmutableList.copyOf(uFlags);
-            this.mailbox = mailbox;
         }
 
         @Override
@@ -124,66 +102,31 @@ public class EventFactory {
         public List<UpdatedFlags> getUpdatedFlags() {
             return uFlags;
         }
-
-        @Override
-        public Mailbox getMailbox() {
-            return mailbox;
-        }
-
     }
 
-    public final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion implements MailboxAware {
-        private final Mailbox mailbox;
-
+    public final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion {
         public MailboxDeletionImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
             super(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
-            this.mailbox = mailbox;
         }
-
-
-        @Override
-        public Mailbox getMailbox() {
-            return mailbox;
-        }
-
     }
 
-    public final class MailboxAddedImpl extends MailboxListener.MailboxAdded implements MailboxAware {
-
-        private final Mailbox mailbox;
-
+    public final class MailboxAddedImpl extends MailboxListener.MailboxAdded {
         public MailboxAddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
             super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
-            this.mailbox = mailbox;
         }
-
-
-        @Override
-        public Mailbox getMailbox() {
-            return mailbox;
-        }
-
     }
 
-    public final class MailboxRenamedEventImpl extends MailboxListener.MailboxRenamed implements MailboxAware {
-
+    public final class MailboxRenamedEventImpl extends MailboxListener.MailboxRenamed {
         private final MailboxPath newPath;
-        private final Mailbox newMailbox;
 
         public MailboxRenamedEventImpl(MailboxSession.SessionId sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
             super(sessionId, user, oldPath, newMailbox.getMailboxId());
             this.newPath = new StoreMailboxPath(newMailbox);
-            this.newMailbox = newMailbox;
         }
 
         @Override
         public MailboxPath getNewPath() {
             return newPath;
-        }
-
-        @Override
-        public Mailbox getMailbox() {
-            return newMailbox;
         }
     }
 
