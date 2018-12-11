@@ -49,7 +49,6 @@ import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.mock.MockMailboxSession;
@@ -95,16 +94,15 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
                 ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
 
-        InMemoryMailboxSessionMapperFactory factory = new InMemoryMailboxSessionMapperFactory();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
-        this.mailboxManager = new InMemoryIntegrationResources()
+        mailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver(),
                 authenticator,
                 authorizator);
 
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
-            factory,
+            mailboxManager.getMapperFactory(),
             new ElasticSearchIndexer(client,
                 Executors.newSingleThreadExecutor(threadFactory),
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
@@ -117,14 +115,14 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES),
             mailboxManager);
 
-        this.mailboxManager.setMessageSearchIndex(searchIndex);
-        this.mailboxManager.addGlobalListener(searchIndex, new MockMailboxSession("admin"));
+        mailboxManager.setMessageSearchIndex(searchIndex);
+        mailboxManager.addGlobalListener(searchIndex, new MockMailboxSession("admin"));
 
         ImapProcessor defaultImapProcessorFactory =
-            DefaultImapProcessorFactory.createDefaultProcessor(this.mailboxManager,
-                new StoreSubscriptionManager(factory),
+            DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,
+                new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
                 new NoQuotaManager(),
-                new DefaultUserQuotaRootResolver(mailboxManager, factory),
+                new DefaultUserQuotaRootResolver(mailboxManager, mailboxManager.getMapperFactory()),
                 new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
             new DefaultImapEncoderFactory().buildImapEncoder(),
