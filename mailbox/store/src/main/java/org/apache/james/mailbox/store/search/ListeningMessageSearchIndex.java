@@ -61,40 +61,51 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     @Override
     public void event(Event event) {
         try {
-            MailboxSession session = mailboxManager.createSystemSession(event.getUser().asString());
             if (event instanceof MailboxEvent) {
-                MailboxEvent mailboxEvent = (MailboxEvent) event;
-                Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
-
-                if (event instanceof Added) {
-                    Added added = (Added) event;
-
-                    added.getUids()
-                        .stream()
-                        .flatMap(uid -> retrieveMailboxMessage(session, mailbox, uid))
-                        .forEach(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
-                } else if (event instanceof Expunged) {
-                    Expunged expunged = (Expunged) event;
-                    try {
-                        delete(session, mailbox, expunged.getUids());
-                    } catch (MailboxException e) {
-                        LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), mailbox, e);
-                    }
-                } else if (event instanceof FlagsUpdated) {
-                    FlagsUpdated flagsUpdated = (FlagsUpdated) event;
-
-                    try {
-                        update(session, mailbox, flagsUpdated.getUpdatedFlags());
-                    } catch (MailboxException e) {
-                        LOGGER.error("Unable to update flags in index for mailbox {}", mailbox, e);
-                    }
-                } else if (event instanceof MailboxDeletion) {
-                    deleteAll(session, mailbox);
-                }
+                handleMailboxEvent(event,
+                    mailboxManager.createSystemSession(event.getUser().asString()),
+                    (MailboxEvent) event);
             }
         } catch (MailboxException e) {
             LOGGER.error("Unable to update index", e);
         }
+    }
+
+    private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws MailboxException {
+        Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
+
+        if (event instanceof Added) {
+            handleAdded(session, mailbox, (Added) event);
+        } else if (event instanceof Expunged) {
+            handleExpunged(session, mailbox, (Expunged) event);
+        } else if (event instanceof FlagsUpdated) {
+            handleFlagsUpdated(session, mailbox, (FlagsUpdated) event);
+        } else if (event instanceof MailboxDeletion) {
+            deleteAll(session, mailbox);
+        }
+    }
+
+    private void handleFlagsUpdated(MailboxSession session, Mailbox mailbox, FlagsUpdated flagsUpdated) {
+        try {
+            update(session, mailbox, flagsUpdated.getUpdatedFlags());
+        } catch (MailboxException e) {
+            LOGGER.error("Unable to update flags in index for mailbox {}", mailbox, e);
+        }
+    }
+
+    private void handleExpunged(MailboxSession session, Mailbox mailbox, Expunged expunged) {
+        try {
+            delete(session, mailbox, expunged.getUids());
+        } catch (MailboxException e) {
+            LOGGER.error("Unable to deleted messages {} from index for mailbox {}", expunged.getUids(), mailbox, e);
+        }
+    }
+
+    private void handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
+        added.getUids()
+            .stream()
+            .flatMap(uid -> retrieveMailboxMessage(session, mailbox, uid))
+            .forEach(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
     }
 
     private Stream<MailboxMessage> retrieveMailboxMessage(MailboxSession session, Mailbox mailbox, MessageUid uid) {
