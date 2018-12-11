@@ -25,6 +25,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.MaybeSender;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMatcher;
 import org.slf4j.Logger;
@@ -81,8 +82,11 @@ public class SenderDomainIs extends GenericMatcher {
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         try {
-            MailAddress mailAddress = mail.getSender();
-            if (mailAddress != null && senderDomains.contains(mailAddress.getDomain())) {
+            MaybeSender maybeSender = mail.getMaybeSender();
+            if (maybeSender.asOptional()
+                    .map(MailAddress::getDomain)
+                    .map(senderDomains::contains)
+                    .orElse(false)) {
                 return mail.getRecipients();
             }
         } catch (Exception e) {
