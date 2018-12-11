@@ -19,7 +19,7 @@
 package org.apache.james.mailbox.store.search;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
@@ -69,10 +69,10 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                 if (event instanceof Added) {
                     Added added = (Added) event;
 
-                    for (MessageUid uid : added.getUids()) {
-                        retrieveMailboxMessage(session, mailbox, uid)
-                            .ifPresent(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
-                    }
+                    added.getUids()
+                        .stream()
+                        .flatMap(uid -> retrieveMailboxMessage(session, mailbox, uid))
+                        .forEach(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
                 } else if (event instanceof Expunged) {
                     Expunged expunged = (Expunged) event;
                     try {
@@ -97,14 +97,14 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         }
     }
 
-    private Optional<MailboxMessage> retrieveMailboxMessage(MailboxSession session, Mailbox mailbox, MessageUid uid) {
+    private Stream<MailboxMessage> retrieveMailboxMessage(MailboxSession session, Mailbox mailbox, MessageUid uid) {
         try {
-            return Optional.of(factory.getMessageMapper(session)
+            return Stream.of(factory.getMessageMapper(session)
                 .findInMailbox(mailbox, MessageRange.one(uid), FetchType.Full, UNLIMITED)
                 .next());
         } catch (Exception e) {
             LOGGER.error("Could not retrieve message {} in mailbox {}", uid.asLong(), mailbox.getMailboxId().serialize(), e);
-            return Optional.empty();
+            return Stream.empty();
         }
     }
 
