@@ -30,6 +30,8 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.Statement;
 
 import net.javacrumbs.futureconverter.java8guava.FutureConverter;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class CassandraAsyncExecutor {
 
@@ -41,29 +43,57 @@ public class CassandraAsyncExecutor {
     }
 
     public CompletableFuture<ResultSet> execute(Statement statement) {
-        return FutureConverter.toCompletableFuture(session.executeAsync(statement));
+        return executeReactor(statement).toFuture();
     }
 
 
     public CompletableFuture<Boolean> executeReturnApplied(Statement statement) {
-        return FutureConverter.toCompletableFuture(session.executeAsync(statement))
-            .thenApply(ResultSet::one)
-            .thenApply(row -> row.getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED));
+        return executeReturnAppliedReactor(statement).toFuture();
     }
 
     public CompletableFuture<Void> executeVoid(Statement statement) {
-        return FutureConverter.toCompletableFuture(session.executeAsync(statement))
-            .thenAccept(result -> { });
+        return executeVoidReactor(statement).toFuture();
     }
 
     public CompletableFuture<Optional<Row>> executeSingleRow(Statement statement) {
-        return execute(statement)
-            .thenApply(ResultSet::one)
-            .thenApply(Optional::ofNullable);
+        return executeSingleRowOptionalReactor(statement)
+                .toFuture();
     }
 
     public CompletableFuture<Boolean> executeReturnExists(Statement statement) {
-        return executeSingleRow(statement)
-            .thenApply(Optional::isPresent);
+        return executeReturnExistsReactor(statement).toFuture();
+    }
+
+    public Mono<ResultSet> executeReactor(Statement statement) {
+        return Mono.fromFuture(FutureConverter
+                .toCompletableFuture(session.executeAsync(statement)))
+                .publishOn(Schedulers.elastic());
+    }
+
+
+    public Mono<Boolean> executeReturnAppliedReactor(Statement statement) {
+        return executeReactor(statement)
+                .map(ResultSet::one)
+                .map(row -> row.getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED));
+    }
+
+    public Mono<Void> executeVoidReactor(Statement statement) {
+        return executeReactor(statement)
+                .then();
+    }
+
+    public Mono<Row> executeSingleRowReactor(Statement statement) {
+        return executeSingleRowOptionalReactor(statement)
+                .flatMap(Mono::justOrEmpty);
+    }
+
+    private Mono<Optional<Row>> executeSingleRowOptionalReactor(Statement statement) {
+        return executeReactor(statement)
+            .map(resultSet -> Optional.ofNullable(resultSet.one()));
+    }
+
+    public Mono<Boolean> executeReturnExistsReactor(Statement statement) {
+        return executeSingleRowReactor(statement)
+                .hasElement();
     }
 }
