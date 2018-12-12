@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -99,9 +98,9 @@ public class SpamAssassinListener implements SpamEventListener {
             Mailbox mailbox = mapperFactory.getMailboxMapper(session).findMailboxById(addedEvent.getMailboxId());
             MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
-            List<InputStream> contents = addedEvent.getUids()
+            List<InputStream> contents = MessageRange.toRanges(addedEvent.getUids())
                 .stream()
-                .flatMap(uid -> retrieveMessage(messageMapper, mailbox, uid))
+                .flatMap(range -> retrieveMessages(messageMapper, mailbox, range))
                 .map(Throwing.function(MailboxMessage::getFullContent))
                 .collect(Guavate.toImmutableList());
             spamAssassin.learnHam(contents, event.getUser());
@@ -120,11 +119,11 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private Stream<MailboxMessage> retrieveMessage(MessageMapper messageMapper, Mailbox mailbox, MessageUid uid) {
+    private Stream<MailboxMessage> retrieveMessages(MessageMapper messageMapper, Mailbox mailbox, MessageRange range) {
         try {
-            return Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.one(uid), MessageMapper.FetchType.Full, LIMIT));
+            return Iterators.toStream(messageMapper.findInMailbox(mailbox, range, MessageMapper.FetchType.Full, LIMIT));
         } catch (MailboxException e) {
-            LOGGER.warn("Can not retrieve message {} {}", mailbox.getMailboxId(), uid.asLong(), e);
+            LOGGER.warn("Can not retrieve message {} {}", mailbox.getMailboxId(), range.toString(), e);
             return Stream.empty();
         }
     }

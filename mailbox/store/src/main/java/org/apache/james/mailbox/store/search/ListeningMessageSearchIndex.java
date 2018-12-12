@@ -102,19 +102,19 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     private void handleAdded(MailboxSession session, Mailbox mailbox, Added added) {
-        added.getUids()
+        MessageRange.toRanges(added.getUids())
             .stream()
-            .flatMap(uid -> retrieveMailboxMessage(session, mailbox, uid))
+            .flatMap(range -> retrieveMailboxMessages(session, mailbox, range))
             .forEach(mailboxMessage -> addMessage(session, mailbox, mailboxMessage));
     }
 
-    private Stream<MailboxMessage> retrieveMailboxMessage(MailboxSession session, Mailbox mailbox, MessageUid uid) {
+    private Stream<MailboxMessage> retrieveMailboxMessages(MailboxSession session, Mailbox mailbox, MessageRange range) {
         try {
             return Stream.of(factory.getMessageMapper(session)
-                .findInMailbox(mailbox, MessageRange.one(uid), FetchType.Full, UNLIMITED)
+                .findInMailbox(mailbox, range, FetchType.Full, UNLIMITED)
                 .next());
         } catch (Exception e) {
-            LOGGER.error("Could not retrieve message {} in mailbox {}", uid.asLong(), mailbox.getMailboxId().serialize(), e);
+            LOGGER.error("Could not retrieve message {} in mailbox {}", range.toString(), mailbox.getMailboxId().serialize(), e);
             return Stream.empty();
         }
     }
