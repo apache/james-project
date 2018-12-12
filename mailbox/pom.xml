@@ -40,7 +40,10 @@
         <module>caching</module>
         <module>cassandra</module>
         <module>elasticsearch</module>
+
+        <module>event/event-memory</module>
         <module>event/json</module>
+
         <module>jpa</module>
         <module>lucene</module>
         <module>maildir</module>

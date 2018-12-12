@@ -37,10 +37,10 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-class EventDeliveryImplTest {
+class InVmEventDeliveryTest {
     private static final int DELIVERY_DELAY = (int) TimeUnit.MILLISECONDS.toMillis(100);
 
-    private EventDeliveryImpl eventDeliveryImpl;
+    private InVmEventDelivery inVmEventDelivery;
     private MailboxListener listener;
     private MailboxListener listener2;
     private MailboxListener.MailboxEvent event;
@@ -50,14 +50,14 @@ class EventDeliveryImplTest {
         event = mock(MailboxListener.MailboxEvent.class);
         listener = mock(MailboxListener.class);
         listener2 = mock(MailboxListener.class);
-        eventDeliveryImpl = new EventDeliveryImpl(new NoopMetricFactory());
+        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory());
     }
 
     @Test
     void deliverShouldHaveCalledSynchronousListenersWhenAllListenerExecutedJoined() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener), event).allListenerFuture().join();
+        inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
 
         verify(listener).event(event);
     }
@@ -66,7 +66,7 @@ class EventDeliveryImplTest {
     void deliverShouldHaveCalledAsynchronousListenersWhenAllListenerExecutedJoined() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener), event).allListenerFuture().join();
+        inVmEventDelivery.deliver(ImmutableList.of(listener), event).allListenerFuture().block();
 
         verify(listener).event(event);
     }
@@ -75,13 +75,13 @@ class EventDeliveryImplTest {
     void deliverShouldHaveCalledSynchronousListenersWhenSynchronousListenerExecutedJoined() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().join();
+        inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
 
         verify(listener).event(event);
     }
 
     @Test
-    void deliverShouldNotBlockObAsynchronousListenersWhenSynchronousListenerExecutedJoined() {
+    void deliverShouldNotBlockOnAsynchronousListenersWhenSynchronousListenerExecutedJoined() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         CountDownLatch latch = new CountDownLatch(1);
         doAnswer(invocation -> {
@@ -91,7 +91,7 @@ class EventDeliveryImplTest {
 
         assertTimeout(Duration.ofSeconds(2),
             () -> {
-                eventDeliveryImpl.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().join();
+                inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
                 latch.countDown();
             });
     }
@@ -107,7 +107,7 @@ class EventDeliveryImplTest {
 
         assertTimeout(Duration.ofSeconds(2),
             () -> {
-                eventDeliveryImpl.deliver(ImmutableList.of(listener), event);
+                inVmEventDelivery.deliver(ImmutableList.of(listener), event);
                 latch.countDown();
             });
     }
@@ -123,7 +123,7 @@ class EventDeliveryImplTest {
 
         assertTimeout(Duration.ofSeconds(2),
             () -> {
-                eventDeliveryImpl.deliver(ImmutableList.of(listener), event);
+                inVmEventDelivery.deliver(ImmutableList.of(listener), event);
                 latch.countDown();
             });
     }
@@ -132,7 +132,7 @@ class EventDeliveryImplTest {
     void deliverShouldEventuallyDeliverAsynchronousListenersWhenSynchronousListenerExecutedJoined() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().join();
+        inVmEventDelivery.deliver(ImmutableList.of(listener), event).synchronousListenerFuture().block();
 
         verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
     }
@@ -141,7 +141,7 @@ class EventDeliveryImplTest {
     void deliverShouldEventuallyDeliverSynchronousListenersWhenNoJoin() {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener), event);
+        inVmEventDelivery.deliver(ImmutableList.of(listener), event);
 
         verify(listener, timeout(DELIVERY_DELAY * 10)).event(event);
     }
@@ -151,7 +151,7 @@ class EventDeliveryImplTest {
         when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
         when(listener2.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
 
-        eventDeliveryImpl.deliver(ImmutableList.of(listener, listener2), event).synchronousListenerFuture().join();
+        inVmEventDelivery.deliver(ImmutableList.of(listener, listener2), event).synchronousListenerFuture().block();
 
         verify(listener2).event(event);
     }

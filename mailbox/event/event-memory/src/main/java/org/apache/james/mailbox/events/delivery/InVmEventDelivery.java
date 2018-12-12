@@ -20,7 +20,8 @@
 package org.apache.james.mailbox.events.delivery;
 
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
+
+import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
@@ -30,29 +31,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class EventDeliveryImpl implements EventDelivery {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EventDeliveryImpl.class);
+public class InVmEventDelivery implements EventDelivery {
+    private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
 
     private final MetricFactory metricFactory;
 
-    public EventDeliveryImpl(MetricFactory metricFactory) {
+    @Inject
+    @VisibleForTesting
+    public InVmEventDelivery(MetricFactory metricFactory) {
         this.metricFactory = metricFactory;
     }
 
     @Override
     public ExecutionStages deliver(Collection<MailboxListener> mailboxListeners, Event event) {
-        CompletableFuture<Void> synchronousListeners = doDeliver(
-            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.SYNCHRONOUS),
-            event);
-        CompletableFuture<Void> asyncListener = doDeliver(
-            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.ASYNCHRONOUS),
-            event);
+        Mono<Void> synchronousListeners = doDeliver(
+            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.SYNCHRONOUS), event)
+            .cache();
+        Mono<Void> asyncListener = doDeliver(
+            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.ASYNCHRONOUS), event)
+            .cache();
+
+        synchronousListeners.subscribe();
+        asyncListener.subscribe();
 
         return new ExecutionStages(synchronousListeners, asyncListener);
     }
@@ -63,15 +70,11 @@ public class EventDeliveryImpl implements EventDelivery {
             .collect(Guavate.toImmutableList());
     }
 
-    private CompletableFuture<Void> doDeliver(Collection<MailboxListener> mailboxListeners, Event event) {
+    private Mono<Void> doDeliver(Collection<MailboxListener> mailboxListeners, Event event) {
         return Flux.fromIterable(mailboxListeners)
-            .flatMap(mailboxListener -> Mono.fromCallable(() ->  {
-                doDeliverToListener(mailboxListener, event);
-                return VoidMarker.IMPL;
-            }))
+            .flatMap(mailboxListener -> Mono.fromRunnable(() -> doDeliverToListener(mailboxListener, event)))
             .then()
-            .subscribeOn(Schedulers.elastic())
-            .toFuture();
+            .subscribeOn(Schedulers.elastic());
     }
 
     private void doDeliverToListener(MailboxListener mailboxListener, Event event) {

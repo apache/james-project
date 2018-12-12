@@ -27,7 +27,7 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
-import org.apache.james.mailbox.events.delivery.EventDeliveryImpl;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -53,7 +53,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     @VisibleForTesting
     public DefaultDelegatingMailboxListener() {
-        this(new EventDeliveryImpl(new NoopMetricFactory()),
+        this(new InVmEventDelivery(new NoopMetricFactory()),
             new MailboxListenerRegistry());
     }
 
@@ -98,7 +98,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
         eventDelivery.deliver(listeners, event)
             .synchronousListenerFuture()
-            .join();
+            .block();
 
         if (event instanceof MailboxDeletion) {
             MailboxDeletion deletion = (MailboxDeletion) event;

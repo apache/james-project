@@ -28,7 +28,7 @@
         <constructor-arg index="1" ref="event-registry"/>
     </bean>
 
-    <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.EventDeliveryImpl" lazy-init="true">
+    <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.InVmEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="metricFactory"/>
     </bean>
 

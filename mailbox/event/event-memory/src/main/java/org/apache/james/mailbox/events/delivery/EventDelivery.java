@@ -20,29 +20,30 @@
 package org.apache.james.mailbox.events.delivery;
 
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
+import reactor.core.publisher.Mono;
+
 public interface EventDelivery {
     class ExecutionStages {
-        private final CompletableFuture<Void> synchronousListenerFuture;
-        private final CompletableFuture<Void> asynchronousListenerFuture;
+        private final Mono<Void> synchronousListenerFuture;
+        private final Mono<Void> asynchronousListenerFuture;
 
-        ExecutionStages(CompletableFuture<Void> synchronousListenerFuture, CompletableFuture<Void> asynchronousListenerFuture) {
+        ExecutionStages(Mono<Void> synchronousListenerFuture, Mono<Void> asynchronousListenerFuture) {
             this.synchronousListenerFuture = synchronousListenerFuture;
             this.asynchronousListenerFuture = asynchronousListenerFuture;
         }
 
-        public CompletableFuture<Void> synchronousListenerFuture() {
+        public Mono<Void> synchronousListenerFuture() {
             return synchronousListenerFuture;
         }
 
-        public CompletableFuture<Void> allListenerFuture() {
-            return CompletableFuture.allOf(
-                synchronousListenerFuture,
-                asynchronousListenerFuture);
+        public Mono<Void> allListenerFuture() {
+            return synchronousListenerFuture
+                .concatWith(asynchronousListenerFuture)
+                .then();
         }
     }
 
