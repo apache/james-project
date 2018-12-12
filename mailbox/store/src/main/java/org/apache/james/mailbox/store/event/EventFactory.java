@@ -40,102 +40,14 @@ import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-
 public class EventFactory {
-
-    private final class AddedImpl extends MailboxListener.Added {
-        private final Map<MessageUid, MessageMetaData> added;
-
-        AddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, SortedMap<MessageUid, MessageMetaData> uids) {
-            super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
-            this.added = ImmutableMap.copyOf(uids);
-        }
-
-        @Override
-        public List<MessageUid> getUids() {
-            return ImmutableList.copyOf(added.keySet());
-        }
-
-        @Override
-        public MessageMetaData getMetaData(MessageUid uid) {
-            return added.get(uid);
-        }
-    }
-
-    private final class ExpungedImpl extends MailboxListener.Expunged {
-        private final Map<MessageUid, MessageMetaData> uids;
-
-        ExpungedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, Map<MessageUid, MessageMetaData> uids) {
-            super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
-            this.uids = ImmutableMap.copyOf(uids);
-        }
-
-        @Override
-        public List<MessageUid> getUids() {
-            return ImmutableList.copyOf(uids.keySet());
-        }
-
-        @Override
-        public MessageMetaData getMetaData(MessageUid uid) {
-            return uids.get(uid);
-        }
-    }
-
-    private final class FlagsUpdatedImpl extends MailboxListener.FlagsUpdated {
-        private final List<MessageUid> uids;
-        private final List<UpdatedFlags> uFlags;
-
-        FlagsUpdatedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, List<MessageUid> uids, List<UpdatedFlags> uFlags) {
-            super(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
-            this.uids = ImmutableList.copyOf(uids);
-            this.uFlags = ImmutableList.copyOf(uFlags);
-        }
-
-        @Override
-        public List<MessageUid> getUids() {
-            return uids;
-        }
-
-        @Override
-        public List<UpdatedFlags> getUpdatedFlags() {
-            return uFlags;
-        }
-    }
-
-    private final class MailboxDeletionImpl extends MailboxListener.MailboxDeletion {
-        MailboxDeletionImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-            super(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
-        }
-    }
-
-    private final class MailboxAddedImpl extends MailboxListener.MailboxAdded {
-        MailboxAddedImpl(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
-            super(sessionId, user,  new StoreMailboxPath(mailbox), mailbox.getMailboxId());
-        }
-    }
-
-    private final class MailboxRenamedEventImpl extends MailboxListener.MailboxRenamed {
-        private final MailboxPath newPath;
-
-        MailboxRenamedEventImpl(MailboxSession.SessionId sessionId, User user, MailboxPath oldPath, Mailbox newMailbox) {
-            super(sessionId, user, oldPath, newMailbox.getMailboxId());
-            this.newPath = new StoreMailboxPath(newMailbox);
-        }
-
-        @Override
-        public MailboxPath getNewPath() {
-            return newPath;
-        }
-    }
 
     public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         return added(session.getSessionId(), session.getUser().getCoreUser(), uids, mailbox);
     }
 
     public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new AddedImpl(sessionId, user, mailbox, uids);
+        return new MailboxListener.Added(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids);
     }
 
     public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
@@ -143,7 +55,7 @@ public class EventFactory {
     }
 
     public MailboxListener.Expunged expunged(MailboxSession.SessionId sessionId, User user, Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new ExpungedImpl(sessionId, user, mailbox, uids);
+        return new MailboxListener.Expunged(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids);
     }
 
     public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
@@ -151,7 +63,7 @@ public class EventFactory {
     }
 
     public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return new FlagsUpdatedImpl(sessionId, user, mailbox, uids, uflags);
+        return new MailboxListener.FlagsUpdated(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids, uflags);
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
@@ -159,7 +71,7 @@ public class EventFactory {
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath from, Mailbox to) {
-        return new MailboxRenamedEventImpl(sessionId, user, from, to);
+        return new MailboxListener.MailboxRenamed(sessionId, user, from, to.getMailboxId(), new StoreMailboxPath(to));
     }
 
     public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot,
@@ -169,7 +81,7 @@ public class EventFactory {
 
     public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot,
                                                           QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return new MailboxDeletionImpl(sessionId, user, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
+        return new MailboxListener.MailboxDeletion(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
     }
 
     public MailboxListener.MailboxAdded mailboxAdded(MailboxSession session, Mailbox mailbox) {
@@ -177,7 +89,7 @@ public class EventFactory {
     }
 
     public MailboxListener.MailboxAdded mailboxAdded(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
-        return new MailboxAddedImpl(sessionId, user, mailbox);
+        return new MailboxListener.MailboxAdded(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
     }
 
     public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
