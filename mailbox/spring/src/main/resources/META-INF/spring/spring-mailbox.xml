@@ -67,7 +67,6 @@
     </bean>
 
     <alias name="default-delegating-listener" alias="delegating-listener"/>
-    <alias name="synchronous-event-delivery" alias="event-delivery"/>
 
     <bean id="dispatcher" class="org.apache.james.mailbox.store.event.MailboxEventDispatcher">
         <constructor-arg index="0" ref="delegating-listener"/>

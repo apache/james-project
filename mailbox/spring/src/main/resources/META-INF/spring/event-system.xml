@@ -39,7 +39,7 @@
         <constructor-arg index="1" ref="synchronous-event-delivery"/>
     </bean>
 
-    <bean id="mixed-event-delivery" class="org.apache.james.mailbox.events.delivery.MixedEventDelivery" lazy-init="true">
+    <bean id="event-delivery" class="org.apache.james.mailbox.events.delivery.MixedEventDelivery" lazy-init="true">
         <constructor-arg index="0" ref="asynchronous-event-delivery"/>
         <constructor-arg index="1" ref="synchronous-event-delivery"/>
     </bean>
