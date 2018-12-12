@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - JPA SMTP dockerFile contributed by [matzepan](https://github.com/matzepan)
 - Listing healthchecks, thanks to [Madhu Bhat](https://github.com/kratostaine)
 - Configuring the ElasticSearch clusterName
+- Logging and Metrics now supports Elasticsearch 6 (previously only Elasticsearch 2 was supported)
 
 ### Fixed
 - MAILBOX-350 Potential invalid UID <-> MSN mapping upon IMAP COPY
@@ -20,7 +21,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ### Changed
 - WebAdmin ReIndexing API had been reworked
-- MailboxListener and mailbox event system was reworked. Custom listeners will need to be adapted. Please see Upgrade instuctions.
+- MailboxListener and mailbox event system were reworked. Custom listeners will need to be adapted. Please see Upgrade instuctions.
+- Docker images are now using a JRE instead of a JDK
 
 ### Removed
 - Drop HBase and JCR components (mailbox and server/data).
