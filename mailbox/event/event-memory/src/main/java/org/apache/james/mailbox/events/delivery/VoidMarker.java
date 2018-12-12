@@ -19,33 +19,7 @@
 
 package org.apache.james.mailbox.events.delivery;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-
-import javax.annotation.PreDestroy;
-
-import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.util.concurrent.NamedThreadFactory;
-
-public class AsynchronousEventDelivery implements EventDelivery {
-    private final ExecutorService threadPoolExecutor;
-    private final SynchronousEventDelivery synchronousEventDelivery;
-
-    public AsynchronousEventDelivery(int threadPoolSize, SynchronousEventDelivery synchronousEventDelivery) {
-        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
-        this.threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize, threadFactory);
-        this.synchronousEventDelivery = synchronousEventDelivery;
-    }
-
-    @Override
-    public void deliver(MailboxListener mailboxListener, Event event) {
-        threadPoolExecutor.submit(() -> synchronousEventDelivery.deliver(mailboxListener, event));
-    }
-
-    @PreDestroy
-    public void stop() {
-        threadPoolExecutor.shutdownNow();
-    }
+public interface VoidMarker {
+    VoidMarker IMPL = () -> null;
+    Void toVoid();
 }

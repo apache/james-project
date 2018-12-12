@@ -19,11 +19,33 @@
 
 package org.apache.james.mailbox.events.delivery;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 
 public interface EventDelivery {
+    class ExecutionStages {
+        private final CompletableFuture<Void> synchronousListenerFuture;
+        private final CompletableFuture<Void> asynchronousListenerFuture;
 
-    void deliver(MailboxListener mailboxListener, Event event);
+        ExecutionStages(CompletableFuture<Void> synchronousListenerFuture, CompletableFuture<Void> asynchronousListenerFuture) {
+            this.synchronousListenerFuture = synchronousListenerFuture;
+            this.asynchronousListenerFuture = asynchronousListenerFuture;
+        }
 
+        public CompletableFuture<Void> synchronousListenerFuture() {
+            return synchronousListenerFuture;
+        }
+
+        public CompletableFuture<Void> allListenerFuture() {
+            return CompletableFuture.allOf(
+                synchronousListenerFuture,
+                asynchronousListenerFuture);
+        }
+    }
+
+
+    ExecutionStages deliver(Collection<MailboxListener> mailboxListeners, Event event);
 }

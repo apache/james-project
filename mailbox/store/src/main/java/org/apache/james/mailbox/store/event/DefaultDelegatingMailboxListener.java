@@ -26,11 +26,14 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.delivery.EventDelivery;
+import org.apache.james.mailbox.events.delivery.EventDeliveryImpl;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Receive a {@link org.apache.james.mailbox.MailboxListener.MailboxEvent} and delegate it to an other
@@ -50,7 +53,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     @VisibleForTesting
     public DefaultDelegatingMailboxListener() {
-        this(new SynchronousEventDelivery(new NoopMetricFactory()),
+        this(new EventDeliveryImpl(new NoopMetricFactory()),
             new MailboxListenerRegistry());
     }
 
@@ -88,30 +91,28 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     @Override
     public void event(Event event) {
-        deliverEventToGlobalListeners(event);
+        ImmutableList<MailboxListener> listeners = ImmutableList.<MailboxListener>builder()
+            .addAll(registry.getGlobalListeners())
+            .addAll(registeredMailboxListeners(event))
+            .build();
+
+        eventDelivery.deliver(listeners, event)
+            .synchronousListenerFuture()
+            .join();
+
+        if (event instanceof MailboxDeletion) {
+            MailboxDeletion deletion = (MailboxDeletion) event;
+            registry.deleteRegistryFor(deletion.getMailboxId());
+        }
+    }
+
+    private Collection<MailboxListener> registeredMailboxListeners(Event event) {
         if (event instanceof MailboxEvent) {
-            mailboxEvent((MailboxEvent) event);
-        }
-    }
+            MailboxEvent mailboxEvent = (MailboxEvent) event;
 
-    private void mailboxEvent(MailboxEvent mailboxEvent) {
-        Collection<MailboxListener> listenerSnapshot = registry.getLocalMailboxListeners(mailboxEvent.getMailboxId());
-        if (mailboxEvent instanceof MailboxDeletion && listenerSnapshot.size() > 0) {
-            registry.deleteRegistryFor(mailboxEvent.getMailboxId());
+            return registry.getLocalMailboxListeners(mailboxEvent.getMailboxId());
         }
-        deliverEventToMailboxListeners(mailboxEvent, listenerSnapshot);
-    }
-
-    protected void deliverEventToMailboxListeners(MailboxEvent event, Collection<MailboxListener> listenerSnapshot) {
-        for (MailboxListener listener : listenerSnapshot) {
-            eventDelivery.deliver(listener, event);
-        }
-    }
-
-    protected void deliverEventToGlobalListeners(Event event) {
-        for (MailboxListener mailboxListener : registry.getGlobalListeners()) {
-            eventDelivery.deliver(mailboxListener, event);
-        }
+        return ImmutableList.of();
     }
 
     public MailboxListenerRegistry getRegistry() {

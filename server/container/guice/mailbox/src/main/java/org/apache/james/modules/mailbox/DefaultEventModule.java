@@ -27,10 +27,8 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.events.delivery.AsynchronousEventDelivery;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
-import org.apache.james.mailbox.events.delivery.MixedEventDelivery;
-import org.apache.james.mailbox.events.delivery.SynchronousEventDelivery;
+import org.apache.james.mailbox.events.delivery.EventDeliveryImpl;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
@@ -73,10 +71,7 @@ public class DefaultEventModule extends AbstractModule {
     EventDelivery provideEventDelivery(ConfigurationProvider configurationProvider, MetricFactory metricFactory) {
         int poolSize = retrievePoolSize(configurationProvider);
 
-        SynchronousEventDelivery synchronousEventDelivery = new SynchronousEventDelivery(metricFactory);
-        return new MixedEventDelivery(
-            new AsynchronousEventDelivery(poolSize, synchronousEventDelivery),
-            synchronousEventDelivery);
+        return new EventDeliveryImpl(metricFactory);
     }
 
     private int retrievePoolSize(ConfigurationProvider configurationProvider) {
