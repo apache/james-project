@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.event;
+package org.apache.james.mailbox.events.delivery;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;

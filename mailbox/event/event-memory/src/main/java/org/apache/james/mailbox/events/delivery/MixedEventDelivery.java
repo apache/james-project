@@ -17,39 +17,36 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.event;
+package org.apache.james.mailbox.events.delivery;
 
-import javax.inject.Inject;
+import javax.annotation.PreDestroy;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.TimeMetric;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class SynchronousEventDelivery implements EventDelivery {
+public class MixedEventDelivery implements EventDelivery {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SynchronousEventDelivery.class);
+    private final AsynchronousEventDelivery asynchronousEventDelivery;
+    private final SynchronousEventDelivery synchronousEventDelivery;
 
-    private final MetricFactory metricFactory;
-
-    @Inject
-    public SynchronousEventDelivery(MetricFactory metricFactory) {
-        this.metricFactory = metricFactory;
+    public MixedEventDelivery(AsynchronousEventDelivery asynchronousEventDelivery,
+                              SynchronousEventDelivery synchronousEventDelivery) {
+        this.asynchronousEventDelivery = asynchronousEventDelivery;
+        this.synchronousEventDelivery = synchronousEventDelivery;
     }
 
     @Override
     public void deliver(MailboxListener mailboxListener, Event event) {
-        TimeMetric timer = metricFactory.timer("mailbox-listener-" + mailboxListener.getClass().getSimpleName());
-        try {
-            mailboxListener.event(event);
-        } catch (Throwable throwable) {
-            LOGGER.error("Error while processing listener {} for {}",
-                    mailboxListener.getClass().getCanonicalName(), event.getClass().getCanonicalName(),
-                    throwable);
-        } finally {
-            timer.stopAndPublish();
+        if (mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
+            synchronousEventDelivery.deliver(mailboxListener, event);
+        } else {
+            asynchronousEventDelivery.deliver(mailboxListener, event);
         }
     }
+
+    @PreDestroy
+    public void stop() {
+        asynchronousEventDelivery.stop();
+    }
+
 }

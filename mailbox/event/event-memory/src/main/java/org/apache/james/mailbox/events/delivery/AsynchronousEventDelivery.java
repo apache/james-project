@@ -17,36 +17,35 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.event;
+package org.apache.james.mailbox.events.delivery;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import javax.annotation.PreDestroy;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.util.concurrent.NamedThreadFactory;
 
-public class MixedEventDelivery implements EventDelivery {
-
-    private final AsynchronousEventDelivery asynchronousEventDelivery;
+public class AsynchronousEventDelivery implements EventDelivery {
+    private final ExecutorService threadPoolExecutor;
     private final SynchronousEventDelivery synchronousEventDelivery;
 
-    public MixedEventDelivery(AsynchronousEventDelivery asynchronousEventDelivery,
-                              SynchronousEventDelivery synchronousEventDelivery) {
-        this.asynchronousEventDelivery = asynchronousEventDelivery;
+    public AsynchronousEventDelivery(int threadPoolSize, SynchronousEventDelivery synchronousEventDelivery) {
+        ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
+        this.threadPoolExecutor = Executors.newFixedThreadPool(threadPoolSize, threadFactory);
         this.synchronousEventDelivery = synchronousEventDelivery;
     }
 
     @Override
     public void deliver(MailboxListener mailboxListener, Event event) {
-        if (mailboxListener.getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
-            synchronousEventDelivery.deliver(mailboxListener, event);
-        } else {
-            asynchronousEventDelivery.deliver(mailboxListener, event);
-        }
+        threadPoolExecutor.submit(() -> synchronousEventDelivery.deliver(mailboxListener, event));
     }
 
     @PreDestroy
     public void stop() {
-        asynchronousEventDelivery.stop();
+        threadPoolExecutor.shutdownNow();
     }
-
 }
