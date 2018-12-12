@@ -33,12 +33,14 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 
+import com.google.common.collect.ImmutableSortedMap;
+
 public class FakeMailboxListenerAdded extends MailboxListener.Added {
 
     public List<MessageUid> uids;
 
     public FakeMailboxListenerAdded(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, MailboxPath path, MailboxId mailboxId) {
-        super(sessionId, user, path, mailboxId);
+        super(sessionId, user, path, mailboxId, ImmutableSortedMap.of());
         this.uids = uids;
     }
 
