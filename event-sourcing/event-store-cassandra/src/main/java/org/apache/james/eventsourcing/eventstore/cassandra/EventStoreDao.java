@@ -30,7 +30,6 @@ import static org.apache.james.eventsourcing.eventstore.cassandra.CassandraEvent
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 
@@ -48,6 +47,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.steveash.guavate.Guavate;
+import reactor.core.publisher.Mono;
 
 public class EventStoreDao {
     private final CassandraUtils cassandraUtils;
@@ -79,10 +79,10 @@ public class EventStoreDao {
             .where(eq(AGGREGATE_ID, bindMarker(AGGREGATE_ID))));
     }
 
-    public CompletableFuture<Boolean> appendAll(List<Event> events) {
+    public Mono<Boolean> appendAll(List<Event> events) {
         BatchStatement batch = new BatchStatement();
         events.forEach(event -> batch.add(insertEvent(event)));
-        return cassandraAsyncExecutor.executeReturnApplied(batch);
+        return cassandraAsyncExecutor.executeReturnAppliedReactor(batch);
     }
 
     private BoundStatement insertEvent(Event event) {

@@ -51,7 +51,7 @@ public class CassandraEventStore implements EventStore {
     public void doAppendAll(List<Event> events) {
         Preconditions.checkArgument(Event.belongsToSameAggregate(events));
 
-        boolean success = eventStoreDao.appendAll(events).join();
+        boolean success = eventStoreDao.appendAll(events).block();
         if (!success) {
             throw new EventStoreFailedException("Concurrent update to the EventStore detected");
         }
