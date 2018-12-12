@@ -175,18 +175,18 @@ public abstract class MailboxManagerTest {
 
     @Nested
     class AnnotationTests {
-        private final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
-        private final MailboxAnnotationKey PRIVATE_CHILD_KEY = new MailboxAnnotationKey("/private/comment/user");
-        private final MailboxAnnotationKey PRIVATE_GRANDCHILD_KEY = new MailboxAnnotationKey("/private/comment/user/name");
-        private final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
+        private final MailboxAnnotationKey privateKey = new MailboxAnnotationKey("/private/comment");
+        private final MailboxAnnotationKey privateChildKey = new MailboxAnnotationKey("/private/comment/user");
+        private final MailboxAnnotationKey privateGrandchildKey = new MailboxAnnotationKey("/private/comment/user/name");
+        private final MailboxAnnotationKey sharedKey = new MailboxAnnotationKey("/shared/comment");
 
-        private final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "My private comment");
-        private final MailboxAnnotation PRIVATE_CHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_CHILD_KEY, "My private comment");
-        private final MailboxAnnotation PRIVATE_GRANDCHILD_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_GRANDCHILD_KEY, "My private comment");
-        private final MailboxAnnotation PRIVATE_ANNOTATION_UPDATE = MailboxAnnotation.newInstance(PRIVATE_KEY, "My updated private comment");
-        private final MailboxAnnotation SHARED_ANNOTATION =  MailboxAnnotation.newInstance(SHARED_KEY, "My shared comment");
+        private final MailboxAnnotation privateAnnotation = MailboxAnnotation.newInstance(privateKey, "My private comment");
+        private final MailboxAnnotation privateChildAnnotation = MailboxAnnotation.newInstance(privateChildKey, "My private comment");
+        private final MailboxAnnotation privateGrandchildAnnotation = MailboxAnnotation.newInstance(privateGrandchildKey, "My private comment");
+        private final MailboxAnnotation privateAnnotationUpdate = MailboxAnnotation.newInstance(privateKey, "My updated private comment");
+        private final MailboxAnnotation sharedAnnotation =  MailboxAnnotation.newInstance(sharedKey, "My shared comment");
 
-        private final List<MailboxAnnotation> ANNOTATIONS = ImmutableList.of(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
+        private final List<MailboxAnnotation> annotations = ImmutableList.of(privateAnnotation, sharedAnnotation);
 
         @Test
         void updateAnnotationsShouldUpdateStoredAnnotation() throws Exception {
@@ -195,10 +195,10 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION));
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotation));
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION_UPDATE));
-            assertThat(mailboxManager.getAllAnnotations(inbox, session)).containsOnly(PRIVATE_ANNOTATION_UPDATE);
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotationUpdate));
+            assertThat(mailboxManager.getAllAnnotations(inbox, session)).containsOnly(privateAnnotationUpdate);
         }
 
         @Test
@@ -208,9 +208,9 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION));
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotation));
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.nil(PRIVATE_KEY)));
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.nil(privateKey)));
             assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEmpty();
         }
 
@@ -220,7 +220,7 @@ public abstract class MailboxManagerTest {
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);
 
-            assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION)))
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotation)))
                 .isInstanceOf(MailboxException.class);
         }
 
@@ -241,9 +241,9 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ANNOTATIONS);
+            mailboxManager.updateAnnotations(inbox, session, annotations);
 
-            assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEqualTo(ANNOTATIONS);
+            assertThat(mailboxManager.getAllAnnotations(inbox, session)).isEqualTo(annotations);
         }
 
         @Test
@@ -263,10 +263,10 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ANNOTATIONS);
+            mailboxManager.updateAnnotations(inbox, session, annotations);
 
-            assertThat(mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
-                .containsOnly(PRIVATE_ANNOTATION);
+            assertThat(mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(privateKey)))
+                .containsOnly(privateAnnotation);
         }
 
         @Test
@@ -275,7 +275,7 @@ public abstract class MailboxManagerTest {
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);
 
-            assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeys(inbox, session, ImmutableSet.of(privateKey)))
                 .isInstanceOf(MailboxException.class);
         }
 
@@ -286,10 +286,10 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotation, privateChildAnnotation, privateGrandchildAnnotation));
 
-            assertThat(mailboxManager.getAnnotationsByKeysWithOneDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
-                .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION);
+            assertThat(mailboxManager.getAnnotationsByKeysWithOneDepth(inbox, session, ImmutableSet.of(privateKey)))
+                .contains(privateAnnotation, privateChildAnnotation);
         }
 
         @Test
@@ -298,7 +298,7 @@ public abstract class MailboxManagerTest {
             session = mailboxManager.createSystemSession(USER_2);
             MailboxPath inbox = MailboxPath.inbox(session);
 
-            assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
+            assertThatThrownBy(() -> mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(privateKey)))
                 .isInstanceOf(MailboxException.class);
         }
 
@@ -309,10 +309,10 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION));
+            mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(privateAnnotation, privateChildAnnotation, privateGrandchildAnnotation));
 
-            assertThat(mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(PRIVATE_KEY)))
-                .contains(PRIVATE_ANNOTATION, PRIVATE_CHILD_ANNOTATION, PRIVATE_GRANDCHILD_ANNOTATION);
+            assertThat(mailboxManager.getAnnotationsByKeysWithAllDepth(inbox, session, ImmutableSet.of(privateKey)))
+                .contains(privateAnnotation, privateChildAnnotation, privateGrandchildAnnotation);
         }
 
         @Test
@@ -322,7 +322,7 @@ public abstract class MailboxManagerTest {
             MailboxPath inbox = MailboxPath.inbox(session);
             mailboxManager.createMailbox(inbox, session);
 
-            assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(PRIVATE_KEY, "The limitation of data is less than 30"))))
+            assertThatThrownBy(() -> mailboxManager.updateAnnotations(inbox, session, ImmutableList.of(MailboxAnnotation.newInstance(privateKey, "The limitation of data is less than 30"))))
                 .isInstanceOf(AnnotationException.class);
         }
 

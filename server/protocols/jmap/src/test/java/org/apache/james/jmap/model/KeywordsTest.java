@@ -199,6 +199,7 @@ public class KeywordsTest {
             .fromMap(ImmutableMap.of("in&valid", true)))
             .isEqualTo(Keywords.DEFAULT_VALUE);
     }
+
     @Test
     public void fromFlagsShouldNotThrowOnInvalidKeywordForLenientFactory() {
         assertThat(Keywords.lenientFactory()
