@@ -55,6 +55,7 @@ public class MaybeSender {
         return new MaybeSender(Optional.empty());
     }
 
+    @SuppressWarnings("deprecation")
     public static MaybeSender of(MailAddress mailAddress) {
         return new MaybeSender(Optional.ofNullable(mailAddress)
             .filter(address -> !address.isNullSender()));
