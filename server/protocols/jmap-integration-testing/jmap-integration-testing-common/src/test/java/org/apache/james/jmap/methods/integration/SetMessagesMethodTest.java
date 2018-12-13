@@ -2343,7 +2343,7 @@ public abstract class SetMessagesMethodTest {
         MailboxListener.Added added = (MailboxListener.Added) event;
         return added.getMailboxId().serialize().equals(outboxId)
             && added.getUids().size() == 1
-            && added.getMetaData(added.getUids().get(0)).getMessageId().serialize().equals(messageId);
+            && added.getMetaData(added.getUids().iterator().next()).getMessageId().serialize().equals(messageId);
     }
 
     @Category(BasicFeature.class)

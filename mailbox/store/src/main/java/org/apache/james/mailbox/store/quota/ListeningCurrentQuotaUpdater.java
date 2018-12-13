@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.quota;
 
-import java.util.List;
+import java.util.Collection;
 
 import javax.inject.Inject;
 
@@ -78,7 +78,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     private void handleExpungedEvent(Expunged expunged, QuotaRoot quotaRoot) throws MailboxException {
         long addedSize = 0;
         long addedCount = 0;
-        List<MessageUid> uids = expunged.getUids();
+        Collection<MessageUid> uids = expunged.getUids();
         for (MessageUid uid : uids) {
             addedSize += expunged.getMetaData(uid).getSize();
             addedCount++;
@@ -97,7 +97,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
         long addedSize = 0;
         long addedCount = 0;
-        List<MessageUid> uids = added.getUids();
+        Collection<MessageUid> uids = added.getUids();
         for (MessageUid uid : uids) {
             addedSize += added.getMetaData(uid).getSize();
             addedCount++;

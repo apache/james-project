@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.search;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -145,7 +146,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * @param expungedUids UIDS to be deleted
      * @throws MailboxException
      */
-    public abstract void delete(MailboxSession session, Mailbox mailbox, List<MessageUid> expungedUids) throws MailboxException;
+    public abstract void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws MailboxException;
 
     /**
      * Delete the messages contained in the given {@link Mailbox} from the index

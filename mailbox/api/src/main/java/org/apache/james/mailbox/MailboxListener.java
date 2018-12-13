@@ -20,6 +20,7 @@
 package org.apache.james.mailbox;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -280,7 +281,7 @@ public interface MailboxListener {
          *
          * @return message uids
          */
-        public abstract List<MessageUid> getUids();
+        public abstract Collection<MessageUid> getUids();
     }
 
     abstract class MetaDataHoldingEvent extends MessageEvent {
@@ -307,8 +308,8 @@ public interface MailboxListener {
         }
 
         @Override
-        public List<MessageUid> getUids() {
-            return ImmutableList.copyOf(uids.keySet());
+        public Collection<MessageUid> getUids() {
+            return uids.keySet();
         }
 
         /**
@@ -336,7 +337,7 @@ public interface MailboxListener {
         }
 
         @Override
-        public List<MessageUid> getUids() {
+        public Collection<MessageUid> getUids() {
             return uids;
         }
 
@@ -366,8 +367,8 @@ public interface MailboxListener {
         }
 
         @Override
-        public List<MessageUid> getUids() {
-            return ImmutableList.copyOf(added.keySet());
+        public Collection<MessageUid> getUids() {
+            return added.keySet();
         }
     }
 
