@@ -69,6 +69,32 @@ private object DTO {
   }
 }
 
+private object ScalaConverter {
+  private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTO.Quota[T] = DTO.Quota(
+    used = java.getUsed,
+    limit = java.getLimit,
+    limits = java.getLimitByScope.asScala.toMap)
+
+  private def toScala(event: JavaQuotaUsageUpdatedEvent): DTO.QuotaUsageUpdatedEvent = DTO.QuotaUsageUpdatedEvent(
+    user = event.getUser,
+    quotaRoot = event.getQuotaRoot,
+    countQuota = toScala(event.getCountQuota),
+    sizeQuota = toScala(event.getSizeQuota),
+    time = event.getInstant)
+
+  private def toScala(event: JavaMailboxAdded): DTO.MailboxAdded = DTO.MailboxAdded(
+    mailboxPath = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    user = event.getUser,
+    sessionId = event.getSessionId)
+
+  def toScala(javaEvent: JavaEvent): Event = javaEvent match {
+    case e: JavaQuotaUsageUpdatedEvent => toScala(e)
+    case e: JavaMailboxAdded => toScala(e)
+    case _ => throw new RuntimeException("no Scala convertion known")
+  }
+}
+
 private class JsonSerialize(mailboxIdFactory: MailboxId.Factory) {
   implicit val userWriters: Writes[User] = (user: User) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
@@ -133,30 +159,7 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory) {
 }
 
 class EventSerializer(mailboxIdFactory: MailboxId.Factory) {
-
-  private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTO.Quota[T] = DTO.Quota(
-    used = java.getUsed,
-    limit = java.getLimit,
-    limits = java.getLimitByScope.asScala.toMap)
-
-  private def toScala(event: JavaQuotaUsageUpdatedEvent): DTO.QuotaUsageUpdatedEvent = DTO.QuotaUsageUpdatedEvent(
-      user = event.getUser,
-      quotaRoot = event.getQuotaRoot,
-      countQuota = toScala(event.getCountQuota),
-      sizeQuota = toScala(event.getSizeQuota),
-      time = event.getInstant)
-
-  private def toScala(event: JavaMailboxAdded): DTO.MailboxAdded = DTO.MailboxAdded(
-      mailboxPath = DTO.MailboxPath.fromJava(event.getMailboxPath),
-      mailboxId = event.getMailboxId,
-      user = event.getUser,
-      sessionId = event.getSessionId)
-
-  def toJson(event: JavaEvent): String = event match {
-    case e: JavaQuotaUsageUpdatedEvent => new JsonSerialize(mailboxIdFactory).toJson(toScala(e))
-    case e: JavaMailboxAdded => new JsonSerialize(mailboxIdFactory).toJson(toScala(e))
-    case _ => throw new RuntimeException("no encoder found")
-  }
+  def toJson(event: JavaEvent): String = new JsonSerialize(mailboxIdFactory).toJson(ScalaConverter.toScala(event))
 
   def fromJson(json: String): JsResult[JavaEvent] = {
     new JsonSerialize(mailboxIdFactory)
