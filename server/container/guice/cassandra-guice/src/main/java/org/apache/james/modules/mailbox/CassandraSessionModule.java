@@ -111,7 +111,7 @@ public class CassandraSessionModule extends AbstractModule {
             LOGGER.debug("BatchSize configuration: {}", batchSizes);
             return batchSizes;
         } catch (FileNotFoundException | ConfigurationException e) {
-            LOGGER.warn("Could not locate batchsizes configuration file. Using default values.");
+            LOGGER.info("Could not locate batchsizes configuration file. Using default values.");
             return BatchSizes.defaultValues();
         }
     }
