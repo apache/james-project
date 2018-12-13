@@ -265,6 +265,25 @@ public interface MailboxListener {
         public MailboxPath getNewPath() {
             return newPath;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxRenamed) {
+                MailboxRenamed that = (MailboxRenamed) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.newPath, that.newPath);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, mailboxId, newPath);
+        }
     }
 
 

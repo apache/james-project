@@ -25,7 +25,7 @@ import java.util.Optional
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
-import org.apache.james.mailbox.MailboxListener.{MailboxAdded => JavaMailboxAdded, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.MailboxListener.{MailboxAdded => JavaMailboxAdded, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, QuotaRoot, MailboxPath => JavaMailboxPath, Quota => JavaQuota}
 import org.apache.james.mailbox.{Event => JavaEvent}
@@ -67,6 +67,10 @@ private object DTO {
   case class MailboxAdded(mailboxPath: MailboxPath, mailboxId: MailboxId, user: User, sessionId: SessionId) extends Event {
     override def toJava: JavaEvent = new JavaMailboxAdded(sessionId, user, mailboxPath.toJava, mailboxId)
   }
+
+  case class MailboxRenamed(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId, newPath: MailboxPath) extends Event {
+    override def toJava: JavaEvent = new JavaMailboxRenamed(sessionId, user, path.toJava, mailboxId, newPath.toJava)
+  }
 }
 
 private object ScalaConverter {
@@ -88,9 +92,17 @@ private object ScalaConverter {
     user = event.getUser,
     sessionId = event.getSessionId)
 
+  private def toScala(event: JavaMailboxRenamed): DTO.MailboxRenamed = DTO.MailboxRenamed(
+    sessionId = event.getSessionId,
+    user = event.getUser,
+    path = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    newPath = DTO.MailboxPath.fromJava(event.getNewPath))
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case e: JavaMailboxAdded => toScala(e)
+    case e: JavaMailboxRenamed => toScala(e)
     case _ => throw new RuntimeException("no Scala convertion known")
   }
 }
