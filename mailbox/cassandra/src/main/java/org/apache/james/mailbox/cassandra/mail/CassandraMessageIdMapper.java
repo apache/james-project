@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
+import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdMapper implements MessageIdMapper {
     private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageIdMapper.class);
@@ -150,7 +151,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
             .thenCompose(voidValue -> CompletableFuture.allOf(
                 imapUidDAO.insert(composedMessageIdWithMetaData),
                 messageIdDAO.insert(composedMessageIdWithMetaData)))
-            .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+            .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId).toFuture())
             .join();
     }
 
@@ -162,7 +163,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         CompletableFuture.allOf(
                         imapUidDAO.insert(composedMessageIdWithMetaData),
                         messageIdDAO.insert(composedMessageIdWithMetaData))
-                .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId))
+                .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(mailboxMessage, mailboxId).toFuture())
                 .join();
     }
 
@@ -225,7 +226,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return CompletableFuture.allOf(
             imapUidDAO.delete(messageId, mailboxId),
             messageIdDAO.delete(mailboxId, metaData.getComposedMessageId().getUid()))
-            .thenCompose(voidValue -> indexTableHandler.updateIndexOnDelete(metaData, mailboxId));
+            .thenCompose(voidValue -> indexTableHandler.updateIndexOnDelete(metaData, mailboxId).toFuture());
     }
 
     @Override
@@ -239,7 +240,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
                 .isPresent())
             .flatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .map(this::updateCounts)
-            .map(CompletableFuture::join)
+            .map(Mono::block)
             .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight));
     }
 
@@ -264,10 +265,10 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         }
     }
 
-    private CompletableFuture<Pair<MailboxId, UpdatedFlags>> updateCounts(Pair<MailboxId, UpdatedFlags> pair) {
+    private Mono<Pair<MailboxId, UpdatedFlags>> updateCounts(Pair<MailboxId, UpdatedFlags> pair) {
         CassandraId cassandraId = (CassandraId) pair.getLeft();
         return indexTableHandler.updateIndexOnFlagsUpdate(cassandraId, pair.getRight())
-            .thenApply(voidValue -> pair);
+            .then(Mono.just(pair));
     }
 
     private Optional<Pair<Flags, ComposedMessageIdWithMetaData>> tryFlagsUpdate(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {

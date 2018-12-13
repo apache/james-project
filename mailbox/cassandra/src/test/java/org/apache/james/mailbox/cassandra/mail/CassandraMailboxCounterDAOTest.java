@@ -51,39 +51,39 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void countMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
-        assertThat(testee.countMessagesInMailbox(mailbox).join()).isEmpty();
+        assertThat(testee.countMessagesInMailbox(mailbox).hasElement().block()).isFalse();
     }
 
     @Test
     void countUnseenMessagesInMailboxShouldReturnEmptyByDefault() throws Exception {
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join()).isEmpty();
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).hasElement().block()).isFalse();
     }
 
     @Test
     void retrieveMailboxCounterShouldReturnEmptyByDefault() throws Exception {
-        assertThat(testee.retrieveMailboxCounters(mailbox).join()).isEmpty();
+        assertThat(testee.retrieveMailboxCounters(mailbox).hasElement().block()).isFalse();
     }
 
     @Test
     void incrementCountShouldAddOneWhenAbsent() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.countMessagesInMailbox(mailbox).join()).contains(1L);
+        assertThat(testee.countMessagesInMailbox(mailbox).block()).isEqualTo(1L);
     }
 
     @Test
     void incrementUnseenShouldAddOneWhenAbsent() throws Exception {
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join()).contains(1L);
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).block()).isEqualTo(1L);
     }
 
     @Test
     void incrementUnseenShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.retrieveMailboxCounters(mailbox).join())
-            .contains(MailboxCounters.builder()
+        assertThat(testee.retrieveMailboxCounters(mailbox).block())
+            .isEqualTo(MailboxCounters.builder()
                 .count(0L)
                 .unseen(1L)
                 .build());
@@ -91,10 +91,10 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void incrementCountShouldAddOneWhenAbsentOnMailboxCounters() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.retrieveMailboxCounters(mailbox).join())
-            .contains(MailboxCounters.builder()
+        assertThat(testee.retrieveMailboxCounters(mailbox).block())
+            .isEqualTo(MailboxCounters.builder()
                 .count(1L)
                 .unseen(0L)
                 .build());
@@ -102,11 +102,11 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void retrieveMailboxCounterShouldWorkWhenFullRow() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.retrieveMailboxCounters(mailbox).join())
-            .contains(MailboxCounters.builder()
+        assertThat(testee.retrieveMailboxCounters(mailbox).block())
+            .isEqualTo(MailboxCounters.builder()
                 .count(1L)
                 .unseen(1L)
                 .build());
@@ -114,73 +114,73 @@ class CassandraMailboxCounterDAOTest {
 
     @Test
     void decrementCountShouldRemoveOne() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
 
-        testee.decrementCount(MAILBOX_ID).join();
+        testee.decrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.countMessagesInMailbox(mailbox).join())
-            .contains(0L);
+        assertThat(testee.countMessagesInMailbox(mailbox).block())
+            .isEqualTo(0L);
     }
 
     @Test
     void decrementUnseenShouldRemoveOne() throws Exception {
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        testee.decrementUnseen(MAILBOX_ID).join();
+        testee.decrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())
-            .contains(0L);
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
+            .isEqualTo(0L);
     }
 
     @Test
     void incrementUnseenShouldHaveNoImpactOnMessageCount() throws Exception {
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.countMessagesInMailbox(mailbox).join())
-            .contains(0L);
+        assertThat(testee.countMessagesInMailbox(mailbox).block())
+            .isEqualTo(0L);
     }
 
     @Test
     void incrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())
-            .contains(0L);
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
+            .isEqualTo(0L);
     }
 
     @Test
     void decrementUnseenShouldHaveNoEffectOnMessageCount() throws Exception {
-        testee.incrementCount(MAILBOX_ID).join();
+        testee.incrementCount(MAILBOX_ID).block();
 
-        testee.decrementUnseen(MAILBOX_ID).join();
+        testee.decrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.countMessagesInMailbox(mailbox).join())
-            .contains(1L);
+        assertThat(testee.countMessagesInMailbox(mailbox).block())
+            .isEqualTo(1L);
     }
 
     @Test
     void decrementCountShouldHaveNoEffectOnUnseenCount() throws Exception {
-        testee.incrementUnseen(MAILBOX_ID).join();
+        testee.incrementUnseen(MAILBOX_ID).block();
 
-        testee.decrementCount(MAILBOX_ID).join();
+        testee.decrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())
-            .contains(1L);
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
+            .isEqualTo(1L);
     }
 
     @Test
     void decrementCountCanLeadToNegativeValue() throws Exception {
-        testee.decrementCount(MAILBOX_ID).join();
+        testee.decrementCount(MAILBOX_ID).block();
 
-        assertThat(testee.countMessagesInMailbox(mailbox).join())
-            .contains(-1L);
+        assertThat(testee.countMessagesInMailbox(mailbox).block())
+            .isEqualTo(-1L);
     }
 
     @Test
     void decrementUnseenCanLeadToNegativeValue() throws Exception {
-        testee.decrementUnseen(MAILBOX_ID).join();
+        testee.decrementUnseen(MAILBOX_ID).block();
 
-        assertThat(testee.countUnseenMessagesInMailbox(mailbox).join())
-            .contains(-1L);
+        assertThat(testee.countUnseenMessagesInMailbox(mailbox).block())
+            .isEqualTo(-1L);
     }
 }

@@ -115,7 +115,7 @@ public class CassandraMailboxMergingRoutes implements Routes {
             CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
             CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
 
-            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).join().orElse(0L);
+            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).defaultIfEmpty(0L).block();
             MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
             TaskId taskId = taskManager.submit(task);
             return TaskIdDto.respond(response, taskId);

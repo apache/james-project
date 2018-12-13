@@ -29,9 +29,7 @@ import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTa
 import static org.apache.james.mailbox.cassandra.table.CassandraApplicableFlagTable.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.Flag.USER_FLAGS;
 
-import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import javax.inject.Inject;
 import javax.mail.Flags;
@@ -43,6 +41,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.querybuilder.Update.Assignments;
+import reactor.core.publisher.Mono;
 
 public class CassandraApplicableFlagDAO {
 
@@ -61,19 +60,18 @@ public class CassandraApplicableFlagDAO {
             .where(eq(MAILBOX_ID, bindMarker(MAILBOX_ID))));
     }
 
-    public CompletableFuture<Optional<Flags>> retrieveApplicableFlag(CassandraId mailboxId) {
-        return cassandraAsyncExecutor.executeSingleRow(
+    public Mono<Flags> retrieveApplicableFlag(CassandraId mailboxId) {
+        return cassandraAsyncExecutor.executeSingleRowReactor(
             select.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .thenApply(rowOptional ->
-                rowOptional.map(row -> new FlagsExtractor(row).getApplicableFlags()));
+            .map(row -> new FlagsExtractor(row).getApplicableFlags());
     }
 
-    public CompletableFuture<Void> updateApplicableFlags(CassandraId cassandraId, Set<String> toBeAdded) {
+    public Mono<Void> updateApplicableFlags(CassandraId cassandraId, Set<String> toBeAdded) {
         if (toBeAdded.isEmpty()) {
-            return CompletableFuture.completedFuture(null);
+            return Mono.empty();
         }
-        return cassandraAsyncExecutor.executeVoid(updateQuery(cassandraId, toBeAdded));
+        return cassandraAsyncExecutor.executeVoidReactor(updateQuery(cassandraId, toBeAdded));
     }
 
     private Update.Where updateQuery(CassandraId cassandraId, Set<String> userFlags) {
