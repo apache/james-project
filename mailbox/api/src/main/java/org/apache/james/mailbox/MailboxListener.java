@@ -137,10 +137,10 @@ public interface MailboxListener {
      * A mailbox event.
      */
     abstract class MailboxEvent implements Event {
-        private final MailboxPath path;
-        private final MailboxId mailboxId;
-        private final User user;
-        private final MailboxSession.SessionId sessionId;
+        protected final MailboxPath path;
+        protected final MailboxId mailboxId;
+        protected final User user;
+        protected final MailboxSession.SessionId sessionId;
 
         public MailboxEvent(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             this.user = user;
@@ -225,6 +225,24 @@ public interface MailboxListener {
 
         public MailboxAdded(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxAdded) {
+                MailboxAdded that = (MailboxAdded) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, mailboxId);
         }
     }
 
