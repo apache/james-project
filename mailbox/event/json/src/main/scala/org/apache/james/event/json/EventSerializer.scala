@@ -25,7 +25,7 @@ import java.util.Optional
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
-import org.apache.james.mailbox.MailboxListener.{MailboxAdded => JavaMailboxAdded, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.MailboxListener.{MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, QuotaRoot, MailboxPath => JavaMailboxPath, Quota => JavaQuota}
 import org.apache.james.mailbox.{Event => JavaEvent}
@@ -41,13 +41,13 @@ private object DTO {
 
   object MailboxPath {
     def fromJava(javaMailboxPath: JavaMailboxPath): MailboxPath = DTO.MailboxPath(
-      javaMailboxPath.getNamespace,
+      Option(javaMailboxPath.getNamespace),
       Option(javaMailboxPath.getUser),
       javaMailboxPath.getName)
   }
 
-  case class MailboxPath(namespace: String, user: Option[String], name: String) {
-    def toJava: JavaMailboxPath = new JavaMailboxPath(namespace, user.orNull, name)
+  case class MailboxPath(namespace: Option[String], user: Option[String], name: String) {
+    def toJava: JavaMailboxPath = new JavaMailboxPath(namespace.orNull, user.orNull, name)
   }
 
   case class Quota[T <: QuotaValue[T]](used: T, limit: T, limits: Map[JavaQuota.Scope, T]) {
@@ -70,6 +70,13 @@ private object DTO {
 
   case class MailboxRenamed(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId, newPath: MailboxPath) extends Event {
     override def toJava: JavaEvent = new JavaMailboxRenamed(sessionId, user, path.toJava, mailboxId, newPath.toJava)
+  }
+
+  case class MailboxDeletion(sessionId: SessionId, user: User, path: MailboxPath, quotaRoot: QuotaRoot,
+                             deletedMessageCount: QuotaCount, totalDeletedSize: QuotaSize, mailboxId: MailboxId) extends Event {
+    override def toJava: JavaEvent = new JavaMailboxDeletion(sessionId, user, path.toJava, quotaRoot, deletedMessageCount,
+      totalDeletedSize,
+      mailboxId)
   }
 }
 
@@ -99,10 +106,20 @@ private object ScalaConverter {
     mailboxId = event.getMailboxId,
     newPath = DTO.MailboxPath.fromJava(event.getNewPath))
 
+  private def toScala(event: JavaMailboxDeletion): DTO.MailboxDeletion = DTO.MailboxDeletion(
+    sessionId = event.getSessionId,
+    user = event.getUser,
+    quotaRoot = event.getQuotaRoot,
+    path = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    deletedMessageCount = event.getDeletedMessageCount,
+    totalDeletedSize = event.getTotalDeletedSize,
+    mailboxId = event.getMailboxId)
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxRenamed => toScala(e)
+    case e: JavaMailboxDeletion => toScala(e)
     case _ => throw new RuntimeException("no Scala convertion known")
   }
 }

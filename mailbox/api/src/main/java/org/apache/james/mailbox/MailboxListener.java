@@ -194,14 +194,14 @@ public interface MailboxListener {
      */
     class MailboxDeletion extends MailboxEvent {
         private final QuotaRoot quotaRoot;
-        private final QuotaCount deletedMessageCOunt;
+        private final QuotaCount deletedMessageCount;
         private final QuotaSize totalDeletedSize;
 
-        public MailboxDeletion(MailboxSession.SessionId sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCOunt, QuotaSize totalDeletedSize,
+        public MailboxDeletion(MailboxSession.SessionId sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize,
                                MailboxId mailboxId) {
             super(sessionId, user, path, mailboxId);
             this.quotaRoot = quotaRoot;
-            this.deletedMessageCOunt = deletedMessageCOunt;
+            this.deletedMessageCount = deletedMessageCount;
             this.totalDeletedSize = totalDeletedSize;
         }
 
@@ -210,11 +210,32 @@ public interface MailboxListener {
         }
 
         public QuotaCount getDeletedMessageCount() {
-            return deletedMessageCOunt;
+            return deletedMessageCount;
         }
 
         public QuotaSize getTotalDeletedSize() {
             return totalDeletedSize;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxDeletion) {
+                MailboxDeletion that = (MailboxDeletion) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.quotaRoot, that.quotaRoot)
+                    && Objects.equals(this.deletedMessageCount, that.deletedMessageCount)
+                    && Objects.equals(this.totalDeletedSize, that.totalDeletedSize);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, mailboxId, quotaRoot, deletedMessageCount, totalDeletedSize);
         }
     }
 

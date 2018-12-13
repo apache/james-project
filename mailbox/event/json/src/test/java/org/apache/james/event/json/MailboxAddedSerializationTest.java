@@ -106,6 +106,45 @@ class MailboxAddedSerializationTest {
     }
 
     @Nested
+    class NullNameSpaceInMailboxPath {
+        @Test
+        void mailboxAddedShouldBeWellDeSerializedWhenMissingNameSpace() {
+            assertThat(EVENT_SERIALIZER.fromJson(
+                "{" +
+                "  \"MailboxAdded\":{" +
+                "    \"mailboxPath\":{" +
+                "      \"user\":\"bob\"," +
+                "      \"name\":\"mailboxName\"" +
+                "     }," +
+                "     \"mailboxId\":\"18\"," +
+                "     \"user\":\"user\"," +
+                "     \"sessionId\":42" +
+                "  }" +
+                "}").get())
+            .isEqualTo(EVENT_1);
+        }
+
+
+        @Test
+        void mailboxAddedShouldBeWellDeSerializedWhenNullNameSpace() {
+            assertThat(EVENT_SERIALIZER.fromJson(
+                "{" +
+                "  \"MailboxAdded\":{" +
+                "    \"mailboxPath\":{" +
+                "      \"namespace\":null," +
+                "      \"user\":\"bob\"," +
+                "      \"name\":\"mailboxName\"" +
+                "     }," +
+                "     \"mailboxId\":\"18\"," +
+                "     \"user\":\"user\"," +
+                "     \"sessionId\":42" +
+                "  }" +
+                "}").get())
+            .isEqualTo(EVENT_1);
+        }
+    }
+
+    @Nested
     class DeserializationErrors {
 
         @Test
@@ -149,22 +188,6 @@ class MailboxAddedSerializationTest {
                 "    \"mailboxPath\":{" +
                 "      \"namespace\":\"#private\"," +
                 "      \"user\":\"bob\"" +
-                "     }," +
-                "     \"mailboxId\":\"18\"," +
-                "     \"user\":\"user\"," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void fromJsonShouldRejectMissingNamespace() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
                 "     }," +
                 "     \"mailboxId\":\"18\"," +
                 "     \"user\":\"user\"," +
@@ -224,23 +247,6 @@ class MailboxAddedSerializationTest {
                 "  \"MailboxAdded\":{" +
                 "    \"mailboxPath\":{" +
                 "      \"namespace\":12," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":\"18\"," +
-                "     \"user\":\"user\"," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void fromJsonShouldRejectNullNamespace() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":null," +
                 "      \"user\":\"bob\"," +
                 "      \"name\":\"mailboxName\"" +
                 "     }," +
