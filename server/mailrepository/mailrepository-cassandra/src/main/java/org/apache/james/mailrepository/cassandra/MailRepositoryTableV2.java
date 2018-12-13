@@ -25,7 +25,6 @@ public interface MailRepositoryTableV2 {
     String REPOSITORY_NAME = "name";
 
     String MAIL_KEY = "mailKey";
-    String MESSAGE_SIZE = "messageSize";
     String HEADER_BLOB_ID = "headerBlobId";
     String BODY_BLOB_ID = "bodyBlobId";
     String STATE = "state";
@@ -44,6 +43,6 @@ public interface MailRepositoryTableV2 {
         int HEADER_VALUE_INDEX = 2;
     }
 
-    String[] MAIL_PROPERTIES = { MAIL_KEY, MESSAGE_SIZE, STATE, SENDER, RECIPIENTS, ATTRIBUTES, ERROR_MESSAGE, REMOTE_ADDR,
+    String[] MAIL_PROPERTIES = { MAIL_KEY, STATE, SENDER, RECIPIENTS, ATTRIBUTES, ERROR_MESSAGE, REMOTE_ADDR,
         REMOTE_HOST, LAST_UPDATED, PER_RECIPIENT_SPECIFIC_HEADERS, HEADER_BLOB_ID, BODY_BLOB_ID };
 }

@@ -36,7 +36,6 @@ import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.He
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.LAST_UPDATED;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.MAIL_KEY;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.MAIL_PROPERTIES;
-import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.MESSAGE_SIZE;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.PER_RECIPIENT_SPECIFIC_HEADERS;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.RECIPIENTS;
 import static org.apache.james.mailrepository.cassandra.MailRepositoryTableV2.REMOTE_ADDR;
@@ -118,7 +117,6 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
         return session.prepare(insertInto(CONTENT_TABLE_NAME)
             .value(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))
             .value(MAIL_KEY, bindMarker(MAIL_KEY))
-            .value(MESSAGE_SIZE, bindMarker(MESSAGE_SIZE))
             .value(STATE, bindMarker(STATE))
             .value(SENDER, bindMarker(SENDER))
             .value(RECIPIENTS, bindMarker(RECIPIENTS))
@@ -152,7 +150,6 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
             .setString(ERROR_MESSAGE, mail.getErrorMessage())
             .setString(REMOTE_ADDR, mail.getRemoteAddr())
             .setString(REMOTE_HOST, mail.getRemoteHost())
-            .setLong(MESSAGE_SIZE, mail.getMessageSize())
             .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
             .setMap(ATTRIBUTES, toRawAttributeMap(mail))
             .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(mail.getPerRecipientSpecificHeaders()))
