@@ -33,6 +33,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -63,7 +64,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "}" +
         "}";
 
-    private static final EventSerializer$ QUOTA_EVENT_MODULE = EventSerializer$.MODULE$;
+    private static final EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory());
 
     @Nested
     class WithUser {
@@ -93,13 +94,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
                 @Test
                 void fromJsonShouldReturnQuotaEvent() {
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                         .isEqualTo(eventWithUserContainsUsername);
                 }
 
                 @Test
                 void toJsonShouldReturnQuotaEventJson() {
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(eventWithUserContainsUsername))
+                    assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsername))
                         .isEqualTo(quotaUsageUpdatedEvent);
                 }
             }
@@ -126,13 +127,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
                 @Test
                 void fromJsonShouldReturnQuotaEvent() {
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                         .isEqualTo(eventWithUserContainsUsernameAndDomain);
                 }
 
                 @Test
                 void toJsonShouldReturnQuotaEventJson() {
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(eventWithUserContainsUsernameAndDomain))
+                    assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsernameAndDomain))
                         .isEqualTo(quotaUsageUpdatedEvent);
                 }
             }
@@ -153,7 +154,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                         "\"user\":\"\"" +
                         "}" +
                     "}";
-                assertThatThrownBy(() -> QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent))
+                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent))
                     .isInstanceOf(IllegalArgumentException.class);
             }
 
@@ -170,7 +171,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                         "}" +
                     "}";
 
-                assertThatThrownBy(() ->QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                     .isInstanceOf(NoSuchElementException.class);
             }
 
@@ -186,7 +187,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                         "\"user\":\"@domain\"" +
                         "}" +
                     "}";
-                assertThatThrownBy(() -> QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent))
+                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent))
                     .isInstanceOf(IllegalArgumentException.class);
             }
         }
@@ -201,13 +202,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
             @Test
             void toJsonShouldReturnSerializedJsonQuotaRoot() {
-                assertThatJson(QUOTA_EVENT_MODULE.toJson(DEFAULT_QUOTA_EVENT))
+                assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_QUOTA_EVENT))
                     .isEqualTo(DEFAULT_QUOTA_EVENT_JSON);
             }
 
             @Test
             void fromJsonShouldDeserializeQuotaRootJson() {
-                assertThat(QUOTA_EVENT_MODULE.fromJson(DEFAULT_QUOTA_EVENT_JSON).get())
+                assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_QUOTA_EVENT_JSON).get())
                     .isEqualTo(DEFAULT_QUOTA_EVENT);
             }
         }
@@ -235,13 +236,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
             @Test
             void toJsonShouldSerializeWithEmptyQuotaRoot() {
-                assertThatJson(QUOTA_EVENT_MODULE.toJson(eventWithEmptyQuotaRoot))
+                assertThatJson(EVENT_SERIALIZER.toJson(eventWithEmptyQuotaRoot))
                     .isEqualTo(quotaUsageUpdatedEvent);
             }
 
             @Test
             void fromJsonShouldDeserializeWithEmptyQuotaRoot() {
-                assertThat(QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+                assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                     .isEqualTo(eventWithEmptyQuotaRoot);
             }
         }
@@ -268,13 +269,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
             @Test
             void toJsonShouldThrowWithNullQuotaRoot() {
-                assertThatThrownBy(() -> QUOTA_EVENT_MODULE.toJson(eventWithNullQuotaRoot))
+                assertThatThrownBy(() -> EVENT_SERIALIZER.toJson(eventWithNullQuotaRoot))
                     .isInstanceOf(NullPointerException.class);
             }
 
             @Test
             void fromJsonShouldThrowWithNullQuotaRoot() {
-                assertThatThrownBy(() -> QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                     .isInstanceOf(NoSuchElementException.class);
             }
         }
@@ -317,7 +318,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.Global));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaCountEventJsonGlobalScope);
                 }
 
@@ -325,7 +326,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.Global));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaCountEventJsonGlobalScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaCountEventJsonGlobalScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -347,7 +348,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.Domain));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaCountEventJsonDomainScope);
                 }
 
@@ -355,7 +356,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.Domain));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaCountEventJsonDomainScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaCountEventJsonDomainScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -377,7 +378,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.User));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaCountEventJsonUserScope);
                 }
 
@@ -385,7 +386,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(limitedQuotaCountByScopes(Quota.Scope.User));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaCountEventJsonUserScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaCountEventJsonUserScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -419,7 +420,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.Global));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaCountEventJsonGlobalScope);
                 }
 
@@ -427,7 +428,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.Global));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaCountEventJsonGlobalScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaCountEventJsonGlobalScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -449,7 +450,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.Domain));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaCountEventJsonDomainScope);
                 }
 
@@ -457,7 +458,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.Domain));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaCountEventJsonDomainScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaCountEventJsonDomainScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -479,7 +480,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.User));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaCountEventJsonUserScope);
                 }
 
@@ -487,7 +488,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaCount() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaCount(unLimitedQuotaCountByScopes(Quota.Scope.User));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaCountEventJsonUserScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaCountEventJsonUserScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -531,7 +532,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.Global));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaSizeEventJsonGlobalScope);
                 }
 
@@ -539,7 +540,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.Global));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaSizeEventJsonGlobalScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaSizeEventJsonGlobalScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -561,7 +562,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.Domain));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaSizeEventJsonDomainScope);
                 }
 
@@ -569,7 +570,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.Domain));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaSizeEventJsonDomainScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaSizeEventJsonDomainScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -591,7 +592,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.User));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(limitedQuotaSizeEventJsonUserScope);
                 }
 
@@ -599,7 +600,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(limitedQuotaSizeByScopes(Quota.Scope.User));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(limitedQuotaSizeEventJsonUserScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(limitedQuotaSizeEventJsonUserScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -634,7 +635,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.Global));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaSizeEventJsonGlobalScope);
                 }
 
@@ -642,7 +643,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.Global));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaSizeEventJsonGlobalScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaSizeEventJsonGlobalScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -664,7 +665,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.Domain));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaSizeEventJsonDomainScope);
                 }
 
@@ -672,7 +673,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.Domain));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaSizeEventJsonDomainScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaSizeEventJsonDomainScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -694,7 +695,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void toJsonShouldSerializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.User));
 
-                    assertThatJson(QUOTA_EVENT_MODULE.toJson(quotaEvent))
+                    assertThatJson(EVENT_SERIALIZER.toJson(quotaEvent))
                         .isEqualTo(unLimitedQuotaSizeEventJsonUserScope);
                 }
 
@@ -702,7 +703,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                 void fromJsonShouldDeserializeQuotaSize() {
                     MailboxListener.QuotaUsageUpdatedEvent quotaEvent = quotaEventByQuotaSize(unLimitedQuotaSizeByScopes(Quota.Scope.User));
 
-                    assertThat(QUOTA_EVENT_MODULE.fromJson(unLimitedQuotaSizeEventJsonUserScope).get())
+                    assertThat(EVENT_SERIALIZER.fromJson(unLimitedQuotaSizeEventJsonUserScope).get())
                         .isEqualTo(quotaEvent);
                 }
             }
@@ -714,13 +715,13 @@ class QuotaUsageUpdatedEventSerializationTest {
 
         @Test
         void toJsonShouldReturnSerializedJsonEventWhenTimeIsValid() {
-            assertThatJson(QUOTA_EVENT_MODULE.toJson(DEFAULT_QUOTA_EVENT))
+            assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_QUOTA_EVENT))
                 .isEqualTo(DEFAULT_QUOTA_EVENT_JSON);
         }
 
         @Test
         void fromJsonShouldReturnDeSerializedEventWhenTimeIsValid() {
-            assertThat(QUOTA_EVENT_MODULE.fromJson(DEFAULT_QUOTA_EVENT_JSON).get())
+            assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_QUOTA_EVENT_JSON).get())
                 .isEqualTo(DEFAULT_QUOTA_EVENT);
         }
 
@@ -736,7 +737,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                     "}" +
                 "}";
 
-            assertThatThrownBy(() -> QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                 .isInstanceOf(NoSuchElementException.class);
         }
 
@@ -753,7 +754,7 @@ class QuotaUsageUpdatedEventSerializationTest {
                     "}" +
                 "}";
 
-            assertThatThrownBy(() -> QUOTA_EVENT_MODULE.fromJson(quotaUsageUpdatedEvent).get())
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
                 .isInstanceOf(NoSuchElementException.class);
         }
     }

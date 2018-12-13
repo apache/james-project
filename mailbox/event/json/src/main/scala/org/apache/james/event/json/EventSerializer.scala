@@ -25,15 +25,15 @@ import java.util.Optional
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
-import org.apache.james.mailbox.MailboxListener.{QuotaEvent => JavaQuotaEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
-import org.apache.james.mailbox.model.{QuotaRoot, Quota => JavaQuota}
+import org.apache.james.mailbox.MailboxListener.{QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.model.{MailboxId, QuotaRoot, Quota => JavaQuota}
 import org.apache.james.mailbox.{Event => JavaEvent}
-import play.api.libs.json._
+import play.api.libs.json.{JsError, JsNull, JsNumber, JsObject, JsResult, JsString, JsSuccess, Json, OFormat, Reads, Writes}
 
 import scala.collection.JavaConverters._
 
 private sealed trait Event {
-  def toJava: JavaQuotaEvent
+  def toJava: JavaEvent
 }
 
 private object DTO {
@@ -51,12 +51,12 @@ private object DTO {
                                     sizeQuota: Quota[QuotaSize], time: Instant) extends Event {
     def getQuotaRoot: QuotaRoot = quotaRoot
 
-    override def toJava: JavaQuotaEvent =
+    override def toJava: JavaEvent =
       new JavaQuotaUsageUpdatedEvent(user, getQuotaRoot, countQuota.toJava, sizeQuota.toJava, time)
   }
 }
 
-private object JsonSerialize {
+private class JsonSerialize(mailboxIdFactory: MailboxId.Factory) {
   implicit val userWriters: Writes[User] = (user: User) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
   implicit val quotaValueWrites: Writes[QuotaValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
@@ -100,14 +100,14 @@ private object JsonSerialize {
   implicit val quotaCReads: Reads[DTO.Quota[QuotaCount]] = Json.reads[DTO.Quota[QuotaCount]]
   implicit val quotaSReads: Reads[DTO.Quota[QuotaSize]] = Json.reads[DTO.Quota[QuotaSize]]
 
-  implicit val quotaEventOFormat: OFormat[Event] = derived.oformat()
+  implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
   def toJson(event: Event): String = Json.toJson(event).toString()
 
   def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
 }
 
-object EventSerializer {
+class EventSerializer(mailboxIdFactory: MailboxId.Factory) {
 
   private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTO.Quota[T] =
     DTO.Quota(used = java.getUsed, limit = java.getLimit, limits = java.getLimitByScope.asScala.toMap)
@@ -121,12 +121,12 @@ object EventSerializer {
       time = event.getInstant)
 
   def toJson(event: JavaEvent): String = event match {
-    case e: JavaQuotaUsageUpdatedEvent => JsonSerialize.toJson(toScala(e))
+    case e: JavaQuotaUsageUpdatedEvent => new JsonSerialize(mailboxIdFactory).toJson(toScala(e))
     case _ => throw new RuntimeException("no encoder found")
   }
 
   def fromJson(json: String): JsResult[JavaEvent] = {
-    JsonSerialize.fromJson(json)
+    new JsonSerialize(mailboxIdFactory).fromJson(json)
       .map(event => event.toJava)
   }
 }
