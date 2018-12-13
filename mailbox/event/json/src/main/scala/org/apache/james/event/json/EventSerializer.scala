@@ -27,14 +27,12 @@ import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
 import org.apache.james.mailbox.MailboxListener.{QuotaEvent => JavaQuotaEvent, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.model.{QuotaRoot, Quota => JavaQuota}
-import play.api.libs.json.{JsError, JsNull, JsNumber, JsObject, JsResult, JsString, JsSuccess, Json, OFormat, Reads, Writes}
+import org.apache.james.mailbox.{Event => JavaEvent}
+import play.api.libs.json._
 
 import scala.collection.JavaConverters._
-import scala.compat.java8.OptionConverters
 
-private sealed trait QuotaEvent {
-  def getQuotaRoot: QuotaRoot
-
+private sealed trait Event {
   def toJava: JavaQuotaEvent
 }
 
@@ -50,13 +48,12 @@ private object DTO {
   }
 
   case class QuotaUsageUpdatedEvent(user: User, quotaRoot: QuotaRoot, countQuota: Quota[QuotaCount],
-                                    sizeQuota: Quota[QuotaSize], time: Instant) extends QuotaEvent {
-    override def getQuotaRoot: QuotaRoot = quotaRoot
+                                    sizeQuota: Quota[QuotaSize], time: Instant) extends Event {
+    def getQuotaRoot: QuotaRoot = quotaRoot
 
     override def toJava: JavaQuotaEvent =
       new JavaQuotaUsageUpdatedEvent(user, getQuotaRoot, countQuota.toJava, sizeQuota.toJava, time)
   }
-
 }
 
 private object JsonSerialize {
@@ -103,14 +100,14 @@ private object JsonSerialize {
   implicit val quotaCReads: Reads[DTO.Quota[QuotaCount]] = Json.reads[DTO.Quota[QuotaCount]]
   implicit val quotaSReads: Reads[DTO.Quota[QuotaSize]] = Json.reads[DTO.Quota[QuotaSize]]
 
-  implicit val quotaEventOFormat: OFormat[QuotaEvent] = derived.oformat()
+  implicit val quotaEventOFormat: OFormat[Event] = derived.oformat()
 
-  def toJson(event: QuotaEvent): String = Json.toJson(event).toString()
+  def toJson(event: Event): String = Json.toJson(event).toString()
 
-  def fromJson(json: String): JsResult[QuotaEvent] = Json.fromJson[QuotaEvent](Json.parse(json))
+  def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
 }
 
-object QuotaEvent {
+object EventSerializer {
 
   private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTO.Quota[T] =
     DTO.Quota(used = java.getUsed, limit = java.getLimit, limits = java.getLimitByScope.asScala.toMap)
@@ -123,12 +120,12 @@ object QuotaEvent {
       sizeQuota = toScala(event.getSizeQuota),
       time = event.getInstant)
 
-  def toJson(event: JavaQuotaEvent): String = event match {
+  def toJson(event: JavaEvent): String = event match {
     case e: JavaQuotaUsageUpdatedEvent => JsonSerialize.toJson(toScala(e))
     case _ => throw new RuntimeException("no encoder found")
   }
 
-  def fromJson(json: String): JsResult[JavaQuotaEvent] = {
+  def fromJson(json: String): JsResult[JavaEvent] = {
     JsonSerialize.fromJson(json)
       .map(event => event.toJava)
   }

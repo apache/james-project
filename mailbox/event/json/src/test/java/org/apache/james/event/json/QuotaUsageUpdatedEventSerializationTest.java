@@ -36,7 +36,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-class QuotaEventTest {
+class QuotaUsageUpdatedEventSerializationTest {
 
     private static final User USER = User.fromUsername("user");
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("foo", Optional.empty());
@@ -63,7 +63,7 @@ class QuotaEventTest {
             "}" +
         "}";
 
-    private static final QuotaEvent$ QUOTA_EVENT_MODULE = QuotaEvent$.MODULE$;
+    private static final EventSerializer$ QUOTA_EVENT_MODULE = EventSerializer$.MODULE$;
 
     @Nested
     class WithUser {
