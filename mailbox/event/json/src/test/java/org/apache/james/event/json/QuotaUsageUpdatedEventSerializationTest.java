@@ -34,6 +34,7 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +65,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "}" +
         "}";
 
-    private static final EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory());
+    private static final EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
 
     @Nested
     class WithUser {

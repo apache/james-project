@@ -61,6 +61,11 @@ public class FlagsBuilder {
         return this;
     }
 
+    public FlagsBuilder merge(FlagsBuilder flagsBuilder) {
+        internalFlags.add(flagsBuilder.internalFlags);
+        return this;
+    }
+
     public Flags build() {
         return new Flags(internalFlags);
     }

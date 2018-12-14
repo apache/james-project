@@ -43,4 +43,9 @@ class MailboxListenerTest {
     void mailboxACLUpdatedShouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxListener.MailboxACLUpdated.class).verify();
     }
+
+    @Test
+    void addedShouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxListener.Added.class).verify();
+    }
 }

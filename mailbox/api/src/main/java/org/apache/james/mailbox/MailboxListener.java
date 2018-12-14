@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.SortedMap;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -429,7 +428,7 @@ public interface MailboxListener {
     class Added extends MetaDataHoldingEvent {
         private final Map<MessageUid, MessageMetaData> added;
 
-        public Added(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, SortedMap<MessageUid, MessageMetaData> uids) {
+        public Added(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, path, mailboxId);
             this.added = ImmutableMap.copyOf(uids);
         }
@@ -446,6 +445,29 @@ public interface MailboxListener {
         @Override
         public Collection<MessageUid> getUids() {
             return added.keySet();
+        }
+
+        public Map<MessageUid, MessageMetaData> getAdded() {
+            return added;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Added) {
+                Added that = (Added) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.added, that.added);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, mailboxId, added);
         }
     }
 
