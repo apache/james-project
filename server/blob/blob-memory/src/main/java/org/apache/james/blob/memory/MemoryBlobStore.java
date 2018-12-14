@@ -25,12 +25,12 @@ import java.io.InputStream;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.ObjectStoreException;
+import org.apache.james.util.CompletableFutureUtil;
 
 import com.google.common.base.Preconditions;
 
@@ -69,10 +69,7 @@ public class MemoryBlobStore implements BlobStore {
         try {
             return CompletableFuture.completedFuture(retrieveStoredValue(blobId));
         } catch (ObjectStoreException e) {
-            Supplier<byte[]> throwing = () -> {
-                throw e;
-            };
-            return CompletableFuture.supplyAsync(throwing);
+            return CompletableFutureUtil.exceptionallyFuture(e);
         }
     }
 
