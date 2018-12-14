@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -47,7 +46,7 @@ public class EventFactory {
     }
 
     public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new MailboxListener.Added(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids);
+        return new MailboxListener.Added(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
     }
 
     public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
@@ -55,7 +54,7 @@ public class EventFactory {
     }
 
     public MailboxListener.Expunged expunged(MailboxSession.SessionId sessionId, User user, Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new MailboxListener.Expunged(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids);
+        return new MailboxListener.Expunged(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
     }
 
     public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
@@ -63,7 +62,7 @@ public class EventFactory {
     }
 
     public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return new MailboxListener.FlagsUpdated(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId(), uids, uflags);
+        return new MailboxListener.FlagsUpdated(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids, uflags);
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
@@ -71,7 +70,7 @@ public class EventFactory {
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath from, Mailbox to) {
-        return new MailboxListener.MailboxRenamed(sessionId, user, from, to.getMailboxId(), new StoreMailboxPath(to));
+        return new MailboxListener.MailboxRenamed(sessionId, user, from, to.getMailboxId(), to.generateAssociatedPath());
     }
 
     public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot,
@@ -81,7 +80,7 @@ public class EventFactory {
 
     public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot,
                                                           QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return new MailboxListener.MailboxDeletion(sessionId, user, new StoreMailboxPath(mailbox), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
+        return new MailboxListener.MailboxDeletion(sessionId, user, mailbox.generateAssociatedPath(), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
     }
 
     public MailboxListener.MailboxAdded mailboxAdded(MailboxSession session, Mailbox mailbox) {
@@ -89,7 +88,7 @@ public class EventFactory {
     }
 
     public MailboxListener.MailboxAdded mailboxAdded(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
-        return new MailboxListener.MailboxAdded(sessionId, user, new StoreMailboxPath(mailbox), mailbox.getMailboxId());
+        return new MailboxListener.MailboxAdded(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId());
     }
 
     public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {

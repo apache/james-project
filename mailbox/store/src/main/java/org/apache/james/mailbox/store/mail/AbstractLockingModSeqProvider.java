@@ -23,14 +23,11 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.store.StoreMailboxPath;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 
 /**
  * Abstract base implementation of {@link ModSeqProvider} which uses the given {@link MailboxPathLocker} to lock the {@link Mailbox} during the mod-seq generation.
- * 
- *
  */
 public abstract class AbstractLockingModSeqProvider implements ModSeqProvider {
 
@@ -41,15 +38,15 @@ public abstract class AbstractLockingModSeqProvider implements ModSeqProvider {
     }
     
     @Override
-    public long nextModSeq(final MailboxSession session, final Mailbox mailbox) throws MailboxException {
+    public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         boolean writeLock = true;
-        return locker.executeWithLock(session, new StoreMailboxPath(mailbox),
+        return locker.executeWithLock(session, mailbox.generateAssociatedPath(),
             () -> lockedNextModSeq(session, mailbox),
             writeLock);
     }
     
     @Override
-    public long nextModSeq(final MailboxSession session, final MailboxId mailboxId) throws MailboxException {
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) {
         throw new NotImplementedException("Not implemented");
     }
 
