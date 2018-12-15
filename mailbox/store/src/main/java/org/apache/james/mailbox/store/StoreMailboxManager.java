@@ -357,7 +357,7 @@ public class StoreMailboxManager implements MailboxManager {
      */
 
     protected MailboxSession createSession(String userName, SessionType type) {
-        return new SimpleMailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
+        return new MailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
     }
 
     private MailboxSession.SessionId newSessionId() {
