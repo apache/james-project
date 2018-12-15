@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -100,11 +99,6 @@ public class GetMessagesMethodTest {
         @Override
         public String getUserName() {
             return username;
-        }
-        
-        @Override
-        public List<Locale> getLocalePreferences() {
-            return ImmutableList.of();
         }
 
         @Override

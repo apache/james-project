@@ -49,16 +49,6 @@ public class MockMailboxSession implements MailboxSession {
             }
 
             @Override
-            public String getPassword() {
-                return null;
-            }
-
-            @Override
-            public List<Locale> getLocalePreferences() {
-                return new ArrayList<>();
-            }
-
-            @Override
             public boolean isSameUser(String other) {
                 if (username == null) {
                     return other == null;
@@ -69,6 +59,11 @@ public class MockMailboxSession implements MailboxSession {
         this.sessionId = sessionId;
         this.open = true;
         type = SessionType.User;
+    }
+
+    @Override
+    public List<Locale> getLocalePreferences() {
+        return new ArrayList<>();
     }
 
     @Override

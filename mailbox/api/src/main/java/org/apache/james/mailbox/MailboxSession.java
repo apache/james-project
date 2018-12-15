@@ -122,6 +122,15 @@ public interface MailboxSession {
     User getUser();
 
     /**
+     * Gets acceptable localisation for this user in preference order.<br>
+     * When localising a phrase, each <code>Locale</code> should be tried in
+     * order until an appropriate translation is obtained.
+     *
+     * @return not null, when empty the default local should be used
+     */
+    List<Locale> getLocalePreferences();
+
+    /**
      * A mailbox user. Useful for specialist mailbox implementation.
      */
     interface User {
@@ -132,14 +141,6 @@ public interface MailboxSession {
          */
         String getUserName();
 
-        /**
-         * Gets acceptable localisation for this user in preference order.<br>
-         * When localising a phrase, each <code>Locale</code> should be tried in
-         * order until an appropriate translation is obtained.
-         * 
-         * @return not null, when empty the default local should be used
-         */
-        List<Locale> getLocalePreferences();
         
         boolean isSameUser(String username);
 
