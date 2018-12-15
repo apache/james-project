@@ -44,8 +44,6 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
 
     private final String userName;
     
-    private final String password;
-    
     private boolean open = true;
 
     private final List<Locale> localePreferences;
@@ -57,16 +55,15 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     private final SessionType type;
 
     
-    public SimpleMailboxSession(SessionId sessionId, String userName, String password,
+    public SimpleMailboxSession(SessionId sessionId, String userName,
                                 List<Locale> localePreferences, char pathSeparator, SessionType type) {
-        this(sessionId, userName, password, localePreferences, new ArrayList<>(), null, pathSeparator, type);
+        this(sessionId, userName, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
-    public SimpleMailboxSession(SessionId sessionId, String userName, String password,
+    public SimpleMailboxSession(SessionId sessionId, String userName,
                                 List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
-        this.password = password;
         this.otherUsersSpace = otherUsersSpace;
         this.sharedSpaces = sharedSpaces;
         this.type = type;
@@ -154,11 +151,6 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     @Override
     public Map<Object, Object> getAttributes() {
         return attributes;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
     }
 
     @Override

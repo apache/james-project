@@ -101,11 +101,6 @@ public class GetMessagesMethodTest {
         public String getUserName() {
             return username;
         }
-
-        @Override
-        public String getPassword() {
-            return password;
-        }
         
         @Override
         public List<Locale> getLocalePreferences() {

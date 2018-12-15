@@ -346,7 +346,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public MailboxSession createSystemSession(String userName) {
-        return createSession(userName, null, SessionType.System);
+        return createSession(userName, SessionType.System);
     }
 
     /**
@@ -356,8 +356,8 @@ public class StoreMailboxManager implements MailboxManager {
      * @return session
      */
 
-    protected MailboxSession createSession(String userName, String password, SessionType type) {
-        return new SimpleMailboxSession(newSessionId(), userName, password, new ArrayList<>(), getDelimiter(), type);
+    protected MailboxSession createSession(String userName, SessionType type) {
+        return new SimpleMailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
     }
 
     private MailboxSession.SessionId newSessionId() {
@@ -392,7 +392,7 @@ public class StoreMailboxManager implements MailboxManager {
     @Override
     public MailboxSession login(String userid, String passwd) throws MailboxException {
         if (isValidLogin(userid, passwd)) {
-            return createSession(userid, passwd, SessionType.User);
+            return createSession(userid, SessionType.User);
         } else {
             throw new BadCredentialsException();
         }
