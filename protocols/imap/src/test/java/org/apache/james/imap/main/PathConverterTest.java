@@ -47,13 +47,9 @@ public class PathConverterTest {
     @Before
     public void setUp() {
         imapSession = mock(ImapSession.class);
-        mailboxSession = mock(MailboxSession.class);
-        MailboxSession.User user = mock(MailboxSession.User.class);
+        mailboxSession = MailboxSession.create(USERNAME);
         pathConverter = PathConverter.forSession(imapSession);
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
-        when(mailboxSession.getUser()).thenReturn(user);
-        when(mailboxSession.getPathDelimiter()).thenReturn(PATH_DELIMITER);
-        when(user.getUserName()).thenReturn(USERNAME);
     }
 
     @Test

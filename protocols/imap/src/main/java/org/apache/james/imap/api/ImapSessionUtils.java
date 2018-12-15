@@ -39,7 +39,7 @@ public class ImapSessionUtils {
     public static String getUserName(ImapSession imapSession) {
         Preconditions.checkNotNull(imapSession);
         return Optional.ofNullable(getMailboxSession(imapSession))
-            .map(mailboxSession -> mailboxSession.getUser().getUserName())
+            .map(mailboxSession -> mailboxSession.getUser().asString())
             .orElse(null);
     }
 }

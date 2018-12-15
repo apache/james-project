@@ -59,7 +59,7 @@ public class NamespaceProcessorTest {
     NamespaceProcessor subject;
     StatusResponseFactory statusResponseStub;
     ImapSession imapSessionStub;
-    MailboxSession mailboxSessionStub;
+    MailboxSession mailboxSession;
     NamespaceRequest namespaceRequest;
     Collection<String> sharedSpaces;
     MailboxManager mailboxManagerStub;
@@ -71,7 +71,7 @@ public class NamespaceProcessorTest {
         mailboxManagerStub = mock(MailboxManager.class);
         subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
         imapSessionStub = mock(ImapSession.class);
-        mailboxSessionStub = mock(MailboxSession.class);
+        mailboxSession = mock(MailboxSession.class);
      
         namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), "TAG");
        
@@ -80,13 +80,13 @@ public class NamespaceProcessorTest {
     @Test
     public void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
         when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSessionStub);
+        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
         when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
 
-        when(mailboxSessionStub.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
-        when(mailboxSessionStub.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
-        when(mailboxSessionStub.getSharedSpaces()).thenReturn(new ArrayList<>());
-        when(mailboxSessionStub.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
+        when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
+        when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
+        when(mailboxSession.getSharedSpaces()).thenReturn(new ArrayList<>());
+        when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
         when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))
@@ -105,13 +105,13 @@ public class NamespaceProcessorTest {
     @Test
     public void testNamespaceResponseShouldContainSharedSpaces() {
         when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSessionStub);
+        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
         when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
 
-        when(mailboxSessionStub.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
-        when(mailboxSessionStub.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
-        when(mailboxSessionStub.getSharedSpaces()).thenReturn(Arrays.asList(SHARED_PREFIX));
-        when(mailboxSessionStub.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
+        when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
+        when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
+        when(mailboxSession.getSharedSpaces()).thenReturn(Arrays.asList(SHARED_PREFIX));
+        when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
         when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))

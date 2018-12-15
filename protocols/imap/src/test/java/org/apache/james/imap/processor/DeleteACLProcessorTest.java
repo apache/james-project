@@ -40,7 +40,6 @@ import org.apache.james.imap.message.request.DeleteACLRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
@@ -82,8 +81,8 @@ public class DeleteACLProcessorTest {
         mailboxManager = mock(MailboxManager.class);
         subject = new DeleteACLProcessor(mock(ImapProcessor.class), mailboxManager, statusResponseFactory, new NoopMetricFactory());
         imapSession = mock(ImapSession.class);
-        mailboxSession = mock(MailboxSession.class);
-        User user1 = mock(User.class);
+        mailboxSession = MailboxSession.create(USER_1);
+
         MessageManager messageManager = mock(MessageManager.class);
         metaData = mock(MetaData.class);
         responder = mock(Responder.class);
@@ -92,10 +91,6 @@ public class DeleteACLProcessorTest {
             .thenReturn(mailboxSession);
         when(imapSession.getState())
             .thenReturn(ImapSessionState.AUTHENTICATED);
-        when(mailboxSession.getUser())
-            .thenReturn(user1);
-        when(user1.getUserName())
-            .thenReturn(USER_1);
         when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(FetchGroup.class)))
             .thenReturn(metaData);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))

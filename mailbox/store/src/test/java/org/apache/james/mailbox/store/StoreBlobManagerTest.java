@@ -66,7 +66,7 @@ public class StoreBlobManagerTest {
     public void setUp() {
         attachmentManager = mock(AttachmentManager.class);
         messageIdManager = mock(MessageIdManager.class);
-        session = mock(MailboxSession.class);
+        session = MailboxSession.create("user");
 
         blobManager = new StoreBlobManager(attachmentManager, messageIdManager, new TestMessageId.Factory());
     }

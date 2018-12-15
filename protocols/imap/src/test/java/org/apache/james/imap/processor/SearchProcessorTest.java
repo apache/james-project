@@ -122,7 +122,7 @@ public class SearchProcessorTest {
         statusResponse = mock(StatusResponse.class);
         mailbox = mock(MessageManager.class);
         mailboxManager = mock(MailboxManager.class);
-        mailboxSession = mock(MailboxSession.class);
+        mailboxSession = MailboxSession.create("user");
         selectedMailbox = mock(SelectedMailbox.class);
         
         processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());

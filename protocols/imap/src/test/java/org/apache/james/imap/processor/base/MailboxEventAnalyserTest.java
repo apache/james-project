@@ -135,7 +135,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(MAILBOX_SESSION.getSessionId(),
-            MAILBOX_SESSION.getUser().getCoreUser(), MAILBOX_PATH, MAILBOX_ID) {};
+            MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID) {};
       
         testee.event(event);
 

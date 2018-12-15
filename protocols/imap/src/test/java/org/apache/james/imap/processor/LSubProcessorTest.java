@@ -69,28 +69,7 @@ public class LSubProcessorTest {
     private static final String MAILBOX_A = "A.MAILBOX";
 
     private static final String TAG = "TAG";
-    public static final MailboxSession.User USER = new MailboxSession.User() {
-        @Override
-        public List<Locale> getLocalePreferences() {
-            return new ArrayList<>();
-        }
-
-        @Override
-        public String getPassword() {
-            return "test";
-        }
-
-        @Override
-        public String getUserName() {
-            return "test";
-        }
-
-        @Override
-        public boolean isSameUser(String username) {
-            return "test".equalsIgnoreCase(username);
-        }
-
-    };
+    public static final String USER = "test";
 
     LSubProcessor processor;
     ImapProcessor next;
@@ -117,7 +96,7 @@ public class LSubProcessorTest {
         statusResponse = mock(StatusResponse.class);
         responderImpl = responder;
         manager =  mock(SubscriptionManager.class);
-        mailboxSession = mock(MailboxSession.class);
+        mailboxSession = MailboxSession.create(USER);
         processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
     }
 
@@ -129,8 +108,6 @@ public class LSubProcessorTest {
         subscriptions.add(MAILBOX_C);
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
-
-        when(mailboxSession.getUser()).thenReturn(USER);
 
         expectSubscriptions();
         when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
@@ -154,8 +131,6 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
 
-        when(mailboxSession.getUser()).thenReturn(USER);
-
         expectSubscriptions();
         when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
@@ -178,8 +153,6 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_ONE);
         subscriptions.add(CHILD_TWO);
 
-        when(mailboxSession.getUser()).thenReturn(USER);
-
         expectSubscriptions();
         when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
@@ -197,8 +170,6 @@ public class LSubProcessorTest {
         subscriptions.add(MAILBOX_A);
         subscriptions.add(MAILBOX_B);
         subscriptions.add(MAILBOX_C);
-
-        when(mailboxSession.getUser()).thenReturn(USER);
         expectSubscriptions();
         when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
@@ -214,7 +185,6 @@ public class LSubProcessorTest {
 
     private void expectSubscriptions() throws Exception {
         when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
-        when(mailboxSession.getPathDelimiter()).thenReturn(HIERARCHY_DELIMITER);
         when(manager.subscriptions(mailboxSession)).thenReturn(subscriptions);
     }
 }
