@@ -33,7 +33,6 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
@@ -78,7 +77,7 @@ public class MailboxAnnotationListenerTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        mailboxSession = new MockMailboxSession("test");
+        mailboxSession = MailboxSession.create("test");
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, mailboxManager);
         eventFactory = new EventFactory();
         mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, mailboxId);

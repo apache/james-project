@@ -44,7 +44,6 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -89,7 +88,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         dispatcher = mock(MailboxEventDispatcher.class);
         quotaManager = mock(QuotaManager.class);
 
-        session = new MockMailboxSession(ALICE);
+        session = MailboxSession.create(ALICE);
         testingData = createTestSystem(quotaManager, dispatcher);
         messageIdManager = testingData.getMessageIdManager();
 

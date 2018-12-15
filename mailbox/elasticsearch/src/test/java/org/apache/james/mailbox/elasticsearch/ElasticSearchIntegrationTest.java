@@ -30,6 +30,7 @@ import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -124,14 +124,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getQuotaManager(),
             storeMailboxManager.getQuotaRootResolver());
         storeMailboxManager.setMessageSearchIndex(elasticSearchListeningMessageSearchIndex);
-        storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, new MockMailboxSession("admin"));
+        storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, MailboxSession.create("admin"));
         this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;
     }
 
     @Test
     public void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MockMailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSession.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -150,7 +150,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void tooLongTermsShouldNotMakeIndexingFail() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MockMailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSession.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -169,7 +169,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MockMailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSession.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -188,7 +188,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void fieldsWithTooLongTermShouldStillBeIndexed() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MockMailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSession.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -207,7 +207,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void reasonableLongTermShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MockMailboxSession session = new MockMailboxSession(USERNAME);
+        MailboxSession session = MailboxSession.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";

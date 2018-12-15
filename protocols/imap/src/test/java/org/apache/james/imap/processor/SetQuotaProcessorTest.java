@@ -35,7 +35,6 @@ import org.apache.james.imap.message.request.SetQuotaRequest;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,7 @@ public class SetQuotaProcessorTest {
 
     @Before
     public void setUp() {
-        mailboxSession = new MockMailboxSession("plop");
+        mailboxSession = MailboxSession.create("plop");
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedResponder = mock(ImapProcessor.Responder.class);

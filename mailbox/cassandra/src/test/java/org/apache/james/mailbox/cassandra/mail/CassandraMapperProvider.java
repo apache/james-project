@@ -29,7 +29,6 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
@@ -49,7 +48,7 @@ public class CassandraMapperProvider implements MapperProvider {
     private final CassandraCluster cassandra;
     private final MessageUidProvider messageUidProvider;
     private final CassandraModSeqProvider cassandraModSeqProvider;
-    private final MockMailboxSession mailboxSession = new MockMailboxSession("benwa");
+    private final MailboxSession mailboxSession = MailboxSession.create("benwa");
     private CassandraMailboxSessionMapperFactory mapperFactory;
 
     public CassandraMapperProvider(CassandraCluster cassandra) {

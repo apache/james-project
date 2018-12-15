@@ -34,11 +34,11 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -64,7 +64,7 @@ import com.google.common.collect.ImmutableSortedMap;
 public class SpamAssassinListenerTest {
 
     public static final String USER = "user";
-    private static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession(USER);
+    private static final MailboxSession MAILBOX_SESSION = MailboxSession.create(USER);
     private static final int UID_VALIDITY = 43;
     private static final MessageUid UID = MessageUid.of(45);
 

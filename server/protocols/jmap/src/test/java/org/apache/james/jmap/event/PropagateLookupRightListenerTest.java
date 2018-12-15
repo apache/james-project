@@ -27,7 +27,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -60,7 +59,7 @@ public class PropagateLookupRightListenerTest {
     private StoreMailboxManager storeMailboxManager;
     private PropagateLookupRightListener testee;
 
-    private MailboxSession mailboxSession = new MockMailboxSession(OWNER_USER);
+    private MailboxSession mailboxSession = MailboxSession.create(OWNER_USER);
 
     private MailboxId parentMailboxId;
     private MailboxId parentMailboxId1;

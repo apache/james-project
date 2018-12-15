@@ -29,7 +29,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.Test;
 
@@ -45,8 +44,8 @@ public abstract class AbstractMessageManagerTest {
     protected abstract MessageManagerTestSystem createTestSystem() throws Exception;
 
     public void setUp() throws Exception {
-        aliceSession = new MockMailboxSession(ALICE);
-        bobSession = new MockMailboxSession(BOB);
+        aliceSession = MailboxSession.create(ALICE);
+        bobSession = MailboxSession.create(BOB);
         testSystem = createTestSystem();
         mailboxManager = testSystem.getMailboxManager();
 

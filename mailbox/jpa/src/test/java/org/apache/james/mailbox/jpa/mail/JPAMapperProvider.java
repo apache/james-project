@@ -26,10 +26,10 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -62,7 +62,7 @@ public class JPAMapperProvider implements MapperProvider {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
-        JPAMessageMapper messageMapper = new JPAMessageMapper(new MockMailboxSession("benwa"), 
+        JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSession.create("benwa"),
             new JPAUidProvider(locker, entityManagerFactory), 
             new JPAModSeqProvider(locker, entityManagerFactory), 
             entityManagerFactory);

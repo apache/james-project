@@ -30,7 +30,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,7 +37,7 @@ import org.junit.rules.ExpectedException;
 
 public class SystemMailboxesProviderImplTest {
 
-    private MailboxSession mailboxSession = new MockMailboxSession(MailboxFixture.ALICE);
+    private MailboxSession mailboxSession = MailboxSession.create(MailboxFixture.ALICE);
     private SystemMailboxesProviderImpl systemMailboxProvider;
 
     private MailboxManager mailboxManager;

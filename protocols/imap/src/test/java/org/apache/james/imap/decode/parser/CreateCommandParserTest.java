@@ -35,7 +35,6 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +51,7 @@ public class CreateCommandParserTest {
     @Before
     public void setUp() throws Exception {
         mockImapSession = mock(ImapSession.class);
-        mailboxSession = new MockMailboxSession("userName");
+        mailboxSession = MailboxSession.create("userName");
 
         when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
 

@@ -38,7 +38,6 @@ import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
@@ -74,7 +73,7 @@ public abstract class AbstractCombinationManagerTest {
     public abstract CombinationManagerTestSystem createTestingData() throws Exception;
 
     public void setUp() throws Exception {
-        session = new MockMailboxSession(MailboxFixture.ALICE);
+        session = MailboxSession.create(MailboxFixture.ALICE);
         testingData = createTestingData();
 
         mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);

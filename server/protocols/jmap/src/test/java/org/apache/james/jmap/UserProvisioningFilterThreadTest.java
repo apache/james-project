@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
@@ -38,7 +37,7 @@ public class UserProvisioningFilterThreadTest {
     @Before
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        session = new MockMailboxSession("username");
+        session = MailboxSession.create("username");
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
 

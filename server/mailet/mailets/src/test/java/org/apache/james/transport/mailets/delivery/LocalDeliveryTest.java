@@ -32,6 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -54,9 +55,9 @@ public class LocalDeliveryTest {
     public static final String RECEIVER_DOMAIN_COM = "receiver@domain.com";
     private UsersRepository usersRepository;
     private MailboxManager mailboxManager;
-    private MailboxSession.User user;
     private FakeMailetConfig config;
     private LocalDelivery testee;
+    private MailboxSession session;
 
     @Before
     public void setUp() throws Exception {
@@ -67,11 +68,10 @@ public class LocalDeliveryTest {
         when(metricFactory.generate(anyString())).thenReturn(mock(Metric.class));
         testee = new LocalDelivery(usersRepository, mailboxManager, metricFactory);
 
-        user = mock(MailboxSession.User.class);
-        MailboxSession session = mock(MailboxSession.class);
+        session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
         when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
-        when(session.getUser()).thenReturn(user);
+
 
         config = FakeMailetConfig.builder()
             .mailetName("Local delivery")
@@ -89,7 +89,7 @@ public class LocalDeliveryTest {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUser(new MailAddress(username))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(user.getUserName()).thenReturn(username);
+        when(session.getUser()).thenReturn(User.fromUsername(username));
 
         // When
         Mail mail = createMail();
@@ -110,7 +110,7 @@ public class LocalDeliveryTest {
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
         when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(user.getUserName()).thenReturn(username);
+        when(session.getUser()).thenReturn(User.fromUsername(username));
 
         // When
         Mail mail = createMail();

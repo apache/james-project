@@ -26,11 +26,11 @@ import java.util.List;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
-    public static final MockMailboxSession MAILBOX_SESSION = new MockMailboxSession("benwa");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSession.create("benwa");
     @ClassRule public static DockerCassandraRule cassandraServer = new DockerCassandraRule();
 
     private static CassandraCluster cassandra;

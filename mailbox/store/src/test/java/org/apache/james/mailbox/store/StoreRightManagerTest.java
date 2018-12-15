@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -39,7 +40,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -56,14 +56,14 @@ public class StoreRightManagerTest {
 
     private static final long UID_VALIDITY = 3421L;
     private StoreRightManager storeRightManager;
-    private MockMailboxSession aliceSession;
+    private MailboxSession aliceSession;
     private MailboxACLResolver mailboxAclResolver;
     private GroupMembershipResolver groupMembershipResolver;
     private MailboxMapper mockedMailboxMapper;
 
     @Before
     public void setup() throws MailboxException {
-        aliceSession = new MockMailboxSession(MailboxFixture.ALICE);
+        aliceSession = MailboxSession.create(MailboxFixture.ALICE);
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
@@ -218,7 +218,7 @@ public class StoreRightManagerTest {
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
         MailboxACL actual = StoreRightManager.filteredForSession(
-            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(CEDRIC));
+            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, MailboxSession.create(CEDRIC));
         assertThat(actual).isEqualTo(acl);
     }
 
@@ -228,7 +228,7 @@ public class StoreRightManagerTest {
             .apply(MailboxACL.command().rights(Right.Read, Right.Write).forUser(BOB).asAddition())
             .apply(MailboxACL.command().rights(Right.Read, Right.Write, Right.Administer).forUser(CEDRIC).asAddition());
         MailboxACL actual = StoreRightManager.filteredForSession(
-            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, new MockMailboxSession(BOB));
+            new SimpleMailbox(INBOX_ALICE, UID_VALIDITY), acl, MailboxSession.create(BOB));
         assertThat(actual.getEntries()).containsKey(MailboxACL.EntryKey.createUserEntryKey(BOB));
     }
 

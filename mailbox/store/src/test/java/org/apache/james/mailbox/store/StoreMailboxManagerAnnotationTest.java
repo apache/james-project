@@ -34,7 +34,6 @@ import java.util.Set;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -70,7 +69,7 @@ public class StoreMailboxManagerAnnotationTest {
     @Mock private MailboxPath mailboxPath;
     @Mock private Mailbox mailbox;
     @Mock private MailboxId mailboxId;
-    private MockMailboxSession session;
+    private MailboxSession session;
 
     private StoreMailboxAnnotationManager annotationManager;
 
@@ -80,7 +79,7 @@ public class StoreMailboxManagerAnnotationTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        session = new MockMailboxSession("userName");
+        session = MailboxSession.create("userName");
 
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);

@@ -59,7 +59,6 @@ import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
@@ -107,7 +106,7 @@ public class SetMessagesCreationProcessorTest {
     private MessageFactory messageFactory;
     private MailSpool mockedMailSpool;
     private SystemMailboxesProvider fakeSystemMailboxesProvider;
-    private MockMailboxSession session;
+    private MailboxSession session;
     private AttachmentManager mockedAttachmentManager;
     private MailboxManager mockedMailboxManager;
     private Factory mockedMailboxIdFactory;
@@ -141,7 +140,7 @@ public class SetMessagesCreationProcessorTest {
         MessageIdManager mockMessageIdManager = mock(MessageIdManager.class);
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
-        session = new MockMailboxSession(USER);
+        session = MailboxSession.create(USER);
         MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter();
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mockedAttachmentManager, mimeMessageConverter);
         messageSender = new MessageSender(mockedMailSpool, mockedMailFactory);

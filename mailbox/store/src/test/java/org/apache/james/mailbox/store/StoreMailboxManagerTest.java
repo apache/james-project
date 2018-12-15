@@ -33,7 +33,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -67,7 +66,7 @@ public class StoreMailboxManagerTest {
     @Before
     public void setUp() throws MailboxException {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
-        mockedMailboxSession = new MockMailboxSession(CURRENT_USER);
+        mockedMailboxSession = MailboxSession.create(CURRENT_USER);
         mockedMailboxMapper = mock(MailboxMapper.class);
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
@@ -189,7 +188,7 @@ public class StoreMailboxManagerTest {
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = new MockMailboxSession("user");
+        MailboxSession session = MailboxSession.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()));
         //When
@@ -202,7 +201,7 @@ public class StoreMailboxManagerTest {
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = new MockMailboxSession("user");
+        MailboxSession session = MailboxSession.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()));
 

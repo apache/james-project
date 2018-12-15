@@ -25,8 +25,8 @@ import static org.mockito.Mockito.mock;
 import java.util.Map;
 
 import org.apache.james.core.User;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.mock.MockMailboxSession;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -51,7 +51,7 @@ public class MessageMoveEventTest {
     @Test
     public void builderShouldThrowWhenMessageMovesIsNull() {
         assertThatThrownBy(() -> MessageMoveEvent.builder()
-                .session(new MockMailboxSession("user@james.org"))
+                .session(MailboxSession.create("user@james.org"))
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
@@ -59,7 +59,7 @@ public class MessageMoveEventTest {
     @Test
     public void builderShouldReturnNoopWhenMessagesIsEmpty() {
         assertThat(MessageMoveEvent.builder()
-                .session(new MockMailboxSession("user@james.org"))
+                .session(MailboxSession.create("user@james.org"))
                 .messageMoves(MessageMoves.builder()
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
@@ -70,7 +70,7 @@ public class MessageMoveEventTest {
 
     @Test
     public void builderShouldNotBeNoopWhenFieldsAreGiven() {
-        MockMailboxSession session = new MockMailboxSession("user@james.org");
+        MailboxSession session = MailboxSession.create("user@james.org");
         MessageMoves messageMoves = MessageMoves.builder()
             .targetMailboxIds(TestId.of(2))
             .previousMailboxIds(TestId.of(1))
@@ -89,7 +89,7 @@ public class MessageMoveEventTest {
     @Test
     public void builderShouldBuildWhenFieldsAreGiven() {
         String username = "user@james.org";
-        MockMailboxSession session = new MockMailboxSession(username);
+        MailboxSession session = MailboxSession.create(username);
         MessageMoves messageMoves = MessageMoves.builder()
             .targetMailboxIds(TestId.of(2))
             .previousMailboxIds(TestId.of(1))
@@ -110,7 +110,7 @@ public class MessageMoveEventTest {
     @Test
     public void isMoveToShouldReturnFalseWhenMailboxIdIsNotInAddedMailboxIds() {
         MessageMoveEvent event = MessageMoveEvent.builder()
-            .session(new MockMailboxSession("user@james.org"))
+            .session(MailboxSession.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
@@ -125,7 +125,7 @@ public class MessageMoveEventTest {
     public void isMoveToShouldReturnTrueWhenMailboxIdIsInAddedMailboxIds() {
         TestId mailboxId = TestId.of(123);
         MessageMoveEvent event = MessageMoveEvent.builder()
-            .session(new MockMailboxSession("user@james.org"))
+            .session(MailboxSession.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(TestId.of(1))
                 .targetMailboxIds(TestId.of(2), mailboxId)
@@ -139,7 +139,7 @@ public class MessageMoveEventTest {
     @Test
     public void isMoveFromShouldReturnFalseWhenMailboxIdIsNotInRemovedMailboxIds() {
         MessageMoveEvent event = MessageMoveEvent.builder()
-            .session(new MockMailboxSession("user@james.org"))
+            .session(MailboxSession.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
@@ -154,7 +154,7 @@ public class MessageMoveEventTest {
     public void isMoveFromShouldReturnTrueWhenMailboxIdIsInRemovedMailboxIds() {
         TestId mailboxId = TestId.of(123);
         MessageMoveEvent event = MessageMoveEvent.builder()
-            .session(new MockMailboxSession("user@james.org"))
+            .session(MailboxSession.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(TestId.of(1), mailboxId)
                 .targetMailboxIds(TestId.of(2))
