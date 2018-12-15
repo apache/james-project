@@ -26,7 +26,6 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.Objects;
 
@@ -46,10 +45,6 @@ public class SimpleMessageMetaData implements MessageMetaData {
         this.modSeq = modSeq;
         this.internalDate = internalDate;
         this.messageId = messageId;
-    }
-    
-    public SimpleMessageMetaData(MailboxMessage message) {
-        this(message.getUid(), message.getModSeq(), message.createFlags(), message.getFullContentOctets(), message.getInternalDate(), message.getMessageId());
     }
     
     @Override

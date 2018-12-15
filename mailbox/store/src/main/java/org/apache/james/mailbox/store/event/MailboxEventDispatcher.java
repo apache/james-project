@@ -44,7 +44,6 @@ import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
@@ -89,7 +88,7 @@ public class MailboxEventDispatcher {
     }
 
     public void added(MailboxSession session, Mailbox mailbox, MailboxMessage mailboxMessage) {
-        SimpleMessageMetaData messageMetaData = new SimpleMessageMetaData(mailboxMessage);
+        MessageMetaData messageMetaData = mailboxMessage.metaData();
         SortedMap<MessageUid, MessageMetaData> metaDataMap = ImmutableSortedMap.<MessageUid, MessageMetaData>naturalOrder()
                 .put(messageMetaData.getUid(), messageMetaData)
                 .build();

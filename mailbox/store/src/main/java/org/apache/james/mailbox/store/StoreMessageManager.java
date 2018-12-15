@@ -720,7 +720,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         while (originalRows.hasNext()) {
             final MailboxMessage originalMessage = originalRows.next();
-            originalRowsCopy.add(new SimpleMessageMetaData(originalMessage));
+            originalRowsCopy.add(originalMessage.metaData());
             MessageMetaData data = messageMapper.execute(
                 () -> messageMapper.move(getMailboxEntity(), originalMessage));
             movedRows.add(data);

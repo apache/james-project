@@ -45,7 +45,6 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageUtils;
 import org.apache.james.mailbox.store.mail.MessageUtils.MessageChangedFlags;
@@ -322,12 +321,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 ((AbstractJPAMailboxMessage) message).setMailbox(currentMailbox);
 
                 getEntityManager().persist(message);
-                return new SimpleMessageMetaData(message);
+                return message.metaData();
             } else {
                 JPAMailboxMessage persistData = new JPAMailboxMessage(currentMailbox, message.getUid(), message.getModSeq(), message);
                 persistData.setFlags(message.createFlags());
                 getEntityManager().persist(persistData);
-                return new SimpleMessageMetaData(persistData);
+                return persistData.metaData();
             }
 
         } catch (PersistenceException | ArgumentException e) {
@@ -381,7 +380,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private Map<MessageUid, MessageMetaData> createMetaData(List<MailboxMessage> uids) {
         final Map<MessageUid, MessageMetaData> data = new HashMap<>();
         for (MailboxMessage m : uids) {
-            data.put(m.getUid(), new SimpleMessageMetaData(m));
+            data.put(m.getUid(), m.metaData());
         }
         return data;
     }

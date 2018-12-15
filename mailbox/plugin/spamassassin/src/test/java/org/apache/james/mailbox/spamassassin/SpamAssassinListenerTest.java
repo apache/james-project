@@ -47,7 +47,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.SystemMailboxesProviderImpl;
 import org.apache.james.mailbox.store.event.EventFactory;
@@ -238,7 +237,7 @@ public class SpamAssassinListenerTest {
     public void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(inbox);
 
-        ImmutableSortedMap<MessageUid, MessageMetaData> sortedMap = ImmutableSortedMap.of(UID, new SimpleMessageMetaData(message));
+        ImmutableSortedMap<MessageUid, MessageMetaData> sortedMap = ImmutableSortedMap.of(UID, message.metaData());
         MailboxListener.Added addedEvent = new EventFactory().added(
                 MAILBOX_SESSION, sortedMap, inbox);
 
@@ -253,7 +252,7 @@ public class SpamAssassinListenerTest {
 
         MailboxListener.Added addedEvent = new EventFactory().added(
             MAILBOX_SESSION,
-            ImmutableSortedMap.of(UID, new SimpleMessageMetaData(message)),
+            ImmutableSortedMap.of(UID, message.metaData()),
             mailbox1);
 
         listener.event(addedEvent);

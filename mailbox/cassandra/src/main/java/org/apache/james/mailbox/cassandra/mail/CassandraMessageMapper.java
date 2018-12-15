@@ -47,7 +47,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -210,7 +209,7 @@ public class CassandraMessageMapper implements MessageMapper {
             .collect(JamesCollectors.chunker(cassandraConfiguration.getExpungeChunkSize()))
             .map(uidChunk -> expungeUidChunk(mailboxId, uidChunk))
             .flatMap(CompletableFuture::join)
-            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, SimpleMessageMetaData::new));
+            .collect(Guavate.toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData));
     }
 
     private CompletableFuture<Stream<SimpleMailboxMessage>> expungeUidChunk(CassandraId mailboxId, Collection<MessageUid> uidChunk) {
@@ -260,7 +259,7 @@ public class CassandraMessageMapper implements MessageMapper {
         save(mailbox, addUidAndModseq(message, mailboxId))
             .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
             .join();
-        return new SimpleMessageMetaData(message);
+        return message.metaData();
     }
 
     private MailboxMessage addUidAndModseq(MailboxMessage message, CassandraId mailboxId) throws MailboxException {
@@ -372,7 +371,7 @@ public class CassandraMessageMapper implements MessageMapper {
         insertIds(addUidAndModseq(message, mailboxId), mailboxId)
                 .thenCompose(voidValue -> indexTableHandler.updateIndexOnAdd(message, mailboxId))
                 .join();
-        return new SimpleMessageMetaData(message);
+        return message.metaData();
     }
 
     private CompletableFuture<Void> save(Mailbox mailbox, MailboxMessage message) throws MailboxException {

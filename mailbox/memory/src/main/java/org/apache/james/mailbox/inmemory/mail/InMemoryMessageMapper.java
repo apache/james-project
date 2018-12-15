@@ -36,7 +36,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
@@ -145,7 +144,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         while (it.hasNext()) {
             MailboxMessage member = it.next();
             if (member.isDeleted()) {
-                filteredResult.put(member.getUid(), new SimpleMessageMetaData(member));
+                filteredResult.put(member.getUid(), member.metaData());
 
                 delete(mailbox, member);
             }
@@ -189,7 +188,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
         copy.setModSeq(message.getModSeq());
         getMembershipByUidForMailbox(mailbox).put(message.getUid(), copy);
 
-        return new SimpleMessageMetaData(message);
+        return message.metaData();
     }
 
     @Override

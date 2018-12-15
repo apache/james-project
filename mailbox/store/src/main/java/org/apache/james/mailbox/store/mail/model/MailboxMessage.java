@@ -129,7 +129,7 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
     Flags createFlags();
 
     default MessageMetaData metaData() {
-        return new SimpleMessageMetaData(this);
+        return new SimpleMessageMetaData(getUid(), getModSeq(), createFlags(), getFullContentOctets(), getInternalDate(), getMessageId());
     }
 
 }

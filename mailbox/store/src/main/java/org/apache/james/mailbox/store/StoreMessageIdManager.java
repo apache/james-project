@@ -86,7 +86,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private static MetadataWithMailboxId toMetadataWithMailboxId(MailboxMessage message) {
-        return new MetadataWithMailboxId(new SimpleMessageMetaData(message), message.getMailboxId());
+        return new MetadataWithMailboxId(message.metaData(), message.getMailboxId());
     }
 
     public static ImmutableSet<MailboxId> toMailboxIds(List<MailboxMessage> mailboxMessages) {
@@ -286,7 +286,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private void removeMessageFromMailboxes(MailboxMessage message, Set<MailboxId> mailboxesToRemove, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-        SimpleMessageMetaData eventPayload = new SimpleMessageMetaData(message);
+        MessageMetaData eventPayload = message.metaData();
 
         for (MailboxId mailboxId: mailboxesToRemove) {
             messageIdMapper.delete(message.getMessageId(), mailboxesToRemove);
