@@ -210,7 +210,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(messageResults).hasSize(2);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        verify(dispatcher).expunged(eq(session), any(SimpleMessageMetaData.class), eq(mailbox2));
+        verify(dispatcher).expunged(eq(session), any(MessageMetaData.class), eq(mailbox2));
         verify(dispatcher).added(eq(session), eq(mailbox3), any(MailboxMessage.class));
         verify(dispatcher).moved(eq(session), any(), any());
         verifyNoMoreInteractions(dispatcher);

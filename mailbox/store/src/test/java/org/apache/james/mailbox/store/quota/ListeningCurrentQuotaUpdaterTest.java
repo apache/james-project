@@ -37,11 +37,11 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.junit.Before;
@@ -73,8 +73,8 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void addedEventShouldIncreaseCurrentQuotaValues() throws Exception {
         MailboxListener.Added added = mock(MailboxListener.Added.class);
         when(added.getMailboxId()).thenReturn(MAILBOX_ID);
-        when(added.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        when(added.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(added.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(added.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(added.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(added.getUser()).thenReturn(USER_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);
@@ -87,8 +87,8 @@ public class ListeningCurrentQuotaUpdaterTest {
     @Test
     public void expungedEventShouldDecreaseCurrentQuotaValues() throws Exception {
         MailboxListener.Expunged expunged = mock(MailboxListener.Expunged.class);
-        when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new SimpleMessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new SimpleMessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(expunged.getMetaData(MessageUid.of(36))).thenReturn(new MessageMetaData(MessageUid.of(36),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        when(expunged.getMetaData(MessageUid.of(38))).thenReturn(new MessageMetaData(MessageUid.of(38),0,new Flags(), SIZE, new Date(), new DefaultMessageId()));
         when(expunged.getUids()).thenReturn(Lists.newArrayList(MessageUid.of(36), MessageUid.of(38)));
         when(expunged.getMailboxId()).thenReturn(MAILBOX_ID);
         when(expunged.getUser()).thenReturn(USER_BENWA);

@@ -50,7 +50,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -168,7 +167,7 @@ public class SelectedMailboxImplTest {
     private void emitEvent(MailboxListener mailboxListener) {
         SecureRandom random = new SecureRandom();
         TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
-        result.put(EMITTED_EVENT_UID, new SimpleMessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
+        result.put(EMITTED_EVENT_UID, new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
         mailboxListener.event(new EventFactory().added(MailboxSession.SessionId.of(random.nextLong()),
             mock(User.class), result, mailbox));
     }

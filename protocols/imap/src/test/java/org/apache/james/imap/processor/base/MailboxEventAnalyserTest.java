@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.apache.james.mailbox.store.SimpleMessageMetaData;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -149,7 +148,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.Added mailboxAdded = eventFactory.added(
             MAILBOX_SESSION,
             ImmutableSortedMap.of(MessageUid.of(11),
-                new SimpleMessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
+                new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
             DEFAULT_MAILBOX);
         testee.event(mailboxAdded);
         assertThat(testee.isSizeChanged()).isTrue();
@@ -160,7 +159,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.Added mailboxAdded = eventFactory.added(
             MAILBOX_SESSION,
             ImmutableSortedMap.of(MessageUid.of(11),
-                new SimpleMessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
+                new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
             DEFAULT_MAILBOX);
         testee.event(mailboxAdded);
         testee.resetEvents();

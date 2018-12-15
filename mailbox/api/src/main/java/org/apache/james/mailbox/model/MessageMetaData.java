@@ -24,23 +24,35 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 
-public interface MessageMetaData {
+import com.google.common.base.Objects;
 
-    MessageUid getUid();
-    
-    
-    /**
-     * Return the modify-sequence number of the message. This is kind of optional and the mailbox
-     * implementation may not support this. If so it will return -1
-     */
-    long getModSeq();
+public class MessageMetaData {
+    private final MessageUid uid;
+    private final Flags flags;
+    private final long size;
+    private final Date internalDate;
+    private final long modSeq;
+    private final MessageId messageId;
 
-    Flags getFlags();
-    
+    public MessageMetaData(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, MessageId messageId) {
+        this.uid = uid;
+        this.flags = flags;
+        this.size = size;
+        this.modSeq = modSeq;
+        this.internalDate = internalDate;
+        this.messageId = messageId;
+    }
+
+    public Flags getFlags() {
+        return flags;
+    }
+
     /**
      * Return the size in bytes
      */
-    long getSize();
+    public long getSize() {
+        return size;
+    }
 
     /**
      * <p>
@@ -48,7 +60,37 @@ public interface MessageMetaData {
      * (by smtp). Clients are also allowed to set the internalDate on append.
      * </p>
      */
-    Date getInternalDate();
-    
-    MessageId getMessageId();
+    public Date getInternalDate() {
+        return internalDate;
+    }
+
+    public MessageUid getUid() {
+        return uid;
+    }
+
+    public MessageId getMessageId() {
+        return messageId;
+    }
+
+    /**
+     * Return the modify-sequence number of the message. This is kind of optional and the mailbox
+     * implementation may not support this. If so it will return -1
+     */
+    public long getModSeq() {
+        return modSeq;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof MessageMetaData) {
+            return uid.equals(((MessageMetaData) obj).getUid());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(uid);
+    }
+
 }
