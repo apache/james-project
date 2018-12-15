@@ -1194,7 +1194,7 @@ public abstract class MailboxManagerTest {
         void createUser1SystemSessionShouldReturnValidSession() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
 
-            assertThat(session.getUser().getUserName()).isEqualTo(USER_1);
+            assertThat(session.getUser().asString()).isEqualTo(USER_1);
         }
 
         @Test

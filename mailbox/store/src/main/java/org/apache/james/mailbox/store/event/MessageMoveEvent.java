@@ -49,7 +49,7 @@ public class MessageMoveEvent implements Event {
         }
 
         public Builder session(MailboxSession session) {
-            this.user = session.getUser().getCoreUser();
+            this.user = session.getUser();
             return this;
         }
 

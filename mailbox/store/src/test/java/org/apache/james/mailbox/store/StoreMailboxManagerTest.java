@@ -141,7 +141,7 @@ public class StoreMailboxManagerTest {
     public void loginShouldCreateSessionWhenGoodPassword() throws Exception {
         MailboxSession expected = storeMailboxManager.login(CURRENT_USER, CURRENT_USER_PASSWORD);
 
-        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+        assertThat(expected.getUser().asString()).isEqualTo(CURRENT_USER);
     }
 
     @Test(expected = BadCredentialsException.class)
@@ -183,7 +183,7 @@ public class StoreMailboxManagerTest {
     public void loginAsOtherUserShouldCreateUserSessionWhenAdminWithGoodPassword() throws Exception {
         MailboxSession expected = storeMailboxManager.loginAsOtherUser(ADMIN, ADMIN_PASSWORD, CURRENT_USER);
 
-        assertThat(expected.getUser().getUserName()).isEqualTo(CURRENT_USER);
+        assertThat(expected.getUser().asString()).isEqualTo(CURRENT_USER);
     }
 
     @Test

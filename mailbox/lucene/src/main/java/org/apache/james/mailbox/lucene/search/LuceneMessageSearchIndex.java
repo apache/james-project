@@ -543,7 +543,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws MailboxException {
         final Document doc = new Document();
         // TODO: Better handling
-        doc.add(new Field(USERS, session.getUser().getUserName().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
+        doc.add(new Field(USERS, session.getUser().asString().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
         doc.add(new Field(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES, Index.NOT_ANALYZED));

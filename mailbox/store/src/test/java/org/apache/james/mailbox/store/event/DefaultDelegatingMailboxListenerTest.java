@@ -169,7 +169,7 @@ public class DefaultDelegatingMailboxListenerTest {
     public void listenersErrorsShouldNotBePropageted() throws Exception {
         MailboxSession session = new MockMailboxSession("benwa");
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session.getSessionId(),
-            session.getUser().getCoreUser(), MAILBOX_PATH, MAILBOX_ID) {};
+            session.getUser(), MAILBOX_PATH, MAILBOX_ID) {};
         MailboxListener mockedListener = mock(MailboxListener.class);
         when(mockedListener.getType()).thenReturn(MailboxListener.ListenerType.ONCE);
         doThrow(new RuntimeException()).when(mockedListener).event(event);

@@ -127,7 +127,7 @@ public class PropagateLookupRightListener implements MailboxListener {
         } catch (MailboxException e) {
             LOGGER.error(String.format("Mailbox '%s' does not exist, user '%s' cannot share mailbox",
                 mailboxPath,
-                session.getUser().getUserName()), e);
+                session.getUser().asString()), e);
         }
     }
 }

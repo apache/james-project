@@ -99,12 +99,12 @@ public class StoreRightManager implements RightManager {
     }
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
-        MailboxSession.User user = session.getUser();
+        User user = session.getUser();
 
         return Optional.ofNullable(user)
             .map(Throwing.function(value ->
                 aclResolver.resolveRights(
-                    user.getUserName(),
+                    user.asString(),
                     groupMembershipResolver,
                     mailbox.getACL(),
                     mailbox.getUser(),
@@ -246,7 +246,7 @@ public class StoreRightManager implements RightManager {
             return acl;
         }
 
-        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().getUserName());
+        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().asString());
         Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
         if (rights.contains(MailboxACL.Right.Administer)) {
             return acl;

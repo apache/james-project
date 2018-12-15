@@ -30,10 +30,10 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.User;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -88,7 +88,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     }
 
     private void createDefaultMailboxes(User user) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(user.getUserName());
+        MailboxSession session = mailboxManager.createSystemSession(user.asString());
         DefaultMailboxes.DEFAULT_MAILBOXES.stream()
             .map(toMailboxPath(session))
             .filter(mailboxPath -> mailboxDoesntExist(mailboxPath, session))
@@ -104,7 +104,7 @@ public class DefaultMailboxesProvisioningFilter implements Filter {
     }
 
     private Function<String, MailboxPath> toMailboxPath(MailboxSession session) {
-        return mailbox -> MailboxPath.forUser(session.getUser().getUserName(), mailbox);
+        return mailbox -> MailboxPath.forUser(session.getUser().asString(), mailbox);
     }
     
     private void createMailbox(MailboxPath mailboxPath, MailboxSession session) {

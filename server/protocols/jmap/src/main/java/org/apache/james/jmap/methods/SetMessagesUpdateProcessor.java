@@ -36,6 +36,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.User;
 import org.apache.james.jmap.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.model.Keyword;
@@ -190,11 +191,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void assertUserIsSender(MailboxSession session, Optional<MailAddress> sender) throws MailboxSendingNotAllowedException {
-        boolean userIsSender = sender.map(address -> session.getUser().isSameUser(address.asString()))
+        boolean userIsSender = sender.map(address -> session.getUser().equals(User.fromMailAddress(address)))
             .orElse(false);
 
         if (!userIsSender) {
-            String allowedSender = session.getUser().getUserName();
+            String allowedSender = session.getUser().asString();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
@@ -245,7 +246,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private List<MailboxId> mailboxIdFor(Role role, MailboxSession session) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, session.getUser().getCoreUser())
+        return systemMailboxesProvider.getMailboxByRole(role, session.getUser())
             .map(MessageManager::getId)
             .collect(Guavate.toImmutableList());
     }
@@ -273,7 +274,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private Set<MailboxId> listMailboxIdsForRole(MailboxSession session, Role role) throws MailboxException {
-        return systemMailboxesProvider.getMailboxByRole(role, session.getUser().getCoreUser())
+        return systemMailboxesProvider.getMailboxByRole(role, session.getUser())
             .map(MessageManager::getId)
             .collect(Guavate.toImmutableSet());
     }

@@ -598,7 +598,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
         if (!mailboxPath.belongsTo(mailboxSession)) {
-            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), mailboxSession.getUser().getUserName());
+            LOGGER.info("Mailbox {} does not belong to {}", mailboxPath.asString(), mailboxSession.getUser().asString());
             throw new MailboxNotFoundException(mailboxPath.asString());
         }
     }
@@ -700,7 +700,7 @@ public class StoreMailboxManager implements MailboxManager {
             + SQL_WILDCARD_CHAR;
         MailboxPath base = new MailboxPath(
             mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE),
-            mailboxQuery.getUser().orElse(mailboxSession.getUser().getUserName()),
+            mailboxQuery.getUser().orElse(mailboxSession.getUser().asString()),
             combinedName);
         return new MailboxPath(base, combinedName);
     }
@@ -710,7 +710,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxQuery.isPrivateMailboxes(session)) {
             return Stream.of();
         }
-        return mailboxMapper.findNonPersonalMailboxes(session.getUser().getUserName(), right).stream();
+        return mailboxMapper.findNonPersonalMailboxes(session.getUser().asString(), right).stream();
     }
 
     private SimpleMailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {

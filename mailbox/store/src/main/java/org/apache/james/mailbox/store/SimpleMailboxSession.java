@@ -26,13 +26,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 
 /**
  * Describes a mailbox session.
  */
-public class SimpleMailboxSession implements MailboxSession, MailboxSession.User {
+public class SimpleMailboxSession implements MailboxSession {
 
     private final Collection<String> sharedSpaces;
 
@@ -112,17 +113,7 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
      */
     @Override
     public User getUser() {
-        return this;
-    }
-    
-    /**
-     * Gets the name of the user executing this session.
-     * 
-     * @return not null
-     */
-    @Override
-    public String getUserName() {
-        return userName;
+        return User.fromUsername(userName);
     }
 
     @Override
@@ -161,14 +152,6 @@ public class SimpleMailboxSession implements MailboxSession, MailboxSession.User
     @Override
     public SessionType getType() {
         return type;
-    }
-
-    @Override
-    public boolean isSameUser(String username) {
-        if (this.userName == null) {
-            return username == null;
-        }
-        return this.userName.equalsIgnoreCase(username);
     }
 
 }

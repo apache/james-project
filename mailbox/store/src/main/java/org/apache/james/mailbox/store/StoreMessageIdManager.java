@@ -230,7 +230,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         List<MailboxMessage> currentMailboxMessages = findRelatedMailboxMessages(messageId, mailboxSession);
 
         if (currentMailboxMessages.isEmpty()) {
-            LOGGER.info("Tried to access {} not accessible for {}", messageId, mailboxSession.getUser().getUserName());
+            LOGGER.info("Tried to access {} not accessible for {}", messageId, mailboxSession.getUser().asString());
             return;
         }
 
@@ -399,7 +399,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             .findFirst();
 
         if (mailboxForbidden.isPresent()) {
-            LOGGER.info("Mailbox with Id {} does not belong to {}", mailboxForbidden.get(), mailboxSession.getUser().getUserName());
+            LOGGER.info("Mailbox with Id {} does not belong to {}", mailboxForbidden.get(), mailboxSession.getUser().asString());
             throw new MailboxNotFoundException(mailboxForbidden.get());
         }
     }

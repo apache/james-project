@@ -26,6 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 
 public class MockMailboxSession implements MailboxSession {
@@ -41,21 +42,7 @@ public class MockMailboxSession implements MailboxSession {
     }
 
     public MockMailboxSession(String username, SessionId sessionId) {
-        this.user = new User() {
-
-            @Override
-            public String getUserName() {
-                return username;
-            }
-
-            @Override
-            public boolean isSameUser(String other) {
-                if (username == null) {
-                    return other == null;
-                }
-                return username.equalsIgnoreCase(other);
-            }
-        };
+        this.user = User.fromUsername(username);
         this.sessionId = sessionId;
         this.open = true;
         type = SessionType.User;

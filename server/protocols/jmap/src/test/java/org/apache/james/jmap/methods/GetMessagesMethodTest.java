@@ -35,6 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.james.core.User;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
@@ -82,36 +83,14 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
+    private static final User ROBERT = User.fromUsername("robert");
+
     private MessageIdManager messageIdManager;
     private org.apache.james.mime4j.dom.Message messageContent1;
     private org.apache.james.mime4j.dom.Message messageContent2;
     private org.apache.james.mime4j.dom.Message messageContent3;
-
-    private static class User implements org.apache.james.mailbox.MailboxSession.User {
-        final String username;
-        final String password;
-
-        public User(String username, String password) {
-            this.username = username;
-            this.password = password;
-        }
-        
-        @Override
-        public String getUserName() {
-            return username;
-        }
-
-        @Override
-        public boolean isSameUser(String username) {
-            return this.username.equalsIgnoreCase(username);
-        }
-    }
-    
-    private static final User ROBERT = new User("robert", "secret");
-
     private StoreMailboxManager mailboxManager;
     private GetMessagesMethod testee;
-
     private MailboxSession session;
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
@@ -130,7 +109,7 @@ public class GetMessagesMethodTest {
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
 
-        session = new MockMailboxSession(ROBERT.username);
+        session = new MockMailboxSession(ROBERT.asString());
         inboxPath = MailboxPath.inbox(session);
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);

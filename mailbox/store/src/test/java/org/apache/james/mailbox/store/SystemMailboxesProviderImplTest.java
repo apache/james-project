@@ -61,7 +61,7 @@ public class SystemMailboxesProviderImplTest {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
-        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser().getCoreUser())).isEmpty();
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser())).isEmpty();
     }
 
     @Test
@@ -69,7 +69,7 @@ public class SystemMailboxesProviderImplTest {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
-        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser().getCoreUser()))
+        assertThat(systemMailboxProvider.getMailboxByRole(Role.INBOX, mailboxSession.getUser()))
             .hasSize(1)
             .containsOnly(inboxMessageManager);
     }

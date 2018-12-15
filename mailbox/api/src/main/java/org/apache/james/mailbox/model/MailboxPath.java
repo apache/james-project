@@ -41,7 +41,7 @@ public class MailboxPath {
      * @return inbox
      */
     public static MailboxPath inbox(MailboxSession session) {
-        return MailboxPath.forUser(session.getUser().getUserName(), MailboxConstants.INBOX);
+        return MailboxPath.forUser(session.getUser().asString(), MailboxConstants.INBOX);
     }
 
     /**
@@ -101,7 +101,7 @@ public class MailboxPath {
     }
 
     public boolean belongsTo(MailboxSession mailboxSession) {
-        return mailboxSession.getUser().isSameUser(user);
+        return user.equalsIgnoreCase(mailboxSession.getUser().asString());
     }
 
     /**

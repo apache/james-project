@@ -25,6 +25,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.james.core.User;
+
 import com.google.common.base.MoreObjects;
 
 /**
@@ -129,25 +131,6 @@ public interface MailboxSession {
      * @return not null, when empty the default local should be used
      */
     List<Locale> getLocalePreferences();
-
-    /**
-     * A mailbox user. Useful for specialist mailbox implementation.
-     */
-    interface User {
-        /**
-         * Gets the name of the user.
-         * 
-         * @return not null
-         */
-        String getUserName();
-
-        
-        boolean isSameUser(String username);
-
-        default org.apache.james.core.User getCoreUser() {
-            return org.apache.james.core.User.fromUsername(getUserName());
-        }
-    }
 
     /**
      * Gets the <a href='http://www.isi.edu/in-notes/rfc2342.txt' rel='tag'>RFC
