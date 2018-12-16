@@ -262,9 +262,9 @@ public class MailboxSession {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        String TAB = " ";
+        String tab = " ";
 
         return "MailboxSession ( " + "sessionId = "
-            + this.sessionId + TAB + "open = " + this.open + TAB + " )";
+            + this.sessionId + tab + "open = " + this.open + tab + " )";
     }
 }
