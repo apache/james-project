@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -68,33 +69,43 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
+    public MessageMetaData messageMetaData() {
+        return message.metaData();
+    }
+
+    @Override
     public MailboxId getMailboxId() {
         return message.getMailboxId();
     }
 
     @Override
     public MessageUid getUid() {
-        return message.getUid();
+        return messageMetaData().getUid();
     }
 
     @Override
     public MessageId getMessageId() {
-        return message.getMessageId();
+        return messageMetaData().getMessageId();
     }
     
     @Override
     public Date getInternalDate() {
-        return message.getInternalDate();
+        return messageMetaData().getInternalDate();
     }
 
     @Override
     public Flags getFlags() {
-        return message.createFlags();
+        return messageMetaData().getFlags();
+    }
+
+    @Override
+    public long getModSeq() {
+        return messageMetaData().getModSeq();
     }
 
     @Override
     public long getSize() {
-        return message.getFullContentOctets();
+        return messageMetaData().getSize();
     }
 
     @Override
@@ -317,11 +328,6 @@ public class MessageResultImpl implements MessageResult {
             }
         }
         return mimeDescriptor;
-    }
-
-    @Override
-    public long getModSeq() {
-        return message.getModSeq();
     }
     
     @Override

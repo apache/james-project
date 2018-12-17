@@ -47,6 +47,7 @@ import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.FetchGroupImpl;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -105,7 +106,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         reset(dispatcher);
 
         MessageResult messageResult = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session).get(0);
-        SimpleMessageMetaData simpleMessageMetaData = fromMessageResult(messageId, messageResult);
+        MessageMetaData simpleMessageMetaData = messageResult.messageMetaData();
 
         messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session);
 
@@ -121,9 +122,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         reset(dispatcher);
 
         MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session).get(0);
-        SimpleMessageMetaData simpleMessageMetaData1 = fromMessageResult(messageId1, messageResult1);
+        MessageMetaData simpleMessageMetaData1 = messageResult1.messageMetaData();
         MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session).get(0);
-        SimpleMessageMetaData simpleMessageMetaData2 = fromMessageResult(messageId2, messageResult2);
+        MessageMetaData simpleMessageMetaData2 = messageResult2.messageMetaData();
 
         messageIdManager.delete(ImmutableList.of(messageId1, messageId2), session);
 
@@ -354,9 +355,5 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             Quota.<QuotaCount>builder().used(QuotaCount.count(2)).computedLimit(QuotaCount.unlimited()).build());
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
             Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
-    }
-
-    private SimpleMessageMetaData fromMessageResult(MessageId messageId, MessageResult messageResult) {
-        return new SimpleMessageMetaData(messageResult.getUid(), messageResult.getModSeq(), messageResult.getFlags(), messageResult.getSize(), messageResult.getInternalDate(), messageId);
     }
 }

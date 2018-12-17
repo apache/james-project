@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 import javax.mail.Flags;
 
@@ -32,6 +33,7 @@ import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
@@ -44,8 +46,6 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
 
 public class StoreMessageResultIterator implements MessageResultIterator {
 
@@ -187,7 +187,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         MessageResult result;
         try {
             result = ResultUtils.loadMessageResult(message, group);
-            cursor = result.getUid();
+            cursor = result.messageMetaData().getUid();
         } catch (MailboxException e) {
             result = new UnloadedMessageResult(message, e);
         }
@@ -209,30 +209,50 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     private static final class UnloadedMessageResult implements MessageResult {
         private final MailboxException exception;
 
-        private final Date internalDate;
-
-        private final long size;
-
-        private final MessageUid uid;
-
-        private final Flags flags;
-
+        private final MessageMetaData messageMetaData;
         private final MessageId messageId;
-
-        private long modSeq = -1;
-
         private final MailboxId mailboxId;
 
         public UnloadedMessageResult(MailboxMessage message, MailboxException exception) {
-            super();
-            internalDate = message.getInternalDate();
-            size = message.getFullContentOctets();
-            uid = message.getUid();
-            flags = message.createFlags();
-            modSeq = message.getModSeq();
+            messageMetaData = message.metaData();
             mailboxId = message.getMailboxId();
             messageId = message.getMessageId();
             this.exception = exception;
+        }
+
+        @Override
+        public MessageMetaData messageMetaData() {
+            return messageMetaData;
+        }
+
+        @Override
+        public MessageUid getUid() {
+            return messageMetaData().getUid();
+        }
+
+        @Override
+        public MessageId getMessageId() {
+            return messageMetaData().getMessageId();
+        }
+
+        @Override
+        public Date getInternalDate() {
+            return messageMetaData().getInternalDate();
+        }
+
+        @Override
+        public Flags getFlags() {
+            return messageMetaData().getFlags();
+        }
+
+        @Override
+        public long getModSeq() {
+            return messageMetaData().getModSeq();
+        }
+
+        @Override
+        public long getSize() {
+            return messageMetaData().getSize();
         }
 
         @Override
@@ -241,61 +261,36 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         }
 
         @Override
-        public Flags getFlags() {
-            return flags;
-        }
-
-        @Override
         public Content getFullContent() throws MailboxException {
             throw exception;
-        }
-
-        @Override
-        public Date getInternalDate() {
-            return internalDate;
         }
 
         @Override
         public Content getBody() throws MailboxException {
             throw exception;
         }
-
-        @Override
-        public long getSize() {
-            return size;
-        }
-
-        @Override
-        public MessageUid getUid() {
-            return uid;
-        }
-
-        @Override
-        public MessageId getMessageId() {
-            return messageId;
-        }
         
         @Override
         public int compareTo(MessageResult that) {
-            return uid.compareTo(that.getUid());
+            return getUid().compareTo(that.getUid());
         }
 
         @Override
-        public int hashCode() {
-            return Objects.hashCode(exception, internalDate, size, uid, flags, modSeq, messageId);
-        }
+        public final boolean equals(Object o) {
+            if (o instanceof UnloadedMessageResult) {
+                UnloadedMessageResult that = (UnloadedMessageResult) o;
 
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj instanceof UnloadedMessageResult) {
-                UnloadedMessageResult that = (UnloadedMessageResult)obj;
-                return (size == that.size) && (uid.equals(that.uid)) && (modSeq == that.modSeq) && exception.equals(that.exception)
-                        && internalDate.equals(that.internalDate) && flags.equals(that.flags);
+                return Objects.equals(this.exception, that.exception)
+                    && Objects.equals(this.messageMetaData, that.messageMetaData)
+                    && Objects.equals(this.messageId, that.messageId)
+                    && Objects.equals(this.mailboxId, that.mailboxId);
             }
             return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(exception, messageMetaData, messageId, mailboxId);
         }
 
         @Override
@@ -326,11 +321,6 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         @Override
         public MimeDescriptor getMimeDescriptor() throws MailboxException {
             throw exception;
-        }
-
-        @Override
-        public long getModSeq() {
-            return modSeq;
         }
 
         @Override
