@@ -31,10 +31,17 @@ import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class MessageMoveEventTest {
 
     @Rule
     public JUnitSoftAssertions softly = new JUnitSoftAssertions();
+
+    @Test
+    public void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(MessageMoveEvent.class).verify();
+    }
 
     @Test
     public void builderShouldThrowWhenSessionIsNull() {

@@ -19,6 +19,7 @@
 package org.apache.james.mailbox;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MailboxId;
@@ -113,5 +114,22 @@ public class MessageMoveEvent implements Event {
     public boolean isMoveFrom(MailboxId mailboxId) {
         return messageMoves.removedMailboxIds()
                 .contains(mailboxId);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MessageMoveEvent) {
+            MessageMoveEvent that = (MessageMoveEvent) o;
+
+            return Objects.equals(this.user, that.user)
+                && Objects.equals(this.messageMoves, that.messageMoves)
+                && Objects.equals(this.messageIds, that.messageIds);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(user, messageMoves, messageIds);
     }
 }

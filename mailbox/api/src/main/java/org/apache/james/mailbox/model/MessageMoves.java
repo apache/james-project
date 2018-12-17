@@ -20,6 +20,7 @@ package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
@@ -83,5 +84,29 @@ public class MessageMoves {
 
     public Set<MailboxId> removedMailboxIds() {
         return Sets.difference(previousMailboxIds, targetMailboxIds);
+    }
+
+    public ImmutableSet<MailboxId> getPreviousMailboxIds() {
+        return previousMailboxIds;
+    }
+
+    public ImmutableSet<MailboxId> getTargetMailboxIds() {
+        return targetMailboxIds;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MessageMoves) {
+            MessageMoves that = (MessageMoves) o;
+
+            return Objects.equals(this.previousMailboxIds, that.previousMailboxIds)
+                && Objects.equals(this.targetMailboxIds, that.targetMailboxIds);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(previousMailboxIds, targetMailboxIds);
     }
 }
