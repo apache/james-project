@@ -179,7 +179,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
      *             otherwise
      * @throws MailboxExistsException
      *             when the <code>to</code> mailbox exists
-     * @throws MailboxNotFound
+     * @throws MailboxNotFoundException
      *             when the <code>from</code> mailbox does not exist
      */
     void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
