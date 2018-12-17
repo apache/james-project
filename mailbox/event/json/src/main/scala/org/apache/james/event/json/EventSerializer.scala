@@ -26,17 +26,11 @@ import javax.mail.{Flags => JavaMailFlags}
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
-import org.apache.james.event.json.DTOs.{ACLDiff, MailboxPath, Quota}
-import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged,
-  MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion,
-  MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.event.json.DTOs.{ACLDiff, Flags, MailboxPath, Quota}
+import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.model.{MailboxId, MessageId, QuotaRoot, MailboxACL => JavaMailboxACL, Quota => JavaQuota}
-import org.apache.james.event.json.DTOs.{Flags, MailboxPath, Quota}
-import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
-import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.model.{MailboxId, MessageId, QuotaRoot, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
-import org.apache.james.mailbox.{MessageUid, Event => JavaEvent}
+import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
+import org.apache.james.mailbox.{MessageUid, Event => JavaEvent, MessageMoveEvent => JavaMessageMoveEvent}
 import play.api.libs.json.{JsArray, JsError, JsNull, JsNumber, JsObject, JsResult, JsString, JsSuccess, Json, OFormat, Reads, Writes}
 
 import scala.collection.JavaConverters._
@@ -88,6 +82,18 @@ private object DTO {
       path.toJava,
       mailboxId,
       expunged.mapValues(_.toJava).asJava)
+  }
+
+  case class MessageMoveEvent(user: User, previousMailboxIds: Seq[MailboxId], targetMailboxIds: Seq[MailboxId],
+                              messageIds: Seq[MessageId]) extends Event {
+    override def toJava: JavaEvent = JavaMessageMoveEvent.builder()
+      .user(user)
+      .messageId(messageIds.asJava)
+      .messageMoves(MessageMoves.builder()
+          .previousMailboxIds(previousMailboxIds.asJava)
+          .targetMailboxIds(targetMailboxIds.asJava)
+        .build())
+      .build()
   }
 }
 
@@ -149,6 +155,13 @@ private object ScalaConverter {
     expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap
   )
 
+  private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
+    user = event.getUser,
+    previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala.toList,
+    targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala.toList,
+    messageIds = event.getMessageIds.asScala.toList)
+
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
     case e: JavaExpunged => toScala(e)
@@ -156,6 +169,7 @@ private object ScalaConverter {
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxDeletion => toScala(e)
     case e: JavaMailboxRenamed => toScala(e)
+    case e: JavaMessageMoveEvent => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
