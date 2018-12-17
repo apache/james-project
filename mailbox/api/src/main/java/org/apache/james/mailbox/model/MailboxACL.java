@@ -87,16 +87,16 @@ public class MailboxACL {
     public static final char ADD_RIGHTS_MARKER = '+';
 
     /**
-     * Marks groups when (de)serializing {@link MailboxACLEntryKey}s.
+     * Marks groups when (de)serializing {@link MailboxACL.EntryKey}s.
      *
-     * @see MailboxACLEntryKey#serialize()
+     * @see MailboxACL.EntryKey#serialize()
      */
     public static final char DEFAULT_GROUP_MARKER = '$';
 
     /**
-     * Marks negative when (de)serializing {@link MailboxACLEntryKey}s.
+     * Marks negative when (de)serializing {@link MailboxACL.EntryKey}s.
      *
-     * @see MailboxACLEntryKey#serialize()
+     * @see MailboxACL.EntryKey#serialize()
      */
     public static final char DEFAULT_NEGATIVE_MARKER = '-';
 
@@ -248,7 +248,7 @@ public class MailboxACL {
          * A schematic example: "lrw".except("w") returns "lr".
          *
          * Implementations must return a new unmodifiable instance of
-         * {@link MailboxACL.MailboxACLRights}. However, implementations may decide to
+         * {@link MailboxACL.Rfc4314Rights}. However, implementations may decide to
          * return this or toRemove parameter value in case the result would be
          * equal to the respective one of those.
          *
@@ -437,7 +437,7 @@ public class MailboxACL {
 
         /**
          * Returns the name of a user or of a group to which this
-         * {@link MailboxACL.MailboxACLEntryKey} applies.
+         * {@link MailboxACL.EntryKey} applies.
          *
          * @return User name, group name or special name.
          */
@@ -459,16 +459,16 @@ public class MailboxACL {
         }
 
         /**
-         * If true the {@link MailboxACL.MailboxACLRights} returned by
-         * {@link MailboxACLEntry#getRights()} should be interpreted as
+         * If true the {@link MailboxACL.Rfc4314Rights} returned by
+         * {@link Entry#getValue()} should be interpreted as
          * "negative rights" as described in RFC4314: If the identifier "-fred"
          * is granted the "w" right, that indicates that the "w" right is to be
          * removed from users matching the identifier "fred", even though the
          * user "fred" might have the "w" right as a consequence of some other
          * identifier in the ACL.
          *
-         * Note that {@link MailboxACLEntry#getName()} does not start with "-"
-         * when {@link MailboxACLEntry#getRights()} returns true.
+         * Note that {@link Entry#getKey()} ()} does not start with "-"
+         * when {@link Entry#getValue()} returns true.
          *
          * @return
          */
@@ -477,7 +477,7 @@ public class MailboxACL {
         }
 
         /**
-         * Returns a serialized form of this {@link MailboxACL.MailboxACLEntryKey} as a
+         * Returns a serialized form of this {@link MailboxACL.EntryKey} as a
          * {@link String}. Implementations should choose a consistent way how
          * all of {@link #getName()}, {@link #getNameType()} and
          * {@link #isNegative()} get serialized.
@@ -766,10 +766,6 @@ public class MailboxACL {
      * Implementations must ensure that the result does not contain entries with
      * empty rigths. E.g. "user1:lr;user2:lrwt".except("user1:lr") should return
      * "user2:lrwt" rather than "user1:;user2:lrwt"
-     *
-     * @param toRemove
-     * @return
-     * @throws UnsupportedRightException
      */
     public MailboxACL except(MailboxACL other) throws UnsupportedRightException {
         return new MailboxACL(entries.entrySet()
@@ -813,11 +809,6 @@ public class MailboxACL {
      * MailboxACLRights.EMPTY) should return "user2:lrwt" rather than
      * "user1:;user2:lrwt". The same result should be returned by
      * "user1:lr;user2:lrwt".replace("user1", null).
-     *
-     * @param key
-     * @param toAdd
-     * @return
-     * @throws UnsupportedRightException
      */
     public MailboxACL replace(EntryKey key, Rfc4314Rights replacement) throws UnsupportedRightException {
         if (entries.containsKey(key)) {
@@ -858,11 +849,6 @@ public class MailboxACL {
      * {@link MailboxACL}. However, implementations may decide to return this or
      * toAdd parameter value in case the result would be equal to the respective
      * one of those.
-     *
-     *
-     * @param toAdd
-     * @return
-     * @throws UnsupportedRightException
      */
     public MailboxACL union(MailboxACL other) throws UnsupportedRightException {
         return new MailboxACL(
