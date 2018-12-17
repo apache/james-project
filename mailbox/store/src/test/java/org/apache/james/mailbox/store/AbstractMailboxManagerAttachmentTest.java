@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -63,7 +64,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
     protected abstract AttachmentMapperFactory getAttachmentMapperFactory();
     
     public void setUp() throws Exception {
-        mailboxSession = MailboxSession.create(USERNAME);
+        mailboxSession = MailboxSessionUtil.create(USERNAME);
         messageMapper = getMailboxSessionMapperFactory().getMessageMapper(mailboxSession);
         mailboxMapper = getMailboxSessionMapperFactory().getMailboxMapper(mailboxSession);
         inboxPath = MailboxPath.forUser(USERNAME, "INBOX");

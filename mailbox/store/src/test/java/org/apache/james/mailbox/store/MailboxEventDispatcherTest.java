@@ -30,6 +30,7 @@ import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
@@ -63,7 +64,7 @@ public class MailboxEventDispatcherTest {
     private MessageResult result;
     private Mailbox mailbox;
 
-    private MailboxSession session = MailboxSession.create("test", SESSION_ID);
+    private MailboxSession session = MailboxSessionUtil.create("test", SESSION_ID);
 
     @Before
     public void setUp() throws Exception {

@@ -42,6 +42,7 @@ import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -75,7 +76,7 @@ public class GetQuotaProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        mailboxSession = MailboxSession.create("plop");
+        mailboxSession = MailboxSessionUtil.create("plop");
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedQuotaManager = mock(QuotaManager.class);

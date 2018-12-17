@@ -26,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.jmap.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mdn.action.mode.DispositionActionMode;
 import org.apache.james.mdn.sending.mode.DispositionSendingMode;
@@ -55,7 +56,7 @@ public class JmapMDNTest {
         .subject(SUBJECT)
         .textBody(TEXT_BODY)
         .build();
-    public static final MailboxSession MAILBOX_SESSION = MailboxSession.create("user@localhost.com");
+    public static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user@localhost.com");
 
     @Test
     public void shouldMatchBeanContract() {

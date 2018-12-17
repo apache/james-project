@@ -32,6 +32,7 @@ import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -73,7 +74,7 @@ public abstract class AbstractCombinationManagerTest {
     public abstract CombinationManagerTestSystem createTestingData() throws Exception;
 
     public void setUp() throws Exception {
-        session = MailboxSession.create(MailboxFixture.ALICE);
+        session = MailboxSessionUtil.create(MailboxFixture.ALICE);
         testingData = createTestingData();
 
         mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);

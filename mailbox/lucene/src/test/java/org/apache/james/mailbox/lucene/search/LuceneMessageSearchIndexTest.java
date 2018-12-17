@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.lucene.search;
 
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -52,7 +52,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getMessageIdFactory(),
             storeMailboxManager);
         storeMailboxManager.setMessageSearchIndex(luceneMessageSearchIndex);
-        storeMailboxManager.addGlobalListener(luceneMessageSearchIndex, MailboxSession.create("admin"));
+        storeMailboxManager.addGlobalListener(luceneMessageSearchIndex, MailboxSessionUtil.create("admin"));
         this.messageSearchIndex = luceneMessageSearchIndex;
     }
 

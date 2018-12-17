@@ -31,6 +31,7 @@ import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
@@ -124,14 +125,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getQuotaManager(),
             storeMailboxManager.getQuotaRootResolver());
         storeMailboxManager.setMessageSearchIndex(elasticSearchListeningMessageSearchIndex);
-        storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, MailboxSession.create("admin"));
+        storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, MailboxSessionUtil.create("admin"));
         this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;
     }
 
     @Test
     public void termsBetweenElasticSearchAndLuceneLimitDueTuNonAsciiCharsShouldBeTruncated() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSession.create(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -150,7 +151,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void tooLongTermsShouldNotMakeIndexingFail() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSession.create(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -169,7 +170,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void fieldsExceedingLuceneLimitShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSession.create(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -188,7 +189,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void fieldsWithTooLongTermShouldStillBeIndexed() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSession.create(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";
@@ -207,7 +208,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     @Test
     public void reasonableLongTermShouldNotBeIgnored() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        MailboxSession session = MailboxSession.create(USERNAME);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
         MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
 
         String recipient = "benwa@linagora.com";

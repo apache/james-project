@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -44,8 +45,8 @@ public abstract class AbstractMessageManagerTest {
     protected abstract MessageManagerTestSystem createTestSystem() throws Exception;
 
     public void setUp() throws Exception {
-        aliceSession = MailboxSession.create(ALICE);
-        bobSession = MailboxSession.create(BOB);
+        aliceSession = MailboxSessionUtil.create(ALICE);
+        bobSession = MailboxSessionUtil.create(BOB);
         testSystem = createTestSystem();
         mailboxManager = testSystem.getMailboxManager();
 

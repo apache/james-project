@@ -26,35 +26,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MailboxConstants;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
 /**
  * Mailbox session.
  */
 public class MailboxSession {
-
-    @VisibleForTesting
-    public static MailboxSession create(String username) {
-        return create(username, SessionId.of(RANDOM.nextLong()));
-    }
-
-    @VisibleForTesting
-    public static MailboxSession create(String username, SessionId sessionId) {
-        ArrayList<Locale> locales = new ArrayList<>();
-
-        return new MailboxSession(
-            sessionId,
-            username,
-            locales,
-            MailboxConstants.DEFAULT_DELIMITER,
-            SessionType.User);
-    }
 
     public static class SessionId {
 
@@ -99,7 +80,6 @@ public class MailboxSession {
      * Id which will be used for a System session
      */
     public static long SYSTEM_SESSION_ID = 0L;
-    private static final Random RANDOM = new Random();
 
     public enum SessionType {
         /**

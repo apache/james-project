@@ -55,6 +55,7 @@ import org.apache.james.imap.message.request.SearchRequest;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -122,7 +123,7 @@ public class SearchProcessorTest {
         statusResponse = mock(StatusResponse.class);
         mailbox = mock(MessageManager.class);
         mailboxManager = mock(MailboxManager.class);
-        mailboxSession = MailboxSession.create("user");
+        mailboxSession = MailboxSessionUtil.create("user");
         selectedMailbox = mock(SelectedMailbox.class);
         
         processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());

@@ -38,7 +38,7 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
@@ -116,7 +116,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
             mailboxManager);
 
         mailboxManager.setMessageSearchIndex(searchIndex);
-        mailboxManager.addGlobalListener(searchIndex, MailboxSession.create("admin"));
+        mailboxManager.addGlobalListener(searchIndex, MailboxSessionUtil.create("admin"));
 
         ImapProcessor defaultImapProcessorFactory =
             DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager,

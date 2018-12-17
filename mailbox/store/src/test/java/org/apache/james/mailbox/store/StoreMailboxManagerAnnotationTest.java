@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -79,7 +80,7 @@ public class StoreMailboxManagerAnnotationTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        session = MailboxSession.create("userName");
+        session = MailboxSessionUtil.create("userName");
 
         when(mailboxSessionMapperFactory.getMailboxMapper(eq(session))).thenReturn(mailboxMapper);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(session))).thenReturn(annotationMapper);

@@ -23,6 +23,7 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -43,7 +44,7 @@ public class QuotaThresholdListenersTestSystem {
         QuotaThresholdCrossingListener thresholdCrossingListener =
             new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(), fileSystem, eventStore, configuration);
 
-        MailboxSession mailboxSession = MailboxSession.create("system");
+        MailboxSession mailboxSession = MailboxSessionUtil.create("system");
         delegatingListener.addGlobalListener(thresholdCrossingListener, mailboxSession);
     }
 

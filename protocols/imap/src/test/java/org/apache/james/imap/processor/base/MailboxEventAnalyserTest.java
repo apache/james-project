@@ -35,6 +35,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -89,8 +90,8 @@ public class MailboxEventAnalyserTest {
 
 
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
-    private static final MailboxSession MAILBOX_SESSION = MailboxSession.create("user");
-    private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSession.create("user");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
+    private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create("user");
     private static final char PATH_DELIMITER = '.';
     private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
     private static final TestId MAILBOX_ID = TestId.of(36);

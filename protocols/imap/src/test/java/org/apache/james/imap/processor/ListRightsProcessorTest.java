@@ -41,6 +41,7 @@ import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -83,7 +84,7 @@ public class ListRightsProcessorTest {
         mailboxManager = mock(MailboxManager.class);
         subject = new ListRightsProcessor(mock(ImapProcessor.class), mailboxManager, statusResponseFactory, new NoopMetricFactory());
         imapSession = mock(ImapSession.class);
-        mailboxSession = MailboxSession.create(USER_1);
+        mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);
         metaData = mock(MetaData.class);
         responder = mock(Responder.class);

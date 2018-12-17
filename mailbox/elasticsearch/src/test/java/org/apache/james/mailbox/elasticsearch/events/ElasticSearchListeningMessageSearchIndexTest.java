@@ -36,6 +36,7 @@ import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
@@ -82,7 +83,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
             messageToElasticSearchJson, mockMailboxManager);
-        session = MailboxSession.create(USERNAME);
+        session = MailboxSessionUtil.create(USERNAME);
         users = ImmutableList.of(User.fromUsername(USERNAME));
     }
     

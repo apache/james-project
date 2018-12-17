@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -37,7 +38,7 @@ import org.junit.rules.ExpectedException;
 
 public class SystemMailboxesProviderImplTest {
 
-    private MailboxSession mailboxSession = MailboxSession.create(MailboxFixture.ALICE);
+    private MailboxSession mailboxSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
     private SystemMailboxesProviderImpl systemMailboxProvider;
 
     private MailboxManager mailboxManager;

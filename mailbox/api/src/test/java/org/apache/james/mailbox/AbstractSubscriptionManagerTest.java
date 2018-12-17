@@ -40,7 +40,7 @@ public abstract class AbstractSubscriptionManagerTest {
 
     public void setup() {
         manager = createSubscriptionManager();
-        session = MailboxSession.create(USER1);
+        session = MailboxSessionUtil.create(USER1);
         manager.startProcessingRequest(session);
     }
     

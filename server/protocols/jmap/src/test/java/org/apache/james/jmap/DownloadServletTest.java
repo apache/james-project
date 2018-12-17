@@ -31,6 +31,7 @@ import org.apache.james.jmap.api.SimpleTokenFactory;
 import org.apache.james.jmap.utils.DownloadPath;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Test;
@@ -39,7 +40,7 @@ public class DownloadServletTest {
 
     @Test
     public void downloadMayFailWhenUnknownErrorOnAttachmentManager() throws Exception {
-        MailboxSession mailboxSession = MailboxSession.create("User");
+        MailboxSession mailboxSession = MailboxSessionUtil.create("User");
         BlobManager mockedBlobManager = mock(BlobManager.class);
         when(mockedBlobManager.retrieve(any(), eq(mailboxSession)))
             .thenThrow(new MailboxException());

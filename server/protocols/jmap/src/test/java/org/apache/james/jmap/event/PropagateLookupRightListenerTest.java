@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -59,7 +60,7 @@ public class PropagateLookupRightListenerTest {
     private StoreMailboxManager storeMailboxManager;
     private PropagateLookupRightListener testee;
 
-    private MailboxSession mailboxSession = MailboxSession.create(OWNER_USER);
+    private MailboxSession mailboxSession = MailboxSessionUtil.create(OWNER_USER);
 
     private MailboxId parentMailboxId;
     private MailboxId parentMailboxId1;

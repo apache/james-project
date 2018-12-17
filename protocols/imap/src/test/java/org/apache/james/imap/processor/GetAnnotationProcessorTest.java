@@ -48,6 +48,7 @@ import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
 import org.apache.james.imap.message.response.AnnotationResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -102,7 +103,7 @@ public class GetAnnotationProcessorTest {
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
 
-        mailboxSession = MailboxSession.create("username");
+        mailboxSession = MailboxSessionUtil.create("username");
         inbox = MailboxPath.inbox(mailboxSession);
         keys = ImmutableSet.of(PRIVATE_KEY);
         annotationRequestBuilder = GetAnnotationRequest.builder()

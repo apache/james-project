@@ -30,7 +30,7 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
@@ -79,7 +79,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
                 new QuotaRatioToElasticSearchJson());
 
             resources.getMailboxManager()
-                .addGlobalListener(listener, MailboxSession.create("ANY"));
+                .addGlobalListener(listener, MailboxSessionUtil.create("ANY"));
 
             return new QuotaSearchTestSystem(
                 resources.getMaxQuotaManager(),

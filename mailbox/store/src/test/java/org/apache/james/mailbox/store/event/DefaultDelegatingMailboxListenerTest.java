@@ -28,6 +28,7 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -166,7 +167,7 @@ public class DefaultDelegatingMailboxListenerTest {
 
     @Test
     public void listenersErrorsShouldNotBePropageted() throws Exception {
-        MailboxSession session = MailboxSession.create("benwa");
+        MailboxSession session = MailboxSessionUtil.create("benwa");
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxEvent(session.getSessionId(),
             session.getUser(), MAILBOX_PATH, MAILBOX_ID) {};
         MailboxListener mockedListener = mock(MailboxListener.class);

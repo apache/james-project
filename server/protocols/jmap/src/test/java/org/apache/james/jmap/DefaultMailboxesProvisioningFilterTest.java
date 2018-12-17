@@ -24,6 +24,7 @@ import java.time.Duration;
 
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -47,7 +48,7 @@ public class DefaultMailboxesProvisioningFilterTest {
 
     @Before
     public void before() throws Exception {
-        session = MailboxSession.create(USERNAME);
+        session = MailboxSessionUtil.create(USERNAME);
 
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(new SimpleGroupMembershipResolver());

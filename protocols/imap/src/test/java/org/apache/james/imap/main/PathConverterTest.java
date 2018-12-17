@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class PathConverterTest {
     @Before
     public void setUp() {
         imapSession = mock(ImapSession.class);
-        mailboxSession = MailboxSession.create(USERNAME);
+        mailboxSession = MailboxSessionUtil.create(USERNAME);
         pathConverter = PathConverter.forSession(imapSession);
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
     }

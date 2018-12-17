@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
@@ -49,7 +50,7 @@ public class DefaultMailboxesProvisioningFilterThreadTest {
 
     @Before
     public void before() {
-        session = MailboxSession.create(USERNAME);
+        session = MailboxSessionUtil.create(USERNAME);
         mailboxManager = mock(MailboxManager.class);
         subscriptionManager = mock(SubscriptionManager.class);
         sut = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());

@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -66,7 +67,7 @@ public class StoreMailboxManagerTest {
     @Before
     public void setUp() throws MailboxException {
         MailboxSessionMapperFactory mockedMapperFactory = mock(MailboxSessionMapperFactory.class);
-        mockedMailboxSession = MailboxSession.create(CURRENT_USER);
+        mockedMailboxSession = MailboxSessionUtil.create(CURRENT_USER);
         mockedMailboxMapper = mock(MailboxMapper.class);
         when(mockedMapperFactory.getMailboxMapper(mockedMailboxSession))
             .thenReturn(mockedMailboxMapper);
@@ -188,7 +189,7 @@ public class StoreMailboxManagerTest {
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = MailboxSession.create("user");
+        MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()));
         //When
@@ -201,7 +202,7 @@ public class StoreMailboxManagerTest {
     @Test
     public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() throws Exception {
         //Given
-        MailboxSession session = MailboxSession.create("user");
+        MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
             .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()));
 

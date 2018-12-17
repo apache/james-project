@@ -37,6 +37,7 @@ import javax.mail.Flags;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
@@ -88,7 +89,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         dispatcher = mock(MailboxEventDispatcher.class);
         quotaManager = mock(QuotaManager.class);
 
-        session = MailboxSession.create(ALICE);
+        session = MailboxSessionUtil.create(ALICE);
         testingData = createTestSystem(quotaManager, dispatcher);
         messageIdManager = testingData.getMessageIdManager();
 
