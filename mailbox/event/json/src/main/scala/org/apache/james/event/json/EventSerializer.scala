@@ -28,9 +28,9 @@ import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
 import org.apache.james.event.json.DTOs.{ACLDiff, MailboxPath, Quota}
 import org.apache.james.event.json.MetaDataDTO.Flags
-import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, MailboxACLUpdated => JavaMailboxACLUpdated,
-  MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed,
-  QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged,
+  MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion,
+  MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, MessageId, QuotaRoot, MailboxACL => JavaMailboxACL, Quota => JavaQuota}
 import org.apache.james.mailbox.{MessageUid, Event => JavaEvent}
@@ -75,6 +75,16 @@ private object DTO {
       path.toJava,
       mailboxId,
       added.map(entry => entry._1 -> entry._2.toJava).asJava)
+  }
+
+  case class Expunged(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId,
+                      expunged: Map[MessageUid, MetaDataDTO.MessageMetaData]) extends Event {
+    override def toJava: JavaEvent = new JavaExpunged(
+      sessionId,
+      user,
+      path.toJava,
+      mailboxId,
+      expunged.map(entry => entry._1 -> entry._2.toJava).asJava)
   }
 }
 
@@ -124,6 +134,14 @@ private object ScalaConverter {
     added = event.getAdded.asScala.map(entry => entry._1 -> MetaDataDTO.MessageMetaData.fromJava(entry._2)).toMap
   )
 
+  private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
+    sessionId = event.getSessionId,
+    user = event.getUser,
+    path = MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    expunged = event.getExpunged.asScala.map(entry => entry._1 -> MetaDataDTO.MessageMetaData.fromJava(entry._2)).toMap
+  )
+
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaMailboxACLUpdated => toScala(e)
     case e: JavaMailboxAdded => toScala(e)
@@ -131,6 +149,7 @@ private object ScalaConverter {
     case e: JavaMailboxRenamed => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
     case e: JavaAdded => toScala(e)
+    case e: JavaExpunged => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
 }

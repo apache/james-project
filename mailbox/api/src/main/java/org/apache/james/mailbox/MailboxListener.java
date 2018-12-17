@@ -376,16 +376,16 @@ public interface MailboxListener {
     }
 
     class Expunged extends MetaDataHoldingEvent {
-        private final Map<MessageUid, MessageMetaData> uids;
+        private final Map<MessageUid, MessageMetaData> expunged;
 
         public Expunged(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, path, mailboxId);
-            this.uids = ImmutableMap.copyOf(uids);
+            this.expunged = ImmutableMap.copyOf(uids);
         }
 
         @Override
         public Collection<MessageUid> getUids() {
-            return uids.keySet();
+            return expunged.keySet();
         }
 
         /**
@@ -395,7 +395,30 @@ public interface MailboxListener {
          */
         @Override
         public MessageMetaData getMetaData(MessageUid uid) {
-            return uids.get(uid);
+            return expunged.get(uid);
+        }
+
+        public Map<MessageUid, MessageMetaData> getExpunged() {
+            return expunged;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Expunged) {
+                Expunged that = (Expunged) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.mailboxId, that.mailboxId)
+                    && Objects.equals(this.expunged, that.expunged);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, mailboxId, expunged);
         }
     }
 

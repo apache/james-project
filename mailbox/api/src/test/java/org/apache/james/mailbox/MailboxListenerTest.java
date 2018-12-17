@@ -48,4 +48,9 @@ class MailboxListenerTest {
     void addedShouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxListener.Added.class).verify();
     }
+
+    @Test
+    void expungedShouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxListener.Expunged.class).verify();
+    }
 }
