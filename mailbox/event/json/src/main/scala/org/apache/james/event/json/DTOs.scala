@@ -25,8 +25,7 @@ import java.util.Date
 import javax.mail.{Flags => JavaMailFlags}
 import org.apache.james.core.quota.QuotaValue
 import org.apache.james.mailbox.acl.{ACLDiff => JavaACLDiff}
-import org.apache.james.mailbox.model.{MailboxACL, MessageId, MailboxPath => JavaMailboxPath, MessageMetaData => JavaMessageMetaData,
-  Quota => JavaQuota}
+import org.apache.james.mailbox.model.{MailboxACL, MessageId, MailboxPath => JavaMailboxPath, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota, UpdatedFlags => JavaUpdatedFlags}
 import org.apache.james.mailbox.{FlagsBuilder, MessageUid}
 
 import scala.collection.JavaConverters._
@@ -128,5 +127,22 @@ object DTOs {
       case JavaMailFlags.Flag.RECENT => RECENT
       case JavaMailFlags.Flag.SEEN => SEEN
     }
+  }
+
+  object UpdatedFlags {
+    def toUpdatedFlags(javaUpdatedFlags: JavaUpdatedFlags): UpdatedFlags = UpdatedFlags(
+      javaUpdatedFlags.getUid,
+      javaUpdatedFlags.getModSeq,
+      Flags.fromJavaFlags(javaUpdatedFlags.getOldFlags).toList,
+      Flags.fromJavaFlags(javaUpdatedFlags.getNewFlags).toList)
+  }
+
+  case class UpdatedFlags(uid: MessageUid, modSeq: Long, oldFlags: List[String], newFlags: List[String]) {
+    def toJava: JavaUpdatedFlags = JavaUpdatedFlags.builder()
+      .uid(uid)
+      .modSeq(modSeq)
+      .oldFlags(Flags.toJavaFlags(oldFlags.toArray))
+      .newFlags(Flags.toJavaFlags(newFlags.toArray))
+      .build()
   }
 }

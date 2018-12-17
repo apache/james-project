@@ -27,7 +27,7 @@ import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
 import org.apache.james.event.json.DTOs.{ACLDiff, Flags, MailboxPath, Quota}
-import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.{MessageUid, Event => JavaEvent, MessageMoveEvent => JavaMessageMoveEvent}
@@ -90,10 +90,21 @@ private object DTO {
       .user(user)
       .messageId(messageIds.asJava)
       .messageMoves(MessageMoves.builder()
-          .previousMailboxIds(previousMailboxIds.asJava)
-          .targetMailboxIds(targetMailboxIds.asJava)
+        .previousMailboxIds(previousMailboxIds.asJava)
+        .targetMailboxIds(targetMailboxIds.asJava)
         .build())
       .build()
+  }
+
+  case class FlagsUpdated(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId,
+                          updatedFlags: List[DTOs.UpdatedFlags]) extends Event {
+    override def toJava: JavaEvent = new JavaFlagsUpdated(
+      sessionId,
+      user,
+      path.toJava,
+      mailboxId,
+      updatedFlags.map(_.uid).asJava,
+      updatedFlags.map(_.toJava).asJava)
   }
 }
 
@@ -161,10 +172,17 @@ private object ScalaConverter {
     targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala,
     messageIds = event.getMessageIds.asScala)
 
+  private def toScala(event: JavaFlagsUpdated): DTO.FlagsUpdated = DTO.FlagsUpdated(
+    sessionId = event.getSessionId,
+    user = event.getUser,
+    path = DTOs.MailboxPath.fromJava(event.getMailboxPath),
+    mailboxId = event.getMailboxId,
+    updatedFlags = event.getUpdatedFlags.asScala.map(DTOs.UpdatedFlags.toUpdatedFlags).toList)
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)
     case e: JavaExpunged => toScala(e)
+    case e: JavaFlagsUpdated => toScala(e)
     case e: JavaMailboxACLUpdated => toScala(e)
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxDeletion => toScala(e)
@@ -192,6 +210,7 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactor
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
   implicit val flagsWrites: Writes[JavaMailFlags] = value => JsArray(Flags.fromJavaFlags(value).map(flag => JsString(flag)))
   implicit val messageMetaDataWrites: Writes[DTOs.MessageMetaData] = Json.writes[DTOs.MessageMetaData]
+  implicit val updatedFlagsWrites: Writes[DTOs.UpdatedFlags] = Json.writes[DTOs.UpdatedFlags]
 
   implicit val aclEntryKeyReads: Reads[JavaMailboxACL.EntryKey] = {
     case JsString(keyAsString) => JsSuccess(JavaMailboxACL.EntryKey.deserialize(keyAsString))
@@ -280,6 +299,7 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactor
   implicit val quotaSReads: Reads[DTOs.Quota[QuotaSize]] = Json.reads[DTOs.Quota[QuotaSize]]
   implicit val mailboxPathReads: Reads[DTOs.MailboxPath] = Json.reads[DTOs.MailboxPath]
   implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
+  implicit val updatedFlagsReads: Reads[DTOs.UpdatedFlags] = Json.reads[DTOs.UpdatedFlags]
 
   implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
