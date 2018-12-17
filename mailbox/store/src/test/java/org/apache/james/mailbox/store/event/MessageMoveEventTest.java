@@ -20,22 +20,16 @@ package org.apache.james.mailbox.store.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-
-import java.util.Map;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Rule;
 import org.junit.Test;
-
-import com.google.common.collect.ImmutableMap;
 
 public class MessageMoveEventTest {
 
@@ -76,12 +70,11 @@ public class MessageMoveEventTest {
             .targetMailboxIds(TestId.of(2))
             .previousMailboxIds(TestId.of(1))
             .build();
-        Map<MessageUid, MailboxMessage> messages = ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class));
 
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(session)
             .messageMoves(messageMoves)
-            .messages(messages)
+            .messageId(TestMessageId.of(35))
             .build();
 
         assertThat(event.isNoop()).isFalse();
@@ -95,17 +88,17 @@ public class MessageMoveEventTest {
             .targetMailboxIds(TestId.of(2))
             .previousMailboxIds(TestId.of(1))
             .build();
-        Map<MessageUid, MailboxMessage> messages = ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class));
 
+        TestMessageId messageId = TestMessageId.of(45);
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(session)
             .messageMoves(messageMoves)
-            .messages(messages)
+            .messageId(messageId)
             .build();
 
         softly.assertThat(event.getUser()).isEqualTo(User.fromUsername(username));
         softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
-        softly.assertThat(event.getMessages()).isEqualTo(messages);
+        softly.assertThat(event.getMessageIds()).containsExactly(messageId);
     }
 
     @Test
@@ -116,7 +109,6 @@ public class MessageMoveEventTest {
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
                     .build())
-            .messages(ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class)))
             .build();
 
         assertThat(event.isMoveTo(TestId.of(123))).isFalse();
@@ -131,7 +123,6 @@ public class MessageMoveEventTest {
                 .previousMailboxIds(TestId.of(1))
                 .targetMailboxIds(TestId.of(2), mailboxId)
                 .build())
-            .messages(ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class)))
             .build();
 
         assertThat(event.isMoveTo(mailboxId)).isTrue();
@@ -145,7 +136,6 @@ public class MessageMoveEventTest {
                     .previousMailboxIds(TestId.of(1))
                     .targetMailboxIds(TestId.of(2))
                     .build())
-            .messages(ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class)))
             .build();
 
         assertThat(event.isMoveFrom(TestId.of(123))).isFalse();
@@ -160,7 +150,6 @@ public class MessageMoveEventTest {
                 .previousMailboxIds(TestId.of(1), mailboxId)
                 .targetMailboxIds(TestId.of(2))
                 .build())
-            .messages(ImmutableMap.of(MessageUid.of(1), mock(MailboxMessage.class)))
             .build();
 
         assertThat(event.isMoveFrom(mailboxId)).isTrue();

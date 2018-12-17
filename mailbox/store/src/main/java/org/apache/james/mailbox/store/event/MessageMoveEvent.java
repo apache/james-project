@@ -18,19 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.event;
 
-import java.util.Map;
+import java.util.Collection;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMoves;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 
 public class MessageMoveEvent implements Event {
 
@@ -39,13 +38,12 @@ public class MessageMoveEvent implements Event {
     }
 
     public static class Builder {
-
+        private ImmutableList.Builder<MessageId> messageIds;
         private User user;
         private MessageMoves messageMoves;
-        private ImmutableMap.Builder<MessageUid, MailboxMessage> messagesBuilder;
 
         private Builder() {
-            messagesBuilder = ImmutableMap.builder();
+            messageIds = ImmutableList.builder();
         }
 
         public Builder session(MailboxSession session) {
@@ -63,8 +61,13 @@ public class MessageMoveEvent implements Event {
             return this;
         }
 
-        public Builder messages(Map<MessageUid, MailboxMessage> messages) {
-            this.messagesBuilder.putAll(messages);
+        public Builder messageId(MessageId messageId) {
+            this.messageIds.add(messageId);
+            return this;
+        }
+
+        public Builder messageId(Collection<MessageId> messageIds) {
+            this.messageIds.addAll(messageIds);
             return this;
         }
 
@@ -72,25 +75,27 @@ public class MessageMoveEvent implements Event {
             Preconditions.checkNotNull(user, "'user' is mandatory");
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
-            ImmutableMap<MessageUid, MailboxMessage> messages = messagesBuilder.build();
-
-            return new MessageMoveEvent(user, messageMoves, messages);
+            return new MessageMoveEvent(user, messageMoves, messageIds.build());
         }
     }
 
     private final User user;
     private final MessageMoves messageMoves;
-    private final Map<MessageUid, MailboxMessage> messages;
+    private final Collection<MessageId> messageIds;
 
     @VisibleForTesting
-    MessageMoveEvent(User user, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+    MessageMoveEvent(User user, MessageMoves messageMoves, Collection<MessageId> messageIds) {
         this.user = user;
         this.messageMoves = messageMoves;
-        this.messages = messages;
+        this.messageIds = messageIds;
     }
 
     public boolean isNoop() {
-        return messages.isEmpty();
+        return messageIds.isEmpty();
+    }
+
+    public Collection<MessageId> getMessageIds() {
+        return messageIds;
     }
 
     @Override
@@ -100,10 +105,6 @@ public class MessageMoveEvent implements Event {
 
     public MessageMoves getMessageMoves() {
         return messageMoves;
-    }
-
-    public Map<MessageUid, MailboxMessage> getMessages() {
-        return messages;
     }
 
     public boolean isMoveTo(MailboxId mailboxId) {

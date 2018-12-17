@@ -90,7 +90,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
@@ -735,9 +734,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
         SortedMap<MessageUid, MessageMetaData> copiedUids = collectMetadata(to.copy(originalRows, session));
 
-        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+        ImmutableList.Builder<MessageId> messageIds = ImmutableList.builder();
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
-            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+            messageIds.add(message.getMessageId());
         }
         dispatcher.added(session, copiedUids, to.getMailboxEntity());
         dispatcher.moved(session,
@@ -745,7 +744,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
                 .build(),
-            messagesMap.build());
+            messageIds.build());
         return copiedUids;
     }
 
@@ -755,9 +754,9 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         MoveResult moveResult = to.move(originalRows, session);
         SortedMap<MessageUid, MessageMetaData> moveUids = collectMetadata(moveResult.getMovedMessages());
 
-        ImmutableMap.Builder<MessageUid, MailboxMessage> messagesMap = ImmutableMap.builder();
+        ImmutableList.Builder<MessageId> messageIds = ImmutableList.builder();
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
-            messagesMap.put(message.getUid(), immutableMailboxMessageFactory.from(to.getMailboxEntity().getMailboxId(), message));
+            messageIds.add(message.getMessageId());
         }
         dispatcher.added(session, moveUids, to.getMailboxEntity());
         dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
@@ -766,7 +765,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId())
                 .build(),
-            messagesMap.build());
+            messageIds.build());
         return moveUids;
     }
 

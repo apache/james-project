@@ -59,7 +59,6 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class SpamAssassinListenerTest {
@@ -68,6 +67,7 @@ public class SpamAssassinListenerTest {
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     private static final int UID_VALIDITY = 43;
     private static final MessageUid UID = MessageUid.of(45);
+    private static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
 
     private SpamAssassin spamAssassin;
     private SpamAssassinListener listener;
@@ -105,60 +105,56 @@ public class SpamAssassinListenerTest {
     }
 
     @Test
-    public void isEventOnSpamMailboxShouldReturnFalseWhenMessageIsMovedToANonSpamMailbox() throws Exception {
+    public void isEventOnSpamMailboxShouldReturnFalseWhenMessageIsMovedToANonSpamMailbox() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(mailboxId1)
                 .targetMailboxIds(mailboxId2)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox2)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedToSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test
-    public void isEventOnSpamMailboxShouldReturnTrueWhenMailboxIsSpam() throws Exception {
+    public void isEventOnSpamMailboxShouldReturnTrueWhenMailboxIsSpam() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(mailboxId1)
                 .targetMailboxIds(spamMailboxId)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox1)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedToSpamMailbox(messageMoveEvent)).isTrue();
     }
 
     @Test
-    public void isEventOnSpamMailboxShouldReturnFalseWhenMailboxIsSpamOtherCase() throws Exception {
+    public void isEventOnSpamMailboxShouldReturnFalseWhenMailboxIsSpamOtherCase() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(mailboxId1)
                 .targetMailboxIds(spamCapitalMailboxId)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox1)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedToSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test
-    public void eventShouldCallSpamAssassinSpamLearningWhenTheEventMatches() throws Exception {
+    public void eventShouldCallSpamAssassinSpamLearningWhenTheEventMatches() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(mailboxId1)
                 .targetMailboxIds(spamMailboxId)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox1)))
+            .messageId(MESSAGE_ID)
             .build();
 
         listener.event(messageMoveEvent);
@@ -167,75 +163,70 @@ public class SpamAssassinListenerTest {
     }
 
     @Test
-    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedBetweenNonSpamMailboxes() throws Exception {
+    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedBetweenNonSpamMailboxes() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(mailboxId1)
                 .targetMailboxIds(mailboxId2)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox2)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test
-    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedOutOfCapitalSpamMailbox() throws Exception {
+    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedOutOfCapitalSpamMailbox() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(spamCapitalMailboxId)
                 .targetMailboxIds(mailboxId2)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox2)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test
-    public void isMessageMovedOutOfSpamMailboxShouldReturnTrueWhenMessageMovedOutOfSpamMailbox() throws Exception {
+    public void isMessageMovedOutOfSpamMailboxShouldReturnTrueWhenMessageMovedOutOfSpamMailbox() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(spamMailboxId)
                 .targetMailboxIds(mailboxId2)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox2)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isTrue();
     }
 
     @Test
-    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedToTrash() throws Exception {
+    public void isMessageMovedOutOfSpamMailboxShouldReturnFalseWhenMessageMovedToTrash() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(spamMailboxId)
                 .targetMailboxIds(trashMailboxId)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox2)))
+            .messageId(MESSAGE_ID)
             .build();
 
         assertThat(listener.isMessageMovedOutOfSpamMailbox(messageMoveEvent)).isFalse();
     }
 
     @Test
-    public void eventShouldCallSpamAssassinHamLearningWhenTheEventMatches() throws Exception {
+    public void eventShouldCallSpamAssassinHamLearningWhenTheEventMatches() {
         MessageMoveEvent messageMoveEvent = MessageMoveEvent.builder()
             .session(MAILBOX_SESSION)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(spamMailboxId)
                 .targetMailboxIds(mailboxId1)
                 .build())
-            .messages(ImmutableMap.of(UID,
-                createMessage(mailbox1)))
+            .messageId(MESSAGE_ID)
             .build();
 
         listener.event(messageMoveEvent);
@@ -274,7 +265,7 @@ public class SpamAssassinListenerTest {
         int size = 45;
         int bodyStartOctet = 25;
         byte[] content = "Subject: test\r\n\r\nBody\r\n".getBytes(StandardCharsets.UTF_8);
-        SimpleMailboxMessage message = new SimpleMailboxMessage(TestMessageId.of(58), new Date(),
+        SimpleMailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID, new Date(),
             size, bodyStartOctet, new SharedByteArrayInputStream(content), new Flags(), new PropertyBuilder(),
             mailbox.getMailboxId());
         MessageMetaData messageMetaData = mapperFactory.createMessageMapper(null).add(mailbox, message);

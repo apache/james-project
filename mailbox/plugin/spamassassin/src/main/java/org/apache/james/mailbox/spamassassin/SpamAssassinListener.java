@@ -83,7 +83,7 @@ public class SpamAssassinListener implements SpamEventListener {
         try {
             MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
             if (event instanceof MessageMoveEvent) {
-                handleMessageMove(event, (MessageMoveEvent) event);
+                handleMessageMove(event, session, (MessageMoveEvent) event);
             }
             if (event instanceof Added) {
                 handleAdded(event, session, (Added) event);
@@ -107,14 +107,14 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private void handleMessageMove(Event event, MessageMoveEvent messageMoveEvent) {
+    private void handleMessageMove(Event event, MailboxSession session, MessageMoveEvent messageMoveEvent) throws MailboxException {
         if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
             LOGGER.debug("Spam event detected");
-            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
+            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
             spamAssassin.learnSpam(messages, event.getUser());
         }
         if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
-            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent);
+            ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
             spamAssassin.learnHam(messages, event.getUser());
         }
     }
@@ -138,9 +138,9 @@ public class SpamAssassinListener implements SpamEventListener {
         }
     }
 
-    private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent) {
-        return messageMoveEvent.getMessages()
-            .values()
+    private ImmutableList<InputStream> retrieveMessages(MessageMoveEvent messageMoveEvent, MailboxSession session) throws MailboxException {
+        return mapperFactory.getMessageIdMapper(session)
+            .find(messageMoveEvent.getMessageIds(), MessageMapper.FetchType.Full)
             .stream()
             .map(Throwing.function(Message::getFullContent))
             .collect(Guavate.toImmutableList());

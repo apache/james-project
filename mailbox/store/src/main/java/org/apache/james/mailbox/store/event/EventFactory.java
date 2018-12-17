@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.event;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -32,12 +33,12 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 public class EventFactory {
 
@@ -99,11 +100,11 @@ public class EventFactory {
         return new MailboxListener.MailboxACLUpdated(sessionId, user, mailboxPath, aclDiff, mailboxId);
     }
 
-    public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
+    public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
         return MessageMoveEvent.builder()
                 .user(session.getUser())
                 .messageMoves(messageMoves)
-                .messages(messages)
+                .messageId(messageIds)
                 .build();
     }
 }

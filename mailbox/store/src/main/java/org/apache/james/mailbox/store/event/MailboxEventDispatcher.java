@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.event;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
@@ -36,6 +37,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.Quota;
@@ -163,8 +165,9 @@ public class MailboxEventDispatcher {
         listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff, mailboxId));
     }
 
-    public void moved(MailboxSession session, MessageMoves messageMoves, Map<MessageUid, MailboxMessage> messages) {
-        MessageMoveEvent moveEvent = eventFactory.moved(session, messageMoves, messages);
+    public void moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
+        MessageMoveEvent moveEvent = eventFactory.moved(session, messageMoves, messageIds);
+
         if (!moveEvent.isNoop()) {
             listener.event(moveEvent);
         }

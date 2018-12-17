@@ -70,7 +70,6 @@ import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -281,7 +280,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         addMessageToMailboxes(mailboxMessage, messageMoves.addedMailboxIds(), mailboxSession);
         removeMessageFromMailboxes(mailboxMessage, messageMoves.removedMailboxIds(), mailboxSession);
-        dispatcher.moved(mailboxSession, messageMoves, ImmutableMap.of(mailboxMessage.getUid(), mailboxMessage));
+        dispatcher.moved(mailboxSession, messageMoves, ImmutableList.of(mailboxMessage.getMessageId()));
     }
 
     private void removeMessageFromMailboxes(MailboxMessage message, Set<MailboxId> mailboxesToRemove, MailboxSession mailboxSession) throws MailboxException {
