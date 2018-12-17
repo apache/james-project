@@ -22,6 +22,8 @@ package org.apache.james.mailrepository.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
@@ -32,6 +34,9 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.TestBlobId;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.mailet.Attribute;
+import org.apache.mailet.AttributeName;
+import org.apache.mailet.AttributeValue;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.MailAddressFixture;
@@ -55,58 +60,6 @@ class CassandraMailRepositoryMailDAOTest {
     abstract class TestSuite {
 
         abstract CassandraMailRepositoryMailDaoAPI testee();
-
-        @Test
-        void readShouldReturnAllMailMetadata() throws Exception {
-            CassandraMailRepositoryMailDaoAPI testee = testee();
-
-            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
-            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
-            String errorMessage = "error message";
-            String state = "state";
-            String remoteAddr = "remoteAddr";
-            String remoteHost = "remoteHost";
-            PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder().name("headerName").value("headerValue").build();
-            String attributeName = "att1";
-            ImmutableList<String> attributeValue = ImmutableList.of("value1", "value2");
-
-            testee.store(URL,
-                FakeMail.builder()
-                    .name(KEY_1.asString())
-                    .sender(MailAddressFixture.SENDER)
-                    .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
-                    .errorMessage(errorMessage)
-                    .state(state)
-                    .remoteAddr(remoteAddr)
-                    .remoteHost(remoteHost)
-                    .addHeaderForRecipient(header, MailAddressFixture.RECIPIENT1)
-                    .attribute(attributeName, attributeValue)
-                    .build(),
-                blobIdHeader,
-                blobIdBody)
-                .join();
-
-            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
-
-            Mail partialMail = mailDTO.getMailBuilder().build();
-            assertSoftly(softly -> {
-                softly.assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody);
-                softly.assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader);
-                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
-                softly.assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage);
-                softly.assertThat(partialMail.getState()).isEqualTo(state);
-                softly.assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr);
-                softly.assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost);
-                softly.assertThat(partialMail.getAttributeNames()).containsOnly(attributeName);
-                softly.assertThat(partialMail.getAttribute(attributeName)).isEqualTo(attributeValue);
-                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
-                    .containsOnly(MailAddressFixture.RECIPIENT1);
-                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
-                    .containsOnly(header);
-                softly.assertThat(partialMail.getMaybeSender().asOptional()).contains(MailAddressFixture.SENDER);
-                softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
-            });
-        }
 
         @Test
         void storeShouldAcceptMailWithOnlyName() throws Exception {
@@ -174,6 +127,58 @@ class CassandraMailRepositoryMailDAOTest {
         CassandraMailRepositoryMailDaoAPI testee() {
             return testee;
         }
+
+        @Test
+        void readShouldReturnAllMailMetadata() throws Exception {
+            CassandraMailRepositoryMailDaoAPI testee = testee();
+
+            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+            String errorMessage = "error message";
+            String state = "state";
+            String remoteAddr = "remoteAddr";
+            String remoteHost = "remoteHost";
+            PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder().name("headerName").value("headerValue").build();
+            String attributeName = "att1";
+            ImmutableList<String> attributeValue = ImmutableList.of("value1", "value2");
+
+            testee.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .sender(MailAddressFixture.SENDER)
+                    .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
+                    .errorMessage(errorMessage)
+                    .state(state)
+                    .remoteAddr(remoteAddr)
+                    .remoteHost(remoteHost)
+                    .addHeaderForRecipient(header, MailAddressFixture.RECIPIENT1)
+                    .attribute(attributeName, attributeValue)
+                    .build(),
+                blobIdHeader,
+                blobIdBody)
+                .join();
+
+            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
+
+            Mail partialMail = mailDTO.getMailBuilder().build();
+            assertSoftly(softly -> {
+                softly.assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody);
+                softly.assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader);
+                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+                softly.assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage);
+                softly.assertThat(partialMail.getState()).isEqualTo(state);
+                softly.assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr);
+                softly.assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost);
+                softly.assertThat(partialMail.getAttributeNames()).containsOnly(attributeName);
+                softly.assertThat(partialMail.getAttribute(attributeName)).isEqualTo(attributeValue);
+                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
+                    .containsOnly(MailAddressFixture.RECIPIENT1);
+                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
+                    .containsOnly(header);
+                softly.assertThat(partialMail.getMaybeSender().asOptional()).contains(MailAddressFixture.SENDER);
+                softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
+            });
+        }
     }
 
     @Nested
@@ -189,6 +194,60 @@ class CassandraMailRepositoryMailDAOTest {
         @Override
         CassandraMailRepositoryMailDaoAPI testee() {
             return testee;
+        }
+
+        @Test
+        void readShouldReturnAllMailMetadata() throws Exception {
+            CassandraMailRepositoryMailDaoAPI testee = testee();
+
+            BlobId blobIdBody = BLOB_ID_FACTORY.from("blobHeader");
+            BlobId blobIdHeader = BLOB_ID_FACTORY.from("blobBody");
+            String errorMessage = "error message";
+            String state = "state";
+            String remoteAddr = "remoteAddr";
+            String remoteHost = "remoteHost";
+            PerRecipientHeaders.Header header = PerRecipientHeaders.Header.builder().name("headerName").value("headerValue").build();
+            String attributeName = "att1";
+            List<AttributeValue<?>> attributeValue = ImmutableList.of(AttributeValue.of("value1"), AttributeValue.of("value2"));
+            Attribute attribute = new Attribute(AttributeName.of(attributeName), AttributeValue.of(attributeValue));
+            List<Attribute> attributes = ImmutableList.of(attribute);
+
+            testee.store(URL,
+                FakeMail.builder()
+                    .name(KEY_1.asString())
+                    .sender(MailAddressFixture.SENDER)
+                    .recipients(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2)
+                    .errorMessage(errorMessage)
+                    .state(state)
+                    .remoteAddr(remoteAddr)
+                    .remoteHost(remoteHost)
+                    .addHeaderForRecipient(header, MailAddressFixture.RECIPIENT1)
+                    .attributes(attributes)
+                    .build(),
+                blobIdHeader,
+                blobIdBody)
+                .join();
+
+            CassandraMailRepositoryMailDAO.MailDTO mailDTO = testee.read(URL, KEY_1).join().get();
+
+            Mail partialMail = mailDTO.getMailBuilder().build();
+            assertSoftly(softly -> {
+                softly.assertThat(mailDTO.getBodyBlobId()).isEqualTo(blobIdBody);
+                softly.assertThat(mailDTO.getHeaderBlobId()).isEqualTo(blobIdHeader);
+                softly.assertThat(partialMail.getName()).isEqualTo(KEY_1.asString());
+                softly.assertThat(partialMail.getErrorMessage()).isEqualTo(errorMessage);
+                softly.assertThat(partialMail.getState()).isEqualTo(state);
+                softly.assertThat(partialMail.getRemoteAddr()).isEqualTo(remoteAddr);
+                softly.assertThat(partialMail.getRemoteHost()).isEqualTo(remoteHost);
+                softly.assertThat(partialMail.getAttributeNames()).containsOnly(attributeName);
+                softly.assertThat(partialMail.getAttribute(AttributeName.of(attributeName))).contains(attribute);
+                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getRecipientsWithSpecificHeaders())
+                    .containsOnly(MailAddressFixture.RECIPIENT1);
+                softly.assertThat(partialMail.getPerRecipientSpecificHeaders().getHeadersForRecipient(MailAddressFixture.RECIPIENT1))
+                    .containsOnly(header);
+                softly.assertThat(partialMail.getMaybeSender().asOptional()).contains(MailAddressFixture.SENDER);
+                softly.assertThat(partialMail.getRecipients()).containsOnly(MailAddressFixture.RECIPIENT1, MailAddressFixture.RECIPIENT2);
+            });
         }
     }
 

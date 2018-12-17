@@ -71,7 +71,8 @@ public interface CassandraMailRepositoryModule {
         .table(MailRepositoryTableV2.CONTENT_TABLE_NAME)
         .comment("Stores the mails for a given repository. " +
             "Content is stored with other blobs. " +
-            "This v2 version was introduced to support multiple headers for each user")
+            "This v2 version was introduced to support multiple headers for each user. " +
+            "The attributes are store as Json introduced in Mailet API v3.2.")
         .statement(statement -> statement
             .addPartitionKey(MailRepositoryTable.REPOSITORY_NAME, text())
             .addPartitionKey(MailRepositoryTable.MAIL_KEY, text())
@@ -79,7 +80,7 @@ public interface CassandraMailRepositoryModule {
             .addColumn(MailRepositoryTable.STATE, text())
             .addColumn(MailRepositoryTable.HEADER_BLOB_ID, text())
             .addColumn(MailRepositoryTable.BODY_BLOB_ID, text())
-            .addColumn(MailRepositoryTable.ATTRIBUTES, map(text(), blob()))
+            .addColumn(MailRepositoryTable.ATTRIBUTES, map(text(), text()))
             .addColumn(MailRepositoryTable.ERROR_MESSAGE, text())
             .addColumn(MailRepositoryTable.SENDER, text())
             .addColumn(MailRepositoryTable.RECIPIENTS, list(text()))
