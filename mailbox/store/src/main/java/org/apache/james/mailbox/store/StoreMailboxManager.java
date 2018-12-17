@@ -713,8 +713,8 @@ public class StoreMailboxManager implements MailboxManager {
         return mailboxMapper.findNonPersonalMailboxes(session.getUser().asString(), right).stream();
     }
 
-    private SimpleMailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
-        return new SimpleMailboxMetaData(
+    private MailboxMetaData toMailboxMetadata(MailboxSession session, List<Mailbox> mailboxes, Mailbox mailbox) {
+        return new MailboxMetaData(
             mailbox.generateAssociatedPath(),
             mailbox.getMailboxId(),
             getDelimiter(),

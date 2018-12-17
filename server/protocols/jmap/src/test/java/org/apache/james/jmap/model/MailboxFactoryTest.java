@@ -30,11 +30,11 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.assertj.core.api.JUnitSoftAssertions;
 import org.junit.Before;
@@ -173,7 +173,7 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
-            Optional.of(ImmutableList.of(new SimpleMailboxMetaData(parentMailboxPath, parentId, DELIMITER))),
+            Optional.of(ImmutableList.of(new MailboxMetaData(parentMailboxPath, parentId, DELIMITER))),
             mailboxSession);
         assertThat(id).contains(parentId);
     }

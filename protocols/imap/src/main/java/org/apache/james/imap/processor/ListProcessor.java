@@ -119,36 +119,11 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     isRelative = true;
                 }
                 // Get the mailbox for the reference name.
-                final MailboxPath rootPath = new MailboxPath(referenceRoot, "", "");
+                MailboxPath rootPath = new MailboxPath(referenceRoot, "", "");
+                MailboxId mailboxId = null;
                 results = new ArrayList<>(1);
-                results.add(new MailboxMetaData() {
-
-                    @Override
-                    public Children inferiors() {
-                        return Children.CHILDREN_ALLOWED_BUT_UNKNOWN;
-                    }
-
-                    @Override
-                    public Selectability getSelectability() {
-                        return Selectability.NOSELECT;
-                    }
-                    
-                    @Override
-                    public char getHierarchyDelimiter() {
-                        return mailboxSession.getPathDelimiter();
-                    }
-
-                    @Override
-                    public MailboxPath getPath() {
-                        return rootPath;
-                    }
-
-                    @Override
-                    public MailboxId getId() {
-                        return null; //Will not be call in ListProcessor scope
-                    }
-                    
-                });
+                results.add(new MailboxMetaData(rootPath, mailboxId, mailboxSession.getPathDelimiter(),
+                    MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NOSELECT));
             } else {
                 // If the mailboxPattern is fully qualified, ignore the
                 // reference name.

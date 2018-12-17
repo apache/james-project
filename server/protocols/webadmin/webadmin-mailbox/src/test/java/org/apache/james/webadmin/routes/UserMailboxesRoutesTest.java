@@ -43,9 +43,9 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
-import org.apache.james.mailbox.store.SimpleMailboxMetaData;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
@@ -774,7 +774,7 @@ class UserMailboxesRoutesTest {
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
                         ImmutableList.of(
-                                new SimpleMailboxMetaData(
+                                new MailboxMetaData(
                                         MailboxPath.forUser(USERNAME, MAILBOX_NAME), mailboxId, '.')));
             doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
 
@@ -800,7 +800,7 @@ class UserMailboxesRoutesTest {
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
                         ImmutableList.of(
-                                new SimpleMailboxMetaData(MailboxPath.forUser(USERNAME, MAILBOX_NAME), mailboxId, '.')));
+                                new MailboxMetaData(MailboxPath.forUser(USERNAME, MAILBOX_NAME), mailboxId, '.')));
             doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -856,7 +856,7 @@ class UserMailboxesRoutesTest {
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
                         ImmutableList.of(
-                                new SimpleMailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
+                                new MailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
             doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -870,7 +870,7 @@ class UserMailboxesRoutesTest {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
-                        ImmutableList.of(new SimpleMailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
+                        ImmutableList.of(new MailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
             doThrow(new MailboxNotFoundException("any")).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
@@ -884,7 +884,7 @@ class UserMailboxesRoutesTest {
             MailboxId mailboxId = InMemoryId.of(12);
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
-                        ImmutableList.of(new SimpleMailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
+                        ImmutableList.of(new MailboxMetaData(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
             doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
 
             when()
