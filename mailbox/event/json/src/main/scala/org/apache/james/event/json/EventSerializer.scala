@@ -20,19 +20,22 @@
 package org.apache.james.event.json
 
 import java.time.Instant
-import java.util.Optional
+import java.util.{Optional, TreeMap => JavaTreeMap}
 
 import javax.mail.{Flags => JavaMailFlags}
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
 import org.apache.james.event.json.DTOs.{ACLDiff, MailboxPath, Quota}
-import org.apache.james.event.json.MetaDataDTO.Flags
 import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged,
   MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion,
   MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
 import org.apache.james.mailbox.model.{MailboxId, MessageId, QuotaRoot, MailboxACL => JavaMailboxACL, Quota => JavaQuota}
+import org.apache.james.event.json.DTOs.{Flags, MailboxPath, Quota}
+import org.apache.james.mailbox.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
+import org.apache.james.mailbox.MailboxSession.SessionId
+import org.apache.james.mailbox.model.{MailboxId, MessageId, QuotaRoot, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.{MessageUid, Event => JavaEvent}
 import play.api.libs.json.{JsArray, JsError, JsNull, JsNumber, JsObject, JsResult, JsString, JsSuccess, Json, OFormat, Reads, Writes}
 
@@ -68,23 +71,23 @@ private object DTO {
   }
 
   case class Added(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId,
-                   added: Map[MessageUid, MetaDataDTO.MessageMetaData]) extends Event {
+                   added: Map[MessageUid, DTOs.MessageMetaData]) extends Event {
     override def toJava: JavaEvent = new JavaAdded(
       sessionId,
       user,
       path.toJava,
       mailboxId,
-      added.map(entry => entry._1 -> entry._2.toJava).asJava)
+      new JavaTreeMap[MessageUid, JavaMessageMetaData](added.mapValues(_.toJava).asJava))
   }
 
   case class Expunged(sessionId: SessionId, user: User, path: MailboxPath, mailboxId: MailboxId,
-                      expunged: Map[MessageUid, MetaDataDTO.MessageMetaData]) extends Event {
+                      expunged: Map[MessageUid, DTOs.MessageMetaData]) extends Event {
     override def toJava: JavaEvent = new JavaExpunged(
       sessionId,
       user,
       path.toJava,
       mailboxId,
-      expunged.map(entry => entry._1 -> entry._2.toJava).asJava)
+      expunged.mapValues(_.toJava).asJava)
   }
 }
 
@@ -95,6 +98,11 @@ private object ScalaConverter {
     mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
     aclDiff = ACLDiff.fromJava(event.getAclDiff),
     mailboxId = event.getMailboxId)
+
+  private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTOs.Quota[T] = DTOs.Quota(
+    used = java.getUsed,
+    limit = java.getLimit,
+    limits = java.getLimitByScope.asScala.toMap)
 
   private def toScala(event: JavaMailboxAdded): DTO.MailboxAdded = DTO.MailboxAdded(
     mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
@@ -110,7 +118,6 @@ private object ScalaConverter {
     deletedMessageCount = event.getDeletedMessageCount,
     totalDeletedSize = event.getTotalDeletedSize,
     mailboxId = event.getMailboxId)
-
 
   private def toScala(event: JavaMailboxRenamed): DTO.MailboxRenamed = DTO.MailboxRenamed(
     sessionId = event.getSessionId,
@@ -131,7 +138,7 @@ private object ScalaConverter {
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    added = event.getAdded.asScala.map(entry => entry._1 -> MetaDataDTO.MessageMetaData.fromJava(entry._2)).toMap
+    added = event.getAdded.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap
   )
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
@@ -139,17 +146,17 @@ private object ScalaConverter {
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    expunged = event.getExpunged.asScala.map(entry => entry._1 -> MetaDataDTO.MessageMetaData.fromJava(entry._2)).toMap
+    expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap
   )
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
+    case e: JavaAdded => toScala(e)
+    case e: JavaExpunged => toScala(e)
     case e: JavaMailboxACLUpdated => toScala(e)
     case e: JavaMailboxAdded => toScala(e)
     case e: JavaMailboxDeletion => toScala(e)
     case e: JavaMailboxRenamed => toScala(e)
     case e: JavaQuotaUsageUpdatedEvent => toScala(e)
-    case e: JavaAdded => toScala(e)
-    case e: JavaExpunged => toScala(e)
     case _ => throw new RuntimeException("no Scala conversion known")
   }
 }
@@ -170,7 +177,7 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactor
   implicit val messageIdWrites: Writes[MessageId] = value => JsString(value.serialize())
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
   implicit val flagsWrites: Writes[JavaMailFlags] = value => JsArray(Flags.fromJavaFlags(value).map(flag => JsString(flag)))
-  implicit val messageMetaDataWrites: Writes[MetaDataDTO.MessageMetaData] = Json.writes[MetaDataDTO.MessageMetaData]
+  implicit val messageMetaDataWrites: Writes[DTOs.MessageMetaData] = Json.writes[DTOs.MessageMetaData]
 
   implicit val aclEntryKeyReads: Reads[JavaMailboxACL.EntryKey] = {
     case JsString(keyAsString) => JsSuccess(JavaMailboxACL.EntryKey.deserialize(keyAsString))
@@ -255,10 +262,10 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactor
     }
 
   implicit val aclDiffReads: Reads[ACLDiff] = Json.reads[ACLDiff]
-  implicit val mailboxPathReads: Reads[MailboxPath] = Json.reads[MailboxPath]
-  implicit val quotaCReads: Reads[Quota[QuotaCount]] = Json.reads[Quota[QuotaCount]]
-  implicit val quotaSReads: Reads[Quota[QuotaSize]] = Json.reads[Quota[QuotaSize]]
-  implicit val messageMetaDataReads: Reads[MetaDataDTO.MessageMetaData] = Json.reads[MetaDataDTO.MessageMetaData]
+  implicit val quotaCReads: Reads[DTOs.Quota[QuotaCount]] = Json.reads[DTOs.Quota[QuotaCount]]
+  implicit val quotaSReads: Reads[DTOs.Quota[QuotaSize]] = Json.reads[DTOs.Quota[QuotaSize]]
+  implicit val mailboxPathReads: Reads[DTOs.MailboxPath] = Json.reads[DTOs.MailboxPath]
+  implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
 
   implicit val eventOFormat: OFormat[Event] = derived.oformat()
 

@@ -27,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.SortedMap;
 
 import javax.mail.Flags;
 
@@ -46,7 +46,7 @@ import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 
 class AddedSerializationTest {
 
@@ -64,7 +64,7 @@ class AddedSerializationTest {
         .add(Flags.Flag.ANSWERED, Flags.Flag.DRAFT)
         .add("User Custom Flag")
         .build();
-    private static final Map<MessageUid, MessageMetaData> ADDED = ImmutableMap.of(
+    private static final SortedMap<MessageUid, MessageMetaData> ADDED = ImmutableSortedMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
 
     private static final MailboxListener.Added DEFAULT_ADDED_EVENT = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, ADDED);
@@ -109,7 +109,7 @@ class AddedSerializationTest {
     @Nested
     class WithEmptyAddedMap {
 
-        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, ImmutableMap.of());
+        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, ImmutableSortedMap.of());
         private final String emptyAddedEventJson =
             "{" +
             "  \"Added\": {" +
@@ -145,7 +145,7 @@ class AddedSerializationTest {
         class WithEmptyFlags {
             private final Flags emptyFlags = new FlagsBuilder().build();
             private final MailboxListener.Added emptyFlagsAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID,
-                ImmutableMap.of(
+                ImmutableSortedMap.of(
                     MESSAGE_UID,
                     new MessageMetaData(MESSAGE_UID, MOD_SEQ, emptyFlags, SIZE, Date.from(INSTANT), MESSAGE_ID)));
 
@@ -192,7 +192,7 @@ class AddedSerializationTest {
                 .add("Custom 1", "Custom 2", "")
                 .build();
             private final MailboxListener.Added onlyUserFlagsAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID,
-                ImmutableMap.of(
+                ImmutableSortedMap.of(
                     MESSAGE_UID,
                     new MessageMetaData(MESSAGE_UID, MOD_SEQ, onlyUserFlags, SIZE, Date.from(INSTANT), MESSAGE_ID)));
 
@@ -240,7 +240,7 @@ class AddedSerializationTest {
                 .add(Flags.Flag.SEEN, Flags.Flag.ANSWERED, Flags.Flag.DELETED)
                 .build();
             private final MailboxListener.Added onlySystemFlagsAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID,
-                ImmutableMap.of(
+                ImmutableSortedMap.of(
                     MESSAGE_UID,
                     new MessageMetaData(MESSAGE_UID, MOD_SEQ, onlySystemFlags, SIZE, Date.from(INSTANT), MESSAGE_ID)));
 
@@ -326,7 +326,7 @@ class AddedSerializationTest {
 
         @Test
         void addedShouldDeserializeWhenInternalDateIsInGoodISOFormat() {
-            Map<MessageUid, MessageMetaData> added = ImmutableMap.of(
+            SortedMap<MessageUid, MessageMetaData> added = ImmutableSortedMap.of(
                 MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(Instant.parse("2018-12-14T09:41:51Z")), MESSAGE_ID));
             MailboxListener.Added eventRoundToMillis = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, added);
 
@@ -358,7 +358,7 @@ class AddedSerializationTest {
 
         @Test
         void addedShouldDeserializeWhenInternalDateIsMissingMilliSeconds() {
-            Map<MessageUid, MessageMetaData> added = ImmutableMap.of(
+            SortedMap<MessageUid, MessageMetaData> added = ImmutableSortedMap.of(
                 MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(Instant.parse("2018-12-14T09:41:51Z")), MESSAGE_ID));
             MailboxListener.Added eventRoundToMillis = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, added);
 
@@ -390,7 +390,7 @@ class AddedSerializationTest {
 
         @Test
         void addedShouldDeserializeWhenInternalDateIsMissingSeconds() {
-            Map<MessageUid, MessageMetaData> added = ImmutableMap.of(
+            SortedMap<MessageUid, MessageMetaData> added = ImmutableSortedMap.of(
                 MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(Instant.parse("2018-12-14T09:41:00Z")), MESSAGE_ID));
             MailboxListener.Added eventRoundToMinute = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, added);
 

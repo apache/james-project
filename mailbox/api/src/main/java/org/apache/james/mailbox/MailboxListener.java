@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.SortedMap;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -451,7 +452,7 @@ public interface MailboxListener {
     class Added extends MetaDataHoldingEvent {
         private final Map<MessageUid, MessageMetaData> added;
 
-        public Added(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids) {
+        public Added(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, SortedMap<MessageUid, MessageMetaData> uids) {
             super(sessionId, user, path, mailboxId);
             this.added = ImmutableMap.copyOf(uids);
         }
