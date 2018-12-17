@@ -155,16 +155,14 @@ private object ScalaConverter {
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    added = event.getAdded.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap
-  )
+    added = event.getAdded.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     sessionId = event.getSessionId,
     user = event.getUser,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap
-  )
+    expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     user = event.getUser,
