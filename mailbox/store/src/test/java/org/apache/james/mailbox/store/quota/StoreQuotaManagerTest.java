@@ -20,9 +20,11 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCount;
@@ -49,34 +51,38 @@ public class StoreQuotaManagerTest {
         quotaRoot = QuotaRoot.quotaRoot("benwa", Optional.empty());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
-        when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.count(360L)));
+        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCount.count(360L)));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(360)).build());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
-        when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.size(360L)));
+        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSize.size(360L)));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.size(360)).build());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        when(mockedMaxQuotaManager.getMaxStorage(quotaRoot)).thenReturn(Optional.of(QuotaSize.unlimited()));
+        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSize.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
 
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
             Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.unlimited()).build());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        when(mockedMaxQuotaManager.getMaxMessage(quotaRoot)).thenReturn(Optional.of(QuotaCount.unlimited()));
+        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCount.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
 
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
