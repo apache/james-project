@@ -61,18 +61,17 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
         HAS_NO_CHILDREN
     }
 
+    public static MailboxMetaData unselectableMailbox(MailboxPath path, MailboxId mailboxId, char delimiter) {
+        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
+    }
+
     private final MailboxPath path;
     private final char delimiter;
     private final Children inferiors;
     private final Selectability selectability;
     private final MailboxId mailboxId;
 
-    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter) {
-        this(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
-    }
-
     public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability) {
-        super();
         this.path = path;
         this.mailboxId = mailboxId;
         this.delimiter = delimiter;

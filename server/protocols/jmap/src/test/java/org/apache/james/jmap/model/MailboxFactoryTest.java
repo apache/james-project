@@ -173,7 +173,7 @@ public class MailboxFactoryTest {
         mailboxManager.createMailbox(mailboxPath, mailboxSession);
 
         Optional<MailboxId> id = sut.getParentIdFromMailboxPath(mailboxPath,
-            Optional.of(ImmutableList.of(new MailboxMetaData(parentMailboxPath, parentId, DELIMITER))),
+            Optional.of(ImmutableList.of(MailboxMetaData.unselectableMailbox(parentMailboxPath, parentId, DELIMITER))),
             mailboxSession);
         assertThat(id).contains(parentId);
     }
