@@ -37,7 +37,7 @@ public class MessageMoves {
             targetMailboxIds = ImmutableSet.builder();
         }
 
-        public Builder previousMailboxIds(Collection<MailboxId> mailboxIds) {
+        public Builder previousMailboxIds(Iterable<MailboxId> mailboxIds) {
             previousMailboxIds.addAll(mailboxIds);
             return this;
         }
@@ -47,7 +47,7 @@ public class MessageMoves {
             return this;
         }
 
-        public Builder targetMailboxIds(Collection<MailboxId> mailboxIds) {
+        public Builder targetMailboxIds(Iterable<MailboxId> mailboxIds) {
             targetMailboxIds.addAll(mailboxIds);
             return this;
         }

@@ -65,7 +65,7 @@ public class MessageMoveEvent implements Event {
             return this;
         }
 
-        public Builder messageId(Collection<MessageId> messageIds) {
+        public Builder messageId(Iterable<MessageId> messageIds) {
             this.messageIds.addAll(messageIds);
             return this;
         }

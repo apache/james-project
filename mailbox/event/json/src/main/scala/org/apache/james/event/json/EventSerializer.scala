@@ -84,8 +84,8 @@ private object DTO {
       expunged.mapValues(_.toJava).asJava)
   }
 
-  case class MessageMoveEvent(user: User, previousMailboxIds: Seq[MailboxId], targetMailboxIds: Seq[MailboxId],
-                              messageIds: Seq[MessageId]) extends Event {
+  case class MessageMoveEvent(user: User, previousMailboxIds: Iterable[MailboxId], targetMailboxIds: Iterable[MailboxId],
+                              messageIds: Iterable[MessageId]) extends Event {
     override def toJava: JavaEvent = JavaMessageMoveEvent.builder()
       .user(user)
       .messageId(messageIds.asJava)
@@ -157,9 +157,9 @@ private object ScalaConverter {
 
   private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     user = event.getUser,
-    previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala.toList,
-    targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala.toList,
-    messageIds = event.getMessageIds.asScala.toList)
+    previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala,
+    targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala,
+    messageIds = event.getMessageIds.asScala)
 
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
