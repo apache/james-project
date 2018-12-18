@@ -25,39 +25,18 @@ import java.util.Optional
 import julienrf.json.derived
 import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
 import org.apache.james.core.{Domain, User}
+import org.apache.james.event.json.DTOs.{MailboxPath, Quota}
 import org.apache.james.mailbox.MailboxListener.{MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.model.{MailboxId, QuotaRoot, MailboxPath => JavaMailboxPath, Quota => JavaQuota}
+import org.apache.james.mailbox.model.{MailboxId, QuotaRoot, Quota => JavaQuota}
 import org.apache.james.mailbox.{Event => JavaEvent}
 import play.api.libs.json.{JsError, JsNull, JsNumber, JsObject, JsResult, JsString, JsSuccess, Json, OFormat, Reads, Writes}
-
-import scala.collection.JavaConverters._
 
 private sealed trait Event {
   def toJava: JavaEvent
 }
 
 private object DTO {
-
-  object MailboxPath {
-    def fromJava(javaMailboxPath: JavaMailboxPath): MailboxPath = DTO.MailboxPath(
-      Option(javaMailboxPath.getNamespace),
-      Option(javaMailboxPath.getUser),
-      javaMailboxPath.getName)
-  }
-
-  case class MailboxPath(namespace: Option[String], user: Option[String], name: String) {
-    def toJava: JavaMailboxPath = new JavaMailboxPath(namespace.orNull, user.orNull, name)
-  }
-
-  case class Quota[T <: QuotaValue[T]](used: T, limit: T, limits: Map[JavaQuota.Scope, T]) {
-    def toJava: JavaQuota[T] =
-      JavaQuota.builder[T]
-        .used(used)
-        .computedLimit(limit)
-        .limitsByScope(limits.asJava)
-        .build()
-  }
 
   case class QuotaUsageUpdatedEvent(user: User, quotaRoot: QuotaRoot, countQuota: Quota[QuotaCount],
                                     sizeQuota: Quota[QuotaSize], time: Instant) extends Event {
@@ -81,20 +60,15 @@ private object DTO {
 }
 
 private object ScalaConverter {
-  private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTO.Quota[T] = DTO.Quota(
-    used = java.getUsed,
-    limit = java.getLimit,
-    limits = java.getLimitByScope.asScala.toMap)
-
   private def toScala(event: JavaQuotaUsageUpdatedEvent): DTO.QuotaUsageUpdatedEvent = DTO.QuotaUsageUpdatedEvent(
     user = event.getUser,
     quotaRoot = event.getQuotaRoot,
-    countQuota = toScala(event.getCountQuota),
-    sizeQuota = toScala(event.getSizeQuota),
+    countQuota = Quota.toScala(event.getCountQuota),
+    sizeQuota = Quota.toScala(event.getSizeQuota),
     time = event.getInstant)
 
   private def toScala(event: JavaMailboxAdded): DTO.MailboxAdded = DTO.MailboxAdded(
-    mailboxPath = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
     user = event.getUser,
     sessionId = event.getSessionId)
@@ -102,15 +76,15 @@ private object ScalaConverter {
   private def toScala(event: JavaMailboxRenamed): DTO.MailboxRenamed = DTO.MailboxRenamed(
     sessionId = event.getSessionId,
     user = event.getUser,
-    path = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    newPath = DTO.MailboxPath.fromJava(event.getNewPath))
+    newPath = MailboxPath.fromJava(event.getNewPath))
 
   private def toScala(event: JavaMailboxDeletion): DTO.MailboxDeletion = DTO.MailboxDeletion(
     sessionId = event.getSessionId,
     user = event.getUser,
     quotaRoot = event.getQuotaRoot,
-    path = DTO.MailboxPath.fromJava(event.getMailboxPath),
+    path = MailboxPath.fromJava(event.getMailboxPath),
     deletedMessageCount = event.getDeletedMessageCount,
     totalDeletedSize = event.getTotalDeletedSize,
     mailboxId = event.getMailboxId)
@@ -129,9 +103,9 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory) {
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
   implicit val quotaValueWrites: Writes[QuotaValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
   implicit val quotaScopeWrites: Writes[JavaQuota.Scope] = value => JsString(value.name)
-  implicit val quotaCountWrites: Writes[DTO.Quota[QuotaCount]] = Json.writes[DTO.Quota[QuotaCount]]
-  implicit val quotaSizeWrites: Writes[DTO.Quota[QuotaSize]] = Json.writes[DTO.Quota[QuotaSize]]
-  implicit val mailboxPathWrites: Writes[DTO.MailboxPath] = Json.writes[DTO.MailboxPath]
+  implicit val quotaCountWrites: Writes[Quota[QuotaCount]] = Json.writes[Quota[QuotaCount]]
+  implicit val quotaSizeWrites: Writes[Quota[QuotaSize]] = Json.writes[Quota[QuotaSize]]
+  implicit val mailboxPathWrites: Writes[MailboxPath] = Json.writes[MailboxPath]
   implicit val mailboxIdWrites: Writes[MailboxId] = value => JsString(value.serialize())
   implicit val sessionIdWrites: Writes[SessionId] = value => JsNumber(value.getValue)
 
@@ -176,9 +150,9 @@ private class JsonSerialize(mailboxIdFactory: MailboxId.Factory) {
       JsObject(m.map { case (k, v) => (k.toString, vr.writes(v)) }.toSeq)
     }
 
-  implicit val quotaCReads: Reads[DTO.Quota[QuotaCount]] = Json.reads[DTO.Quota[QuotaCount]]
-  implicit val quotaSReads: Reads[DTO.Quota[QuotaSize]] = Json.reads[DTO.Quota[QuotaSize]]
-  implicit val mailboxPathReads: Reads[DTO.MailboxPath] = Json.reads[DTO.MailboxPath]
+  implicit val quotaCReads: Reads[Quota[QuotaCount]] = Json.reads[Quota[QuotaCount]]
+  implicit val quotaSReads: Reads[Quota[QuotaSize]] = Json.reads[Quota[QuotaSize]]
+  implicit val mailboxPathReads: Reads[MailboxPath] = Json.reads[MailboxPath]
 
   implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
