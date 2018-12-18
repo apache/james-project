@@ -22,7 +22,6 @@ package org.apache.james.mailbox.cassandra.quota;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -34,7 +33,6 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -132,34 +130,6 @@ public class CassandraPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public Optional<QuotaCount> getGlobalMaxMessage() {
         return globalQuota.getGlobalMaxMessage();
-    }
-
-    @Override
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        Supplier<Optional<QuotaSize>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
-            .flatMap(this::getDomainMaxStorage)).sneakyThrow();
-        Supplier<Optional<QuotaSize>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow();
-
-        return Stream
-            .of(() -> perUserQuota.getMaxStorage(quotaRoot),
-                domainQuotaSupplier,
-                globalDomainSupplier)
-            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
-            .findFirst();
-    }
-
-    @Override
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        Supplier<Optional<QuotaCount>> domainQuotaSupplier = Throwing.supplier(() -> quotaRoot.getDomain()
-            .flatMap(this::getDomainMaxMessage)).sneakyThrow();
-        Supplier<Optional<QuotaCount>> globalDomainSupplier = Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow();
-
-        return Stream
-            .of(() -> perUserQuota.getMaxMessage(quotaRoot),
-                domainQuotaSupplier,
-                globalDomainSupplier)
-            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
-            .findFirst();
     }
 
     @Override

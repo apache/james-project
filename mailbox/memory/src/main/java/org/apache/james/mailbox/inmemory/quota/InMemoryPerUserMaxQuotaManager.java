@@ -31,7 +31,6 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -70,22 +69,6 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public void removeDomainMaxStorage(Domain domain) {
         domainMaxStorage.remove(domain);
-    }
-
-    @Override
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        return OptionalUtils.or(
-            Optional.ofNullable(userMaxStorage.get(quotaRoot.getValue())),
-            quotaRoot.getDomain().flatMap(this::getDomainMaxStorage),
-            maxStorage);
-    }
-
-    @Override
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        return OptionalUtils.or(
-            Optional.ofNullable(userMaxMessage.get(quotaRoot.getValue())),
-            quotaRoot.getDomain().flatMap(this::getDomainMaxMessage),
-            maxMessage);
     }
 
     @Override

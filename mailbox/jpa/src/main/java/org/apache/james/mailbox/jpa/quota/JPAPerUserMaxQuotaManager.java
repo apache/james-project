@@ -22,7 +22,6 @@ package org.apache.james.mailbox.jpa.quota;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -34,7 +33,6 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -116,26 +114,6 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     @Override
     public Optional<QuotaCount> getGlobalMaxMessage() {
         return dao.getGlobalMaxMessage();
-    }
-
-    @Override
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
-        return Stream
-            .of((Supplier<Optional<QuotaSize>>) () -> dao.getMaxStorage(quotaRoot),
-                () -> quotaRoot.getDomain().flatMap(this::getDomainMaxStorage),
-                this::getGlobalMaxStorage)
-            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
-            .findFirst();
-    }
-
-    @Override
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
-        return Stream
-            .of((Supplier<Optional<QuotaCount>>) () -> dao.getMaxMessage(quotaRoot),
-                () -> quotaRoot.getDomain().flatMap(this::getDomainMaxMessage),
-                this::getGlobalMaxMessage)
-            .flatMap(supplier -> OptionalUtils.toStream(supplier.get()))
-            .findFirst();
     }
 
     @Override
