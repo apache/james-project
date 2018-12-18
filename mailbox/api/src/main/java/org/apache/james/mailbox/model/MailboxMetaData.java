@@ -19,7 +19,11 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Objects;
+
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
+
+import com.google.common.base.MoreObjects;
 
 /**
  * Returned by the list method of MailboxRepository and others
@@ -120,37 +124,24 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
 
     @Override
     public String toString() {
-        return "ListResult: " + path;
+        return MoreObjects.toStringHelper(this)
+            .add("path", path)
+            .toString();
     }
 
     @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((path == null) ? 0 : path.hashCode());
-        return result;
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxMetaData) {
+            MailboxMetaData that = (MailboxMetaData) o;
+
+            return Objects.equals(this.path, that.path);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MailboxMetaData other = (MailboxMetaData) obj;
-        if (path == null) {
-            if (other.path != null) {
-                return false;
-            }
-        } else if (!path.equals(other.path)) {
-            return false;
-        }
-        return true;
+    public final int hashCode() {
+        return Objects.hash(path);
     }
 
     @Override
