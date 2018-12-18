@@ -171,7 +171,6 @@ public class MailboxEventAnalyserTest {
     public void testShouldNotSetUidWhenNoSystemFlagChange() {
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(90L)),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(MessageUid.of(90))
@@ -190,7 +189,6 @@ public class MailboxEventAnalyserTest {
         
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             OTHER_MAILBOX_SESSION,
-            ImmutableList.of(uid),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(uid)
@@ -210,7 +208,6 @@ public class MailboxEventAnalyserTest {
         
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             MAILBOX_SESSION,
-            ImmutableList.of(uid),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(uid)
@@ -231,7 +228,6 @@ public class MailboxEventAnalyserTest {
 
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             OTHER_MAILBOX_SESSION,
-            ImmutableList.of(uid),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(uid)
@@ -250,7 +246,6 @@ public class MailboxEventAnalyserTest {
     public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(345)),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(MessageUid.of(345))
@@ -269,7 +264,6 @@ public class MailboxEventAnalyserTest {
     public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
         MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
             MAILBOX_SESSION,
-            ImmutableList.of(MessageUid.of(886)),
             DEFAULT_MAILBOX,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(MessageUid.of(886))

@@ -59,12 +59,8 @@ public class EventFactory {
         return new MailboxListener.Expunged(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
     }
 
-    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return flagsUpdated(session.getSessionId(), session.getUser(), uids, mailbox, uflags);
-    }
-
-    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession.SessionId sessionId, User user, List<MessageUid> uids, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return new MailboxListener.FlagsUpdated(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids, uflags);
+    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
+        return new MailboxListener.FlagsUpdated(session.getSessionId(), session.getUser(), mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uflags);
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {

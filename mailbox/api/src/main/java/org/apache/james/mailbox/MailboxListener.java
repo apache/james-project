@@ -37,6 +37,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -430,10 +431,12 @@ public interface MailboxListener {
         private final List<MessageUid> uids;
         private final List<UpdatedFlags> updatedFlags;
 
-        public FlagsUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, List<MessageUid> uids, List<UpdatedFlags> updatedFlags) {
+        public FlagsUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, List<UpdatedFlags> updatedFlags) {
             super(sessionId, user, path, mailboxId);
-            this.uids = ImmutableList.copyOf(uids);
             this.updatedFlags = ImmutableList.copyOf(updatedFlags);
+            this.uids = updatedFlags.stream()
+                .map(UpdatedFlags::getUid)
+                .collect(Guavate.toImmutableList());
         }
 
         @Override

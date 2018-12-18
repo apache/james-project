@@ -275,7 +275,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        verify(dispatcher, times(2)).flagsUpdated(eq(session), any(MessageUid.class), any(Mailbox.class), any(UpdatedFlags.class));
+        verify(dispatcher, times(2)).flagsUpdated(eq(session), any(Mailbox.class), any(UpdatedFlags.class));
         verifyNoMoreInteractions(dispatcher);
     }
 
@@ -300,7 +300,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
             .newFlags(newFlags)
             .build();
 
-        verify(dispatcher, times(1)).flagsUpdated(session, messageUid, mailbox2, updatedFlags);
+        verify(dispatcher, times(1)).flagsUpdated(session, mailbox2, updatedFlags);
         verifyNoMoreInteractions(dispatcher);
     }
 

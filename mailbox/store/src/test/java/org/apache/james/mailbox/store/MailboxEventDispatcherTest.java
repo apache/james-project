@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.mail.Flags;
-import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -81,7 +80,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldReturnNoChangesWhenSystemFlagsUnchanged() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -100,7 +98,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowAnsweredAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(
                 UpdatedFlags.builder()
@@ -121,7 +118,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowAnsweredRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(
                 UpdatedFlags.builder()
@@ -142,7 +138,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowDeletedAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -162,7 +157,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowDeletedRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -182,7 +176,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowDraftAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -202,7 +195,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowDraftRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -222,7 +214,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowFlaggedAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -242,7 +233,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowFlaggedRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -262,7 +252,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowRecentAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -282,7 +271,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowRecentRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -302,7 +290,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowSeenAdded() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -322,7 +309,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowSeenRemoved() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -342,7 +328,6 @@ public class MailboxEventDispatcherTest {
     @Test
     public void testShouldShowMixedChanges() {
         dispatcher.flagsUpdated(session,
-            ImmutableList.of(result.getUid()),
             mailbox,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(result.getUid())
@@ -371,14 +356,7 @@ public class MailboxEventDispatcherTest {
 
     @Test
     public void flagsUpdatedShouldNotFireEventWhenEmptyIdList() {
-        UpdatedFlags updatedFlags = UpdatedFlags.builder()
-                .uid(MessageUid.of(1))
-                .modSeq(2)
-                .oldFlags(new Flags(Flag.RECENT))
-                .newFlags(new Flags(Flag.ANSWERED))
-                .build();
-        
-        dispatcher.flagsUpdated(session, ImmutableList.of(), mailbox, ImmutableList.of(updatedFlags));
+        dispatcher.flagsUpdated(session, mailbox, ImmutableList.of());
         assertThat(collector.getEvents()).isEmpty();
     }
 }

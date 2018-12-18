@@ -55,8 +55,6 @@ class FlagsUpdatedSerializationTest {
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", MAILBOX_NAME);
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(123456);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(654321);
-    private static final List<MessageUid> MESSAGE_UID_1_IN_LIST = ImmutableList.of(MESSAGE_UID_1);
-    private static final List<MessageUid> MESSAGE_UID_LIST = ImmutableList.of(MESSAGE_UID_1, MESSAGE_UID_2);
 
     private static final int MOD_SEQ_1 = 35;
     private static final Flags OLD_FLAGS_1 = FlagsBuilder.builder()
@@ -93,7 +91,7 @@ class FlagsUpdatedSerializationTest {
     private static List<UpdatedFlags> UPDATED_FLAGS_LIST = ImmutableList.of(UPDATED_FLAG_1, UPDATED_FLAG_2);
 
     private static final MailboxListener.FlagsUpdated DEFAULT_EVENT = new MailboxListener.FlagsUpdated(SESSION_ID, USER,
-        MAILBOX_PATH, MAILBOX_ID, MESSAGE_UID_LIST, UPDATED_FLAGS_LIST);
+        MAILBOX_PATH, MAILBOX_ID, UPDATED_FLAGS_LIST);
     private static final String DEFAULT_EVENT_JSON =
         "{" +
         "  \"FlagsUpdated\": {" +
@@ -210,7 +208,7 @@ class FlagsUpdatedSerializationTest {
         private final String nullUser = null;
         private final MailboxListener.FlagsUpdated nullUserEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER,
             new MailboxPath(MailboxConstants.USER_NAMESPACE, nullUser, MAILBOX_NAME),
-            MAILBOX_ID, MESSAGE_UID_LIST, UPDATED_FLAGS_LIST);
+            MAILBOX_ID, UPDATED_FLAGS_LIST);
 
         private static final String EVENT_JSON_WITH_NULL_USER_IN_PATH =
             "{" +
@@ -258,10 +256,9 @@ class FlagsUpdatedSerializationTest {
 
         @Nested
         class EmptyUpdatedFlags {
-            private final List<MessageUid> emptyUids = ImmutableList.of();
             private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
             private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, emptyUids, emptyUpdatedFlags);
+                MAILBOX_ID, emptyUpdatedFlags);
 
             private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =
                 "{" +
@@ -301,7 +298,7 @@ class FlagsUpdatedSerializationTest {
                 .newFlags(NEW_FLAGS_1)
                 .build();
             private final MailboxListener.FlagsUpdated emptyOldFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, MESSAGE_UID_1_IN_LIST, ImmutableList.of(emptyOldFlags));
+                MAILBOX_ID, ImmutableList.of(emptyOldFlags));
 
             private static final String EVENT_JSON_WITH_EMPTY_OLD_FLAGS =
                 "{" +
@@ -348,7 +345,7 @@ class FlagsUpdatedSerializationTest {
                 .newFlags(FlagsBuilder.builder().build())
                 .build();
             private final MailboxListener.FlagsUpdated emptyNewFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, MESSAGE_UID_1_IN_LIST, ImmutableList.of(emptyNewFlags));
+                MAILBOX_ID, ImmutableList.of(emptyNewFlags));
 
             private static final String EVENT_JSON_WITH_EMPTY_NEW_FLAGS =
                 "{" +
@@ -395,7 +392,7 @@ class FlagsUpdatedSerializationTest {
                 .newFlags(FlagsBuilder.builder().build())
                 .build();
             private final MailboxListener.FlagsUpdated emptyFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, MESSAGE_UID_1_IN_LIST, ImmutableList.of(emptyFlags));
+                MAILBOX_ID, ImmutableList.of(emptyFlags));
 
             private static final String EVENT_JSON_WITH_EMPTY_OLD_AND_NEW_FLAGS =
                 "{" +

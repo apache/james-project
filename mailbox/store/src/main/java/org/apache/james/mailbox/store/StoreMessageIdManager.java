@@ -301,7 +301,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     private void dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, UpdatedFlags updatedFlags) throws MailboxException {
         if (updatedFlags.flagsChanged()) {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-            dispatcher.flagsUpdated(mailboxSession, updatedFlags.getUid(), mailbox, updatedFlags);
+            dispatcher.flagsUpdated(mailboxSession, mailbox, updatedFlags);
         }
     }
 

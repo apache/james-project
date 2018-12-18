@@ -103,7 +103,6 @@ private object DTO {
       user,
       path.toJava,
       mailboxId,
-      updatedFlags.map(_.uid).asJava,
       updatedFlags.map(_.toJava).asJava)
   }
 }

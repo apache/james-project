@@ -582,7 +582,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             uFlags.put(flag.getUid(), flag);
         }
 
-        dispatcher.flagsUpdated(mailboxSession, new ArrayList<>(uFlags.keySet()), getMailboxEntity(), new ArrayList<>(uFlags.values()));
+        dispatcher.flagsUpdated(mailboxSession, getMailboxEntity(), new ArrayList<>(uFlags.values()));
 
         return newFlagsByUid;
     }
