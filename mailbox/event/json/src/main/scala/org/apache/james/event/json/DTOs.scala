@@ -20,11 +20,18 @@
 package org.apache.james.event.json
 
 import org.apache.james.core.quota.QuotaValue
-import org.apache.james.mailbox.model.{MailboxPath => JavaMailboxPath, Quota => JavaQuota}
+import org.apache.james.mailbox.acl.{ACLDiff => JavaACLDiff}
+import org.apache.james.mailbox.model.{MailboxACL, MailboxPath => JavaMailboxPath, Quota => JavaQuota}
 
 import scala.collection.JavaConverters._
 
 object DTOs {
+  object ACLDiff {
+    def fromJava(javaACLDiff: JavaACLDiff): ACLDiff = ACLDiff(
+      javaACLDiff.getOldACL.getEntries.asScala.toMap,
+      javaACLDiff.getNewACL.getEntries.asScala.toMap)
+  }
+
   object MailboxPath {
     def fromJava(javaMailboxPath: JavaMailboxPath): MailboxPath = MailboxPath(
       Option(javaMailboxPath.getNamespace),
@@ -37,6 +44,11 @@ object DTOs {
       used = java.getUsed,
       limit = java.getLimit,
       limits = java.getLimitByScope.asScala.toMap)
+  }
+
+  case class ACLDiff(oldACL: Map[MailboxACL.EntryKey, MailboxACL.Rfc4314Rights],
+                     newACL: Map[MailboxACL.EntryKey, MailboxACL.Rfc4314Rights]) {
+    def toJava: JavaACLDiff = new JavaACLDiff(new MailboxACL(oldACL.asJava), new MailboxACL(newACL.asJava))
   }
 
   case class MailboxPath(namespace: Option[String], user: Option[String], name: String) {

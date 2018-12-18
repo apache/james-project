@@ -175,6 +175,10 @@ public class MailboxACL {
                 .except(new Rfc4314Rights(rights));
         }
 
+        public static Rfc4314Rights deserialize(String serialized) throws UnsupportedRightException {
+            return new Rfc4314Rights(serialized);
+        }
+
         private static final char c_ObsoleteCreate = 'c';
         private static final char d_ObsoleteDelete = 'd';
 
