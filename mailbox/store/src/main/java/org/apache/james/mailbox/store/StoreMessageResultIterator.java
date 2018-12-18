@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StoreMessageResultIterator implements MessageResultIterator {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageResultIterator.class);
 
     private Iterator<MailboxMessage> next = null;
@@ -187,7 +186,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         MessageResult result;
         try {
             result = ResultUtils.loadMessageResult(message, group);
-            cursor = result.messageMetaData().getUid();
+            cursor = result.getUid();
         } catch (MailboxException e) {
             result = new UnloadedMessageResult(message, e);
         }
@@ -280,17 +279,20 @@ public class StoreMessageResultIterator implements MessageResultIterator {
             if (o instanceof UnloadedMessageResult) {
                 UnloadedMessageResult that = (UnloadedMessageResult) o;
 
-                return Objects.equals(this.exception, that.exception)
-                    && Objects.equals(this.messageMetaData, that.messageMetaData)
-                    && Objects.equals(this.messageId, that.messageId)
-                    && Objects.equals(this.mailboxId, that.mailboxId);
+                return Objects.equals(exception, that.exception)
+                    && Objects.equals(this.getInternalDate(), that.getInternalDate())
+                    && Objects.equals(this.getSize(), that.getSize())
+                    && Objects.equals(this.getUid(), that.getUid())
+                    && Objects.equals(this.getFlags(), that.getFlags())
+                    && Objects.equals(this.getModSeq(), that.getModSeq())
+                    && Objects.equals(this.messageId, that.messageId);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(exception, messageMetaData, messageId, mailboxId);
+            return Objects.hash(exception, getInternalDate(), getSize(), getUid(), getFlags(), getModSeq(), messageId);
         }
 
         @Override
