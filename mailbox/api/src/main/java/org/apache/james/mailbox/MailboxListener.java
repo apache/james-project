@@ -323,6 +323,25 @@ public interface MailboxListener {
             return aclDiff;
         }
 
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof MailboxACLUpdated) {
+                MailboxACLUpdated that = (MailboxACLUpdated) o;
+
+                return Objects.equals(this.sessionId, that.sessionId)
+                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.path, that.path)
+                    && Objects.equals(this.aclDiff, that.aclDiff)
+                    && Objects.equals(this.mailboxId, that.mailboxId);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sessionId, user, path, aclDiff, mailboxId);
+        }
+
     }
 
     /**

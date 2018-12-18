@@ -38,4 +38,9 @@ class MailboxListenerTest {
     void mailboxDeletionShouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxListener.MailboxDeletion.class).verify();
     }
+
+    @Test
+    void mailboxACLUpdatedShouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxListener.MailboxACLUpdated.class).verify();
+    }
 }
