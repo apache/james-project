@@ -192,7 +192,11 @@ public class MailboxEventDispatcher {
     }
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
-        event(eventFactory.moved(session, messageMoves, messageIds));
+        event(eventFactory.moved()
+            .session(session)
+            .messageMoves(messageMoves)
+            .messageId(messageIds)
+            .build());
     }
 
     public void quota(User user, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {

@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.store.event;
 
-import java.util.Collection;
-
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -31,9 +29,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
-import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -332,11 +328,7 @@ public class EventFactory {
         return new MailboxAclUpdatedBuilder();
     }
 
-    public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
-        return MessageMoveEvent.builder()
-                .user(session.getUser())
-                .messageMoves(messageMoves)
-                .messageId(messageIds)
-                .build();
+    public MessageMoveEvent.Builder moved() {
+        return MessageMoveEvent.builder();
     }
 }
