@@ -125,7 +125,11 @@ public class MailboxEventDispatcher {
      * registered MailboxListener will get triggered then
      */
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        event(eventFactory.flagsUpdated(session, mailbox, uflags));
+        event(eventFactory.flagsUpdated()
+            .mailbox(mailbox)
+            .mailboxSession(session)
+            .updatedFags(uflags)
+            .build());
     }
 
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, UpdatedFlags uflags) {
@@ -153,7 +157,7 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
-        listener.event(eventFactory.mailboxAdded()
+        event(eventFactory.mailboxAdded()
             .mailbox(mailbox)
             .mailboxSession(session)
             .build());

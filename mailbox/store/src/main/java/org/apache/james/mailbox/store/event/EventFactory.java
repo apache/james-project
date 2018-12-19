@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.event;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
@@ -41,54 +40,100 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class EventFactory {
-    public static class MailboxAddedBuilder {
-        private MailboxPath path;
-        private MailboxId mailboxId;
-        private User user;
-        private MailboxSession.SessionId sessionId;
+    public abstract static class MailboxEventBuilder<T extends MailboxEventBuilder> {
+        protected MailboxPath path;
+        protected MailboxId mailboxId;
+        protected User user;
+        protected MailboxSession.SessionId sessionId;
 
-        public MailboxAddedBuilder mailbox(Mailbox mailbox) {
+        abstract T backReference();
+
+        public T mailbox(Mailbox mailbox) {
             path(mailbox.generateAssociatedPath());
             mailboxId(mailbox.getMailboxId());
-            return this;
+            return backReference();
         }
 
-        public MailboxAddedBuilder mailboxSession(MailboxSession mailboxSession) {
+        public T mailboxSession(MailboxSession mailboxSession) {
             user(mailboxSession.getUser());
             sessionId(mailboxSession.getSessionId());
-            return this;
+            return backReference();
         }
 
-        public MailboxAddedBuilder mailboxId(MailboxId mailboxId) {
+        public T mailboxId(MailboxId mailboxId) {
             this.mailboxId = mailboxId;
-            return this;
+            return backReference();
         }
 
-        public MailboxAddedBuilder path(MailboxPath path) {
+        public T path(MailboxPath path) {
             this.path = path;
-            return this;
+            return backReference();
         }
 
-        public MailboxAddedBuilder user(User user) {
+        public T user(User user) {
             this.user = user;
-            return this;
+            return backReference();
         }
 
-        public MailboxAddedBuilder sessionId(MailboxSession.SessionId sessionId) {
+        public T sessionId(MailboxSession.SessionId sessionId) {
             this.sessionId = sessionId;
-            return this;
+            return backReference();
         }
 
-        public MailboxListener.MailboxAdded build() {
+        void mailboxEventChecks() {
             Preconditions.checkState(user != null, "Field `user` is compulsory");
             Preconditions.checkState(mailboxId != null, "Field `mailboxId` is compulsory");
             Preconditions.checkState(path != null, "Field `path` is compulsory");
             Preconditions.checkState(sessionId != null, "Field `sessionId` is compulsory");
+        }
+    }
+
+    public static class MailboxAddedBuilder extends MailboxEventBuilder<MailboxAddedBuilder> {
+        @Override
+        MailboxAddedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxListener.MailboxAdded build() {
+            mailboxEventChecks();
 
             return new MailboxListener.MailboxAdded(sessionId, user, path, mailboxId);
+        }
+    }
+
+    public static class FlagsUpdatedBuilder extends MailboxEventBuilder<FlagsUpdatedBuilder> {
+        private final ImmutableList.Builder<UpdatedFlags> updatedFlags;
+
+        public FlagsUpdatedBuilder() {
+            updatedFlags = ImmutableList.builder();
+        }
+
+        public FlagsUpdatedBuilder updatedFags(Iterable<UpdatedFlags> updatedFlags) {
+            this.updatedFlags.addAll(updatedFlags);
+            return this;
+        }
+
+        public FlagsUpdatedBuilder updatedFags(UpdatedFlags updatedFlags) {
+            this.updatedFlags.add(updatedFlags);
+            return this;
+        }
+
+        @Override
+        FlagsUpdatedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxListener.FlagsUpdated build() {
+            mailboxEventChecks();
+
+            ImmutableList<UpdatedFlags> updatedFlags = this.updatedFlags.build();
+
+            return new MailboxListener.FlagsUpdated(sessionId, user, path, mailboxId, updatedFlags);
         }
     }
 
@@ -108,8 +153,8 @@ public class EventFactory {
         return new MailboxListener.Expunged(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
     }
 
-    public MailboxListener.FlagsUpdated flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        return new MailboxListener.FlagsUpdated(session.getSessionId(), session.getUser(), mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uflags);
+    public FlagsUpdatedBuilder flagsUpdated() {
+        return new FlagsUpdatedBuilder();
     }
 
     public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {

@@ -56,6 +56,25 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class MailboxEventAnalyserTest {
+    private static final MessageUid UID = MessageUid.of(900);
+    private static final UpdatedFlags ADD_RECENT_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags(Flags.Flag.RECENT))
+        .build();
+    private static final UpdatedFlags ADD_ANSWERED_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags(Flags.Flag.ANSWERED))
+        .build();
+    private static final UpdatedFlags NOOP_UPDATED_FLAGS = UpdatedFlags.builder()
+        .uid(UID)
+        .modSeq(-1)
+        .oldFlags(new Flags())
+        .newFlags(new Flags())
+        .build();
 
     public static class SingleMessageResultIterator implements MessageResultIterator {
         private final MessageResult messageResult;
@@ -169,15 +188,12 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldNotSetUidWhenNoSystemFlagChange() {
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(90))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags())
-                .build()));
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(NOOP_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
         assertThat(testee.flagUpdateUids()).isEmpty();
@@ -185,36 +201,27 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldSetUidWhenSystemFlagChange() {
-        MessageUid uid = MessageUid.of(900);
-        
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            OTHER_MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()));
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(OTHER_MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
-       assertThat(testee.flagUpdateUids().iterator()).containsExactly(uid);
+       assertThat(testee.flagUpdateUids().iterator()).containsExactly(UID);
     }
 
     @Test
     public void testShouldClearFlagUidsUponReset() {
-        MessageUid uid = MessageUid.of(900);
         SelectedMailboxImpl analyser = this.testee;
-        
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()));
+
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
+
         analyser.event(update);
         analyser.event(update);
         analyser.deselect();
@@ -224,35 +231,27 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
-        MessageUid uid = MessageUid.of(900);
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(OTHER_MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .build();
 
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            OTHER_MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(uid)
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()));
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
 
-        assertThat(testee.flagUpdateUids().iterator()).containsExactly(uid);
+        assertThat(testee.flagUpdateUids().iterator()).containsExactly(UID);
     }
 
     @Test
     public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(345))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags())
-                .build()));
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(NOOP_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
         testee.setSilentFlagChanges(true);
         testee.event(update);
@@ -262,15 +261,12 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
-        MailboxListener.FlagsUpdated update = eventFactory.flagsUpdated(
-            MAILBOX_SESSION,
-            DEFAULT_MAILBOX,
-            ImmutableList.of(UpdatedFlags.builder()
-                .uid(MessageUid.of(886))
-                .modSeq(-1)
-                .oldFlags(new Flags())
-                .newFlags(new Flags(Flags.Flag.RECENT))
-                .build()));
+        MailboxListener.FlagsUpdated update = new EventFactory().flagsUpdated()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(DEFAULT_MAILBOX)
+            .updatedFags(ADD_RECENT_UPDATED_FLAGS)
+            .build();
+
         testee.event(update);
 
         assertThat(testee.flagUpdateUids().iterator()).isEmpty();
