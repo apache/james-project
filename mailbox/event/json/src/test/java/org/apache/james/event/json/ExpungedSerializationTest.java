@@ -81,7 +81,9 @@ class ExpungedSerializationTest {
         "      \"123456\": {" +
         "        \"uid\": 123456," +
         "        \"modSeq\": 35," +
-        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+        "        \"flags\": {" +
+        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+        "          \"userFlags\":[\"User Custom Flag\"]}," +
         "        \"size\": 45,  " +
         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
         "        \"messageId\": \"42\"" +
@@ -162,7 +164,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": []," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[], " +
+                "          \"userFlags\":[]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -209,7 +213,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"Custom 1\", \"Custom 2\", \"\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[], " +
+                "          \"userFlags\":[\"Custom 1\", \"Custom 2\", \"\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -257,7 +263,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"\\\\Seen\", \"\\\\Answered\", \"\\\\Deleted\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Seen\",\"Answered\",\"Deleted\"], " +
+                "          \"userFlags\":[]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -279,44 +287,6 @@ class ExpungedSerializationTest {
             void expungedShouldBeWellDeSerializedWhenOnlySystemFlags() {
                 assertThat(EVENT_SERIALIZER.fromJson(systemOnlyFlagsExpungedEventJson).get())
                     .isEqualTo(onlySystemFlagsExpungedEvent);
-            }
-        }
-
-        @Nested
-        class WithFlagCaseSensitive {
-
-            private static final String CASE_SENSITIVE_SYSTEM_FLAGS_EVENT_JSON =
-                "{" +
-                "  \"Expunged\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"#private\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"expunged\": {" +
-                "      \"123456\": {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\answereD\", \"\\\\dRaFt\"]," +
-                "        \"size\": 45,  " +
-                "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                "        \"messageId\": \"42\"" +
-                "      }" +
-                "    }," +
-                "    \"sessionId\": 42," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}";
-
-             @Test
-            void expungedShouldCareAboutSystemFlagsCaseSensitive() {
-                 MailboxListener.Expunged deSerializedEvent = (MailboxListener.Expunged) EVENT_SERIALIZER
-                     .fromJson(CASE_SENSITIVE_SYSTEM_FLAGS_EVENT_JSON)
-                     .get();
-
-                 assertThat(deSerializedEvent.getMetaData(MESSAGE_UID).getFlags().getSystemFlags())
-                     .isEmpty();
             }
         }
     }
@@ -343,7 +313,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                "          \"userFlags\":[\"User Custom Flag\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51+00:00\"," +
                 "        \"messageId\": \"42\"" +
@@ -375,7 +347,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                "          \"userFlags\":[\"User Custom Flag\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -407,7 +381,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                "          \"userFlags\":[\"User Custom Flag\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -437,7 +413,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                "          \"userFlags\":[\"User Custom Flag\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -465,7 +443,9 @@ class ExpungedSerializationTest {
                 "      \"123456\": {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                "        \"flags\": {" +
+                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                "          \"userFlags\":[\"User Custom Flag\"]}," +
                 "        \"size\": 45,  " +
                 "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                 "        \"messageId\": \"42\"" +
@@ -501,7 +481,9 @@ class ExpungedSerializationTest {
             "      \"123456\": {" +
             "        \"uid\": 123456," +
             "        \"modSeq\": 35," +
-            "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+            "        \"flags\": {" +
+            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+            "          \"userFlags\":[\"User Custom Flag\"]}," +
             "        \"size\": 45,  " +
             "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
             "        \"messageId\": \"42\"" +
@@ -545,7 +527,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -572,7 +556,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -600,7 +586,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -631,7 +619,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -658,7 +648,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -686,7 +678,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -716,7 +710,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -744,7 +740,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -772,7 +770,9 @@ class ExpungedSerializationTest {
                     "      \"123456\": {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
                     "        \"size\": 45,  " +
                     "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                     "        \"messageId\": \"42\"" +
@@ -806,7 +806,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -837,7 +839,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -869,7 +873,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -897,7 +903,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -951,7 +959,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": \"123456\"," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -979,7 +989,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": null," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1011,7 +1023,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1039,7 +1053,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": null," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1072,7 +1088,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": \"45\",  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1100,7 +1118,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": null,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1132,7 +1152,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": 42" +
@@ -1160,7 +1182,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": null" +
@@ -1191,7 +1215,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14 12:52:36+07:00\"," +
                         "        \"messageId\": \"42\"" +
@@ -1219,7 +1245,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14\"," +
                         "        \"messageId\": \"42\"" +
@@ -1247,7 +1275,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14TZ\"," +
                         "        \"messageId\": \"42\"" +
@@ -1275,7 +1305,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14T09:41:51.541\"," +
                         "        \"messageId\": \"42\"" +
@@ -1303,7 +1335,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"2018-12-14Z\"," +
                         "        \"messageId\": \"42\"" +
@@ -1331,7 +1365,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": \"\"," +
                         "        \"messageId\": \"42\"" +
@@ -1359,7 +1395,9 @@ class ExpungedSerializationTest {
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"User Custom Flag\", \"\\\\Answered\", \"\\\\Draft\"]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
                         "        \"internalDate\": null," +
                         "        \"messageId\": \"42\"" +
@@ -1377,7 +1415,7 @@ class ExpungedSerializationTest {
             class DeserializationErrorOnFlags {
 
                 @Test
-                void expungedShouldThrowWhenFlagsIsNull() {
+                void addedShouldThrowWhenFlagsIsNull() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"Expunged\": {" +
@@ -1393,7 +1431,7 @@ class ExpungedSerializationTest {
                         "        \"modSeq\": 35," +
                         "        \"flags\": null," +
                         "        \"size\": 45,  " +
-                        "        \"internalDate\": \"\"," +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
                         "      }" +
                         "    }," +
@@ -1401,27 +1439,29 @@ class ExpungedSerializationTest {
                         "    \"user\": \"user\"" +
                         "  }" +
                         "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
+                        .isInstanceOf(NoSuchElementException.class);
                 }
 
                 @Test
-                void expungedShouldThrowWhenFlagsContainsNullElements() {
+                void addedShouldThrowWhenSystemFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"Added\": {" +
+                        "  \"Expunged\": {" +
                         "    \"path\": {" +
                         "      \"namespace\": \"#private\"," +
                         "      \"user\": \"user\"," +
                         "      \"name\": \"mailboxName\"" +
                         "    }," +
                         "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
+                        "    \"expunged\": {" +
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"flag 1\", null, \"flags 2\", null]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[null, \"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
                         "        \"size\": 45,  " +
-                        "        \"internalDate\": \"\"," +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
                         "      }" +
                         "    }," +
@@ -1429,27 +1469,177 @@ class ExpungedSerializationTest {
                         "    \"user\": \"user\"" +
                         "  }" +
                         "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
+                        .isInstanceOf(NoSuchElementException.class);
                 }
 
                 @Test
-                void expungedShouldThrowWhenFlagsContainsNumberElements() {
+                void addedShouldThrowWhenUserFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"Added\": {" +
+                        "  \"Expunged\": {" +
                         "    \"path\": {" +
                         "      \"namespace\": \"#private\"," +
                         "      \"user\": \"user\"," +
                         "      \"name\": \"mailboxName\"" +
                         "    }," +
                         "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
+                        "    \"expunged\": {" +
                         "      \"123456\": {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"flags\": [\"flag 1\", 1254, \"flags 2\", 125.36]," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\", null]}," +
                         "        \"size\": 45,  " +
-                        "        \"internalDate\": \"\"," +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                        "        \"messageId\": \"42\"" +
+                        "      }" +
+                        "    }," +
+                        "    \"sessionId\": 42," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                        .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void addedShouldThrowWhenSystemFlagsContainsNumberElements() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"Expunged\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": \"#private\"," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"expunged\": {" +
+                        "      \"123456\": {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": 35," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[42, \"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
+                        "        \"size\": 45,  " +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                        "        \"messageId\": \"42\"" +
+                        "      }" +
+                        "    }," +
+                        "    \"sessionId\": 42," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                        .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void addedShouldThrowWhenUserFlagsContainsNumberElements() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"Expunged\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": \"#private\"," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"expunged\": {" +
+                        "      \"123456\": {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": 35," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\", 42]}," +
+                        "        \"size\": 45,  " +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                        "        \"messageId\": \"42\"" +
+                        "      }" +
+                        "    }," +
+                        "    \"sessionId\": 42," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                        .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void addedShouldThrowWhenSystemFlagsDoNotHaveTheRightCase() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"Expunged\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": \"#private\"," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"expunged\": {" +
+                        "      \"123456\": {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": 35," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"draft\"], " +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
+                        "        \"size\": 45,  " +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                        "        \"messageId\": \"42\"" +
+                        "      }" +
+                        "    }," +
+                        "    \"sessionId\": 42," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                        .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void addedShouldThrowWhenNoSystemFlags() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"Expunged\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": \"#private\"," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"expunged\": {" +
+                        "      \"123456\": {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": 35," +
+                        "        \"flags\": {" +
+                        "          \"userFlags\":[\"User Custom Flag\"]}," +
+                        "        \"size\": 45,  " +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                        "        \"messageId\": \"42\"" +
+                        "      }" +
+                        "    }," +
+                        "    \"sessionId\": 42," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                        .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void addedShouldThrowWhenNoUserFlags() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"Expunged\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": \"#private\"," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"expunged\": {" +
+                        "      \"123456\": {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": 35," +
+                        "        \"flags\": {" +
+                        "          \"systemFlags\":[\"Draft\"]}," +
+                        "        \"size\": 45,  " +
+                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
                         "        \"messageId\": \"42\"" +
                         "      }" +
                         "    }," +

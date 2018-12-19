@@ -106,14 +106,14 @@ class FlagsUpdatedSerializationTest {
         "      {" +
         "        \"uid\": 123456," +
         "        \"modSeq\": 35," +
-        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
         "      }," +
         "      {" +
         "        \"uid\": 654321," +
         "        \"modSeq\": 36," +
-        "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-        "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+        "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
         "      }" +
         "    ]," +
         "    \"user\": \"user\"" +
@@ -154,14 +154,14 @@ class FlagsUpdatedSerializationTest {
                 "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                 "      }," +
                 "      {" +
                 "        \"uid\": 654321," +
                 "        \"modSeq\": 36," +
-                "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                 "      }" +
                 "    ]," +
                 "    \"user\": \"user\"" +
@@ -186,14 +186,14 @@ class FlagsUpdatedSerializationTest {
                 "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                 "      }," +
                 "      {" +
                 "        \"uid\": 654321," +
                 "        \"modSeq\": 36," +
-                "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                 "      }" +
                 "    ]," +
                 "    \"user\": \"user\"" +
@@ -223,14 +223,14 @@ class FlagsUpdatedSerializationTest {
             "      {" +
             "        \"uid\": 123456," +
             "        \"modSeq\": 35," +
-            "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-            "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+            "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+            "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
             "      }," +
             "      {" +
             "        \"uid\": 654321," +
             "        \"modSeq\": 36," +
-            "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-            "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+            "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+            "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
             "      }" +
             "    ]," +
             "    \"user\": \"user\"" +
@@ -314,8 +314,8 @@ class FlagsUpdatedSerializationTest {
                 "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"oldFlags\": []," +
-                "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                "        \"oldFlags\": {\"systemFlags\":[],\"userFlags\":[]}," +
+                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                 "      }" +
                 "    ]," +
                 "    \"user\": \"user\"" +
@@ -361,8 +361,8 @@ class FlagsUpdatedSerializationTest {
                 "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                "        \"newFlags\": []" +
+                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                "        \"newFlags\": {\"systemFlags\":[],\"userFlags\":[]}" +
                 "      }" +
                 "    ]," +
                 "    \"user\": \"user\"" +
@@ -408,8 +408,8 @@ class FlagsUpdatedSerializationTest {
                 "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
-                "        \"oldFlags\": []," +
-                "        \"newFlags\": []" +
+                "        \"oldFlags\": {\"systemFlags\":[],\"userFlags\":[]}," +
+                "        \"newFlags\": {\"systemFlags\":[],\"userFlags\":[]}" +
                 "      }" +
                 "    ]," +
                 "    \"user\": \"user\"" +
@@ -451,14 +451,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -483,14 +483,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -515,14 +515,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -550,14 +550,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]" +
                     "  }" +
@@ -581,14 +581,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": 4569" +
@@ -613,14 +613,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user@user@anotherUser\"" +
@@ -647,14 +647,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -679,14 +679,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -711,14 +711,14 @@ class FlagsUpdatedSerializationTest {
                     "      {" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
-                    "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                    "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                     "      }," +
                     "      {" +
                     "        \"uid\": 654321," +
                     "        \"modSeq\": 36," +
-                    "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                    "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                     "      }" +
                     "    ]," +
                     "    \"user\": \"user\"" +
@@ -749,14 +749,14 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }," +
                         "      {" +
                         "        \"uid\": 654321," +
                         "        \"modSeq\": 36," +
-                        "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                        "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -784,14 +784,14 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }," +
                         "      {" +
                         "        \"uid\": 654321," +
                         "        \"modSeq\": 36," +
-                        "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                        "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -820,14 +820,14 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }," +
                         "      {" +
                         "        \"uid\": 654321," +
                         "        \"modSeq\": 36," +
-                        "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                        "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -852,14 +852,14 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }," +
                         "      {" +
                         "        \"uid\": 654321," +
                         "        \"modSeq\": 36," +
-                        "        \"oldFlags\": [\"Old Flag 2\", \"\\\\Flagged\", \"\\\\Recent\"]," +
-                        "        \"newFlags\": [\"New Flag 2\", \"\\\\Answered\", \"\\\\Seen\" ]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -892,8 +892,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": \"123456\"," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -918,8 +918,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": null," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -944,8 +944,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 12563.3564," +
                         "        \"modSeq\": 35," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -974,8 +974,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1000,8 +1000,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": null," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1026,8 +1026,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": 35.2567454," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1057,7 +1057,7 @@ class FlagsUpdatedSerializationTest {
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
                         "        \"oldFlags\": null," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1067,7 +1067,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenOldFlagsContainsNullElements() {
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1082,8 +1082,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [null, null, \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[null,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1093,7 +1093,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenOldFlagsContainsNotStringElements() {
+                void flagsUpdatedShouldThrowWhenUserFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1108,8 +1108,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", 1256, 5894.9523]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", null]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1119,7 +1119,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenOldFlagsContainsNestedArray() {
+                void flagsUpdatedShouldThrowWhenSystemFlagsDoesNotContainString() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1134,8 +1134,86 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", [\"\\\\Answered\", \"\\\\Draft\"]]," +
-                        "        \"newFlags\": [\"New Flag 1\", \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"oldFlags\": {\"systemFlags\":[42,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsUnknownString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"unKnown\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsBadCaseString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"dRaFt\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenUserFlagsDoesNotContainString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", 42]}," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1163,8 +1241,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": null" +
+                        "        \"newFlags\": null," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1174,7 +1252,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenNewFlagsContainsNullElements() {
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1189,8 +1267,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [null, \"\\\\Answered\", \"\\\\Draft\", null]" +
+                        "        \"newFlags\": {\"systemFlags\":[null,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1200,7 +1278,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenNewFlagsContainsNotStringElements() {
+                void flagsUpdatedShouldThrowWhenUserFlagsContainsNullElements() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1215,8 +1293,8 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", 1666.3984, 2152, \"\\\\Answered\", \"\\\\Draft\"]" +
+                        "        \"newFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", null]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1226,7 +1304,7 @@ class FlagsUpdatedSerializationTest {
                 }
 
                 @Test
-                void flagsUpdatedShouldThrowWhenNewFlagsContainsNestedArray() {
+                void flagsUpdatedShouldThrowWhenSystemFlagsDoesNotContainString() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
                         "  \"FlagsUpdated\": {" +
@@ -1241,8 +1319,86 @@ class FlagsUpdatedSerializationTest {
                         "      {" +
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": [\"Old Flag 1\", \"\\\\Deleted\", \"\\\\Seen\"]," +
-                        "        \"newFlags\": [\"New Flag 1\", [\"\\\\Answered\", \"\\\\Draft\"]]" +
+                        "        \"newFlags\": {\"systemFlags\":[42,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsUnknownString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"newFlags\": {\"systemFlags\":[\"unKnown\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenSystemFlagsContainsBadCaseString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"newFlags\": {\"systemFlags\":[\"dRaFt\"],\"userFlags\":[\"New Flag 1\"]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
+                        "      }" +
+                        "    ]," +
+                        "    \"user\": \"user\"" +
+                        "  }" +
+                        "}").get())
+                    .isInstanceOf(NoSuchElementException.class);
+                }
+
+                @Test
+                void flagsUpdatedShouldThrowWhenUserFlagsDoesNotContainString() {
+                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                        "{" +
+                        "  \"FlagsUpdated\": {" +
+                        "    \"path\": {" +
+                        "      \"namespace\": 482," +
+                        "      \"user\": \"user\"," +
+                        "      \"name\": \"mailboxName\"" +
+                        "    }," +
+                        "    \"mailboxId\": \"18\"," +
+                        "    \"sessionId\": 42," +
+                        "    \"updatedFlags\": [" +
+                        "      {" +
+                        "        \"uid\": 123456," +
+                        "        \"modSeq\": \"35\"," +
+                        "        \"newFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", 42]}," +
+                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
                         "    \"user\": \"user\"" +
@@ -1253,5 +1409,4 @@ class FlagsUpdatedSerializationTest {
             }
         }
     }
-
 }
