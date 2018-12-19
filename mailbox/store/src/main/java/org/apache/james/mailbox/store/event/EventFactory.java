@@ -242,6 +242,37 @@ public class EventFactory {
         }
     }
 
+    public static class MailboxRenamedBuilder extends MailboxEventBuilder<MailboxRenamedBuilder> {
+        private MailboxPath newPath;
+
+        @Override
+        protected MailboxRenamedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxRenamedBuilder newPath(MailboxPath newPath) {
+            this.newPath = newPath;
+            return this;
+        }
+
+        public MailboxRenamedBuilder oldPath(MailboxPath oldPath) {
+            this.path = oldPath;
+            return this;
+        }
+
+        public MailboxListener.MailboxRenamed build() {
+            mailboxEventChecks();
+            Preconditions.checkState(path != null, "Field `newPath` is compulsory");
+
+            return new MailboxListener.MailboxRenamed(
+                sessionId,
+                user,
+                path,
+                mailboxId,
+                newPath);
+        }
+    }
+
     public static class FlagsUpdatedBuilder extends MailboxEventBuilder<FlagsUpdatedBuilder> {
         private final ImmutableList.Builder<UpdatedFlags> updatedFlags;
 
@@ -285,12 +316,8 @@ public class EventFactory {
         return new FlagsUpdatedBuilder();
     }
 
-    public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
-        return mailboxRenamed(session.getSessionId(), session.getUser(), from, to);
-    }
-
-    public MailboxListener.MailboxRenamed mailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath from, Mailbox to) {
-        return new MailboxListener.MailboxRenamed(sessionId, user, from, to.getMailboxId(), to.generateAssociatedPath());
+    public MailboxRenamedBuilder mailboxRenamed() {
+        return new MailboxRenamedBuilder();
     }
 
     public MailboxDeletionBuilder mailboxDeleted() {

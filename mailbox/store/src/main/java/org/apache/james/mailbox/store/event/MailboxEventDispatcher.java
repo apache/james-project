@@ -149,7 +149,12 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
-        event(eventFactory.mailboxRenamed(session, from, to));
+        event(eventFactory.mailboxRenamed()
+            .mailboxSession(session)
+            .mailboxId(to.getMailboxId())
+            .oldPath(from)
+            .newPath(to.generateAssociatedPath())
+            .build());
     }
 
     /**
