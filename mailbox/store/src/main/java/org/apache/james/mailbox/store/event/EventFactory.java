@@ -51,7 +51,7 @@ public class EventFactory {
         protected User user;
         protected MailboxSession.SessionId sessionId;
 
-        abstract T backReference();
+        protected abstract T backReference();
 
         public T mailbox(Mailbox mailbox) {
             path(mailbox.generateAssociatedPath());
@@ -85,7 +85,7 @@ public class EventFactory {
             return backReference();
         }
 
-        void mailboxEventChecks() {
+        protected void mailboxEventChecks() {
             Preconditions.checkState(user != null, "Field `user` is compulsory");
             Preconditions.checkState(mailboxId != null, "Field `mailboxId` is compulsory");
             Preconditions.checkState(path != null, "Field `path` is compulsory");
@@ -95,7 +95,7 @@ public class EventFactory {
 
     public static class MailboxAddedBuilder extends MailboxEventBuilder<MailboxAddedBuilder> {
         @Override
-        MailboxAddedBuilder backReference() {
+        protected MailboxAddedBuilder backReference() {
             return this;
         }
 
@@ -103,6 +103,41 @@ public class EventFactory {
             mailboxEventChecks();
 
             return new MailboxListener.MailboxAdded(sessionId, user, path, mailboxId);
+        }
+    }
+
+    public static class MailboxDeletionBuilder extends MailboxEventBuilder<MailboxDeletionBuilder> {
+        private QuotaRoot quotaRoot;
+        private QuotaCount deletedMessageCount;
+        private QuotaSize totalDeletedSize;
+
+        @Override
+        protected MailboxDeletionBuilder backReference() {
+            return this;
+        }
+
+        public MailboxDeletionBuilder quotaRoot(QuotaRoot quotaRoot) {
+            this.quotaRoot = quotaRoot;
+            return this;
+        }
+
+        public MailboxDeletionBuilder deletedMessageCount(QuotaCount deletedMessageCount) {
+            this.deletedMessageCount = deletedMessageCount;
+            return this;
+        }
+
+        public MailboxDeletionBuilder totalDeletedSize(QuotaSize totalDeletedSize) {
+            this.totalDeletedSize = totalDeletedSize;
+            return this;
+        }
+
+        public MailboxListener.MailboxDeletion build() {
+            mailboxEventChecks();
+            Preconditions.checkState(quotaRoot != null, "Field `quotaRoot` is compulsory");
+            Preconditions.checkState(deletedMessageCount != null, "Field `deletedMessageCount` is compulsory");
+            Preconditions.checkState(totalDeletedSize != null, "Field `totalDeletedSize` is compulsory");
+
+            return new MailboxListener.MailboxDeletion(sessionId, user, path, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId);
         }
     }
 
@@ -124,7 +159,7 @@ public class EventFactory {
         }
 
         @Override
-        FlagsUpdatedBuilder backReference() {
+        protected FlagsUpdatedBuilder backReference() {
             return this;
         }
 
@@ -165,14 +200,8 @@ public class EventFactory {
         return new MailboxListener.MailboxRenamed(sessionId, user, from, to.getMailboxId(), to.generateAssociatedPath());
     }
 
-    public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot,
-                                                          QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return mailboxDeleted(session.getSessionId(), session.getUser(), mailbox, quotaRoot, deletedMessageCount, totalDeletedSize);
-    }
-
-    public MailboxListener.MailboxDeletion mailboxDeleted(MailboxSession.SessionId sessionId, User user, Mailbox mailbox, QuotaRoot quotaRoot,
-                                                          QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        return new MailboxListener.MailboxDeletion(sessionId, user, mailbox.generateAssociatedPath(), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
+    public MailboxDeletionBuilder mailboxDeleted() {
+        return new MailboxDeletionBuilder();
     }
 
     public MailboxAddedBuilder mailboxAdded() {

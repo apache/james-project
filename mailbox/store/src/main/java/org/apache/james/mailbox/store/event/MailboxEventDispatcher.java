@@ -149,7 +149,13 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        event(eventFactory.mailboxDeleted(session, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize));
+        event(eventFactory.mailboxDeleted()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .quotaRoot(quotaRoot)
+            .deletedMessageCount(deletedMessageCount)
+            .totalDeletedSize(totalDeletedSize)
+            .build());
     }
 
     /**
