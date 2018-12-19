@@ -26,10 +26,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.security.SecureRandom;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -37,12 +35,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.User;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -165,10 +163,10 @@ public class SelectedMailboxImplTest {
     }
 
     private void emitEvent(MailboxListener mailboxListener) {
-        SecureRandom random = new SecureRandom();
-        TreeMap<MessageUid, MessageMetaData> result = new TreeMap<>();
-        result.put(EMITTED_EVENT_UID, new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()));
-        mailboxListener.event(new EventFactory().added(MailboxSession.SessionId.of(random.nextLong()),
-            mock(User.class), result, mailbox));
+        mailboxListener.event(new EventFactory().added()
+            .mailbox(mailbox)
+            .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()))
+            .mailboxSession(MailboxSessionUtil.create("user"))
+            .build());
     }
 }

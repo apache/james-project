@@ -83,7 +83,11 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        event(eventFactory.added(session, uids, mailbox));
+        event(eventFactory.added()
+            .mailbox(mailbox)
+            .mailboxSession(session)
+            .addMetaData(uids.values())
+            .build());
     }
 
     public void added(MailboxSession session, Mailbox mailbox, MailboxMessage mailboxMessage) {

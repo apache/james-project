@@ -53,7 +53,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
 
 public class MailboxEventAnalyserTest {
     private static final MessageUid UID = MessageUid.of(900);
@@ -107,7 +106,6 @@ public class MailboxEventAnalyserTest {
         }
     }
 
-
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
     private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create("user");
@@ -116,6 +114,11 @@ public class MailboxEventAnalyserTest {
     private static final TestId MAILBOX_ID = TestId.of(36);
     private static final int UID_VALIDITY = 1024;
     private static final SimpleMailbox DEFAULT_MAILBOX = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
+    private static final MailboxListener.Added ADDED = new EventFactory().added()
+        .mailboxSession(MAILBOX_SESSION)
+        .mailbox(DEFAULT_MAILBOX)
+        .addMetaData(new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId()))
+        .build();
 
     private SelectedMailboxImpl testee;
     private EventFactory eventFactory;
@@ -164,23 +167,14 @@ public class MailboxEventAnalyserTest {
 
     @Test
     public void testShouldBeNoSizeChangeOnAdded() {
-        MailboxListener.Added mailboxAdded = eventFactory.added(
-            MAILBOX_SESSION,
-            ImmutableSortedMap.of(MessageUid.of(11),
-                new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
-            DEFAULT_MAILBOX);
-        testee.event(mailboxAdded);
+        testee.event(ADDED);
+
         assertThat(testee.isSizeChanged()).isTrue();
     }
 
     @Test
     public void testShouldNoSizeChangeAfterReset() {
-        MailboxListener.Added mailboxAdded = eventFactory.added(
-            MAILBOX_SESSION,
-            ImmutableSortedMap.of(MessageUid.of(11),
-                new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId())),
-            DEFAULT_MAILBOX);
-        testee.event(mailboxAdded);
+        testee.event(ADDED);
         testee.resetEvents();
 
         assertThat(testee.isSizeChanged()).isFalse();

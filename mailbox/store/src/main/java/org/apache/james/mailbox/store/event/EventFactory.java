@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.event;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.SortedMap;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -39,6 +38,7 @@ import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -90,6 +90,59 @@ public class EventFactory {
             Preconditions.checkState(mailboxId != null, "Field `mailboxId` is compulsory");
             Preconditions.checkState(path != null, "Field `path` is compulsory");
             Preconditions.checkState(sessionId != null, "Field `sessionId` is compulsory");
+        }
+    }
+
+    public abstract static class MessageMetaDataEventBuilder<T extends MessageMetaDataEventBuilder> extends MailboxEventBuilder<T> {
+        protected final ImmutableList.Builder<MessageMetaData> metaData;
+
+        protected MessageMetaDataEventBuilder() {
+            metaData = ImmutableList.builder();
+        }
+
+        protected abstract T backReference();
+
+        public T addMessage(MailboxMessage message) {
+            this.addMetaData(message.metaData());
+            return backReference();
+        }
+
+        public T addMessages(Iterable<MailboxMessage> messages) {
+            this.addMetaData(ImmutableList.copyOf(messages)
+                .stream()
+                .map(MailboxMessage::metaData)
+                .collect(Guavate.toImmutableList()));
+            return backReference();
+        }
+
+        public T addMetaData(MessageMetaData metaData) {
+            this.metaData.add(metaData);
+            return backReference();
+        }
+
+        public T addMetaData(Iterable<MessageMetaData> metaData) {
+            this.metaData.addAll(metaData);
+            return backReference();
+        }
+    }
+
+    public static class AddedBuilder extends MessageMetaDataEventBuilder<AddedBuilder> {
+        @Override
+        protected AddedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxListener.Added build() {
+            mailboxEventChecks();
+
+            return new MailboxListener.Added(
+                sessionId,
+                user,
+                path,
+                mailboxId,
+                metaData.build()
+                    .stream()
+                    .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
         }
     }
 
@@ -172,12 +225,8 @@ public class EventFactory {
         }
     }
 
-    public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return added(session.getSessionId(), session.getUser(), uids, mailbox);
-    }
-
-    public MailboxListener.Added added(MailboxSession.SessionId sessionId, User user, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new MailboxListener.Added(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
+    public AddedBuilder added() {
+        return new AddedBuilder();
     }
 
     public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {

@@ -37,7 +37,6 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageMoveEvent;
-import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -58,14 +57,10 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.google.common.collect.ImmutableSortedMap;
-
 public class SpamAssassinListenerTest {
-
     public static final String USER = "user";
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     private static final int UID_VALIDITY = 43;
-    private static final MessageUid UID = MessageUid.of(45);
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(45);
 
     private SpamAssassin spamAssassin;
@@ -237,9 +232,11 @@ public class SpamAssassinListenerTest {
     public void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(inbox);
 
-        ImmutableSortedMap<MessageUid, MessageMetaData> sortedMap = ImmutableSortedMap.of(UID, message.metaData());
-        MailboxListener.Added addedEvent = new EventFactory().added(
-                MAILBOX_SESSION, sortedMap, inbox);
+        MailboxListener.Added addedEvent = new EventFactory().added()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(inbox)
+            .addMessage(message)
+            .build();
 
         listener.event(addedEvent);
 
@@ -250,10 +247,11 @@ public class SpamAssassinListenerTest {
     public void eventShouldNotCallSpamAssassinHamLearningWhenTheMessageIsAddedInAMailboxOtherThanInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(mailbox1);
 
-        MailboxListener.Added addedEvent = new EventFactory().added(
-            MAILBOX_SESSION,
-            ImmutableSortedMap.of(UID, message.metaData()),
-            mailbox1);
+        MailboxListener.Added addedEvent = new EventFactory().added()
+            .mailboxSession(MAILBOX_SESSION)
+            .mailbox(mailbox1)
+            .addMessage(message)
+            .build();
 
         listener.event(addedEvent);
 
