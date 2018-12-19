@@ -88,7 +88,6 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             getBatchSizes(),
-            getImmutableMailboxMessageFactory(),
             getStoreRightManager());
     }
 }

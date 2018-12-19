@@ -152,12 +152,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     
     private BatchSizes batchSizes = BatchSizes.defaultValues();
 
-    private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
-
     public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher,
-            MailboxPathLocker locker, Mailbox mailbox,
-            QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-            ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) {
+                               MailboxPathLocker locker, Mailbox mailbox,
+                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
+                               StoreRightManager storeRightManager) {
         this.messageCapabilities = messageCapabilities;
         this.mailbox = mailbox;
         this.dispatcher = dispatcher;
@@ -169,7 +167,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
-        this.immutableMailboxMessageFactory = immutableMailboxMessageFactory;
         this.storeRightManager = storeRightManager;
     }
 

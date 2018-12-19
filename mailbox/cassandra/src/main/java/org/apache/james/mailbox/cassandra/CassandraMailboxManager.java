@@ -113,7 +113,6 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             getBatchSizes(),
-            getImmutableMailboxMessageFactory(),
             getStoreRightManager());
     }
 

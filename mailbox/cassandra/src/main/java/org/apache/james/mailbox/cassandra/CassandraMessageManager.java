@@ -31,7 +31,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
-import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -53,10 +52,10 @@ public class CassandraMessageManager extends StoreMessageManager {
     public CassandraMessageManager(CassandraMailboxSessionMapperFactory mapperFactory, MessageSearchIndex index,
                                    MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
                                    QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
-                                   BatchSizes batchSizes, ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
+                                   BatchSizes batchSizes,
                                    StoreRightManager storeRightManager) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
 
         this.mapperFactory = mapperFactory;
     }

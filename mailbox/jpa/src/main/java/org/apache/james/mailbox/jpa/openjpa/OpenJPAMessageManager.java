@@ -36,7 +36,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
-import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
@@ -64,10 +63,10 @@ public class OpenJPAMessageManager extends JPAMessageManager {
                                  MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                                 ImmutableMailboxMessage.Factory immutableMailboxMessageFactory, StoreRightManager storeRightManager) {
+                                 StoreRightManager storeRightManager) {
 
         super(mapperFactory,  index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
-            messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
+            messageParser, messageIdFactory, batchSizes, storeRightManager);
         this.feature = f;
     }
 

@@ -142,7 +142,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
-    private final ImmutableMailboxMessage.Factory immutableMailboxMessageFactory;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
@@ -163,7 +162,6 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.dispatcher = mailboxEventDispatcher;
-        this.immutableMailboxMessageFactory = new ImmutableMailboxMessage.Factory();
         this.storeRightManager = storeRightManager;
     }
 
@@ -209,10 +207,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public BatchSizes getBatchSizes() {
         return batchSizes;
-    }
-
-    public ImmutableMailboxMessage.Factory getImmutableMailboxMessageFactory() {
-        return immutableMailboxMessageFactory;
     }
 
     /**
@@ -438,7 +432,7 @@ public class StoreMailboxManager implements MailboxManager {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(),
                 getLocker(), mailbox, getQuotaManager(),
                 getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes(),
-                getImmutableMailboxMessageFactory(), getStoreRightManager());
+            getStoreRightManager());
     }
 
     /**

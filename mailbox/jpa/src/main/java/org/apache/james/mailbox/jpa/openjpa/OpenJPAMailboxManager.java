@@ -74,7 +74,6 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getMessageParser(),
             getMessageIdFactory(),
             getBatchSizes(),
-            getImmutableMailboxMessageFactory(),
             getStoreRightManager());
     }
 }

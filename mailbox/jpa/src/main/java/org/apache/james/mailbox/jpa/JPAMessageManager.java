@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
-import org.apache.james.mailbox.store.ImmutableMailboxMessage;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -60,11 +59,10 @@ public class JPAMessageManager extends StoreMessageManager {
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
                              BatchSizes batchSizes,
-                             ImmutableMailboxMessage.Factory immutableMailboxMessageFactory,
                              StoreRightManager storeRightManager) {
 
         super(JPAMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, immutableMailboxMessageFactory, storeRightManager);
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
     }
     
     @Override
