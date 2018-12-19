@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.event;
 
 import java.util.Collection;
-import java.util.Map;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -43,6 +42,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 
 public class EventFactory {
     public abstract static class MailboxEventBuilder<T extends MailboxEventBuilder> {
@@ -124,6 +124,12 @@ public class EventFactory {
             this.metaData.addAll(metaData);
             return backReference();
         }
+
+        protected ImmutableSortedMap<MessageUid, MessageMetaData> metaDataAsMap() {
+            return metaData.build()
+                .stream()
+                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid));
+        }
     }
 
     public static class AddedBuilder extends MessageMetaDataEventBuilder<AddedBuilder> {
@@ -140,9 +146,25 @@ public class EventFactory {
                 user,
                 path,
                 mailboxId,
-                metaData.build()
-                    .stream()
-                    .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
+                metaDataAsMap());
+        }
+    }
+
+    public static class ExpungedBuilder extends MessageMetaDataEventBuilder<ExpungedBuilder> {
+        @Override
+        protected ExpungedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxListener.Expunged build() {
+            mailboxEventChecks();
+            
+            return new MailboxListener.Expunged(
+                sessionId,
+                user,
+                path,
+                mailboxId,
+                metaDataAsMap());
         }
     }
 
@@ -229,12 +251,8 @@ public class EventFactory {
         return new AddedBuilder();
     }
 
-    public MailboxListener.Expunged expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return expunged(session.getSessionId(), session.getUser(), uids, mailbox);
-    }
-
-    public MailboxListener.Expunged expunged(MailboxSession.SessionId sessionId, User user, Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        return new MailboxListener.Expunged(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId(), uids);
+    public ExpungedBuilder expunged() {
+        return new ExpungedBuilder();
     }
 
     public FlagsUpdatedBuilder flagsUpdated() {

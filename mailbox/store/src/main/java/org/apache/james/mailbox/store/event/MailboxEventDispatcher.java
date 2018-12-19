@@ -114,7 +114,11 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        event(eventFactory.expunged(session, uids, mailbox));
+        event(eventFactory.expunged()
+            .mailbox(mailbox)
+            .mailboxSession(session)
+            .addMetaData(uids.values())
+            .build());
     }
 
     public void expunged(MailboxSession session,  MessageMetaData messageMetaData, Mailbox mailbox) {
