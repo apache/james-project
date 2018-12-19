@@ -172,3 +172,38 @@ $ nodetool stop
 $ nodetool upgradesstables apache_james
 ```
 
+## 3.3.0 version
+
+Changes to apply between 3.2.0 and 3.3.0 had been reported here.
+
+Changelist:
+
+ - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
+ 
+### Rename KEY column in JAMES_MAILBOX_ANNOTATION table
+ 
+Date: 19/12/2018
+ 
+SHA-1: e25967664538be18ec29f47e73e661bdf29da41f
+ 
+JIRA: https://issues.apache.org/jira/projects/MAILBOX/issues/MAILBOX-356
+ 
+Required: Yes
+
+Concerned products: all JPA related products
+
+#### Upgrade procedure
+
+Rename `KEY` column in `JAMES_MAILBOX_ANNOTATION` table. The syntax is:
+
+##### In MySQL
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE KEY ANNOTATION_KEY varchar(200);
+```
+
+##### In MariaDB
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(200);
+```
+
+_or the syntax corresponding to your database._
