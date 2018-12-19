@@ -178,7 +178,12 @@ public class MailboxEventDispatcher {
     }
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        event(eventFactory.aclUpdated(session, mailboxPath, aclDiff, mailboxId));
+        event(eventFactory.aclUpdated()
+            .mailboxSession(session)
+            .path(mailboxPath)
+            .mailboxId(mailboxId)
+            .aclDiff(aclDiff)
+            .build());
     }
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {

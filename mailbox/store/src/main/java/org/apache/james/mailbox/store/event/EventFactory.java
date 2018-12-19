@@ -168,6 +168,32 @@ public class EventFactory {
         }
     }
 
+    public static class MailboxAclUpdatedBuilder extends MailboxEventBuilder<MailboxAclUpdatedBuilder> {
+        private ACLDiff aclDiff;
+
+        public MailboxAclUpdatedBuilder aclDiff(ACLDiff aclDiff) {
+            this.aclDiff = aclDiff;
+            return this;
+        }
+
+        @Override
+        protected MailboxAclUpdatedBuilder backReference() {
+            return this;
+        }
+
+        public MailboxListener.MailboxACLUpdated build() {
+            Preconditions.checkState(aclDiff != null, "Field `aclDiff` is compulsory");
+            mailboxEventChecks();
+
+            return new MailboxListener.MailboxACLUpdated(
+                sessionId,
+                user,
+                path,
+                aclDiff,
+                mailboxId);
+        }
+    }
+
     public static class MailboxAddedBuilder extends MailboxEventBuilder<MailboxAddedBuilder> {
         @Override
         protected MailboxAddedBuilder backReference() {
@@ -275,12 +301,8 @@ public class EventFactory {
         return new MailboxAddedBuilder();
     }
 
-    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        return aclUpdated(session.getSessionId(), session.getUser(), mailboxPath, aclDiff, mailboxId);
-    }
-
-    public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        return new MailboxListener.MailboxACLUpdated(sessionId, user, mailboxPath, aclDiff, mailboxId);
+    public MailboxAclUpdatedBuilder aclUpdated() {
+        return new MailboxAclUpdatedBuilder();
     }
 
     public MessageMoveEvent moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
