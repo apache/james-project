@@ -55,23 +55,20 @@ import com.google.common.collect.ImmutableSortedMap;
  * Helper class to dispatch {@link org.apache.james.mailbox.Event}'s to registerend MailboxListener
  */
 public class MailboxEventDispatcher {
-
     @VisibleForTesting
     public static MailboxEventDispatcher ofListener(MailboxListener mailboxListener) {
-        return new MailboxEventDispatcher(mailboxListener, new EventFactory());
+        return new MailboxEventDispatcher(mailboxListener);
     }
 
     private final MailboxListener listener;
-    private final EventFactory eventFactory;
 
     @Inject
     public MailboxEventDispatcher(DelegatingMailboxListener delegatingMailboxListener) {
-        this(delegatingMailboxListener, new EventFactory());
+        this((MailboxListener) delegatingMailboxListener);
     }
 
-    private MailboxEventDispatcher(MailboxListener listener, EventFactory eventFactory) {
+    private MailboxEventDispatcher(MailboxListener listener) {
         this.listener = listener;
-        this.eventFactory = eventFactory;
     }
 
     /**
@@ -83,7 +80,7 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        event(eventFactory.added()
+        event(EventFactory.added()
             .mailbox(mailbox)
             .mailboxSession(session)
             .addMetaData(uids.values())
@@ -114,7 +111,7 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        event(eventFactory.expunged()
+        event(EventFactory.expunged()
             .mailbox(mailbox)
             .mailboxSession(session)
             .addMetaData(uids.values())
@@ -133,7 +130,7 @@ public class MailboxEventDispatcher {
      * registered MailboxListener will get triggered then
      */
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        event(eventFactory.flagsUpdated()
+        event(EventFactory.flagsUpdated()
             .mailbox(mailbox)
             .mailboxSession(session)
             .updatedFags(uflags)
@@ -149,7 +146,7 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
-        event(eventFactory.mailboxRenamed()
+        event(EventFactory.mailboxRenamed()
             .mailboxSession(session)
             .mailboxId(to.getMailboxId())
             .oldPath(from)
@@ -162,7 +159,7 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        event(eventFactory.mailboxDeleted()
+        event(EventFactory.mailboxDeleted()
             .mailboxSession(session)
             .mailbox(mailbox)
             .quotaRoot(quotaRoot)
@@ -176,14 +173,14 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
-        event(eventFactory.mailboxAdded()
+        event(EventFactory.mailboxAdded()
             .mailbox(mailbox)
             .mailboxSession(session)
             .build());
     }
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        event(eventFactory.aclUpdated()
+        event(EventFactory.aclUpdated()
             .mailboxSession(session)
             .path(mailboxPath)
             .mailboxId(mailboxId)
@@ -192,7 +189,7 @@ public class MailboxEventDispatcher {
     }
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
-        event(eventFactory.moved()
+        event(EventFactory.moved()
             .session(session)
             .messageMoves(messageMoves)
             .messageId(messageIds)

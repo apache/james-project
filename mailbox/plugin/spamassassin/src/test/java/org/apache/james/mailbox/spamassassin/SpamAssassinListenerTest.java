@@ -232,7 +232,7 @@ public class SpamAssassinListenerTest {
     public void eventShouldCallSpamAssassinHamLearningWhenTheMessageIsAddedInInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(inbox);
 
-        MailboxListener.Added addedEvent = new EventFactory().added()
+        MailboxListener.Added addedEvent = EventFactory.added()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(inbox)
             .addMessage(message)
@@ -247,7 +247,7 @@ public class SpamAssassinListenerTest {
     public void eventShouldNotCallSpamAssassinHamLearningWhenTheMessageIsAddedInAMailboxOtherThanInbox() throws Exception {
         SimpleMailboxMessage message = createMessage(mailbox1);
 
-        MailboxListener.Added addedEvent = new EventFactory().added()
+        MailboxListener.Added addedEvent = EventFactory.added()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(mailbox1)
             .addMessage(message)

@@ -300,35 +300,35 @@ public class EventFactory {
         }
     }
 
-    public AddedBuilder added() {
+    public static AddedBuilder added() {
         return new AddedBuilder();
     }
 
-    public ExpungedBuilder expunged() {
+    public static ExpungedBuilder expunged() {
         return new ExpungedBuilder();
     }
 
-    public FlagsUpdatedBuilder flagsUpdated() {
+    public static FlagsUpdatedBuilder flagsUpdated() {
         return new FlagsUpdatedBuilder();
     }
 
-    public MailboxRenamedBuilder mailboxRenamed() {
+    public static MailboxRenamedBuilder mailboxRenamed() {
         return new MailboxRenamedBuilder();
     }
 
-    public MailboxDeletionBuilder mailboxDeleted() {
+    public static MailboxDeletionBuilder mailboxDeleted() {
         return new MailboxDeletionBuilder();
     }
 
-    public MailboxAddedBuilder mailboxAdded() {
+    public static MailboxAddedBuilder mailboxAdded() {
         return new MailboxAddedBuilder();
     }
 
-    public MailboxAclUpdatedBuilder aclUpdated() {
+    public static MailboxAclUpdatedBuilder aclUpdated() {
         return new MailboxAclUpdatedBuilder();
     }
 
-    public MessageMoveEvent.Builder moved() {
+    public static MessageMoveEvent.Builder moved() {
         return MessageMoveEvent.builder();
     }
 }

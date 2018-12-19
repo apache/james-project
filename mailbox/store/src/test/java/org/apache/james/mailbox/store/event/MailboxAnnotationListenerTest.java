@@ -77,7 +77,7 @@ public class MailboxAnnotationListenerTest {
         mailboxSession = MailboxSessionUtil.create("test");
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, mailboxManager);
 
-        deleteEvent = new EventFactory().mailboxDeleted()
+        deleteEvent = EventFactory.mailboxDeleted()
             .mailboxSession(mailboxSession)
             .mailboxId(mailboxId)
             .path(MailboxPath.forUser("user", "name"))
