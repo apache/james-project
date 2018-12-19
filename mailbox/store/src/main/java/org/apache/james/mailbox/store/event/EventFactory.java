@@ -41,7 +41,56 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
+import com.google.common.base.Preconditions;
+
 public class EventFactory {
+    public static class MailboxAddedBuilder {
+        private MailboxPath path;
+        private MailboxId mailboxId;
+        private User user;
+        private MailboxSession.SessionId sessionId;
+
+        public MailboxAddedBuilder mailbox(Mailbox mailbox) {
+            path(mailbox.generateAssociatedPath());
+            mailboxId(mailbox.getMailboxId());
+            return this;
+        }
+
+        public MailboxAddedBuilder mailboxSession(MailboxSession mailboxSession) {
+            user(mailboxSession.getUser());
+            sessionId(mailboxSession.getSessionId());
+            return this;
+        }
+
+        public MailboxAddedBuilder mailboxId(MailboxId mailboxId) {
+            this.mailboxId = mailboxId;
+            return this;
+        }
+
+        public MailboxAddedBuilder path(MailboxPath path) {
+            this.path = path;
+            return this;
+        }
+
+        public MailboxAddedBuilder user(User user) {
+            this.user = user;
+            return this;
+        }
+
+        public MailboxAddedBuilder sessionId(MailboxSession.SessionId sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+
+        public MailboxListener.MailboxAdded build() {
+            Preconditions.checkState(user != null, "Field `user` is compulsory");
+            Preconditions.checkState(mailboxId != null, "Field `mailboxId` is compulsory");
+            Preconditions.checkState(path != null, "Field `path` is compulsory");
+            Preconditions.checkState(sessionId != null, "Field `sessionId` is compulsory");
+
+            return new MailboxListener.MailboxAdded(sessionId, user, path, mailboxId);
+        }
+    }
 
     public MailboxListener.Added added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         return added(session.getSessionId(), session.getUser(), uids, mailbox);
@@ -81,12 +130,8 @@ public class EventFactory {
         return new MailboxListener.MailboxDeletion(sessionId, user, mailbox.generateAssociatedPath(), quotaRoot, deletedMessageCount, totalDeletedSize, mailbox.getMailboxId());
     }
 
-    public MailboxListener.MailboxAdded mailboxAdded(MailboxSession session, Mailbox mailbox) {
-        return mailboxAdded(session.getSessionId(), session.getUser(), mailbox);
-    }
-
-    public MailboxListener.MailboxAdded mailboxAdded(MailboxSession.SessionId sessionId, User user, Mailbox mailbox) {
-        return new MailboxListener.MailboxAdded(sessionId, user, mailbox.generateAssociatedPath(), mailbox.getMailboxId());
+    public MailboxAddedBuilder mailboxAdded() {
+        return new MailboxAddedBuilder();
     }
 
     public MailboxListener.MailboxACLUpdated aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {

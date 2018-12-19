@@ -153,7 +153,10 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
-        event(eventFactory.mailboxAdded(session, mailbox));
+        listener.event(eventFactory.mailboxAdded()
+            .mailbox(mailbox)
+            .mailboxSession(session)
+            .build());
     }
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
