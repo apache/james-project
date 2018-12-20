@@ -71,11 +71,17 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
     public synchronized void close() {
         Optional.ofNullable(channelReference.get())
             .filter(Channel::isOpen)
-            .ifPresent(Throwing.<Channel>consumer(Channel::close).sneakyThrow());
+            .ifPresent(Throwing.<Channel>consumer(Channel::close).orDoNothing());
 
         Optional.ofNullable(connectionReference.get())
             .filter(Connection::isOpen)
-            .ifPresent(Throwing.<Connection>consumer(Connection::close).sneakyThrow());
+            .ifPresent(Throwing.<Connection>consumer(Connection::close).orDoNothing());
+
+        try {
+            rabbitFlux.close();
+        } catch (Throwable ignored) {
+            //ignore exception during close
+        }
     }
 
     private Connection getResilientConnection() {
