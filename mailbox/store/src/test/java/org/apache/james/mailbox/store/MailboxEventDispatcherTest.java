@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -68,7 +69,9 @@ public class MailboxEventDispatcherTest {
     public void setUp() throws Exception {
         collector = new EventCollector();
 
-        dispatcher = MailboxEventDispatcher.ofListener(collector);
+        DefaultDelegatingMailboxListener mailboxListener = new DefaultDelegatingMailboxListener();
+        mailboxListener.addGlobalListener(collector, session);
+        dispatcher = new MailboxEventDispatcher(mailboxListener);
         result = mock(MessageResult.class);
         mailbox = new SimpleMailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, MAILBOX_ID);
 

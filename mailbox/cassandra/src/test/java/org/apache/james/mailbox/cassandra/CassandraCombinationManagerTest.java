@@ -19,14 +19,12 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import static org.mockito.Mockito.mock;
-
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
+import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.junit.After;
@@ -64,7 +62,9 @@ public class CassandraCombinationManagerTest extends AbstractCombinationManagerT
     
     @Override
     public CombinationManagerTestSystem createTestingData() throws Exception {
-        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), MailboxEventDispatcher.ofListener(mock(MailboxListener.class)));
+        DefaultDelegatingMailboxListener mailboxListener = new DefaultDelegatingMailboxListener();
+        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(mailboxListener);
+        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), mailboxEventDispatcher);
     }
     
 }

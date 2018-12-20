@@ -46,7 +46,6 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -55,20 +54,11 @@ import com.google.common.collect.ImmutableSortedMap;
  * Helper class to dispatch {@link org.apache.james.mailbox.Event}'s to registerend MailboxListener
  */
 public class MailboxEventDispatcher {
-    @VisibleForTesting
-    public static MailboxEventDispatcher ofListener(MailboxListener mailboxListener) {
-        return new MailboxEventDispatcher(mailboxListener);
-    }
-
     private final MailboxListener listener;
 
     @Inject
     public MailboxEventDispatcher(DelegatingMailboxListener delegatingMailboxListener) {
-        this((MailboxListener) delegatingMailboxListener);
-    }
-
-    private MailboxEventDispatcher(MailboxListener listener) {
-        this.listener = listener;
+        this.listener = delegatingMailboxListener;
     }
 
     /**
