@@ -46,7 +46,6 @@ public class GuiceJamesServer {
     private final IsStartedProbe isStartedProbe;
     private Stager<PreDestroy> preDestroy;
     private GuiceProbeProvider guiceProbeProvider;
-    private CleanupTasksPerformer cleanupTasksPerformer;
 
     public static GuiceJamesServer forConfiguration(Configuration configuration) {
         IsStartedProbe isStartedProbe = new IsStartedProbe();

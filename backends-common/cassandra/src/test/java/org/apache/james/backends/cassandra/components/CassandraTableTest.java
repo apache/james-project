@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.components.CassandraTable.InitializationStatus;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -87,6 +86,7 @@ class CassandraTableTest {
         assertThat(left.reduce(right)).isEqualByComparingTo(expectedResult);
     }
 
+    @SuppressWarnings("unused")
     private static Stream<Arguments> initializationStatusReduceShouldFallIntoTheRightState() {
         return Stream.of(
                 Arguments.of(ALREADY_DONE, ALREADY_DONE, ALREADY_DONE),

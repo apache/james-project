@@ -47,7 +47,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
 
 public class ObjectStorageBlobsDAO implements BlobStore {
-    private static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
     private static final Location DEFAULT_LOCATION = null;
     private static final Logger LOGGER = LoggerFactory.getLogger(ObjectStorageBlobsDAO.class);
 

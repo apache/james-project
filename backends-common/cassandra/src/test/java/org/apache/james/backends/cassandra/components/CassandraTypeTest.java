@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 import java.util.stream.Stream;
 
 import org.apache.james.backends.cassandra.components.CassandraType.InitializationStatus;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

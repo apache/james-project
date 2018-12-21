@@ -193,7 +193,6 @@ public class MailboxACL {
         }
 
         // JSON Deserialization
-        @SuppressWarnings("unused")
         private Rfc4314Rights(String serializedRfc4314Rights) throws UnsupportedRightException {
             this(rightListFromSerializedRfc4314Rights(serializedRfc4314Rights));
         }

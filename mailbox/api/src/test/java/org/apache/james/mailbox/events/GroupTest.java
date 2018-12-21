@@ -27,7 +27,9 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class GroupTest {
     static class GroupA extends Group {}
+
     static class GroupB extends Group {}
+
     static class GroupC extends GroupA {}
 
     @Test

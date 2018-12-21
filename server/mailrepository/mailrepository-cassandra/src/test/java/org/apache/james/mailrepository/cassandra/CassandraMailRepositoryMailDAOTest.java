@@ -22,7 +22,6 @@ package org.apache.james.mailrepository.cassandra;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 

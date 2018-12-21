@@ -45,6 +45,7 @@ public interface EventBusContract {
     MailboxListener.MailboxEvent event = mock(MailboxListener.MailboxEvent.class);
 
     class GroupA extends Group {}
+
     class GroupB extends Group {}
 
     MailboxId ID_1 = TestId.of(18);
