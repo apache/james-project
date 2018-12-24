@@ -309,13 +309,10 @@ class MailboxACLUpdatedEventSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnACLDiff {
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenMissingACLDiff() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxACLUpdatedShouldThrowWhenMissingACLDiff() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxACLUpdated\":{" +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
@@ -326,8 +323,7 @@ class MailboxACLUpdatedEventSerializationTest {
                     "    \"user\":\"user\"" +
                     "   }" +
                     "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested
@@ -728,14 +724,11 @@ class MailboxACLUpdatedEventSerializationTest {
                 }
             }
         }
-    }
 
-        @Nested
-        class DeserializationErrorOnMailboxId {
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenMissingMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxACLUpdatedShouldThrowWhenMissingMailboxId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxACLUpdated\":{" +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
@@ -749,50 +742,7 @@ class MailboxACLUpdatedEventSerializationTest {
                     "    \"user\":\"user\"" +
                     "   }" +
                     "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenNullMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"user\":\"bob\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":null," +
-                    "    \"sessionId\":6," +
-                    "    \"user\":\"user\"" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenMailboxIdIsANumber() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"user\":\"bob\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":123," +
-                    "    \"sessionId\":6," +
-                    "    \"user\":\"user\"" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested
@@ -804,20 +754,20 @@ class MailboxACLUpdatedEventSerializationTest {
                 void mailboxACLUpdatedShouldThrowWhenNameSpaceIsNotAString() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"MailboxACLUpdated\":{" +
-                        "    \"mailboxPath\":{" +
-                        "       \"namespace\":230192.06," +
-                        "       \"user\":\"bob\"," +
-                        "       \"name\":\"mailboxName\"" +
-                        "      }," +
-                        "    \"aclDiff\":{" +
-                        "       \"oldACL\":{}," +
-                        "       \"newACL\":{\"$any\":\"ar\"}}," +
-                        "    \"mailboxId\":\"123\"," +
-                        "    \"sessionId\":6," +
-                        "    \"user\":\"user\"" +
-                        "   }" +
-                        "}").get())
+                            "  \"MailboxACLUpdated\":{" +
+                            "    \"mailboxPath\":{" +
+                            "       \"namespace\":230192.06," +
+                            "       \"user\":\"bob\"," +
+                            "       \"name\":\"mailboxName\"" +
+                            "      }," +
+                            "    \"aclDiff\":{" +
+                            "       \"oldACL\":{}," +
+                            "       \"newACL\":{\"$any\":\"ar\"}}," +
+                            "    \"mailboxId\":\"123\"," +
+                            "    \"sessionId\":6," +
+                            "    \"user\":\"user\"" +
+                            "   }" +
+                            "}").get())
                         .isInstanceOf(NoSuchElementException.class);
                 }
             }
@@ -828,20 +778,20 @@ class MailboxACLUpdatedEventSerializationTest {
                 void mailboxACLUpdatedShouldThrowWhenUserIsNotAString() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"MailboxACLUpdated\":{" +
-                        "    \"mailboxPath\":{" +
-                        "       \"namespace\":230192.06," +
-                        "       \"user\":180806," +
-                        "       \"name\":\"mailboxName\"" +
-                        "      }," +
-                        "    \"aclDiff\":{" +
-                        "       \"oldACL\":{}," +
-                        "       \"newACL\":{\"$any\":\"ar\"}}," +
-                        "    \"mailboxId\":\"123\"," +
-                        "    \"sessionId\":6," +
-                        "    \"user\":\"user\"" +
-                        "   }" +
-                        "}").get())
+                            "  \"MailboxACLUpdated\":{" +
+                            "    \"mailboxPath\":{" +
+                            "       \"namespace\":230192.06," +
+                            "       \"user\":180806," +
+                            "       \"name\":\"mailboxName\"" +
+                            "      }," +
+                            "    \"aclDiff\":{" +
+                            "       \"oldACL\":{}," +
+                            "       \"newACL\":{\"$any\":\"ar\"}}," +
+                            "    \"mailboxId\":\"123\"," +
+                            "    \"sessionId\":6," +
+                            "    \"user\":\"user\"" +
+                            "   }" +
+                            "}").get())
                         .isInstanceOf(NoSuchElementException.class);
                 }
             }
@@ -853,20 +803,20 @@ class MailboxACLUpdatedEventSerializationTest {
                 void mailboxACLUpdatedShouldThrowWhenNullMailboxName() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"MailboxACLUpdated\":{" +
-                        "    \"mailboxPath\":{" +
-                        "       \"namespace\":230192.06," +
-                        "       \"user\":180806," +
-                        "       \"name\":null" +
-                        "      }," +
-                        "    \"aclDiff\":{" +
-                        "       \"oldACL\":{}," +
-                        "       \"newACL\":{\"$any\":\"ar\"}}," +
-                        "    \"mailboxId\":\"123\"," +
-                        "    \"sessionId\":6," +
-                        "    \"user\":\"user\"" +
-                        "   }" +
-                        "}").get())
+                            "  \"MailboxACLUpdated\":{" +
+                            "    \"mailboxPath\":{" +
+                            "       \"namespace\":230192.06," +
+                            "       \"user\":180806," +
+                            "       \"name\":null" +
+                            "      }," +
+                            "    \"aclDiff\":{" +
+                            "       \"oldACL\":{}," +
+                            "       \"newACL\":{\"$any\":\"ar\"}}," +
+                            "    \"mailboxId\":\"123\"," +
+                            "    \"sessionId\":6," +
+                            "    \"user\":\"user\"" +
+                            "   }" +
+                            "}").get())
                         .isInstanceOf(NoSuchElementException.class);
                 }
 
@@ -874,23 +824,24 @@ class MailboxACLUpdatedEventSerializationTest {
                 void mailboxACLUpdatedShouldThrowWhenMailboxNameIdIsANumber() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                         "{" +
-                        "  \"MailboxACLUpdated\":{" +
-                        "    \"mailboxPath\":{" +
-                        "       \"namespace\":230192.06," +
-                        "       \"user\":\"bob\"," +
-                        "       \"name\":160205" +
-                        "      }," +
-                        "    \"aclDiff\":{" +
-                        "       \"oldACL\":{}," +
-                        "       \"newACL\":{\"$any\":\"ar\"}}," +
-                        "    \"mailboxId\":\"123\"," +
-                        "    \"sessionId\":6," +
-                        "    \"user\":\"user\"" +
-                        "   }" +
-                        "}").get())
+                            "  \"MailboxACLUpdated\":{" +
+                            "    \"mailboxPath\":{" +
+                            "       \"namespace\":230192.06," +
+                            "       \"user\":\"bob\"," +
+                            "       \"name\":160205" +
+                            "      }," +
+                            "    \"aclDiff\":{" +
+                            "       \"oldACL\":{}," +
+                            "       \"newACL\":{\"$any\":\"ar\"}}," +
+                            "    \"mailboxId\":\"123\"," +
+                            "    \"sessionId\":6," +
+                            "    \"user\":\"user\"" +
+                            "   }" +
+                            "}").get())
                         .isInstanceOf(NoSuchElementException.class);
                 }
             }
         }
+    }
 
 }

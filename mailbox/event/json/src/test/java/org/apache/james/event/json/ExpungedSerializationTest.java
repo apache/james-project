@@ -567,12 +567,10 @@ class ExpungedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailboxId {
-            @Test
-            void expungedShouldThrowWhenMissingMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void expungedShouldThrowWhenMissingMailboxId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"Expunged\": {" +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
@@ -596,67 +594,6 @@ class ExpungedSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void expungedShouldThrowWhenNullMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"Expunged\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": null," +
-                    "    \"expunged\": {" +
-                    "      \"123456\": {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"flags\": {" +
-                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                    "          \"userFlags\":[\"User Custom Flag\"]}," +
-                    "        \"size\": 45,  " +
-                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                    "        \"messageId\": \"42\"" +
-                    "      }" +
-                    "    }," +
-                    "    \"sessionId\": 42," +
-                    "    \"user\": \"user\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void expungedShouldThrowWhenMailboxIdIsANumber() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"Expunged\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": 18," +
-                    "    \"expunged\": {" +
-                    "      \"123456\": {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"flags\": {" +
-                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                    "          \"userFlags\":[\"User Custom Flag\"]}," +
-                    "        \"size\": 45,  " +
-                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                    "        \"messageId\": \"42\"" +
-                    "      }" +
-                    "    }," +
-                    "    \"sessionId\": 42," +
-                    "    \"user\": \"user\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
         @Nested

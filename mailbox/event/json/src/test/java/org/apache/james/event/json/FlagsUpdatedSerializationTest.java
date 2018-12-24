@@ -495,12 +495,10 @@ class FlagsUpdatedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailboxId {
-            @Test
-            void flagsUpdatedShouldThrowWhenMissingMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void flagsUpdatedShouldThrowWhenMissingMailboxId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"FlagsUpdated\": {" +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
@@ -526,71 +524,6 @@ class FlagsUpdatedSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void flagsUpdatedShouldThrowWhenNullMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"FlagsUpdated\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": null," +
-                    "    \"sessionId\": 42," +
-                    "    \"updatedFlags\": [" +
-                    "      {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
-                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                    "      }," +
-                    "      {" +
-                    "        \"uid\": 654321," +
-                    "        \"modSeq\": 36," +
-                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
-                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
-                    "      }" +
-                    "    ]," +
-                    "    \"user\": \"user\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void flagsUpdatedShouldThrowWhenMailboxIdIsANumber() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"FlagsUpdated\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": 18," +
-                    "    \"sessionId\": 42," +
-                    "    \"updatedFlags\": [" +
-                    "      {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
-                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                    "      }," +
-                    "      {" +
-                    "        \"uid\": 654321," +
-                    "        \"modSeq\": 36," +
-                    "        \"oldFlags\": {\"systemFlags\":[\"Flagged\",\"Recent\"],\"userFlags\":[\"Old Flag 2\"]}," +
-                    "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Seen\"],\"userFlags\":[\"New Flag 2\"]}" +
-                    "      }" +
-                    "    ]," +
-                    "    \"user\": \"user\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
         @Nested

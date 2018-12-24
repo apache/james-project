@@ -329,12 +329,10 @@ class MailboxRenamedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailBoxId {
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNumberMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxRenamedDeSerializeShouldThrowWhenMissingMailboxId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxRenamed\":{" +
                     "    \"sessionId\":123456789," +
                     "    \"user\":\"user\"," +
@@ -352,29 +350,6 @@ class MailboxRenamedSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNullMailboxId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
         @Nested

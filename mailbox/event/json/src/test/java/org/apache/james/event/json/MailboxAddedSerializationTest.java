@@ -275,56 +275,5 @@ class MailboxAddedSerializationTest {
                 "}").get())
                 .isInstanceOf(NoSuchElementException.class);
         }
-
-        @Test
-        void fromJsonShouldRejectLongMailboxId() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":18," +
-                "     \"user\":\"user\"," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void fromJsonShouldRejectNullMailboxId() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":null," +
-                "     \"user\":\"user\"," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void fromJsonShouldRejectInvalidMailboxId() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":\"invalid\"," +
-                "     \"user\":\"user\"," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NumberFormatException.class);
-        }
     }
 }
