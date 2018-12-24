@@ -284,13 +284,10 @@ class MailboxRenamedSerializationTest {
 
     @Nested
     class DeserializationErrors {
-
-        @Nested
-        class DeserializationErrorOnUser {
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNullUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxRenamedDeSerializeShouldThrowWhenMissingUser() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxRenamed\":{" +
                     "    \"sessionId\":123456789," +
                     "    \"path\":{" +
@@ -307,55 +304,6 @@ class MailboxRenamedSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenEmptyUser() {
-                String eventWithEmptyUser =
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(eventWithEmptyUser).get())
-                    .isInstanceOf(IllegalArgumentException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenBadUser() {
-                String eventWithBadUser =
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user@user@user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(eventWithBadUser).get())
-                    .isInstanceOf(IllegalArgumentException.class);
-            }
         }
 
         @Test

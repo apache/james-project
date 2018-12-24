@@ -290,13 +290,10 @@ class MailboxACLUpdatedEventSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnUser {
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenMissingUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxACLUpdatedShouldThrowWhenMissingUser() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxACLUpdated\":{" +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
@@ -309,48 +306,7 @@ class MailboxACLUpdatedEventSerializationTest {
                     "    \"sessionId\":6" +
                     "   }" +
                     "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenUserIsNotAString() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":\"23\"," +
-                    "    \"sessionId\":6," +
-                    "    \"user\":12345" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenUserIsNotWellFormatted() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":\"23\"," +
-                    "    \"sessionId\":6," +
-                    "    \"user\":\"user@domain@secondDomain\"" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(IllegalArgumentException.class);
-            }
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested

@@ -539,12 +539,10 @@ class AddedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnUser {
-            @Test
-            void addedShouldThrowWhenMissingUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void addedShouldThrowWhenMissingUser() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"Added\": {" +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
@@ -568,67 +566,6 @@ class AddedSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void addedShouldThrowWhenUserIsNotAString() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"Added\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": \"18\"," +
-                    "    \"added\": {" +
-                    "      \"123456\": {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"flags\": {" +
-                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                    "          \"userFlags\":[\"User Custom Flag\"]}," +
-                    "        \"size\": 45,  " +
-                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                    "        \"messageId\": \"42\"" +
-                    "      }" +
-                    "    }," +
-                    "    \"sessionId\": 42," +
-                    "    \"user\": 596" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void addedShouldThrowWhenUserIsNotWellFormatted() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"Added\": {" +
-                    "    \"path\": {" +
-                    "      \"namespace\": \"#private\"," +
-                    "      \"user\": \"user\"," +
-                    "      \"name\": \"mailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\": \"18\"," +
-                    "    \"added\": {" +
-                    "      \"123456\": {" +
-                    "        \"uid\": 123456," +
-                    "        \"modSeq\": 35," +
-                    "        \"flags\": {" +
-                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                    "          \"userFlags\":[\"User Custom Flag\"]}," +
-                    "        \"size\": 45,  " +
-                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                    "        \"messageId\": \"42\"" +
-                    "      }" +
-                    "    }," +
-                    "    \"sessionId\": 42," +
-                    "    \"user\": \"user@user@anotherUser\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(IllegalArgumentException.class);
-            }
         }
 
         @Nested

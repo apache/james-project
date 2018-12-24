@@ -297,12 +297,10 @@ class MailboxDeletionSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnUser {
-            @Test
-            void mailboxAddedShouldThrowWhenMissingUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxAddedShouldThrowWhenMissingUser() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxDeletion\":{" +
                     "    \"sessionId\":3652," +
                     "    \"path\":{" +
@@ -317,49 +315,6 @@ class MailboxDeletionSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenUserIsNotAString() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":3652," +
-                    "    \"user\":5489515," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":60," +
-                    "    \"totalDeletedSize\":100," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenUserIsNotWellFormatted() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":3652," +
-                    "    \"user\":\"user@domain@secondDomain\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":60," +
-                    "    \"totalDeletedSize\":100," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(IllegalArgumentException.class);
-            }
         }
 
         @Nested

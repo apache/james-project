@@ -326,39 +326,5 @@ class MailboxAddedSerializationTest {
                 "}").get())
                 .isInstanceOf(NumberFormatException.class);
         }
-
-        @Test
-        void fromJsonShouldRejectLongUser() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":\"18\"," +
-                "     \"user\":15," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void fromJsonShouldRejectNullUser() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MailboxAdded\":{" +
-                "    \"mailboxPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"bob\"," +
-                "      \"name\":\"mailboxName\"" +
-                "     }," +
-                "     \"mailboxId\":\"18\"," +
-                "     \"user\":null," +
-                "     \"sessionId\":18" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
     }
 }

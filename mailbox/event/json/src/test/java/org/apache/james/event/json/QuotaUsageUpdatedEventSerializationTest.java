@@ -67,132 +67,49 @@ class QuotaUsageUpdatedEventSerializationTest {
 
     private static final EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
 
-    @Nested
-    class WithUser {
+    private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
+        User.fromUsername("onlyUsername"),
+        QUOTA_ROOT,
+        QUOTA_COUNT,
+        QUOTA_SIZE,
+        INSTANT);
+    private final String quotaUsageUpdatedEvent =
+        "{" +
+            "\"QuotaUsageUpdatedEvent\":{" +
+            "\"quotaRoot\":\"foo\"," +
+            "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
+            "\"time\":\"2018-11-13T12:00:55Z\"," +
+            "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+            "\"user\":\"onlyUsername\"" +
+            "}" +
+            "}";
 
-        @Nested
-        class WithValidUser {
+    @Test
+    void fromJsonShouldReturnQuotaEvent() {
+        assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
+            .isEqualTo(eventWithUserContainsUsername);
+    }
 
-            @Nested
-            class WithUserContainsOnlyUsername {
+    @Test
+    void toJsonShouldReturnQuotaEventJson() {
+        assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsername))
+            .isEqualTo(quotaUsageUpdatedEvent);
+    }
 
-                private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
-                    User.fromUsername("onlyUsername"),
-                    QUOTA_ROOT,
-                    QUOTA_COUNT,
-                    QUOTA_SIZE,
-                    INSTANT);
-                private final String quotaUsageUpdatedEvent =
-                    "{" +
-                        "\"QuotaUsageUpdatedEvent\":{" +
-                        "\"quotaRoot\":\"foo\"," +
-                        "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                        "\"time\":\"2018-11-13T12:00:55Z\"," +
-                        "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                        "\"user\":\"onlyUsername\"" +
-                        "}" +
-                    "}";
+    @Test
+    void fromJsonShouldThrowResultWhenUserIsMissing() {
+        String quotaUsageUpdatedEvent =
+            "{" +
+                "\"QuotaUsageUpdatedEvent\":{" +
+                "\"quotaRoot\":\"foo\"," +
+                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
+                "\"time\":\"2018-11-13T12:00:55Z\"," +
+                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}" +
+                "}" +
+                "}";
 
-                @Test
-                void fromJsonShouldReturnQuotaEvent() {
-                    assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
-                        .isEqualTo(eventWithUserContainsUsername);
-                }
-
-                @Test
-                void toJsonShouldReturnQuotaEventJson() {
-                    assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsername))
-                        .isEqualTo(quotaUsageUpdatedEvent);
-                }
-            }
-
-            @Nested
-            class WithUserContainsUsernameAndDomain {
-
-                private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsernameAndDomain = new MailboxListener.QuotaUsageUpdatedEvent(
-                    User.fromUsername("user@domain"),
-                    QUOTA_ROOT,
-                    QUOTA_COUNT,
-                    QUOTA_SIZE,
-                    INSTANT);
-                private final String quotaUsageUpdatedEvent =
-                    "{" +
-                        "\"QuotaUsageUpdatedEvent\":{" +
-                        "\"quotaRoot\":\"foo\"," +
-                        "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                        "\"time\":\"2018-11-13T12:00:55Z\"," +
-                        "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                        "\"user\":\"user@domain\"" +
-                        "}" +
-                    "}";
-
-                @Test
-                void fromJsonShouldReturnQuotaEvent() {
-                    assertThat(EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
-                        .isEqualTo(eventWithUserContainsUsernameAndDomain);
-                }
-
-                @Test
-                void toJsonShouldReturnQuotaEventJson() {
-                    assertThatJson(EVENT_SERIALIZER.toJson(eventWithUserContainsUsernameAndDomain))
-                        .isEqualTo(quotaUsageUpdatedEvent);
-                }
-            }
-        }
-
-        @Nested
-        class WithInvalidUser {
-
-            @Test
-            void fromJsonShouldThrowWhenEmptyUser() {
-                String quotaUsageUpdatedEvent =
-                    "{" +
-                        "\"QuotaUsageUpdatedEvent\":{" +
-                        "\"quotaRoot\":\"foo\"," +
-                        "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                        "\"time\":\"2018-11-13T12:00:55Z\"," +
-                        "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                        "\"user\":\"\"" +
-                        "}" +
-                    "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent))
-                    .isInstanceOf(IllegalArgumentException.class);
-            }
-
-
-            @Test
-            void fromJsonShouldThrowResultWhenUserIsNull() {
-                String quotaUsageUpdatedEvent =
-                    "{" +
-                        "\"QuotaUsageUpdatedEvent\":{" +
-                        "\"quotaRoot\":\"foo\"," +
-                        "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                        "\"time\":\"2018-11-13T12:00:55Z\"," +
-                        "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}" +
-                        "}" +
-                    "}";
-
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void fromJsonShouldThrowWhenUserIsInvalid() {
-                String quotaUsageUpdatedEvent =
-                    "{" +
-                        "\"QuotaUsageUpdatedEvent\":{" +
-                        "\"quotaRoot\":\"foo\"," +
-                        "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                        "\"time\":\"2018-11-13T12:00:55Z\"," +
-                        "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                        "\"user\":\"@domain\"" +
-                        "}" +
-                    "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent))
-                    .isInstanceOf(IllegalArgumentException.class);
-            }
-        }
-
+        assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
+            .isInstanceOf(NoSuchElementException.class);
     }
 
     @Nested

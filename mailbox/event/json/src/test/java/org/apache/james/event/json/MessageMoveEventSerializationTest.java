@@ -70,39 +70,6 @@ class MessageMoveEventSerializationTest {
     @Nested
     class ValidPayloads {
         @Nested
-        class NoVirtualHosting {
-            private final Event event = MessageMoveEvent.builder()
-                .user(User.fromUsername("bob"))
-                .messageId(TestMessageId.of(42))
-                .messageMoves(
-                    MessageMoves.builder()
-                        .previousMailboxIds(TestId.of(18), TestId.of(24))
-                        .targetMailboxIds(TestId.of(36))
-                        .build())
-                .build();
-            private final String json = "{" +
-                "  \"MessageMoveEvent\": {" +
-                "    \"user\": \"bob\"," +
-                "    \"previousMailboxIds\": [\"18\", \"24\"]," +
-                "    \"targetMailboxIds\": [\"36\"]," +
-                "    \"messageIds\": [\"42\"]" +
-                "  }" +
-                "}";
-
-            @Test
-            void messageMoveEventShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(event))
-                    .isEqualTo(json);
-            }
-
-            @Test
-            void messageMoveEventShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(json).get())
-                    .isEqualTo(event);
-            }
-        }
-
-        @Nested
         class EmptyTargetMailboxIds {
             private final Event event = MessageMoveEvent.builder()
                 .user(User.fromUsername("bob"))
@@ -201,57 +168,6 @@ class MessageMoveEventSerializationTest {
 
     @Nested
     class InvalidPayloads {
-        @Test
-        void emptyUserShouldBeRejected() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MessageMoveEvent\": {" +
-                "    \"user\": \"\"," +
-                "    \"previousMailboxIds\": [\"18\", \"24\"]," +
-                "    \"targetMailboxIds\": [\"36\"]," +
-                "    \"messageIds\": [\"42\"]" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void basUsersShouldBeRejected() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MessageMoveEvent\": {" +
-                "    \"user\": \"bob@domain.tld@bad\"," +
-                "    \"previousMailboxIds\": [\"18\", \"24\"]," +
-                "    \"targetMailboxIds\": [\"36\"]," +
-                "    \"messageIds\": [\"42\"]" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void nonStringUserShouldBeRejected() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MessageMoveEvent\": {" +
-                "    \"user\": 42," +
-                "    \"previousMailboxIds\": [\"18\", \"24\"]," +
-                "    \"targetMailboxIds\": [\"36\"]," +
-                "    \"messageIds\": [\"42\"]" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
-
-        @Test
-        void nullUserShouldBeRejected() {
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
-                "  \"MessageMoveEvent\": {" +
-                "    \"user\": null," +
-                "    \"previousMailboxIds\": [\"18\", \"24\"]," +
-                "    \"targetMailboxIds\": [\"36\"]," +
-                "    \"messageIds\": [\"42\"]" +
-                "  }" +
-                "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
 
         @Test
         void nullPreviousMailboxIdsShouldBeRejected() {
