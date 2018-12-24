@@ -19,12 +19,10 @@
 
 package org.apache.james.event.json.dtos;
 
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.event.json.JsonSerialize;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.JsError;
@@ -37,29 +35,27 @@ import scala.collection.immutable.List;
 import scala.math.BigDecimal;
 
 class MessageUidTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Test
     void messageUidShouldBeWellSerialized() {
-        assertThat(JSON_SERIALIZE.messageUidWrites().writes(MessageUid.of(18)))
+        assertThat(DTO_JSON_SERIALIZE.messageUidWrites().writes(MessageUid.of(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
     @Test
     void messageUidShouldBeWellDeSerialized() {
-        assertThat(JSON_SERIALIZE.messageUidReads().reads(new JsNumber(BigDecimal.valueOf(18))))
-            .isEqualTo(new JsSuccess<>(MessageUid.of(18), new JsPath(List.empty())));
+        assertThat(DTO_JSON_SERIALIZE.messageUidReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
+            .isEqualTo(MessageUid.of(18));
     }
 
     @Test
     void messageUidShouldReturnErrorWhenString() {
-        assertThat(JSON_SERIALIZE.messageUidReads().reads(new JsString("18")))
+        assertThat(DTO_JSON_SERIALIZE.messageUidReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);
     }
 
     @Test
     void messageUidShouldReturnErrorWhenNull() {
-        assertThat(JSON_SERIALIZE.messageIdReads().reads(JsNull$.MODULE$))
+        assertThat(DTO_JSON_SERIALIZE.messageIdReads().reads(JsNull$.MODULE$))
             .isInstanceOf(JsError.class);
     }
 }

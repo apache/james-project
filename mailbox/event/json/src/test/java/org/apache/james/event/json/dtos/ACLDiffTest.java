@@ -19,14 +19,17 @@
 
 package org.apache.james.event.json.dtos;
 
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.event.json.JsonSerialize;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.exception.UnsupportedRightException;
+import org.apache.james.mailbox.model.MailboxACL;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableMap;
 
 import play.api.libs.json.JsError;
 import play.api.libs.json.JsNull$;
@@ -36,18 +39,38 @@ import play.api.libs.json.Json;
 import scala.math.BigDecimal;
 
 class ACLDiffTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Test
     void deSerializeShouldThrowWhenNewACLIsMissing() {
-        assertThat(JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
             "{\"oldACL\":{}}")))
             .isInstanceOf(JsError.class);
     }
 
     @Test
+    void deSerializeShouldAcceptDoubleRight() {
+        assertThat(DTO_JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
+            "{\"oldACL\":{\"$any\":\"aa\"},\"newACL\":{}}"))
+            .get().toJava())
+            .isEqualTo(new ACLDiff(new MailboxACL(ImmutableMap.of(
+                new MailboxACL.EntryKey("any", MailboxACL.NameType.group, false),
+                new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer))),
+                new MailboxACL()));
+    }
+
+    @Test
+    void deSerializeShouldAcceptEmptyRight() {
+        assertThat(DTO_JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
+            "{\"oldACL\":{\"$any\":\"\"},\"newACL\":{}}"))
+            .get().toJava())
+            .isEqualTo(new ACLDiff(new MailboxACL(ImmutableMap.of(
+                new MailboxACL.EntryKey("any", MailboxACL.NameType.group, false),
+                new MailboxACL.Rfc4314Rights())),
+                new MailboxACL()));
+    }
+
+    @Test
     void deSerializeShouldThrowWhenOldACLIsMissing() {
-        assertThat(JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.aclDiffReads().reads(Json.parse(
             "{\"newACL\":{}}")))
             .isInstanceOf(JsError.class);
     }
@@ -56,31 +79,31 @@ class ACLDiffTest {
     class EntryKeyTest {
         @Test
         void deSerializeShouldThrowWhenNotIncludedNameInEntryKey() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")))
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("$")))
                 .isInstanceOf(IllegalStateException.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsEmpty() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("")))
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("")))
                 .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsNotWellFormatted() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")))
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsString("-")))
                 .isInstanceOf(StringIndexOutOfBoundsException.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsNull() {
-            assertThat(JSON_SERIALIZE.aclEntryKeyReads().reads(JsNull$.MODULE$))
+            assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(JsNull$.MODULE$))
                 .isInstanceOf(JsError.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenNameInEntryKeyIsNotString() {
-            assertThat(JSON_SERIALIZE.aclEntryKeyReads().reads(new JsNumber(BigDecimal.valueOf(18))))
+            assertThat(DTO_JSON_SERIALIZE.aclEntryKeyReads().reads(new JsNumber(BigDecimal.valueOf(18))))
                 .isInstanceOf(JsError.class);
         }
     }
@@ -89,19 +112,19 @@ class ACLDiffTest {
     class RightTest {
         @Test
         void deSerializeShouldThrowWhenUnsupportedRightInNewACL() {
-            assertThat(JSON_SERIALIZE.aclDiffReads().reads(new JsString("\"unsupported\"")))
-                .isInstanceOf(JsError.class);
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.aclRightsReads().reads(new JsString("\"unsupported\"")))
+                .isInstanceOf(UnsupportedRightException.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenNull() {
-            assertThat(JSON_SERIALIZE.aclDiffReads().reads(JsNull$.MODULE$))
+            assertThat(DTO_JSON_SERIALIZE.aclRightsReads().reads(JsNull$.MODULE$))
                 .isInstanceOf(JsError.class);
         }
 
         @Test
         void deSerializeShouldThrowWhenRightIsNotString() {
-            assertThat(JSON_SERIALIZE.aclDiffReads().reads(new JsNumber(BigDecimal.valueOf(18))))
+            assertThat(DTO_JSON_SERIALIZE.aclRightsReads().reads(new JsNumber(BigDecimal.valueOf(18))))
                 .isInstanceOf(JsError.class);
         }
     }

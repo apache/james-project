@@ -20,14 +20,12 @@
 package org.apache.james.event.json.dtos;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.event.json.DTOs;
-import org.apache.james.event.json.JsonSerialize;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.JsError;
@@ -36,11 +34,10 @@ import play.api.libs.json.Json;
 class MailboxPathTest {
     private static final String MAILBOX_NAME = "mailboxName";
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", MAILBOX_NAME);
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
 
     @Test
     void mailboxPathShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(MAILBOX_PATH)).toString())
+        assertThatJson(DTO_JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(MAILBOX_PATH)).toString())
             .isEqualTo(
                 "{" +
                 "  \"namespace\":\"#private\"," +
@@ -51,7 +48,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathWithNullUserShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(
+        assertThatJson(DTO_JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(
             new MailboxPath(MailboxConstants.USER_NAMESPACE, null, MAILBOX_NAME))).toString())
             .isEqualTo(
                 "{" +
@@ -62,7 +59,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathWithEmptyNamespaceShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(
+        assertThatJson(DTO_JSON_SERIALIZE.mailboxPathWrites().writes(DTOs.MailboxPath$.MODULE$.fromJava(
             new MailboxPath("", "user", MAILBOX_NAME))).toString())
             .isEqualTo(
                 "{" +
@@ -74,7 +71,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathWithShouldBeWellDeSerialized() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":\"user\"," +
             "  \"name\":\"mailboxName\"" +
@@ -85,7 +82,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathWithNullUserShouldBeWellDeSerialized() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":null," +
             "  \"name\":\"mailboxName\"" +
@@ -96,7 +93,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathWithNoUserShouldBeWellDeSerialized() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"name\":\"mailboxName\"" +
             "}")).get())
@@ -106,7 +103,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenNoNamespace() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"user\":\"user\"," +
             "  \"name\":\"mailboxName\"" +
             "}"))
@@ -116,7 +113,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenNullNamespace() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":null," +
             "  \"user\":\"user\"," +
             "  \"name\":\"mailboxName\"" +
@@ -127,7 +124,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenLongNamespace() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":18," +
             "  \"user\":\"user\"," +
             "  \"name\":\"mailboxName\"" +
@@ -137,7 +134,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenLongUser() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":42," +
             "  \"name\":\"mailboxName\"" +
@@ -147,7 +144,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenMissingMailboxName() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":\"user\"" +
             "}")))
@@ -156,7 +153,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenNullMailboxName() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":\"user\"," +
             "  \"name\":null" +
@@ -166,7 +163,7 @@ class MailboxPathTest {
 
     @Test
     void mailboxPathDeserializationShouldFailWhenLongMailboxName() {
-        assertThat(JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
+        assertThat(DTO_JSON_SERIALIZE.mailboxPathReads().reads(Json.parse("{" +
             "  \"namespace\":\"#private\"," +
             "  \"user\":\"user\"," +
             "  \"name\":42" +

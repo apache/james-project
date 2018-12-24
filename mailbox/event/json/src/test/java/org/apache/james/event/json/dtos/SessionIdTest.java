@@ -19,47 +19,40 @@
 
 package org.apache.james.event.json.dtos;
 
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.event.json.JsonSerialize;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.JsError;
 import play.api.libs.json.JsNull$;
 import play.api.libs.json.JsNumber;
-import play.api.libs.json.JsPath;
 import play.api.libs.json.JsString;
-import play.api.libs.json.JsSuccess;
-import scala.collection.immutable.List;
 import scala.math.BigDecimal;
 
 class SessionIdTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Test
     void sessionIdShouldBeWellSerialized() {
-        assertThat(JSON_SERIALIZE.sessionIdWrites().writes(MailboxSession.SessionId.of(18)))
+        assertThat(DTO_JSON_SERIALIZE.sessionIdWrites().writes(MailboxSession.SessionId.of(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
     @Test
     void sessionIdShouldBeWellDeSerialized() {
-        assertThat(JSON_SERIALIZE.sessionIdReads().reads(new JsNumber(BigDecimal.valueOf(18))))
-            .isEqualTo(new JsSuccess<>(MailboxSession.SessionId.of(18), new JsPath(List.empty())));
+        assertThat(DTO_JSON_SERIALIZE.sessionIdReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
+            .isEqualTo(MailboxSession.SessionId.of(18));
     }
 
     @Test
     void sessionIdShouldReturnErrorWhenString() {
-        assertThat(JSON_SERIALIZE.sessionIdReads().reads(new JsString("18")))
+        assertThat(DTO_JSON_SERIALIZE.sessionIdReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);
     }
 
     @Test
     void sessionIdShouldReturnErrorWhenNull() {
-        assertThat(JSON_SERIALIZE.sessionIdReads().reads(JsNull$.MODULE$))
+        assertThat(DTO_JSON_SERIALIZE.sessionIdReads().reads(JsNull$.MODULE$))
             .isInstanceOf(JsError.class);
     }
 }

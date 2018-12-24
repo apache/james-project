@@ -20,6 +20,7 @@
 package org.apache.james.event.json.dtos;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -28,19 +29,14 @@ import java.util.NoSuchElementException;
 import javax.mail.Flags;
 
 import org.apache.james.event.json.DTOs;
-import org.apache.james.event.json.JsonSerialize;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.Json;
 
 class FlagsTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Test
     void emptyFlagsShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags()))
             .toString())
             .isEqualTo("{\"systemFlags\":[],\"userFlags\":[]}");
@@ -48,7 +44,7 @@ class FlagsTest {
 
     @Test
     void answeredShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.ANSWERED)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Answered\"],\"userFlags\":[]}");
@@ -56,7 +52,7 @@ class FlagsTest {
 
     @Test
     void deletedShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.DELETED)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Deleted\"],\"userFlags\":[]}");
@@ -64,7 +60,7 @@ class FlagsTest {
 
     @Test
     void draftShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.DRAFT)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Draft\"],\"userFlags\":[]}");
@@ -72,7 +68,7 @@ class FlagsTest {
 
     @Test
     void flaggedShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.FLAGGED)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Flagged\"],\"userFlags\":[]}");
@@ -80,7 +76,7 @@ class FlagsTest {
 
     @Test
     void recentShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.RECENT)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Recent\"],\"userFlags\":[]}");
@@ -88,7 +84,7 @@ class FlagsTest {
 
     @Test
     void seenShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags(Flags.Flag.SEEN)))
             .toString())
             .isEqualTo("{\"systemFlags\":[\"Seen\"],\"userFlags\":[]}");
@@ -96,7 +92,7 @@ class FlagsTest {
 
     @Test
     void userFlagShouldBeWellSerialized() {
-        assertThatJson(JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
+        assertThatJson(DTO_JSON_SERIALIZE.flagWrites().writes(DTOs.Flags$.MODULE$.fromJavaFlags(
             new Flags("user flag")))
             .toString())
             .isEqualTo("{\"systemFlags\":[],\"userFlags\":[\"user flag\"]}");
@@ -105,7 +101,7 @@ class FlagsTest {
     @Test
     void emptyFlagsShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags());
     }
@@ -113,7 +109,7 @@ class FlagsTest {
     @Test
     void answeredShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Answered\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Answered\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.ANSWERED));
     }
@@ -121,7 +117,7 @@ class FlagsTest {
     @Test
     void deletedShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Deleted\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Deleted\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.DELETED));
     }
@@ -129,7 +125,7 @@ class FlagsTest {
     @Test
     void draftShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Draft\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Draft\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.DRAFT));
     }
@@ -137,7 +133,7 @@ class FlagsTest {
     @Test
     void flaggedShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Flagged\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Flagged\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.FLAGGED));
     }
@@ -145,7 +141,7 @@ class FlagsTest {
     @Test
     void recentShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Recent\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Recent\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.RECENT));
     }
@@ -153,7 +149,7 @@ class FlagsTest {
     @Test
     void seenShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Seen\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"Seen\"],\"userFlags\":[]}"))
                 .get()))
             .isEqualTo(new Flags(Flags.Flag.SEEN));
     }
@@ -161,7 +157,7 @@ class FlagsTest {
     @Test
     void userFlagShouldBeWellDeSerialized() {
         assertThat(DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[\"user flag\"]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[\"user flag\"]}"))
                 .get()))
             .isEqualTo(new Flags("user flag"));
     }
@@ -169,7 +165,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenUnknownSystemFlag() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"unknown\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"unknown\"],\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -177,7 +173,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenBadCaseSystemFlag() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"AnSwErEd\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[\"AnSwErEd\"],\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -185,7 +181,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenNullSystemFlag() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":null,\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":null,\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -193,7 +189,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenSystemFlagContainsNullElements() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[null,\"Draft\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[null,\"Draft\"],\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -201,7 +197,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenSystemFlagContainsNotStringElements() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[42,\"Draft\"],\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[42,\"Draft\"],\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -209,7 +205,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenUserFlagsContainsNullElements() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[null, \"a\"]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[null, \"a\"]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -217,7 +213,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenUserFlagsContainsNonStringElements() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[42, \"a\"]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[],\"userFlags\":[42, \"a\"]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -225,7 +221,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenNoUserFlags() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"systemFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }
@@ -233,7 +229,7 @@ class FlagsTest {
     @Test
     void deserializeShouldThrowWhenNoSystemFlags() {
         assertThatThrownBy(() -> DTOs.Flags$.MODULE$.toJavaFlags(
-            JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"userFlags\":[]}"))
+            DTO_JSON_SERIALIZE.flagsReads().reads(Json.parse("{\"userFlags\":[]}"))
                 .get()))
             .isInstanceOf(NoSuchElementException.class);
     }

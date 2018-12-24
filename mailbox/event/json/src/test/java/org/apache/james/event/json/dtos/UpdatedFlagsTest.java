@@ -19,22 +19,18 @@
 
 package org.apache.james.event.json.dtos;
 
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.event.json.JsonSerialize;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.JsError;
 import play.api.libs.json.Json;
 
 class UpdatedFlagsTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Test
     void flagsUpdatedShouldThrowWhenMoqSeqIsAString() {
-        assertThat(JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
             "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": \"35\"," +
@@ -46,7 +42,7 @@ class UpdatedFlagsTest {
 
     @Test
     void flagsUpdatedShouldThrowWhenMoqSeqIsNull() {
-        assertThat(JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
             "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": null," +
@@ -58,7 +54,7 @@ class UpdatedFlagsTest {
 
     @Test
     void flagsUpdatedShouldThrowWhenMoqSeqIsNotAnInteger() {
-        assertThat(JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
             "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35.2567454," +
@@ -70,7 +66,7 @@ class UpdatedFlagsTest {
 
     @Test
     void flagsUpdatedShouldThrowWhenOldFlagIsMissing() {
-        assertThat(JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
             "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +
@@ -81,7 +77,7 @@ class UpdatedFlagsTest {
 
     @Test
     void flagsUpdatedShouldThrowWhenNewFlagIsMissing() {
-        assertThat(JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
+        assertThat(DTO_JSON_SERIALIZE.updatedFlagsReads().reads(Json.parse(
             "      {" +
                 "        \"uid\": 123456," +
                 "        \"modSeq\": 35," +

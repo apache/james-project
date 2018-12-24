@@ -19,28 +19,24 @@
 
 package org.apache.james.event.json.dtos;
 
+import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.NoSuchElementException;
 
-import org.apache.james.event.json.JsonSerialize;
-import org.apache.james.mailbox.model.TestId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.Json;
 
 class MessageMetaDataTest {
-    private static final JsonSerialize JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
-
     @Nested
     class StructureTest {
         @Test
         void deserializeShouldThrowWhenNoFlags() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
                     "        \"size\": 45,  " +
@@ -53,7 +49,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenNoUid() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"modSeq\": 35," +
                     "        \"flags\": {" +
                     "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
@@ -68,7 +64,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenNoModSeq() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"flags\": {" +
                     "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
@@ -83,7 +79,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenNoSize() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
                     "        \"flags\": {" +
@@ -98,7 +94,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenNoInternalDate() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
                     "        \"flags\": {" +
@@ -113,7 +109,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenNoMessageId() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": 35," +
                     "        \"flags\": {" +
@@ -131,7 +127,7 @@ class MessageMetaDataTest {
     class ModSeqTest {
         @Test
         void deserializeShouldThrowWhenNullModSeq() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": null," +
                     "        \"flags\": {" +
@@ -147,7 +143,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenStringModSeq() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"modSeq\": \"42\"," +
                     "        \"flags\": {" +
@@ -166,7 +162,7 @@ class MessageMetaDataTest {
     class SizeTest {
         @Test
         void deserializeShouldThrowWhenNullSize() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": null," +
                     "        \"flags\": {" +
@@ -182,7 +178,7 @@ class MessageMetaDataTest {
 
         @Test
         void deserializeShouldThrowWhenStringSize() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": \"42\"," +
                     "        \"flags\": {" +
@@ -201,7 +197,7 @@ class MessageMetaDataTest {
     class DeserializationErrorOnInternalDate {
         @Test
         void deSerializeShouldThrowWhenInternalDateIsNotInISOFormatBecauseOfMissingTWord() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -217,7 +213,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateContainsOnlyDate() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -233,7 +229,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateIsMissingHourPart() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -249,7 +245,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateIsMissingTimeZone() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -265,7 +261,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateIsMissingHours() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -281,7 +277,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateIsEmpty() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -297,7 +293,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldThrowWhenInternalDateIsNull() {
-            assertThatThrownBy(() -> JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -313,7 +309,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldParseValidISOInstants() {
-            assertThat(JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThat(DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
@@ -330,7 +326,7 @@ class MessageMetaDataTest {
 
         @Test
         void deSerializeShouldParseWhenInternalDateIsMissingMilliSeconds() {
-            assertThat(JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
+            assertThat(DTO_JSON_SERIALIZE.messageMetaDataReads().reads(Json.parse("{" +
                     "        \"uid\": 123456," +
                     "        \"size\": 42," +
                     "        \"flags\": {" +
