@@ -136,16 +136,13 @@ class FlagsUpdatedSerializationTest {
     }
 
     @Nested
-    class WithUpdatedFlags {
+    class WithEmptyUpdatedFlags {
+        private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
+        private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
+            MAILBOX_ID, emptyUpdatedFlags);
 
-        @Nested
-        class EmptyUpdatedFlags {
-            private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
-            private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, emptyUpdatedFlags);
-
-            private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =
-                "{" +
+        private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =
+            "{" +
                 "  \"FlagsUpdated\": {" +
                 "    \"path\": {" +
                 "      \"namespace\": \"#private\"," +
@@ -159,159 +156,17 @@ class FlagsUpdatedSerializationTest {
                 "  }" +
                 "}";
 
-            @Test
-            void flagsUpdatedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(emptyUpdatedFlagsEvent))
-                    .when(Option.IGNORING_ARRAY_ORDER)
-                    .isEqualTo(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS);
-            }
-
-            @Test
-            void flagsUpdatedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS).get())
-                    .isEqualTo(emptyUpdatedFlagsEvent);
-            }
+        @Test
+        void flagsUpdatedShouldBeWellSerialized() {
+            assertThatJson(EVENT_SERIALIZER.toJson(emptyUpdatedFlagsEvent))
+                .when(Option.IGNORING_ARRAY_ORDER)
+                .isEqualTo(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS);
         }
 
-        @Nested
-        class EmptyOldFlags {
-            private final UpdatedFlags emptyOldFlags = UpdatedFlags.builder()
-                .uid(MESSAGE_UID_1)
-                .modSeq(MOD_SEQ_1)
-                .oldFlags(FlagsBuilder.builder().build())
-                .newFlags(NEW_FLAGS_1)
-                .build();
-            private final MailboxListener.FlagsUpdated emptyOldFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, ImmutableList.of(emptyOldFlags));
-
-            private static final String EVENT_JSON_WITH_EMPTY_OLD_FLAGS =
-                "{" +
-                "  \"FlagsUpdated\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"#private\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"sessionId\": 42," +
-                "    \"updatedFlags\": [" +
-                "      {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"oldFlags\": {\"systemFlags\":[],\"userFlags\":[]}," +
-                "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                "      }" +
-                "    ]," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}";
-
-            @Test
-            void flagsUpdatedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(emptyOldFlagsUpdatedFlagsEvent))
-                    .when(Option.IGNORING_ARRAY_ORDER)
-                    .isEqualTo(EVENT_JSON_WITH_EMPTY_OLD_FLAGS);
-            }
-
-            @Test
-            void flagsUpdatedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_OLD_FLAGS).get())
-                    .isEqualTo(emptyOldFlagsUpdatedFlagsEvent);
-            }
-        }
-
-        @Nested
-        class EmptyNewFlags {
-            private final UpdatedFlags emptyNewFlags = UpdatedFlags.builder()
-                .uid(MESSAGE_UID_1)
-                .modSeq(MOD_SEQ_1)
-                .oldFlags(OLD_FLAGS_1)
-                .newFlags(FlagsBuilder.builder().build())
-                .build();
-            private final MailboxListener.FlagsUpdated emptyNewFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, ImmutableList.of(emptyNewFlags));
-
-            private static final String EVENT_JSON_WITH_EMPTY_NEW_FLAGS =
-                "{" +
-                "  \"FlagsUpdated\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"#private\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"sessionId\": 42," +
-                "    \"updatedFlags\": [" +
-                "      {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"oldFlags\": {\"systemFlags\":[\"Deleted\",\"Seen\"],\"userFlags\":[\"Old Flag 1\"]}," +
-                "        \"newFlags\": {\"systemFlags\":[],\"userFlags\":[]}" +
-                "      }" +
-                "    ]," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}";
-
-            @Test
-            void flagsUpdatedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(emptyNewFlagsUpdatedFlagsEvent))
-                    .when(Option.IGNORING_ARRAY_ORDER)
-                    .isEqualTo(EVENT_JSON_WITH_EMPTY_NEW_FLAGS);
-            }
-
-            @Test
-            void flagsUpdatedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_NEW_FLAGS).get())
-                    .isEqualTo(emptyNewFlagsUpdatedFlagsEvent);
-            }
-        }
-
-        @Nested
-        class EmptyOldFlagsAndNewFlags {
-            private final UpdatedFlags emptyFlags = UpdatedFlags.builder()
-                .uid(MESSAGE_UID_1)
-                .modSeq(MOD_SEQ_1)
-                .oldFlags(FlagsBuilder.builder().build())
-                .newFlags(FlagsBuilder.builder().build())
-                .build();
-            private final MailboxListener.FlagsUpdated emptyFlagsUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-                MAILBOX_ID, ImmutableList.of(emptyFlags));
-
-            private static final String EVENT_JSON_WITH_EMPTY_OLD_AND_NEW_FLAGS =
-                "{" +
-                "  \"FlagsUpdated\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"#private\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"sessionId\": 42," +
-                "    \"updatedFlags\": [" +
-                "      {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"oldFlags\": {\"systemFlags\":[],\"userFlags\":[]}," +
-                "        \"newFlags\": {\"systemFlags\":[],\"userFlags\":[]}" +
-                "      }" +
-                "    ]," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}";
-
-            @Test
-            void flagsUpdatedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(emptyFlagsUpdatedFlagsEvent))
-                    .when(Option.IGNORING_ARRAY_ORDER)
-                    .isEqualTo(EVENT_JSON_WITH_EMPTY_OLD_AND_NEW_FLAGS);
-            }
-
-            @Test
-            void flagsUpdatedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_OLD_AND_NEW_FLAGS).get())
-                    .isEqualTo(emptyFlagsUpdatedFlagsEvent);
-            }
+        @Test
+        void flagsUpdatedShouldBeWellDeSerialized() {
+            assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS).get())
+                .isEqualTo(emptyUpdatedFlagsEvent);
         }
     }
 
@@ -611,7 +466,6 @@ class FlagsUpdatedSerializationTest {
 
             @Nested
             class DeserializationErrorOnOldFlags {
-
                 @Test
                 void flagsUpdatedShouldThrowWhenOldFlagsIsNull() {
                     assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
@@ -629,162 +483,6 @@ class FlagsUpdatedSerializationTest {
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
                         "        \"oldFlags\": null," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsNullElements() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[null,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenUserFlagsContainsNullElements() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", null]}," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsDoesNotContainString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[42,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsUnknownString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"unKnown\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsBadCaseString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"dRaFt\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenUserFlagsDoesNotContainString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", 42]}," +
                         "        \"newFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
@@ -814,162 +512,6 @@ class FlagsUpdatedSerializationTest {
                         "        \"uid\": 123456," +
                         "        \"modSeq\": \"35\"," +
                         "        \"newFlags\": null," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsNullElements() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[null,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenUserFlagsContainsNullElements() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", null]}," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsDoesNotContainString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[42,\"Draft\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsUnknownString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[\"unKnown\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenSystemFlagsContainsBadCaseString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[\"dRaFt\"],\"userFlags\":[\"New Flag 1\"]}," +
-                        "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
-                        "      }" +
-                        "    ]," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void flagsUpdatedShouldThrowWhenUserFlagsDoesNotContainString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"FlagsUpdated\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 482," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"sessionId\": 42," +
-                        "    \"updatedFlags\": [" +
-                        "      {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": \"35\"," +
-                        "        \"newFlags\": {\"systemFlags\":[\"Draft\"],\"userFlags\":[\"New Flag 1\", 42]}," +
                         "        \"oldFlags\": {\"systemFlags\":[\"Answered\",\"Draft\"],\"userFlags\":[\"New Flag 1\"]}" +
                         "      }" +
                         "    ]," +
