@@ -379,13 +379,10 @@ class ExpungedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
             }
 
-            @Nested
-            class DeserializationErrorOnMessageUid {
-
-                @Test
-                void expungedShouldThrowWhenMessageUidIsAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
+            @Test
+            void expungedShouldThrowWhenMessageUidIsMissing() {
+                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                    "{" +
                         "  \"Expunged\": {" +
                         "    \"path\": {" +
                         "      \"namespace\": \"#private\"," +
@@ -395,7 +392,6 @@ class ExpungedSerializationTest {
                         "    \"mailboxId\": \"18\"," +
                         "    \"expunged\": {" +
                         "      \"123456\": {" +
-                        "        \"uid\": \"123456\"," +
                         "        \"modSeq\": 35," +
                         "        \"flags\": {" +
                         "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
@@ -410,37 +406,6 @@ class ExpungedSerializationTest {
                         "  }" +
                         "}").get())
                     .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void expungedShouldThrowWhenMessageUidIsNull() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Expunged\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": null" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"expunged\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": null," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
             }
 
             @Nested
