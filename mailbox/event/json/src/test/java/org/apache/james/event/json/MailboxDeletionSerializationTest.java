@@ -90,72 +90,6 @@ class MailboxDeletionSerializationTest {
     }
 
     @Nested
-    class NullOrEmptyNameSpaceInMailboxPath {
-
-        @Test
-        void mailboxAddedShouldBeWellDeSerializedWhenEmptyNameSpace() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"MailboxDeletion\":{" +
-                "    \"sessionId\":3652," +
-                "    \"user\":\"user\"," +
-                "    \"path\":{" +
-                "      \"namespace\":\"\"," +
-                "      \"user\":\"user\"," +
-                "      \"name\":\"mailboxName\"" +
-                "    }," +
-                "    \"quotaRoot\":\"user@domain\"," +
-                "    \"deletedMessageCount\":60," +
-                "    \"totalDeletedSize\":100," +
-                "    \"mailboxId\":\"789\"" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_MAILBOX_DELETION_EVENT);
-        }
-    }
-
-    @Nested
-    class NullUserInMailboxPath {
-
-        private final String nulUser = null;
-        private final MailboxListener.MailboxDeletion nullUserInMailboxPathEvent = new MailboxListener.MailboxDeletion(
-                SESSION_ID,
-                USER,
-                new MailboxPath(USER_NAMESPACE, nulUser, "mailboxName"),
-                QUOTA_ROOT,
-                DELETED_MESSAGE_COUNT,
-                TOTAL_DELETED_SIZE,
-                MAILBOX_ID);
-        private final String nullUserMailboxEventJson =
-            "{" +
-            "  \"MailboxDeletion\":{" +
-            "    \"sessionId\":3652," +
-            "    \"user\":\"user\"," +
-            "    \"path\":{" +
-            "      \"namespace\":\"#private\"," +
-            "      \"name\":\"mailboxName\"" +
-            "    }," +
-            "    \"quotaRoot\":\"user@domain\"," +
-            "    \"deletedMessageCount\":60," +
-            "    \"totalDeletedSize\":100," +
-            "    \"mailboxId\":\"789\"" +
-            "  }" +
-            "}";
-
-        @Test
-        void mailboxAddedShouldBeWellSerializedWhenNullUserInMailboxPath() {
-            assertThatJson(EVENT_SERIALIZER.toJson(nullUserInMailboxPathEvent))
-                .isEqualTo(nullUserMailboxEventJson);
-        }
-
-        @Test
-        void mailboxAddedShouldBeWellDeSerializedWhenNullUserInMailboxPath() {
-            assertThat(EVENT_SERIALIZER.fromJson(nullUserMailboxEventJson).get())
-                .isEqualTo(nullUserInMailboxPathEvent);
-        }
-    }
-
-    @Nested
     class EmptyQuotaRoot {
         private final MailboxListener.MailboxDeletion emptyQuotaRootEvent = new MailboxListener.MailboxDeletion(
                 SESSION_ID,
@@ -490,102 +424,20 @@ class MailboxDeletionSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailboxPath {
-
-            @Nested
-            class DeserializationErrorOnNameSpace {
-                @Test
-                void mailboxAddedShouldThrowWhenNameSpaceIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"MailboxDeletion\":{" +
-                        "    \"sessionId\":3652," +
-                        "    \"user\":\"user\"," +
-                        "    \"path\":{" +
-                        "      \"namespace\":4268.548," +
-                        "      \"user\":\"user\"," +
-                        "      \"name\":\"mailBoxName\"" +
-                        "    }," +
-                        "    \"quotaRoot\":\"user@domain\"," +
-                        "    \"deletedMessageCount\":60," +
-                        "    \"totalDeletedSize\":100," +
-                        "    \"mailboxId\":\"789\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnUser {
-                @Test
-                void mailboxAddedShouldThrowWhenUserIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"MailboxDeletion\":{" +
-                        "    \"sessionId\":3652," +
-                        "    \"user\":\"user\"," +
-                        "    \"path\":{" +
-                        "      \"namespace\":\"#private\"," +
-                        "      \"user\":153274," +
-                        "      \"name\":\"mailBoxName\"" +
-                        "    }," +
-                        "    \"quotaRoot\":\"user@domain\"," +
-                        "    \"deletedMessageCount\":60," +
-                        "    \"totalDeletedSize\":100," +
-                        "    \"mailboxId\":\"789\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnMailboxName {
-
-                @Test
-                void mailboxAddedShouldThrowWhenNullMailboxName() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"MailboxDeletion\":{" +
-                        "    \"sessionId\":3652," +
-                        "    \"user\":\"user\"," +
-                        "    \"path\":{" +
-                        "      \"namespace\":\"#private\"," +
-                        "      \"user\":\"user\"," +
-                        "      \"name\":null" +
-                        "    }," +
-                        "    \"quotaRoot\":\"user@domain\"," +
-                        "    \"deletedMessageCount\":60," +
-                        "    \"totalDeletedSize\":100," +
-                        "    \"mailboxId\":\"789\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void mailboxAddedShouldThrowWhenMailboxNameIdIsANumber() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"MailboxDeletion\":{" +
-                        "    \"sessionId\":3652," +
-                        "    \"user\":\"user\"," +
-                        "    \"path\":{" +
-                        "      \"namespace\":\"#private\"," +
-                        "      \"user\":\"user\"," +
-                        "      \"name\":4578" +
-                        "    }," +
-                        "    \"quotaRoot\":\"user@domain\"," +
-                        "    \"deletedMessageCount\":60," +
-                        "    \"totalDeletedSize\":100," +
-                        "    \"mailboxId\":\"789\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
+        @Test
+        void mailboxAddedShouldThrowWhenMissingPath() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"MailboxDeletion\":{" +
+                    "    \"sessionId\":3652," +
+                    "    \"user\":\"user\"," +
+                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"deletedMessageCount\":60," +
+                    "    \"totalDeletedSize\":100," +
+                    "    \"mailboxId\":\"789\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
         }
     }
 }

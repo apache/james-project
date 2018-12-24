@@ -21,7 +21,6 @@ package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static org.apache.james.mailbox.model.MailboxConstants.USER_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -396,116 +395,6 @@ class ExpungedSerializationTest {
             .isEqualTo(eventRoundToMinute);
         }
     }
-    @Nested
-    class NullOrEmptyNameSpaceInMailboxPath {
-
-        @Test
-        void expungedShouldBeWellDeSerializedWhenNullNameSpace() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"Expunged\": {" +
-                "    \"path\": {" +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"expunged\": {" +
-                "      \"123456\": {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"flags\": {" +
-                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                "          \"userFlags\":[\"User Custom Flag\"]}," +
-                "        \"size\": 45,  " +
-                "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                "        \"messageId\": \"42\"" +
-                "      }" +
-                "    }," +
-                "    \"sessionId\": 42," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_EXPUNGED_EVENT);
-        }
-
-        @Test
-        void expungedShouldBeWellDeSerializedWhenEmptyNameSpace() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"Expunged\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"expunged\": {" +
-                "      \"123456\": {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"flags\": {" +
-                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                "          \"userFlags\":[\"User Custom Flag\"]}," +
-                "        \"size\": 45,  " +
-                "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                "        \"messageId\": \"42\"" +
-                "      }" +
-                "    }," +
-                "    \"sessionId\": 42," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_EXPUNGED_EVENT);
-        }
-    }
-
-    @Nested
-    class NullUserInMailboxPath {
-        private final String nullUser = null;
-        private final MailboxListener.Expunged eventWithNullUserInPath = new MailboxListener.Expunged(
-            SESSION_ID,
-            USER,
-            new MailboxPath(USER_NAMESPACE, nullUser, MAILBOX_NAME),
-            MAILBOX_ID,
-            EXPUNGED);
-
-        private static final String EVENT_JSON_WITH_NULL_USER_IN_PATH =
-            "{" +
-            "  \"Expunged\": {" +
-            "    \"path\": {" +
-            "      \"namespace\": \"#private\"," +
-            "      \"name\": \"mailboxName\"" +
-            "    }," +
-            "    \"mailboxId\": \"18\"," +
-            "    \"expunged\": {" +
-            "      \"123456\": {" +
-            "        \"uid\": 123456," +
-            "        \"modSeq\": 35," +
-            "        \"flags\": {" +
-            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-            "          \"userFlags\":[\"User Custom Flag\"]}," +
-            "        \"size\": 45,  " +
-            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-            "        \"messageId\": \"42\"" +
-            "      }" +
-            "    }," +
-            "    \"sessionId\": 42," +
-            "    \"user\": \"user\"" +
-            "  }" +
-            "}";
-
-        @Test
-        void expungedShouldBeWellSerialized() {
-            assertThatJson(EVENT_SERIALIZER.toJson(eventWithNullUserInPath))
-                .isEqualTo(EVENT_JSON_WITH_NULL_USER_IN_PATH);
-        }
-
-        @Test
-        void expungedShouldBeWellDeSerialized() {
-            assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_NULL_USER_IN_PATH).get())
-                .isEqualTo(eventWithNullUserInPath);
-        }
-    }
 
     @Nested
     class DeserializationErrors {
@@ -596,138 +485,29 @@ class ExpungedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailboxPath {
-
-            @Nested
-            class DeserializationErrorOnNameSpace {
-                @Test
-                void expungedShouldThrowWhenNameSpaceIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Expunged\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 48246," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"expunged\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnUser {
-                @Test
-                void expungedShouldThrowWhenUserIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Expunged\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": 265412.64," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"expunged\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnMailboxName {
-
-                @Test
-                void expungedShouldThrowWhenNullMailboxName() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Expunged\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": null" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"expunged\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void expungedShouldThrowWhenMailboxNameIdIsANumber() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Expunged\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": 11861" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"expunged\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
+        @Test
+        void expungedShouldThrowWhenMissingPath() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"Expunged\": {" +
+                    "    \"mailboxId\": \"18\"," +
+                    "    \"expunged\": {" +
+                    "      \"123456\": {" +
+                    "        \"uid\": 123456," +
+                    "        \"modSeq\": 35," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
+                    "        \"size\": 45,  " +
+                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                    "        \"messageId\": \"42\"" +
+                    "      }" +
+                    "    }," +
+                    "    \"sessionId\": 42," +
+                    "    \"user\": \"user\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested

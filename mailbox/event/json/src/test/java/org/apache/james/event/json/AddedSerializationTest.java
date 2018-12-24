@@ -21,7 +21,6 @@ package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static net.javacrumbs.jsonunit.core.Option.IGNORING_ARRAY_ORDER;
-import static org.apache.james.mailbox.model.MailboxConstants.USER_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -398,117 +397,6 @@ class AddedSerializationTest {
     }
 
     @Nested
-    class NullOrEmptyNameSpaceInMailboxPath {
-
-        @Test
-        void addedShouldBeWellDeSerializedWhenNullNameSpace() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"Added\": {" +
-                "    \"path\": {" +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"added\": {" +
-                "      \"123456\": {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"flags\": {" +
-                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                "          \"userFlags\":[\"User Custom Flag\"]}," +
-                "        \"size\": 45,  " +
-                "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                "        \"messageId\": \"42\"" +
-                "      }" +
-                "    }," +
-                "    \"sessionId\": 42," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_ADDED_EVENT);
-        }
-
-        @Test
-        void addedShouldBeWellDeSerializedWhenEmptyNameSpace() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"Added\": {" +
-                "    \"path\": {" +
-                "      \"namespace\": \"\"," +
-                "      \"user\": \"user\"," +
-                "      \"name\": \"mailboxName\"" +
-                "    }," +
-                "    \"mailboxId\": \"18\"," +
-                "    \"added\": {" +
-                "      \"123456\": {" +
-                "        \"uid\": 123456," +
-                "        \"modSeq\": 35," +
-                "        \"flags\": {" +
-                "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                "          \"userFlags\":[\"User Custom Flag\"]}," +
-                "        \"size\": 45,  " +
-                "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                "        \"messageId\": \"42\"" +
-                "      }" +
-                "    }," +
-                "    \"sessionId\": 42," +
-                "    \"user\": \"user\"" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_ADDED_EVENT);
-        }
-    }
-
-    @Nested
-    class NullUserInMailboxPath {
-        private final String nullUser = null;
-        private final MailboxListener.Added eventWithNullUserInPath = new MailboxListener.Added(
-            SESSION_ID,
-            USER,
-            new MailboxPath(USER_NAMESPACE, nullUser, MAILBOX_NAME),
-            MAILBOX_ID,
-            ADDED);
-
-        private static final String EVENT_JSON_WITH_NULL_USER_IN_PATH =
-            "{" +
-            "  \"Added\": {" +
-            "    \"path\": {" +
-            "      \"namespace\": \"#private\"," +
-            "      \"name\": \"mailboxName\"" +
-            "    }," +
-            "    \"mailboxId\": \"18\"," +
-            "    \"added\": {" +
-            "      \"123456\": {" +
-            "        \"uid\": 123456," +
-            "        \"modSeq\": 35," +
-            "        \"flags\": {" +
-            "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-            "          \"userFlags\":[\"User Custom Flag\"]}," +
-            "        \"size\": 45,  " +
-            "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-            "        \"messageId\": \"42\"" +
-            "      }" +
-            "    }," +
-            "    \"sessionId\": 42," +
-            "    \"user\": \"user\"" +
-            "  }" +
-            "}";
-
-        @Test
-        void addedShouldBeWellSerialized() {
-            assertThatJson(EVENT_SERIALIZER.toJson(eventWithNullUserInPath))
-                .isEqualTo(EVENT_JSON_WITH_NULL_USER_IN_PATH);
-        }
-
-        @Test
-        void addedShouldBeWellDeSerialized() {
-            assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_NULL_USER_IN_PATH).get())
-                .isEqualTo(eventWithNullUserInPath);
-        }
-    }
-
-    @Nested
     class DeserializationErrors {
         @Test
         void addedShouldThrowWhenMissingSessionId() {
@@ -597,138 +485,29 @@ class AddedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnMailboxPath {
-
-            @Nested
-            class DeserializationErrorOnNameSpace {
-                @Test
-                void addedShouldThrowWhenNameSpaceIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Added\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": 48246," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnUser {
-                @Test
-                void addedShouldThrowWhenUserIsNotAString() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Added\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": 265412.64," +
-                        "      \"name\": \"mailboxName\"" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
-
-            @Nested
-            class DeserializationErrorOnMailboxName {
-
-                @Test
-                void addedShouldThrowWhenNullMailboxName() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Added\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": null" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-
-                @Test
-                void addedShouldThrowWhenMailboxNameIdIsANumber() {
-                    assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                        "{" +
-                        "  \"Added\": {" +
-                        "    \"path\": {" +
-                        "      \"namespace\": \"#private\"," +
-                        "      \"user\": \"user\"," +
-                        "      \"name\": 11861" +
-                        "    }," +
-                        "    \"mailboxId\": \"18\"," +
-                        "    \"added\": {" +
-                        "      \"123456\": {" +
-                        "        \"uid\": 123456," +
-                        "        \"modSeq\": 35," +
-                        "        \"flags\": {" +
-                        "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
-                        "          \"userFlags\":[\"User Custom Flag\"]}," +
-                        "        \"size\": 45,  " +
-                        "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
-                        "        \"messageId\": \"42\"" +
-                        "      }" +
-                        "    }," +
-                        "    \"sessionId\": 42," +
-                        "    \"user\": \"user\"" +
-                        "  }" +
-                        "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-                }
-            }
+        @Test
+        void addedShouldThrowWhenMissingPath() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"Added\": {" +
+                    "    \"mailboxId\": \"18\"," +
+                    "    \"added\": {" +
+                    "      \"123456\": {" +
+                    "        \"uid\": 123456," +
+                    "        \"modSeq\": 35," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
+                    "        \"size\": 45,  " +
+                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                    "        \"messageId\": \"42\"" +
+                    "      }" +
+                    "    }," +
+                    "    \"sessionId\": 42," +
+                    "    \"user\": \"user\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested

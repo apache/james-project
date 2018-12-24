@@ -86,203 +86,6 @@ class MailboxRenamedSerializationTest {
     }
 
     @Nested
-    class NullUserInMailboxPath {
-
-        @Nested
-        class NullUserInOldPath {
-            private final String nullUser = null;
-            private final MailboxListener.MailboxRenamed eventWithNullUserOldPath = new MailboxListener.MailboxRenamed(
-                DEFAULT_SESSION_ID,
-                DEFAULT_USER,
-                new MailboxPath(USER_NAMESPACE, nullUser, OLD_MAILBOX_NAME),
-                DEFAULT_MAILBOX_ID,
-                DEFAULT_NEW_MAILBOX_PATH);
-
-            private static final String EVENT_JSON_WITH_NULL_USER_OLD_PATH = "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-
-            @Test
-            void mailboxRenamedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(eventWithNullUserOldPath))
-                    .isEqualTo(EVENT_JSON_WITH_NULL_USER_OLD_PATH);
-            }
-
-            @Test
-            void mailboxRenamedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_NULL_USER_OLD_PATH).get())
-                    .isEqualTo(eventWithNullUserOldPath);
-            }
-        }
-
-        @Nested
-        class NullUserInNewPath {
-            private final String nullUser = null;
-            private final MailboxListener.MailboxRenamed eventWithNullUserNewPath = new MailboxListener.MailboxRenamed(
-                DEFAULT_SESSION_ID,
-                DEFAULT_USER,
-                DEFAULT_OLD_MAILBOX_PATH,
-                DEFAULT_MAILBOX_ID,
-                new MailboxPath(USER_NAMESPACE, nullUser, NEW_MAILBOX_NAME));
-
-            private static final String EVENT_JSON_WITH_NULL_USER_NEW_PATH = "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-
-            @Test
-            void mailboxRenamedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(eventWithNullUserNewPath))
-                    .isEqualTo(EVENT_JSON_WITH_NULL_USER_NEW_PATH);
-            }
-
-            @Test
-            void mailboxRenamedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_NULL_USER_NEW_PATH).get())
-                    .isEqualTo(eventWithNullUserNewPath);
-            }
-        }
-
-        @Nested
-        class NullUserInOldPathAndNewPath {
-            private final String nullUser = null;
-            private final MailboxListener.MailboxRenamed eventWithNullUserBothPath = new MailboxListener.MailboxRenamed(
-                DEFAULT_SESSION_ID,
-                DEFAULT_USER,
-                new MailboxPath(USER_NAMESPACE, nullUser, OLD_MAILBOX_NAME),
-                DEFAULT_MAILBOX_ID,
-                new MailboxPath(USER_NAMESPACE, nullUser, NEW_MAILBOX_NAME));
-
-            private static final String EVENT_JSON_WITH_NULL_USER_BOTH_PATH =
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-
-            @Test
-            void mailboxRenamedShouldBeWellSerialized() {
-                assertThatJson(EVENT_SERIALIZER.toJson(eventWithNullUserBothPath))
-                    .isEqualTo(EVENT_JSON_WITH_NULL_USER_BOTH_PATH);
-            }
-
-            @Test
-            void mailboxRenamedShouldBeWellDeSerialized() {
-                assertThat(EVENT_SERIALIZER.fromJson(EVENT_JSON_WITH_NULL_USER_BOTH_PATH).get())
-                    .isEqualTo(eventWithNullUserBothPath);
-            }
-        }
-    }
-
-    @Nested
-    class EmptyNameSpaceInMailboxPath {
-
-        @Test
-        void mailboxRenamedShouldBeWellDeSerializedWhenEmptyNameSpaceOldPath() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"MailboxRenamed\":{" +
-                "    \"sessionId\":123456789," +
-                "    \"user\":\"user\"," +
-                "    \"path\":{" +
-                "      \"user\":\"user\"," +
-                "      \"namespace\":\"\"," +
-                "      \"name\":\"oldMailboxName\"" +
-                "     }," +
-                "    \"mailboxId\":\"123456\"," +
-                "    \"newPath\":{" +
-                "      \"namespace\":\"#private\"," +
-                "      \"user\":\"user\"," +
-                "      \"name\":\"newMailboxName\"" +
-                "     }" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_MAILBOX_RENAMED_EVENT);
-        }
-
-        @Test
-        void mailboxRenamedShouldBeWellDeSerializedWhenEmptyNameSpaceNewPath() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"MailboxRenamed\":{" +
-                "    \"sessionId\":123456789," +
-                "    \"user\":\"user\"," +
-                "    \"path\":{" +
-                "      \"user\":\"user\"," +
-                "      \"namespace\":\"#private\"," +
-                "      \"name\":\"oldMailboxName\"" +
-                "     }," +
-                "    \"mailboxId\":\"123456\"," +
-                "    \"newPath\":{" +
-                "      \"namespace\":\"\"," +
-                "      \"user\":\"user\"," +
-                "      \"name\":\"newMailboxName\"" +
-                "     }" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_MAILBOX_RENAMED_EVENT);
-        }
-
-        @Test
-        void mailboxRenamedShouldBeWellDeSerializedWhenEmptyNameSpaceBothPath() {
-            assertThat(EVENT_SERIALIZER.fromJson(
-                "{" +
-                "  \"MailboxRenamed\":{" +
-                "    \"sessionId\":123456789," +
-                "    \"user\":\"user\"," +
-                "    \"path\":{" +
-                "      \"user\":\"user\"," +
-                "      \"namespace\":\"\"," +
-                "      \"name\":\"oldMailboxName\"" +
-                "     }," +
-                "    \"mailboxId\":\"123456\"," +
-                "    \"newPath\":{" +
-                "      \"namespace\":\"\"," +
-                "      \"user\":\"user\"," +
-                "      \"name\":\"newMailboxName\"" +
-                "     }" +
-                "  }" +
-                "}").get())
-            .isEqualTo(DEFAULT_MAILBOX_RENAMED_EVENT);
-        }
-    }
-
-    @Nested
     class DeserializationErrors {
         @Test
         void mailboxRenamedDeSerializeShouldThrowWhenMissingUser() {
@@ -341,6 +144,23 @@ class MailboxRenamedSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"oldMailboxName\"" +
                     "    }," +
+                    "    \"newPath\":{" +
+                    "      \"namespace\":\"#private\"," +
+                    "      \"user\":\"user\"," +
+                    "      \"name\":\"newMailboxName\"" +
+                    "     }" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
+        void mailboxRenamedDeSerializeShouldThrowWhenMissingOldPath() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"MailboxRenamed\":{" +
+                    "    \"sessionId\":123456789," +
+                    "    \"user\":\"user\"," +
                     "    \"mailboxId\":123456," +
                     "    \"newPath\":{" +
                     "      \"namespace\":\"#private\"," +
@@ -352,148 +172,10 @@ class MailboxRenamedSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnOldMailboxPath {
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingOldPathNameSpace() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenOldPathNameSpaceNotString() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":999," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingOldPathUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNotStringOldPathUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":666," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingOldPathName() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNotStringOldPathName() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":1456" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingNewPathNameSpace() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxRenamedDeSerializeShouldThrowWhenMissingNewPath() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxRenamed\":{" +
                     "    \"sessionId\":123456789," +
                     "    \"user\":\"user\"," +
@@ -502,129 +184,10 @@ class MailboxRenamedSerializationTest {
                     "      \"user\":\"user\"," +
                     "      \"name\":\"oldMailboxName\"" +
                     "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
+                    "    \"mailboxId\":123456" +
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNewPathNameSpaceNotString() {
-                String eventWithNumberMailboxId =
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":999," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(eventWithNumberMailboxId).get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingNewPathUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNotStringNewPathUser() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":4569," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenMissingNewPathName() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNotStringNewPathName() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":123456789," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "    }," +
-                    "    \"mailboxId\":123456," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":7529" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
     }
 }
