@@ -88,86 +88,6 @@ class MailboxDeletionSerializationTest {
     }
 
     @Nested
-    class NullQuotaCountInDeletedMessageCount {
-        private final MailboxListener.MailboxDeletion unlimitedQuotaCountDeletedMessageEvent = new MailboxListener.MailboxDeletion(
-                SESSION_ID,
-                USER,
-                MAILBOX_PATH,
-                QUOTA_ROOT,
-                QuotaCount.unlimited(),
-                TOTAL_DELETED_SIZE,
-                MAILBOX_ID);
-        private final String nullQuotaCountInDeletedMessageCountEventJson =
-            "{" +
-            "  \"MailboxDeletion\":{" +
-            "    \"sessionId\":3652," +
-            "    \"user\":\"user\"," +
-            "    \"path\":{" +
-            "      \"namespace\":\"#private\"," +
-            "      \"user\":\"user\"," +
-            "      \"name\":\"mailboxName\"" +
-            "    }," +
-            "    \"quotaRoot\":\"user@domain\"," +
-            "    \"deletedMessageCount\":null," +
-            "    \"totalDeletedSize\":100," +
-            "    \"mailboxId\":\"789\"" +
-            "  }" +
-            "}";
-
-        @Test
-        void mailboxAddedShouldBeWellSerializedWhenNullQuotaCount() {
-            assertThatJson(EVENT_SERIALIZER.toJson(unlimitedQuotaCountDeletedMessageEvent))
-                .isEqualTo(nullQuotaCountInDeletedMessageCountEventJson);
-        }
-
-        @Test
-        void mailboxAddedShouldBeWellDeSerializedWhenNullQuotaCount() {
-            assertThat(EVENT_SERIALIZER.fromJson(nullQuotaCountInDeletedMessageCountEventJson).get())
-                .isEqualTo(unlimitedQuotaCountDeletedMessageEvent);
-        }
-    }
-
-    @Nested
-    class NullQuotaSizeInTotalDeletedSize {
-        private final MailboxListener.MailboxDeletion unlimitedQuotaSizeDeletedSizeEvent = new MailboxListener.MailboxDeletion(
-                SESSION_ID,
-                USER,
-                MAILBOX_PATH,
-                QUOTA_ROOT,
-                DELETED_MESSAGE_COUNT,
-                QuotaSize.unlimited(),
-                MAILBOX_ID);
-        private final String nullQuotaSizeInTotalDeletedMessageEventJson =
-            "{" +
-            "  \"MailboxDeletion\":{" +
-            "    \"sessionId\":3652," +
-            "    \"user\":\"user\"," +
-            "    \"path\":{" +
-            "      \"namespace\":\"#private\"," +
-            "      \"user\":\"user\"," +
-            "      \"name\":\"mailboxName\"" +
-            "    }," +
-            "    \"quotaRoot\":\"user@domain\"," +
-            "    \"deletedMessageCount\":60," +
-            "    \"totalDeletedSize\":null," +
-            "    \"mailboxId\":\"789\"" +
-            "  }" +
-            "}";
-
-        @Test
-        void mailboxAddedShouldBeWellSerializedWhenNullQuotaSize() {
-            assertThatJson(EVENT_SERIALIZER.toJson(unlimitedQuotaSizeDeletedSizeEvent))
-                .isEqualTo(nullQuotaSizeInTotalDeletedMessageEventJson);
-        }
-
-        @Test
-        void mailboxAddedShouldBeWellDeSerializedWhenNullQuotaSize() {
-            assertThat(EVENT_SERIALIZER.fromJson(nullQuotaSizeInTotalDeletedMessageEventJson).get())
-                .isEqualTo(unlimitedQuotaSizeDeletedSizeEvent);
-        }
-    }
-
-    @Nested
     class DeserializationErrors {
         @Test
         void mailboxAddedShouldThrowWhenMissingSessionId() {
@@ -229,12 +149,10 @@ class MailboxDeletionSerializationTest {
                 .isInstanceOf(NoSuchElementException.class);
         }
 
-        @Nested
-        class DeserializationErrorOnDeletedMessageCount {
-            @Test
-            void mailboxAddedShouldThrowWhenMissingQuotaCount() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxAddedShouldThrowWhenMissingQuotaCount() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxDeletion\":{" +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
@@ -249,36 +167,12 @@ class MailboxDeletionSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenQuotaCountIsNotANumber() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":3652," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":\"60\"," +
-                    "    \"totalDeletedSize\":100," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
-        @Nested
-        class DeserializationErrorOnTotalDeletedSize {
-            @Test
-            void mailboxAddedShouldThrowWhenMissingQuotaSize() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxAddedShouldThrowWhenMissingQuotaSize() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxDeletion\":{" +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
@@ -293,28 +187,6 @@ class MailboxDeletionSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenQuotaSizeIsNotANumber() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":3652," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":60," +
-                    "    \"totalDeletedSize\":\"100\"," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
         @Test
