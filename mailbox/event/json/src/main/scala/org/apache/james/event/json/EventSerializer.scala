@@ -35,7 +35,7 @@ import play.api.libs.json.{JsError, JsNull, JsNumber, JsObject, JsResult, JsStri
 
 import scala.collection.JavaConverters._
 
-private sealed trait Event {
+sealed trait Event {
   def toJava: JavaEvent
 }
 
@@ -190,7 +190,7 @@ private object ScalaConverter {
   }
 }
 
-private class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
+class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[User] = (user: User) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)

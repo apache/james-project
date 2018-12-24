@@ -358,35 +358,10 @@ class MailboxRenamedSerializationTest {
             }
         }
 
-        @Nested
-        class DeserializationErrorOnSessionId {
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenStringSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxRenamed\":{" +
-                    "    \"sessionId\":\"123456789\"," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"oldMailboxName\"" +
-                    "     }," +
-                    "    \"mailboxId\":\"123456\"," +
-                    "    \"newPath\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"newMailboxName\"" +
-                    "     }" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxRenamedDeSerializeShouldThrowWhenNullSessionId() {
-                String eventWithNullSessionId =
-                    "{" +
+        @Test
+        void mailboxRenamedDeSerializeShouldThrowWhenMissingSessionId() {
+            String eventWithNullSessionId =
+                "{" +
                     "  \"MailboxRenamed\":{" +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -402,9 +377,8 @@ class MailboxRenamedSerializationTest {
                     "     }" +
                     "  }" +
                     "}";
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(eventWithNullSessionId).get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(eventWithNullSessionId).get())
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested

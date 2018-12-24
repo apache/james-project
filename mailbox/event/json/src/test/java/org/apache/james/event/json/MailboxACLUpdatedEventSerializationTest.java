@@ -270,13 +270,10 @@ class MailboxACLUpdatedEventSerializationTest {
 
     @Nested
     class DeserializationErrors {
-
-        @Nested
-        class DeserializationErrorOnSessionId {
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenMissingSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxACLUpdatedShouldThrowWhenMissingSessionId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxACLUpdated\":{" +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
@@ -290,50 +287,7 @@ class MailboxACLUpdatedEventSerializationTest {
                     "    \"user\":\"user\"" +
                     "   }" +
                     "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenNullSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"user\":\"bob\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":\"23\"," +
-                    "    \"sessionId\":null," +
-                    "    \"user\":\"user\"" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxACLUpdatedShouldThrowWhenStringSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxACLUpdated\":{" +
-                    "    \"mailboxPath\":{" +
-                    "       \"namespace\":\"#private\"," +
-                    "       \"user\":\"bob\"," +
-                    "       \"name\":\"mailboxName\"" +
-                    "      }," +
-                    "    \"aclDiff\":{" +
-                    "       \"oldACL\":{}," +
-                    "       \"newACL\":{\"$any\":\"ar\"}}," +
-                    "    \"mailboxId\":\"23\"," +
-                    "    \"sessionId\":\"123\"," +
-                    "    \"user\":\"user\"" +
-                    "   }" +
-                    "}").get())
-                    .isInstanceOf(NoSuchElementException.class);
-            }
+                .isInstanceOf(NoSuchElementException.class);
         }
 
         @Nested

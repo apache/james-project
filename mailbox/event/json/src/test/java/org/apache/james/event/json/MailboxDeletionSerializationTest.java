@@ -277,13 +277,10 @@ class MailboxDeletionSerializationTest {
 
     @Nested
     class DeserializationErrors {
-
-        @Nested
-        class DeserializationErrorOnSessionId {
-            @Test
-            void mailboxAddedShouldThrowWhenMissingSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
+        @Test
+        void mailboxAddedShouldThrowWhenMissingSessionId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
                     "  \"MailboxDeletion\":{" +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -298,49 +295,6 @@ class MailboxDeletionSerializationTest {
                     "  }" +
                     "}").get())
                 .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenNullSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":null," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":60," +
-                    "    \"totalDeletedSize\":100," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
-
-            @Test
-            void mailboxAddedShouldThrowWhenStringSessionId() {
-                assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
-                    "{" +
-                    "  \"MailboxDeletion\":{" +
-                    "    \"sessionId\":\"3652\"," +
-                    "    \"user\":\"user\"," +
-                    "    \"path\":{" +
-                    "      \"namespace\":\"#private\"," +
-                    "      \"user\":\"user\"," +
-                    "      \"name\":\"mailboxName\"" +
-                    "    }," +
-                    "    \"quotaRoot\":\"user@domain\"," +
-                    "    \"deletedMessageCount\":60," +
-                    "    \"totalDeletedSize\":100," +
-                    "    \"mailboxId\":\"789\"" +
-                    "  }" +
-                    "}").get())
-                .isInstanceOf(NoSuchElementException.class);
-            }
         }
 
         @Nested
