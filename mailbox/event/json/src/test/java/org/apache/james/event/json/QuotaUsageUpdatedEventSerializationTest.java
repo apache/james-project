@@ -51,19 +51,6 @@ class QuotaUsageUpdatedEventSerializationTest {
         .computedLimit(QuotaSize.size(10000))
         .build();
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
-    private static final MailboxListener.QuotaUsageUpdatedEvent DEFAULT_QUOTA_EVENT =
-        new MailboxListener.QuotaUsageUpdatedEvent(USER, QUOTA_ROOT, QUOTA_COUNT, QUOTA_SIZE, INSTANT);
-
-    private static final String DEFAULT_QUOTA_EVENT_JSON =
-        "{" +
-            "\"QuotaUsageUpdatedEvent\":{" +
-            "\"quotaRoot\":\"foo\"," +
-            "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-            "\"time\":\"2018-11-13T12:00:55Z\"," +
-            "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-            "\"user\":\"user\"" +
-            "}" +
-        "}";
 
     private static final EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
 
@@ -540,52 +527,36 @@ class QuotaUsageUpdatedEventSerializationTest {
         }
     }
 
-    @Nested
-    class WithTime {
-
-        @Test
-        void toJsonShouldReturnSerializedJsonEventWhenTimeIsValid() {
-            assertThatJson(EVENT_SERIALIZER.toJson(DEFAULT_QUOTA_EVENT))
-                .isEqualTo(DEFAULT_QUOTA_EVENT_JSON);
-        }
-
-        @Test
-        void fromJsonShouldReturnDeSerializedEventWhenTimeIsValid() {
-            assertThat(EVENT_SERIALIZER.fromJson(DEFAULT_QUOTA_EVENT_JSON).get())
-                .isEqualTo(DEFAULT_QUOTA_EVENT);
-        }
-
-        @Test
-        void fromJsonShouldThrowResultWhenTimeIsNull() {
-            String quotaUsageUpdatedEvent =
-                "{" +
-                    "\"QuotaUsageUpdatedEvent\":{" +
-                    "\"quotaRoot\":\"foo\"," +
-                    "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
-                    "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                    "\"user\":\"user\"" +
-                    "}" +
+    @Test
+    void fromJsonShouldThrowResultWhenTimeIsNull() {
+        String quotaUsageUpdatedEvent =
+            "{" +
+                "\"QuotaUsageUpdatedEvent\":{" +
+                "\"quotaRoot\":\"foo\"," +
+                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
+                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+                "\"user\":\"user\"" +
+                "}" +
                 "}";
 
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
+        assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
+            .isInstanceOf(NoSuchElementException.class);
+    }
 
-        @Test
-        void fromJsonShouldThrowResultWhenTimeIsEmpty() {
-            String quotaUsageUpdatedEvent =
-                "{" +
-                    "\"QuotaUsageUpdatedEvent\":{" +
-                    "\"quotaRoot\":\"foo\"," +
-                    "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
-                    "\"time\":\"\"," +
-                    "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                    "\"user\":\"user\"" +
-                    "}" +
+    @Test
+    void fromJsonShouldThrowResultWhenTimeIsEmpty() {
+        String quotaUsageUpdatedEvent =
+            "{" +
+                "\"QuotaUsageUpdatedEvent\":{" +
+                "\"quotaRoot\":\"foo\"," +
+                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
+                "\"time\":\"\"," +
+                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+                "\"user\":\"user\"" +
+                "}" +
                 "}";
 
-            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
-                .isInstanceOf(NoSuchElementException.class);
-        }
+        assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
+            .isInstanceOf(NoSuchElementException.class);
     }
 }
