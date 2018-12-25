@@ -35,7 +35,7 @@ import play.api.libs.json.{JsError, JsNull, JsNumber, JsObject, JsResult, JsStri
 
 import scala.collection.JavaConverters._
 
-sealed trait Event {
+private sealed trait Event {
   def toJava: JavaEvent
 }
 
@@ -304,20 +304,24 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
   implicit val updatedFlagsReads: Reads[DTOs.UpdatedFlags] = Json.reads[DTOs.UpdatedFlags]
 
-  implicit val eventOFormat: OFormat[Event] = derived.oformat()
+  private class EventSerializerPrivateWrapper {
+    implicit val eventOFormat: OFormat[Event] = derived.oformat()
 
-  def toJson(event: Event): String = Json.toJson(event).toString()
+    def toJson(event: Event): String = Json.toJson(event).toString()
+    def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
+  }
 
-  def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
+  def toJson(event: JavaEvent): String = new EventSerializerPrivateWrapper().toJson(ScalaConverter.toScala(event))
+  def fromJson(json: String): JsResult[JavaEvent] = new EventSerializerPrivateWrapper().fromJson(json)
+    .map(event => event.toJava)
 }
 
 class EventSerializer(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
-  def toJson(event: JavaEvent): String = new JsonSerialize(mailboxIdFactory, messageIdFactory).toJson(ScalaConverter.toScala(event))
+  def toJson(event: JavaEvent): String = new JsonSerialize(mailboxIdFactory, messageIdFactory).toJson(event)
 
   def fromJson(json: String): JsResult[JavaEvent] = {
     new JsonSerialize(mailboxIdFactory, messageIdFactory)
       .fromJson(json)
-      .map(event => event.toJava)
   }
 }
 
