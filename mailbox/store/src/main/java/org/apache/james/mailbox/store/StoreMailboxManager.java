@@ -513,6 +513,7 @@ public class StoreMailboxManager implements MailboxManager {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
                             // notify listeners
                             delegatingListener.event(EventFactory.mailboxAdded()
+                                .randomEventId()
                                 .mailboxSession(mailboxSession)
                                 .mailbox(m)
                                 .build());
@@ -560,6 +561,7 @@ public class StoreMailboxManager implements MailboxManager {
             SimpleMailbox m = new SimpleMailbox(mailbox);
             mailboxMapper.delete(mailbox);
             delegatingListener.event(EventFactory.mailboxDeleted()
+                .randomEventId()
                 .mailboxSession(session)
                 .mailbox(mailbox)
                 .quotaRoot(quotaRoot)
@@ -605,6 +607,7 @@ public class StoreMailboxManager implements MailboxManager {
         mapper.save(mailbox);
 
         delegatingListener.event(EventFactory.mailboxRenamed()
+            .randomEventId()
             .mailboxSession(session)
             .mailboxId(mailbox.getMailboxId())
             .oldPath(from)
@@ -622,6 +625,7 @@ public class StoreMailboxManager implements MailboxManager {
                 sub.setName(subNewName);
                 mapper.save(sub);
                 delegatingListener.event(EventFactory.mailboxRenamed()
+                    .randomEventId()
                     .mailboxSession(session)
                     .mailboxId(sub.getMailboxId())
                     .oldPath(fromPath)

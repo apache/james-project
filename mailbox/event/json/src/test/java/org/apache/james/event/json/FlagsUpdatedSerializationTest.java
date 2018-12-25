@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -91,10 +92,11 @@ class FlagsUpdatedSerializationTest {
     private static List<UpdatedFlags> UPDATED_FLAGS_LIST = ImmutableList.of(UPDATED_FLAG_1, UPDATED_FLAG_2);
 
     private static final MailboxListener.FlagsUpdated DEFAULT_EVENT = new MailboxListener.FlagsUpdated(SESSION_ID, USER,
-        MAILBOX_PATH, MAILBOX_ID, UPDATED_FLAGS_LIST);
+        MAILBOX_PATH, MAILBOX_ID, UPDATED_FLAGS_LIST, EVENT_ID);
     private static final String DEFAULT_EVENT_JSON =
         "{" +
         "  \"FlagsUpdated\": {" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"path\": {" +
         "      \"namespace\": \"#private\"," +
         "      \"user\": \"user\"," +
@@ -137,11 +139,12 @@ class FlagsUpdatedSerializationTest {
     class WithEmptyUpdatedFlags {
         private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
         private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
-            MAILBOX_ID, emptyUpdatedFlags);
+            MAILBOX_ID, emptyUpdatedFlags, EVENT_ID);
 
         private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =
             "{" +
                 "  \"FlagsUpdated\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"path\": {" +
                 "      \"namespace\": \"#private\"," +
                 "      \"user\": \"user\"," +
@@ -175,6 +178,7 @@ class FlagsUpdatedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"FlagsUpdated\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -202,10 +206,30 @@ class FlagsUpdatedSerializationTest {
         }
 
         @Test
+        void flagsUpdatedShouldThrowWhenMissingEventId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"FlagsUpdated\": {" +
+                    "    \"sessionId\":42," +
+                    "    \"path\": {" +
+                    "      \"namespace\": \"#private\"," +
+                    "      \"user\": \"user\"," +
+                    "      \"name\": \"mailboxName\"" +
+                    "    }," +
+                    "    \"mailboxId\": \"18\"," +
+                    "    \"updatedFlags\": []," +
+                    "    \"user\": \"user\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
         void flagsUpdatedShouldThrowWhenMissingUser() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"FlagsUpdated\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -237,6 +261,7 @@ class FlagsUpdatedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"FlagsUpdated\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -268,6 +293,7 @@ class FlagsUpdatedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"FlagsUpdated\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": 482," +
                     "      \"user\": \"user\"," +

@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,10 +53,12 @@ class MailboxACLUpdatedEventSerializationTest {
                 USER,
                 new MailboxPath(MailboxConstants.USER_NAMESPACE, "bob", "mailboxName"),
                 ACLDiff.computeDiff(MailboxACL.EMPTY, MAILBOX_ACL),
-                TestId.of(23));
+                TestId.of(23),
+                EVENT_ID);
 
     private static final String MAILBOX_ACL_UPDATED_JSON = "{" +
         "  \"MailboxACLUpdated\":{" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"mailboxPath\":{" +
         "       \"namespace\":\"#private\"," +
         "       \"user\":\"bob\"," +
@@ -89,6 +92,28 @@ class MailboxACLUpdatedEventSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxACLUpdated\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                    "    \"mailboxPath\":{" +
+                    "       \"namespace\":\"#private\"," +
+                    "       \"user\":\"bob\"," +
+                    "       \"name\":\"mailboxName\"" +
+                    "      }," +
+                    "    \"aclDiff\":{" +
+                    "       \"oldACL\":{}," +
+                    "       \"newACL\":{\"$any\":\"ar\"}}," +
+                    "    \"mailboxId\":\"23\"," +
+                    "    \"user\":\"user\"" +
+                    "   }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
+        void mailboxACLUpdatedShouldThrowWhenMissingEventId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"MailboxACLUpdated\":{" +
+                    "    \"sessionId\":42," +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
                     "       \"user\":\"bob\"," +
@@ -109,6 +134,7 @@ class MailboxACLUpdatedEventSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxACLUpdated\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
                     "       \"name\":\"mailboxName\"" +
@@ -128,6 +154,7 @@ class MailboxACLUpdatedEventSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxACLUpdated\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
                     "       \"name\":\"mailboxName\"" +
@@ -145,6 +172,7 @@ class MailboxACLUpdatedEventSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxACLUpdated\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":\"#private\"," +
                     "       \"user\":\"bob\"," +
@@ -165,6 +193,7 @@ class MailboxACLUpdatedEventSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxACLUpdated\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"mailboxPath\":{" +
                     "       \"namespace\":230192.06," +
                     "       \"user\":\"bob\"," +

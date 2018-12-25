@@ -140,6 +140,7 @@ public class StoreRightManager implements RightManager {
         ACLDiff aclDiff = mapper.updateACL(mailbox, mailboxACLCommand);
 
         delegatingMailboxListener.event(EventFactory.aclUpdated()
+            .randomEventId()
             .mailboxSession(session)
             .mailbox(mailbox)
             .aclDiff(aclDiff)
@@ -222,6 +223,7 @@ public class StoreRightManager implements RightManager {
         ACLDiff aclDiff = mapper.setACL(mailbox, mailboxACL);
 
         delegatingMailboxListener.event(EventFactory.aclUpdated()
+            .randomEventId()
             .mailboxSession(session)
             .mailbox(mailbox)
             .aclDiff(aclDiff)

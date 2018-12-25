@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.james.core.User;
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -54,7 +55,9 @@ public interface EventBusContract {
         MailboxSession.SessionId.of(42),
         User.fromUsername("user"),
         new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName"),
-        TestId.of(18));
+        TestId.of(18),
+        Event.EventId.random());
+    MailboxListener.Added NOOP_EVENT = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
 
     class GroupA extends Group {}
 
@@ -94,8 +97,7 @@ public interface EventBusContract {
 
         eventBus().register(listener, new GroupA());
 
-        MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of());
-        eventBus().dispatch(noopEvent, NO_KEYS).block();
+        eventBus().dispatch(NOOP_EVENT, NO_KEYS).block();
 
         verifyNoMoreInteractions(listener);
     }
@@ -106,8 +108,7 @@ public interface EventBusContract {
 
         eventBus().register(listener, KEY_1);
 
-        MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of());
-        eventBus().dispatch(noopEvent, KEY_1).block();
+        eventBus().dispatch(NOOP_EVENT, KEY_1).block();
 
         verifyNoMoreInteractions(listener);
     }

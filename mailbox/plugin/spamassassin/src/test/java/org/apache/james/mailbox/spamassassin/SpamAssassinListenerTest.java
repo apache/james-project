@@ -233,6 +233,7 @@ public class SpamAssassinListenerTest {
         SimpleMailboxMessage message = createMessage(inbox);
 
         MailboxListener.Added addedEvent = EventFactory.added()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(inbox)
             .addMessage(message)
@@ -248,6 +249,7 @@ public class SpamAssassinListenerTest {
         SimpleMailboxMessage message = createMessage(mailbox1);
 
         MailboxListener.Added addedEvent = EventFactory.added()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(mailbox1)
             .addMessage(message)

@@ -19,10 +19,15 @@
 
 package org.apache.james.event.json;
 
+
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 
 public interface SerializerFixture {
     JsonSerialize DTO_JSON_SERIALIZE = new JsonSerialize(new TestId.Factory(), new TestMessageId.Factory());
     EventSerializer EVENT_SERIALIZER = new EventSerializer(new TestId.Factory(), new TestMessageId.Factory());
+
+    String SERIALIZED_EVENT_ID = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
+    Event.EventId EVENT_ID = Event.EventId.of(SERIALIZED_EVENT_ID);
 }

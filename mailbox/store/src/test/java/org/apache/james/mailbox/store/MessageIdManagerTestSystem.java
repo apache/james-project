@@ -83,6 +83,7 @@ public class MessageIdManagerTestSystem {
             MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
             mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
             mailboxManager.getDelegationListener().event(EventFactory.added()
+                .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .addMessage(message)

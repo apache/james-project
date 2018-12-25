@@ -50,6 +50,7 @@ import org.junit.rules.RuleChain;
 import org.junit.rules.TemporaryFolder;
 
 public class ElasticSearchQuotaMailboxListenerTest {
+    private static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     private static final int BATCH_SIZE = 1;
     private static final Event DUMB_EVENT = mock(Event.class);
@@ -94,6 +95,7 @@ public class ElasticSearchQuotaMailboxListenerTest {
     @Test
     public void eventShouldIndexEventWhenQuotaEvent() throws Exception {
         quotaMailboxListener.event(EventFactory.quotaUpdated()
+            .eventId(EVENT_ID)
             .user(BOB_USER)
             .quotaRoot(QUOTAROOT)
             .quotaCount(Counts._52_PERCENT)

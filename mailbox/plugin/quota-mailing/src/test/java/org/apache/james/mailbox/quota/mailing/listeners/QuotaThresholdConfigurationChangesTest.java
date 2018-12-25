@@ -29,6 +29,7 @@ import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.mailetC
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
@@ -37,6 +38,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.Test;
 
 public interface QuotaThresholdConfigurationChangesTest {
+    Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     QuotaMailingListenerConfiguration CONFIGURATION_50 = QuotaMailingListenerConfiguration.builder()
         .addThreshold(_50)
@@ -51,14 +53,19 @@ public interface QuotaThresholdConfigurationChangesTest {
         .gracePeriod(GRACE_PERIOD)
         .build();
 
+    static EventFactory.RequireQuotaCount<EventFactory.RequireQuotaSize<EventFactory.RequireInstant<EventFactory.QuotaUsageUpdatedFinalStage>>> eventBase() {
+        return EventFactory.quotaUpdated()
+            .eventId(EVENT_ID)
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT);
+    }
+
     @Test
     default void shouldNotSendMailWhenNoNewExceededThresholdAfterThresholdIncrease(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._55_PERCENT)
             .instant(NOW)
@@ -68,9 +75,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._55_PERCENT)
             .instant(NOW)
@@ -84,9 +89,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -96,9 +99,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -112,9 +113,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -124,9 +123,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -140,9 +137,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._30_PERCENT)
             .instant(NOW)
@@ -152,9 +147,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._30_PERCENT)
             .instant(NOW)
@@ -168,9 +161,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._30_PERCENT)
             .instant(NOW)
@@ -179,9 +170,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
         mailetContext.resetSentMails();
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._30_PERCENT)
             .instant(NOW)
@@ -195,9 +184,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)
@@ -207,9 +194,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)
@@ -223,9 +208,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -236,9 +219,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -252,9 +233,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_50);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)
@@ -265,9 +244,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)
@@ -281,9 +258,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, CONFIGURATION_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -294,9 +269,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -311,9 +284,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
             CONFIGURATION_50_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -323,9 +294,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -340,9 +309,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
             CONFIGURATION_50_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -352,9 +319,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._92_PERCENT)
             .instant(NOW)
@@ -369,9 +334,7 @@ public interface QuotaThresholdConfigurationChangesTest {
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store,
             CONFIGURATION_50_75);
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)
@@ -381,9 +344,7 @@ public interface QuotaThresholdConfigurationChangesTest {
 
         mailetContext.resetSentMails();
 
-        testee.event(EventFactory.quotaUpdated()
-            .user(BOB_USER)
-            .quotaRoot(QUOTAROOT)
+        testee.event(eventBase()
             .quotaCount(Counts._40_PERCENT)
             .quotaSize(Sizes._60_PERCENT)
             .instant(NOW)

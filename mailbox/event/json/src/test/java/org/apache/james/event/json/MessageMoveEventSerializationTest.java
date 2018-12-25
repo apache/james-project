@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.Test;
 
 class MessageMoveEventSerializationTest {
     private static final Event EVENT = MessageMoveEvent.builder()
+        .eventId(EVENT_ID)
         .user(User.fromUsername("bob@domain.tld"))
         .messageId(TestMessageId.of(42))
         .messageMoves(
@@ -47,6 +49,7 @@ class MessageMoveEventSerializationTest {
         .build();
     private static final String JSON = "{" +
         "  \"MessageMoveEvent\": {" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"user\": \"bob@domain.tld\"," +
         "    \"previousMailboxIds\": [\"18\", \"24\"]," +
         "    \"targetMailboxIds\": [\"36\"]," +
@@ -71,6 +74,7 @@ class MessageMoveEventSerializationTest {
         @Nested
         class EmptyTargetMailboxIds {
             private final Event event = MessageMoveEvent.builder()
+                .eventId(EVENT_ID)
                 .user(User.fromUsername("bob"))
                 .messageId(TestMessageId.of(42))
                 .messageMoves(
@@ -80,6 +84,7 @@ class MessageMoveEventSerializationTest {
                 .build();
             private final String json = "{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob\"," +
                 "    \"previousMailboxIds\": [\"18\", \"24\"]," +
                 "    \"targetMailboxIds\": []," +
@@ -103,6 +108,7 @@ class MessageMoveEventSerializationTest {
         @Nested
         class EmptyPreviousMailboxIds {
             private final Event event = MessageMoveEvent.builder()
+                .eventId(EVENT_ID)
                 .user(User.fromUsername("bob"))
                 .messageId(TestMessageId.of(42))
                 .messageMoves(
@@ -112,6 +118,7 @@ class MessageMoveEventSerializationTest {
                 .build();
             private final String json = "{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob\"," +
                 "    \"previousMailboxIds\": []," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -135,6 +142,7 @@ class MessageMoveEventSerializationTest {
         @Nested
         class EmptyMessagesIds {
             private final Event event = MessageMoveEvent.builder()
+                .eventId(EVENT_ID)
                 .user(User.fromUsername("bob"))
                 .messageMoves(
                     MessageMoves.builder()
@@ -144,6 +152,7 @@ class MessageMoveEventSerializationTest {
                 .build();
             private final String json = "{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob\"," +
                 "    \"previousMailboxIds\": [\"18\", \"24\"]," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -172,6 +181,20 @@ class MessageMoveEventSerializationTest {
         void nullPreviousMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                "    \"user\": \"bob@domain.tld\"," +
+                "    \"previousMailboxIds\": null," +
+                "    \"targetMailboxIds\": [\"36\"]," +
+                "    \"messageIds\": [\"42\"]" +
+                "  }" +
+                "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
+        void missingEventIdMailboxIdsShouldBeRejected() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
+                "  \"MessageMoveEvent\": {" +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": null," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -185,6 +208,7 @@ class MessageMoveEventSerializationTest {
         void nonCollectionPreviousMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": 42," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -198,6 +222,7 @@ class MessageMoveEventSerializationTest {
         void nonStringElementInPreviousMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [42]," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -211,6 +236,7 @@ class MessageMoveEventSerializationTest {
         void nullElementInPreviousMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [null]," +
                 "    \"targetMailboxIds\": [\"36\"]," +
@@ -224,6 +250,7 @@ class MessageMoveEventSerializationTest {
         void nullTargetMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": null," +
@@ -237,6 +264,7 @@ class MessageMoveEventSerializationTest {
         void nonCollectionTargetMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": 42," +
@@ -250,6 +278,7 @@ class MessageMoveEventSerializationTest {
         void nonStringElementInTargetMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": [42]," +
@@ -263,6 +292,7 @@ class MessageMoveEventSerializationTest {
         void nullElementInTargetMailboxIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": [null]," +
@@ -289,6 +319,7 @@ class MessageMoveEventSerializationTest {
         void nonCollectionMessageIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": [\"42\"]," +
@@ -302,6 +333,7 @@ class MessageMoveEventSerializationTest {
         void nonStringElementInMessageIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": [\"42\"]," +
@@ -315,6 +347,7 @@ class MessageMoveEventSerializationTest {
         void nullElementInMessageIdsShouldBeRejected() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MessageMoveEvent\": {" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"user\": \"bob@domain.tld\"," +
                 "    \"previousMailboxIds\": [\"36\"]," +
                 "    \"targetMailboxIds\": [\"42\"]," +

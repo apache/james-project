@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -41,9 +42,11 @@ class MailboxAddedSerializationTest {
         MailboxSession.SessionId.of(42),
         USER,
         new MailboxPath(MailboxConstants.USER_NAMESPACE, "bob", "mailboxName"),
-        TestId.of(18));
+        TestId.of(18),
+        EVENT_ID);
     private static final String JSON_1 = "{" +
         "  \"MailboxAdded\":{" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"mailboxPath\":{" +
         "      \"namespace\":\"#private\"," +
         "      \"user\":\"bob\"," +
@@ -74,6 +77,24 @@ class MailboxAddedSerializationTest {
         void fromJsonShouldRejectMissingSessionId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MailboxAdded\":{" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                "    \"mailboxPath\":{" +
+                "      \"namespace\":\"#private\"," +
+                "      \"user\":\"bob\"" +
+                "     }," +
+                "     \"mailboxId\":\"18\"," +
+                "     \"user\":\"user\"," +
+                "     \"sessionId\":18" +
+                "  }" +
+                "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
+        void fromJsonShouldRejectMissingEventId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
+                "  \"MailboxAdded\":{" +
+                "    \"sessionId\":42," +
                 "    \"mailboxPath\":{" +
                 "      \"namespace\":\"#private\"," +
                 "      \"user\":\"bob\"" +
@@ -90,6 +111,7 @@ class MailboxAddedSerializationTest {
         void fromJsonShouldRejectMissingMailboxId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MailboxAdded\":{" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"mailboxPath\":{" +
                 "      \"namespace\":\"#private\"," +
                 "      \"user\":\"bob\"," +
@@ -106,6 +128,7 @@ class MailboxAddedSerializationTest {
         void fromJsonShouldRejectMissingUser() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MailboxAdded\":{" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "    \"mailboxPath\":{" +
                 "      \"namespace\":\"#private\"," +
                 "      \"user\":\"bob\"," +
@@ -122,6 +145,7 @@ class MailboxAddedSerializationTest {
         void fromJsonShouldRejectMissingMailboxPath() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson("{" +
                 "  \"MailboxAdded\":{" +
+                "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                 "     \"mailboxId\":\"18\"," +
                 "     \"user\":\"user\"," +
                 "     \"sessionId\":18" +

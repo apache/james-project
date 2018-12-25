@@ -20,6 +20,7 @@ package org.apache.james.mailbox;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MailboxId;
@@ -40,9 +41,11 @@ public class MessageMoveEvent implements Event {
         private ImmutableList.Builder<MessageId> messageIds;
         private User user;
         private MessageMoves messageMoves;
+        private Optional<EventId> eventId;
 
         private Builder() {
             messageIds = ImmutableList.builder();
+            eventId = Optional.empty();
         }
 
         public Builder session(MailboxSession session) {
@@ -65,6 +68,11 @@ public class MessageMoveEvent implements Event {
             return this;
         }
 
+        public Builder eventId(EventId eventId) {
+            this.eventId = Optional.of(eventId);
+            return this;
+        }
+
         public Builder messageId(Iterable<MessageId> messageIds) {
             this.messageIds.addAll(messageIds);
             return this;
@@ -74,16 +82,18 @@ public class MessageMoveEvent implements Event {
             Preconditions.checkNotNull(user, "'user' is mandatory");
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
-            return new MessageMoveEvent(user, messageMoves, messageIds.build());
+            return new MessageMoveEvent(eventId.orElse(EventId.random()), user, messageMoves, messageIds.build());
         }
     }
 
+    private final EventId eventId;
     private final User user;
     private final MessageMoves messageMoves;
     private final Collection<MessageId> messageIds;
 
     @VisibleForTesting
-    MessageMoveEvent(User user, MessageMoves messageMoves, Collection<MessageId> messageIds) {
+    MessageMoveEvent(EventId eventId, User user, MessageMoves messageMoves, Collection<MessageId> messageIds) {
+        this.eventId = eventId;
         this.user = user;
         this.messageMoves = messageMoves;
         this.messageIds = messageIds;
@@ -96,6 +106,11 @@ public class MessageMoveEvent implements Event {
 
     public Collection<MessageId> getMessageIds() {
         return messageIds;
+    }
+
+    @Override
+    public EventId getEventId() {
+        return eventId;
     }
 
     @Override
@@ -122,7 +137,8 @@ public class MessageMoveEvent implements Event {
         if (o instanceof MessageMoveEvent) {
             MessageMoveEvent that = (MessageMoveEvent) o;
 
-            return Objects.equals(this.user, that.user)
+            return Objects.equals(this.eventId, that.eventId)
+                && Objects.equals(this.user, that.user)
                 && Objects.equals(this.messageMoves, that.messageMoves)
                 && Objects.equals(this.messageIds, that.messageIds);
         }
@@ -131,6 +147,6 @@ public class MessageMoveEvent implements Event {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(user, messageMoves, messageIds);
+        return Objects.hash(eventId, user, messageMoves, messageIds);
     }
 }

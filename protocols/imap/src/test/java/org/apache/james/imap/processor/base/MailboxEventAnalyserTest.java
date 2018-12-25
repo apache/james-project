@@ -32,6 +32,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -115,6 +116,7 @@ public class MailboxEventAnalyserTest {
     private static final int UID_VALIDITY = 1024;
     private static final SimpleMailbox DEFAULT_MAILBOX = new SimpleMailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);
     private static final MailboxListener.Added ADDED = EventFactory.added()
+        .randomEventId()
         .mailboxSession(MAILBOX_SESSION)
         .mailbox(DEFAULT_MAILBOX)
         .addMetaData(new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId()))
@@ -156,7 +158,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldBeNoSizeChangeOnOtherEvent() {
         MailboxListener.MailboxEvent event = new MailboxListener.MailboxAdded(MAILBOX_SESSION.getSessionId(),
-            MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID);
+            MAILBOX_SESSION.getUser(), MAILBOX_PATH, MAILBOX_ID, Event.EventId.random());
       
         testee.event(event);
 
@@ -181,6 +183,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldNotSetUidWhenNoSystemFlagChange() {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(NOOP_UPDATED_FLAGS)
@@ -194,6 +197,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldSetUidWhenSystemFlagChange() {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
@@ -209,6 +213,7 @@ public class MailboxEventAnalyserTest {
         SelectedMailboxImpl analyser = this.testee;
 
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
@@ -224,6 +229,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldSetUidWhenSystemFlagChangeDifferentSessionInSilentMode() {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(OTHER_MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
@@ -239,6 +245,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldNotSetUidWhenSystemFlagChangeSameSessionInSilentMode() {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(NOOP_UPDATED_FLAGS)
@@ -254,6 +261,7 @@ public class MailboxEventAnalyserTest {
     @Test
     public void testShouldNotSetUidWhenOnlyRecentFlagUpdated() {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
             .updatedFlag(ADD_RECENT_UPDATED_FLAGS)

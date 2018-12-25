@@ -257,6 +257,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         Map<MessageUid, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
         delegatingMailboxListener.event(EventFactory.expunged()
+            .randomEventId()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .metaData(ImmutableSortedMap.copyOf(uids))
@@ -403,6 +404,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                         Mailbox mailbox = getMailboxEntity();
                         MailboxMessage copy = copyMessage(message);
                         delegatingMailboxListener.event(EventFactory.added()
+                            .randomEventId()
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
                             .addMessage(copy)
@@ -564,6 +566,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
 
         delegatingMailboxListener.event(EventFactory.flagsUpdated()
+            .randomEventId()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .updatedFlags(updatedFlags)
@@ -727,6 +730,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
 
         delegatingMailboxListener.event(EventFactory.added()
+            .randomEventId()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(copiedUids)
@@ -755,11 +759,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
 
         delegatingMailboxListener.event(EventFactory.added()
+            .randomEventId()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(moveUids)
             .build());
         delegatingMailboxListener.event(EventFactory.expunged()
+            .randomEventId()
             .mailboxSession(session)
             .mailbox(getMailboxEntity())
             .addMetaData(moveResult.getOriginalMessages())

@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,6 +49,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         .build();
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
     private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
+        EVENT_ID,
         User.fromUsername("onlyUsername"),
         QUOTA_ROOT,
         QUOTA_COUNT,
@@ -56,6 +58,7 @@ class QuotaUsageUpdatedEventSerializationTest {
     private final String quotaUsageUpdatedEvent =
         "{" +
         "    \"QuotaUsageUpdatedEvent\":{" +
+        "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "        \"quotaRoot\":\"foo\"," +
         "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
         "        \"time\":\"2018-11-13T12:00:55Z\"," +
@@ -81,6 +84,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         String quotaUsageUpdatedEvent =
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "        \"quotaRoot\":\"foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
@@ -97,11 +101,12 @@ class QuotaUsageUpdatedEventSerializationTest {
         String quotaUsageUpdatedEvent =
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "        \"quotaRoot\":\"foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
             "        \"user\":\"onlyUsername\"" +
-            "        }" +
+            "    }" +
             "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
@@ -113,11 +118,12 @@ class QuotaUsageUpdatedEventSerializationTest {
         String quotaUsageUpdatedEvent =
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "        \"quotaRoot\":\"foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
             "        \"user\":\"onlyUsername\"" +
-            "        }" +
+            "    }" +
             "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
@@ -129,11 +135,12 @@ class QuotaUsageUpdatedEventSerializationTest {
         String quotaUsageUpdatedEvent =
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "        \"quotaRoot\":\"foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
             "        \"user\":\"user\"" +
-            "        }" +
+            "    }" +
             "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
@@ -145,6 +152,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         String quotaUsageUpdatedEvent =
             "{" +
             "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "        \"quotaRoot\":\"foo\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
             "        \"time\":\"\"," +

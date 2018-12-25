@@ -219,6 +219,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MetadataWithMailboxId metadataWithMailboxId : metadataWithMailbox) {
             delegatingMailboxListener.event(EventFactory.expunged()
+                .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
                 .addMetaData(metadataWithMailboxId.messageMetaData)
@@ -300,6 +301,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         for (MailboxId mailboxId: mailboxesToRemove) {
             messageIdMapper.delete(message.getMessageId(), mailboxesToRemove);
             delegatingMailboxListener.event(EventFactory.expunged()
+                .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMetaData(eventPayload)
@@ -316,6 +318,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
 
             delegatingMailboxListener.event(EventFactory.flagsUpdated()
+                .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .updatedFlag(updatedFlags)
@@ -382,6 +385,7 @@ public class StoreMessageIdManager implements MessageIdManager {
             save(mailboxSession, messageIdMapper, copy);
 
             delegatingMailboxListener.event(EventFactory.added()
+                .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMessage(copy)

@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.apache.james.mailbox.model.MailboxConstants.USER_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,11 +57,13 @@ class MailboxDeletionSerializationTest {
         QUOTA_ROOT,
         DELETED_MESSAGE_COUNT,
         TOTAL_DELETED_SIZE,
-        MAILBOX_ID);
+        MAILBOX_ID,
+        EVENT_ID);
 
     private static final String DEFAULT_EVEN_JSON =
         "{" +
         "  \"MailboxDeletion\":{" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"sessionId\":3652," +
         "    \"user\":\"user\"," +
         "    \"path\":{" +
@@ -94,6 +97,28 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
+                    "    \"user\":\"user\"," +
+                    "    \"path\":{" +
+                    "      \"namespace\":\"#private\"," +
+                    "      \"user\":\"user\"," +
+                    "      \"name\":\"mailboxName\"" +
+                    "    }," +
+                    "    \"quotaRoot\":\"user@domain\"," +
+                    "    \"deletedMessageCount\":60," +
+                    "    \"totalDeletedSize\":100," +
+                    "    \"mailboxId\":\"789\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
+        void mailboxAddedShouldThrowWhenMissingEventId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"MailboxDeletion\":{" +
+                    "    \"sessionId\":42," +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
                     "      \"namespace\":\"#private\"," +
@@ -114,6 +139,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"path\":{" +
                     "      \"namespace\":\"#private\"," +
@@ -134,6 +160,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -154,6 +181,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -174,6 +202,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -194,6 +223,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
                     "    \"path\":{" +
@@ -214,6 +244,7 @@ class MailboxDeletionSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"MailboxDeletion\":{" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"sessionId\":3652," +
                     "    \"user\":\"user\"," +
                     "    \"quotaRoot\":\"user@domain\"," +

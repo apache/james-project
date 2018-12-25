@@ -78,4 +78,6 @@ public interface Event {
     User getUser();
 
     boolean isNoop();
+
+    EventId getEventId();
 }

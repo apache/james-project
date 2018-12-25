@@ -20,6 +20,7 @@
 package org.apache.james.event.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.event.json.SerializerFixture.EVENT_ID;
 import static org.apache.james.event.json.SerializerFixture.EVENT_SERIALIZER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -66,10 +67,12 @@ class AddedSerializationTest {
     private static final SortedMap<MessageUid, MessageMetaData> ADDED = ImmutableSortedMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
 
-    private static final MailboxListener.Added DEFAULT_ADDED_EVENT = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, ADDED);
+    private static final MailboxListener.Added DEFAULT_ADDED_EVENT = new MailboxListener.Added(SESSION_ID, USER,
+        MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID);
     private static final String DEFAULT_ADDED_EVENT_JSON = 
         "{" +
         "  \"Added\": {" +
+        "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
         "    \"path\": {" +
         "      \"namespace\": \"#private\"," +
         "      \"user\": \"user\"," +
@@ -108,10 +111,12 @@ class AddedSerializationTest {
     @Nested
     class WithEmptyAddedMap {
 
-        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, ImmutableSortedMap.of());
+        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH,
+            MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID);
         private final String emptyAddedEventJson =
             "{" +
             "  \"Added\": {" +
+            "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
             "    \"path\": {" +
             "      \"namespace\": \"#private\"," +
             "      \"user\": \"user\"," +
@@ -140,10 +145,41 @@ class AddedSerializationTest {
     @Nested
     class DeserializationErrors {
         @Test
+        void addedShouldThrowWhenMissingEventId() {
+            assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
+                "{" +
+                    "  \"Added\": {" +
+                    "    \"sessionId\":42," +
+                    "    \"path\": {" +
+                    "      \"namespace\": \"#private\"," +
+                    "      \"user\": \"user\"," +
+                    "      \"name\": \"mailboxName\"" +
+                    "    }," +
+                    "    \"mailboxId\": \"18\"," +
+                    "    \"added\": {" +
+                    "      \"123456\": {" +
+                    "        \"uid\": 123456," +
+                    "        \"modSeq\": 35," +
+                    "        \"flags\": {" +
+                    "          \"systemFlags\":[\"Answered\",\"Draft\"], " +
+                    "          \"userFlags\":[\"User Custom Flag\"]}," +
+                    "        \"size\": 45,  " +
+                    "        \"internalDate\": \"2018-12-14T09:41:51.541Z\"," +
+                    "        \"messageId\": \"42\"" +
+                    "      }" +
+                    "    }," +
+                    "    \"user\": \"user\"" +
+                    "  }" +
+                    "}").get())
+                .isInstanceOf(NoSuchElementException.class);
+        }
+
+        @Test
         void addedShouldThrowWhenMissingSessionId() {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -173,6 +209,7 @@ class AddedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -202,6 +239,7 @@ class AddedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -231,6 +269,7 @@ class AddedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"mailboxId\": \"18\"," +
                     "    \"added\": {" +
                     "      \"123456\": {" +
@@ -256,6 +295,7 @@ class AddedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +
@@ -275,6 +315,7 @@ class AddedSerializationTest {
             assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(
                 "{" +
                     "  \"Added\": {" +
+                    "    \"eventId\":\"6e0dd59d-660e-4d9b-b22f-0354479f47b4\"," +
                     "    \"path\": {" +
                     "      \"namespace\": \"#private\"," +
                     "      \"user\": \"user\"," +

@@ -91,6 +91,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         }
         delegatingMailboxListener.event(
             EventFactory.quotaUpdated()
+                .randomEventId()
                 .user(expunged.getUser())
                 .quotaRoot(quotaRoot)
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))
@@ -112,6 +113,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         }
         delegatingMailboxListener.event(
             EventFactory.quotaUpdated()
+                .randomEventId()
                 .user(added.getUser())
                 .quotaRoot(quotaRoot)
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))

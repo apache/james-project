@@ -100,21 +100,24 @@ class MailboxListenerTest {
 
     @Test
     void renameWithSameNameShouldBeNoop() {
-        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, PATH);
+        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, PATH,
+            Event.EventId.random());
 
         assertThat(mailboxRenamed.isNoop()).isTrue();
     }
 
     @Test
     void renameWithDifferentNameShouldNotBeNoop() {
-        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, OTHER_PATH);
+        MailboxListener.MailboxRenamed mailboxRenamed = new MailboxListener.MailboxRenamed(SESSION_ID, BOB, PATH, MAILBOX_ID, OTHER_PATH,
+            Event.EventId.random());
 
         assertThat(mailboxRenamed.isNoop()).isFalse();
     }
 
     @Test
     void addedShouldNotBeNoop() {
-        MailboxListener.MailboxAdded added = new MailboxListener.MailboxAdded(SESSION_ID, BOB, PATH, MAILBOX_ID);
+        MailboxListener.MailboxAdded added = new MailboxListener.MailboxAdded(SESSION_ID, BOB, PATH, MAILBOX_ID,
+            Event.EventId.random());
 
         assertThat(added.isNoop()).isFalse();
     }
@@ -122,56 +125,62 @@ class MailboxListenerTest {
     @Test
     void removedShouldNotBeNoop() {
         MailboxListener.MailboxDeletion deletion = new MailboxListener.MailboxDeletion(SESSION_ID, BOB, PATH, QUOTA_ROOT,
-            QUOTA_COUNT, QUOTA_SIZE, MAILBOX_ID);
+            QUOTA_COUNT, QUOTA_SIZE, MAILBOX_ID, Event.EventId.random());
 
         assertThat(deletion.isNoop()).isFalse();
     }
 
     @Test
     void aclDiffWithSameAclShouldBeNoop() {
-        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_1), MAILBOX_ID);
+        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_1), MAILBOX_ID,
+            Event.EventId.random());
 
         assertThat(aclUpdated.isNoop()).isTrue();
     }
 
     @Test
     void aclDiffWithDifferentAclShouldNotBeNoop() {
-        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_2), MAILBOX_ID);
+        MailboxListener.MailboxACLUpdated aclUpdated = new MailboxListener.MailboxACLUpdated(SESSION_ID, BOB, PATH, ACLDiff.computeDiff(ACL_1, ACL_2), MAILBOX_ID,
+            Event.EventId.random());
 
         assertThat(aclUpdated.isNoop()).isFalse();
     }
 
     @Test
     void addedShouldBeNoopWhenEmpty() {
-        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of());
+        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
+            Event.EventId.random());
 
         assertThat(added.isNoop()).isTrue();
     }
 
     @Test
     void addedShouldNotBeNoopWhenNotEmpty() {
-        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA));
+        MailboxListener.Added added = new MailboxListener.Added(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
+            Event.EventId.random());
 
         assertThat(added.isNoop()).isFalse();
     }
 
     @Test
     void expungedShouldBeNoopWhenEmpty() {
-        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of());
+        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(),
+            Event.EventId.random());
 
         assertThat(expunged.isNoop()).isTrue();
     }
 
     @Test
     void expungedShouldNotBeNoopWhenNotEmpty() {
-        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA));
+        MailboxListener.Expunged expunged = new MailboxListener.Expunged(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableSortedMap.of(UID, META_DATA),
+            Event.EventId.random());
 
         assertThat(expunged.isNoop()).isFalse();
     }
 
     @Test
     void flagsUpdatedShouldBeNoopWhenEmpty() {
-        MailboxListener.FlagsUpdated flagsUpdated = new MailboxListener.FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableList.of());
+        MailboxListener.FlagsUpdated flagsUpdated = new MailboxListener.FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID, ImmutableList.of(), Event.EventId.random());
 
         assertThat(flagsUpdated.isNoop()).isTrue();
     }
@@ -184,14 +193,15 @@ class MailboxListenerTest {
                 .modSeq(45)
                 .newFlags(new Flags())
                 .oldFlags(new Flags(Flags.Flag.ANSWERED))
-                .build()));
+                .build()),
+            Event.EventId.random());
 
         assertThat(flagsUpdated.isNoop()).isFalse();
     }
 
     @Test
     void quotaUsageUpdatedEventShouldNotBeNoop() {
-        MailboxListener.QuotaUsageUpdatedEvent event = new MailboxListener.QuotaUsageUpdatedEvent(BOB, QUOTA_ROOT,
+        MailboxListener.QuotaUsageUpdatedEvent event = new MailboxListener.QuotaUsageUpdatedEvent(Event.EventId.random(), BOB, QUOTA_ROOT,
             Quota.<QuotaCount>builder()
                 .used(QUOTA_COUNT)
                 .computedLimit(QuotaCount.unlimited())
