@@ -311,17 +311,16 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     def fromJson(json: String): JsResult[Event] = Json.fromJson[Event](Json.parse(json))
   }
 
-  def toJson(event: JavaEvent): String = new EventSerializerPrivateWrapper().toJson(ScalaConverter.toScala(event))
-  def fromJson(json: String): JsResult[JavaEvent] = new EventSerializerPrivateWrapper().fromJson(json)
+  private val eventSerializerPrivateWrapper = new EventSerializerPrivateWrapper()
+  def toJson(event: JavaEvent): String = eventSerializerPrivateWrapper.toJson(ScalaConverter.toScala(event))
+  def fromJson(json: String): JsResult[JavaEvent] = eventSerializerPrivateWrapper.fromJson(json)
     .map(event => event.toJava)
 }
 
 class EventSerializer(mailboxIdFactory: MailboxId.Factory, messageIdFactory: MessageId.Factory) {
-  def toJson(event: JavaEvent): String = new JsonSerialize(mailboxIdFactory, messageIdFactory).toJson(event)
+  private val jsonSerialize = new JsonSerialize(mailboxIdFactory, messageIdFactory)
 
-  def fromJson(json: String): JsResult[JavaEvent] = {
-    new JsonSerialize(mailboxIdFactory, messageIdFactory)
-      .fromJson(json)
-  }
+  def toJson(event: JavaEvent): String = jsonSerialize.toJson(event)
+  def fromJson(json: String): JsResult[JavaEvent] = jsonSerialize.fromJson(json)
 }
 
