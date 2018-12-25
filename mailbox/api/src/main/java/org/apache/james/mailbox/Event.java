@@ -18,9 +18,62 @@
  ****************************************************************/
 package org.apache.james.mailbox;
 
+import java.util.Objects;
+import java.util.UUID;
+
 import org.apache.james.core.User;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+
 public interface Event {
+
+    class EventId {
+        public static EventId of(UUID uuid) {
+            return new EventId(uuid);
+        }
+
+        public static EventId random() {
+            return new EventId(UUID.randomUUID());
+        }
+
+        public static EventId of(String serialized) {
+            return of(UUID.fromString(serialized));
+        }
+
+        private final UUID id;
+
+        private EventId(UUID id) {
+            Preconditions.checkNotNull(id);
+            this.id = id;
+        }
+
+        public UUID getId() {
+            return id;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof EventId) {
+                EventId eventId = (EventId) o;
+
+                return Objects.equals(this.id, eventId.id);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(id);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("id", id)
+                .toString();
+        }
+    }
 
     User getUser();
 
