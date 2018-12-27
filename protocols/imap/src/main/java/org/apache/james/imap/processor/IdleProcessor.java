@@ -175,6 +175,11 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 unsolicitedResponses(session, responder, false);
             }
         }
+
+        @Override
+        public ExecutionMode getExecutionMode() {
+            return ExecutionMode.ASYNCHRONOUS;
+        }
     }
 
     @Override
