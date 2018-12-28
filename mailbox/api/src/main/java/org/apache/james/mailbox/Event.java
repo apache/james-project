@@ -23,4 +23,6 @@ import org.apache.james.core.User;
 public interface Event {
 
     User getUser();
+
+    boolean isNoop();
 }

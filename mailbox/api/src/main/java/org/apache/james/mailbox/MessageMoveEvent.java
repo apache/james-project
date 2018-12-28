@@ -89,6 +89,7 @@ public class MessageMoveEvent implements Event {
         this.messageIds = messageIds;
     }
 
+    @Override
     public boolean isNoop() {
         return messageIds.isEmpty();
     }

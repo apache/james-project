@@ -92,6 +92,11 @@ public interface MailboxListener {
         }
 
         @Override
+        public boolean isNoop() {
+            return false;
+        }
+
+        @Override
         public User getUser() {
             return user;
         }
@@ -206,6 +211,11 @@ public interface MailboxListener {
             this.totalDeletedSize = totalDeletedSize;
         }
 
+        @Override
+        public boolean isNoop() {
+            return false;
+        }
+
         public QuotaRoot getQuotaRoot() {
             return quotaRoot;
         }
@@ -250,6 +260,11 @@ public interface MailboxListener {
         }
 
         @Override
+        public boolean isNoop() {
+            return false;
+        }
+
+        @Override
         public final boolean equals(Object o) {
             if (o instanceof MailboxAdded) {
                 MailboxAdded that = (MailboxAdded) o;
@@ -277,6 +292,11 @@ public interface MailboxListener {
         public MailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, MailboxPath newPath) {
             super(sessionId, user, path, mailboxId);
             this.newPath = newPath;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return newPath.equals(path);
         }
 
         /**
@@ -322,6 +342,11 @@ public interface MailboxListener {
 
         public ACLDiff getAclDiff() {
             return aclDiff;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return aclDiff.getNewACL().equals(aclDiff.getOldACL());
         }
 
         @Override
@@ -405,6 +430,11 @@ public interface MailboxListener {
         }
 
         @Override
+        public boolean isNoop() {
+            return expunged.isEmpty();
+        }
+
+        @Override
         public final boolean equals(Object o) {
             if (o instanceof Expunged) {
                 Expunged that = (Expunged) o;
@@ -446,6 +476,11 @@ public interface MailboxListener {
 
         public List<UpdatedFlags> getUpdatedFlags() {
             return updatedFlags;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return updatedFlags.isEmpty();
         }
 
         @Override
@@ -496,6 +531,11 @@ public interface MailboxListener {
 
         public Map<MessageUid, MessageMetaData> getAdded() {
             return added;
+        }
+
+        @Override
+        public boolean isNoop() {
+            return added.isEmpty();
         }
 
         @Override
