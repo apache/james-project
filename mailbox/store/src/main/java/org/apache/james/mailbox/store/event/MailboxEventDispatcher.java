@@ -33,7 +33,6 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MessageMoveEvent;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
@@ -84,7 +83,7 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        listener.event(eventFactory.added(session, uids, mailbox));
+        event(eventFactory.added(session, uids, mailbox));
     }
 
     public void added(MailboxSession session, Mailbox mailbox, MailboxMessage mailboxMessage) {
@@ -111,9 +110,7 @@ public class MailboxEventDispatcher {
      * @param mailbox The mailbox
      */
     public void expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
-        if (!uids.isEmpty()) {
-            listener.event(eventFactory.expunged(session, uids, mailbox));
-        }
+        event(eventFactory.expunged(session, uids, mailbox));
     }
 
     public void expunged(MailboxSession session,  MessageMetaData messageMetaData, Mailbox mailbox) {
@@ -128,9 +125,7 @@ public class MailboxEventDispatcher {
      * registered MailboxListener will get triggered then
      */
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
-        if (!uflags.isEmpty()) {
-            listener.event(eventFactory.flagsUpdated(session, mailbox, uflags));
-        }
+        event(eventFactory.flagsUpdated(session, mailbox, uflags));
     }
 
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, UpdatedFlags uflags) {
@@ -142,7 +137,7 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxRenamed(MailboxSession session, MailboxPath from, Mailbox to) {
-        listener.event(eventFactory.mailboxRenamed(session, from, to));
+        event(eventFactory.mailboxRenamed(session, from, to));
     }
 
     /**
@@ -150,7 +145,7 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxDeleted(MailboxSession session, Mailbox mailbox, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
-        listener.event(eventFactory.mailboxDeleted(session, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize));
+        event(eventFactory.mailboxDeleted(session, mailbox, quotaRoot, deletedMessageCount, totalDeletedSize));
     }
 
     /**
@@ -158,26 +153,24 @@ public class MailboxEventDispatcher {
      * MailboxListener will get triggered then
      */
     public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
-        listener.event(eventFactory.mailboxAdded(session, mailbox));
+        event(eventFactory.mailboxAdded(session, mailbox));
     }
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
-        listener.event(eventFactory.aclUpdated(session, mailboxPath, aclDiff, mailboxId));
+        event(eventFactory.aclUpdated(session, mailboxPath, aclDiff, mailboxId));
     }
 
     public void moved(MailboxSession session, MessageMoves messageMoves, Collection<MessageId> messageIds) {
-        MessageMoveEvent moveEvent = eventFactory.moved(session, messageMoves, messageIds);
-
-        if (!moveEvent.isNoop()) {
-            listener.event(moveEvent);
-        }
+        event(eventFactory.moved(session, messageMoves, messageIds));
     }
 
     public void quota(User user, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {
-        listener.event(new MailboxListener.QuotaUsageUpdatedEvent(user, quotaRoot, countQuota, sizeQuota, Instant.now()));
+        event(new MailboxListener.QuotaUsageUpdatedEvent(user, quotaRoot, countQuota, sizeQuota, Instant.now()));
     }
 
     public void event(Event event) {
-        listener.event(event);
+        if (!event.isNoop()) {
+            listener.event(event);
+        }
     }
 }
