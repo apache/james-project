@@ -24,6 +24,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
@@ -37,6 +38,8 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.util.EventCollector;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.google.common.collect.ImmutableSortedMap;
 
 public class DefaultDelegatingMailboxListenerTest {
 
@@ -177,6 +180,16 @@ public class DefaultDelegatingMailboxListenerTest {
         defaultDelegatingMailboxListener.addGlobalListener(mockedListener, null);
 
         defaultDelegatingMailboxListener.event(event);
+    }
+
+
+    @Test
+    public void listenersShouldReceiveEvents() {
+        MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of());
+
+        defaultDelegatingMailboxListener.event(noopEvent);
+
+        assertThat(onceEventCollector.getEvents()).isEmpty();
     }
 
 }

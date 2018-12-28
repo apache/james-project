@@ -169,8 +169,6 @@ public class MailboxEventDispatcher {
     }
 
     public void event(Event event) {
-        if (!event.isNoop()) {
-            listener.event(event);
-        }
+        listener.event(event);
     }
 }

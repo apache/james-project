@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class MailboxEventDispatcherTest {
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(10);
@@ -91,7 +90,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator()).isEmpty();
     }
 
@@ -110,7 +109,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.ANSWERED);
     }
@@ -130,7 +129,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.ANSWERED);
     }
@@ -149,7 +148,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.DELETED);
     }
@@ -168,7 +167,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.DELETED);
     }
@@ -187,7 +186,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.DRAFT);
     }
@@ -206,7 +205,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.DRAFT);
     }
@@ -225,7 +224,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.FLAGGED);
     }
@@ -244,7 +243,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.FLAGGED);
     }
@@ -263,7 +262,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.RECENT);
     }
@@ -282,7 +281,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.RECENT);
     }
@@ -301,7 +300,7 @@ public class MailboxEventDispatcherTest {
         assertThat(collector.getEvents()).hasSize(1)
             .are(INSTANCE_OF_EVENT_FLAGS_UPDATED);
         MailboxListener.FlagsUpdated event = (MailboxListener.FlagsUpdated) collector.getEvents()
-                .get(0);
+            .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.SEEN);
     }
@@ -346,17 +345,5 @@ public class MailboxEventDispatcherTest {
                 .get(0);
         assertThat(event.getUpdatedFlags().get(0).systemFlagIterator())
             .containsOnly(Flags.Flag.SEEN, Flags.Flag.RECENT, Flags.Flag.ANSWERED);
-    }
-
-    @Test
-    public void expungedShouldNotFireEventWhenEmptyMap() {
-        dispatcher.expunged(session, ImmutableMap.of(), mailbox);
-        assertThat(collector.getEvents()).isEmpty();
-    }
-
-    @Test
-    public void flagsUpdatedShouldNotFireEventWhenEmptyIdList() {
-        dispatcher.flagsUpdated(session, mailbox, ImmutableList.of());
-        assertThat(collector.getEvents()).isEmpty();
     }
 }

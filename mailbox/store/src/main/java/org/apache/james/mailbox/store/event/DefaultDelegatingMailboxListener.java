@@ -91,18 +91,20 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
     @Override
     public void event(Event event) {
-        ImmutableList<MailboxListener> listeners = ImmutableList.<MailboxListener>builder()
-            .addAll(registry.getGlobalListeners())
-            .addAll(registeredMailboxListeners(event))
-            .build();
+        if (!event.isNoop()) {
+            ImmutableList<MailboxListener> listeners = ImmutableList.<MailboxListener>builder()
+                .addAll(registry.getGlobalListeners())
+                .addAll(registeredMailboxListeners(event))
+                .build();
 
-        eventDelivery.deliver(listeners, event)
-            .synchronousListenerFuture()
-            .block();
+            eventDelivery.deliver(listeners, event)
+                .synchronousListenerFuture()
+                .block();
 
-        if (event instanceof MailboxDeletion) {
-            MailboxDeletion deletion = (MailboxDeletion) event;
-            registry.deleteRegistryFor(deletion.getMailboxId());
+            if (event instanceof MailboxDeletion) {
+                MailboxDeletion deletion = (MailboxDeletion) event;
+                registry.deleteRegistryFor(deletion.getMailboxId());
+            }
         }
     }
 
