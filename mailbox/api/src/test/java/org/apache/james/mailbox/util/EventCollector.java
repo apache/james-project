@@ -53,14 +53,4 @@ public class EventCollector implements MailboxListener {
         events.add(event);
     }
 
-    public void mailboxDeleted() {
-    }
-
-    public void mailboxRenamed(String origName, String newName) {
-    }
-
-    public boolean isClosed() {
-        return false;
-    }
-
 }
