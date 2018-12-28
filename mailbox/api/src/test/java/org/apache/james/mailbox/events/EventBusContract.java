@@ -28,18 +28,23 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
 
+import org.apache.james.core.User;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 
 public interface EventBusContract {
     MailboxListener.MailboxEvent event = mock(MailboxListener.MailboxEvent.class);
@@ -71,6 +76,30 @@ public interface EventBusContract {
         eventBus().dispatch(event, NO_KEYS).block();
 
         verify(listener, times(1)).event(any());
+    }
+
+    @Test
+    default void groupListenersShouldNotReceiveNoopEvents() {
+        MailboxListener listener = newListener();
+
+        eventBus().register(listener, new GroupA());
+
+        MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of());
+        eventBus().dispatch(noopEvent, NO_KEYS).block();
+
+        verifyNoMoreInteractions(listener);
+    }
+
+    @Test
+    default void registeredListenersShouldNotReceiveNoopEvents() {
+        MailboxListener listener = newListener();
+
+        eventBus().register(listener, KEY_1);
+
+        MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), User.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of());
+        eventBus().dispatch(noopEvent, KEY_1).block();
+
+        verifyNoMoreInteractions(listener);
     }
 
     @Test
