@@ -27,6 +27,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Removed
 - Drop HBase and JCR components (mailbox and server/data).
 
+### Third party softwares
+ - Tika prior 1.20 is subject to multiple CVEs. We recommend the upgrade
+
 ## [3.2.0] - 2018-11-14
 ### Added
 - Mail filtering configured via the JMAP protocol
