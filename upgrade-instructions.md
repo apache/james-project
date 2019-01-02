@@ -16,7 +16,9 @@ Changes to apply between 3.2.x and 3.3.x will be reported here.
 
 Change list:
 
+ - [Changes to the MailboxListener API](#changes-to-the-mailboxlistener-api)
  - [Changes in WebAdmin reIndexing API](#changes-in-webadmin-reindexing-api)
+ - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
 
 ### Changes to the MailboxListener API
 
@@ -56,6 +58,34 @@ JIRA: https://issues.apache.org/jira/browse/JAMES-2555
 We made this API introduced in James 3.2.0 a bit more REST friendly. If you developed tools using this API, you will need to update them.
 
 For more details please refer to [the latest WebAdmin documentation](https://github.com/apache/james-project/blob/master/src/site/markdown/server/manage-webadmin.md#ReIndexing).
+
+### Rename KEY column in JAMES_MAILBOX_ANNOTATION table
+
+Date: 19/12/2018
+
+SHA-1: e25967664538be18ec29f47e73e661bdf29da41f
+
+JIRA: https://issues.apache.org/jira/projects/MAILBOX/issues/MAILBOX-356
+
+Required: Yes
+
+Concerned products: all JPA related products
+
+#### Upgrade procedure
+
+Rename `KEY` column in `JAMES_MAILBOX_ANNOTATION` table. The syntax is:
+
+##### In MySQL
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE KEY ANNOTATION_KEY varchar(200);
+```
+
+##### In MariaDB
+```
+ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(200);
+```
+
+_or the syntax corresponding to your database._
 
 ## 3.2.0 version
 
@@ -171,39 +201,3 @@ $ nodetool stop
 ```
 $ nodetool upgradesstables apache_james
 ```
-
-## 3.3.0 version
-
-Changes to apply between 3.2.0 and 3.3.0 had been reported here.
-
-Changelist:
-
- - [Rename KEY column in JAMES_MAILBOX_ANNOTATION table](#james-mailbox-annotation)
- 
-### Rename KEY column in JAMES_MAILBOX_ANNOTATION table
- 
-Date: 19/12/2018
- 
-SHA-1: e25967664538be18ec29f47e73e661bdf29da41f
- 
-JIRA: https://issues.apache.org/jira/projects/MAILBOX/issues/MAILBOX-356
- 
-Required: Yes
-
-Concerned products: all JPA related products
-
-#### Upgrade procedure
-
-Rename `KEY` column in `JAMES_MAILBOX_ANNOTATION` table. The syntax is:
-
-##### In MySQL
-```
-ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE KEY ANNOTATION_KEY varchar(200);
-```
-
-##### In MariaDB
-```
-ALTER TABLE JAMES_MAILBOX_ANNOTATION CHANGE COLUMN KEY ANNOTATION_KEY varchar(200);
-```
-
-_or the syntax corresponding to your database._
