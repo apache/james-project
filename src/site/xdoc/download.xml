@@ -164,7 +164,7 @@ is found <a href='https://www.apache.org/licenses/exports/'>here</a>.
           [<a href="https://apache.org/dist/james/server/3.2.0/james-server-sources-3.2.0.zip.asc">PGP</a>]</li>
 
         <li>Binary (ZIP Format) for Spring wiring:
-          <a href="https://www.apache.org/dyn/closer.lua/james/server/james-server-app-3.2.0-app.zip">apache-james-3.2.0-app.zip</a>
+          <a href="https://www.apache.org/dyn/closer.lua/james/server/3.2.0/james-server-app-3.2.0-app.zip">apache-james-3.2.0-app.zip</a>
           [<a href="https://apache.org/dist/james/server/3.2.0/james-server-app-3.2.0-app.zip.sha1">SHA-1</a>]
           [<a href="https://apache.org/dist/james/server/3.2.0/james-server-app-3.2.0-app.zip.asc">PGP</a>]
         </li>
