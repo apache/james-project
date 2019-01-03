@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.store.event;
 
+import java.time.Instant;
+
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -30,6 +32,7 @@ import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -137,13 +140,28 @@ public class EventFactory {
     }
 
     @FunctionalInterface
-    public interface RequireQuotaCount<T> {
+    public interface RequireQuotaCountValue<T> {
         T quotaCount(QuotaCount quotaCount);
     }
 
     @FunctionalInterface
-    public interface RequireQuotaSize<T> {
+    public interface RequireQuotaSizeValue<T> {
         T quotaSize(QuotaSize quotaSize);
+    }
+
+    @FunctionalInterface
+    public interface RequireQuotaCount<T> {
+        T quotaCount(Quota<QuotaCount> quotaCount);
+    }
+
+    @FunctionalInterface
+    public interface RequireQuotaSize<T> {
+        T quotaSize(Quota<QuotaSize> quotaSize);
+    }
+
+    @FunctionalInterface
+    public interface RequireInstant<T> {
+        T instant(Instant instant);
     }
 
     @FunctionalInterface
@@ -336,6 +354,26 @@ public class EventFactory {
         }
     }
 
+    public static final class QuotaUsageUpdatedFinalStage {
+        private final User user;
+        private final QuotaRoot quotaRoot;
+        private final Quota<QuotaCount> countQuota;
+        private final Quota<QuotaSize> sizeQuota;
+        private final Instant instant;
+
+        QuotaUsageUpdatedFinalStage(User user, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
+            this.user = user;
+            this.quotaRoot = quotaRoot;
+            this.countQuota = countQuota;
+            this.sizeQuota = sizeQuota;
+            this.instant = instant;
+        }
+
+        public MailboxListener.QuotaUsageUpdatedEvent build() {
+            return new MailboxListener.QuotaUsageUpdatedEvent(user, quotaRoot, countQuota, sizeQuota, instant);
+        }
+    }
+
     public static RequireMailboxEvent<RequireMetadata<AddedFinalStage>> added() {
         return user -> sessionId -> mailboxId -> path -> metaData -> new AddedFinalStage(path, mailboxId, user, sessionId, metaData);
     }
@@ -352,7 +390,7 @@ public class EventFactory {
         return user -> sessionId -> mailboxId -> oldPath -> newPath -> new MailboxRenamedFinalStage(oldPath, mailboxId, user, sessionId, newPath);
     }
 
-    public static  RequireMailboxEvent<RequireQuotaRoot<RequireQuotaCount<RequireQuotaSize<MailboxDeletionFinalStage>>>> mailboxDeleted() {
+    public static  RequireMailboxEvent<RequireQuotaRoot<RequireQuotaCountValue<RequireQuotaSizeValue<MailboxDeletionFinalStage>>>> mailboxDeleted() {
         return user -> sessionId -> mailboxId -> path -> quotaRoot -> quotaCount -> quotaSize -> new MailboxDeletionFinalStage(
             path, mailboxId, user, sessionId, quotaRoot, quotaCount, quotaSize);
     }
@@ -363,6 +401,10 @@ public class EventFactory {
 
     public static RequireMailboxEvent<RequireAclDiff<MailboxAclUpdatedFinalStage>> aclUpdated() {
         return user -> sessionId -> mailboxId -> path -> aclDiff -> new MailboxAclUpdatedFinalStage(path, mailboxId, user, sessionId, aclDiff);
+    }
+
+    public static RequireUser<RequireQuotaRoot<RequireQuotaCount<RequireQuotaSize<RequireInstant<QuotaUsageUpdatedFinalStage>>>>> quotaUpdated() {
+        return user -> quotaRoot -> quotaCount -> quotaSize -> instant -> new QuotaUsageUpdatedFinalStage(user, quotaRoot, quotaCount, quotaSize, instant);
     }
 
     public static MessageMoveEvent.Builder moved() {

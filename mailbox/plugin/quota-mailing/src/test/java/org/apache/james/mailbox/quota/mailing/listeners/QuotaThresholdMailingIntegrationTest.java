@@ -38,10 +38,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.mailbox.MailboxListener.QuotaUsageUpdatedEvent;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.junit.jupiter.api.Test;
@@ -53,7 +53,13 @@ public interface QuotaThresholdMailingIntegrationTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._30_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).isEmpty();
     }
@@ -62,10 +68,23 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotSendMailWhenNoThresholdUpdate(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, ONE_HOUR_AGO));
+
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(ONE_HOUR_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).isEmpty();
     }
@@ -74,11 +93,29 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotSendMailWhenThresholdOverPassedRecently(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, TWELVE_HOURS_AGO));
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._30_PERCENT, SIX_HOURS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(TWELVE_HOURS_AGO)
+            .build());
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(SIX_HOURS_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).isEmpty();
     }
@@ -88,7 +125,13 @@ public interface QuotaThresholdMailingIntegrationTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -97,9 +140,21 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotSendDuplicates(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, ONE_HOUR_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(ONE_HOUR_AGO)
+            .build());
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -108,9 +163,21 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotifySeparatelyCountAndSize(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, ONE_HOUR_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(ONE_HOUR_AGO)
+            .build());
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._60_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._60_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(2);
     }
@@ -120,7 +187,13 @@ public interface QuotaThresholdMailingIntegrationTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -129,11 +202,29 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldSendMailWhenThresholdOverPassedOverGracePeriod(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, TWELVE_DAYS_AGO));
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._30_PERCENT, SIX_DAYS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(TWELVE_DAYS_AGO)
+            .build());
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(SIX_DAYS_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -142,10 +233,22 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotSendMailWhenNoThresholdUpdateForCount(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._32_PERCENT, Sizes._55_PERCENT, TWO_DAYS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._32_PERCENT)
+            .quotaSize(Sizes._55_PERCENT)
+            .instant(TWO_DAYS_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._60_PERCENT, TWO_DAYS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._60_PERCENT)
+            .instant(TWO_DAYS_AGO)
+            .build());
 
         assertThat(mailetContext.getSentMails()).isEmpty();
     }
@@ -154,11 +257,29 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldNotSendMailWhenThresholdOverPassedRecentlyForCount(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, TWELVE_HOURS_AGO));
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._30_PERCENT, SIX_HOURS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(TWELVE_HOURS_AGO)
+            .build());
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(SIX_HOURS_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).isEmpty();
     }
@@ -168,7 +289,13 @@ public interface QuotaThresholdMailingIntegrationTest {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, TWELVE_HOURS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(TWELVE_HOURS_AGO)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -177,11 +304,29 @@ public interface QuotaThresholdMailingIntegrationTest {
     default void shouldSendMailWhenThresholdOverPassedOverGracePeriodForCount(EventStore store) throws Exception {
         FakeMailContext mailetContext = mailetContext();
         QuotaThresholdListenersTestSystem testee = new QuotaThresholdListenersTestSystem(mailetContext, store, DEFAULT_CONFIGURATION);
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, TWELVE_DAYS_AGO));
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._30_PERCENT, SIX_DAYS_AGO));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(TWELVE_DAYS_AGO)
+            .build());
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._40_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(SIX_DAYS_AGO)
+            .build());
         mailetContext.resetSentMails();
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails()).hasSize(1);
     }
@@ -195,8 +340,20 @@ public interface QuotaThresholdMailingIntegrationTest {
                 .gracePeriod(GRACE_PERIOD)
                 .build());
 
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._52_PERCENT, Sizes._30_PERCENT, NOW));
-        testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._85_PERCENT, Sizes._42_PERCENT, NOW));
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._52_PERCENT)
+            .quotaSize(Sizes._30_PERCENT)
+            .instant(NOW)
+            .build());
+        testee.event(EventFactory.quotaUpdated()
+            .user(BOB_USER)
+            .quotaRoot(QUOTAROOT)
+            .quotaCount(Counts._85_PERCENT)
+            .quotaSize(Sizes._42_PERCENT)
+            .instant(NOW)
+            .build());
 
         assertThat(mailetContext.getSentMails())
             .hasSize(2);
@@ -212,7 +369,13 @@ public interface QuotaThresholdMailingIntegrationTest {
                 .build());
 
         ConcurrentTestRunner.builder()
-            .operation((threadNb, step) -> testee.event(new QuotaUsageUpdatedEvent(BOB_USER, QUOTAROOT, Counts._40_PERCENT, Sizes._55_PERCENT, NOW)))
+            .operation((threadNb, step) -> testee.event(EventFactory.quotaUpdated()
+                    .user(BOB_USER)
+                    .quotaRoot(QUOTAROOT)
+                    .quotaCount(Counts._40_PERCENT)
+                    .quotaSize(Sizes._55_PERCENT)
+                    .instant(NOW)
+                    .build()))
             .threadCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
