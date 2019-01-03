@@ -164,9 +164,9 @@ public class SelectedMailboxImplTest {
 
     private void emitEvent(MailboxListener mailboxListener) {
         mailboxListener.event(EventFactory.added()
+            .mailboxSession(MailboxSessionUtil.create("user"))
             .mailbox(mailbox)
             .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()))
-            .mailboxSession(MailboxSessionUtil.create("user"))
             .build());
     }
 }

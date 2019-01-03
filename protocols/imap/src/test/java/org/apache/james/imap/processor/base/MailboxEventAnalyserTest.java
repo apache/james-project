@@ -183,7 +183,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(NOOP_UPDATED_FLAGS)
+            .updatedFlag(NOOP_UPDATED_FLAGS)
             .build();
 
         testee.event(update);
@@ -196,7 +196,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(OTHER_MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
             .build();
 
         testee.event(update);
@@ -211,7 +211,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
             .build();
 
         analyser.event(update);
@@ -226,7 +226,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(OTHER_MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(ADD_ANSWERED_UPDATED_FLAGS)
+            .updatedFlag(ADD_ANSWERED_UPDATED_FLAGS)
             .build();
 
         testee.event(update);
@@ -241,7 +241,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(NOOP_UPDATED_FLAGS)
+            .updatedFlag(NOOP_UPDATED_FLAGS)
             .build();
 
         testee.event(update);
@@ -256,7 +256,7 @@ public class MailboxEventAnalyserTest {
         MailboxListener.FlagsUpdated update = EventFactory.flagsUpdated()
             .mailboxSession(MAILBOX_SESSION)
             .mailbox(DEFAULT_MAILBOX)
-            .updatedFags(ADD_RECENT_UPDATED_FLAGS)
+            .updatedFlag(ADD_RECENT_UPDATED_FLAGS)
             .build();
 
         testee.event(update);

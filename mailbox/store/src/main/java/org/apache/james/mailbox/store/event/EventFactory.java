@@ -41,291 +41,328 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 
 public class EventFactory {
-    public abstract static class MailboxEventBuilder<T extends MailboxEventBuilder> {
-        protected MailboxPath path;
-        protected MailboxId mailboxId;
-        protected User user;
-        protected MailboxSession.SessionId sessionId;
+    @FunctionalInterface
+    public interface RequireUser<T> {
+        T user(User user);
+    }
 
-        protected abstract T backReference();
+    @FunctionalInterface
+    public interface RequireSessionId<T> {
+        T sessionId(MailboxSession.SessionId sessionId);
+    }
 
-        public T mailbox(Mailbox mailbox) {
-            path(mailbox.generateAssociatedPath());
-            mailboxId(mailbox.getMailboxId());
-            return backReference();
-        }
-
-        public T mailboxSession(MailboxSession mailboxSession) {
-            user(mailboxSession.getUser());
-            sessionId(mailboxSession.getSessionId());
-            return backReference();
-        }
-
-        public T mailboxId(MailboxId mailboxId) {
-            this.mailboxId = mailboxId;
-            return backReference();
-        }
-
-        public T path(MailboxPath path) {
-            this.path = path;
-            return backReference();
-        }
-
-        public T user(User user) {
-            this.user = user;
-            return backReference();
-        }
-
-        public T sessionId(MailboxSession.SessionId sessionId) {
-            this.sessionId = sessionId;
-            return backReference();
-        }
-
-        protected void mailboxEventChecks() {
-            Preconditions.checkState(user != null, "Field `user` is compulsory");
-            Preconditions.checkState(mailboxId != null, "Field `mailboxId` is compulsory");
-            Preconditions.checkState(path != null, "Field `path` is compulsory");
-            Preconditions.checkState(sessionId != null, "Field `sessionId` is compulsory");
+    @FunctionalInterface
+    public interface RequireSession<T> extends RequireUser<RequireSessionId<T>> {
+        default T mailboxSession(MailboxSession session) {
+            return user(session.getUser())
+                .sessionId(session.getSessionId());
         }
     }
 
-    public abstract static class MessageMetaDataEventBuilder<T extends MessageMetaDataEventBuilder> extends MailboxEventBuilder<T> {
-        protected final ImmutableList.Builder<MessageMetaData> metaData;
+    @FunctionalInterface
+    public interface RequireMailboxId<T> {
+        T mailboxId(MailboxId mailboxId);
+    }
 
-        protected MessageMetaDataEventBuilder() {
-            metaData = ImmutableList.builder();
+    @FunctionalInterface
+    public interface RequirePath<T> {
+        T mailboxPath(MailboxPath path);
+    }
+
+    @FunctionalInterface
+    public interface RequireMailbox<T> extends RequireMailboxId<RequirePath<T>> {
+        default T mailbox(Mailbox mailbox) {
+            return mailboxId(mailbox.getMailboxId())
+                .mailboxPath(mailbox.generateAssociatedPath());
+        }
+    }
+
+    @FunctionalInterface
+    public interface RequireNewPath<T> {
+        T newPath(MailboxPath path);
+    }
+
+    @FunctionalInterface
+    public interface RequireOldPath<T> {
+        T oldPath(MailboxPath path);
+    }
+
+    @FunctionalInterface
+    public interface RequireMetadata<T> {
+        T metaData(ImmutableSortedMap<MessageUid, MessageMetaData> metaData);
+
+        default T addMetaData(MessageMetaData metaData) {
+            return metaData(ImmutableSortedMap.of(metaData.getUid(), metaData));
         }
 
-        protected abstract T backReference();
-
-        public T addMessage(MailboxMessage message) {
-            this.addMetaData(message.metaData());
-            return backReference();
+        default T addMessage(MailboxMessage message) {
+            return addMetaData(message.metaData());
         }
 
-        public T addMessages(Iterable<MailboxMessage> messages) {
-            this.addMetaData(ImmutableList.copyOf(messages)
+        default T addMetaData(Iterable<MessageMetaData> metaData) {
+            return metaData(ImmutableList.copyOf(metaData)
+                .stream()
+                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
+        }
+
+        default T addMessages(Iterable<MailboxMessage> messages) {
+            return metaData(ImmutableList.copyOf(messages)
                 .stream()
                 .map(MailboxMessage::metaData)
-                .collect(Guavate.toImmutableList()));
-            return backReference();
-        }
-
-        public T addMetaData(MessageMetaData metaData) {
-            this.metaData.add(metaData);
-            return backReference();
-        }
-
-        public T addMetaData(Iterable<MessageMetaData> metaData) {
-            this.metaData.addAll(metaData);
-            return backReference();
-        }
-
-        protected ImmutableSortedMap<MessageUid, MessageMetaData> metaDataAsMap() {
-            return metaData.build()
-                .stream()
-                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid));
+                .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
         }
     }
 
-    public static class AddedBuilder extends MessageMetaDataEventBuilder<AddedBuilder> {
-        @Override
-        protected AddedBuilder backReference() {
-            return this;
+    @FunctionalInterface
+    public interface RequireAclDiff<T> {
+        T aclDiff(ACLDiff aclDiff);
+    }
+
+    @FunctionalInterface
+    public interface RequireUpdatedFlags<T> {
+        T updatedFlags(ImmutableList<UpdatedFlags> updatedFlags);
+
+        default T updatedFlags(Iterable<UpdatedFlags> updatedFlags) {
+            return updatedFlags(ImmutableList.copyOf(updatedFlags));
         }
 
-        public MailboxListener.Added build() {
-            mailboxEventChecks();
-
-            return new MailboxListener.Added(
-                sessionId,
-                user,
-                path,
-                mailboxId,
-                metaDataAsMap());
+        default T updatedFlag(UpdatedFlags updatedFlags) {
+            return updatedFlags(ImmutableList.of(updatedFlags));
         }
     }
 
-    public static class ExpungedBuilder extends MessageMetaDataEventBuilder<ExpungedBuilder> {
-        @Override
-        protected ExpungedBuilder backReference() {
-            return this;
-        }
-
-        public MailboxListener.Expunged build() {
-            mailboxEventChecks();
-            
-            return new MailboxListener.Expunged(
-                sessionId,
-                user,
-                path,
-                mailboxId,
-                metaDataAsMap());
-        }
+    @FunctionalInterface
+    public interface RequireQuotaRoot<T> {
+        T quotaRoot(QuotaRoot quotaRoot);
     }
 
-    public static class MailboxAclUpdatedBuilder extends MailboxEventBuilder<MailboxAclUpdatedBuilder> {
-        private ACLDiff aclDiff;
-
-        public MailboxAclUpdatedBuilder aclDiff(ACLDiff aclDiff) {
-            this.aclDiff = aclDiff;
-            return this;
-        }
-
-        @Override
-        protected MailboxAclUpdatedBuilder backReference() {
-            return this;
-        }
-
-        public MailboxListener.MailboxACLUpdated build() {
-            Preconditions.checkState(aclDiff != null, "Field `aclDiff` is compulsory");
-            mailboxEventChecks();
-
-            return new MailboxListener.MailboxACLUpdated(
-                sessionId,
-                user,
-                path,
-                aclDiff,
-                mailboxId);
-        }
+    @FunctionalInterface
+    public interface RequireQuotaCount<T> {
+        T quotaCount(QuotaCount quotaCount);
     }
 
-    public static class MailboxAddedBuilder extends MailboxEventBuilder<MailboxAddedBuilder> {
-        @Override
-        protected MailboxAddedBuilder backReference() {
-            return this;
+    @FunctionalInterface
+    public interface RequireQuotaSize<T> {
+        T quotaSize(QuotaSize quotaSize);
+    }
+
+    @FunctionalInterface
+    public interface RequireMailboxEvent<T> extends RequireSession<RequireMailbox<T>> {}
+
+    public static class MailboxAddedFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+
+        MailboxAddedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
         }
 
         public MailboxListener.MailboxAdded build() {
-            mailboxEventChecks();
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
 
             return new MailboxListener.MailboxAdded(sessionId, user, path, mailboxId);
         }
     }
 
-    public static class MailboxDeletionBuilder extends MailboxEventBuilder<MailboxDeletionBuilder> {
-        private QuotaRoot quotaRoot;
-        private QuotaCount deletedMessageCount;
-        private QuotaSize totalDeletedSize;
+    public static class AddedFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
 
-        @Override
-        protected MailboxDeletionBuilder backReference() {
-            return this;
+        AddedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ImmutableSortedMap<MessageUid, MessageMetaData> metaData) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
+            this.metaData = metaData;
         }
 
-        public MailboxDeletionBuilder quotaRoot(QuotaRoot quotaRoot) {
+        public MailboxListener.Added build() {
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
+            Preconditions.checkNotNull(metaData);
+
+            return new MailboxListener.Added(sessionId, user, path, mailboxId, metaData);
+        }
+    }
+
+    public static class ExpungedFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
+
+        ExpungedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ImmutableSortedMap<MessageUid, MessageMetaData> metaData) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
+            this.metaData = metaData;
+        }
+
+        public MailboxListener.Expunged build() {
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
+            Preconditions.checkNotNull(metaData);
+
+            return new MailboxListener.Expunged(sessionId, user, path, mailboxId, metaData);
+        }
+    }
+
+    public static class MailboxAclUpdatedFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final ACLDiff aclDiff;
+
+        MailboxAclUpdatedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ACLDiff aclDiff) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
+            this.aclDiff = aclDiff;
+        }
+
+        public MailboxListener.MailboxACLUpdated build() {
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
+            Preconditions.checkNotNull(aclDiff);
+
+            return new MailboxListener.MailboxACLUpdated(sessionId, user, path, aclDiff, mailboxId);
+        }
+    }
+
+    public static class MailboxDeletionFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final QuotaRoot quotaRoot;
+        private final QuotaCount deletedMessageCount;
+        private final QuotaSize totalDeletedSize;
+
+        MailboxDeletionFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
             this.quotaRoot = quotaRoot;
-            return this;
-        }
-
-        public MailboxDeletionBuilder deletedMessageCount(QuotaCount deletedMessageCount) {
             this.deletedMessageCount = deletedMessageCount;
-            return this;
-        }
-
-        public MailboxDeletionBuilder totalDeletedSize(QuotaSize totalDeletedSize) {
             this.totalDeletedSize = totalDeletedSize;
-            return this;
         }
 
         public MailboxListener.MailboxDeletion build() {
-            mailboxEventChecks();
-            Preconditions.checkState(quotaRoot != null, "Field `quotaRoot` is compulsory");
-            Preconditions.checkState(deletedMessageCount != null, "Field `deletedMessageCount` is compulsory");
-            Preconditions.checkState(totalDeletedSize != null, "Field `totalDeletedSize` is compulsory");
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
+            Preconditions.checkNotNull(quotaRoot);
+            Preconditions.checkNotNull(deletedMessageCount);
+            Preconditions.checkNotNull(totalDeletedSize);
 
             return new MailboxListener.MailboxDeletion(sessionId, user, path, quotaRoot, deletedMessageCount, totalDeletedSize, mailboxId);
         }
     }
 
-    public static class MailboxRenamedBuilder extends MailboxEventBuilder<MailboxRenamedBuilder> {
-        private MailboxPath newPath;
+    public static class MailboxRenamedFinalStage {
+        private final MailboxPath oldPath;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final MailboxPath newPath;
 
-        @Override
-        protected MailboxRenamedBuilder backReference() {
-            return this;
-        }
-
-        public MailboxRenamedBuilder newPath(MailboxPath newPath) {
+        MailboxRenamedFinalStage(MailboxPath oldPath, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, MailboxPath newPath) {
+            this.oldPath = oldPath;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
             this.newPath = newPath;
-            return this;
         }
 
-        public MailboxRenamedBuilder oldPath(MailboxPath oldPath) {
-            this.path = oldPath;
-            return this;
-        }
 
         public MailboxListener.MailboxRenamed build() {
-            mailboxEventChecks();
-            Preconditions.checkState(path != null, "Field `newPath` is compulsory");
+            Preconditions.checkNotNull(oldPath);
+            Preconditions.checkNotNull(newPath);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
 
-            return new MailboxListener.MailboxRenamed(
-                sessionId,
-                user,
-                path,
-                mailboxId,
-                newPath);
+            return new MailboxListener.MailboxRenamed(sessionId, user, oldPath, mailboxId, newPath);
         }
     }
 
-    public static class FlagsUpdatedBuilder extends MailboxEventBuilder<FlagsUpdatedBuilder> {
-        private final ImmutableList.Builder<UpdatedFlags> updatedFlags;
+    public static class FlagsUpdatedFinalStage {
+        private final MailboxPath path;
+        private final MailboxId mailboxId;
+        private final User user;
+        private final MailboxSession.SessionId sessionId;
+        private final ImmutableList<UpdatedFlags> updatedFlags;
 
-        public FlagsUpdatedBuilder() {
-            updatedFlags = ImmutableList.builder();
+        FlagsUpdatedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ImmutableList<UpdatedFlags> updatedFlags) {
+            this.path = path;
+            this.mailboxId = mailboxId;
+            this.user = user;
+            this.sessionId = sessionId;
+            this.updatedFlags = updatedFlags;
         }
 
-        public FlagsUpdatedBuilder updatedFags(Iterable<UpdatedFlags> updatedFlags) {
-            this.updatedFlags.addAll(updatedFlags);
-            return this;
-        }
-
-        public FlagsUpdatedBuilder updatedFags(UpdatedFlags updatedFlags) {
-            this.updatedFlags.add(updatedFlags);
-            return this;
-        }
-
-        @Override
-        protected FlagsUpdatedBuilder backReference() {
-            return this;
-        }
 
         public MailboxListener.FlagsUpdated build() {
-            mailboxEventChecks();
-
-            ImmutableList<UpdatedFlags> updatedFlags = this.updatedFlags.build();
+            Preconditions.checkNotNull(path);
+            Preconditions.checkNotNull(mailboxId);
+            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(sessionId);
+            Preconditions.checkNotNull(updatedFlags);
 
             return new MailboxListener.FlagsUpdated(sessionId, user, path, mailboxId, updatedFlags);
         }
     }
 
-    public static AddedBuilder added() {
-        return new AddedBuilder();
+    public static RequireMailboxEvent<RequireMetadata<AddedFinalStage>> added() {
+        return user -> sessionId -> mailboxId -> path -> metaData -> new AddedFinalStage(path, mailboxId, user, sessionId, metaData);
     }
 
-    public static ExpungedBuilder expunged() {
-        return new ExpungedBuilder();
+    public static RequireMailboxEvent<RequireMetadata<ExpungedFinalStage>> expunged() {
+        return user -> sessionId -> mailboxId -> path -> metaData -> new ExpungedFinalStage(path, mailboxId, user, sessionId, metaData);
     }
 
-    public static FlagsUpdatedBuilder flagsUpdated() {
-        return new FlagsUpdatedBuilder();
+    public static RequireMailboxEvent<RequireUpdatedFlags<FlagsUpdatedFinalStage>> flagsUpdated() {
+        return user -> sessionId -> mailboxId -> path -> updatedFlags -> new FlagsUpdatedFinalStage(path, mailboxId, user, sessionId, updatedFlags);
     }
 
-    public static MailboxRenamedBuilder mailboxRenamed() {
-        return new MailboxRenamedBuilder();
+    public static RequireSession<RequireMailboxId<RequireOldPath<RequireNewPath<MailboxRenamedFinalStage>>>> mailboxRenamed() {
+        return user -> sessionId -> mailboxId -> oldPath -> newPath -> new MailboxRenamedFinalStage(oldPath, mailboxId, user, sessionId, newPath);
     }
 
-    public static MailboxDeletionBuilder mailboxDeleted() {
-        return new MailboxDeletionBuilder();
+    public static  RequireMailboxEvent<RequireQuotaRoot<RequireQuotaCount<RequireQuotaSize<MailboxDeletionFinalStage>>>> mailboxDeleted() {
+        return user -> sessionId -> mailboxId -> path -> quotaRoot -> quotaCount -> quotaSize -> new MailboxDeletionFinalStage(
+            path, mailboxId, user, sessionId, quotaRoot, quotaCount, quotaSize);
     }
 
-    public static MailboxAddedBuilder mailboxAdded() {
-        return new MailboxAddedBuilder();
+    public static RequireMailboxEvent<MailboxAddedFinalStage> mailboxAdded() {
+        return user -> sessionId -> mailboxId -> path -> new MailboxAddedFinalStage(path, mailboxId, user, sessionId);
     }
 
-    public static MailboxAclUpdatedBuilder aclUpdated() {
-        return new MailboxAclUpdatedBuilder();
+    public static RequireMailboxEvent<RequireAclDiff<MailboxAclUpdatedFinalStage>> aclUpdated() {
+        return user -> sessionId -> mailboxId -> path -> aclDiff -> new MailboxAclUpdatedFinalStage(path, mailboxId, user, sessionId, aclDiff);
     }
 
     public static MessageMoveEvent.Builder moved() {

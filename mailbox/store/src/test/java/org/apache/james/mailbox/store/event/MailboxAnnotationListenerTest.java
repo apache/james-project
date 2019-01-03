@@ -80,10 +80,10 @@ public class MailboxAnnotationListenerTest {
         deleteEvent = EventFactory.mailboxDeleted()
             .mailboxSession(mailboxSession)
             .mailboxId(mailboxId)
-            .path(MailboxPath.forUser("user", "name"))
+            .mailboxPath(MailboxPath.forUser("user", "name"))
             .quotaRoot(QuotaRoot.quotaRoot("root", Optional.empty()))
-            .deletedMessageCount(QuotaCount.count(123))
-            .totalDeletedSize(QuotaSize.size(456))
+            .quotaCount(QuotaCount.count(123))
+            .quotaSize(QuotaSize.size(456))
             .build();
 
         when(mailboxManager.createSystemSession(deleteEvent.getUser().asString()))

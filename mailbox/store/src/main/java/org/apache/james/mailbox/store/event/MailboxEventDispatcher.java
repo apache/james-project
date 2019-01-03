@@ -71,8 +71,8 @@ public class MailboxEventDispatcher {
      */
     public void added(MailboxSession session, SortedMap<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         event(EventFactory.added()
-            .mailbox(mailbox)
             .mailboxSession(session)
+            .mailbox(mailbox)
             .addMetaData(uids.values())
             .build());
     }
@@ -102,8 +102,8 @@ public class MailboxEventDispatcher {
      */
     public void expunged(MailboxSession session,  Map<MessageUid, MessageMetaData> uids, Mailbox mailbox) {
         event(EventFactory.expunged()
-            .mailbox(mailbox)
             .mailboxSession(session)
+            .mailbox(mailbox)
             .addMetaData(uids.values())
             .build());
     }
@@ -121,9 +121,9 @@ public class MailboxEventDispatcher {
      */
     public void flagsUpdated(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> uflags) {
         event(EventFactory.flagsUpdated()
-            .mailbox(mailbox)
             .mailboxSession(session)
-            .updatedFags(uflags)
+            .mailbox(mailbox)
+            .updatedFlags(uflags)
             .build());
     }
 
@@ -153,8 +153,8 @@ public class MailboxEventDispatcher {
             .mailboxSession(session)
             .mailbox(mailbox)
             .quotaRoot(quotaRoot)
-            .deletedMessageCount(deletedMessageCount)
-            .totalDeletedSize(totalDeletedSize)
+            .quotaCount(deletedMessageCount)
+            .quotaSize(totalDeletedSize)
             .build());
     }
 
@@ -164,16 +164,16 @@ public class MailboxEventDispatcher {
      */
     public void mailboxAdded(MailboxSession session, Mailbox mailbox) {
         event(EventFactory.mailboxAdded()
-            .mailbox(mailbox)
             .mailboxSession(session)
+            .mailbox(mailbox)
             .build());
     }
 
     public void aclUpdated(MailboxSession session, MailboxPath mailboxPath, ACLDiff aclDiff, MailboxId mailboxId) {
         event(EventFactory.aclUpdated()
             .mailboxSession(session)
-            .path(mailboxPath)
             .mailboxId(mailboxId)
+            .mailboxPath(mailboxPath)
             .aclDiff(aclDiff)
             .build());
     }
