@@ -347,7 +347,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.addMapping(source, Mapping.alias(ADDRESS));
         virtualUserTable.addMapping(source, Mapping.alias(address2));
 
-        assertThat(virtualUserTable.getUserDomainMappings(source)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).hasSize(2);
     }
 
     @Test
@@ -362,8 +362,16 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.removeMapping(source, Mapping.alias(ADDRESS));
         virtualUserTable.removeMapping(source, Mapping.alias(address2));
 
-        assertThat(virtualUserTable.getUserDomainMappings(source))
+        assertThat(virtualUserTable.getStoredMappings(source))
                 .isEqualTo(MappingsImpl.empty());
+    }
+
+    @Test
+    public void getUserDomainMappingShouldBeEmptyByDefault() throws Exception {
+        Domain domain = Domain.LOCALHOST;
+        MappingSource source = MappingSource.fromUser(USER, domain);
+
+        assertThat(virtualUserTable.getStoredMappings(source)).isEmpty();
     }
 
     @Test

@@ -206,7 +206,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
+    public Mappings getStoredMappings(MappingSource source) {
         return MappingsImpl.empty();
     }
 

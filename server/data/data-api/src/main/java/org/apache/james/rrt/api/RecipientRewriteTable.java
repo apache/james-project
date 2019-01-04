@@ -49,7 +49,8 @@ public interface RecipientRewriteTable {
     EnumSet<Mapping.Type> listSourcesSupportedType = EnumSet.of(
         Mapping.Type.Group,
         Mapping.Type.Forward,
-        Mapping.Type.Address);
+        Mapping.Type.Address,
+        Mapping.Type.Alias);
 
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
@@ -80,7 +81,7 @@ public interface RecipientRewriteTable {
     void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException;
 
     /**
-     * Return the Mappings for the given source. Return null if no
+     * Return the Mappings for the given source. Return empty object if no
      * matched mapping was found
      *
      * @throws ErrorMappingException
@@ -89,8 +90,8 @@ public interface RecipientRewriteTable {
     Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
-     * Return the explicit mapping stored for the given user and domain. Return
-     * null if no mapping was found
+     * Return the explicit mapping stored for the given user and domain. Return empty object
+     * if no matched mapping was found
      * 
      * @return the collection which holds the mappings.
      * @throws RecipientRewriteTableException

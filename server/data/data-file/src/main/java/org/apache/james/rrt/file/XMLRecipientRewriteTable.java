@@ -69,16 +69,10 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public Mappings getStoredMappings(MappingSource source) {
-        if (mappings == null) {
-            return null;
-        } else {
-            String maps = mappings.get(source);
-            if (maps != null) {
-                return MappingsImpl.fromRawString(maps);
-            } else {
-                return null;
-            }
-        }
+        return Optional.ofNullable(mappings)
+                .map(mappings -> mappings.get(source))
+                .map(MappingsImpl::fromRawString)
+                .orElse(MappingsImpl.empty());
     }
 
     @Override

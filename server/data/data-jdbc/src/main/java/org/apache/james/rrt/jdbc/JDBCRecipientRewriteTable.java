@@ -190,7 +190,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         Mappings map = getStoredMappings(source);
-        if (map != null && map.size() != 0) {
+        if (!map.isEmpty()) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(source, updatedMappings.serialize());
         }
@@ -252,7 +252,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
             theJDBCUtil.closeJDBCStatement(mappingStmt);
             theJDBCUtil.closeJDBCConnection(conn);
         }
-        return null;
+        return MappingsImpl.empty();
     }
 
     @Override
@@ -292,7 +292,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         Mappings map = getStoredMappings(source);
-        if (map != null && map.size() > 1) {
+        if (map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(source, updatedMappings.serialize());
         } else {

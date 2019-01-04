@@ -49,7 +49,6 @@ import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
-import org.apache.james.rrt.lib.MappingsImpl;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.util.OptionalUtils;
@@ -242,8 +241,7 @@ public class GroupsRoutes implements Routes {
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress)))
-            .orElse(MappingsImpl.empty())
+        Mappings mappings = recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress))
             .select(Mapping.Type.Group);
 
         ensureNonEmptyMappings(mappings);

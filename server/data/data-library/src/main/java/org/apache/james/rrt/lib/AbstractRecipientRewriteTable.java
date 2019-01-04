@@ -314,7 +314,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getStoredMappings(source);
-        if (mappings != null && mappings.contains(mapping)) {
+        if (mappings.contains(mapping)) {
             throw new MappingAlreadyExistsException("Mapping " + mapping + " for " + source.asString() + " already exist!");
         }
     }
