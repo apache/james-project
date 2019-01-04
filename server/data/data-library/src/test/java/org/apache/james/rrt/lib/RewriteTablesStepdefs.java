@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.List;
 
 import org.apache.james.core.Domain;
-import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTable.ErrorMappingException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 
@@ -56,6 +55,10 @@ public class RewriteTablesStepdefs {
     @Given("store \"([^\"]*)\" address mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
     public void storeAddressMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
+        storeAddressMappingForUserAtDomain(address, source);
+    }
+
+    private void storeAddressMappingForUserAtDomain(String address, MappingSource source) throws RecipientRewriteTableException {
         rewriteTable.addAddressMapping(source, address);
     }
 
@@ -67,7 +70,7 @@ public class RewriteTablesStepdefs {
 
     @Given("store \"([^\"]*)\" address mapping as wildcard for domain \"([^\"]*)\"")
     public void storeAddressMappingAsWildcardAtDomain(String address, String domain) throws Throwable {
-        storeAddressMappingForUserAtDomain(address, RecipientRewriteTable.WILDCARD, domain);
+        storeAddressMappingForUserAtDomain(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
     @Given("store \"([^\"]*)\" alias domain mapping for domain \"([^\"]*)\"")
@@ -106,6 +109,10 @@ public class RewriteTablesStepdefs {
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a address mapping \"([^\"]*)\"")
     public void userAtDomainRemovesAddressMapping(String user, String domain, String address) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
+        userAtDomainRemovesAddressMapping(address, source);
+    }
+
+    private void userAtDomainRemovesAddressMapping(String address, MappingSource source) throws RecipientRewriteTableException {
         rewriteTable.removeAddressMapping(source, address);
     }
 
@@ -129,7 +136,7 @@ public class RewriteTablesStepdefs {
 
     @When("wildcard address mapping \"([^\"]*)\" at domain \"([^\"]*)\" is removed")
     public void removeWildcardAddressMappingAtDomain(String address, String domain) throws Throwable {
-        userAtDomainRemovesAddressMapping(RecipientRewriteTable.WILDCARD, domain, address);
+        userAtDomainRemovesAddressMapping(address, MappingSource.fromDomain(Domain.of(domain)));
     }
 
     @When("alias domain mapping \"([^\"]*)\" for \"([^\"]*)\" domain is removed")

@@ -35,27 +35,6 @@ import com.google.common.base.Preconditions;
  */
 public interface RecipientRewriteTable {
 
-    interface Domains {
-
-        Domain WILDCARD = new Domain(RecipientRewriteTable.WILDCARD) {
-
-            @Override
-            public String name() {
-                throw new IllegalStateException();
-            }
-
-            @Override
-            public String toString() {
-                return "Domain : * (Wildcard)";
-            }
-        };
-    }
-
-    /**
-     * The wildcard used for alias domain mappings
-     */
-    String WILDCARD = "*";
-
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
     void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
