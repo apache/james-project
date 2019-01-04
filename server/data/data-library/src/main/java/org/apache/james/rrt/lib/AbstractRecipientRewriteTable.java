@@ -162,6 +162,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         switch (type) {
             case Forward:
             case Group:
+            case Alias:
                 return Mapping.of(type, rewrittenUser.asString());
             case Regex:
             case Domain:

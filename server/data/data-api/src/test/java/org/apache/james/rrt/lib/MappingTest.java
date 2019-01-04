@@ -55,6 +55,12 @@ public class MappingTest {
     }
 
     @Test
+    void hasPrefixShouldReturnTrueWhenAlias() {
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Alias.asPrefix() + "myAlias");
+        assertThat(hasPrefix).isTrue();
+    }
+
+    @Test
     void hasPrefixShouldReturnFalseWhenAddress() {
         boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
         assertThat(hasPrefix).isFalse();
@@ -91,6 +97,12 @@ public class MappingTest {
     }
 
     @Test
+    void detectTypeShouldReturnAliasWhenAliasPrefix() {
+        assertThat(Mapping.detectType(Type.Alias.asPrefix() + "mapping"))
+                .isEqualTo(Type.Alias);
+    }
+
+    @Test
     void withoutPrefixShouldRemoveAddressPrefix() {
         assertThat(Type.Address.withoutPrefix(Type.Address.asPrefix() + "mapping"))
             .isEqualTo("mapping");
@@ -124,6 +136,12 @@ public class MappingTest {
     void withoutPrefixShouldRemoveForwardPrefix() {
         assertThat(Type.Forward.withoutPrefix(Type.Forward.asPrefix() + "mapping"))
             .isEqualTo("mapping");
+    }
+
+    @Test
+    void withoutPrefixShouldRemoveAliasPrefix() {
+        assertThat(Type.Alias.withoutPrefix(Type.Alias.asPrefix() + "mapping"))
+                .isEqualTo("mapping");
     }
 
     @Test
@@ -185,6 +203,12 @@ public class MappingTest {
     void groupFactoryMethodShouldThrowOnNull() {
         assertThatThrownBy(() -> Mapping.group(null))
             .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void aliasFactoryMethodShouldThrowOnNull() {
+        assertThatThrownBy(() -> Mapping.alias(null))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -258,6 +282,11 @@ public class MappingTest {
     }
 
     @Test
+    void getTypeShouldReturnAliasWhenAliasPrefix() {
+        assertThat(Mapping.alias("abc").getType()).isEqualTo(Mapping.Type.Alias);
+    }
+
+    @Test
     void getErrorMessageShouldThrowWhenMappingIsNotAnError() {
         assertThatThrownBy(() -> Mapping.domain(Domain.of("toto")).getErrorMessage())
             .isInstanceOf(IllegalStateException.class);
@@ -304,6 +333,12 @@ public class MappingTest {
     void asMailAddressShouldReturnMappingValueForForward() throws Exception {
         assertThat(Mapping.forward("value@domain").asMailAddress())
             .contains(new MailAddress("value@domain"));
+    }
+
+    @Test
+    void asMailAddressShouldReturnMappingValueForAlias() throws Exception {
+        assertThat(Mapping.alias("value@domain").asMailAddress())
+                .contains(new MailAddress("value@domain"));
     }
 
 }

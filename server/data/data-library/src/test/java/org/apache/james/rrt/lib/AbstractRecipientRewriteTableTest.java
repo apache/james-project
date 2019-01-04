@@ -339,6 +339,34 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
+    public void addAliasMappingShouldStore() throws Exception {
+        Domain domain = Domain.LOCALHOST;
+        String address2 = "test@james";
+        MappingSource source = MappingSource.fromUser(USER, domain);
+
+        virtualUserTable.addMapping(source, Mapping.alias(ADDRESS));
+        virtualUserTable.addMapping(source, Mapping.alias(address2));
+
+        assertThat(virtualUserTable.getUserDomainMappings(source)).hasSize(2);
+    }
+
+    @Test
+    public void removeAliasMappingShouldDelete() throws Exception {
+        Domain domain = Domain.LOCALHOST;
+        String address2 = "test@james";
+        MappingSource source = MappingSource.fromUser(USER, domain);
+
+        virtualUserTable.addMapping(source, Mapping.alias(ADDRESS));
+        virtualUserTable.addMapping(source, Mapping.alias(address2));
+
+        virtualUserTable.removeMapping(source, Mapping.alias(ADDRESS));
+        virtualUserTable.removeMapping(source, Mapping.alias(address2));
+
+        assertThat(virtualUserTable.getUserDomainMappings(source))
+                .isEqualTo(MappingsImpl.empty());
+    }
+
+    @Test
     public void listSourcesShouldReturnWhenHasMapping() throws Exception {
         MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.group(ADDRESS);
@@ -363,6 +391,16 @@ public abstract class AbstractRecipientRewriteTableTest {
     public void listSourcesShouldReturnWhenHasForwardMapping() throws Exception {
         MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
         Mapping mapping = Mapping.forward("forward");
+
+        virtualUserTable.addMapping(source, mapping);
+
+        assertThat(virtualUserTable.listSources(mapping)).contains(source);
+    }
+
+    @Test
+    public void listSourcesShouldReturnAliasMappings() throws Exception {
+        MappingSource source = MappingSource.fromUser(USER, Domain.LOCALHOST);
+        Mapping mapping = Mapping.alias("alias");
 
         virtualUserTable.addMapping(source, mapping);
 

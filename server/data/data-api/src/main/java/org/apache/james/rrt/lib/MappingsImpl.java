@@ -63,6 +63,8 @@ public class MappingsImpl implements Mappings, Serializable {
                     return 2;
                 case Forward:
                     return 3;
+                case Alias:
+                    return 3;
                 case Regex:
                     return 4;
                 case Error:

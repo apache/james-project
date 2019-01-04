@@ -60,6 +60,7 @@ public interface Mapping {
                 return new UserRewritter.ThrowingRewriter();
             case Forward:
             case Group:
+            case Alias:
             case Address:
                 return new UserRewritter.ReplaceRewriter();
         }
@@ -73,6 +74,7 @@ public interface Mapping {
             case Error:
             case Group:
             case Address:
+            case Alias:
                 return IdentityMappingPolicy.Throw;
             case Forward:
                 return IdentityMappingPolicy.ReturnIdentity;
@@ -109,6 +111,7 @@ public interface Mapping {
                 return MailAddressConversionPolicy.ToEmpty;
             case Forward:
             case Group:
+            case Alias:
             case Address:
                 return MailAddressConversionPolicy.ToMailAddress;
             }
@@ -139,6 +142,10 @@ public interface Mapping {
         return of(Type.Group, mapping);
     }
 
+    static Mapping alias(String mapping) {
+        return of(Type.Alias, mapping);
+    }
+
     static Type detectType(String input) {
         if (input.startsWith(Type.Regex.asPrefix())) {
             return Type.Regex;
@@ -155,6 +162,9 @@ public interface Mapping {
         if (input.startsWith(Type.Group.asPrefix())) {
             return Type.Group;
         }
+        if (input.startsWith(Type.Alias.asPrefix())) {
+            return Type.Alias;
+        }
         return Type.Address;
     }
 
@@ -164,6 +174,7 @@ public interface Mapping {
         Error("error:"),
         Forward("forward:"),
         Group("group:"),
+        Alias("alias:"),
         Address("");
 
         private final String asPrefix;
@@ -186,7 +197,8 @@ public interface Mapping {
                 || mapping.startsWith(Domain.asPrefix())
                 || mapping.startsWith(Error.asPrefix())
                 || mapping.startsWith(Forward.asPrefix())
-                || mapping.startsWith(Group.asPrefix());
+                || mapping.startsWith(Group.asPrefix())
+                || mapping.startsWith(Alias.asPrefix());
         }
 
     }
