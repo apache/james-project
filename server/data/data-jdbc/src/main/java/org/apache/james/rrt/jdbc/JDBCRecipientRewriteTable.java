@@ -189,7 +189,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
+        Mappings map = getStoredMappings(source);
         if (map != null && map.size() != 0) {
             Mappings updatedMappings = MappingsImpl.from(map).add(mapping).build();
             doUpdateMapping(source, updatedMappings.serialize());
@@ -228,7 +228,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException {
+    public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         Connection conn = null;
         PreparedStatement mappingStmt = null;
         try {
@@ -291,7 +291,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
 
     @Override
     public void removeMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings map = getUserDomainMappings(source);
+        Mappings map = getStoredMappings(source);
         if (map != null && map.size() > 1) {
             Mappings updatedMappings = map.remove(mapping);
             doUpdateMapping(source, updatedMappings.serialize());

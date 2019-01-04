@@ -95,7 +95,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
+    public Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
         return getMappings(User.fromLocalPartWithDomain(user, domain), mappingLimit);
     }
 
@@ -312,7 +312,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     protected abstract Mappings mapAddress(String user, Domain domain) throws RecipientRewriteTableException;
 
     private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
-        Mappings mappings = getUserDomainMappings(source);
+        Mappings mappings = getStoredMappings(source);
         if (mappings != null && mappings.contains(mapping)) {
             throw new MappingAlreadyExistsException("Mapping " + mapping + " for " + source.asString() + " already exist!");
         }

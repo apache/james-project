@@ -670,7 +670,7 @@ class GroupsRoutesTest {
         void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
             doThrow(RecipientRewriteTableException.class)
                 .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
+                .getStoredMappings(any());
 
             when()
                 .get(GROUP1)
@@ -682,7 +682,7 @@ class GroupsRoutesTest {
         void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
             doThrow(RuntimeException.class)
                 .when(memoryRecipientRewriteTable)
-                .getUserDomainMappings(any());
+                .getStoredMappings(any());
 
             when()
                 .get(GROUP1)

@@ -113,7 +113,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) {
+    public Mappings getStoredMappings(MappingSource source) {
         return retrieveMappings(source)
             .orElse(null);
     }

@@ -234,7 +234,7 @@ public class ForwardRoutes implements Routes {
     })
     public ImmutableSet<ForwardDestinationResponse> listForwardDestinations(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress baseAddress = parseMailAddress(request.params(FORWARD_BASE_ADDRESS));
-        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(MappingSource.fromMailAddress(baseAddress)))
+        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(baseAddress)))
             .orElse(MappingsImpl.empty())
             .select(Mapping.Type.Forward);
 

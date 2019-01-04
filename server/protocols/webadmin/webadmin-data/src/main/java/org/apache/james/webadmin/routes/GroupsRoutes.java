@@ -242,7 +242,7 @@ public class GroupsRoutes implements Routes {
     })
     public ImmutableSortedSet<String> listGroupMembers(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress groupAddress = parseMailAddress(request.params(GROUP_ADDRESS));
-        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getUserDomainMappings(MappingSource.fromMailAddress(groupAddress)))
+        Mappings mappings = Optional.ofNullable(recipientRewriteTable.getStoredMappings(MappingSource.fromMailAddress(groupAddress)))
             .orElse(MappingsImpl.empty())
             .select(Mapping.Type.Group);
 

@@ -68,7 +68,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) {
+    public Mappings getStoredMappings(MappingSource source) {
         if (mappings == null) {
             return null;
         } else {

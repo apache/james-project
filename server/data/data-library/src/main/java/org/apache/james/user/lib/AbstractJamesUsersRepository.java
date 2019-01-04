@@ -121,7 +121,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getMappings(String username, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
+    public Mappings getResolvedMappings(String username, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
         Builder mappingsBuilder = MappingsImpl.builder();
         try {
             User user = getUserByName(username);
@@ -192,7 +192,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                     }
                     try {
                         MappingSource source = MappingSource.fromUser(org.apache.james.core.User.fromUsername(user));
-                        mappings.put(source, getMappings(username, domain));
+                        mappings.put(source, getResolvedMappings(username, domain));
                     } catch (ErrorMappingException e) {
                         // shold never happen here
                     }
@@ -206,7 +206,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     }
 
     @Override
-    public Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException {
+    public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         return MappingsImpl.empty();
     }
 

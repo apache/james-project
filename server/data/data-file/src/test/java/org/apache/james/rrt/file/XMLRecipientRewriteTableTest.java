@@ -80,7 +80,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     protected void addMappingToConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings mappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(source))
+        Mappings mappings = Optional.ofNullable(virtualUserTable.getStoredMappings(source))
             .orElse(MappingsImpl.empty());
 
         Mappings updatedMappings = MappingsImpl.from(mappings)
@@ -91,7 +91,7 @@ public class XMLRecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     }
 
     protected void removeMappingFromConfiguration(MappingSource source, String mapping, Type type) throws RecipientRewriteTableException {
-        Mappings oldMappings = Optional.ofNullable(virtualUserTable.getUserDomainMappings(source))
+        Mappings oldMappings = Optional.ofNullable(virtualUserTable.getStoredMappings(source))
             .orElseThrow(() -> new RecipientRewriteTableException("Cannot remove from null mappings"));
 
         Mappings updatedMappings = oldMappings.remove(Mapping.of(type, mapping));

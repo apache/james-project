@@ -88,7 +88,7 @@ public interface RecipientRewriteTable {
      * @throws ErrorMappingException
      *             get thrown if an error mapping was found
      */
-    Mappings getMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
+    Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
      * Return the explicit mapping stored for the given user and domain. Return
@@ -97,7 +97,7 @@ public interface RecipientRewriteTable {
      * @return the collection which holds the mappings.
      * @throws RecipientRewriteTableException
      */
-    Mappings getUserDomainMappings(MappingSource source) throws RecipientRewriteTableException;
+    Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException;
 
     /**
      * Return a Map which holds all mappings. The key is the user@domain and the

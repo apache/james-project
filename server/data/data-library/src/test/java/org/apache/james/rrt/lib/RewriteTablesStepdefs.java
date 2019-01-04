@@ -151,12 +151,12 @@ public class RewriteTablesStepdefs {
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should be empty")
     public void assertMappingsIsEmpty(String user, String domain) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, Domain.of(domain))).isNullOrEmpty();
+        assertThat(rewriteTable.getResolvedMappings(user, Domain.of(domain))).isNullOrEmpty();
     }
 
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
     public void assertMappingsForUser(String user, String domain, List<String> mappings) throws Throwable {
-        assertThat(rewriteTable.getMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
+        assertThat(rewriteTable.getResolvedMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
     }
 
     @Then("a \"([^\"]*)\" exception should have been thrown")
@@ -166,7 +166,7 @@ public class RewriteTablesStepdefs {
 
     @Then("retrieving mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should raise an ErrorMappingException with message \"([^\"]*)\"")
     public void retrievingMappingsForUserAtDomainShouldRaiseAnException(String user, String domain, String message) throws Exception {
-        assertThatThrownBy(() -> rewriteTable.getMappings(user, Domain.of(domain)))
+        assertThatThrownBy(() -> rewriteTable.getResolvedMappings(user, Domain.of(domain)))
             .isInstanceOf(ErrorMappingException.class)
             .hasMessage(message);
     }

@@ -95,7 +95,7 @@ public class RecipientRewriteTableManagement extends StandardMBean implements Re
     @Override
     public Mappings getUserDomainMappings(String user, String domain) throws RecipientRewriteTableException {
         MappingSource source = MappingSource.fromUser(user, domain);
-        return rrt.getUserDomainMappings(source);
+        return rrt.getStoredMappings(source);
     }
 
     @Override
