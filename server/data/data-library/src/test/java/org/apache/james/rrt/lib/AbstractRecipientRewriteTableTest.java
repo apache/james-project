@@ -87,12 +87,12 @@ public abstract class AbstractRecipientRewriteTableTest {
         String regex2 = "(.+)@test";
         String invalidRegex = ".*):";
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("No mapping")
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
 
         virtualUserTable.addMapping(source, Mapping.regex(regex));
         virtualUserTable.addMapping(source, Mapping.regex(regex2));
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("Two mappings").hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("Two mappings").hasSize(2);
         assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
         virtualUserTable.removeMapping(source, Mapping.regex(regex));
 
@@ -104,7 +104,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.removeMapping(source, Mapping.regex(regex2));
 
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("No mapping")
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
@@ -140,19 +140,19 @@ public abstract class AbstractRecipientRewriteTableTest {
         MappingSource source = MappingSource.fromUser(USER, domain);
         String address2 = "test@james";
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("No mapping")
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
 
         virtualUserTable.addMapping(source, Mapping.address(ADDRESS));
         virtualUserTable.addMapping(source, Mapping.address(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("Two mappings").hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("Two mappings").hasSize(2);
         assertThat(virtualUserTable.getAllMappings()).describedAs("One mappingline").hasSize(1);
 
         virtualUserTable.removeMapping(source, Mapping.address(ADDRESS));
         virtualUserTable.removeMapping(source, Mapping.address(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).describedAs("No mapping")
+        assertThat(virtualUserTable.getStoredMappings(source)).describedAs("No mapping")
             .isEqualTo(MappingsImpl.empty());
         assertThat(virtualUserTable.getAllMappings()).describedAs("No mapping").isEmpty();
     }
@@ -279,7 +279,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.addMapping(source, Mapping.address(ADDRESS));
         virtualUserTable.addMapping(source, Mapping.regex(ADDRESS));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).hasSize(2);
     }
 
     @Test
@@ -291,7 +291,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.addMapping(source, Mapping.forward(ADDRESS));
         virtualUserTable.addMapping(source, Mapping.forward(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).hasSize(2);
     }
 
     @Test
@@ -306,7 +306,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.removeMapping(source, Mapping.forward(ADDRESS));
         virtualUserTable.removeMapping(source, Mapping.forward(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain))
+        assertThat(virtualUserTable.getStoredMappings(source))
             .isEqualTo(MappingsImpl.empty());
     }
 
@@ -319,7 +319,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.addMapping(source, Mapping.group(ADDRESS));
         virtualUserTable.addMapping(source, Mapping.group(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain)).hasSize(2);
+        assertThat(virtualUserTable.getStoredMappings(source)).hasSize(2);
     }
 
     @Test
@@ -334,7 +334,7 @@ public abstract class AbstractRecipientRewriteTableTest {
         virtualUserTable.removeMapping(source, Mapping.group(ADDRESS));
         virtualUserTable.removeMapping(source, Mapping.group(address2));
 
-        assertThat(virtualUserTable.getResolvedMappings(USER, domain))
+        assertThat(virtualUserTable.getStoredMappings(source))
             .isEqualTo(MappingsImpl.empty());
     }
 

@@ -38,19 +38,19 @@ public class MappingTest {
 
     @Test
     void hasPrefixShouldReturnTrueWhenDomain() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Domain.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Domain.asPrefix() + "myDomain");
         assertThat(hasPrefix).isTrue();
     }
 
     @Test
     void hasPrefixShouldReturnTrueWhenError() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Error.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Error.asPrefix() + "myError");
         assertThat(hasPrefix).isTrue();
     }
 
     @Test
     void hasPrefixShouldReturnTrueWhenForward() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Forward.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Forward.asPrefix() + "myForward");
         assertThat(hasPrefix).isTrue();
     }
 
@@ -62,7 +62,7 @@ public class MappingTest {
 
     @Test
     void hasPrefixShouldReturnFalseWhenAddress() {
-        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myRegex");
+        boolean hasPrefix = Mapping.Type.hasPrefix(Type.Address.asPrefix() + "myAddress");
         assertThat(hasPrefix).isFalse();
     }
 
