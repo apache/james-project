@@ -34,6 +34,24 @@ import com.google.common.base.Preconditions;
  * Interface which should be implemented of classes which map recipients.
  */
 public interface RecipientRewriteTable {
+    class ErrorMappingException extends Exception {
+        private static final long serialVersionUID = 2348752938798L;
+
+        public ErrorMappingException(String string) {
+            super(string);
+        }
+    }
+
+    class TooManyMappingException extends ErrorMappingException {
+        public TooManyMappingException(String string) {
+            super(string);
+        }
+    }
+
+    EnumSet<Mapping.Type> listSourcesSupportedType = EnumSet.of(
+        Mapping.Type.Group,
+        Mapping.Type.Forward,
+        Mapping.Type.Address);
 
     void addMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException;
 
@@ -91,40 +109,12 @@ public interface RecipientRewriteTable {
     Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException;
 
     default List<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
-        Preconditions.checkArgument(supportsSourceListing(mapping),
+        Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             String.format("Not supported mapping of type %s", mapping.getType()));
 
         return getAllMappings().entrySet().stream()
             .filter(entry -> entry.getValue().contains(mapping))
             .map(Map.Entry::getKey)
             .collect(Guavate.toImmutableList());
-    }
-
-    EnumSet<Mapping.Type> listSourcesSupportedType = EnumSet.of(
-        Mapping.Type.Group,
-        Mapping.Type.Forward,
-        Mapping.Type.Address);
-
-    default boolean supportsSourceListing(Mapping mapping) {
-        return listSourcesSupportedType.contains(
-            mapping.getType());
-    }
-
-    class ErrorMappingException extends Exception {
-
-        private static final long serialVersionUID = 2348752938798L;
-
-        public ErrorMappingException(String string) {
-            super(string);
-        }
-
-    }
-
-    class TooManyMappingException extends ErrorMappingException {
-        
-        public TooManyMappingException(String string) {
-            super(string);
-        }
-
     }
 }
