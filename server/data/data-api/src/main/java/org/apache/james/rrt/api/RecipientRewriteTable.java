@@ -35,8 +35,6 @@ import com.google.common.base.Preconditions;
  */
 public interface RecipientRewriteTable {
     class ErrorMappingException extends Exception {
-        private static final long serialVersionUID = 2348752938798L;
-
         public ErrorMappingException(String string) {
             super(string);
         }
