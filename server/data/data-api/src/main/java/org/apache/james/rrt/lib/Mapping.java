@@ -21,6 +21,7 @@
 package org.apache.james.rrt.lib;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -147,25 +148,11 @@ public interface Mapping {
     }
 
     static Type detectType(String input) {
-        if (input.startsWith(Type.Regex.asPrefix())) {
-            return Type.Regex;
-        }
-        if (input.startsWith(Type.Domain.asPrefix())) {
-            return Type.Domain;
-        }
-        if (input.startsWith(Type.Error.asPrefix())) {
-            return Type.Error;
-        }
-        if (input.startsWith(Type.Forward.asPrefix())) {
-            return Type.Forward;
-        }
-        if (input.startsWith(Type.Group.asPrefix())) {
-            return Type.Group;
-        }
-        if (input.startsWith(Type.Alias.asPrefix())) {
-            return Type.Alias;
-        }
-        return Type.Address;
+        return Arrays.stream(Type.values())
+            .filter(Type::hasPrefix)
+            .filter(type -> input.startsWith(type.asPrefix()))
+            .findAny()
+            .orElse(Type.Address);
     }
 
     enum Type {
@@ -192,13 +179,14 @@ public interface Mapping {
             return input.substring(asPrefix.length());
         }
 
+        public boolean hasPrefix() {
+            return !asPrefix.isEmpty();
+        }
+
         public static boolean hasPrefix(String mapping) {
-            return mapping.startsWith(Regex.asPrefix())
-                || mapping.startsWith(Domain.asPrefix())
-                || mapping.startsWith(Error.asPrefix())
-                || mapping.startsWith(Forward.asPrefix())
-                || mapping.startsWith(Group.asPrefix())
-                || mapping.startsWith(Alias.asPrefix());
+            return Arrays.stream(Type.values())
+                .filter(Type::hasPrefix)
+                .anyMatch(type -> mapping.startsWith(type.asPrefix()));
         }
 
     }

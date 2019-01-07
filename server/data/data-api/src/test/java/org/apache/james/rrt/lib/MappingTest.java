@@ -99,7 +99,7 @@ public class MappingTest {
     @Test
     void detectTypeShouldReturnAliasWhenAliasPrefix() {
         assertThat(Mapping.detectType(Type.Alias.asPrefix() + "mapping"))
-                .isEqualTo(Type.Alias);
+            .isEqualTo(Type.Alias);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class MappingTest {
     @Test
     void withoutPrefixShouldRemoveAliasPrefix() {
         assertThat(Type.Alias.withoutPrefix(Type.Alias.asPrefix() + "mapping"))
-                .isEqualTo("mapping");
+            .isEqualTo("mapping");
     }
 
     @Test
@@ -208,7 +208,7 @@ public class MappingTest {
     @Test
     void aliasFactoryMethodShouldThrowOnNull() {
         assertThatThrownBy(() -> Mapping.alias(null))
-                .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
@@ -338,7 +338,7 @@ public class MappingTest {
     @Test
     void asMailAddressShouldReturnMappingValueForAlias() throws Exception {
         assertThat(Mapping.alias("value@domain").asMailAddress())
-                .contains(new MailAddress("value@domain"));
+            .contains(new MailAddress("value@domain"));
     }
 
 }
