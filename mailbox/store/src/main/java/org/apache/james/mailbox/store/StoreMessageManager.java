@@ -65,6 +65,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -86,10 +87,13 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.BodyOffsetInputStream;
 import org.apache.james.util.IteratorWrapper;
+import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
@@ -272,7 +276,11 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         Map<MessageUid, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
-        dispatcher.expunged(mailboxSession, uids, getMailboxEntity());
+        dispatcher.event(EventFactory.expunged()
+            .mailboxSession(mailboxSession)
+            .mailbox(getMailboxEntity())
+            .metaData(ImmutableSortedMap.copyOf(uids))
+            .build());
         return uids.keySet().iterator();
     }
 
@@ -414,7 +422,11 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
                         Mailbox mailbox = getMailboxEntity();
                         MailboxMessage copy = copyMessage(message);
-                        dispatcher.added(mailboxSession, mailbox, copy);
+                        dispatcher.event(EventFactory.added()
+                            .mailboxSession(mailboxSession)
+                            .mailbox(mailbox)
+                            .addMessage(copy)
+                            .build());
                         return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
                     }, true);
                 }
@@ -563,25 +575,23 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         if (!isWriteable(mailboxSession)) {
             throw new ReadOnlyException(getMailboxPath(), mailboxSession.getPathDelimiter());
         }
-        final SortedMap<MessageUid, Flags> newFlagsByUid = new TreeMap<>();
 
         trimFlags(flags, mailboxSession);
 
-        final MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(mailboxSession);
 
         Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
+        List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
 
-        final SortedMap<MessageUid, UpdatedFlags> uFlags = new TreeMap<>();
+        dispatcher.event(EventFactory.flagsUpdated()
+            .mailboxSession(mailboxSession)
+            .mailbox(getMailboxEntity())
+            .updatedFlags(updatedFlags)
+            .build());
 
-        while (it.hasNext()) {
-            UpdatedFlags flag = it.next();
-            newFlagsByUid.put(flag.getUid(), flag.getNewFlags());
-            uFlags.put(flag.getUid(), flag);
-        }
-
-        dispatcher.flagsUpdated(mailboxSession, getMailboxEntity(), new ArrayList<>(uFlags.values()));
-
-        return newFlagsByUid;
+        return updatedFlags.stream().collect(Guavate.toImmutableMap(
+            UpdatedFlags::getUid,
+            UpdatedFlags::getNewFlags));
     }
 
     /**
@@ -735,13 +745,21 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
             messageIds.add(message.getMessageId());
         }
-        dispatcher.added(session, copiedUids, to.getMailboxEntity());
-        dispatcher.moved(session,
-            MessageMoves.builder()
+
+        dispatcher.event(EventFactory.added()
+            .mailboxSession(session)
+            .mailbox(to.getMailboxEntity())
+            .metaData(copiedUids)
+            .build());
+        dispatcher.event(EventFactory.moved()
+            .session(session)
+            .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
-                .build(),
-            messageIds.build());
+                .build())
+            .messageId(messageIds.build())
+            .build());
+
         return copiedUids;
     }
 
@@ -755,14 +773,26 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         for (MailboxMessage message : originalRows.getEntriesSeen()) {
             messageIds.add(message.getMessageId());
         }
-        dispatcher.added(session, moveUids, to.getMailboxEntity());
-        dispatcher.expunged(session, collectMetadata(moveResult.getOriginalMessages()), getMailboxEntity());
-        dispatcher.moved(session,
-            MessageMoves.builder()
+
+        dispatcher.event(EventFactory.added()
+            .mailboxSession(session)
+            .mailbox(to.getMailboxEntity())
+            .metaData(moveUids)
+            .build());
+        dispatcher.event(EventFactory.expunged()
+            .mailboxSession(session)
+            .mailbox(getMailboxEntity())
+            .addMetaData(moveResult.getOriginalMessages())
+            .build());
+        dispatcher.event(EventFactory.moved()
+            .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId())
-                .build(),
-            messageIds.build());
+                .build())
+            .messageId(messageIds.build())
+            .session(session)
+            .build());
+
         return moveUids;
     }
 

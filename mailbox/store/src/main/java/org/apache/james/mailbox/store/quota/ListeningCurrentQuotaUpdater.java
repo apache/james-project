@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.quota;
 
+import java.time.Instant;
 import java.util.Collection;
 
 import javax.inject.Inject;
@@ -29,6 +30,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,11 +89,14 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.decrease(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(
-            expunged.getUser(),
-            quotaRoot,
-            quotaManager.getMessageQuota(quotaRoot),
-            quotaManager.getStorageQuota(quotaRoot));
+        dispatcher.event(
+            EventFactory.quotaUpdated()
+                .user(expunged.getUser())
+                .quotaRoot(quotaRoot)
+                .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                .instant(Instant.now())
+                .build());
     }
 
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
@@ -105,11 +110,14 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.quota(
-            added.getUser(),
-            quotaRoot,
-            quotaManager.getMessageQuota(quotaRoot),
-            quotaManager.getStorageQuota(quotaRoot));
+        dispatcher.event(
+            EventFactory.quotaUpdated()
+                .user(added.getUser())
+                .quotaRoot(quotaRoot)
+                .quotaCount(quotaManager.getMessageQuota(quotaRoot))
+                .quotaSize(quotaManager.getStorageQuota(quotaRoot))
+                .instant(Instant.now())
+                .build());
     }
 
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {

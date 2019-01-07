@@ -51,6 +51,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -217,8 +218,11 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MetadataWithMailboxId metadataWithMailboxId : metadataWithMailbox) {
-            dispatcher.expunged(mailboxSession, metadataWithMailboxId.messageMetaData,
-                mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId));
+            dispatcher.event(EventFactory.expunged()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
+                .addMetaData(metadataWithMailboxId.messageMetaData)
+                .build());
         }
     }
 
@@ -280,7 +284,12 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         addMessageToMailboxes(mailboxMessage, messageMoves.addedMailboxIds(), mailboxSession);
         removeMessageFromMailboxes(mailboxMessage, messageMoves.removedMailboxIds(), mailboxSession);
-        dispatcher.moved(mailboxSession, messageMoves, ImmutableList.of(mailboxMessage.getMessageId()));
+
+        dispatcher.event(EventFactory.moved()
+            .session(mailboxSession)
+            .messageMoves(messageMoves)
+            .messageId(mailboxMessage.getMessageId())
+            .build());
     }
 
     private void removeMessageFromMailboxes(MailboxMessage message, Set<MailboxId> mailboxesToRemove, MailboxSession mailboxSession) throws MailboxException {
@@ -290,7 +299,11 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         for (MailboxId mailboxId: mailboxesToRemove) {
             messageIdMapper.delete(message.getMessageId(), mailboxesToRemove);
-            dispatcher.expunged(mailboxSession, eventPayload, mailboxMapper.findMailboxById(mailboxId));
+            dispatcher.event(EventFactory.expunged()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailboxMapper.findMailboxById(mailboxId))
+                .addMetaData(eventPayload)
+                .build());
         }
     }
 
@@ -301,7 +314,12 @@ public class StoreMessageIdManager implements MessageIdManager {
     private void dispatchFlagsChange(MailboxSession mailboxSession, MailboxId mailboxId, UpdatedFlags updatedFlags) throws MailboxException {
         if (updatedFlags.flagsChanged()) {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-            dispatcher.flagsUpdated(mailboxSession, mailbox, updatedFlags);
+
+            dispatcher.event(EventFactory.flagsUpdated()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailbox)
+                .updatedFlag(updatedFlags)
+                .build());
         }
     }
 
@@ -362,7 +380,12 @@ public class StoreMessageIdManager implements MessageIdManager {
                             .build())
                     .build();
             save(mailboxSession, messageIdMapper, copy);
-            dispatcher.added(mailboxSession, mailboxMapper.findMailboxById(mailboxId), copy);
+
+            dispatcher.event(EventFactory.added()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailboxMapper.findMailboxById(mailboxId))
+                .addMessage(copy)
+                .build());
         }
     }
 

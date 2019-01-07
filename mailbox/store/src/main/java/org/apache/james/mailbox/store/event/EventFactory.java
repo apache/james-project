@@ -20,6 +20,9 @@
 package org.apache.james.mailbox.store.event;
 
 import java.time.Instant;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.SortedMap;
 
 import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
@@ -92,7 +95,7 @@ public class EventFactory {
 
     @FunctionalInterface
     public interface RequireMetadata<T> {
-        T metaData(ImmutableSortedMap<MessageUid, MessageMetaData> metaData);
+        T metaData(SortedMap<MessageUid, MessageMetaData> metaData);
 
         default T addMetaData(MessageMetaData metaData) {
             return metaData(ImmutableSortedMap.of(metaData.getUid(), metaData));
@@ -106,6 +109,10 @@ public class EventFactory {
             return metaData(ImmutableList.copyOf(metaData)
                 .stream()
                 .collect(Guavate.toImmutableSortedMap(MessageMetaData::getUid)));
+        }
+
+        default T addMetaData(Iterator<MessageMetaData> metaData) {
+            return addMetaData(ImmutableList.copyOf(metaData));
         }
 
         default T addMessages(Iterable<MailboxMessage> messages) {
@@ -197,12 +204,12 @@ public class EventFactory {
         private final MailboxSession.SessionId sessionId;
         private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
 
-        AddedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ImmutableSortedMap<MessageUid, MessageMetaData> metaData) {
+        AddedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
             this.path = path;
             this.mailboxId = mailboxId;
             this.user = user;
             this.sessionId = sessionId;
-            this.metaData = metaData;
+            this.metaData = ImmutableSortedMap.copyOf(metaData);
         }
 
         public MailboxListener.Added build() {
@@ -223,12 +230,12 @@ public class EventFactory {
         private final MailboxSession.SessionId sessionId;
         private final ImmutableSortedMap<MessageUid, MessageMetaData> metaData;
 
-        ExpungedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, ImmutableSortedMap<MessageUid, MessageMetaData> metaData) {
+        ExpungedFinalStage(MailboxPath path, MailboxId mailboxId, User user, MailboxSession.SessionId sessionId, Map<MessageUid, MessageMetaData> metaData) {
             this.path = path;
             this.mailboxId = mailboxId;
             this.user = user;
             this.sessionId = sessionId;
-            this.metaData = metaData;
+            this.metaData = ImmutableSortedMap.copyOf(metaData);
         }
 
         public MailboxListener.Expunged build() {

@@ -43,6 +43,7 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -138,7 +139,11 @@ public class StoreRightManager implements RightManager {
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         ACLDiff aclDiff = mapper.updateACL(mailbox, mailboxACLCommand);
 
-        dispatcher.aclUpdated(session, mailboxPath, aclDiff, mailbox.getMailboxId());
+        dispatcher.event(EventFactory.aclUpdated()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .aclDiff(aclDiff)
+            .build());
     }
 
     private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -216,7 +221,11 @@ public class StoreRightManager implements RightManager {
     private void setRights(MailboxACL mailboxACL, MailboxMapper mapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
         ACLDiff aclDiff = mapper.setACL(mailbox, mailboxACL);
 
-        dispatcher.aclUpdated(session, mailbox.generateAssociatedPath(), aclDiff, mailbox.getMailboxId());
+        dispatcher.event(EventFactory.aclUpdated()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .aclDiff(aclDiff)
+            .build());
     }
 
     /**

@@ -33,6 +33,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -81,7 +82,11 @@ public class MessageIdManagerTestSystem {
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
             MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
             mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
-            mailboxManager.getEventDispatcher().added(mailboxSession, message.metaData(), mailbox);
+            mailboxManager.getEventDispatcher().event(EventFactory.added()
+                .mailboxSession(mailboxSession)
+                .mailbox(mailbox)
+                .addMessage(message)
+                .build());
             return messageId;
         } catch (Exception e) {
             throw new RuntimeException(e);

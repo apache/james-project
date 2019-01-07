@@ -69,6 +69,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -524,7 +525,10 @@ public class StoreMailboxManager implements MailboxManager {
                         try {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
                             // notify listeners
-                            dispatcher.mailboxAdded(mailboxSession, m);
+                            dispatcher.event(EventFactory.mailboxAdded()
+                                .mailboxSession(mailboxSession)
+                                .mailbox(m)
+                                .build());
                         } catch (MailboxExistsException e) {
                             LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
                         }
@@ -568,7 +572,13 @@ public class StoreMailboxManager implements MailboxManager {
             // mailbox once we remove it
             SimpleMailbox m = new SimpleMailbox(mailbox);
             mailboxMapper.delete(mailbox);
-            dispatcher.mailboxDeleted(session, mailbox, quotaRoot, QuotaCount.count(messageCount), QuotaSize.size(totalSize));
+            dispatcher.event(EventFactory.mailboxDeleted()
+                .mailboxSession(session)
+                .mailbox(mailbox)
+                .quotaRoot(quotaRoot)
+                .quotaCount(QuotaCount.count(messageCount))
+                .quotaSize(QuotaSize.size(totalSize))
+                .build());
             return m;
         });
 
@@ -607,7 +617,12 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setName(to.getName());
         mapper.save(mailbox);
 
-        dispatcher.mailboxRenamed(session, from, mailbox);
+        dispatcher.event(EventFactory.mailboxRenamed()
+            .mailboxSession(session)
+            .mailboxId(mailbox.getMailboxId())
+            .oldPath(from)
+            .newPath(to)
+            .build());
 
         // rename submailboxes
         MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
@@ -619,7 +634,12 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxPath fromPath = new MailboxPath(children, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
-                dispatcher.mailboxRenamed(session, fromPath, sub);
+                dispatcher.event(EventFactory.mailboxRenamed()
+                    .mailboxSession(session)
+                    .mailboxId(sub.getMailboxId())
+                    .oldPath(fromPath)
+                    .newPath(sub.generateAssociatedPath())
+                    .build());
 
                 LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName);
             }
