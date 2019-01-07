@@ -22,6 +22,7 @@ package org.apache.james.event.json.dtos;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.event.json.DTOs;
@@ -200,6 +201,23 @@ class QuotaCountTest {
                 assertThat(DTO_JSON_SERIALIZE.quotaCReads().reads(Json.parse(json)).get().toJava())
                     .isEqualTo(quota);
             }
+        }
+    }
+
+    @Nested
+    class UnknownQuotaScope {
+        private final String json = "{\"used\":12,\"limit\":100,\"limits\":{\"Invalid\":100}}";
+
+        @Test
+        void fromJsonShouldThrowOnInvalidScope() {
+            assertThatThrownBy(() -> DTO_JSON_SERIALIZE.quotaCReads().reads(Json.parse(json)).get().toJava())
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void scopesShouldBeString() {
+            assertThat(DTO_JSON_SERIALIZE.quotaScopeReads().reads(Json.parse("3")))
+                .isInstanceOf(JsError.class);
         }
     }
 }
