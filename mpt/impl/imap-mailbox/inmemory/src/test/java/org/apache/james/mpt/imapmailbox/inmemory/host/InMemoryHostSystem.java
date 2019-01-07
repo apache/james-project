@@ -17,6 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
+
 package org.apache.james.mpt.imapmailbox.inmemory.host;
 
 import org.apache.james.core.quota.QuotaCount;
