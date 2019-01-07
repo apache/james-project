@@ -30,8 +30,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +41,14 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
 
     private final StoreCurrentQuotaManager currentQuotaManager;
     private final QuotaRootResolver quotaRootResolver;
-    private final MailboxEventDispatcher dispatcher;
+    private final DelegatingMailboxListener delegatingMailboxListener;
     private final QuotaManager quotaManager;
 
     @Inject
-    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, MailboxEventDispatcher dispatcher, QuotaManager quotaManager) {
+    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, DelegatingMailboxListener delegatingMailboxListener, QuotaManager quotaManager) {
         this.currentQuotaManager = currentQuotaManager;
         this.quotaRootResolver = quotaRootResolver;
-        this.dispatcher = dispatcher;
+        this.delegatingMailboxListener = delegatingMailboxListener;
         this.quotaManager = quotaManager;
     }
 
@@ -89,7 +89,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.decrease(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.event(
+        delegatingMailboxListener.event(
             EventFactory.quotaUpdated()
                 .user(expunged.getUser())
                 .quotaRoot(quotaRoot)
@@ -110,7 +110,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
         }
-        dispatcher.event(
+        delegatingMailboxListener.event(
             EventFactory.quotaUpdated()
                 .user(added.getUser())
                 .quotaRoot(quotaRoot)

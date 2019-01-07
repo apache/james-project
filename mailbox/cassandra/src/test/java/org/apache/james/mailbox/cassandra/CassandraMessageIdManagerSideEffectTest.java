@@ -25,7 +25,7 @@ import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdMa
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, dispatcher);
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) throws Exception {
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, delegatingMailboxListener);
     }
 }

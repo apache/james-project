@@ -48,7 +48,6 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -97,18 +96,16 @@ public class JPAHostSystem extends JamesImapHostSystem {
         MessageParser messageParser = new MessageParser();
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         mailboxManager = new OpenJPAMailboxManager(mapperFactory, authenticator, authorizator,
-            messageParser, new DefaultMessageId.Factory(), delegatingListener,
-            mailboxEventDispatcher, annotationManager, storeRightManager);
+            messageParser, new DefaultMessageId.Factory(), delegatingListener, annotationManager, storeRightManager);
 
         DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory);
         JpaCurrentQuotaManager currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
         maxQuotaManager = new JPAPerUserMaxQuotaManager(new JPAPerUserMaxQuotaDAO(entityManagerFactory));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxEventDispatcher, storeQuotaManager);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, delegatingListener, storeQuotaManager);
 
         mailboxManager.setQuotaManager(storeQuotaManager);
         mailboxManager.setQuotaUpdater(quotaUpdater);

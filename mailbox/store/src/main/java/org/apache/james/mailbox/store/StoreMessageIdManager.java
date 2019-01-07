@@ -51,8 +51,8 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -101,18 +101,18 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final MailboxEventDispatcher dispatcher;
+    private final DelegatingMailboxListener delegatingMailboxListener;
     private final MessageId.Factory messageIdFactory;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
 
     @Inject
     public StoreMessageIdManager(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
-                                 MailboxEventDispatcher dispatcher, MessageId.Factory messageIdFactory,
+                                 DelegatingMailboxListener delegatingMailboxListener, MessageId.Factory messageIdFactory,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
-        this.dispatcher = dispatcher;
+        this.delegatingMailboxListener = delegatingMailboxListener;
         this.messageIdFactory = messageIdFactory;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
@@ -218,7 +218,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MetadataWithMailboxId metadataWithMailboxId : metadataWithMailbox) {
-            dispatcher.event(EventFactory.expunged()
+            delegatingMailboxListener.event(EventFactory.expunged()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
                 .addMetaData(metadataWithMailboxId.messageMetaData)
@@ -285,7 +285,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         addMessageToMailboxes(mailboxMessage, messageMoves.addedMailboxIds(), mailboxSession);
         removeMessageFromMailboxes(mailboxMessage, messageMoves.removedMailboxIds(), mailboxSession);
 
-        dispatcher.event(EventFactory.moved()
+        delegatingMailboxListener.event(EventFactory.moved()
             .session(mailboxSession)
             .messageMoves(messageMoves)
             .messageId(mailboxMessage.getMessageId())
@@ -299,7 +299,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         for (MailboxId mailboxId: mailboxesToRemove) {
             messageIdMapper.delete(message.getMessageId(), mailboxesToRemove);
-            dispatcher.event(EventFactory.expunged()
+            delegatingMailboxListener.event(EventFactory.expunged()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMetaData(eventPayload)
@@ -315,7 +315,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         if (updatedFlags.flagsChanged()) {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
 
-            dispatcher.event(EventFactory.flagsUpdated()
+            delegatingMailboxListener.event(EventFactory.flagsUpdated()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .updatedFlag(updatedFlags)
@@ -381,7 +381,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .build();
             save(mailboxSession, messageIdMapper, copy);
 
-            dispatcher.event(EventFactory.added()
+            delegatingMailboxListener.event(EventFactory.added()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMessage(copy)

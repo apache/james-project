@@ -39,7 +39,6 @@ import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.After;
@@ -88,20 +87,19 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
         DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory,
             noAuthenticator, noAuthorizator, new NoMailboxPathLocker(), new MessageParser(),
-            messageIdFactory, mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, noAuthenticator, noAuthorizator,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
+            delegatingMailboxListener, annotationManager, storeRightManager);
         parseFailingMailboxManager.init();
     }
 

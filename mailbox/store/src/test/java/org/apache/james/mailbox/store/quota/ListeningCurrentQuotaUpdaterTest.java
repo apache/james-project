@@ -42,7 +42,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +66,7 @@ public class ListeningCurrentQuotaUpdaterTest {
         mockedQuotaRootResolver = mock(QuotaRootResolver.class);
         mockedCurrentQuotaManager = mock(StoreCurrentQuotaManager.class);
         testee = new ListeningCurrentQuotaUpdater(mockedCurrentQuotaManager, mockedQuotaRootResolver,
-            mock(MailboxEventDispatcher.class), mock(QuotaManager.class));
+            mock(DelegatingMailboxListener.class), mock(QuotaManager.class));
     }
 
     @Test

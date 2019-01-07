@@ -43,7 +43,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getEventDispatcher(),
+            storeMailboxManager.getDelegationListener(),
             storeMailboxManager.getMessageIdFactory(),
             storeMailboxManager.getQuotaManager(),
             storeMailboxManager.getQuotaRootResolver());

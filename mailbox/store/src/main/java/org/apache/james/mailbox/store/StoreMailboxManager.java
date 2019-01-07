@@ -71,7 +71,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -110,7 +109,6 @@ public class StoreMailboxManager implements MailboxManager {
     public static final char SQL_WILDCARD_CHAR = '%';
     public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
 
-    private final MailboxEventDispatcher dispatcher;
     private final DelegatingMailboxListener delegatingListener;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
 
@@ -148,10 +146,8 @@ public class StoreMailboxManager implements MailboxManager {
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
-                               MailboxEventDispatcher mailboxEventDispatcher,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
         Preconditions.checkNotNull(delegatingListener);
-        Preconditions.checkNotNull(mailboxEventDispatcher);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
         this.annotationManager = annotationManager;
@@ -162,7 +158,6 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
-        this.dispatcher = mailboxEventDispatcher;
         this.storeRightManager = storeRightManager;
     }
 
@@ -290,14 +285,6 @@ public class StoreMailboxManager implements MailboxManager {
         return quotaManager;
     }
 
-    /**
-     * Return the {@link MailboxEventDispatcher} used by thei {@link MailboxManager}
-     *
-     * @return dispatcher
-     */
-    public MailboxEventDispatcher getEventDispatcher() {
-        return dispatcher;
-    }
 
     /**
      * Return the {@link MailboxSessionMapperFactory} used by this {@link MailboxManager}
@@ -430,7 +417,7 @@ public class StoreMailboxManager implements MailboxManager {
      * @return storeMailbox
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventDispatcher(),
+        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getDelegationListener(),
                 getLocker(), mailbox, getQuotaManager(),
                 getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes(),
             getStoreRightManager());
@@ -525,7 +512,7 @@ public class StoreMailboxManager implements MailboxManager {
                         try {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
                             // notify listeners
-                            dispatcher.event(EventFactory.mailboxAdded()
+                            delegatingListener.event(EventFactory.mailboxAdded()
                                 .mailboxSession(mailboxSession)
                                 .mailbox(m)
                                 .build());
@@ -572,7 +559,7 @@ public class StoreMailboxManager implements MailboxManager {
             // mailbox once we remove it
             SimpleMailbox m = new SimpleMailbox(mailbox);
             mailboxMapper.delete(mailbox);
-            dispatcher.event(EventFactory.mailboxDeleted()
+            delegatingListener.event(EventFactory.mailboxDeleted()
                 .mailboxSession(session)
                 .mailbox(mailbox)
                 .quotaRoot(quotaRoot)
@@ -617,7 +604,7 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setName(to.getName());
         mapper.save(mailbox);
 
-        dispatcher.event(EventFactory.mailboxRenamed()
+        delegatingListener.event(EventFactory.mailboxRenamed()
             .mailboxSession(session)
             .mailboxId(mailbox.getMailboxId())
             .oldPath(from)
@@ -634,7 +621,7 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxPath fromPath = new MailboxPath(children, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
-                dispatcher.event(EventFactory.mailboxRenamed()
+                delegatingListener.event(EventFactory.mailboxRenamed()
                     .mailboxSession(session)
                     .mailboxId(sub.getMailboxId())
                     .oldPath(fromPath)

@@ -15,7 +15,7 @@ import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -29,7 +29,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
 
     public InMemoryMessageManager(MailboxSessionMapperFactory mapperFactory,
                                   MessageSearchIndex index,
-                                  MailboxEventDispatcher dispatcher,
+                                  DelegatingMailboxListener delegatingMailboxListener,
                                   MailboxPathLocker locker,
                                   Mailbox mailbox,
                                   QuotaManager quotaManager,
@@ -39,7 +39,7 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   BatchSizes batchSizes,
                                   StoreRightManager storeRightManager) {
 
-        super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox, quotaManager, quotaRootResolver,
+        super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, delegatingMailboxListener, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, storeRightManager);
         this.mapperFactory = (InMemoryMailboxSessionMapperFactory) mapperFactory;
     }

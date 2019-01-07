@@ -84,7 +84,6 @@ import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -142,7 +141,6 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(CassandraMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(CassandraModSeqProvider.class).in(Scopes.SINGLETON);
         bind(CassandraUidProvider.class).in(Scopes.SINGLETON);
-        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
         bind(NoMailboxPathLocker.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthorizator.class).in(Scopes.SINGLETON);

@@ -51,7 +51,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.AbstractListAssert;
@@ -87,7 +87,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
     private EventCollector eventCollector;
     private DefaultDelegatingMailboxListener delegatingMailboxListener;
 
-    protected abstract MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception;
+    protected abstract MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) throws Exception;
 
     public void setUp() throws Exception {
         delegatingMailboxListener = new DefaultDelegatingMailboxListener();
@@ -95,7 +95,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         quotaManager = mock(QuotaManager.class);
 
         session = MailboxSessionUtil.create(ALICE);
-        testingData = createTestSystem(quotaManager, new MailboxEventDispatcher(delegatingMailboxListener));
+        testingData = createTestSystem(quotaManager, delegatingMailboxListener);
         messageIdManager = testingData.getMessageIdManager();
 
         mailbox1 = testingData.createMailbox(MailboxFixture.INBOX_ALICE, session);

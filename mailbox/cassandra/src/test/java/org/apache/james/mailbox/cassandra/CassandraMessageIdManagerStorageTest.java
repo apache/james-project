@@ -25,7 +25,6 @@ import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -62,8 +61,6 @@ public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManag
     
     @Override
     protected MessageIdManagerTestSystem createTestingData() throws Exception {
-        DefaultDelegatingMailboxListener mailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(mailboxListener);
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), mailboxEventDispatcher);
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), new DefaultDelegatingMailboxListener());
     }
 }

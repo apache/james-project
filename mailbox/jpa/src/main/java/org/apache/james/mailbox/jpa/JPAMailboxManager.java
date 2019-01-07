@@ -33,7 +33,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.transaction.Mapper;
@@ -55,12 +54,11 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
                              DelegatingMailboxListener delegatingMailboxListener,
-                             MailboxEventDispatcher mailboxEventDispatcher,
                              StoreMailboxAnnotationManager annotationManager,
                              StoreRightManager storeRightManager) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, locker,
             messageParser, messageIdFactory, annotationManager,
-            mailboxEventDispatcher, delegatingMailboxListener, storeRightManager);
+            delegatingMailboxListener, storeRightManager);
     }
     
     @Override

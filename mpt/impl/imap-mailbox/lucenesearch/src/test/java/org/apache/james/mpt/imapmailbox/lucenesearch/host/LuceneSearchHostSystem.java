@@ -46,7 +46,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
@@ -98,10 +97,9 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
        
         try {
             DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-            MailboxEventDispatcher dispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-            
+
             InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-            StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), dispatcher);
+            StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
             mailboxManager = new InMemoryMailboxManager(mapperFactory,
@@ -110,7 +108,6 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 locker,
                 new MessageParser(),
                 messageIdFactory,
-                dispatcher,
                 delegatingMailboxListener,
                 new StoreMailboxAnnotationManager(mapperFactory, rightManager),
                 rightManager);

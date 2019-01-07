@@ -76,7 +76,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
 
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
 
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxManager.getEventDispatcher(), quotaManager);
+        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxManager.getDelegationListener(), quotaManager);
 
         mailboxManager.setQuotaRootResolver(quotaRootResolver);
         mailboxManager.setQuotaManager(quotaManager);

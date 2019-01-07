@@ -25,7 +25,6 @@ import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -62,9 +61,7 @@ public class CassandraCombinationManagerTest extends AbstractCombinationManagerT
     
     @Override
     public CombinationManagerTestSystem createTestingData() throws Exception {
-        DefaultDelegatingMailboxListener mailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(mailboxListener);
-        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), mailboxEventDispatcher);
+        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), new DefaultDelegatingMailboxListener());
     }
     
 }

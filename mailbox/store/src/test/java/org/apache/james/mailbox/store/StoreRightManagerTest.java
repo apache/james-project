@@ -46,7 +46,7 @@ import org.apache.james.mailbox.model.MailboxACL.ACLCommand;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -69,14 +69,11 @@ public class StoreRightManagerTest {
         mockedMailboxMapper = mock(MailboxMapper.class);
         mailboxAclResolver = new UnionMailboxACLResolver();
         groupMembershipResolver = new SimpleGroupMembershipResolver();
-        MailboxEventDispatcher dispatcher = mock(MailboxEventDispatcher.class);
+        DelegatingMailboxListener delegatingMailboxListener = mock(DelegatingMailboxListener.class);
         when(mockedMapperFactory.getMailboxMapper(aliceSession))
             .thenReturn(mockedMailboxMapper);
 
-        storeRightManager = new StoreRightManager(mockedMapperFactory,
-                                                  mailboxAclResolver,
-                                                  groupMembershipResolver,
-                                                  dispatcher);
+        storeRightManager = new StoreRightManager(mockedMapperFactory, mailboxAclResolver, groupMembershipResolver, delegatingMailboxListener);
     }
 
     @Test

@@ -33,7 +33,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 
@@ -50,11 +49,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
                                  DelegatingMailboxListener delegatingMailboxListener,
-                                 MailboxEventDispatcher mailboxEventDispatcher,
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager) {
         super(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, delegatingMailboxListener, mailboxEventDispatcher, annotationManager, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager);
     }
 
     protected AdvancedFeature getAdvancedFeature() {
@@ -65,7 +63,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new OpenJPAMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getEventDispatcher(),
+            getDelegationListener(),
             getLocker(),
             mailboxRow,
             getAdvancedFeature(),

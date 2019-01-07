@@ -34,8 +34,7 @@ import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.junit.Before;
@@ -49,7 +48,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, MailboxEventDispatcher dispatcher) {
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) {
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
@@ -57,7 +56,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         FakeAuthorizator fakeAuthorizator = FakeAuthorizator.defaultReject();
 
-        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), dispatcher);
+        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
@@ -66,14 +65,13 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             locker,
             new MessageParser(),
             messageIdFactory,
-            dispatcher,
-            new DefaultDelegatingMailboxListener(),
+            delegatingMailboxListener,
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
             rightManager);
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
-            dispatcher,
+            delegatingMailboxListener,
             messageIdFactory,
             quotaManager,
             new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory));

@@ -48,7 +48,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -141,9 +140,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
-            groupMembershipResolver, mailboxEventDispatcher);
+            groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
             .apply(storeRightManager, mailboxSessionMapperFactory);
 
@@ -154,7 +152,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             new JVMMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
-            mailboxEventDispatcher,
             delegatingListener,
             annotationManager,
             storeRightManager);
@@ -179,8 +176,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                                                     Authenticator authenticator, Authorizator authorizator) throws MailboxException {
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
         StoreMailboxManager manager = new InMemoryMailboxManager(
@@ -190,7 +186,6 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             new NoMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
-            mailboxEventDispatcher,
             delegatingListener,
             annotationManager,
             storeRightManager);
@@ -207,7 +202,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         return new StoreMessageIdManager(
             mailboxManager,
             mailboxManager.getMapperFactory(),
-            mailboxManager.getEventDispatcher(),
+            mailboxManager.getDelegationListener(),
             factory,
             mailboxManager.getQuotaManager(),
             mailboxManager.getQuotaRootResolver());
@@ -221,7 +216,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         InMemoryCurrentQuotaManager currentQuotaManager = createCurrentQuotaManager(mailboxManager);
 
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
-        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxManager.getEventDispatcher(), quotaManager);
+        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxManager.getDelegationListener(), quotaManager);
         mailboxManager.setQuotaManager(quotaManager);
         mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, null);
         return quotaManager;

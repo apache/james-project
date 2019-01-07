@@ -65,8 +65,8 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -133,36 +133,25 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
 
     private final EnumSet<MailboxManager.MessageCapabilities> messageCapabilities;
-
+    private final DelegatingMailboxListener delegatingMailboxListener;
     private final Mailbox mailbox;
-
-    private final MailboxEventDispatcher dispatcher;
-
     private final MailboxSessionMapperFactory mapperFactory;
-
     private final MessageSearchIndex index;
-
     private final StoreRightManager storeRightManager;
-
     private final QuotaManager quotaManager;
-
     private final QuotaRootResolver quotaRootResolver;
-
     private final MailboxPathLocker locker;
-
     private final MessageParser messageParser;
-
     private final Factory messageIdFactory;
-    
-    private BatchSizes batchSizes = BatchSizes.defaultValues();
+    private final BatchSizes batchSizes;
 
-    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, MailboxEventDispatcher dispatcher,
+    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, DelegatingMailboxListener delegatingMailboxListener,
                                MailboxPathLocker locker, Mailbox mailbox,
                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                StoreRightManager storeRightManager) {
         this.messageCapabilities = messageCapabilities;
+        this.delegatingMailboxListener = delegatingMailboxListener;
         this.mailbox = mailbox;
-        this.dispatcher = dispatcher;
         this.mapperFactory = mapperFactory;
         this.index = index;
         this.locker = locker;
@@ -185,15 +174,6 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      */
     protected MailboxPathLocker getLocker() {
         return locker;
-    }
-
-    /**
-     * Return the {@link MailboxEventDispatcher} for this Mailbox
-     * 
-     * @return dispatcher
-     */
-    protected MailboxEventDispatcher getDispatcher() {
-        return dispatcher;
     }
 
     /**
@@ -276,7 +256,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         Map<MessageUid, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
-        dispatcher.event(EventFactory.expunged()
+        delegatingMailboxListener.event(EventFactory.expunged()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .metaData(ImmutableSortedMap.copyOf(uids))
@@ -422,7 +402,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
                         Mailbox mailbox = getMailboxEntity();
                         MailboxMessage copy = copyMessage(message);
-                        dispatcher.event(EventFactory.added()
+                        delegatingMailboxListener.event(EventFactory.added()
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
                             .addMessage(copy)
@@ -583,7 +563,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
         List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
 
-        dispatcher.event(EventFactory.flagsUpdated()
+        delegatingMailboxListener.event(EventFactory.flagsUpdated()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .updatedFlags(updatedFlags)
@@ -746,12 +726,12 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        dispatcher.event(EventFactory.added()
+        delegatingMailboxListener.event(EventFactory.added()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(copiedUids)
             .build());
-        dispatcher.event(EventFactory.moved()
+        delegatingMailboxListener.event(EventFactory.moved()
             .session(session)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
@@ -774,17 +754,17 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        dispatcher.event(EventFactory.added()
+        delegatingMailboxListener.event(EventFactory.added()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(moveUids)
             .build());
-        dispatcher.event(EventFactory.expunged()
+        delegatingMailboxListener.event(EventFactory.expunged()
             .mailboxSession(session)
             .mailbox(getMailboxEntity())
             .addMetaData(moveResult.getOriginalMessages())
             .build());
-        dispatcher.event(EventFactory.moved()
+        delegatingMailboxListener.event(EventFactory.moved()
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId())

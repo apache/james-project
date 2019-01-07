@@ -34,7 +34,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -51,13 +50,12 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
 
     @Inject
     public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
-                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory, MailboxEventDispatcher dispatcher,
+                                  MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
                                   DelegatingMailboxListener delegatingMailboxListener,
                                   StoreMailboxAnnotationManager annotationManager,
                                   StoreRightManager storeRightManager) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            annotationManager, dispatcher,
-            delegatingMailboxListener, storeRightManager);
+            annotationManager, delegatingMailboxListener, storeRightManager);
     }
 
     @Override
@@ -80,7 +78,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) {
         return new InMemoryMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getEventDispatcher(),
+            getDelegationListener(),
             getLocker(),
             mailbox,
             getQuotaManager(),

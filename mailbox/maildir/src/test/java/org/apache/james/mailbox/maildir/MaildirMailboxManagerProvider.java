@@ -34,7 +34,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.rules.TemporaryFolder;
@@ -52,16 +51,14 @@ public class MaildirMailboxManagerProvider {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mf, aclResolver, groupMembershipResolver, delegatingListener);
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
         StoreMailboxManager manager = new StoreMailboxManager(mf, noAuthenticator, noAuthorizator, new JVMMailboxPathLocker(),
-            messageParser, new DefaultMessageId.Factory(), annotationManager,
-            mailboxEventDispatcher, delegatingListener, storeRightManager);
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager);
         manager.init();
 
         return manager;

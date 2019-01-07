@@ -33,7 +33,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -50,11 +50,11 @@ public class CassandraMessageManager extends StoreMessageManager {
     private CassandraMailboxSessionMapperFactory mapperFactory;
 
     public CassandraMessageManager(CassandraMailboxSessionMapperFactory mapperFactory, MessageSearchIndex index,
-                                   MailboxEventDispatcher dispatcher, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
+                                   DelegatingMailboxListener delegatingMailboxListener, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
                                    QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
                                    BatchSizes batchSizes,
                                    StoreRightManager storeRightManager) {
-        super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, dispatcher, locker, mailbox,
+        super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, delegatingMailboxListener, locker, mailbox,
             quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
 
         this.mapperFactory = mapperFactory;
@@ -71,7 +71,7 @@ public class CassandraMessageManager extends StoreMessageManager {
     }
 
     @Override
-    protected void storeAttachment(final MailboxMessage message, final List<MessageAttachment> messageAttachments, final MailboxSession session) throws MailboxException {
+    protected void storeAttachment(MailboxMessage message, List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {
         mapperFactory.getAttachmentMapper(session)
             .storeAttachmentsForMessage(
                 messageAttachments.stream()

@@ -36,7 +36,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -61,8 +60,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
                                    MailboxPathLocker locker, MessageParser messageParser,
-                                   MessageId.Factory messageIdFactory,
-                                   MailboxEventDispatcher mailboxEventDispatcher, DelegatingMailboxListener delegatingMailboxListener,
+                                   MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager) {
         super(mapperFactory,
             authenticator,
@@ -71,7 +69,6 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             messageParser,
             messageIdFactory,
             annotationManager,
-            mailboxEventDispatcher,
             delegatingMailboxListener,
             storeRightManager);
         this.locker = locker;
@@ -105,7 +102,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new CassandraMessageManager(mapperFactory,
             getMessageSearchIndex(),
-            getEventDispatcher(),
+            getDelegationListener(),
             this.locker,
             mailboxRow,
             getQuotaManager(),

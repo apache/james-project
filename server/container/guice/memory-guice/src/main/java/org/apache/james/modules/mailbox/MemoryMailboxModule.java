@@ -53,7 +53,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
@@ -117,7 +116,6 @@ public class MemoryMailboxModule extends AbstractModule {
         bind(InMemoryMailboxManager.class).in(Scopes.SINGLETON);
         bind(InMemoryMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(StoreMessageIdManager.class).in(Scopes.SINGLETON);
-        bind(MailboxEventDispatcher.class).in(Scopes.SINGLETON);
         bind(StoreAttachmentManager.class).in(Scopes.SINGLETON);
         bind(StoreRightManager.class).in(Scopes.SINGLETON);
 

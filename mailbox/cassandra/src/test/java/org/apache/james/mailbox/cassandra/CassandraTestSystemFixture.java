@@ -40,7 +40,7 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
+import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
@@ -60,24 +60,23 @@ public class CassandraTestSystemFixture {
 
     public static CassandraMailboxManager createMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory) throws Exception {
         DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingMailboxListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
 
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, mock(Authenticator.class), mock(Authorizator.class),
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
-            mailboxEventDispatcher, delegatingMailboxListener, annotationManager, storeRightManager);
+            delegatingMailboxListener, annotationManager, storeRightManager);
         cassandraMailboxManager.init();
 
         return cassandraMailboxManager;
     }
 
-    public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, MailboxEventDispatcher dispatcher) throws Exception {
+    public static StoreMessageIdManager createMessageIdManager(CassandraMailboxSessionMapperFactory mapperFactory, QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) throws Exception {
         CassandraMailboxManager mailboxManager = createMailboxManager(mapperFactory);
         return new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
-            dispatcher,
+            delegatingMailboxListener,
             new CassandraMessageId.Factory(),
             quotaManager,
             new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory));

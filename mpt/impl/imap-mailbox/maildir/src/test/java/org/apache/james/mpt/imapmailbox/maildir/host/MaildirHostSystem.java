@@ -41,7 +41,6 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.MailboxEventDispatcher;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -76,12 +75,10 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         MessageParser messageParser = new MessageParser();
 
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        MailboxEventDispatcher mailboxEventDispatcher = new MailboxEventDispatcher(delegatingListener);
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, mailboxEventDispatcher);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, locker,
-            messageParser, new DefaultMessageId.Factory(), annotationManager,
-            mailboxEventDispatcher, delegatingListener, storeRightManager);
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager);
         mailboxManager.init();
 
         ImapProcessor defaultImapProcessorFactory =
