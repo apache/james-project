@@ -115,11 +115,6 @@ private object ScalaConverter {
     aclDiff = ACLDiff.fromJava(event.getAclDiff),
     mailboxId = event.getMailboxId)
 
-  private def toScala[T <: QuotaValue[T]](java: JavaQuota[T]): DTOs.Quota[T] = DTOs.Quota(
-    used = java.getUsed,
-    limit = java.getLimit,
-    limits = java.getLimitByScope.asScala.toMap)
-
   private def toScala(event: JavaMailboxAdded): DTO.MailboxAdded = DTO.MailboxAdded(
     mailboxPath = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
