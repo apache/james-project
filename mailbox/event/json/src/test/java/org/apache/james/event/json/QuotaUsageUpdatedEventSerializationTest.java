@@ -55,14 +55,14 @@ class QuotaUsageUpdatedEventSerializationTest {
         INSTANT);
     private final String quotaUsageUpdatedEvent =
         "{" +
-            "\"QuotaUsageUpdatedEvent\":{" +
-            "\"quotaRoot\":\"foo\"," +
-            "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-            "\"time\":\"2018-11-13T12:00:55Z\"," +
-            "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-            "\"user\":\"onlyUsername\"" +
-            "}" +
-            "}";
+        "    \"QuotaUsageUpdatedEvent\":{" +
+        "        \"quotaRoot\":\"foo\"," +
+        "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
+        "        \"time\":\"2018-11-13T12:00:55Z\"," +
+        "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+        "        \"user\":\"onlyUsername\"" +
+        "    }" +
+        "}";
 
     @Test
     void fromJsonShouldReturnQuotaEvent() {
@@ -80,13 +80,13 @@ class QuotaUsageUpdatedEventSerializationTest {
     void fromJsonShouldThrowResultWhenUserIsMissing() {
         String quotaUsageUpdatedEvent =
             "{" +
-                "\"QuotaUsageUpdatedEvent\":{" +
-                "\"quotaRoot\":\"foo\"," +
-                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                "\"time\":\"2018-11-13T12:00:55Z\"," +
-                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}" +
-                "}" +
-                "}";
+            "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"quotaRoot\":\"foo\"," +
+            "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
+            "        \"time\":\"2018-11-13T12:00:55Z\"," +
+            "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}" +
+            "    }" +
+            "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
             .isInstanceOf(NoSuchElementException.class);
@@ -96,13 +96,13 @@ class QuotaUsageUpdatedEventSerializationTest {
     void fromJsonShouldThrowWhenCountQuotaIsMissing() {
         String quotaUsageUpdatedEvent =
             "{" +
-                "\"QuotaUsageUpdatedEvent\":{" +
-                "\"quotaRoot\":\"foo\"," +
-                "\"time\":\"2018-11-13T12:00:55Z\"," +
-                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                "\"user\":\"onlyUsername\"" +
-                "}" +
-                "}";
+            "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"quotaRoot\":\"foo\"," +
+            "        \"time\":\"2018-11-13T12:00:55Z\"," +
+            "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+            "        \"user\":\"onlyUsername\"" +
+            "        }" +
+            "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
             .isInstanceOf(NoSuchElementException.class);
@@ -112,13 +112,13 @@ class QuotaUsageUpdatedEventSerializationTest {
     void fromJsonShouldThrowWhenSizeQuotaIsMissing() {
         String quotaUsageUpdatedEvent =
             "{" +
-                "\"QuotaUsageUpdatedEvent\":{" +
-                "\"quotaRoot\":\"foo\"," +
-                "\"time\":\"2018-11-13T12:00:55Z\"," +
-                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-                "\"user\":\"onlyUsername\"" +
-                "}" +
-                "}";
+            "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"quotaRoot\":\"foo\"," +
+            "        \"time\":\"2018-11-13T12:00:55Z\"," +
+            "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
+            "        \"user\":\"onlyUsername\"" +
+            "        }" +
+            "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
             .isInstanceOf(NoSuchElementException.class);
@@ -128,13 +128,13 @@ class QuotaUsageUpdatedEventSerializationTest {
     void fromJsonShouldThrowResultWhenTimeIsNull() {
         String quotaUsageUpdatedEvent =
             "{" +
-                "\"QuotaUsageUpdatedEvent\":{" +
-                "\"quotaRoot\":\"foo\"," +
-                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
-                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                "\"user\":\"user\"" +
-                "}" +
-                "}";
+            "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"quotaRoot\":\"foo\"," +
+            "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
+            "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+            "        \"user\":\"user\"" +
+            "        }" +
+            "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
             .isInstanceOf(NoSuchElementException.class);
@@ -144,14 +144,14 @@ class QuotaUsageUpdatedEventSerializationTest {
     void fromJsonShouldThrowResultWhenTimeIsEmpty() {
         String quotaUsageUpdatedEvent =
             "{" +
-                "\"QuotaUsageUpdatedEvent\":{" +
-                "\"quotaRoot\":\"foo\"," +
-                "\"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
-                "\"time\":\"\"," +
-                "\"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-                "\"user\":\"user\"" +
-                "}" +
-                "}";
+            "    \"QuotaUsageUpdatedEvent\":{" +
+            "        \"quotaRoot\":\"foo\"," +
+            "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}," +
+            "        \"time\":\"\"," +
+            "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
+            "        \"user\":\"user\"" +
+            "    }" +
+            "}";
 
         assertThatThrownBy(() -> EVENT_SERIALIZER.fromJson(quotaUsageUpdatedEvent).get())
             .isInstanceOf(NoSuchElementException.class);
