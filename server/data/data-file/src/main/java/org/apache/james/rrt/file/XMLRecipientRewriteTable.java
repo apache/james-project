@@ -70,9 +70,9 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public Mappings getStoredMappings(MappingSource source) {
         return Optional.ofNullable(mappings)
-                .map(mappings -> mappings.get(source))
-                .map(MappingsImpl::fromRawString)
-                .orElse(MappingsImpl.empty());
+            .map(mappings -> mappings.get(source))
+            .map(MappingsImpl::fromRawString)
+            .orElse(MappingsImpl.empty());
     }
 
     @Override
