@@ -43,6 +43,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     private DockerRabbitMQ rabbitMQ;
     private SimpleChannelPool simpleChannelPool;
+    private RabbitMQConnectionFactory connectionFactory;
 
     @Override
     public void beforeAll(ExtensionContext context) {
@@ -52,7 +53,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     @Override
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
-        RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
+        connectionFactory = createRabbitConnectionFactory();
         this.simpleChannelPool = new SimpleChannelPool(connectionFactory);
     }
 
@@ -82,6 +83,10 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
 
     public DockerRabbitMQ getRabbitMQ() {
         return rabbitMQ;
+    }
+
+    public RabbitMQConnectionFactory getConnectionFactory() {
+        return connectionFactory;
     }
 
     private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
