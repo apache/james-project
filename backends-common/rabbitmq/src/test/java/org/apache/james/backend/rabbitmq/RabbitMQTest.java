@@ -18,13 +18,13 @@
  ****************************************************************/
 package org.apache.james.backend.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.AUTO_ACK;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.AUTO_DELETE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DIRECT;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_ACK;
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backend.rabbitmq.Constants.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCLUSIVE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.NO_PROPERTIES;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.WORK_QUEUE;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
@@ -137,7 +137,7 @@ class RabbitMQTest {
         }
 
         private String createQueue(Channel channel) throws IOException {
-            channel.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+            channel.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
             String queueName = channel.queueDeclare().getQueue();
             channel.queueBind(queueName, EXCHANGE_NAME, ROUTING_KEY);
             return queueName;
@@ -204,7 +204,7 @@ class RabbitMQTest {
             @Test
             void rabbitMQShouldSupportTheBroadcastCase() throws Exception {
                 // Declare a single exchange and three queues attached to it.
-                channel1.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+                channel1.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
 
                 String queue2 = channel2.queueDeclare().getQueue();
                 channel2.queueBind(queue2, EXCHANGE_NAME, ROUTING_KEY);
@@ -292,7 +292,7 @@ class RabbitMQTest {
                 String conversation4 = "c4";
 
                 // Declare the exchange and a single queue attached to it.
-                channel1.exchangeDeclare(EXCHANGE_NAME, DIRECT, DURABLE);
+                channel1.exchangeDeclare(EXCHANGE_NAME, DIRECT_EXCHANGE, DURABLE);
 
                 String queue1 = channel1.queueDeclare().getQueue();
                 // 1 will follow conversation 1 and 2

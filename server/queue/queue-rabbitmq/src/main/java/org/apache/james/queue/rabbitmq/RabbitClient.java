@@ -19,6 +19,15 @@
 
 package org.apache.james.queue.rabbitmq;
 
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_ACK;
+import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
+import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backend.rabbitmq.Constants.MULTIPLE;
+import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backend.rabbitmq.Constants.REQUEUE;
+
 import java.io.IOException;
 import java.util.Optional;
 
@@ -27,21 +36,10 @@ import javax.inject.Inject;
 import org.apache.james.backend.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.queue.api.MailQueue;
 
-import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.GetResponse;
 
 class RabbitClient {
-
-    private static final boolean AUTO_ACK = true;
-    private static final boolean AUTO_DELETE = true;
-    private static final boolean DURABLE = true;
-    private static final boolean EXCLUSIVE = true;
-    private static final boolean MULTIPLE = true;
-    private static final ImmutableMap<String, Object> NO_ARGUMENTS = ImmutableMap.of();
-    private static final String ROUTING_KEY = "";
-    public static final boolean REQUEUE = true;
-
     private final RabbitMQChannelPool channelPool;
 
     @Inject
@@ -54,7 +52,7 @@ class RabbitClient {
             try {
                 channel.exchangeDeclare(name.toRabbitExchangeName().asString(), "direct", DURABLE);
                 channel.queueDeclare(name.toWorkQueueName().asString(), DURABLE, !EXCLUSIVE, !AUTO_DELETE, NO_ARGUMENTS);
-                channel.queueBind(name.toWorkQueueName().asString(), name.toRabbitExchangeName().asString(), ROUTING_KEY);
+                channel.queueBind(name.toWorkQueueName().asString(), name.toRabbitExchangeName().asString(), EMPTY_ROUTING_KEY);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -64,7 +62,7 @@ class RabbitClient {
     void publish(MailQueueName name, byte[] message) throws MailQueue.MailQueueException {
         channelPool.execute(channel -> {
             try {
-                channel.basicPublish(name.toRabbitExchangeName().asString(), ROUTING_KEY, new AMQP.BasicProperties(), message);
+                channel.basicPublish(name.toRabbitExchangeName().asString(), EMPTY_ROUTING_KEY, new AMQP.BasicProperties(), message);
             } catch (IOException e) {
                 throw new MailQueue.MailQueueException("Unable to publish to RabbitMQ", e);
             }
