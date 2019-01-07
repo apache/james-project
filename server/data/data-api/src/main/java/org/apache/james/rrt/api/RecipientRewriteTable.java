@@ -80,6 +80,10 @@ public interface RecipientRewriteTable {
 
     void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException;
 
+    void addAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException;
+
+    void removeAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException;
+
     /**
      * Return the Mappings for the given source. Return empty object if no
      * matched mapping was found

@@ -84,6 +84,12 @@ public class RewriteTablesStepdefs {
         rewriteTable.addForwardMapping(source, address);
     }
 
+    @Given("store \"([^\"]*)\" alias mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeAliasMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rewriteTable.addAliasMapping(source, address);
+    }
+
     @Given("store \"([^\"]*)\" group mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
     public void storeGroupMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
@@ -126,6 +132,12 @@ public class RewriteTablesStepdefs {
     public void userAtDomainRemovesForwardMapping(String user, String domain, String address) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
         rewriteTable.removeForwardMapping(source, address);
+    }
+
+    @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes an alias mapping \"([^\"]*)\"")
+    public void userAtDomainRemovesAliasMapping(String user, String domain, String address) throws Throwable {
+        MappingSource source = MappingSource.fromUser(user, domain);
+        rewriteTable.removeAliasMapping(source, address);
     }
 
     @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes a group mapping \"([^\"]*)\"")

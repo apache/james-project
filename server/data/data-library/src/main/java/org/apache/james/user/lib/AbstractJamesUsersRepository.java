@@ -288,4 +288,14 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     public void removeGroupMapping(MappingSource source, String address) throws RecipientRewriteTableException {
         throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
     }
+
+    @Override
+    public void addAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+    }
+
+    @Override
+    public void removeAliasMapping(MappingSource source, String address) throws RecipientRewriteTableException {
+        throw new RecipientRewriteTableException("Read-Only RecipientRewriteTable");
+    }
 }

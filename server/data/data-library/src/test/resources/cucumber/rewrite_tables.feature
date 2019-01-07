@@ -242,6 +242,28 @@ Feature: Rewrite Tables tests
     When user "test" at domain "localhost" removes a forward mapping "test@james"
     Then mappings for user "test" at domain "localhost" should contain only "forward:test@localhost2"
 
+# Alias mapping
+
+  Scenario: stored alias mapping should be retrieved when one mapping is matching
+    Given store "test@localhost2" alias mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "alias:test@localhost2"
+
+  Scenario: stored alias mapping should be retrieved when two mappings are matching
+    Given store "test@localhost2" alias mapping for user "test" at domain "localhost"
+    And store "test@james" alias mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "alias:test@localhost2, alias:test@james"
+
+  Scenario: stored alias mapping should not be retrieved by another user
+    Given store "test@localhost2" alias mapping for user "test" at domain "localhost"
+    And store "test@james" alias mapping for user "test" at domain "localhost"
+    Then mappings for user "test2" at domain "localhost" should be empty
+
+  Scenario: removing a stored alias mapping should work
+    Given store "test@localhost2" alias mapping for user "test" at domain "localhost"
+    And store "test@james" alias mapping for user "test" at domain "localhost"
+    When user "test" at domain "localhost" removes an alias mapping "test@james"
+    Then mappings for user "test" at domain "localhost" should contain only "alias:test@localhost2"
+
 # Group mapping
 
   Scenario: stored group mapping should be retrieved when one mapping is matching
