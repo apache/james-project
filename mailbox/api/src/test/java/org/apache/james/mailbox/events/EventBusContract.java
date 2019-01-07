@@ -23,16 +23,17 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.james.core.User;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 
@@ -58,11 +60,14 @@ public interface EventBusContract {
 
     class GroupB extends Group {}
 
+    int ONE_SECOND = 1000;
+    int FIVE_HUNDRED_MS = 500;
     MailboxId ID_1 = TestId.of(18);
     MailboxId ID_2 = TestId.of(24);
     ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
+    List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class);
 
     EventBus eventBus();
 
@@ -80,7 +85,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -138,8 +143,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        verify(listener, times(1)).event(any());
-        verify(listener2, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        verify(listener2, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -150,7 +155,8 @@ public interface EventBusContract {
         registration.unregister();
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -195,7 +201,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -205,7 +211,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -215,7 +222,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_2)).block();
 
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -225,7 +233,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -237,8 +245,9 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verify(listener, times(1)).event(any());
-        verifyZeroInteractions(listener2);
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        verify(listener2, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -250,8 +259,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verify(listener, times(1)).event(any());
-        verify(listener2, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        verify(listener2, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -262,7 +271,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -273,7 +282,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -285,7 +295,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -296,7 +307,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -317,7 +328,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1, KEY_2)).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -328,7 +339,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1, KEY_2)).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
@@ -338,7 +349,8 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
 
-        verifyZeroInteractions(listener);
+        verify(listener, after(FIVE_HUNDRED_MS).never())
+            .event(any());
     }
 
     @Test
@@ -349,7 +361,7 @@ public interface EventBusContract {
 
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        verify(listener, times(1)).event(any());
+        verify(listener, timeout(ONE_SECOND).times(1)).event(any());
     }
 
     @Test
