@@ -89,6 +89,14 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return connectionFactory;
     }
 
+    public RabbitMQManagementAPI managementAPI() throws Exception {
+        return RabbitMQManagementAPI.from(RabbitMQConfiguration.builder()
+                .amqpUri(rabbitMQ.amqpUri())
+                .managementUri(rabbitMQ.managementUri())
+                .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
+                .build());
+    }
+
     private RabbitMQConnectionFactory createRabbitConnectionFactory() throws URISyntaxException {
         RabbitMQConfiguration rabbitMQConfiguration = RabbitMQConfiguration.builder()
             .amqpUri(rabbitMQ.amqpUri())
