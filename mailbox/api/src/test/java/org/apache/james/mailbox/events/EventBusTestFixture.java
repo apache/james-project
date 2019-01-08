@@ -61,6 +61,7 @@ public interface EventBusTestFixture {
 
     class GroupA extends Group {}
     class GroupB extends Group {}
+    class GroupC extends Group {}
 
     MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(
         MailboxSession.SessionId.of(42),
@@ -76,7 +77,7 @@ public interface EventBusTestFixture {
     ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
-    List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class);
+    List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class, GroupC.class);
 
     ConditionFactory WAIT_CONDITION = await().timeout(com.jayway.awaitility.Duration.ONE_SECOND);
 

@@ -49,6 +49,7 @@ import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
+import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
@@ -56,7 +57,8 @@ import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
-class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract {
+class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
+    EventBusConcurrentTestContract.SingleEventBusConcurrentContract, EventBusConcurrentTestContract.MultiEventBusConcurrentContract {
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
@@ -89,6 +91,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         ALL_GROUPS.stream()
             .map(groupClass -> GroupRegistration.WorkQueueName.of(groupClass).asString())
             .forEach(queueName -> sender.delete(QueueSpecification.queue(queueName)).block());
+        sender.delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)).block();
+        sender.close();
     }
 
     @Override
