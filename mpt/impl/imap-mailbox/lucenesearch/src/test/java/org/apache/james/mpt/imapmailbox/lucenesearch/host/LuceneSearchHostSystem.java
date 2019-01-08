@@ -50,6 +50,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -104,6 +105,9 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
             SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+            FSDirectory fsDirectory = FSDirectory.open(tempFile);
+            searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory, sessionProvider);
+
             mailboxManager = new InMemoryMailboxManager(mapperFactory,
                 sessionProvider,
                 locker,
@@ -111,12 +115,11 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 messageIdFactory,
                 delegatingMailboxListener,
                 new StoreMailboxAnnotationManager(mapperFactory, rightManager),
-                rightManager);
+                rightManager,
+                QuotaComponents.disabled(sessionProvider, mapperFactory),
+                searchIndex);
 
-            FSDirectory fsDirectory = FSDirectory.open(tempFile);
-            searchIndex = new LuceneMessageSearchIndex(mapperFactory, new InMemoryId.Factory(), fsDirectory, messageIdFactory, sessionProvider);
             searchIndex.setEnableSuffixMatch(true);
-            mailboxManager.setMessageSearchIndex(searchIndex);
 
             mailboxManager.init();
 

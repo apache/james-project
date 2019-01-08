@@ -36,11 +36,14 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoMaxQuotaManager;
 import org.apache.james.mailbox.store.quota.NoQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.junit.Before;
 
 public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -66,6 +69,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, fakeAuthorizator);
 
         QuotaComponents quotaComponents = new QuotaComponents(new NoMaxQuotaManager(), quotaManager, new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory), new NoQuotaUpdater());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
 
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
             sessionProvider,
@@ -75,7 +79,8 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             delegatingMailboxListener,
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
             rightManager,
-            quotaComponents);
+            quotaComponents,
+            index);
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,

@@ -48,12 +48,15 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 
 public class InMemoryIntegrationResources implements IntegrationResources<StoreMailboxManager> {
 
@@ -111,6 +114,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
         QuotaComponents quotaComponents = createQuotaComponents(mailboxSessionMapperFactory, delegatingListener, sessionProvider);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
 
         InMemoryMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
@@ -121,7 +125,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             delegatingListener,
             annotationManager,
             storeRightManager,
-            quotaComponents);
+            quotaComponents,
+            index);
         manager.init();
         try {
             return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory());
@@ -149,6 +154,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
         QuotaComponents quotaComponents = createQuotaComponents(mailboxSessionMapperFactory, delegatingListener, sessionProvider);
 
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
+
         StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
             sessionProvider,
@@ -158,7 +165,8 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             delegatingListener,
             annotationManager,
             storeRightManager,
-            quotaComponents);
+            quotaComponents,
+            index);
         manager.init();
         return manager;
     }

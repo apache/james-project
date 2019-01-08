@@ -43,9 +43,12 @@ import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 
 class CassandraTestSystemFixture {
 
@@ -66,9 +69,10 @@ class CassandraTestSystemFixture {
         SessionProvider sessionProvider = new SessionProvider(mock(Authenticator.class), mock(Authorizator.class));
 
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
-            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
+            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
         cassandraMailboxManager.init();
 
         return cassandraMailboxManager;

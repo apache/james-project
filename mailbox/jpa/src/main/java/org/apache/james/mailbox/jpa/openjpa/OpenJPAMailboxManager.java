@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
  * OpenJPA implementation of MailboxManager
@@ -50,10 +51,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager,
-                                 QuotaComponents quotaComponents) {
+                                 QuotaComponents quotaComponents,
+                                 MessageSearchIndex index) {
         super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
             messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager,
-            quotaComponents);
+            quotaComponents, index);
     }
 
     protected AdvancedFeature getAdvancedFeature() {

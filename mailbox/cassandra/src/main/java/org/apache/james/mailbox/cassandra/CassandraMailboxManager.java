@@ -63,7 +63,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
                                    MailboxPathLocker locker, MessageParser messageParser,
                                    MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
-                                   QuotaComponents quotaComponents,
+                                   QuotaComponents quotaComponents, MessageSearchIndex index,
                                    MailboxManagerConfiguration configuration) {
         super(mapperFactory,
             sessionProvider,
@@ -74,15 +74,10 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             delegatingMailboxListener,
             storeRightManager,
             quotaComponents,
+            index,
             configuration);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
-    }
-
-    @Override
-    @Inject
-    public void setMessageSearchIndex(MessageSearchIndex index) {
-        super.setMessageSearchIndex(index);
     }
 
     @Override

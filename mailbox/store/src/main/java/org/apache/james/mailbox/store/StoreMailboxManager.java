@@ -66,7 +66,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
-import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -77,7 +76,6 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
@@ -116,16 +114,16 @@ public class StoreMailboxManager implements MailboxManager {
     private final QuotaRootResolver quotaRootResolver;
     private final QuotaUpdater quotaUpdater;
     private final QuotaComponents quotaComponents;
+    private final MessageSearchIndex index;
     protected final MailboxManagerConfiguration configuration;
 
-    private MessageSearchIndex index;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager,
-                               QuotaComponents quotaComponents, MailboxManagerConfiguration configuration) {
+                               QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration) {
         Preconditions.checkNotNull(delegatingListener);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -141,6 +139,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.quotaRootResolver = quotaComponents.getQuotaRootResolver();
         this.quotaManager = quotaComponents.getQuotaManager();
         this.quotaComponents = quotaComponents;
+        this.index = searchIndex;
         this.configuration = configuration;
     }
 
@@ -164,9 +163,6 @@ public class StoreMailboxManager implements MailboxManager {
     @PostConstruct
     public void init() throws MailboxException {
         MailboxSession session = createSystemSession("storeMailboxManager");
-        if (index == null) {
-            index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
-        }
         if (index instanceof ListeningMessageSearchIndex) {
             this.addGlobalListener((MailboxListener) index, session);
         }
@@ -230,16 +226,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public MessageParser getMessageParser() {
         return messageParser;
-    }
-
-    /**
-     * Set the {@link MessageSearchIndex} which should be used by this {@link MailboxManager}. If none is given this implementation will use a {@link SimpleMessageSearchIndex}
-     * by default
-     *
-     * @param index
-     */
-    public void setMessageSearchIndex(MessageSearchIndex index) {
-        this.index = index;
     }
 
     /**

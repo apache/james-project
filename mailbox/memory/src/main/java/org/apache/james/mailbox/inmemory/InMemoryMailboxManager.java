@@ -55,15 +55,10 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   DelegatingMailboxListener delegatingMailboxListener,
                                   StoreMailboxAnnotationManager annotationManager,
                                   StoreRightManager storeRightManager,
-                                  QuotaComponents quotaComponents) {
+                                  QuotaComponents quotaComponents,
+                                  MessageSearchIndex searchIndex) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
-            annotationManager, delegatingMailboxListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
-    }
-
-    @Override
-    @Inject
-    public void setMessageSearchIndex(MessageSearchIndex index) {
-        super.setMessageSearchIndex(index);
+            annotationManager, delegatingMailboxListener, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Override

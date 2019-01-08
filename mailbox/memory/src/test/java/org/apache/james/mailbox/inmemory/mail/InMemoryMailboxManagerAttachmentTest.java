@@ -41,9 +41,12 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.junit.Before;
 
 public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
@@ -67,16 +70,17 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-                new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents);
+                new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-            failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents);
+            failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
         parseFailingMailboxManager.init();
         super.setUp();
     }

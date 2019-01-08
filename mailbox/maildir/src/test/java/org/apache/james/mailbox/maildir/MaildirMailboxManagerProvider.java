@@ -36,9 +36,12 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.junit.rules.TemporaryFolder;
 
 public class MaildirMailboxManagerProvider {
@@ -62,8 +65,11 @@ public class MaildirMailboxManagerProvider {
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor());
+
         StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager,
+            quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
         manager.init();
 
         return manager;

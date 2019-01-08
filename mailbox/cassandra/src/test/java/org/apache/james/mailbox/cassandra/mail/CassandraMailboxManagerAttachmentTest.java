@@ -41,9 +41,12 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.mailbox.store.search.MessageSearchIndex;
+import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -95,16 +98,18 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
-            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
+            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents,
+            index, MailboxManagerConfiguration.DEFAULT);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
+            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
         parseFailingMailboxManager.init();
     }
 
