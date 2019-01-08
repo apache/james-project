@@ -19,10 +19,12 @@
 
 package org.apache.james.mailbox.events;
 
+import static com.jayway.awaitility.Awaitility.await;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
@@ -35,8 +37,27 @@ import org.apache.james.mailbox.model.TestId;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.jayway.awaitility.core.ConditionFactory;
 
 public interface EventBusTestFixture {
+
+    class MailboxListenerCountingSuccessfulExecution implements MailboxListener {
+        private final AtomicInteger calls = new AtomicInteger(0);
+
+        @Override
+        public ListenerType getType() {
+            return ListenerType.ONCE;
+        }
+
+        @Override
+        public void event(Event event) {
+            calls.incrementAndGet();
+        }
+
+        int numberOfEventCalls() {
+            return calls.get();
+        }
+    }
 
     class GroupA extends Group {}
     class GroupB extends Group {}
@@ -56,6 +77,8 @@ public interface EventBusTestFixture {
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
     List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class);
+
+    ConditionFactory WAIT_CONDITION = await().timeout(com.jayway.awaitility.Duration.ONE_SECOND);
 
     static MailboxListener newListener() {
         MailboxListener listener = mock(MailboxListener.class);

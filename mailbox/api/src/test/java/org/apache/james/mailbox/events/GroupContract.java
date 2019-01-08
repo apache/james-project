@@ -25,14 +25,19 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GroupB;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
+import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
@@ -158,6 +163,38 @@ public interface GroupContract {
             MailboxListener listener = newListener();
 
             eventBus().register(listener, new GroupA());
+
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+
+            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void failingGroupListenersShouldNotAbortGroupDelivery() {
+            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            eventBus().register(listener, new GroupA());
+
+            doThrow(new RuntimeException())
+                .doCallRealMethod()
+                .when(listener).event(any());
+
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+            eventBus().dispatch(EVENT, NO_KEYS).block();
+
+            WAIT_CONDITION
+                .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
+        }
+
+        @Test
+        default void allGroupListenersShouldBeExecutedWhenAGroupListenerFails() {
+            MailboxListener listener = newListener();
+
+            MailboxListener failingListener = mock(MailboxListener.class);
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            doThrow(new RuntimeException()).when(failingListener).event(any());
+
+            eventBus().register(failingListener, new GroupA());
+            eventBus().register(listener, new GroupB());
 
             eventBus().dispatch(EVENT, NO_KEYS).block();
 
