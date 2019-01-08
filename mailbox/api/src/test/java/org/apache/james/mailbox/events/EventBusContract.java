@@ -21,5 +21,10 @@ package org.apache.james.mailbox.events;
 
 public interface EventBusContract {
 
+    interface MultipleEventBusContract extends EventBusContract {
+
+        EventBus eventBus2();
+    }
+
     EventBus eventBus();
 }

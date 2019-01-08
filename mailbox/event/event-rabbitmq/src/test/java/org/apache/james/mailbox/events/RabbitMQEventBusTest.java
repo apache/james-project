@@ -56,12 +56,13 @@ import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
-class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract {
+class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract {
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQEventBus eventBus;
+    private RabbitMQEventBus eventBus2;
     private Sender sender;
     private RabbitMQConnectionFactory connectionFactory;
     private EventSerializer eventSerializer;
@@ -75,13 +76,16 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract 
         eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory());
 
         eventBus = new RabbitMQEventBus(connectionFactory, eventSerializer);
+        eventBus2 = new RabbitMQEventBus(connectionFactory, eventSerializer);
         eventBus.start();
+        eventBus2.start();
         sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
     }
 
     @AfterEach
     void tearDown() {
         eventBus.stop();
+        eventBus2.stop();
         ALL_GROUPS.stream()
             .map(groupClass -> GroupRegistration.WorkQueueName.of(groupClass).asString())
             .forEach(queueName -> sender.delete(QueueSpecification.queue(queueName)).block());
@@ -90,6 +94,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract 
     @Override
     public EventBus eventBus() {
         return eventBus;
+    }
+
+    @Override
+    public EventBus eventBus2() {
+        return eventBus2;
     }
 
     @Nested

@@ -201,4 +201,43 @@ public interface GroupContract {
             verify(listener, timeout(ONE_SECOND).times(1)).event(any());
         }
     }
+
+    interface MultipleEventBusGroupContract extends EventBusContract.MultipleEventBusContract {
+
+        @Test
+        default void groupsDefinedOnlyOnSomeNodesShouldBeNotified() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, new GroupA());
+
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
+
+            verify(mailboxListener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void groupListenersShouldBeExecutedOnceInAControlledEnvironment() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, new GroupA());
+            eventBus2().register(mailboxListener, new GroupA());
+
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
+
+            verify(mailboxListener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void unregisterShouldStopNotificationForDistantGroups() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, new GroupA()).unregister();
+
+            eventBus2().dispatch(EVENT, NO_KEYS).block();
+
+
+            verify(mailboxListener, after(FIVE_HUNDRED_MS).never())
+                .event(any());
+        }
+    }
 }
