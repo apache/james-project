@@ -31,6 +31,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -61,7 +62,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
                                    MailboxPathLocker locker, MessageParser messageParser,
                                    MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
-                                   StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager) {
+                                   StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
+                                   MailboxManagerConfiguration configuration) {
         super(mapperFactory,
             authenticator,
             authorizator,
@@ -70,7 +72,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             messageIdFactory,
             annotationManager,
             delegatingMailboxListener,
-            storeRightManager);
+            storeRightManager,
+            configuration);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
     }
@@ -109,7 +112,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes(),
+            configuration.getBatchSizes(),
             getStoreRightManager());
     }
 

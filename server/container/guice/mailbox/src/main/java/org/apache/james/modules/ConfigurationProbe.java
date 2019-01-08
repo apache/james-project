@@ -21,23 +21,23 @@ package org.apache.james.modules;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.utils.GuiceProbe;
 
 public class ConfigurationProbe implements GuiceProbe {
 
-    private final StoreMailboxManager storeMailboxManager;
+    private final MailboxManagerConfiguration configuration;
 
     @Inject
-    private ConfigurationProbe(StoreMailboxManager storeMailboxManager) {
-        this.storeMailboxManager = storeMailboxManager;
+    private ConfigurationProbe(MailboxManagerConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     public int getMoveBatchSize() {
-        return storeMailboxManager.getMoveBatchSize();
+        return configuration.getBatchSizes().getMoveBatchSize();
     }
 
     public int getCopyBatchSize() {
-        return storeMailboxManager.getCopyBatchSize();
+        return configuration.getBatchSizes().getCopyBatchSize();
     }
 }

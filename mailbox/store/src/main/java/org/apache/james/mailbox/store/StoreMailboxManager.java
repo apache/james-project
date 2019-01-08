@@ -119,21 +119,20 @@ public class StoreMailboxManager implements MailboxManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final MailboxSessionIdGenerator idGenerator;
+    protected final MailboxManagerConfiguration configuration;
 
     private Authorizator authorizator;
-    private MessageBatcher copyBatcher;
-    private MessageBatcher moveBatcher;
     private MessageSearchIndex index;
     private QuotaManager quotaManager;
     private QuotaRootResolver quotaRootResolver;
     private QuotaUpdater quotaUpdater;
-    private BatchSizes batchSizes = BatchSizes.defaultValues();
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
-                               DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager) {
+                               DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager,
+                               MailboxManagerConfiguration configuration) {
         Preconditions.checkNotNull(delegatingListener);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -147,6 +146,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.delegatingListener = delegatingListener;
         this.storeRightManager = storeRightManager;
         this.idGenerator = new RandomMailboxSessionIdGenerator();
+        this.configuration = configuration;
     }
 
     public Factory getMessageIdFactory() {
@@ -163,30 +163,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public void setQuotaUpdater(QuotaUpdater quotaUpdater) {
         this.quotaUpdater = quotaUpdater;
-    }
-
-    public void setCopyBatchSize(BatchSizes batchSizes) {
-        this.copyBatcher = new MessageBatcher(batchSizes.getCopyBatchSize());
-    }
-
-    public int getCopyBatchSize() {
-        return copyBatcher.getBatchSize();
-    }
-
-    public void setMoveBatchSize(BatchSizes batchSizes) {
-        this.moveBatcher = new MessageBatcher(batchSizes.getMoveBatchSize());
-    }
-
-    public int getMoveBatchSize() {
-        return moveBatcher.getBatchSize();
-    }
-
-    public void setBatchSizes(BatchSizes batchSizes) {
-        this.batchSizes = batchSizes;
-    }
-
-    public BatchSizes getBatchSizes() {
-        return batchSizes;
     }
 
     /**
@@ -211,12 +187,6 @@ public class StoreMailboxManager implements MailboxManager {
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);
-        }
-        if (copyBatcher == null) {
-            copyBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
-        }
-        if (moveBatcher == null) {
-            moveBatcher = new MessageBatcher(MessageBatcher.NO_BATCH_SIZE);
         }
         if (hasCapability(MailboxCapabilities.Annotation)) {
             this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, this), session);
@@ -400,7 +370,7 @@ public class StoreMailboxManager implements MailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getDelegationListener(),
                 getLocker(), mailbox, getQuotaManager(),
-                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), getBatchSizes(),
+                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
             getStoreRightManager());
     }
 
@@ -621,35 +591,33 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     @Override
-    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> copyMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
         return copyMessages(set, session, toMailbox, fromMailbox);
     }
 
     @Override
-    public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> copyMessages(MessageRange set, MailboxId from, MailboxId to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
         return copyMessages(set, session, toMailbox, fromMailbox);
     }
 
     
-    private List<MessageRange> copyMessages(MessageRange set, final MailboxSession session,
-            final StoreMessageManager toMailbox, final StoreMessageManager fromMailbox) throws MailboxException {
-        return copyBatcher.batchMessages(set,
+    private List<MessageRange> copyMessages(MessageRange set, MailboxSession session, StoreMessageManager toMailbox, StoreMessageManager fromMailbox) throws MailboxException {
+        return configuration.getCopyBatcher().batchMessages(set,
             messageRange -> fromMailbox.copyTo(messageRange, toMailbox, session));
     }
 
     @Override
-    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, final MailboxSession session) throws MailboxException {
-        final StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
-        final StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
+    public List<MessageRange> moveMessages(MessageRange set, MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
+        StoreMessageManager toMailbox = (StoreMessageManager) getMailbox(to, session);
+        StoreMessageManager fromMailbox = (StoreMessageManager) getMailbox(from, session);
 
-        return moveBatcher.batchMessages(set,
-            messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
+        return configuration.getMoveBatcher().batchMessages(set, messageRange -> fromMailbox.moveTo(messageRange, toMailbox, session));
     }
 
     @Override

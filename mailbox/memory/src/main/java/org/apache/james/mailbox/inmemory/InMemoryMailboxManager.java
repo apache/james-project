@@ -28,6 +28,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -55,7 +56,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   StoreMailboxAnnotationManager annotationManager,
                                   StoreRightManager storeRightManager) {
         super(mailboxSessionMapperFactory, authenticator, authorizator, locker, messageParser, messageIdFactory,
-            annotationManager, delegatingMailboxListener, storeRightManager);
+            annotationManager, delegatingMailboxListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
-            getBatchSizes(),
+            configuration.getBatchSizes(),
             getStoreRightManager());
     }
 }
