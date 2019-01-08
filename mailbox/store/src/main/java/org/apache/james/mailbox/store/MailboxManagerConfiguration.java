@@ -22,10 +22,7 @@ package org.apache.james.mailbox.store;
 import javax.inject.Inject;
 
 public class MailboxManagerConfiguration {
-    public static final MailboxManagerConfiguration DEFAULT = new MailboxManagerConfiguration(BatchSizes.builder()
-        .copyBatchSize(MessageBatcher.NO_BATCH_SIZE)
-        .moveBatchSize(MessageBatcher.NO_BATCH_SIZE)
-        .build());
+    public static final MailboxManagerConfiguration DEFAULT = new MailboxManagerConfiguration(BatchSizes.defaultValues());
 
     private final BatchSizes batchSizes;
 
@@ -39,10 +36,10 @@ public class MailboxManagerConfiguration {
     }
 
     public MessageBatcher getCopyBatcher() {
-        return new MessageBatcher(batchSizes.getCopyBatchSize());
+        return new MessageBatcher(batchSizes.getCopyBatchSize().orElse(MessageBatcher.NO_BATCH_SIZE));
     }
 
     public MessageBatcher getMoveBatcher() {
-        return new MessageBatcher(batchSizes.getMoveBatchSize());
+        return new MessageBatcher(batchSizes.getMoveBatchSize().orElse(MessageBatcher.NO_BATCH_SIZE));
     }
 }
