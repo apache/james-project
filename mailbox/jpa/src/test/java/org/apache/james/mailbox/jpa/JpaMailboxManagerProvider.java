@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 
 public class JpaMailboxManagerProvider {
 
@@ -61,10 +62,12 @@ public class JpaMailboxManagerProvider {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager,
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
+
         OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
             delegatingListener, annotationManager,
-            storeRightManager);
+            storeRightManager, quotaComponents);
 
         try {
             openJPAMailboxManager.init();

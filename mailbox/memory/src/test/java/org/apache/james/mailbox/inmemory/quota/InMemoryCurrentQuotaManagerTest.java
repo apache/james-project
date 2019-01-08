@@ -27,8 +27,8 @@ import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,8 +43,7 @@ public class InMemoryCurrentQuotaManagerTest {
     @Before
     public void setUp() throws Exception {
         mockedCurrentQuotaCalculator = mock(CurrentQuotaCalculator.class);
-        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
-        testee = new InMemoryCurrentQuotaManager(mockedCurrentQuotaCalculator, mockedMailboxManager);
+        testee = new InMemoryCurrentQuotaManager(mockedCurrentQuotaCalculator, mock(SessionProvider.class));
     }
 
     @Test

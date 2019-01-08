@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -93,16 +94,17 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
-            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
-            delegatingMailboxListener, annotationManager, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
         parseFailingMailboxManager.init();
     }
 

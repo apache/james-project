@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.junit.Before;
 
 public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
@@ -65,16 +66,17 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-                new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager);
+                new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents);
         mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-            failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager);
+            failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents);
         parseFailingMailboxManager.init();
         super.setUp();
     }

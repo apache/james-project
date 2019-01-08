@@ -38,6 +38,9 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
+import org.apache.james.mailbox.store.quota.NoMaxQuotaManager;
+import org.apache.james.mailbox.store.quota.NoQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.junit.Before;
 
 public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
@@ -61,6 +64,9 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, fakeAuthorizator);
+
+        QuotaComponents quotaComponents = new QuotaComponents(new NoMaxQuotaManager(), quotaManager, new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory), new NoQuotaUpdater());
+
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
             sessionProvider,
             locker,
@@ -68,14 +74,15 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             messageIdFactory,
             delegatingMailboxListener,
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
-            rightManager);
+            rightManager,
+            quotaComponents);
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
             delegatingMailboxListener,
             messageIdFactory,
             quotaManager,
-            new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory));
+            quotaComponents.getQuotaRootResolver());
         return new MessageIdManagerTestSystem(messageIdManager, messageIdFactory, mapperFactory, mailboxManager);
     }
 }

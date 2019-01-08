@@ -39,6 +39,7 @@ import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
@@ -62,6 +63,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
                                    MailboxPathLocker locker, MessageParser messageParser,
                                    MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
+                                   QuotaComponents quotaComponents,
                                    MailboxManagerConfiguration configuration) {
         super(mapperFactory,
             sessionProvider,
@@ -71,6 +73,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             annotationManager,
             delegatingMailboxListener,
             storeRightManager,
+            quotaComponents,
             configuration);
         this.locker = locker;
         this.mapperFactory = mapperFactory;
@@ -106,8 +109,8 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             getDelegationListener(),
             this.locker,
             mailboxRow,
-            getQuotaManager(),
-            getQuotaRootResolver(),
+            getQuotaComponents().getQuotaManager(),
+            getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),

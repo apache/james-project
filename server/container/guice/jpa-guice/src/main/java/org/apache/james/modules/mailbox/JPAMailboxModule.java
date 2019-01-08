@@ -39,8 +39,6 @@ import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -51,7 +49,6 @@ import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.modules.Names;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.utils.MailboxManagerDefinition;
@@ -111,11 +108,7 @@ public class JPAMailboxModule extends AbstractModule {
     @Provides
     @Named(Names.MAILBOXMANAGER_NAME)
     @Singleton
-    public MailboxManager provideMailboxManager(OpenJPAMailboxManager jpaMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
-                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
-        jpaMailboxManager.setQuotaRootResolver(quotaRootResolver);
-        jpaMailboxManager.setQuotaManager(quotaManager);
-        jpaMailboxManager.setQuotaUpdater(quotaUpdater);
+    public MailboxManager provideMailboxManager(OpenJPAMailboxManager jpaMailboxManager) throws MailboxException {
         jpaMailboxManager.init();
         return jpaMailboxManager;
     }

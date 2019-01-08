@@ -47,7 +47,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -75,9 +74,8 @@ public class GetMailboxesMethodTest {
         InMemoryIntegrationResources inMemoryIntegrationResources = new InMemoryIntegrationResources();
         GroupMembershipResolver groupMembershipResolver = inMemoryIntegrationResources.createGroupMembershipResolver();
         mailboxManager = inMemoryIntegrationResources.createMailboxManager(groupMembershipResolver);
-        MaxQuotaManager maxQuotaManager = inMemoryIntegrationResources.createMaxQuotaManager();
-        QuotaRootResolver quotaRootResolver = inMemoryIntegrationResources.createQuotaRootResolver(mailboxManager);
-        QuotaManager quotaManager = inMemoryIntegrationResources.createQuotaManager(maxQuotaManager, mailboxManager);
+        QuotaRootResolver quotaRootResolver = mailboxManager.getQuotaComponents().getQuotaRootResolver();
+        QuotaManager quotaManager = mailboxManager.getQuotaComponents().getQuotaManager();
         mailboxFactory = new MailboxFactory(mailboxManager, quotaManager, quotaRootResolver);
 
         getMailboxesMethod = new GetMailboxesMethod(mailboxManager, mailboxFactory, new DefaultMetricFactory());

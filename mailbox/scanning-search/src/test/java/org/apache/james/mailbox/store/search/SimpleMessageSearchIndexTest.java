@@ -46,8 +46,8 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
             storeMailboxManager.getMapperFactory(),
             storeMailboxManager.getDelegationListener(),
             storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager.getQuotaManager(),
-            storeMailboxManager.getQuotaRootResolver());
+            storeMailboxManager.getQuotaComponents().getQuotaManager(),
+            storeMailboxManager.getQuotaComponents().getQuotaRootResolver());
 
         storeMailboxManager.setMessageSearchIndex(messageSearchIndex);
     }

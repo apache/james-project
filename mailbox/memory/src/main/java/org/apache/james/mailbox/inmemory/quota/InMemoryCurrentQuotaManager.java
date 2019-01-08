@@ -27,9 +27,9 @@ import javax.inject.Inject;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
@@ -43,11 +43,11 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
     private final LoadingCache<QuotaRoot, Entry> quotaCache;
 
     @Inject
-    public InMemoryCurrentQuotaManager(final CurrentQuotaCalculator quotaCalculator, final MailboxManager mailboxManager) {
+    public InMemoryCurrentQuotaManager(CurrentQuotaCalculator quotaCalculator, SessionProvider sessionProvider) {
         this.quotaCache = CacheBuilder.newBuilder().build(new CacheLoader<QuotaRoot, Entry>() {
             @Override
             public Entry load(QuotaRoot quotaRoot) throws Exception {
-                return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, mailboxManager.createSystemSession(quotaRoot.getValue())));
+                return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(quotaRoot.getValue())));
             }
         });
     }

@@ -27,19 +27,11 @@ import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -56,34 +48,18 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
 
     private StoreMailboxManager mailboxManager;
     private InMemoryPerUserMaxQuotaManager perUserMaxQuotaManager;
-
-    public static JamesImapHostSystem build() throws Exception {
-        return new InMemoryHostSystem();
-    }
     
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
         this.mailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver(), authenticator, authorizator);
-        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mailboxManager.getMapperFactory());
 
-        perUserMaxQuotaManager = new InMemoryPerUserMaxQuotaManager();
+        perUserMaxQuotaManager = (InMemoryPerUserMaxQuotaManager) mailboxManager.getQuotaComponents().getMaxQuotaManager();
 
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(
-            new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver),
-            mailboxManager);
+        ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
+            mailboxManager.getQuotaComponents().getQuotaManager(), mailboxManager.getQuotaComponents().getQuotaRootResolver(), new DefaultMetricFactory());
 
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
-
-        ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, mailboxManager.getDelegationListener(), quotaManager);
-
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
-        mailboxManager.setQuotaUpdater(quotaUpdater);
-        mailboxManager.addGlobalListener(quotaUpdater, MailboxSessionUtil.create("admin"));
-
-        final ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()), quotaManager, quotaRootResolver, new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
@@ -100,7 +76,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws MailboxException {
+    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
         perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }

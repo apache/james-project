@@ -45,8 +45,7 @@ import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -80,16 +79,17 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
         mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, sessionProvider, locker,
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
         mailboxManager.init();
 
         ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
                         mailboxManager, 
                         sm, 
-                        new NoQuotaManager(), 
-                        new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory),
+                        quotaComponents.getQuotaManager(),
+                        quotaComponents.getQuotaRootResolver(),
                         new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),

@@ -25,6 +25,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Ignore;
@@ -40,13 +41,14 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         storeMailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver());
 
+        QuotaComponents quotaComponents = storeMailboxManager.getQuotaComponents();
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
             storeMailboxManager.getDelegationListener(),
             storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager.getQuotaManager(),
-            storeMailboxManager.getQuotaRootResolver());
+            quotaComponents.getQuotaManager(),
+            quotaComponents.getQuotaRootResolver());
         LuceneMessageSearchIndex luceneMessageSearchIndex = new LuceneMessageSearchIndex(
             storeMailboxManager.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
             storeMailboxManager.getMessageIdFactory(),

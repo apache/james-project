@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -91,24 +92,19 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
         QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
-        mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
-            new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-            delegatingMailboxListener, annotationManager, storeRightManager, MailboxManagerConfiguration.DEFAULT);
 
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(session),
             new CassandraPerDomainMaxQuotaDao(cassandra.getConf()),
             new CassandraGlobalMaxQuotaDao(session));
-
         CassandraCurrentQuotaManager currentQuotaManager = new CassandraCurrentQuotaManager(session);
-
         StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, perUserMaxQuotaManager);
-
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, delegatingMailboxListener, quotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver, quotaUpdater);
 
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
-        mailboxManager.setQuotaUpdater(quotaUpdater);
+        mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
+            new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
+            delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
 
         mailboxManager.init();
 

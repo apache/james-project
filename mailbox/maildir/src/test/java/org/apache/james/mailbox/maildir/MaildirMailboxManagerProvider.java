@@ -38,6 +38,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.junit.rules.TemporaryFolder;
 
 public class MaildirMailboxManagerProvider {
@@ -60,8 +61,9 @@ public class MaildirMailboxManagerProvider {
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
         manager.init();
 
         return manager;

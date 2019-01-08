@@ -34,6 +34,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 
 /**
  * OpenJPA implementation of MailboxManager
@@ -48,9 +49,11 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  MessageId.Factory messageIdFactory,
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  StoreMailboxAnnotationManager annotationManager,
-                                 StoreRightManager storeRightManager) {
+                                 StoreRightManager storeRightManager,
+                                 QuotaComponents quotaComponents) {
         super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager);
+            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager,
+            quotaComponents);
     }
 
     protected AdvancedFeature getAdvancedFeature() {
@@ -65,8 +68,8 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getLocker(),
             mailboxRow,
             getAdvancedFeature(),
-            getQuotaManager(),
-            getQuotaRootResolver(),
+            getQuotaComponents().getQuotaManager(),
+            getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),

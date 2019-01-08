@@ -36,6 +36,7 @@ import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 public class InMemoryMailboxManager extends StoreMailboxManager {
@@ -53,9 +54,10 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
                                   MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
                                   DelegatingMailboxListener delegatingMailboxListener,
                                   StoreMailboxAnnotationManager annotationManager,
-                                  StoreRightManager storeRightManager) {
+                                  StoreRightManager storeRightManager,
+                                  QuotaComponents quotaComponents) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
-            annotationManager, delegatingMailboxListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+            annotationManager, delegatingMailboxListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Override
@@ -81,8 +83,8 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
             getDelegationListener(),
             getLocker(),
             mailbox,
-            getQuotaManager(),
-            getQuotaRootResolver(),
+            getQuotaComponents().getQuotaManager(),
+            getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),

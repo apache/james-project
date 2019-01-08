@@ -72,8 +72,6 @@ import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -88,7 +86,6 @@ import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
-import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.modules.Names;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
@@ -191,11 +188,7 @@ public class CassandraMailboxModule extends AbstractModule {
     @Provides
     @Named(Names.MAILBOXMANAGER_NAME)
     @Singleton
-    public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager, ListeningCurrentQuotaUpdater quotaUpdater,
-                                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) throws MailboxException {
-        cassandraMailboxManager.setQuotaUpdater(quotaUpdater);
-        cassandraMailboxManager.setQuotaManager(quotaManager);
-        cassandraMailboxManager.setQuotaRootResolver(quotaRootResolver);
+    public MailboxManager provideMailboxManager(CassandraMailboxManager cassandraMailboxManager) throws MailboxException {
         cassandraMailboxManager.init();
         return cassandraMailboxManager;
     }

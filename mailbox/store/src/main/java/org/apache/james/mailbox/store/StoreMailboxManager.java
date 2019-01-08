@@ -73,8 +73,7 @@ import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
-import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -113,19 +112,20 @@ public class StoreMailboxManager implements MailboxManager {
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final SessionProvider sessionProvider;
+    private final QuotaManager quotaManager;
+    private final QuotaRootResolver quotaRootResolver;
+    private final QuotaUpdater quotaUpdater;
+    private final QuotaComponents quotaComponents;
     protected final MailboxManagerConfiguration configuration;
 
     private MessageSearchIndex index;
-    private QuotaManager quotaManager;
-    private QuotaRootResolver quotaRootResolver;
-    private QuotaUpdater quotaUpdater;
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager,
-                               MailboxManagerConfiguration configuration) {
+                               QuotaComponents quotaComponents, MailboxManagerConfiguration configuration) {
         Preconditions.checkNotNull(delegatingListener);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
@@ -137,23 +137,19 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.storeRightManager = storeRightManager;
+        this.quotaUpdater = quotaComponents.getQuotaUpdater();
+        this.quotaRootResolver = quotaComponents.getQuotaRootResolver();
+        this.quotaManager = quotaComponents.getQuotaManager();
+        this.quotaComponents = quotaComponents;
         this.configuration = configuration;
+    }
+
+    public QuotaComponents getQuotaComponents() {
+        return quotaComponents;
     }
 
     public Factory getMessageIdFactory() {
         return messageIdFactory;
-    }
-
-    public void setQuotaManager(QuotaManager quotaManager) {
-        this.quotaManager = quotaManager;
-    }
-
-    public void setQuotaRootResolver(QuotaRootResolver quotaRootResolver) {
-        this.quotaRootResolver = quotaRootResolver;
-    }
-
-    public void setQuotaUpdater(QuotaUpdater quotaUpdater) {
-        this.quotaUpdater = quotaUpdater;
     }
 
     public SessionProvider getSessionProvider() {
@@ -173,12 +169,6 @@ public class StoreMailboxManager implements MailboxManager {
         }
         if (index instanceof ListeningMessageSearchIndex) {
             this.addGlobalListener((MailboxListener) index, session);
-        }
-        if (quotaManager == null) {
-            quotaManager = new NoQuotaManager();
-        }
-        if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);
@@ -202,7 +192,6 @@ public class StoreMailboxManager implements MailboxManager {
     public EnumSet<SearchCapabilities> getSupportedSearchCapabilities() {
         return index.getSupportedCapabilities(getSupportedMessageCapabilities());
     }
-    
 
     /**
      * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
@@ -213,7 +202,6 @@ public class StoreMailboxManager implements MailboxManager {
         return delegatingListener;
     }
 
-
     /**
      * Return the {@link MessageSearchIndex} used by this {@link MailboxManager}
      *
@@ -222,15 +210,6 @@ public class StoreMailboxManager implements MailboxManager {
     public MessageSearchIndex getMessageSearchIndex() {
         return index;
     }
-
-    public QuotaRootResolver getQuotaRootResolver() {
-        return quotaRootResolver;
-    }
-
-    public QuotaManager getQuotaManager() {
-        return quotaManager;
-    }
-
 
     /**
      * Return the {@link MailboxSessionMapperFactory} used by this {@link MailboxManager}
@@ -310,8 +289,8 @@ public class StoreMailboxManager implements MailboxManager {
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getDelegationListener(),
-                getLocker(), mailbox, getQuotaManager(),
-                getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
+                getLocker(), mailbox, quotaManager,
+            getQuotaComponents().getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
             getStoreRightManager());
     }
 

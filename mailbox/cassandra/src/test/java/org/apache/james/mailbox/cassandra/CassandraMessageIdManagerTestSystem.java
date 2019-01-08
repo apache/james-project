@@ -46,7 +46,7 @@ public class CassandraMessageIdManagerTestSystem {
         CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
             (StoreCurrentQuotaManager) currentQuotaManager,
-            mailboxManager.getQuotaRootResolver(), mailboxManager.getDelegationListener(), quotaManager);
+            mailboxManager.getQuotaComponents().getQuotaRootResolver(), mailboxManager.getDelegationListener(), quotaManager);
         mailboxManager.addGlobalListener(listeningCurrentQuotaUpdater, mailboxManager.createSystemSession("System"));
         return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getDelegationListener()),
             new CassandraMessageId.Factory(),

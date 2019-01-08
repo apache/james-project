@@ -45,6 +45,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
@@ -117,13 +118,14 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
             storeMailboxManager);
 
+        QuotaComponents quotaComponents = storeMailboxManager.getQuotaComponents();
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
             storeMailboxManager.getDelegationListener(),
             storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager.getQuotaManager(),
-            storeMailboxManager.getQuotaRootResolver());
+            quotaComponents.getQuotaManager(),
+            quotaComponents.getQuotaRootResolver());
         storeMailboxManager.setMessageSearchIndex(elasticSearchListeningMessageSearchIndex);
         storeMailboxManager.addGlobalListener(elasticSearchListeningMessageSearchIndex, MailboxSessionUtil.create("admin"));
         this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;

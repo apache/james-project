@@ -46,6 +46,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -82,9 +83,10 @@ public class StoreMailboxManagerTest {
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));
+        QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mockedMapperFactory);
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-                annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
+                annotationManager, delegatingListener, storeRightManager, quotaComponents, MailboxManagerConfiguration.DEFAULT);
         storeMailboxManager.init();
     }
 

@@ -23,7 +23,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
@@ -35,13 +34,11 @@ public interface IntegrationResources<T extends MailboxManager> {
 
     T createMailboxManager(GroupMembershipResolver groupMembershipResolver) throws MailboxException;
 
-    QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, T mailboxManager) throws Exception;
+    QuotaManager retrieveQuotaManager(T mailboxManager) throws Exception;
 
-    MaxQuotaManager createMaxQuotaManager() throws Exception;
+    MaxQuotaManager retrieveMaxQuotaManager(T mailboxManager) throws Exception;
 
-    CurrentQuotaManager createCurrentQuotaManager(T mailboxManager) throws Exception;
-
-    QuotaRootResolver createQuotaRootResolver(T mailboxManager) throws Exception;
+    QuotaRootResolver retrieveQuotaRootResolver(T mailboxManager) throws Exception;
 
     GroupMembershipResolver createGroupMembershipResolver() throws Exception;
 

@@ -53,6 +53,7 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -100,18 +101,16 @@ public class JPAHostSystem extends JamesImapHostSystem {
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
-        mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider,
-            messageParser, new DefaultMessageId.Factory(), delegatingListener, annotationManager, storeRightManager);
-
         DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mapperFactory);
         JpaCurrentQuotaManager currentQuotaManager = new JpaCurrentQuotaManager(entityManagerFactory);
         maxQuotaManager = new JPAPerUserMaxQuotaManager(new JPAPerUserMaxQuotaDAO(entityManagerFactory));
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, delegatingListener, storeQuotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, storeQuotaManager, quotaRootResolver, quotaUpdater);
 
-        mailboxManager.setQuotaManager(storeQuotaManager);
-        mailboxManager.setQuotaUpdater(quotaUpdater);
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
+        mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider,
+            messageParser, new DefaultMessageId.Factory(), delegatingListener, annotationManager, storeRightManager, quotaComponents);
+
         mailboxManager.init();
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mapperFactory);

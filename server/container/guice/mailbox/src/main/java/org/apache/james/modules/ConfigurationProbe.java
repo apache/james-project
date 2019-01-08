@@ -34,10 +34,10 @@ public class ConfigurationProbe implements GuiceProbe {
     }
 
     public int getMoveBatchSize() {
-        return configuration.getBatchSizes().getMoveBatchSize();
+        return configuration.getBatchSizes().getMoveBatchSize().get();
     }
 
     public int getCopyBatchSize() {
-        return configuration.getBatchSizes().getCopyBatchSize();
+        return configuration.getBatchSizes().getCopyBatchSize().get();
     }
 }

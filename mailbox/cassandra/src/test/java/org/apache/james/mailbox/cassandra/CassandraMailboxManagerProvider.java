@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 
 import com.datastax.driver.core.Session;
@@ -71,18 +72,19 @@ public class CassandraMailboxManagerProvider {
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
-
-        CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
-            messageParser, messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, MailboxManagerConfiguration.DEFAULT);
-
         CassandraPerUserMaxQuotaManager maxQuotaManager = new CassandraPerUserMaxQuotaManager(new CassandraPerUserMaxQuotaDao(session),
             new CassandraPerDomainMaxQuotaDao(session),
             new CassandraGlobalMaxQuotaDao(session));
         CassandraCurrentQuotaManager currentQuotaUpdater = new CassandraCurrentQuotaManager(session);
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaUpdater, maxQuotaManager);
         QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
-
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaUpdater, quotaRootResolver, delegatingMailboxListener, storeQuotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, storeQuotaManager, quotaRootResolver, quotaUpdater);
+
+        CassandraMailboxManager manager = new CassandraMailboxManager(mapperFactory, sessionProvider, new NoMailboxPathLocker(),
+            messageParser, messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager,
+            quotaComponents, MailboxManagerConfiguration.DEFAULT);
+
         manager.setQuotaManager(storeQuotaManager);
         manager.setQuotaUpdater(quotaUpdater);
         manager.setQuotaRootResolver(quotaRootResolver);
