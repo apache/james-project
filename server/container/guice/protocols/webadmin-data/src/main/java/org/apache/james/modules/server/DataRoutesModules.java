@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.apache.james.webadmin.routes.ForwardRoutes;
@@ -34,6 +35,7 @@ public class DataRoutesModules extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+        routesMultibinder.addBinding().to(AliasRoutes.class);
         routesMultibinder.addBinding().to(DomainsRoutes.class);
         routesMultibinder.addBinding().to(DomainMappingsRoutes.class);
         routesMultibinder.addBinding().to(ForwardRoutes.class);

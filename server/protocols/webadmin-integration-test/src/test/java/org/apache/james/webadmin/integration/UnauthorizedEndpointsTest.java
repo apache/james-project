@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMigrationRoutes;
 import org.apache.james.webadmin.routes.DLPConfigurationRoutes;
 import org.apache.james.webadmin.routes.DomainMappingsRoutes;
@@ -127,6 +128,7 @@ class UnauthorizedEndpointsTest {
             UserQuotaRoutes.USERS_QUOTA_ENDPOINT + "/joe@perdu.com/size",
             UserRoutes.USERS + "/user@james.org",
             ForwardRoutes.ROOT_PATH + "/alice@james.org/bob@james.org",
+            AliasRoutes.ROOT_PATH + "/bob@james.org/sources/bob-alias@james.org",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/count",
             GlobalQuotaRoutes.QUOTA_ENDPOINT + "/size",
             GlobalQuotaRoutes.QUOTA_ENDPOINT,

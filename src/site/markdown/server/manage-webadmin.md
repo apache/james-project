@@ -37,6 +37,7 @@ as exposed above). To avoid information duplication, this is ommited on endpoint
  - [Correcting ghost mailbox](#Correcting_ghost_mailbox)
  - [Creating address group](#Creating_address_group)
  - [Creating address forwards](#Creating_address_forwards)
+ - [Creating address aliases](#Creating_address_aliases)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_dlp_configuration)
@@ -1298,6 +1299,36 @@ Response codes:
 
  - 204: Success
  - 400: Forward structure or member is not valid
+
+## Creating address aliases
+
+You can use **webadmin** to define aliases for an user.
+
+When a specific email is sent to the alias address, the destination address of the alias will receive it.
+
+Aliases can be defined for existing users.
+
+This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and requires
+the [RecipientRewriteTable mailet](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
+to be configured.
+
+Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
+
+ - [Adding a new alias to an user](#Adding_a_new_alias_to_an_user)
+
+### Adding a new alias to an user
+
+```
+curl -XPUT http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will add alias@domain.com to user@domain.com, creating the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
+ - 400: The alias source exists as an user already
 
 ## Administrating mail repositories
 

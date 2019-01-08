@@ -326,6 +326,7 @@ public class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailRepositories\"]"))
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
+            .body(containsString("\"tags\":[\"Address Aliases\"]"))
             .body(containsString("\"tags\":[\"Address Groups\"]"))
             .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
             .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
