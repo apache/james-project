@@ -86,8 +86,8 @@ interface EventDeadLettersContract {
     MailboxListener.MailboxAdded EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_2);
     MailboxListener.MailboxAdded EVENT_3 = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, MAILBOX_ID, EVENT_ID_3);
 
-    Group GROUP_A = new EventBusContract.GroupA();
-    Group GROUP_B = new EventBusContract.GroupB();
+    Group GROUP_A = new EventBusTestFixture.GroupA();
+    Group GROUP_B = new EventBusTestFixture.GroupB();
     Group NULL_GROUP = null;
     Event NULL_EVENT = null;
     Event.EventId NULL_EVENT_ID = null;
