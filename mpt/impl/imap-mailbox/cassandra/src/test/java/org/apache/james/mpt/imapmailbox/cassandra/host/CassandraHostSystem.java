@@ -90,10 +90,10 @@ public class CassandraHostSystem extends JamesImapHostSystem {
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
             delegatingMailboxListener, annotationManager, storeRightManager, MailboxManagerConfiguration.DEFAULT);
-        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory);
 
         perUserMaxQuotaManager = new CassandraPerUserMaxQuotaManager(
             new CassandraPerUserMaxQuotaDao(session),

@@ -89,7 +89,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
                         mailboxManager, 
                         sm, 
                         new NoQuotaManager(), 
-                        new DefaultUserQuotaRootResolver(mailboxManager, mailboxSessionMapperFactory),
+                        new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory),
                         new DefaultMetricFactory());
         configure(new DefaultImapDecoderFactory().buildImapDecoder(),
                 new DefaultImapEncoderFactory().buildImapEncoder(),

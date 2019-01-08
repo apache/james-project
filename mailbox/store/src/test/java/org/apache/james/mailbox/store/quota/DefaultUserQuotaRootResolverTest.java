@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -34,6 +33,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.junit.Before;
@@ -57,9 +57,8 @@ public class DefaultUserQuotaRootResolverTest {
 
     @Before
     public void setUp() {
-        MailboxManager mailboxManager = mock(MailboxManager.class);
         mockedFactory = mock(MailboxSessionMapperFactory.class);
-        testee = new DefaultUserQuotaRootResolver(mailboxManager, mockedFactory);
+        testee = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mockedFactory);
     }
 
     @Test

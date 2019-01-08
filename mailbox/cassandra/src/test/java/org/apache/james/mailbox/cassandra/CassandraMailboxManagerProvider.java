@@ -80,7 +80,7 @@ public class CassandraMailboxManagerProvider {
             new CassandraGlobalMaxQuotaDao(session));
         CassandraCurrentQuotaManager currentQuotaUpdater = new CassandraCurrentQuotaManager(session);
         StoreQuotaManager storeQuotaManager = new StoreQuotaManager(currentQuotaUpdater, maxQuotaManager);
-        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(manager, mapperFactory);
+        QuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mapperFactory);
 
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaUpdater, quotaRootResolver, delegatingMailboxListener, storeQuotaManager);
         manager.setQuotaManager(storeQuotaManager);

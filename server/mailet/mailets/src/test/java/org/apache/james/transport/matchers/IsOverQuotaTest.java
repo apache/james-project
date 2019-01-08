@@ -56,7 +56,7 @@ public class IsOverQuotaTest {
     public void setUp() throws Exception {
         mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
 
-        quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mailboxManager.getMapperFactory());
+        quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mailboxManager.getMapperFactory());
         maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         CurrentQuotaCalculator quotaCalculator = new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver);
         InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(quotaCalculator, mailboxManager);

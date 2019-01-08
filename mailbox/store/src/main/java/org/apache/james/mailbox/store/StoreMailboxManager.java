@@ -156,6 +156,10 @@ public class StoreMailboxManager implements MailboxManager {
         this.quotaUpdater = quotaUpdater;
     }
 
+    public SessionProvider getSessionProvider() {
+        return sessionProvider;
+    }
+
     /**
      * Init the {@link MailboxManager}
      *
@@ -174,7 +178,7 @@ public class StoreMailboxManager implements MailboxManager {
             quotaManager = new NoQuotaManager();
         }
         if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultUserQuotaRootResolver(this, mailboxSessionMapperFactory);
+            quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
         }
         if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);

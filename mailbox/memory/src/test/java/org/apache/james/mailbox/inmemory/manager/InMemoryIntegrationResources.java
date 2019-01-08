@@ -249,7 +249,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     @Override
     public DefaultUserQuotaRootResolver createQuotaRootResolver(StoreMailboxManager mailboxManager) {
         if (quotaRootResolver == null) {
-            quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mailboxManager.getMapperFactory());
+            quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mailboxManager.getMapperFactory());
         }
         return quotaRootResolver;
     }

@@ -82,7 +82,7 @@ public class CassandraTestSystemFixture {
             delegatingMailboxListener,
             new CassandraMessageId.Factory(),
             quotaManager,
-            new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory));
+            new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mapperFactory));
     }
 
     public static MaxQuotaManager createMaxQuotaManager(CassandraCluster cassandra) {
