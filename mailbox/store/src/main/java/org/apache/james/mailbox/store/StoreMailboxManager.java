@@ -114,6 +114,7 @@ public class StoreMailboxManager implements MailboxManager {
     private final DelegatingMailboxListener delegatingListener;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final Authenticator authenticator;
+    private final Authorizator authorizator;
     private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
     private final MessageParser messageParser;
@@ -121,7 +122,6 @@ public class StoreMailboxManager implements MailboxManager {
     private final MailboxSessionIdGenerator idGenerator;
     protected final MailboxManagerConfiguration configuration;
 
-    private Authorizator authorizator;
     private MessageSearchIndex index;
     private QuotaManager quotaManager;
     private QuotaRootResolver quotaRootResolver;
