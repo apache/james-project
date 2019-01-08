@@ -42,6 +42,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
@@ -102,9 +103,9 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
             StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+            SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
             mailboxManager = new InMemoryMailboxManager(mapperFactory,
-                authenticator,
-                authorizator,
+                sessionProvider,
                 locker,
                 new MessageParser(),
                 messageIdFactory,

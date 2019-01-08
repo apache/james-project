@@ -45,6 +45,7 @@ import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaDAO;
 import org.apache.james.mailbox.jpa.quota.JPAPerUserMaxQuotaManager;
 import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
@@ -98,7 +99,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         StoreRightManager storeRightManager = new StoreRightManager(mapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mapperFactory, storeRightManager);
-        mailboxManager = new OpenJPAMailboxManager(mapperFactory, authenticator, authorizator,
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider,
             messageParser, new DefaultMessageId.Factory(), delegatingListener, annotationManager, storeRightManager);
 
         DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager, mapperFactory);

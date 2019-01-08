@@ -29,9 +29,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
@@ -59,14 +58,13 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     private final CassandraMailboxSessionMapperFactory mapperFactory;
 
     @Inject
-    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, Authenticator authenticator, Authorizator authorizator,
+    public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, SessionProvider sessionProvider,
                                    MailboxPathLocker locker, MessageParser messageParser,
                                    MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
                                    MailboxManagerConfiguration configuration) {
         super(mapperFactory,
-            authenticator,
-            authorizator,
+            sessionProvider,
             locker,
             messageParser,
             messageIdFactory,

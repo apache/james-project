@@ -31,6 +31,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -59,9 +60,9 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, fakeAuthorizator);
         InMemoryMailboxManager mailboxManager = new InMemoryMailboxManager(mapperFactory,
-            fakeAuthenticator,
-            fakeAuthorizator,
+            sessionProvider,
             locker,
             new MessageParser(),
             messageIdFactory,

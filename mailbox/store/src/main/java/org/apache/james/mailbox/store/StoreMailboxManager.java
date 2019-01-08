@@ -38,17 +38,12 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSession.SessionType;
-import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
-import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -113,13 +108,11 @@ public class StoreMailboxManager implements MailboxManager {
     private final StoreRightManager storeRightManager;
     private final DelegatingMailboxListener delegatingListener;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final Authenticator authenticator;
-    private final Authorizator authorizator;
     private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
-    private final MailboxSessionIdGenerator idGenerator;
+    private final SessionProvider sessionProvider;
     protected final MailboxManagerConfiguration configuration;
 
     private MessageSearchIndex index;
@@ -128,7 +121,7 @@ public class StoreMailboxManager implements MailboxManager {
     private QuotaUpdater quotaUpdater;
 
     @Inject
-    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
+    public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
                                DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager,
@@ -137,15 +130,13 @@ public class StoreMailboxManager implements MailboxManager {
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
         this.annotationManager = annotationManager;
-        this.authenticator = authenticator;
-        this.authorizator = authorizator;
+        this.sessionProvider = sessionProvider;
         this.locker = locker;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.storeRightManager = storeRightManager;
-        this.idGenerator = new RandomMailboxSessionIdGenerator();
         this.configuration = configuration;
     }
 
@@ -279,84 +270,30 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public MailboxSession createSystemSession(String userName) {
-        return createSession(userName, SessionType.System);
-    }
-
-    /**
-     * Create Session
-     *
-     * @param userName
-     * @return session
-     */
-
-    protected MailboxSession createSession(String userName, SessionType type) {
-        return new MailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
-    }
-
-    private MailboxSession.SessionId newSessionId() {
-        return MailboxSession.SessionId.of(randomId());
-    }
-
-    /**
-     * Generate and return the next id to use
-     *
-     * @return id
-     */
-    protected long randomId() {
-        return idGenerator.nextId();
+        return sessionProvider.createSystemSession(userName);
     }
 
     @Override
     public char getDelimiter() {
-        return MailboxConstants.DEFAULT_DELIMITER;
-    }
-
-    /**
-     * Log in the user with the given userid and password
-     *
-     * @param userid the username
-     * @param passwd the password
-     * @return success true if login success false otherwise
-     */
-    private boolean isValidLogin(String userid, String passwd) throws MailboxException {
-        return authenticator.isAuthentic(userid, passwd);
+        return sessionProvider.getDelimiter();
     }
 
     @Override
     public MailboxSession login(String userid, String passwd) throws MailboxException {
-        if (isValidLogin(userid, passwd)) {
-            return createSession(userid, SessionType.User);
-        } else {
-            throw new BadCredentialsException();
-        }
+        return sessionProvider.login(userid, passwd);
     }
 
     @Override
     public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId) throws MailboxException {
-        if (! isValidLogin(adminUserid, passwd)) {
-            throw new BadCredentialsException();
-        }
-        Authorizator.AuthorizationState authorizationState = authorizator.canLoginAsOtherUser(adminUserid, otherUserId);
-        switch (authorizationState) {
-            case ALLOWED:
-                return createSystemSession(otherUserId);
-            case NOT_ADMIN:
-                throw new NotAdminException();
-            case UNKNOWN_USER:
-                throw new UserDoesNotExistException(otherUserId);
-            default:
-                throw new RuntimeException("Unknown AuthorizationState " + authorizationState);
-        }
+        return sessionProvider.loginAsOtherUser(adminUserid, passwd, otherUserId);
     }
 
     /**
      * Close the {@link MailboxSession} if not null
      */
     @Override
-    public void logout(MailboxSession session, boolean force) throws MailboxException {
-        if (session != null) {
-            session.close();
-        }
+    public void logout(MailboxSession session, boolean force) {
+        sessionProvider.logout(session);
     }
 
     /**

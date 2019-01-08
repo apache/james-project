@@ -30,6 +30,8 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -55,10 +57,11 @@ public class MaildirMailboxManagerProvider {
 
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
+        SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
-        StoreMailboxManager manager = new StoreMailboxManager(mf, noAuthenticator, noAuthorizator, new JVMMailboxPathLocker(),
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager);
+        StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
         manager.init();
 
         return manager;

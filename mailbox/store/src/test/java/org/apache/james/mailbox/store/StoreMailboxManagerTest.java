@@ -81,9 +81,10 @@ public class StoreMailboxManagerTest {
                                                                     new SimpleGroupMembershipResolver(), delegatingListener);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
-        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER),
+        SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));
+        storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-                annotationManager, delegatingListener, storeRightManager);
+                annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
         storeMailboxManager.init();
     }
 

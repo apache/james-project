@@ -36,6 +36,8 @@ import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -77,8 +79,9 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
-        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, authenticator, authorizator, locker,
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager);
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+        mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, sessionProvider, locker,
+            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, MailboxManagerConfiguration.DEFAULT);
         mailboxManager.init();
 
         ImapProcessor defaultImapProcessorFactory =

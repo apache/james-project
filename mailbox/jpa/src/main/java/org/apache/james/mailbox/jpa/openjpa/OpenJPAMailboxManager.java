@@ -26,9 +26,8 @@ import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.Authenticator;
-import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
@@ -44,14 +43,13 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
 
     @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
-                                 Authenticator authenticator,
-                                 Authorizator authorizator,
+                                 SessionProvider sessionProvider,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
                                  DelegatingMailboxListener delegatingMailboxListener,
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager) {
-        super(mapperFactory, authenticator, authorizator, new JVMMailboxPathLocker(), messageParser,
+        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
             messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager);
     }
 

@@ -43,6 +43,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.NoMailboxPathLocker;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -145,10 +146,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
             .apply(storeRightManager, mailboxSessionMapperFactory);
 
+        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
+
         InMemoryMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
-            fakeAuthenticator,
-            FakeAuthorizator.defaultReject(),
+            sessionProvider,
             new JVMMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
@@ -179,10 +181,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
 
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+
         StoreMailboxManager manager = new InMemoryMailboxManager(
             mailboxSessionMapperFactory,
-            authenticator,
-            authorizator,
+            sessionProvider,
             new NoMailboxPathLocker(),
             new MessageParser(),
             new InMemoryMessageId.Factory(),
