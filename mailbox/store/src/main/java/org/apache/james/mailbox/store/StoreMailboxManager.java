@@ -108,39 +108,26 @@ public class StoreMailboxManager implements MailboxManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMailboxManager.class);
     public static final char SQL_WILDCARD_CHAR = '%';
     public static final EnumSet<MessageCapabilities> DEFAULT_NO_MESSAGE_CAPABILITIES = EnumSet.noneOf(MessageCapabilities.class);
-
-    private final DelegatingMailboxListener delegatingListener;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-
-    private final Authenticator authenticator;
-    private final MailboxAnnotationManager annotationManager;
-
-    private Authorizator authorizator;
-
-    private final StoreRightManager storeRightManager;
-
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private MessageBatcher copyBatcher;
-
-    private MessageBatcher moveBatcher;
-
+    private final StoreRightManager storeRightManager;
+    private final DelegatingMailboxListener delegatingListener;
+    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
+    private final Authenticator authenticator;
+    private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
-
-    private MessageSearchIndex index;
-
-    private MailboxSessionIdGenerator idGenerator;
-
-    private QuotaManager quotaManager;
-
-    private QuotaRootResolver quotaRootResolver;
-
-    private QuotaUpdater quotaUpdater;
-
-    private BatchSizes batchSizes = BatchSizes.defaultValues();
-
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
+
+    private Authorizator authorizator;
+    private MessageBatcher copyBatcher;
+    private MessageBatcher moveBatcher;
+    private MessageSearchIndex index;
+    private MailboxSessionIdGenerator idGenerator;
+    private QuotaManager quotaManager;
+    private QuotaRootResolver quotaRootResolver;
+    private QuotaUpdater quotaUpdater;
+    private BatchSizes batchSizes = BatchSizes.defaultValues();
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, Authenticator authenticator, Authorizator authorizator,
