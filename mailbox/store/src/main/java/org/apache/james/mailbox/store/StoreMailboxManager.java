@@ -174,7 +174,7 @@ public class StoreMailboxManager implements MailboxManager {
             this.addGlobalListener((MailboxListener) quotaUpdater, session);
         }
         if (hasCapability(MailboxCapabilities.Annotation)) {
-            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, this), session);
+            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), session);
         }
     }
 

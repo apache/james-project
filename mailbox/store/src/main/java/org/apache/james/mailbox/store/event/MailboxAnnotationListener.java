@@ -24,12 +24,12 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,12 +37,12 @@ import org.slf4j.LoggerFactory;
 public class MailboxAnnotationListener implements MailboxListener {
     private static final Logger logger = LoggerFactory.getLogger(MailboxAnnotationListener.class);
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final MailboxManager mailboxManager;
+    private final SessionProvider sessionProvider;
 
     @Inject
-    public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory, MailboxManager mailboxManager) {
+    public MailboxAnnotationListener(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider) {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
-        this.mailboxManager = mailboxManager;
+        this.sessionProvider = sessionProvider;
     }
     
     @Override
@@ -54,7 +54,7 @@ public class MailboxAnnotationListener implements MailboxListener {
     public void event(Event event) {
         if (event instanceof MailboxDeletion) {
             try {
-                MailboxSession mailboxSession = mailboxManager.createSystemSession(event.getUser().asString());
+                MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUser().asString());
                 AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);
                 MailboxId mailboxId = ((MailboxDeletion) event).getMailboxId();
 

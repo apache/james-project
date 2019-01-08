@@ -32,7 +32,6 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -42,6 +41,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +63,7 @@ public class MailboxAnnotationListenerTest {
     public static final int UID_VALIDITY = 145;
     public static final TestId MAILBOX_ID = TestId.of(45);
 
-    @Mock private MailboxManager mailboxManager;
+    @Mock private SessionProvider sessionProvider;
     @Mock private MailboxSessionMapperFactory mailboxSessionMapperFactory;
     @Mock private AnnotationMapper annotationMapper;
     @Mock private MailboxId mailboxId;
@@ -76,7 +76,7 @@ public class MailboxAnnotationListenerTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         mailboxSession = MailboxSessionUtil.create("test");
-        listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, mailboxManager);
+        listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider);
 
         deleteEvent = EventFactory.mailboxDeleted()
             .randomEventId()
@@ -88,7 +88,7 @@ public class MailboxAnnotationListenerTest {
             .quotaSize(QuotaSize.size(456))
             .build();
 
-        when(mailboxManager.createSystemSession(deleteEvent.getUser().asString()))
+        when(sessionProvider.createSystemSession(deleteEvent.getUser().asString()))
             .thenReturn(mailboxSession);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(mailboxSession))).thenReturn(annotationMapper);
     }
