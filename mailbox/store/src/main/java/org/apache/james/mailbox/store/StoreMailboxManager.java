@@ -118,12 +118,12 @@ public class StoreMailboxManager implements MailboxManager {
     private final MailboxPathLocker locker;
     private final MessageParser messageParser;
     private final Factory messageIdFactory;
+    private final MailboxSessionIdGenerator idGenerator;
 
     private Authorizator authorizator;
     private MessageBatcher copyBatcher;
     private MessageBatcher moveBatcher;
     private MessageSearchIndex index;
-    private MailboxSessionIdGenerator idGenerator;
     private QuotaManager quotaManager;
     private QuotaRootResolver quotaRootResolver;
     private QuotaUpdater quotaUpdater;
@@ -146,14 +146,11 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.storeRightManager = storeRightManager;
+        this.idGenerator = new RandomMailboxSessionIdGenerator();
     }
 
     public Factory getMessageIdFactory() {
         return messageIdFactory;
-    }
-    
-    public void setMailboxSessionIdGenerator(MailboxSessionIdGenerator idGenerator) {
-        this.idGenerator = idGenerator;
     }
 
     public void setQuotaManager(QuotaManager quotaManager) {
@@ -199,9 +196,6 @@ public class StoreMailboxManager implements MailboxManager {
      */
     @PostConstruct
     public void init() throws MailboxException {
-        if (idGenerator == null) {
-            idGenerator = new RandomMailboxSessionIdGenerator();
-        }
         MailboxSession session = createSystemSession("storeMailboxManager");
         if (index == null) {
             index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
