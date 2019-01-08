@@ -81,7 +81,7 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
         final AtomicBoolean fail = new AtomicBoolean(false);
         final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
 
-        // fire of 1000 append operations
+        // fire of append operations
         for (int i = 0; i < APPEND_OPERATIONS; i++) {
             pool.execute(() -> {
                 if (fail.get()) {

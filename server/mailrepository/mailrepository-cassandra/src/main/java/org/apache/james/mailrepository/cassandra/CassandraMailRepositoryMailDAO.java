@@ -84,6 +84,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryMailDAO implements CassandraMailRepositoryMailDaoAPI {
 
@@ -161,8 +162,8 @@ public class CassandraMailRepositoryMailDAO implements CassandraMailRepositoryMa
     }
 
     @Override
-    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
-        return executor.executeVoid(deleteMail.bind()
+    public Mono<Void> remove(MailRepositoryUrl url, MailKey key) {
+        return executor.executeVoidReactor(deleteMail.bind()
             .setString(REPOSITORY_NAME, url.asString())
             .setString(MAIL_KEY, key.asString()));
     }

@@ -22,7 +22,6 @@ package org.apache.james.mailrepository.cassandra;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -33,10 +32,11 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.util.CompletableFutureUtil;
-import org.apache.james.util.FluentFutureStream;
 import org.apache.mailet.Mail;
 
 import com.github.fge.lambdas.Throwing;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepository implements MailRepository {
 
@@ -60,28 +60,28 @@ public class CassandraMailRepository implements MailRepository {
     public MailKey store(Mail mail) throws MessagingException {
         MailKey mailKey = MailKey.forMail(mail);
 
-        mimeMessageStore.save(mail.getMessage())
+        Mono.fromFuture(mimeMessageStore.save(mail.getMessage())
             .thenCompose(Throwing.function(parts -> mailDAO.store(url, mail,
                 parts.getHeaderBlobId(),
-                parts.getBodyBlobId())))
-            .thenCompose(any -> keysDAO.store(url, mailKey))
-            .thenCompose(this::increaseSizeIfStored)
-            .join();
+                parts.getBodyBlobId()))))
+            .then(keysDAO.store(url, mailKey))
+            .flatMap(this::increaseSizeIfStored)
+            .block();
 
         return mailKey;
     }
 
-    private CompletionStage<Void> increaseSizeIfStored(Boolean isStored) {
+    private Mono<Void> increaseSizeIfStored(Boolean isStored) {
         if (isStored) {
             return countDAO.increment(url);
         }
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
     public Iterator<MailKey> list() {
         return keysDAO.list(url)
-            .join()
+            .toIterable()
             .iterator();
     }
 
@@ -108,33 +108,34 @@ public class CassandraMailRepository implements MailRepository {
 
     @Override
     public void remove(Mail mail) {
-        removeAsync(MailKey.forMail(mail)).join();
+        removeAsync(MailKey.forMail(mail)).block();
     }
 
     @Override
     public void remove(Collection<Mail> toRemove) {
-        FluentFutureStream.of(toRemove.stream()
+        Flux.fromIterable(toRemove)
             .map(MailKey::forMail)
-            .map(this::removeAsync))
-            .join();
+            .flatMap(this::removeAsync)
+            .then()
+            .block();
     }
 
     @Override
     public void remove(MailKey key) {
-        removeAsync(key).join();
+        removeAsync(key).block();
     }
 
-    private CompletableFuture<Void> removeAsync(MailKey key) {
+    private Mono<Void> removeAsync(MailKey key) {
         return keysDAO.remove(url, key)
-            .thenCompose(this::decreaseSizeIfDeleted)
-            .thenCompose(any -> mailDAO.remove(url, key));
+            .flatMap(this::decreaseSizeIfDeleted)
+            .then(mailDAO.remove(url, key));
     }
 
-    private CompletionStage<Void> decreaseSizeIfDeleted(Boolean isDeleted) {
+    private Mono<Void> decreaseSizeIfDeleted(Boolean isDeleted) {
         if (isDeleted) {
             return countDAO.decrement(url);
         }
-        return CompletableFuture.completedFuture(null);
+        return Mono.empty();
     }
 
     @Override
@@ -145,9 +146,9 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public void removeAll() {
         keysDAO.list(url)
-            .thenCompose(stream -> FluentFutureStream.of(stream.map(this::removeAsync))
-                .completableFuture())
-            .join();
+            .flatMap(this::removeAsync)
+            .then()
+            .block();
     }
 
     @Override

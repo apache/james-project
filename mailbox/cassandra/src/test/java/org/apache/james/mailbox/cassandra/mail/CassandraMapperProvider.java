@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import java.util.List;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -55,7 +56,7 @@ public class CassandraMapperProvider implements MapperProvider {
     public CassandraMapperProvider(CassandraCluster cassandra) {
         this.cassandra = cassandra;
         messageUidProvider = new MessageUidProvider();
-        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf());
+        cassandraModSeqProvider = new CassandraModSeqProvider(this.cassandra.getConf(), CassandraConfiguration.DEFAULT_CONFIGURATION);
         mapperFactory = createMapperFactory();
     }
 

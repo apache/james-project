@@ -41,6 +41,7 @@ import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraSieveQuotaDAO {
 
@@ -107,8 +108,8 @@ public class CassandraSieveQuotaDAO {
                 .orElse(0L));
     }
 
-    public CompletableFuture<Void> updateSpaceUsed(User user, long spaceUsed) {
-        return cassandraAsyncExecutor.executeVoid(
+    public Mono<Void> updateSpaceUsed(User user, long spaceUsed) {
+        return cassandraAsyncExecutor.executeVoidReactor(
             updateSpaceUsedStatement.bind()
                 .setLong(CassandraSieveSpaceTable.SPACE_USED, spaceUsed)
                 .setString(CassandraSieveSpaceTable.USER_NAME, user.asString()));

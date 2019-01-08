@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
@@ -64,6 +63,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Bytes;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import reactor.core.publisher.Flux;
 
 class CassandraMessageDAOTest {
     private static final int BODY_START = 16;
@@ -186,8 +186,8 @@ class CassandraMessageDAOTest {
             .build();
     }
 
-    private MessageWithoutAttachment toMessage(CompletableFuture<Stream<CassandraMessageDAO.MessageResult>> readOptional) throws InterruptedException, java.util.concurrent.ExecutionException {
-        return readOptional.join()
+    private MessageWithoutAttachment toMessage(Flux<CassandraMessageDAO.MessageResult> read) throws InterruptedException, java.util.concurrent.ExecutionException {
+        return read.toStream()
             .map(CassandraMessageDAO.MessageResult::message)
             .map(Pair::getLeft)
             .findAny()

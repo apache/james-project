@@ -32,6 +32,8 @@ import org.apache.james.util.OptionalUtils;
 import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class MergingCassandraMailRepositoryMailDao implements CassandraMailRepositoryMailDaoAPI {
 
@@ -51,8 +53,8 @@ public class MergingCassandraMailRepositoryMailDao implements CassandraMailRepos
     }
 
     @Override
-    public CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key) {
-        return CompletableFuture.allOf(v1.remove(url, key), v2.remove(url, key));
+    public Mono<Void> remove(MailRepositoryUrl url, MailKey key) {
+        return Flux.merge(v1.remove(url, key), v2.remove(url, key)).then();
     }
 
     @Override

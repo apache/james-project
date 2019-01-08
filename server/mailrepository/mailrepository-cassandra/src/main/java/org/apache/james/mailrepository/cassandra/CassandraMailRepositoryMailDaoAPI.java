@@ -31,10 +31,12 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 
+import reactor.core.publisher.Mono;
+
 public interface CassandraMailRepositoryMailDaoAPI {
     CompletableFuture<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) throws MessagingException;
 
-    CompletableFuture<Void> remove(MailRepositoryUrl url, MailKey key);
+    Mono<Void> remove(MailRepositoryUrl url, MailKey key);
 
     CompletableFuture<Optional<MailDTO>> read(MailRepositoryUrl url, MailKey key);
 

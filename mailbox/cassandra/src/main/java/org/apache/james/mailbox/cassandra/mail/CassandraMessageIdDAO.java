@@ -67,6 +67,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import reactor.core.publisher.Mono;
 
 public class CassandraMessageIdDAO {
 
@@ -169,8 +170,8 @@ public class CassandraMessageIdDAO {
                 .and(lte(IMAP_UID, bindMarker(IMAP_UID_LTE))));
     }
 
-    public CompletableFuture<Void> delete(CassandraId mailboxId, MessageUid uid) {
-        return cassandraAsyncExecutor.executeVoid(delete.bind()
+    public Mono<Void> delete(CassandraId mailboxId, MessageUid uid) {
+        return cassandraAsyncExecutor.executeVoidReactor(delete.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid())
                 .setLong(IMAP_UID, uid.asLong()));
     }
@@ -193,10 +194,10 @@ public class CassandraMessageIdDAO {
                 .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags())));
     }
 
-    public CompletableFuture<Void> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
+    public Mono<Void> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
-        return cassandraAsyncExecutor.executeVoid(update.bind()
+        return cassandraAsyncExecutor.executeVoidReactor(update.bind()
                 .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))

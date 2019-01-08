@@ -50,7 +50,7 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void getCountShouldReturnOneWhenIncrementedOneTime() {
-        testee.increment(URL).join();
+        testee.increment(URL).block();
 
         assertThat(testee.getCount(URL).join())
             .isEqualTo(1L);
@@ -58,7 +58,7 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void incrementShouldNotAffectOtherUrls() {
-        testee.increment(URL).join();
+        testee.increment(URL).block();
 
         assertThat(testee.getCount(URL2).join())
             .isEqualTo(0L);
@@ -66,8 +66,8 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void incrementCanBeAppliedSeveralTime() {
-        testee.increment(URL).join();
-        testee.increment(URL).join();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
 
         assertThat(testee.getCount(URL).join())
             .isEqualTo(2L);
@@ -75,11 +75,11 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void decrementShouldDecreaseCount() {
-        testee.increment(URL).join();
-        testee.increment(URL).join();
-        testee.increment(URL).join();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
+        testee.increment(URL).block();
 
-        testee.decrement(URL).join();
+        testee.decrement(URL).block();
 
         assertThat(testee.getCount(URL).join())
             .isEqualTo(2L);
@@ -87,7 +87,7 @@ class CassandraMailRepositoryCountDAOTest {
 
     @Test
     void decrementCanLeadToNegativeCount() {
-        testee.decrement(URL).join();
+        testee.decrement(URL).block();
 
         assertThat(testee.getCount(URL).join())
             .isEqualTo(-1L);

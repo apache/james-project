@@ -31,10 +31,6 @@ import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Tab
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table.TABLE_NAME;
 import static org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table.USER;
 
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
-
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
@@ -42,11 +38,15 @@ import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.GhostMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.util.FunctionalUtils;
+import org.apache.james.util.ReactorUtils;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
 
@@ -101,26 +101,26 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
     }
 
     @Override
-    public CompletableFuture<Optional<CassandraIdAndPath>> retrieveId(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeSingleRow(
+    public Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath) {
+        return cassandraAsyncExecutor.executeSingleRowReactor(
             select.bind()
                 .setString(NAMESPACE, mailboxPath.getNamespace())
                 .setString(USER, sanitizeUser(mailboxPath.getUser()))
                 .setString(MAILBOX_NAME, mailboxPath.getName()))
-            .thenApply(rowOptional ->
-                rowOptional.map(this::fromRowToCassandraIdAndPath))
-            .thenApply(value -> logGhostMailbox(mailboxPath, value));
+            .map(this::fromRowToCassandraIdAndPath)
+            .map(FunctionalUtils.toFunction(this::logGhostMailboxSuccess))
+            .switchIfEmpty(ReactorUtils.executeAndEmpty(() -> logGhostMailboxFailure(mailboxPath)));
     }
 
     @Override
-    public CompletableFuture<Stream<CassandraIdAndPath>> listUserMailboxes(String namespace, String user) {
-        return cassandraAsyncExecutor.execute(
+    public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user) {
+        return cassandraAsyncExecutor.executeReactor(
             selectAll.bind()
                 .setString(NAMESPACE, namespace)
                 .setString(USER, sanitizeUser(user)))
-            .thenApply(resultSet -> cassandraUtils.convertToStream(resultSet)
+            .flatMapMany(resultSet -> cassandraUtils.convertToFlux(resultSet)
                 .map(this::fromRowToCassandraIdAndPath)
-                .peek(this::logReadSuccess));
+                .map(FunctionalUtils.toFunction(this::logReadSuccess)));
     }
 
     /**
@@ -130,17 +130,16 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
      * reads and write operations are also added in order to allow audit in order to know if the mailbox existed.
      */
     @Override
-    public Optional<CassandraIdAndPath> logGhostMailbox(MailboxPath mailboxPath, Optional<CassandraIdAndPath> value) {
-        if (value.isPresent()) {
-            CassandraIdAndPath cassandraIdAndPath = value.get();
-            logReadSuccess(cassandraIdAndPath);
-        } else {
-            GhostMailbox.logger()
+    public void logGhostMailboxSuccess(CassandraIdAndPath value) {
+        logReadSuccess(value);
+    }
+
+    @Override
+    public void logGhostMailboxFailure(MailboxPath mailboxPath) {
+        GhostMailbox.logger()
                 .addField(GhostMailbox.MAILBOX_NAME, mailboxPath)
                 .addField(TYPE, "readMiss")
                 .log(logger -> logger.info("Read mailbox missed"));
-        }
-        return value;
     }
 
     /**
@@ -166,7 +165,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
     }
 
     @Override
-    public CompletableFuture<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId) {
+    public Mono<Boolean> save(MailboxPath mailboxPath, CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeReturnApplied(insert.bind()
             .setString(NAMESPACE, mailboxPath.getNamespace())
             .setString(USER, sanitizeUser(mailboxPath.getUser()))
@@ -175,8 +174,8 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
     }
 
     @Override
-    public CompletableFuture<Void> delete(MailboxPath mailboxPath) {
-        return cassandraAsyncExecutor.executeVoid(delete.bind()
+    public Mono<Void> delete(MailboxPath mailboxPath) {
+        return cassandraAsyncExecutor.executeVoidReactor(delete.bind()
             .setString(NAMESPACE, mailboxPath.getNamespace())
             .setString(USER, sanitizeUser(mailboxPath.getUser()))
             .setString(MAILBOX_NAME, mailboxPath.getName()));

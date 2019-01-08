@@ -116,7 +116,7 @@ class CassandraSieveQuotaDAOTest {
     void spaceUsedByShouldReturnStoredValue() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(spaceUsed);
     }
@@ -125,8 +125,8 @@ class CassandraSieveQuotaDAOTest {
     void updateSpaceUsedShouldBeAdditive() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(2 * spaceUsed);
     }
@@ -135,8 +135,8 @@ class CassandraSieveQuotaDAOTest {
     void updateSpaceUsedShouldWorkWithNegativeValues() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).join();
-        sieveQuotaDAO.updateSpaceUsed(USER, -1 * spaceUsed).join();
+        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USER, -1 * spaceUsed).block();
 
         assertThat(sieveQuotaDAO.spaceUsedBy(USER).join()).isEqualTo(0L);
     }

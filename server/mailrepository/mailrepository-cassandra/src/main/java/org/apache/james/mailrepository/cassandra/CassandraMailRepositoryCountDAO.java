@@ -40,6 +40,7 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import reactor.core.publisher.Mono;
 
 public class CassandraMailRepositoryCountDAO {
 
@@ -75,13 +76,13 @@ public class CassandraMailRepositoryCountDAO {
             .where(eq(REPOSITORY_NAME, bindMarker(REPOSITORY_NAME))));
     }
 
-    public CompletableFuture<Void> increment(MailRepositoryUrl url) {
-        return executor.executeVoid(increment.bind()
+    public Mono<Void> increment(MailRepositoryUrl url) {
+        return executor.executeVoidReactor(increment.bind()
             .setString(REPOSITORY_NAME, url.asString()));
     }
 
-    public CompletableFuture<Void> decrement(MailRepositoryUrl url) {
-        return executor.executeVoid(decrement.bind()
+    public Mono<Void> decrement(MailRepositoryUrl url) {
+        return executor.executeVoidReactor(decrement.bind()
             .setString(REPOSITORY_NAME, url.asString()));
     }
 

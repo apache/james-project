@@ -55,7 +55,7 @@ class CassandraAttachmentDAOTest {
 
     @Test
     void getAttachmentShouldReturnEmptyWhenAbsent() {
-        Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<Attachment> attachment = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(attachment).isEmpty();
     }
@@ -98,7 +98,7 @@ class CassandraAttachmentDAOTest {
             .build();
         testee.storeAttachment(attachment).join();
 
-        Optional<Attachment> actual = testee.getAttachment(ATTACHMENT_ID).join();
+        Optional<Attachment> actual = testee.getAttachment(ATTACHMENT_ID).blockOptional();
 
         assertThat(actual).contains(attachment);
     }
@@ -114,7 +114,7 @@ class CassandraAttachmentDAOTest {
 
         testee.deleteAttachment(attachment.getAttachmentId()).join();
 
-        assertThat(testee.getAttachment(attachment.getAttachmentId()).join())
+        assertThat(testee.getAttachment(attachment.getAttachmentId()).blockOptional())
             .isEmpty();
     }
 }

@@ -26,11 +26,16 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
@@ -149,10 +154,20 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         assertThat(messages.hasNext()).isTrue();
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(2);
-        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
-            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_014.jpg"));
-        assertThat(attachmentMapper.getAttachment(attachments.get(1).getAttachmentId()).getStream())
-            .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/4037_015.jpg"));
+        ImmutableList<byte[]> attachmentContents = attachments
+            .stream()
+            .map(MessageAttachment::getAttachmentId)
+            .map(Throwing.function(attachmentMapper::getAttachment))
+            .map(Attachment::getBytes)
+            .collect(ImmutableList.toImmutableList());
+
+        ImmutableList<byte[]> files = Stream.of("eml/4037_014.jpg", "eml/4037_015.jpg")
+                .map(ClassLoader::getSystemResourceAsStream)
+                .map(Throwing.function(IOUtils::toByteArray))
+                .collect(ImmutableList.toImmutableList());
+
+        assertThat(attachmentContents)
+            .containsExactlyInAnyOrder(files.get(0), files.get(1));
     }
 
     @Test

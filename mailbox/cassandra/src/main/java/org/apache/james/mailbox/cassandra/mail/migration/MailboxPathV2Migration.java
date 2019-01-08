@@ -80,9 +80,9 @@ public class MailboxPathV2Migration implements Migration {
 
     public Result migrate(CassandraIdAndPath idAndPath) {
         try {
-            daoV2.save(idAndPath.getMailboxPath(), idAndPath.getCassandraId()).join();
+            daoV2.save(idAndPath.getMailboxPath(), idAndPath.getCassandraId()).block();
 
-            daoV1.delete(idAndPath.getMailboxPath()).join();
+            daoV1.delete(idAndPath.getMailboxPath()).block();
             return Result.COMPLETED;
         } catch (Exception e) {
             LOGGER.error("Error while performing migration for path {}", idAndPath.getMailboxPath(), e);

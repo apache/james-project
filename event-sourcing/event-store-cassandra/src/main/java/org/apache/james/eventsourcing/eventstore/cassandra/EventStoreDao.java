@@ -82,7 +82,7 @@ public class EventStoreDao {
     public Mono<Boolean> appendAll(List<Event> events) {
         BatchStatement batch = new BatchStatement();
         events.forEach(event -> batch.add(insertEvent(event)));
-        return cassandraAsyncExecutor.executeReturnAppliedReactor(batch);
+        return cassandraAsyncExecutor.executeReturnApplied(batch);
     }
 
     private BoundStatement insertEvent(Event event) {
