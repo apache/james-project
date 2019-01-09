@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -62,8 +63,8 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     private final MailboxSessionMapperFactory factory;
     
     
-    public LazyMessageSearchIndex(ListeningMessageSearchIndex index, MailboxSessionMapperFactory factory, MailboxManager mailboxManager) {
-        super(factory, mailboxManager);
+    public LazyMessageSearchIndex(ListeningMessageSearchIndex index, MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
+        super(factory, sessionProvider);
         this.index = index;
         this.factory = factory;
     }

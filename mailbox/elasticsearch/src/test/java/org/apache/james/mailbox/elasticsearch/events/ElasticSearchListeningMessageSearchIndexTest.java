@@ -34,7 +34,6 @@ import javax.mail.Flags;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.UpdatedRepresentation;
 import org.apache.james.core.User;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -43,6 +42,7 @@ import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.elasticsearch.ElasticsearchException;
@@ -77,12 +77,12 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         MailboxSessionMapperFactory mapperFactory = mock(MailboxSessionMapperFactory.class);
         messageToElasticSearchJson = mock(MessageToElasticSearchJson.class);
         ElasticSearchSearcher elasticSearchSearcher = mock(ElasticSearchSearcher.class);
-        MailboxManager mockMailboxManager = mock(MailboxManager.class);
+        SessionProvider mockSessionProvider = mock(SessionProvider.class);
 
         elasticSearchIndexer = mock(ElasticSearchIndexer.class);
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
-            messageToElasticSearchJson, mockMailboxManager);
+            messageToElasticSearchJson, mockSessionProvider);
         session = MailboxSessionUtil.create(USERNAME);
         users = ImmutableList.of(User.fromUsername(USERNAME));
     }

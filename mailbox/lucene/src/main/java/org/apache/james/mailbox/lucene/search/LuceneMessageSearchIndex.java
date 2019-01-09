@@ -67,6 +67,7 @@ import org.apache.james.mailbox.model.SearchQuery.UidCriterion;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -367,8 +368,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         MailboxId.Factory mailboxIdFactory,
         Directory directory,
         MessageId.Factory messageIdFactory,
-        MailboxManager mailboxManager) throws IOException {
-        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, mailboxManager);
+        SessionProvider sessionProvider) throws IOException {
+        this(factory, mailboxIdFactory, directory, false, true, messageIdFactory, sessionProvider);
     }
 
     public LuceneMessageSearchIndex(
@@ -378,8 +379,8 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             boolean dropIndexOnStart,
             boolean lenient,
             MessageId.Factory messageIdFactory,
-            MailboxManager mailboxManager) throws IOException {
-        super(factory, mailboxManager);
+            SessionProvider sessionProvider) throws IOException {
+        super(factory, sessionProvider);
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.directory = directory;

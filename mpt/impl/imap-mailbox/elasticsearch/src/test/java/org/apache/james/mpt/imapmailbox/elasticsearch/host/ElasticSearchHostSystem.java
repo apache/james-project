@@ -52,6 +52,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -102,7 +103,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         ElasticSearchListeningMessageSearchIndex searchIndex = new ElasticSearchListeningMessageSearchIndex(
-            mailboxManager.getMapperFactory(),
+            mailboxSessionMapperFactory,
             new ElasticSearchIndexer(client,
                 Executors.newSingleThreadExecutor(threadFactory),
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS,
@@ -113,7 +114,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                 new InMemoryId.Factory(), messageIdFactory,
                 MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, MailboxElasticSearchConstants.MESSAGE_TYPE),
             new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.systemDefault(), IndexAttachments.YES),
-            mailboxManager);
+            new SessionProvider(authenticator, authorizator));
 
         mailboxManager.setMessageSearchIndex(searchIndex);
         mailboxManager.addGlobalListener(searchIndex, MailboxSessionUtil.create("admin"));

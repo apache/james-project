@@ -24,6 +24,9 @@ import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.FakeAuthenticator;
+import org.apache.james.mailbox.store.FakeAuthorizator;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
@@ -52,7 +55,7 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         LuceneMessageSearchIndex luceneMessageSearchIndex = new LuceneMessageSearchIndex(
             storeMailboxManager.getMapperFactory(), new InMemoryId.Factory(), new RAMDirectory(),
             storeMailboxManager.getMessageIdFactory(),
-            storeMailboxManager);
+            new SessionProvider(new FakeAuthenticator(), FakeAuthorizator.defaultReject()));
         storeMailboxManager.setMessageSearchIndex(luceneMessageSearchIndex);
         storeMailboxManager.addGlobalListener(luceneMessageSearchIndex, MailboxSessionUtil.create("admin"));
         this.messageSearchIndex = luceneMessageSearchIndex;

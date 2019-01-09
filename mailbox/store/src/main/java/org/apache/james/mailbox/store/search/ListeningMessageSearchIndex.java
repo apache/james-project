@@ -24,13 +24,13 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -48,11 +48,11 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
 
     private static final int UNLIMITED = -1;
     private final MailboxSessionMapperFactory factory;
-    private final MailboxManager mailboxManager;
+    private final SessionProvider sessionProvider;
 
-    public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, MailboxManager mailboxManager) {
+    public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
         this.factory = factory;
-        this.mailboxManager = mailboxManager;
+        this.sessionProvider = sessionProvider;
     }
 
     /**
@@ -64,7 +64,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
         try {
             if (event instanceof MailboxEvent) {
                 handleMailboxEvent(event,
-                    mailboxManager.createSystemSession(event.getUser().asString()),
+                    sessionProvider.createSystemSession(event.getUser().asString()),
                     (MailboxEvent) event);
             }
         } catch (MailboxException e) {
