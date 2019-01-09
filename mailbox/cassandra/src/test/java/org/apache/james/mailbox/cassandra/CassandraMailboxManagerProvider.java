@@ -40,6 +40,7 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -90,7 +91,8 @@ public class CassandraMailboxManagerProvider {
             messageParser, messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager,
             quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
         try {
-            manager.init();
+            delegatingMailboxListener.addGlobalListener(quotaUpdater, sessionProvider.createSystemSession("admin"));
+            delegatingMailboxListener.addGlobalListener(new MailboxAnnotationListener(mapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }

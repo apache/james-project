@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCount;
@@ -65,7 +64,6 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
-import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -73,8 +71,6 @@ import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
-import org.apache.james.mailbox.store.quota.QuotaUpdater;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.util.streams.Iterators;
@@ -112,11 +108,9 @@ public class StoreMailboxManager implements MailboxManager {
     private final SessionProvider sessionProvider;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
-    private final QuotaUpdater quotaUpdater;
     private final QuotaComponents quotaComponents;
     private final MessageSearchIndex index;
     protected final MailboxManagerConfiguration configuration;
-
 
     @Inject
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
@@ -135,7 +129,6 @@ public class StoreMailboxManager implements MailboxManager {
         this.messageIdFactory = messageIdFactory;
         this.delegatingListener = delegatingListener;
         this.storeRightManager = storeRightManager;
-        this.quotaUpdater = quotaComponents.getQuotaUpdater();
         this.quotaRootResolver = quotaComponents.getQuotaRootResolver();
         this.quotaManager = quotaComponents.getQuotaManager();
         this.quotaComponents = quotaComponents;
@@ -153,25 +146,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     public SessionProvider getSessionProvider() {
         return sessionProvider;
-    }
-
-    /**
-     * Init the {@link MailboxManager}
-     *
-     * @throws MailboxException
-     */
-    @PostConstruct
-    public void init() throws MailboxException {
-        MailboxSession session = createSystemSession("storeMailboxManager");
-        if (index instanceof ListeningMessageSearchIndex) {
-            this.addGlobalListener((MailboxListener) index, session);
-        }
-        if (quotaUpdater != null && quotaUpdater instanceof MailboxListener) {
-            this.addGlobalListener((MailboxListener) quotaUpdater, session);
-        }
-        if (hasCapability(MailboxCapabilities.Annotation)) {
-            this.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), session);
-        }
     }
 
     @Override

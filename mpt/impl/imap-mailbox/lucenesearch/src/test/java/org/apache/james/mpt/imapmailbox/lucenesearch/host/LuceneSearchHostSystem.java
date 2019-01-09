@@ -121,7 +121,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
             searchIndex.setEnableSuffixMatch(true);
 
-            mailboxManager.init();
+            delegatingMailboxListener.addGlobalListener(searchIndex, sessionProvider.createSystemSession("admin"));
 
             SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
 

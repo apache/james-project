@@ -75,13 +75,11 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
                 new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
-        mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
             failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
-        parseFailingMailboxManager.init();
         super.setUp();
     }
 

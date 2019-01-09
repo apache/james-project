@@ -49,6 +49,7 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -115,7 +116,8 @@ public class JPAHostSystem extends JamesImapHostSystem {
         mailboxManager = new OpenJPAMailboxManager(mapperFactory, sessionProvider, messageParser, new DefaultMessageId.Factory(),
             delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
 
-        mailboxManager.init();
+        delegatingListener.addGlobalListener(quotaUpdater, sessionProvider.createSystemSession("admin"));
+        delegatingListener.addGlobalListener(new MailboxAnnotationListener(mapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
 
         SubscriptionManager subscriptionManager = new JPASubscriptionManager(mapperFactory);
         

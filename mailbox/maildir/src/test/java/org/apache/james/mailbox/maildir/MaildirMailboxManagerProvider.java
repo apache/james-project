@@ -70,7 +70,6 @@ public class MaildirMailboxManagerProvider {
         StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
             messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager,
             quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
-        manager.init();
 
         return manager;
     }

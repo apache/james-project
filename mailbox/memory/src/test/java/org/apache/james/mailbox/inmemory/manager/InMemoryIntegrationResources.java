@@ -48,6 +48,7 @@ import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
@@ -127,7 +128,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             storeRightManager,
             quotaComponents,
             index);
-        manager.init();
+
+        delegatingListener.addGlobalListener((ListeningCurrentQuotaUpdater) quotaComponents.getQuotaUpdater(), sessionProvider.createSystemSession("admin"));
+        delegatingListener.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
+
         try {
             return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory());
         } catch (Exception e) {
@@ -167,7 +171,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             storeRightManager,
             quotaComponents,
             index);
-        manager.init();
+
+        delegatingListener.addGlobalListener((ListeningCurrentQuotaUpdater) quotaComponents.getQuotaUpdater(), sessionProvider.createSystemSession("admin"));
+        delegatingListener.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
         return manager;
     }
 

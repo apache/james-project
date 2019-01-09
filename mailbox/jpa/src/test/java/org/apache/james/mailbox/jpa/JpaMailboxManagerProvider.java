@@ -26,7 +26,6 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
@@ -68,17 +67,9 @@ public class JpaMailboxManagerProvider {
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor());
 
-        OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, sessionProvider,
+        return new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
             delegatingListener, annotationManager,
             storeRightManager, quotaComponents, index);
-
-        try {
-            openJPAMailboxManager.init();
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-
-        return openJPAMailboxManager;
     }
 }

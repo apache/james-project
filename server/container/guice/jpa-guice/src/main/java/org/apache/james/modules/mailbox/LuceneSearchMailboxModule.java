@@ -22,6 +22,7 @@ package org.apache.james.modules.mailbox;
 import java.io.IOException;
 
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -32,6 +33,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 
 public class LuceneSearchMailboxModule extends AbstractModule {
 
@@ -40,6 +42,10 @@ public class LuceneSearchMailboxModule extends AbstractModule {
         bind(LuceneMessageSearchIndex.class).in(Scopes.SINGLETON);
         bind(MessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(LuceneMessageSearchIndex.class);
+
+        Multibinder.newSetBinder(binder(), MailboxListener.class)
+            .addBinding()
+            .to(LuceneMessageSearchIndex.class);
     }
 
     @Provides

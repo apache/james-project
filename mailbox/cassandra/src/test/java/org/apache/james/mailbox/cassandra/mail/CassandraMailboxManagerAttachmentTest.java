@@ -103,14 +103,12 @@ public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManage
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
             messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT);
-        mailboxManager.init();
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any()))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider,
             new NoMailboxPathLocker(), failingMessageParser, messageIdFactory,
             delegatingMailboxListener, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
-        parseFailingMailboxManager.init();
     }
 
     @Override

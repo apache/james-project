@@ -92,7 +92,6 @@ public class StoreMailboxManagerTest {
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
                 annotationManager, delegatingListener, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
-        storeMailboxManager.init();
     }
 
     @Test(expected = MailboxNotFoundException.class)
