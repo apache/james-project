@@ -32,10 +32,6 @@
 
     <name>Apache James :: Server :: Mail Queue :: RabbitMQ</name>
 
-    <properties>
-        <feign.version>10.0.1</feign.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -154,21 +150,6 @@
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-core</artifactId>
-            <version>${feign.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-jackson</artifactId>
-            <version>${feign.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.github.openfeign</groupId>
-            <artifactId>feign-slf4j</artifactId>
-            <version>${feign.version}</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor</groupId>

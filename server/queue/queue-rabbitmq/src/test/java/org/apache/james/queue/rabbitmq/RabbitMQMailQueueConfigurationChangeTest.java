@@ -89,7 +89,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private UpdatableTickingClock clock;
-    private RabbitMQManagementApi mqManagementApi;
+    private RabbitMQMailQueueManagement mqManagementApi;
     private RabbitClient rabbitClient;
     private ThreadLocalRandom random;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
@@ -107,7 +107,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
             .managementCredentials(DEFAULT_MANAGEMENT_CREDENTIAL)
             .build();
         rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQConfiguration);
     }
 
     @AfterEach

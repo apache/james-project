@@ -1,3 +1,4 @@
+
 /****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
@@ -17,16 +18,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.queue.rabbitmq;
+package org.apache.james.backend.rabbitmq;
 
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
-
-import javax.inject.Inject;
-
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.util.OptionalUtils;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -42,59 +37,43 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 
-public class RabbitMQManagementApi {
+public interface RabbitMQManagementAPI {
 
-    private static final ErrorDecoder RETRY_500 = (methodKey, response) -> {
+    class MessageQueue {
+        @JsonProperty("name")
+        String name;
+
+        @JsonProperty("vhost")
+        String vhost;
+
+        public String getName() {
+            return name;
+        }
+    }
+
+    static RabbitMQManagementAPI from(RabbitMQConfiguration configuration) {
+        RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
+        return Feign.builder()
+            .requestInterceptor(new BasicAuthRequestInterceptor(credentials.getUser(), new String(credentials.getPassword())))
+            .logger(new Slf4jLogger(RabbitMQManagementAPI.class))
+            .logLevel(Logger.Level.FULL)
+            .encoder(new JacksonEncoder())
+            .decoder(new JacksonDecoder())
+            .retryer(new Retryer.Default())
+            .errorDecoder(RETRY_500)
+            .target(RabbitMQManagementAPI.class, configuration.getManagementUri().toString());
+    }
+
+    ErrorDecoder RETRY_500 = (methodKey, response) -> {
         if (response.status() == 500) {
             throw new RetryableException("Error encountered, scheduling retry", response.request().httpMethod(), new Date());
         }
         throw new RuntimeException("Non recoverable exception status: " + response.status());
     };
 
-    public interface Api {
+    @RequestLine("GET /api/queues")
+    List<MessageQueue> listQueues();
 
-        class MessageQueue {
-            @JsonProperty("name")
-            String name;
-
-            @JsonProperty("vhost")
-            String vhost;
-        }
-
-        @RequestLine("GET /api/queues")
-        List<MessageQueue> listQueues();
-
-        @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
-        void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
-    }
-
-    private final Api api;
-
-    @Inject
-    RabbitMQManagementApi(RabbitMQConfiguration configuration) {
-        RabbitMQConfiguration.ManagementCredentials credentials = configuration.getManagementCredentials();
-        api = Feign.builder()
-            .requestInterceptor(new BasicAuthRequestInterceptor(credentials.getUser(), new String(credentials.getPassword())))
-            .logger(new Slf4jLogger(RabbitMQManagementApi.class))
-            .logLevel(Logger.Level.FULL)
-            .encoder(new JacksonEncoder())
-            .decoder(new JacksonDecoder())
-            .retryer(new Retryer.Default())
-            .errorDecoder(RETRY_500)
-            .target(Api.class, configuration.getManagementUri().toString());
-    }
-
-    Stream<MailQueueName> listCreatedMailQueueNames() {
-        return api.listQueues()
-            .stream()
-            .map(x -> x.name)
-            .map(MailQueueName::fromRabbitWorkQueueName)
-            .flatMap(OptionalUtils::toStream)
-            .distinct();
-    }
-
-    public void deleteAllQueues() {
-        api.listQueues()
-            .forEach(queue -> api.deleteQueue("/", queue.name));
-    }
+    @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
+    void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
 }

@@ -54,7 +54,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
     static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
 
     private RabbitMQMailQueueFactory mailQueueFactory;
-    private RabbitMQManagementApi mqManagementApi;
+    private RabbitMQMailQueueManagement mqManagementApi;
 
     @BeforeEach
     void setup() throws URISyntaxException {
@@ -80,7 +80,7 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             mailQueueViewFactory,
             Clock.systemUTC(),
             new RawMailQueueItemDecoratorFactory());
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
 

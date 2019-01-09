@@ -90,7 +90,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     private RabbitMQMailQueueFactory mailQueueFactory;
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
-    private RabbitMQManagementApi mqManagementApi;
+    private RabbitMQMailQueueManagement mqManagementApi;
 
     @Override
     public void enQueue(Mail mail) throws MailQueue.MailQueueException {
@@ -129,7 +129,7 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
             mailQueueViewFactory,
             clock,
             new RawMailQueueItemDecoratorFactory());
-        mqManagementApi = new RabbitMQManagementApi(rabbitMQConfiguration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQConfiguration);
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
