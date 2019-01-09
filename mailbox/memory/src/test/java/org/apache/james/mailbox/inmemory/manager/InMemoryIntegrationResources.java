@@ -19,8 +19,6 @@
 
 package org.apache.james.mailbox.inmemory.manager;
 
-import java.util.function.BiFunction;
-
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
@@ -33,6 +31,7 @@ import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.manager.IntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestResources;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -94,26 +93,13 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     }
 
     public Resources createResources(GroupMembershipResolver groupMembershipResolver) throws MailboxException {
-        return createMailboxManager(groupMembershipResolver,
-            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
-                new StoreMailboxAnnotationManager(
-                    inMemoryMailboxSessionMapperFactory,
-                    storeRightManager)));
+        return createResources(groupMembershipResolver,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX,
+            MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
     }
 
     public Resources createResources(GroupMembershipResolver groupMembershipResolver,
                                      int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
-        return createMailboxManager(groupMembershipResolver,
-            ((storeRightManager, inMemoryMailboxSessionMapperFactory) ->
-             new StoreMailboxAnnotationManager(
-                 inMemoryMailboxSessionMapperFactory,
-                 storeRightManager,
-                 limitAnnotationCount,
-                 limitAnnotationSize)));
-    }
-
-    private Resources createMailboxManager(GroupMembershipResolver groupMembershipResolver,
-                                           BiFunction<StoreRightManager, InMemoryMailboxSessionMapperFactory, StoreMailboxAnnotationManager> annotationManagerBiFunction) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
@@ -121,8 +107,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
             groupMembershipResolver, delegatingListener);
-        StoreMailboxAnnotationManager annotationManager = annotationManagerBiFunction
-            .apply(storeRightManager, mailboxSessionMapperFactory);
+        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager, limitAnnotationCount, limitAnnotationSize);
 
         SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
         QuotaComponents quotaComponents = createQuotaComponents(mailboxSessionMapperFactory, delegatingListener, sessionProvider);
