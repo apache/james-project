@@ -58,7 +58,6 @@ public class JamesSpringContextTest {
         DefaultDelegatingMailboxListener mailboxListener = context.getBean(DefaultDelegatingMailboxListener.class);
 
         assertThat(mailboxListener.getRegistry().getGlobalListeners())
-            .hasSize(2)
             .areExactly(ONCE, QUOTA_UPDATER_LISTENER);
     }
 

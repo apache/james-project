@@ -30,7 +30,7 @@
     <bean id="lazyIndex" class="org.apache.james.mailbox.store.search.LazyMessageSearchIndex">
         <constructor-arg index="0" ref="luceneIndex"/>
         <constructor-arg index="1" ref="messageMapperFactory"/>
-        <constructor-arg index="2" ref="mailboxmanager"/>
+        <constructor-arg index="2" ref="sessionProvider"/>
     </bean>
     <bean id="luceneIndex" class="org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex">
         <constructor-arg index="0" ref="messageMapperFactory"/>

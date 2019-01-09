@@ -66,6 +66,18 @@
         <constructor-arg index="3" ref="delegating-listener" />
     </bean>
 
-    <alias name="default-delegating-listener" alias="delegating-listener"/>
+    <bean id="sessionProvider" class="org.apache.james.mailbox.store.SessionProvider" >
+        <constructor-arg index="0" ref="authenticator" />
+        <constructor-arg index="1" ref="authorizator" />
+    </bean>
+
+    <bean id="mailbox-init" class="org.apache.james.mailbox.spring.MailboxInitializer" init-method="init">
+        <constructor-arg index="0" ref="sessionProvider" />
+        <constructor-arg index="1" ref="delegating-listener" />
+        <constructor-arg index="2" ref="indexer" />
+        <constructor-arg index="3" ref="quotaUpdater" />
+        <constructor-arg index="4" ref="mailboxmanager" />
+        <constructor-arg index="5" ref="messageMapperFactory" />
+    </bean>
 
 </beans>

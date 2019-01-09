@@ -26,7 +26,7 @@
         <constructor-arg index="0" ref="entityManagerFactory" />
     </bean>
     <bean id="defaultQuotaRootResolver" class="org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver" lazy-init="true">
-        <constructor-arg index="0" ref="mailboxmanager"/>
+        <constructor-arg index="0" ref="sessionProvider"/>
         <constructor-arg index="1" ref="messageMapperFactory"/>
     </bean>
 
@@ -37,7 +37,7 @@
 
     <bean id="inMemoryCurrentQuotaManager" class="org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager" lazy-init="true">
         <constructor-arg index="0" ref="currentQuotaCalculator"/>
-        <constructor-arg index="1" ref="mailboxmanager"/>
+        <constructor-arg index="1" ref="sessionProvider"/>
     </bean>
 
     <bean id="noMaxQuotaManager" class="org.apache.james.mailbox.store.quota.NoMaxQuotaManager" lazy-init="true"/>
@@ -56,6 +56,13 @@
         <constructor-arg index="1" ref="quotaRootResolver"/>
         <constructor-arg index="2" ref="delegating-listener"/>
         <constructor-arg index="3" ref="storeQuotaManager"/>
+    </bean>
+
+    <bean id="quotaComponents" class="org.apache.james.mailbox.store.quota.QuotaComponents">
+        <constructor-arg index="0" ref="maxQuotaManager"/>
+        <constructor-arg index="1" ref="quotaManager"/>
+        <constructor-arg index="2" ref="quotaRootResolver"/>
+        <constructor-arg index="3" ref="quotaUpdater"/>
     </bean>
 
 </beans>

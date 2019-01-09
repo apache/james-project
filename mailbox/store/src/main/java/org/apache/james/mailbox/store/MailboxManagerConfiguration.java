@@ -24,6 +24,14 @@ import javax.inject.Inject;
 public class MailboxManagerConfiguration {
     public static final MailboxManagerConfiguration DEFAULT = new MailboxManagerConfiguration(BatchSizes.defaultValues());
 
+    static class NoMailboxConfiguration extends MailboxManagerConfiguration {
+        // Spring hack
+
+        public NoMailboxConfiguration() {
+            super(BatchSizes.defaultValues());
+        }
+    }
+
     private final BatchSizes batchSizes;
 
     @Inject

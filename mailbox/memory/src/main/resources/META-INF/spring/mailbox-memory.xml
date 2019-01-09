@@ -31,20 +31,17 @@
     <!-- WARNING: Memory does not persist the mailbox. -->
     <!--          Information will be lost after jvm restart. -->
 
-    <bean id="memory-mailboxManager" class="org.apache.james.mailbox.inmemory.InMemoryMailboxManager" init-method="init">
+    <bean id="memory-mailboxManager" class="org.apache.james.mailbox.inmemory.InMemoryMailboxManager">
         <constructor-arg index="0" ref="memory-sessionMapperFactory"/>
-        <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="authorizator"/>
-        <constructor-arg index="3" ref="memory-locker"/>
-        <constructor-arg index="4" ref="messageParser"/>
-        <constructor-arg index="5" ref="messageIdFactory" />
-        <constructor-arg index="6" ref="delegating-listener" />
-        <constructor-arg index="7" ref="storeMailboxAnnotationManager" />
-        <constructor-arg index="8" ref="storeRightManager" />
-<!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
-        <property name="quotaManager" ref="quotaManager"/>
-        <property name="quotaRootResolver" ref="quotaRootResolver"/>
-        <property name="quotaUpdater" ref="quotaUpdater"/>
+        <constructor-arg index="1" ref="sessionProvider"/>
+        <constructor-arg index="2" ref="memory-locker"/>
+        <constructor-arg index="3" ref="messageParser"/>
+        <constructor-arg index="4" ref="messageIdFactory" />
+        <constructor-arg index="5" ref="delegating-listener" />
+        <constructor-arg index="6" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="7" ref="storeRightManager" />
+        <constructor-arg index="8" ref="quotaComponents" />
+        <constructor-arg index="9" ref="indexer" />
     </bean>
 
     <bean id ="memory-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">

@@ -27,17 +27,12 @@
       Mailbox Lucene
      -->
 
-    <bean id="lazyIndex" class="org.apache.james.mailbox.store.search.LazyMessageSearchIndex">
-        <constructor-arg index="0" ref="luceneIndex"/>
-        <constructor-arg index="1" ref="messageMapperFactory"/>
-        <constructor-arg index="2" ref="mailboxmanager"/>
-    </bean>
     <bean id="luceneIndex" class="org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex">
         <constructor-arg index="0" ref="messageMapperFactory"/>
         <constructor-arg index="1" ref="mailboxIdFactory"/>
         <constructor-arg index="2" type="org.apache.lucene.store.Directory" ref="fsDirectory"/>
         <constructor-arg index="3" ref="messageIdFactory"/>
-        <constructor-arg index="4" ref="mailboxmanager"/>
+        <constructor-arg index="4" ref="sessionProvider"/>
         <property name="enableSuffixMatch" value="true"/>
     </bean>
     <bean id="fsDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">
@@ -45,4 +40,5 @@
     </bean>
     <alias name="jpa-mailboxIdFactory" alias="mailboxIdFactory"/>
     <alias name="jpa-mailboxmanager" alias="mailboxmanager"/>
+    <alias name="luceneIndex" alias="indexer"/>
 </beans>

@@ -32,18 +32,16 @@
     <bean id="jpa-mailboxIdFactory" class="org.apache.james.mailbox.jpa.JPAId.Factory" />
 
 
-    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager" init-method="init">
+    <bean id="jpa-mailboxmanager" class="org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
-        <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="authorizator"/>
-        <constructor-arg index="3" ref="messageParser"/>
-        <constructor-arg index="4" ref="messageIdFactory"/>
-        <constructor-arg index="5" ref="delegating-listener"/>
-        <constructor-arg index="6" ref="storeMailboxAnnotationManager"/>
-        <constructor-arg index="7" ref="storeRightManager" />
-        <property name="quotaManager" ref="quotaManager"/>
-        <property name="quotaRootResolver" ref="quotaRootResolver"/>
-        <property name="quotaUpdater" ref="quotaUpdater"/>
+        <constructor-arg index="1" ref="sessionProvider"/>
+        <constructor-arg index="2" ref="messageParser"/>
+        <constructor-arg index="3" ref="messageIdFactory" />
+        <constructor-arg index="4" ref="delegating-listener" />
+        <constructor-arg index="5" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="6" ref="storeRightManager" />
+        <constructor-arg index="7" ref="quotaComponents" />
+        <constructor-arg index="8" ref="indexer" />
     </bean>
     
     <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">

@@ -34,21 +34,21 @@
         <property name ="location" value="classpath:mailbox-maildir.properties"/>
     </bean>
 
-    <bean id="maildir-mailboxmanager" class="org.apache.james.mailbox.store.StoreMailboxManager" init-method="init">
+    <bean id="maildir-mailboxmanager" class="org.apache.james.mailbox.store.StoreMailboxManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
-        <constructor-arg index="1" ref="authenticator"/>
-        <constructor-arg index="2" ref="authorizator"/>
-        <constructor-arg index="3" ref="maildir-locker"/>
-        <constructor-arg index="4" ref="messageParser"/>
-        <constructor-arg index="5" ref="messageIdFactory" />
-        <constructor-arg index="6" ref="storeMailboxAnnotationManager" />
-        <constructor-arg index="7" ref="delegating-listener" />
-        <constructor-arg index="8" ref="storeRightManager" />
-<!--         <property name="messageSearchIndex" ref="lazyIndex"/> -->
-        <property name="quotaManager" ref="quotaManager"/>
-        <property name="quotaRootResolver" ref="quotaRootResolver"/>
-        <property name="quotaUpdater" ref="quotaUpdater"/>
+        <constructor-arg index="1" ref="sessionProvider"/>
+        <constructor-arg index="2" ref="memory-locker"/>
+        <constructor-arg index="3" ref="messageParser"/>
+        <constructor-arg index="4" ref="messageIdFactory" />
+        <constructor-arg index="5" ref="storeMailboxAnnotationManager" />
+        <constructor-arg index="6" ref="delegating-listener" />
+        <constructor-arg index="7" ref="storeRightManager" />
+        <constructor-arg index="8" ref="quotaComponents" />
+        <constructor-arg index="9" ref="indexer" />
+        <constructor-arg index="10" ref="no-mailbox-configuration" />
     </bean>
+
+    <bean id ="no-mailbox-configuration" class="org.apache.james.mailbox.store.MailboxManagerConfiguration.NoMailboxConfiguration"/>
     
     <bean id ="maildir-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="maildir-sessionMapperFactory"/>
