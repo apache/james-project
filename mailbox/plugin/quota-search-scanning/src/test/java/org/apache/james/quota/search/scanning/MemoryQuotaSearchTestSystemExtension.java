@@ -25,6 +25,7 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -52,13 +53,15 @@ public class MemoryQuotaSearchTestSystemExtension implements ParameterResolver {
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
             usersRepository.setDomainList(domainList);
 
+            QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
+
             return new QuotaSearchTestSystem(
-                resources.getMaxQuotaManager(),
+                quotaComponents.getMaxQuotaManager(),
                 resources.getMailboxManager(),
-                resources.getQuotaManager(),
-                resources.getQuotaRootResolver(),
+                quotaComponents.getQuotaManager(),
+                resources.getDefaultUserQuotaRootResolver(),
                 new ScanningQuotaSearcher(usersRepository,
-                    new ClauseConverter(resources.getQuotaRootResolver(), resources.getQuotaManager())),
+                    new ClauseConverter(resources.getDefaultUserQuotaRootResolver(), quotaComponents.getQuotaManager())),
                 usersRepository,
                 domainList,
                 resources.getCurrentQuotaManager(),

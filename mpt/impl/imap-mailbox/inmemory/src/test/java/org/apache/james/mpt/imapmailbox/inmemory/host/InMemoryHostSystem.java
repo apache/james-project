@@ -52,10 +52,9 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     @Override
     public void beforeTest() throws Exception {
         super.beforeTest();
-        this.mailboxManager = new InMemoryIntegrationResources()
-            .createMailboxManager(new SimpleGroupMembershipResolver(), authenticator, authorizator);
-
-        perUserMaxQuotaManager = (InMemoryPerUserMaxQuotaManager) mailboxManager.getQuotaComponents().getMaxQuotaManager();
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver(), authenticator, authorizator);
+        this.mailboxManager = resources.getMailboxManager();
+        this.perUserMaxQuotaManager = resources.getMaxQuotaManager();
 
         ImapProcessor defaultImapProcessorFactory = DefaultImapProcessorFactory.createDefaultProcessor(mailboxManager, new StoreSubscriptionManager(mailboxManager.getMapperFactory()),
             mailboxManager.getQuotaComponents().getQuotaManager(), mailboxManager.getQuotaComponents().getQuotaRootResolver(), new DefaultMetricFactory());

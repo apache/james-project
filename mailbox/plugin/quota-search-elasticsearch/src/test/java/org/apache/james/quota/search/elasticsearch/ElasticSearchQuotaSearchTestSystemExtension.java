@@ -33,6 +33,7 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
+import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.quota.search.QuotaSearchTestSystem;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
@@ -81,11 +82,13 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             resources.getMailboxManager()
                 .addGlobalListener(listener, MailboxSessionUtil.create("ANY"));
 
+            QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
+
             return new QuotaSearchTestSystem(
-                resources.getMaxQuotaManager(),
+                quotaComponents.getMaxQuotaManager(),
                 resources.getMailboxManager(),
-                resources.getQuotaManager(),
-                resources.getQuotaRootResolver(),
+                quotaComponents.getQuotaManager(),
+                resources.getDefaultUserQuotaRootResolver(),
                 new ElasticSearchQuotaSearcher(client,
                     QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_READ_ALIAS),
                 usersRepository,

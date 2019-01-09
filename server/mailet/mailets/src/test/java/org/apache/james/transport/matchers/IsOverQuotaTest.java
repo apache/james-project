@@ -30,14 +30,11 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.inmemory.quota.InMemoryCurrentQuotaManager;
 import org.apache.james.mailbox.inmemory.quota.InMemoryPerUserMaxQuotaManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
-import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -54,18 +51,14 @@ public class IsOverQuotaTest {
 
     @Before
     public void setUp() throws Exception {
-        mailboxManager = new InMemoryIntegrationResources().createMailboxManager(new SimpleGroupMembershipResolver());
+        InMemoryIntegrationResources.Resources resources = new InMemoryIntegrationResources().createResources(new SimpleGroupMembershipResolver());
+        mailboxManager = resources.getMailboxManager();
 
-        quotaRootResolver = new DefaultUserQuotaRootResolver(mailboxManager.getSessionProvider(), mailboxManager.getMapperFactory());
-        maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        CurrentQuotaCalculator quotaCalculator = new CurrentQuotaCalculator(mailboxManager.getMapperFactory(), quotaRootResolver);
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(quotaCalculator, mailboxManager);
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        quotaRootResolver = resources.getDefaultUserQuotaRootResolver();
+        maxQuotaManager = resources.getMaxQuotaManager();
+
         usersRepository = mock(UsersRepository.class);
-        testee = new IsOverQuota(quotaRootResolver, quotaManager, mailboxManager, usersRepository);
-
-        mailboxManager.setQuotaRootResolver(quotaRootResolver);
-        mailboxManager.setQuotaManager(quotaManager);
+        testee = new IsOverQuota(quotaRootResolver, resources.getMailboxManager().getQuotaComponents().getQuotaManager(), mailboxManager, usersRepository);
 
         testee.init(FakeMatcherConfig.builder().matcherName("IsOverQuota").build());
 

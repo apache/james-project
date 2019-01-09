@@ -35,13 +35,11 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
@@ -65,11 +63,21 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         private final InMemoryMailboxManager mailboxManager;
         private final StoreRightManager storeRightManager;
         private final MessageId.Factory messageIdFactory;
+        private final InMemoryCurrentQuotaManager currentQuotaManager;
+        private final DefaultUserQuotaRootResolver defaultUserQuotaRootResolver;
+        private final InMemoryPerUserMaxQuotaManager maxQuotaManager;
 
-        Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory) {
+        Resources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager) {
             this.mailboxManager = mailboxManager;
             this.storeRightManager = storeRightManager;
             this.messageIdFactory = messageIdFactory;
+            this.currentQuotaManager = currentQuotaManager;
+            this.defaultUserQuotaRootResolver = defaultUserQuotaRootResolver;
+            this.maxQuotaManager = maxQuotaManager;
+        }
+
+        public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
+            return defaultUserQuotaRootResolver;
         }
 
         public InMemoryMailboxManager getMailboxManager() {
@@ -77,7 +85,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         }
 
         public InMemoryCurrentQuotaManager getCurrentQuotaManager() {
-            return (InMemoryCurrentQuotaManager) mailboxManager.getQuotaComponents().getMaxQuotaManager();
+            return currentQuotaManager;
         }
 
         public StoreRightManager getStoreRightManager() {
@@ -86,6 +94,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
         public MessageId.Factory getMessageIdFactory() {
             return messageIdFactory;
+        }
+
+        public InMemoryPerUserMaxQuotaManager getMaxQuotaManager() {
+            return maxQuotaManager;
         }
     }
 
@@ -102,19 +114,41 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
     }
 
-    public Resources createResources(GroupMembershipResolver groupMembershipResolver,
-                                     int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
+    public Resources createResources(GroupMembershipResolver groupMembershipResolver, int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
+
+        return createResources(groupMembershipResolver, fakeAuthenticator, FakeAuthorizator.defaultReject(), limitAnnotationCount, limitAnnotationSize);
+    }
+
+    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) throws MailboxException {
+        return createResources(groupMembershipResolver, authenticator, authorizator).mailboxManager;
+    }
+
+    public Resources createResources(GroupMembershipResolver groupMembershipResolver, Authenticator authenticator, Authorizator authorizator) throws MailboxException {
+        return createResources(groupMembershipResolver, authenticator, authorizator, MailboxConstants.DEFAULT_LIMIT_ANNOTATIONS_ON_MAILBOX, MailboxConstants.DEFAULT_LIMIT_ANNOTATION_SIZE);
+    }
+
+    private Resources createResources(GroupMembershipResolver groupMembershipResolver,
+                                      Authenticator authenticator, Authorizator authorizator,
+                                      int limitAnnotationCount, int limitAnnotationSize) throws MailboxException {
+
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
             groupMembershipResolver, delegatingListener);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager, limitAnnotationCount, limitAnnotationSize);
 
-        SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, FakeAuthorizator.defaultReject());
-        QuotaComponents quotaComponents = createQuotaComponents(mailboxSessionMapperFactory, delegatingListener, sessionProvider);
+        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
+
+        InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
+        DefaultUserQuotaRootResolver quotaRootResolver =  new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
+        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
+        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
+        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, delegatingListener, quotaManager);
+        QuotaComponents quotaComponents = new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver, listeningCurrentQuotaUpdater);
+
         MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
 
         InMemoryMailboxManager manager = new InMemoryMailboxManager(
@@ -133,48 +167,10 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
         delegatingListener.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
 
         try {
-            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory());
+            return new Resources(manager, storeRightManager, new InMemoryMessageId.Factory(), currentQuotaManager, quotaRootResolver, maxQuotaManager);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private QuotaComponents createQuotaComponents(InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory, DefaultDelegatingMailboxListener delegatingListener, SessionProvider sessionProvider) {
-        MaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
-        QuotaRootResolver quotaRootResolver =  new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
-        InMemoryCurrentQuotaManager currentQuotaManager = new InMemoryCurrentQuotaManager(new CurrentQuotaCalculator(mailboxSessionMapperFactory, quotaRootResolver), sessionProvider);
-        StoreQuotaManager quotaManager = new StoreQuotaManager(currentQuotaManager, maxQuotaManager);
-        ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, delegatingListener, quotaManager);
-        return new QuotaComponents(maxQuotaManager, quotaManager, quotaRootResolver, listeningCurrentQuotaUpdater);
-    }
-
-    public StoreMailboxManager createMailboxManager(GroupMembershipResolver groupMembershipResolver,
-                                                    Authenticator authenticator, Authorizator authorizator) throws MailboxException {
-        InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(), groupMembershipResolver, delegatingListener);
-        StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
-
-        SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
-        QuotaComponents quotaComponents = createQuotaComponents(mailboxSessionMapperFactory, delegatingListener, sessionProvider);
-
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
-
-        StoreMailboxManager manager = new InMemoryMailboxManager(
-            mailboxSessionMapperFactory,
-            sessionProvider,
-            new NoMailboxPathLocker(),
-            new MessageParser(),
-            new InMemoryMessageId.Factory(),
-            delegatingListener,
-            annotationManager,
-            storeRightManager,
-            quotaComponents,
-            index);
-
-        delegatingListener.addGlobalListener((ListeningCurrentQuotaUpdater) quotaComponents.getQuotaUpdater(), sessionProvider.createSystemSession("admin"));
-        delegatingListener.addGlobalListener(new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider), sessionProvider.createSystemSession("admin"));
-        return manager;
     }
 
     @Override
