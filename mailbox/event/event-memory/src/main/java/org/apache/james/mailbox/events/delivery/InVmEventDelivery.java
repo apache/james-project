@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.events.delivery;
 
+import java.time.Duration;
 import java.util.Collection;
 
 import javax.inject.Inject;
@@ -40,6 +41,10 @@ import reactor.core.scheduler.Schedulers;
 
 public class InVmEventDelivery implements EventDelivery {
     private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
+    private static final int MAX_RETRIES = 3;
+    private static final Duration FIRST_BACKOFF = Duration.ofMillis(100);
+    private static final Duration MAX_BACKOFF = Duration.ofMillis(Long.MAX_VALUE);
+    private static final double DEFAULT_JITTER_FACTOR = 0.5;
 
     private final MetricFactory metricFactory;
 
@@ -72,22 +77,40 @@ public class InVmEventDelivery implements EventDelivery {
 
     private Mono<Void> doDeliver(Collection<MailboxListener> mailboxListeners, Event event) {
         return Flux.fromIterable(mailboxListeners)
-            .flatMap(mailboxListener -> Mono.fromRunnable(() -> doDeliverToListener(mailboxListener, event)))
+            .flatMap(mailboxListener -> deliveryWithRetries(event, mailboxListener))
             .then()
             .subscribeOn(Schedulers.elastic());
+    }
+
+    private Mono<Void> deliveryWithRetries(Event event, MailboxListener mailboxListener) {
+        return Mono.fromRunnable(() -> doDeliverToListener(mailboxListener, event))
+            .doOnError(throwable -> LOGGER.error("Error while processing listener {} for {}",
+                listenerName(mailboxListener),
+                eventName(event),
+                throwable))
+            .retryBackoff(MAX_RETRIES, FIRST_BACKOFF, MAX_BACKOFF, DEFAULT_JITTER_FACTOR)
+            .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
+                listenerName(mailboxListener),
+                MAX_RETRIES,
+                eventName(event),
+                throwable))
+            .then();
     }
 
     private void doDeliverToListener(MailboxListener mailboxListener, Event event) {
         TimeMetric timer = metricFactory.timer("mailbox-listener-" + mailboxListener.getClass().getSimpleName());
         try {
             mailboxListener.event(event);
-        } catch (Throwable throwable) {
-            LOGGER.error("Error while processing listener {} for {}",
-                mailboxListener.getClass().getCanonicalName(), event.getClass().getCanonicalName(),
-                throwable);
         } finally {
             timer.stopAndPublish();
         }
     }
 
+    private String listenerName(MailboxListener mailboxListener) {
+        return mailboxListener.getClass().getCanonicalName();
+    }
+
+    private String eventName(Event event) {
+        return event.getClass().getCanonicalName();
+    }
 }
