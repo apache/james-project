@@ -112,7 +112,7 @@ public class SelectedMailboxImplTest {
         final AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
-            .addListener(eq(mailboxId), any(MailboxListener.class), any(MailboxSession.class));
+            .register(any(MailboxListener.class), eq(mailboxId));
 
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
             mailboxManager,
@@ -127,7 +127,7 @@ public class SelectedMailboxImplTest {
         final AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
             .when(mailboxManager)
-            .addListener(eq(mailboxId), any(MailboxListener.class), any(MailboxSession.class));
+            .register(any(MailboxListener.class), eq(mailboxId));
 
         new SelectedMailboxImpl(
             mailboxManager,

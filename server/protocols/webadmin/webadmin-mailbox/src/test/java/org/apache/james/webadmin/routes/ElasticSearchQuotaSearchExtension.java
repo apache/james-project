@@ -30,7 +30,6 @@ import org.apache.james.backends.es.EmbeddedElasticSearch;
 import org.apache.james.backends.es.utils.TestingClientProvider;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -82,8 +81,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                     QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
                 new QuotaRatioToElasticSearchJson());
 
-            resources.getMailboxManager()
-                .addGlobalListener(listener, MailboxSessionUtil.create("ANY"));
+            resources.getMailboxManager().register(listener);
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
 

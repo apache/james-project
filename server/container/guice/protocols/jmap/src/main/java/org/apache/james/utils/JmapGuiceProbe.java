@@ -55,8 +55,8 @@ public class JmapGuiceProbe implements GuiceProbe {
         return jmapServer.getPort();
     }
 
-    public void addMailboxListener(MailboxListener listener) throws MailboxException {
-        mailboxManager.addGlobalListener(listener, mailboxManager.createSystemSession("jmap"));
+    public void addMailboxListener(MailboxListener.GroupMailboxListener listener) {
+        mailboxManager.register(listener);
     }
 
     public void modifyVacation(AccountId accountId, VacationPatch vacationPatch) {

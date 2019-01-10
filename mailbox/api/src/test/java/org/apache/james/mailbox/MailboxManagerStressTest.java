@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
@@ -59,15 +58,15 @@ public abstract class MailboxManagerStressTest {
     public void testStressTest() throws InterruptedException, MailboxException {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
-        final CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
-        final ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
-        final Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
-        final String username = "username";
+        CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
+        ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
+        Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
+        String username = "username";
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
-        final MailboxPath path = MailboxPath.forUser(username, "INBOX");
-        Optional<MailboxId> mailboxId = mailboxManager.createMailbox(path, session);
-        mailboxManager.addListener(mailboxId.get(), new MailboxListener() {
+        MailboxPath path = MailboxPath.forUser(username, "INBOX");
+        MailboxId mailboxId = mailboxManager.createMailbox(path, session).get();
+        mailboxManager.register(new MailboxListener() {
             @Override
             public ListenerType getType() {
                 return ListenerType.MAILBOX;
@@ -78,7 +77,7 @@ public abstract class MailboxManagerStressTest {
                 MessageUid u = ((Added) event).getUids().iterator().next();
                 uList.add(u);
             }
-        }, session);
+        }, mailboxId);
         mailboxManager.endProcessingRequest(session);
         mailboxManager.logout(session, false);
 

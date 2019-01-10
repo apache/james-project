@@ -23,6 +23,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -68,7 +70,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * </p>
  */
 
-public interface MailboxManager extends RequestAware, MailboxListenerSupport, RightManager, MailboxAnnotationManager {
+public interface MailboxManager extends RequestAware, RightManager, MailboxAnnotationManager {
 
     int MAX_MAILBOX_NAME_LENGTH = 200;
 
@@ -344,4 +346,10 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    Registration register(MailboxListener listener, MailboxId registrationKey);
+
+    Registration register(MailboxListener listener, Group group);
+
+    Registration register(MailboxListener.GroupMailboxListener groupMailboxListener);
 }

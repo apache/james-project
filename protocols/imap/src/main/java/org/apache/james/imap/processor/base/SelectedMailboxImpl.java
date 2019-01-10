@@ -40,13 +40,12 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
@@ -54,31 +53,24 @@ import com.google.common.collect.ImmutableList;
  * Default implementation of {@link SelectedMailbox}
  */
 public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImpl.class);
-
-    private final Set<MessageUid> recentUids = new TreeSet<>();
-
-    private boolean recentUidRemoved = false;
-
+    private final Registration registration;
     private final MailboxManager mailboxManager;
-
     private final MailboxId mailboxId;
-
     private final ImapSession session;
-
     private final MailboxSession.SessionId sessionId;
+    private final MailboxSession mailboxSession;
+    private final UidMsnConverter uidMsnConverter;
+    private final Set<MessageUid> recentUids = new TreeSet<>();
     private final Set<MessageUid> flagUpdateUids = new TreeSet<>();
     private final Flags.Flag uninterestingFlag = Flags.Flag.RECENT;
     private final Set<MessageUid> expungedUids = new TreeSet<>();
-    private final UidMsnConverter uidMsnConverter;
 
+    private boolean recentUidRemoved = false;
     private boolean isDeletedByOtherSession = false;
     private boolean sizeChanged = false;
     private boolean silentFlagChanges = false;
     private final Flags applicableFlags;
-
     private boolean applicableFlagsChanged;
-    private final MailboxSession mailboxSession;
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
@@ -95,7 +87,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         mailboxId = messageManager.getId();
 
-        mailboxManager.addListener(mailboxId, this, mailboxSession);
+        registration = mailboxManager.register(this, mailboxId);
 
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
         uidMsnConverter.addAll(ImmutableList.copyOf(
@@ -119,13 +111,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     @Override
     public synchronized void deselect() {
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-
-        try {
-            mailboxManager.removeListener(mailboxId, this, mailboxSession);
-        } catch (MailboxException e) {
-            LOGGER.error("Unable to remove listener {} from mailbox while closing it", this, e);
-        }
+        registration.unregister();
         
         uidMsnConverter.clear();
         flagUpdateUids.clear();

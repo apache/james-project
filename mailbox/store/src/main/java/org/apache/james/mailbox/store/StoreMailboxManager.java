@@ -39,6 +39,8 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -605,11 +607,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     }
 
-    @Override
-    public void addListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.addListener(mailboxId, listener, session);
-    }
-
     /**
      * End processing of Request for session
      */
@@ -633,22 +630,6 @@ public class StoreMailboxManager implements MailboxManager {
             .stream()
             .map(Mailbox::generateAssociatedPath)
             .collect(Guavate.toImmutableList());
-    }
-
-    @Override
-    public void addGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.addGlobalListener(listener, session);
-    }
-
-    @Override
-    public void removeListener(MailboxId mailboxId, MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.removeListener(mailboxId, listener, session);
-
-    }
-
-    @Override
-    public void removeGlobalListener(MailboxListener listener, MailboxSession session) throws MailboxException {
-        delegatingListener.removeGlobalListener(listener, session);
     }
 
     @Override
@@ -736,5 +717,44 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         return mapper.hasChildren(mailbox, session.getPathDelimiter());
+    }
+
+    @Override
+    public Registration register(MailboxListener listener, MailboxId registrationKey) {
+        MailboxSession session = createSystemSession("admin");
+        try {
+            delegatingListener.addListener(registrationKey, listener, session);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
+        return () -> {
+            try {
+                delegatingListener.removeListener(registrationKey, listener, session);
+            } catch (MailboxException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    @Override
+    public Registration register(MailboxListener listener, Group group) {
+        MailboxSession session = createSystemSession("admin");
+        try {
+            delegatingListener.addGlobalListener(listener, session);
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
+        return () -> {
+            try {
+                delegatingListener.removeGlobalListener(listener, session);
+            } catch (MailboxException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    @Override
+    public Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
+        return register(groupMailboxListener, groupMailboxListener.getGroup());
     }
 }

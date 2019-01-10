@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -46,22 +45,18 @@ import org.apache.james.imap.message.response.ContinuationResponse;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.Registration;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
-    private static final Logger LOGGER = LoggerFactory.getLogger(IdleProcessor.class);
-
     private static final List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private static final String DONE = "DONE";
+
     private TimeUnit heartbeatIntervalUnit;
     private long heartbeatInterval;
     private boolean enableIdle;
@@ -86,89 +81,74 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected void doProcess(IdleRequest message, final ImapSession session, final String tag, final ImapCommand command, final Responder responder) {
-
-        try {
-          
-            final MailboxManager mailboxManager = getMailboxManager();
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-            final SelectedMailbox sm = session.getSelected();
-            final IdleMailboxListener idleListener;
-            if (sm != null) {
-                idleListener = new IdleMailboxListener(session, responder);
-                mailboxManager.addListener(sm.getMailboxId(), idleListener, mailboxSession);
-            } else {
-                idleListener = null;
-            }
-
-            final AtomicBoolean idleActive = new AtomicBoolean(true);
-            
-            session.pushLineHandler(new ImapLineHandler() {
-                @Override
-                public void onLine(ImapSession session, byte[] data) {
-                    String line;
-                    if (data.length > 2) {
-                        line = new String(data, 0, data.length - 2);
-                    } else {
-                        line = "";
-                    }
-
-                    if (idleListener != null) {
-                        try {
-                            mailboxManager.removeListener(sm.getMailboxId(), idleListener, mailboxSession);
-                        } catch (MailboxException e) {
-                                LOGGER.error("Unable to remove idle listener for mailbox {}", sm.getMailboxId(), e);
-                        }
-                    }
-                    session.popLineHandler();
-                    if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                        StatusResponse response = getStatusResponseFactory().taggedBad(tag, command, HumanReadableText.INVALID_COMMAND);
-                        responder.respond(response);
-                    } else {
-                        okComplete(command, tag, responder);
-
-                    }
-                    idleActive.set(false);
-                }
-            });
-
-            // Check if we should send heartbeats
-            if (enableIdle) {
-                heartbeatExecutor.schedule(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        // check if we need to cancel the Runnable
-                        // See IMAP-275
-                        if (session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
-                            // Send a heartbeat to the client to make sure we
-                            // reset the idle timeout. This is kind of the same
-                            // workaround as dovecot use.
-                            //
-                            // This is mostly needed because of the broken
-                            // outlook client, but can't harm for other clients
-                            // too.
-                            // See IMAP-272
-                            StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
-                            responder.respond(response);
-                            
-                            // schedule the heartbeat again for the next interval
-                            heartbeatExecutor.schedule(this, heartbeatInterval, heartbeatIntervalUnit);
-                        }
-                    }
-                }, heartbeatInterval, heartbeatIntervalUnit);
-            }
-            
-            // Write the response after the listener was add
-            // IMAP-341
-            responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
-            unsolicitedResponses(session, responder, false);
-
-
-        } catch (MailboxException e) {
-            LOGGER.error("Enable idle for {} failed", session.getSelected().getMailboxId(), e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+    protected void doProcess(IdleRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+        MailboxManager mailboxManager = getMailboxManager();
+        SelectedMailbox sm = session.getSelected();
+        Registration registration;
+        if (sm != null) {
+            registration = mailboxManager.register(new IdleMailboxListener(session, responder), sm.getMailboxId());
+        } else {
+            registration = null;
         }
+
+        final AtomicBoolean idleActive = new AtomicBoolean(true);
+
+        session.pushLineHandler(new ImapLineHandler() {
+            @Override
+            public void onLine(ImapSession session, byte[] data) {
+                String line;
+                if (data.length > 2) {
+                    line = new String(data, 0, data.length - 2);
+                } else {
+                    line = "";
+                }
+
+                if (registration != null) {
+                    registration.unregister();
+                }
+                session.popLineHandler();
+                if (!DONE.equals(line.toUpperCase(Locale.US))) {
+                    StatusResponse response = getStatusResponseFactory().taggedBad(tag, command, HumanReadableText.INVALID_COMMAND);
+                    responder.respond(response);
+                } else {
+                    okComplete(command, tag, responder);
+
+                }
+                idleActive.set(false);
+            }
+        });
+
+        // Check if we should send heartbeats
+        if (enableIdle) {
+            heartbeatExecutor.schedule(new Runnable() {
+
+                @Override
+                public void run() {
+                    // check if we need to cancel the Runnable
+                    // See IMAP-275
+                    if (session.getState() != ImapSessionState.LOGOUT && idleActive.get()) {
+                        // Send a heartbeat to the client to make sure we
+                        // reset the idle timeout. This is kind of the same
+                        // workaround as dovecot use.
+                        //
+                        // This is mostly needed because of the broken
+                        // outlook client, but can't harm for other clients
+                        // too.
+                        // See IMAP-272
+                        StatusResponse response = getStatusResponseFactory().untaggedOk(HumanReadableText.HEARTBEAT);
+                        responder.respond(response);
+
+                        // schedule the heartbeat again for the next interval
+                        heartbeatExecutor.schedule(this, heartbeatInterval, heartbeatIntervalUnit);
+                    }
+                }
+            }, heartbeatInterval, heartbeatIntervalUnit);
+        }
+
+        // Write the response after the listener was add
+        // IMAP-341
+        responder.respond(new ContinuationResponse(HumanReadableText.IDLING));
+        unsolicitedResponses(session, responder, false);
     }
 
     @Override

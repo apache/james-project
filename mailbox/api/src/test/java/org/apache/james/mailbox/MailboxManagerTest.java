@@ -382,7 +382,7 @@ public abstract class MailboxManagerTest {
         @Test
         void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -400,7 +400,7 @@ public abstract class MailboxManagerTest {
         @Test
         void createMailboxShouldFireMailboxAddedEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
 
             Optional<MailboxId> newId = mailboxManager.createMailbox(newPath, session);
 
@@ -415,7 +415,7 @@ public abstract class MailboxManagerTest {
         @Test
         void addingMessageShouldFireQuotaUpdateEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
 
             inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
@@ -438,7 +438,7 @@ public abstract class MailboxManagerTest {
 
         @Test
         void addingMessageShouldFireAddedEvent() throws Exception {
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
 
@@ -456,7 +456,7 @@ public abstract class MailboxManagerTest {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             inboxManager.expunge(MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -472,7 +472,7 @@ public abstract class MailboxManagerTest {
         void setFlagsShouldFireFlagsUpdatedEvent() throws Exception {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             inboxManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -490,7 +490,7 @@ public abstract class MailboxManagerTest {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -508,7 +508,7 @@ public abstract class MailboxManagerTest {
             mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -525,7 +525,7 @@ public abstract class MailboxManagerTest {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -542,7 +542,7 @@ public abstract class MailboxManagerTest {
             mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            mailboxManager.addGlobalListener(listener, session);
+            mailboxManager.register(listener);
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
