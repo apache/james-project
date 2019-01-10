@@ -53,6 +53,6 @@ class QuotaThresholdListenersTestSystem {
     }
 
     void event(Event event) {
-        eventBus.dispatch(event, NO_KEYS);
+        eventBus.dispatch(event, NO_KEYS).block();
     }
 }

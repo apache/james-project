@@ -96,6 +96,8 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 
+import reactor.core.publisher.Flux;
+
 /**
  * Base class for {@link org.apache.james.mailbox.MessageManager}
  * implementations.
@@ -264,7 +266,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             .mailbox(getMailboxEntity())
             .metaData(ImmutableSortedMap.copyOf(uids))
             .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
         return uids.keySet().iterator();
     }
 
@@ -412,7 +415,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                             .mailbox(mailbox)
                             .addMessage(copy)
                             .build(),
-                            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+                            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                            .block();
                         return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
                     }, true);
                 }
@@ -575,7 +579,8 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             .mailbox(getMailboxEntity())
             .updatedFlags(updatedFlags)
             .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
 
         return updatedFlags.stream().collect(Guavate.toImmutableMap(
             UpdatedFlags::getUid,
@@ -734,22 +739,24 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        eventBus.dispatch(EventFactory.added()
-            .randomEventId()
-            .mailboxSession(session)
-            .mailbox(to.getMailboxEntity())
-            .metaData(copiedUids)
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
-        eventBus.dispatch(EventFactory.moved()
-            .session(session)
-            .messageMoves(MessageMoves.builder()
-                .previousMailboxIds(getMailboxEntity().getMailboxId())
-                .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
-                .build())
-            .messageId(messageIds.build())
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+        Flux.merge(
+            eventBus.dispatch(EventFactory.added()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(to.getMailboxEntity())
+                    .metaData(copiedUids)
+                    .build(),
+                new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
+            eventBus.dispatch(EventFactory.moved()
+                    .session(session)
+                    .messageMoves(MessageMoves.builder()
+                        .previousMailboxIds(getMailboxEntity().getMailboxId())
+                        .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
+                        .build())
+                    .messageId(messageIds.build())
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId())))
+            .then().block();
 
         return copiedUids;
     }
@@ -765,29 +772,31 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        eventBus.dispatch(EventFactory.added()
-            .randomEventId()
-            .mailboxSession(session)
-            .mailbox(to.getMailboxEntity())
-            .metaData(moveUids)
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
-        eventBus.dispatch(EventFactory.expunged()
-            .randomEventId()
-            .mailboxSession(session)
-            .mailbox(getMailboxEntity())
-            .addMetaData(moveResult.getOriginalMessages())
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
-        eventBus.dispatch(EventFactory.moved()
-            .messageMoves(MessageMoves.builder()
-                .previousMailboxIds(getMailboxEntity().getMailboxId())
-                .targetMailboxIds(to.getMailboxEntity().getMailboxId())
-                .build())
-            .messageId(messageIds.build())
-            .session(session)
-            .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+        Flux.merge(
+            eventBus.dispatch(EventFactory.added()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(to.getMailboxEntity())
+                    .metaData(moveUids)
+                    .build(),
+                new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
+            eventBus.dispatch(EventFactory.expunged()
+                    .randomEventId()
+                    .mailboxSession(session)
+                    .mailbox(getMailboxEntity())
+                    .addMetaData(moveResult.getOriginalMessages())
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId())),
+            eventBus.dispatch(EventFactory.moved()
+                    .messageMoves(MessageMoves.builder()
+                        .previousMailboxIds(getMailboxEntity().getMailboxId())
+                        .targetMailboxIds(to.getMailboxEntity().getMailboxId())
+                        .build())
+                    .messageId(messageIds.build())
+                    .session(session)
+                    .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId())))
+            .then().block();
 
         return moveUids;
     }

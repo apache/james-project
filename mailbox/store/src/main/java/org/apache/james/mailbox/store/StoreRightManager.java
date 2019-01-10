@@ -146,7 +146,8 @@ public class StoreRightManager implements RightManager {
             .mailbox(mailbox)
             .aclDiff(aclDiff)
             .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
     }
 
     private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
@@ -230,7 +231,8 @@ public class StoreRightManager implements RightManager {
             .mailbox(mailbox)
             .aclDiff(aclDiff)
             .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
     }
 
     /**

@@ -105,7 +105,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))
                 .instant(Instant.now())
                 .build(),
-            NO_REGISTRATION_KEYS);
+            NO_REGISTRATION_KEYS)
+            .block();
     }
 
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
@@ -128,7 +129,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))
                 .instant(Instant.now())
                 .build(),
-            NO_REGISTRATION_KEYS);
+            NO_REGISTRATION_KEYS)
+            .block();
     }
 
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {

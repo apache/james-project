@@ -348,7 +348,8 @@ public class StoreMailboxManager implements MailboxManager {
                                 .mailboxSession(mailboxSession)
                                 .mailbox(m)
                                 .build(),
-                                new MailboxIdRegistrationKey(m.getMailboxId()));
+                                new MailboxIdRegistrationKey(m.getMailboxId()))
+                                .block();
                         } catch (MailboxExistsException e) {
                             LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
                         }
@@ -400,7 +401,8 @@ public class StoreMailboxManager implements MailboxManager {
                 .quotaCount(QuotaCount.count(messageCount))
                 .quotaSize(QuotaSize.size(totalSize))
                 .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+                .block();
             return m;
         });
 
@@ -446,7 +448,8 @@ public class StoreMailboxManager implements MailboxManager {
             .oldPath(from)
             .newPath(to)
             .build(),
-            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
 
         // rename submailboxes
         MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
@@ -465,7 +468,8 @@ public class StoreMailboxManager implements MailboxManager {
                     .oldPath(fromPath)
                     .newPath(sub.generateAssociatedPath())
                     .build(),
-                    new MailboxIdRegistrationKey(sub.getMailboxId()));
+                    new MailboxIdRegistrationKey(sub.getMailboxId()))
+                    .block();
 
                 LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName);
             }

@@ -75,6 +75,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class StoreMessageIdManager implements MessageIdManager {
 
     private static class MetadataWithMailboxId {
@@ -218,15 +221,18 @@ public class StoreMessageIdManager implements MessageIdManager {
                     MailboxMessage::getMailboxId)));
 
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-        for (MetadataWithMailboxId metadataWithMailboxId : metadataWithMailbox) {
-            eventBus.dispatch(EventFactory.expunged()
-                .randomEventId()
-                .mailboxSession(mailboxSession)
-                .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
-                .addMetaData(metadataWithMailboxId.messageMetaData)
-                .build(),
-                new MailboxIdRegistrationKey(metadataWithMailboxId.mailboxId));
-        }
+        Flux.fromIterable(metadataWithMailbox)
+            .flatMap(Throwing.<StoreMessageIdManager.MetadataWithMailboxId, Mono<Void>>function(
+                metadataWithMailboxId -> eventBus.dispatch(EventFactory.expunged()
+                    .randomEventId()
+                    .mailboxSession(mailboxSession)
+                    .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
+                    .addMetaData(metadataWithMailboxId.messageMetaData)
+                    .build(),
+                new MailboxIdRegistrationKey(metadataWithMailboxId.mailboxId)))
+                .sneakyThrow())
+            .then()
+            .block();
     }
 
     @Override
@@ -295,7 +301,8 @@ public class StoreMessageIdManager implements MessageIdManager {
             .build(),
             messageMoves.impactedMailboxIds()
                 .map(MailboxIdRegistrationKey::new)
-                .collect(Guavate.toImmutableSet()));
+                .collect(Guavate.toImmutableSet()))
+            .block();
     }
 
     private void removeMessageFromMailboxes(MailboxMessage message, Set<MailboxId> mailboxesToRemove, MailboxSession mailboxSession) throws MailboxException {
@@ -311,7 +318,8 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMetaData(eventPayload)
                 .build(),
-                new MailboxIdRegistrationKey(mailboxId));
+                new MailboxIdRegistrationKey(mailboxId))
+            .block();
         }
     }
 
@@ -329,7 +337,8 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .mailbox(mailbox)
                 .updatedFlag(updatedFlags)
                 .build(),
-                new MailboxIdRegistrationKey(mailboxId));
+                new MailboxIdRegistrationKey(mailboxId))
+                .block();
         }
     }
 
@@ -397,7 +406,8 @@ public class StoreMessageIdManager implements MessageIdManager {
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMessage(copy)
                 .build(),
-                new MailboxIdRegistrationKey(mailboxId));
+                new MailboxIdRegistrationKey(mailboxId))
+                .block();
         }
     }
 
