@@ -46,11 +46,6 @@ public interface EventBusTestFixture {
         private final AtomicInteger calls = new AtomicInteger(0);
 
         @Override
-        public ListenerType getType() {
-            return ListenerType.ONCE;
-        }
-
-        @Override
         public void event(Event event) {
             calls.incrementAndGet();
         }

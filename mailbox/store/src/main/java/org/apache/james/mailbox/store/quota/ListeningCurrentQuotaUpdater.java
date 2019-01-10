@@ -65,11 +65,6 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
     }
 
     @Override
-    public ListenerType getType() {
-        return currentQuotaManager.getAssociatedListenerType();
-    }
-
-    @Override
     public void event(Event event) {
         try {
             if (event instanceof Added) {

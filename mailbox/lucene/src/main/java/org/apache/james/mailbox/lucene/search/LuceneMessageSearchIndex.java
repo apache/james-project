@@ -407,11 +407,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.EACH_NODE;
-    }
-
-    @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
         return EnumSet.of(SearchCapabilities.MultimailboxSearch);
 

@@ -28,11 +28,6 @@ public class NoopMailboxListener implements MailboxListener.GroupMailboxListener
     static final Group GROUP = new NoopMailboxListenerGroup();
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
-    }
-
-    @Override
     public Group getGroup() {
         return GROUP;
     }

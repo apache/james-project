@@ -71,11 +71,6 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
-    }
-
-    @Override
     public void event(Event event) {
         try {
             if (event instanceof QuotaUsageUpdatedEvent) {

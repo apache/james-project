@@ -59,11 +59,6 @@ public class PropagateLookupRightListener implements MailboxListener.GroupMailbo
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
-    }
-
-    @Override
     public void event(Event event) {
         try {
             MailboxSession mailboxSession = createMailboxSession(event);

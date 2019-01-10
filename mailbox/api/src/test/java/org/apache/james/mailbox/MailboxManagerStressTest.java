@@ -66,18 +66,11 @@ public abstract class MailboxManagerStressTest {
         mailboxManager.startProcessingRequest(session);
         MailboxPath path = MailboxPath.forUser(username, "INBOX");
         MailboxId mailboxId = mailboxManager.createMailbox(path, session).get();
-        mailboxManager.register(new MailboxListener() {
-            @Override
-            public ListenerType getType() {
-                return ListenerType.MAILBOX;
-            }
-
-            @Override
-            public void event(Event event) {
-                MessageUid u = ((Added) event).getUids().iterator().next();
+        mailboxManager.register(
+            event -> {
+                MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
                 uList.add(u);
-            }
-        }, mailboxId);
+            }, mailboxId);
         mailboxManager.endProcessingRequest(session);
         mailboxManager.logout(session, false);
 

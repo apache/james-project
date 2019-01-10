@@ -53,18 +53,10 @@ public interface MailboxListener {
         Group getGroup();
     }
 
-    enum ListenerType {
-        ONCE,
-        EACH_NODE,
-        MAILBOX
-    }
-
     enum ExecutionMode {
         SYNCHRONOUS,
         ASYNCHRONOUS
     }
-
-    ListenerType getType();
 
     default ExecutionMode getExecutionMode() {
         return ExecutionMode.SYNCHRONOUS;

@@ -93,11 +93,6 @@ public class PropagateLookupRightListenerTest {
     }
 
     @Test
-    public void getTypeShouldReturnOnce() throws Exception {
-        assertThat(testee.getType()).isEqualTo(MailboxListener.ListenerType.ONCE);
-    }
-
-    @Test
     public void getExecutionModeShouldReturnAsynchronous() throws Exception {
         assertThat(testee.getExecutionMode()).isEqualTo(MailboxListener.ExecutionMode.SYNCHRONOUS);
     }

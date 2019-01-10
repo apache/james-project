@@ -95,11 +95,6 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.MAILBOX;
-    }
-
-    @Override
     public synchronized Optional<MessageUid> getFirstUid() {
         return uidMsnConverter.getFirstUid();
     }

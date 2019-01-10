@@ -56,11 +56,6 @@ public class MailboxAnnotationListener implements MailboxListener.GroupMailboxLi
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.EACH_NODE;
-    }
-
-    @Override
     public void event(Event event) {
         if (event instanceof MailboxDeletion) {
             try {

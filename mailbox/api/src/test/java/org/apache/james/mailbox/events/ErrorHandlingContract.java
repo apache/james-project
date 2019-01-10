@@ -50,11 +50,6 @@ interface ErrorHandlingContract extends EventBusContract {
         }
 
         @Override
-        public ListenerType getType() {
-            return MailboxListener.ListenerType.ONCE;
-        }
-
-        @Override
         public void event(Event event) {
             timeElapsed.add(Instant.now());
             throw new RuntimeException("throw to trigger reactor retry");

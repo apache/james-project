@@ -172,11 +172,6 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 unsolicitedResponses(session, responder, false);
             }
         }
-
-        @Override
-        public ListenerType getType() {
-            return ListenerType.MAILBOX;
-        }
     }
 
     @Override

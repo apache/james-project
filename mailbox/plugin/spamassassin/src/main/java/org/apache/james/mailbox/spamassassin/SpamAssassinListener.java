@@ -77,11 +77,6 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
-    }
-
-    @Override
     public ExecutionMode getExecutionMode() {
         return executionMode;
     }

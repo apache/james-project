@@ -26,7 +26,6 @@ import javax.inject.Inject;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.SessionProvider;
@@ -50,11 +49,6 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
                 return new Entry(quotaCalculator.recalculateCurrentQuotas(quotaRoot, sessionProvider.createSystemSession(quotaRoot.getValue())));
             }
         });
-    }
-
-    @Override
-    public MailboxListener.ListenerType getAssociatedListenerType() {
-        return MailboxListener.ListenerType.EACH_NODE;
     }
 
     @Override

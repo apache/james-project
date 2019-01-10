@@ -41,10 +41,6 @@ public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMa
         eventBus.register(this);
     }
 
-    @Override
-    public ListenerType getType() {
-        return ListenerType.EACH_NODE;
-    }
 
     @Override
     public void event(Event event) {

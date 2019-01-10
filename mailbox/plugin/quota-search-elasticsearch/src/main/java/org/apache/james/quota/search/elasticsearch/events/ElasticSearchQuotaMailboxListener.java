@@ -56,11 +56,6 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
     }
 
     @Override
-    public ListenerType getType() {
-        return ListenerType.ONCE;
-    }
-
-    @Override
     public void event(Event event) {
         try {
             if (event instanceof QuotaUsageUpdatedEvent) {

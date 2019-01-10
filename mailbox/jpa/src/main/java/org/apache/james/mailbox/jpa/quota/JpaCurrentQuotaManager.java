@@ -28,7 +28,6 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -48,11 +47,6 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
     public JpaCurrentQuotaManager(EntityManagerFactory entityManagerFactory) {
         this.entityManagerFactory = entityManagerFactory;
         this.transactionRunner = new TransactionRunner(entityManagerFactory);
-    }
-
-    @Override
-    public MailboxListener.ListenerType getAssociatedListenerType() {
-        return MailboxListener.ListenerType.ONCE;
     }
 
     @Override

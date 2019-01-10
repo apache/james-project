@@ -33,24 +33,9 @@ public class EventCollector implements MailboxListener.GroupMailboxListener {
 
     private final List<Event> events = new ArrayList<>();
 
-    private final ListenerType listenerType;
-
-    public EventCollector(ListenerType listenerType) {
-        this.listenerType = listenerType;
-    }
-
-    public EventCollector() {
-        this(ListenerType.EACH_NODE);
-    }
-
     @Override
     public Group getGroup() {
         return GROUP;
-    }
-
-    @Override
-    public ListenerType getType() {
-        return listenerType;
     }
 
     public List<Event> getEvents() {

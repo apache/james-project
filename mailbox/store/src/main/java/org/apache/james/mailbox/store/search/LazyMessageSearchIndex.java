@@ -76,11 +76,6 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     public Group getGroup() {
         return GROUP;
     }
-
-    @Override
-    public ListenerType getType() {
-        return index.getType();
-    }
     
     @Override
     public EnumSet<SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
