@@ -1,4 +1,3 @@
-
 /****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
@@ -22,8 +21,10 @@ package org.apache.james.backend.rabbitmq;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 
 import feign.Feign;
 import feign.Logger;
@@ -46,8 +47,97 @@ public interface RabbitMQManagementAPI {
         @JsonProperty("vhost")
         String vhost;
 
+        @JsonProperty("auto_delete")
+        boolean autoDelete;
+
+        @JsonProperty("durable")
+        boolean durable;
+
+        @JsonProperty("exclusive")
+        boolean exclusive;
+
+        @JsonProperty("arguments")
+        Map<String, String> arguments;
+
         public String getName() {
             return name;
+        }
+
+        public String getVhost() {
+            return vhost;
+        }
+
+        public boolean isAutoDelete() {
+            return autoDelete;
+        }
+
+        public boolean isDurable() {
+            return durable;
+        }
+
+        public boolean isExclusive() {
+            return exclusive;
+        }
+
+        public Map<String, String> getArguments() {
+            return arguments;
+        }
+    }
+
+    class Exchange {
+
+        @JsonProperty("name")
+        String name;
+
+        @JsonProperty("type")
+        String type;
+
+        @JsonProperty("auto_delete")
+        boolean autoDelete;
+
+        @JsonProperty("durable")
+        boolean durable;
+
+        @JsonProperty("internal")
+        boolean internal;
+
+        @JsonProperty("arguments")
+        Map<String, String> arguments;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getType() {
+            return type;
+        }
+
+        public boolean isAutoDelete() {
+            return autoDelete;
+        }
+
+        public boolean isDurable() {
+            return durable;
+        }
+
+        public boolean isInternal() {
+            return internal;
+        }
+
+        public Map<String, String> getArguments() {
+            return arguments;
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("name", name)
+                .add("type", type)
+                .add("autoDelete", autoDelete)
+                .add("durable", durable)
+                .add("internal", internal)
+                .add("arguments", arguments)
+                .toString();
         }
     }
 
@@ -76,4 +166,7 @@ public interface RabbitMQManagementAPI {
 
     @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
     void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
+
+    @RequestLine("GET /api/exchanges")
+    List<Exchange> listExchanges();
 }
