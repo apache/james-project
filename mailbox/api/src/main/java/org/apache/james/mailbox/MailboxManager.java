@@ -347,6 +347,4 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     Registration register(MailboxListener listener, MailboxId registrationKey);
-
-    Registration register(MailboxListener.GroupMailboxListener groupMailboxListener);
 }

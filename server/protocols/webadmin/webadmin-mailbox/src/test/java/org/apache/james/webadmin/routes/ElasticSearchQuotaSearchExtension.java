@@ -81,7 +81,7 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
                     QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
                 new QuotaRatioToElasticSearchJson());
 
-            resources.getMailboxManager().register(listener);
+            resources.getMailboxManager().getEventBus().register(listener);
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
 

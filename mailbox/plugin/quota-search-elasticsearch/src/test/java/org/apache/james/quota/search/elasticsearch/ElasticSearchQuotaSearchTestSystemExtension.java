@@ -78,7 +78,7 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
                     QuotaRatioElasticSearchConstants.QUOTA_RATIO_TYPE),
                 new QuotaRatioToElasticSearchJson());
 
-            resources.getMailboxManager().register(listener);
+            resources.getMailboxManager().getEventBus().register(listener);
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();
 

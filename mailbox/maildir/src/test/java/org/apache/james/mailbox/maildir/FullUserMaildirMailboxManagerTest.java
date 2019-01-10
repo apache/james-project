@@ -19,20 +19,26 @@
 package org.apache.james.mailbox.maildir;
 
 import org.apache.james.junit.TemporaryFolderExtension;
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManagerTest;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest {
+public class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
     @RegisterExtension
     TemporaryFolderExtension temporaryFolder = new TemporaryFolderExtension();
     
     @Override
-    protected MailboxManager provideMailboxManager() {
+    protected StoreMailboxManager provideMailboxManager() {
         try {
             return MaildirMailboxManagerProvider.createMailboxManager("/%fulluser", temporaryFolder.getTemporaryFolder().getTempDir());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected EventBus retrieveEventBus(StoreMailboxManager mailboxManager) {
+        return mailboxManager.getEventBus();
     }
 }
