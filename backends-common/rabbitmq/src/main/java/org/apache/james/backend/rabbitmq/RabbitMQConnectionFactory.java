@@ -48,7 +48,6 @@ public class RabbitMQConnectionFactory {
         try {
             ConnectionFactory connectionFactory = new ConnectionFactory();
             connectionFactory.setUri(rabbitMQConfiguration.getUri());
-            connectionFactory.useNio();
             return connectionFactory;
         } catch (Exception e) {
             throw new RuntimeException(e);
