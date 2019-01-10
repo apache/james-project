@@ -37,6 +37,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.DeleteResult;
@@ -51,7 +53,6 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -101,18 +102,18 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private final MailboxManager mailboxManager;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final DelegatingMailboxListener delegatingMailboxListener;
+    private final EventBus eventBus;
     private final MessageId.Factory messageIdFactory;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
 
     @Inject
     public StoreMessageIdManager(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
-                                 DelegatingMailboxListener delegatingMailboxListener, MessageId.Factory messageIdFactory,
+                                 EventBus eventBus, MessageId.Factory messageIdFactory,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         this.mailboxManager = mailboxManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
-        this.delegatingMailboxListener = delegatingMailboxListener;
+        this.eventBus = eventBus;
         this.messageIdFactory = messageIdFactory;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
@@ -218,12 +219,13 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
         for (MetadataWithMailboxId metadataWithMailboxId : metadataWithMailbox) {
-            delegatingMailboxListener.event(EventFactory.expunged()
+            eventBus.dispatch(EventFactory.expunged()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(metadataWithMailboxId.mailboxId))
                 .addMetaData(metadataWithMailboxId.messageMetaData)
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(metadataWithMailboxId.mailboxId));
         }
     }
 
@@ -286,11 +288,14 @@ public class StoreMessageIdManager implements MessageIdManager {
         addMessageToMailboxes(mailboxMessage, messageMoves.addedMailboxIds(), mailboxSession);
         removeMessageFromMailboxes(mailboxMessage, messageMoves.removedMailboxIds(), mailboxSession);
 
-        delegatingMailboxListener.event(EventFactory.moved()
+        eventBus.dispatch(EventFactory.moved()
             .session(mailboxSession)
             .messageMoves(messageMoves)
             .messageId(mailboxMessage.getMessageId())
-            .build());
+            .build(),
+            messageMoves.impactedMailboxIds()
+                .map(MailboxIdRegistrationKey::new)
+                .collect(Guavate.toImmutableSet()));
     }
 
     private void removeMessageFromMailboxes(MailboxMessage message, Set<MailboxId> mailboxesToRemove, MailboxSession mailboxSession) throws MailboxException {
@@ -300,12 +305,13 @@ public class StoreMessageIdManager implements MessageIdManager {
 
         for (MailboxId mailboxId: mailboxesToRemove) {
             messageIdMapper.delete(message.getMessageId(), mailboxesToRemove);
-            delegatingMailboxListener.event(EventFactory.expunged()
+            eventBus.dispatch(EventFactory.expunged()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMetaData(eventPayload)
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(mailboxId));
         }
     }
 
@@ -317,12 +323,13 @@ public class StoreMessageIdManager implements MessageIdManager {
         if (updatedFlags.flagsChanged()) {
             Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
 
-            delegatingMailboxListener.event(EventFactory.flagsUpdated()
+            eventBus.dispatch(EventFactory.flagsUpdated()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .updatedFlag(updatedFlags)
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(mailboxId));
         }
     }
 
@@ -384,12 +391,13 @@ public class StoreMessageIdManager implements MessageIdManager {
                     .build();
             save(mailboxSession, messageIdMapper, copy);
 
-            delegatingMailboxListener.event(EventFactory.added()
+            eventBus.dispatch(EventFactory.added()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailboxMapper.findMailboxById(mailboxId))
                 .addMessage(copy)
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(mailboxId));
         }
     }
 

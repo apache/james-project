@@ -2,7 +2,7 @@ package org.apache.james.mailbox.caching;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.MailboxListenerSupport;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.slf4j.Logger;
@@ -35,11 +35,10 @@ public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMa
      * Used to register the CacheInvalidatingMailboxListener as a global listener
      * into the main MailboxListener
      *
-     * @param listener
-     * @throws MailboxException
+     * @param eventBus
      */
-    public void register(MailboxListenerSupport listener) throws MailboxException {
-        listener.addGlobalListener(this, null);
+    public void register(EventBus eventBus) {
+        eventBus.register(this);
     }
 
     @Override

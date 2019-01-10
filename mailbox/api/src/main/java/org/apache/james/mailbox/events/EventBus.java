@@ -38,4 +38,8 @@ public interface EventBus {
     default Mono<Void> dispatch(Event event, RegistrationKey key) {
         return dispatch(event, ImmutableSet.of(key));
     }
+
+    default Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
+        return register(groupMailboxListener, groupMailboxListener.getGroup());
+    }
 }

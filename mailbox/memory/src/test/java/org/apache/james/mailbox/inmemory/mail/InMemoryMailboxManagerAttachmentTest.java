@@ -28,6 +28,8 @@ import java.io.InputStream;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -40,13 +42,13 @@ import org.apache.james.mailbox.store.NoMailboxPathLocker;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 
 public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
@@ -62,11 +64,11 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
         mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
         MessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         GroupMembershipResolver groupMembershipResolver = null;
         UnionMailboxACLResolver aclResolver = new UnionMailboxACLResolver();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, eventBus);
 
         SessionProvider sessionProvider = new SessionProvider(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
@@ -74,12 +76,12 @@ public class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManager
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         mailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-                new MessageParser(), messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
+                new MessageParser(), messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index);
         MessageParser failingMessageParser = mock(MessageParser.class);
         when(failingMessageParser.retrieveAttachments(any(InputStream.class)))
             .thenThrow(new RuntimeException("Message parser set to fail"));
         parseFailingMailboxManager = new InMemoryMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(),
-            failingMessageParser, messageIdFactory, delegatingListener, annotationManager, storeRightManager, quotaComponents, index);
+            failingMessageParser, messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents, index);
         super.setUp();
     }
 

@@ -29,6 +29,8 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -42,7 +44,6 @@ import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.PrefixedRegex;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
@@ -50,6 +51,7 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,10 +81,10 @@ public class StoreMailboxManagerTest {
         authenticator.addUser(CURRENT_USER, CURRENT_USER_PASSWORD);
         authenticator.addUser(ADMIN, ADMIN_PASSWORD);
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
 
         StoreRightManager storeRightManager = new StoreRightManager(mockedMapperFactory, new UnionMailboxACLResolver(),
-                                                                    new SimpleGroupMembershipResolver(), delegatingListener);
+                                                                    new SimpleGroupMembershipResolver(), eventBus);
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));
@@ -91,7 +93,7 @@ public class StoreMailboxManagerTest {
 
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-                annotationManager, delegatingListener, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
+                annotationManager, eventBus, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Test(expected = MailboxNotFoundException.class)

@@ -74,7 +74,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
     }

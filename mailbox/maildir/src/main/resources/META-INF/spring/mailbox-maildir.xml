@@ -41,7 +41,7 @@
         <constructor-arg index="3" ref="messageParser"/>
         <constructor-arg index="4" ref="messageIdFactory" />
         <constructor-arg index="5" ref="storeMailboxAnnotationManager" />
-        <constructor-arg index="6" ref="delegating-listener" />
+        <constructor-arg index="6" ref="event-bus" />
         <constructor-arg index="7" ref="storeRightManager" />
         <constructor-arg index="8" ref="quotaComponents" />
         <constructor-arg index="9" ref="indexer" />

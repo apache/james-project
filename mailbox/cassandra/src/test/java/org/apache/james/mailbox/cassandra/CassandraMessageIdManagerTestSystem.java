@@ -21,34 +21,34 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 
-public class CassandraMessageIdManagerTestSystem {
+class CassandraMessageIdManagerTestSystem {
 
-    public static MessageIdManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) throws Exception {
+    static MessageIdManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, EventBus eventBus) {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, delegatingMailboxListener),
+        return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus),
             new CassandraMessageId.Factory(),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory)) {
         };
     }
 
-    public static MessageIdManagerTestSystem createTestingDataWithQuota(CassandraCluster cassandra, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) throws Exception {
+    static MessageIdManagerTestSystem createTestingDataWithQuota(CassandraCluster cassandra, QuotaManager quotaManager, CurrentQuotaManager currentQuotaManager) {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
         CassandraMailboxManager mailboxManager = CassandraTestSystemFixture.createMailboxManager(mapperFactory);
         ListeningCurrentQuotaUpdater listeningCurrentQuotaUpdater = new ListeningCurrentQuotaUpdater(
             (StoreCurrentQuotaManager) currentQuotaManager,
-            mailboxManager.getQuotaComponents().getQuotaRootResolver(), mailboxManager.getDelegationListener(), quotaManager);
+            mailboxManager.getQuotaComponents().getQuotaRootResolver(), mailboxManager.getEventBus(), quotaManager);
         mailboxManager.register(listeningCurrentQuotaUpdater);
-        return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getDelegationListener()),
+        return new MessageIdManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, mailboxManager.getEventBus()),
             new CassandraMessageId.Factory(),
             mapperFactory,
             mailboxManager);

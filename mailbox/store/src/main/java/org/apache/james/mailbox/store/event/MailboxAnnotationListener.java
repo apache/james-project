@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
@@ -34,8 +35,12 @@ import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MailboxAnnotationListener implements MailboxListener {
+public class MailboxAnnotationListener implements MailboxListener.GroupMailboxListener {
+    private static final class MailboxAnnotationListenerGroup extends Group {}
+
     private static final Logger logger = LoggerFactory.getLogger(MailboxAnnotationListener.class);
+    private static final Group GROUP = new MailboxAnnotationListenerGroup();
+
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final SessionProvider sessionProvider;
 
@@ -44,7 +49,12 @@ public class MailboxAnnotationListener implements MailboxListener {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.sessionProvider = sessionProvider;
     }
-    
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
+    }
+
     @Override
     public ListenerType getType() {
         return ListenerType.EACH_NODE;

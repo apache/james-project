@@ -21,6 +21,7 @@ package org.apache.james.mailbox.inmemory.manager;
 
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -35,7 +36,6 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
@@ -55,7 +55,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
     }
 
     @Override
-    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) {
+    protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus) {
         InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
@@ -63,7 +63,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         FakeAuthorizator fakeAuthorizator = FakeAuthorizator.defaultReject();
 
-        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
+        StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         SessionProvider sessionProvider = new SessionProvider(fakeAuthenticator, fakeAuthorizator);
@@ -76,7 +76,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
             locker,
             new MessageParser(),
             messageIdFactory,
-            delegatingMailboxListener,
+            eventBus,
             new StoreMailboxAnnotationManager(mapperFactory, rightManager),
             rightManager,
             quotaComponents,
@@ -84,7 +84,7 @@ public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdMan
         StoreMessageIdManager messageIdManager = new StoreMessageIdManager(
             mailboxManager,
             mapperFactory,
-            delegatingMailboxListener,
+            eventBus,
             messageIdFactory,
             quotaManager,
             quotaComponents.getQuotaRootResolver());

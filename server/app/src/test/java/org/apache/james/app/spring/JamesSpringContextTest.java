@@ -22,8 +22,8 @@ package org.apache.james.app.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
-import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.assertj.core.api.Condition;
 import org.junit.After;
@@ -31,10 +31,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class JamesSpringContextTest {
-    private static final Condition<MailboxListener> QUOTA_UPDATER_LISTENER = new Condition<MailboxListener>() {
+    private static final Condition<Group> QUOTA_UPDATER_LISTENER = new Condition<Group>() {
         @Override
-        public boolean matches(MailboxListener mailboxListener) {
-            return mailboxListener instanceof ListeningCurrentQuotaUpdater;
+        public boolean matches(Group group) {
+            return ListeningCurrentQuotaUpdater.GROUP.equals(group);
         }
     };
     private static final int ONCE = 1;
@@ -55,9 +55,9 @@ public class JamesSpringContextTest {
 
     @Test
     public void springShouldLoadAndAddOnlyOneQuotaUpdaterListener() {
-        DefaultDelegatingMailboxListener mailboxListener = context.getBean(DefaultDelegatingMailboxListener.class);
+        InVMEventBus eventBus = context.getBean(InVMEventBus.class);
 
-        assertThat(mailboxListener.getRegistry().getGlobalListeners())
+        assertThat(eventBus.registeredGroups())
             .areExactly(ONCE, QUOTA_UPDATER_LISTENER);
     }
 

@@ -35,7 +35,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -46,11 +47,11 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -98,10 +99,10 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
     private void initFields() {
        
         try {
-            DefaultDelegatingMailboxListener delegatingMailboxListener = new DefaultDelegatingMailboxListener();
+            InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
 
             InMemoryMailboxSessionMapperFactory mapperFactory = new InMemoryMailboxSessionMapperFactory();
-            StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), delegatingMailboxListener);
+            StoreRightManager rightManager = new StoreRightManager(mapperFactory, new UnionMailboxACLResolver(), new SimpleGroupMembershipResolver(), eventBus);
             JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
             InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
             SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
@@ -113,7 +114,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 locker,
                 new MessageParser(),
                 messageIdFactory,
-                delegatingMailboxListener,
+                eventBus,
                 new StoreMailboxAnnotationManager(mapperFactory, rightManager),
                 rightManager,
                 QuotaComponents.disabled(sessionProvider, mapperFactory),
@@ -121,7 +122,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
             searchIndex.setEnableSuffixMatch(true);
 
-            delegatingMailboxListener.addGlobalListener(searchIndex, sessionProvider.createSystemSession("admin"));
+            eventBus.register(searchIndex);
 
             SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
 
@@ -137,7 +138,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
                 new DefaultImapEncoderFactory().buildImapEncoder(),
                 defaultImapProcessorFactory);
 
-        } catch (IOException | MailboxException e) {
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

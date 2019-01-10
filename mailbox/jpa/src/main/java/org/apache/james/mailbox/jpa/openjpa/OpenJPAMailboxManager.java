@@ -22,6 +22,7 @@ package org.apache.james.mailbox.jpa.openjpa;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
@@ -31,7 +32,6 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -48,13 +48,13 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  SessionProvider sessionProvider,
                                  MessageParser messageParser,
                                  MessageId.Factory messageIdFactory,
-                                 DelegatingMailboxListener delegatingMailboxListener,
+                                 EventBus eventBus,
                                  StoreMailboxAnnotationManager annotationManager,
                                  StoreRightManager storeRightManager,
                                  QuotaComponents quotaComponents,
                                  MessageSearchIndex index) {
         super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, delegatingMailboxListener, annotationManager, storeRightManager,
+            messageIdFactory, eventBus, annotationManager, storeRightManager,
             quotaComponents, index);
     }
 
@@ -66,7 +66,7 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new OpenJPAMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getDelegationListener(),
+            getEventBus(),
             getLocker(),
             mailboxRow,
             getAdvancedFeature(),

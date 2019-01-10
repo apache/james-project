@@ -22,10 +22,12 @@ package org.apache.james.mailbox.cassandra;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.AbstractCombinationManagerTest;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,8 +62,9 @@ public class CassandraCombinationManagerTest extends AbstractCombinationManagerT
     }
     
     @Override
-    public CombinationManagerTestSystem createTestingData() throws Exception {
-        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), new DefaultDelegatingMailboxListener());
+    public CombinationManagerTestSystem createTestingData() {
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        return CassandraCombinationManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), eventBus);
     }
     
 }

@@ -26,32 +26,36 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableSet;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailboxListener, QuotaUpdater {
     private static class ListeningCurrentQuotaUpdaterGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningCurrentQuotaUpdater.class);
-    private static final Group GROUP = new ListeningCurrentQuotaUpdaterGroup();
+    public static final Group GROUP = new ListeningCurrentQuotaUpdaterGroup();
+    private static final ImmutableSet<RegistrationKey> NO_REGISTRATION_KEYS = ImmutableSet.of();
 
     private final StoreCurrentQuotaManager currentQuotaManager;
     private final QuotaRootResolver quotaRootResolver;
-    private final DelegatingMailboxListener delegatingMailboxListener;
+    private final EventBus eventBus;
     private final QuotaManager quotaManager;
 
     @Inject
-    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, DelegatingMailboxListener delegatingMailboxListener, QuotaManager quotaManager) {
+    public ListeningCurrentQuotaUpdater(StoreCurrentQuotaManager currentQuotaManager, QuotaRootResolver quotaRootResolver, EventBus eventBus, QuotaManager quotaManager) {
         this.currentQuotaManager = currentQuotaManager;
         this.quotaRootResolver = quotaRootResolver;
-        this.delegatingMailboxListener = delegatingMailboxListener;
+        this.eventBus = eventBus;
         this.quotaManager = quotaManager;
     }
 
@@ -97,7 +101,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.decrease(quotaRoot, addedCount, addedSize);
         }
-        delegatingMailboxListener.event(
+        eventBus.dispatch(
             EventFactory.quotaUpdated()
                 .randomEventId()
                 .user(expunged.getUser())
@@ -105,7 +109,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))
                 .instant(Instant.now())
-                .build());
+                .build(),
+            NO_REGISTRATION_KEYS);
     }
 
     private void handleAddedEvent(Added added, QuotaRoot quotaRoot) throws MailboxException {
@@ -119,7 +124,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
         if (addedCount != 0 && addedSize != 0) {
             currentQuotaManager.increase(quotaRoot, addedCount, addedSize);
         }
-        delegatingMailboxListener.event(
+        eventBus.dispatch(
             EventFactory.quotaUpdated()
                 .randomEventId()
                 .user(added.getUser())
@@ -127,7 +132,8 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))
                 .instant(Instant.now())
-                .build());
+                .build(),
+            NO_REGISTRATION_KEYS);
     }
 
     private void handleMailboxDeletionEvent(MailboxDeletion mailboxDeletionEvent) throws MailboxException {

@@ -26,10 +26,10 @@ import javax.inject.Inject;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
@@ -45,8 +45,6 @@ import com.google.inject.multibindings.Multibinder;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(DefaultDelegatingMailboxListener.class).in(Scopes.SINGLETON);
-        bind(DelegatingMailboxListener.class).to(DefaultDelegatingMailboxListener.class);
 
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(ListenerRegistrationPerformer.class);
 
@@ -57,10 +55,13 @@ public class DefaultEventModule extends AbstractModule {
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(MailboxListenerRegistry.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
-        Multibinder.newSetBinder(binder(), MailboxListener.class);
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
 
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
         bind(EventDelivery.class).to(InVmEventDelivery.class);
+
+        bind(InVMEventBus.class).in(Scopes.SINGLETON);
+        bind(EventBus.class).to(InVMEventBus.class);
     }
 
     @Singleton

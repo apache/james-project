@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -33,7 +34,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -52,13 +52,13 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     @Inject
     public InMemoryMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                   MailboxPathLocker locker, MessageParser messageParser, MessageId.Factory messageIdFactory,
-                                  DelegatingMailboxListener delegatingMailboxListener,
+                                  EventBus eventBus,
                                   StoreMailboxAnnotationManager annotationManager,
                                   StoreRightManager storeRightManager,
                                   QuotaComponents quotaComponents,
                                   MessageSearchIndex searchIndex) {
         super(mailboxSessionMapperFactory, sessionProvider, locker, messageParser, messageIdFactory,
-            annotationManager, delegatingMailboxListener, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT);
+            annotationManager, eventBus, storeRightManager, quotaComponents, searchIndex, MailboxManagerConfiguration.DEFAULT);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class InMemoryMailboxManager extends StoreMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) {
         return new InMemoryMessageManager(getMapperFactory(),
             getMessageSearchIndex(),
-            getDelegationListener(),
+            getEventBus(),
             getLocker(),
             mailbox,
             getQuotaComponents().getQuotaManager(),

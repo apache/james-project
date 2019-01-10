@@ -106,7 +106,7 @@ public class JPAMailboxModule extends AbstractModule {
         
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(JPAMailboxManagerDefinition.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(MailboxAnnotationListener.class);
 

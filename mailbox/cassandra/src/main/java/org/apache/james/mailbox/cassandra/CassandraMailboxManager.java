@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -35,7 +36,6 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
@@ -61,7 +61,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     @Inject
     public CassandraMailboxManager(CassandraMailboxSessionMapperFactory mapperFactory, SessionProvider sessionProvider,
                                    MailboxPathLocker locker, MessageParser messageParser,
-                                   MessageId.Factory messageIdFactory, DelegatingMailboxListener delegatingMailboxListener,
+                                   MessageId.Factory messageIdFactory, EventBus eventBus,
                                    StoreMailboxAnnotationManager annotationManager, StoreRightManager storeRightManager,
                                    QuotaComponents quotaComponents, MessageSearchIndex index,
                                    MailboxManagerConfiguration configuration) {
@@ -71,7 +71,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
             messageParser,
             messageIdFactory,
             annotationManager,
-            delegatingMailboxListener,
+            eventBus,
             storeRightManager,
             quotaComponents,
             index,
@@ -101,7 +101,7 @@ public class CassandraMailboxManager extends StoreMailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailboxRow, MailboxSession session) {
         return new CassandraMessageManager(mapperFactory,
             getMessageSearchIndex(),
-            getDelegationListener(),
+            getEventBus(),
             this.locker,
             mailboxRow,
             getQuotaComponents().getQuotaManager(),

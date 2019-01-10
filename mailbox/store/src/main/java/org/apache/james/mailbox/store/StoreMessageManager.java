@@ -46,6 +46,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.ReadOnlyException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -65,7 +67,6 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
@@ -133,7 +134,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
 
     private final EnumSet<MailboxManager.MessageCapabilities> messageCapabilities;
-    private final DelegatingMailboxListener delegatingMailboxListener;
+    private final EventBus eventBus;
     private final Mailbox mailbox;
     private final MailboxSessionMapperFactory mapperFactory;
     private final MessageSearchIndex index;
@@ -145,12 +146,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
     private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
 
-    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory, MessageSearchIndex index, DelegatingMailboxListener delegatingMailboxListener,
+    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
+                               MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
                                QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                StoreRightManager storeRightManager) {
         this.messageCapabilities = messageCapabilities;
-        this.delegatingMailboxListener = delegatingMailboxListener;
+        this.eventBus = eventBus;
         this.mailbox = mailbox;
         this.mapperFactory = mapperFactory;
         this.index = index;
@@ -228,7 +230,7 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
      * 
      * In this implementation, all permanent flags are shared, ergo we simply
      * return {@link #getPermanentFlags(MailboxSession)}
-     * 
+     *
      * @see UnionMailboxACLResolver#isReadWrite(MailboxACLRights, Flags)
      * 
      * @param session
@@ -256,12 +258,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         }
         Map<MessageUid, MessageMetaData> uids = deleteMarkedInMailbox(set, mailboxSession);
 
-        delegatingMailboxListener.event(EventFactory.expunged()
+        eventBus.dispatch(EventFactory.expunged()
             .randomEventId()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .metaData(ImmutableSortedMap.copyOf(uids))
-            .build());
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
         return uids.keySet().iterator();
     }
 
@@ -403,12 +406,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
 
                         Mailbox mailbox = getMailboxEntity();
                         MailboxMessage copy = copyMessage(message);
-                        delegatingMailboxListener.event(EventFactory.added()
+                        eventBus.dispatch(EventFactory.added()
                             .randomEventId()
                             .mailboxSession(mailboxSession)
                             .mailbox(mailbox)
                             .addMessage(copy)
-                            .build());
+                            .build(),
+                            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
                         return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
                     }, true);
                 }
@@ -565,12 +569,13 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
         Iterator<UpdatedFlags> it = messageMapper.execute(() -> messageMapper.updateFlags(getMailboxEntity(), new FlagsUpdateCalculator(flags, flagsUpdateMode), set));
         List<UpdatedFlags> updatedFlags = Iterators.toStream(it).collect(Guavate.toImmutableList());
 
-        delegatingMailboxListener.event(EventFactory.flagsUpdated()
+        eventBus.dispatch(EventFactory.flagsUpdated()
             .randomEventId()
             .mailboxSession(mailboxSession)
             .mailbox(getMailboxEntity())
             .updatedFlags(updatedFlags)
-            .build());
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
 
         return updatedFlags.stream().collect(Guavate.toImmutableMap(
             UpdatedFlags::getUid,
@@ -729,20 +734,22 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        delegatingMailboxListener.event(EventFactory.added()
+        eventBus.dispatch(EventFactory.added()
             .randomEventId()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(copiedUids)
-            .build());
-        delegatingMailboxListener.event(EventFactory.moved()
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+        eventBus.dispatch(EventFactory.moved()
             .session(session)
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
                 .build())
             .messageId(messageIds.build())
-            .build());
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
 
         return copiedUids;
     }
@@ -758,26 +765,29 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
-        delegatingMailboxListener.event(EventFactory.added()
+        eventBus.dispatch(EventFactory.added()
             .randomEventId()
             .mailboxSession(session)
             .mailbox(to.getMailboxEntity())
             .metaData(moveUids)
-            .build());
-        delegatingMailboxListener.event(EventFactory.expunged()
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+        eventBus.dispatch(EventFactory.expunged()
             .randomEventId()
             .mailboxSession(session)
             .mailbox(getMailboxEntity())
             .addMetaData(moveResult.getOriginalMessages())
-            .build());
-        delegatingMailboxListener.event(EventFactory.moved()
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
+        eventBus.dispatch(EventFactory.moved()
             .messageMoves(MessageMoves.builder()
                 .previousMailboxIds(getMailboxEntity().getMailboxId())
                 .targetMailboxIds(to.getMailboxEntity().getMailboxId())
                 .build())
             .messageId(messageIds.build())
             .session(session)
-            .build());
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
 
         return moveUids;
     }

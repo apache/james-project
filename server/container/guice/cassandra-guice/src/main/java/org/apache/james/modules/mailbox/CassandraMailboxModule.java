@@ -185,7 +185,7 @@ public class CassandraMailboxModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailboxManagerDefinition.class).addBinding().to(CassandraMailboxManagerDefinition.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(MailboxAnnotationListener.class);
 

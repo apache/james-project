@@ -28,6 +28,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
@@ -82,12 +83,13 @@ public class MessageIdManagerTestSystem {
             Mailbox mailbox = mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
             MailboxMessage message = createMessage(mailboxId, flags, messageId, uid);
             mapperFactory.getMessageMapper(mailboxSession).add(mailbox, message);
-            mailboxManager.getDelegationListener().event(EventFactory.added()
+            mailboxManager.getEventBus().dispatch(EventFactory.added()
                 .randomEventId()
                 .mailboxSession(mailboxSession)
                 .mailbox(mailbox)
                 .addMessage(message)
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(mailboxId));
             return messageId;
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -22,6 +22,7 @@ import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
@@ -32,7 +33,6 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
@@ -54,14 +54,14 @@ public abstract class JPAMailboxManager extends StoreMailboxManager {
                              MailboxPathLocker locker,
                              MessageParser messageParser,
                              MessageId.Factory messageIdFactory,
-                             DelegatingMailboxListener delegatingMailboxListener,
+                             EventBus eventBus,
                              StoreMailboxAnnotationManager annotationManager,
                              StoreRightManager storeRightManager,
                              QuotaComponents quotaComponents,
                              MessageSearchIndex index) {
         super(mailboxSessionMapperFactory, sessionProvider, locker,
             messageParser, messageIdFactory, annotationManager,
-            delegatingMailboxListener, storeRightManager, quotaComponents,
+            eventBus, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT);
     }
     

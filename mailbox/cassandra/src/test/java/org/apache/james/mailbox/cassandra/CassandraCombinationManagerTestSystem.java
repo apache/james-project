@@ -24,11 +24,11 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.CombinationManagerTestSystem;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 
 public class CassandraCombinationManagerTestSystem extends CombinationManagerTestSystem {
@@ -36,10 +36,10 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     private final CassandraMailboxSessionMapperFactory mapperFactory;
     private final CassandraMailboxManager cassandraMailboxManager;
 
-    public static CombinationManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, DelegatingMailboxListener delegatingMailboxListener) throws Exception {
+    public static CombinationManagerTestSystem createTestingData(CassandraCluster cassandra, QuotaManager quotaManager, EventBus eventBus) {
         CassandraMailboxSessionMapperFactory mapperFactory = CassandraTestSystemFixture.createMapperFactory(cassandra);
 
-        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, delegatingMailboxListener),
+        return new CassandraCombinationManagerTestSystem(CassandraTestSystemFixture.createMessageIdManager(mapperFactory, quotaManager, eventBus),
             mapperFactory,
             CassandraTestSystemFixture.createMailboxManager(mapperFactory));
     }
@@ -57,7 +57,7 @@ public class CassandraCombinationManagerTestSystem extends CombinationManagerTes
     }
 
     @Override
-    public MessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
+    public MessageManager createMessageManager(Mailbox mailbox, MailboxSession session) {
         return cassandraMailboxManager.createMessageManager(mailbox, session);
     }
 

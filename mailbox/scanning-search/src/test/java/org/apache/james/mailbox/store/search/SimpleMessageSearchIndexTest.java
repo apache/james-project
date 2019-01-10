@@ -32,7 +32,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     }
 
     @Override
-    protected void initializeMailboxManager() throws Exception {
+    protected void initializeMailboxManager() {
         storeMailboxManager = new InMemoryIntegrationResources()
             .createMailboxManager(new SimpleGroupMembershipResolver());
 
@@ -44,7 +44,7 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getDelegationListener(),
+            storeMailboxManager.getEventBus(),
             storeMailboxManager.getMessageIdFactory(),
             storeMailboxManager.getQuotaComponents().getQuotaManager(),
             storeMailboxManager.getQuotaComponents().getQuotaRootResolver());

@@ -22,6 +22,8 @@ package org.apache.james.mailbox.events;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
@@ -39,7 +41,8 @@ public class InVMEventBus implements EventBus {
     private final ConcurrentHashMap<Group, MailboxListener> groups;
     private final EventDelivery eventDelivery;
 
-    InVMEventBus(EventDelivery eventDelivery) {
+    @Inject
+    public InVMEventBus(EventDelivery eventDelivery) {
         this.eventDelivery = eventDelivery;
         this.registrations = Multimaps.synchronizedSetMultimap(HashMultimap.create());
         this.groups = new ConcurrentHashMap<>();
@@ -67,6 +70,10 @@ public class InVMEventBus implements EventBus {
                 .onErrorResume(throwable -> Mono.empty());
         }
         return Mono.empty();
+    }
+
+    public Set<Group> registeredGroups() {
+        return groups.keySet();
     }
 
     private Set<MailboxListener> registeredListeners(Set<RegistrationKey> keys) {

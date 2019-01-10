@@ -26,6 +26,7 @@ import javax.mail.Flags;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAMessageManager;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
@@ -38,7 +39,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -59,13 +59,13 @@ public class OpenJPAMessageManager extends JPAMessageManager {
     }
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory,
-                                 MessageSearchIndex index, DelegatingMailboxListener delegatingMailboxListener,
+                                 MessageSearchIndex index, EventBus eventBus,
                                  MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                  StoreRightManager storeRightManager) {
 
-        super(mapperFactory,  index, delegatingMailboxListener, locker, mailbox, quotaManager, quotaRootResolver,
+        super(mapperFactory,  index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
             messageParser, messageIdFactory, batchSizes, storeRightManager);
         this.feature = f;
     }

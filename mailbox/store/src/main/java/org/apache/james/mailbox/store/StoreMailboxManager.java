@@ -39,7 +39,8 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
-import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -64,7 +65,6 @@ import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -101,7 +101,7 @@ public class StoreMailboxManager implements MailboxManager {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private final StoreRightManager storeRightManager;
-    private final DelegatingMailboxListener delegatingListener;
+    private final EventBus eventBus;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final MailboxAnnotationManager annotationManager;
     private final MailboxPathLocker locker;
@@ -118,9 +118,9 @@ public class StoreMailboxManager implements MailboxManager {
     public StoreMailboxManager(MailboxSessionMapperFactory mailboxSessionMapperFactory, SessionProvider sessionProvider,
                                MailboxPathLocker locker, MessageParser messageParser,
                                MessageId.Factory messageIdFactory, MailboxAnnotationManager annotationManager,
-                               DelegatingMailboxListener delegatingListener, StoreRightManager storeRightManager,
+                               EventBus eventBus, StoreRightManager storeRightManager,
                                QuotaComponents quotaComponents, MessageSearchIndex searchIndex, MailboxManagerConfiguration configuration) {
-        Preconditions.checkNotNull(delegatingListener);
+        Preconditions.checkNotNull(eventBus);
         Preconditions.checkNotNull(mailboxSessionMapperFactory);
 
         this.annotationManager = annotationManager;
@@ -129,7 +129,7 @@ public class StoreMailboxManager implements MailboxManager {
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
-        this.delegatingListener = delegatingListener;
+        this.eventBus = eventBus;
         this.storeRightManager = storeRightManager;
         this.quotaRootResolver = quotaComponents.getQuotaRootResolver();
         this.quotaManager = quotaComponents.getQuotaManager();
@@ -166,12 +166,12 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     /**
-     * Return the {@link DelegatingMailboxListener} which is used by this {@link MailboxManager}
+     * Return the {@link EventBus} which is used by this {@link MailboxManager}
      *
      * @return delegatingListener
      */
-    public DelegatingMailboxListener getDelegationListener() {
-        return delegatingListener;
+    public EventBus getEventBus() {
+        return eventBus;
     }
 
     /**
@@ -250,7 +250,7 @@ public class StoreMailboxManager implements MailboxManager {
      * @return storeMailbox
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
-        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getDelegationListener(),
+        return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
                 getLocker(), mailbox, quotaManager,
             getQuotaComponents().getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
             getStoreRightManager());
@@ -345,11 +345,12 @@ public class StoreMailboxManager implements MailboxManager {
                         try {
                             mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
                             // notify listeners
-                            delegatingListener.event(EventFactory.mailboxAdded()
+                            eventBus.dispatch(EventFactory.mailboxAdded()
                                 .randomEventId()
                                 .mailboxSession(mailboxSession)
                                 .mailbox(m)
-                                .build());
+                                .build(),
+                                new MailboxIdRegistrationKey(m.getMailboxId()));
                         } catch (MailboxExistsException e) {
                             LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
                         }
@@ -393,14 +394,15 @@ public class StoreMailboxManager implements MailboxManager {
             // mailbox once we remove it
             SimpleMailbox m = new SimpleMailbox(mailbox);
             mailboxMapper.delete(mailbox);
-            delegatingListener.event(EventFactory.mailboxDeleted()
+            eventBus.dispatch(EventFactory.mailboxDeleted()
                 .randomEventId()
                 .mailboxSession(session)
                 .mailbox(mailbox)
                 .quotaRoot(quotaRoot)
                 .quotaCount(QuotaCount.count(messageCount))
                 .quotaSize(QuotaSize.size(totalSize))
-                .build());
+                .build(),
+                new MailboxIdRegistrationKey(mailbox.getMailboxId()));
             return m;
         });
 
@@ -439,13 +441,14 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setName(to.getName());
         mapper.save(mailbox);
 
-        delegatingListener.event(EventFactory.mailboxRenamed()
+        eventBus.dispatch(EventFactory.mailboxRenamed()
             .randomEventId()
             .mailboxSession(session)
             .mailboxId(mailbox.getMailboxId())
             .oldPath(from)
             .newPath(to)
-            .build());
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()));
 
         // rename submailboxes
         MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
@@ -457,13 +460,14 @@ public class StoreMailboxManager implements MailboxManager {
                 MailboxPath fromPath = new MailboxPath(children, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
-                delegatingListener.event(EventFactory.mailboxRenamed()
+                eventBus.dispatch(EventFactory.mailboxRenamed()
                     .randomEventId()
                     .mailboxSession(session)
                     .mailboxId(sub.getMailboxId())
                     .oldPath(fromPath)
                     .newPath(sub.generateAssociatedPath())
-                    .build());
+                    .build(),
+                    new MailboxIdRegistrationKey(sub.getMailboxId()));
 
                 LOGGER.debug("Rename mailbox sub-mailbox {} to {}", subOriginalName, subNewName);
             }
@@ -721,40 +725,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     @Override
     public Registration register(MailboxListener listener, MailboxId registrationKey) {
-        MailboxSession session = createSystemSession("admin");
-        try {
-            delegatingListener.addListener(registrationKey, listener, session);
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-        return () -> {
-            try {
-                delegatingListener.removeListener(registrationKey, listener, session);
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
-    @Override
-    public Registration register(MailboxListener listener, Group group) {
-        MailboxSession session = createSystemSession("admin");
-        try {
-            delegatingListener.addGlobalListener(listener, session);
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
-        return () -> {
-            try {
-                delegatingListener.removeGlobalListener(listener, session);
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            }
-        };
-    }
-
-    @Override
-    public Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
-        return register(groupMailboxListener, groupMailboxListener.getGroup());
+        return eventBus.register(listener, new MailboxIdRegistrationKey(registrationKey));
     }
 }

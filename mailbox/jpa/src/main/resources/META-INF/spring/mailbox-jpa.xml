@@ -37,7 +37,7 @@
         <constructor-arg index="1" ref="sessionProvider"/>
         <constructor-arg index="2" ref="messageParser"/>
         <constructor-arg index="3" ref="messageIdFactory" />
-        <constructor-arg index="4" ref="delegating-listener" />
+        <constructor-arg index="4" ref="event-bus" />
         <constructor-arg index="5" ref="storeMailboxAnnotationManager" />
         <constructor-arg index="6" ref="storeRightManager" />
         <constructor-arg index="7" ref="quotaComponents" />

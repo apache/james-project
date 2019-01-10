@@ -22,33 +22,37 @@ package org.apache.james.mailbox.quota.mailing.listeners;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.MailboxSessionUtil;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.RegistrationKey;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.MailetContext;
 
-public class QuotaThresholdListenersTestSystem {
+import com.google.common.collect.ImmutableSet;
 
-    private final DefaultDelegatingMailboxListener delegatingListener;
+class QuotaThresholdListenersTestSystem {
+    private static final ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
 
-    public QuotaThresholdListenersTestSystem(MailetContext mailetContext, EventStore eventStore, QuotaMailingListenerConfiguration configuration) throws MailboxException {
-        delegatingListener = new DefaultDelegatingMailboxListener();
+    private final EventBus eventBus;
+
+    QuotaThresholdListenersTestSystem(MailetContext mailetContext, EventStore eventStore, QuotaMailingListenerConfiguration configuration) throws MailboxException {
+        eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
 
         FileSystem fileSystem = new FileSystemImpl(new JamesServerResourceLoader("."));
 
         QuotaThresholdCrossingListener thresholdCrossingListener =
             new QuotaThresholdCrossingListener(mailetContext, MemoryUsersRepository.withVirtualHosting(), fileSystem, eventStore, configuration);
 
-        MailboxSession mailboxSession = MailboxSessionUtil.create("system");
-        delegatingListener.addGlobalListener(thresholdCrossingListener, mailboxSession);
+        eventBus.register(thresholdCrossingListener);
     }
 
-    public void event(Event event) {
-        delegatingListener.event(event);
+    void event(Event event) {
+        eventBus.dispatch(event, NO_KEYS);
     }
 }

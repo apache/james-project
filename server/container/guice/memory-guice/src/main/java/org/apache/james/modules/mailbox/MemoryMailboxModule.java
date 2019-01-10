@@ -122,7 +122,7 @@ public class MemoryMailboxModule extends AbstractModule {
             .addBinding()
             .to(MemoryMailboxManagerDefinition.class);
 
-        Multibinder.newSetBinder(binder(), MailboxListener.class)
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(MailboxAnnotationListener.class);
 

@@ -33,6 +33,8 @@ import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.maildir.MaildirMailboxSessionMapperFactory;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -42,13 +44,13 @@ import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -56,15 +58,11 @@ import org.apache.james.mpt.host.JamesImapHostSystem;
 
 public class MaildirHostSystem extends JamesImapHostSystem {
 
-    public static final String META_DATA_DIRECTORY = "target/user-meta-data";
+    private static final String META_DATA_DIRECTORY = "target/user-meta-data";
     private static final String MAILDIR_HOME = "target/Maildir";
     private static final ImapFeatures SUPPORTED_FEATURES = ImapFeatures.of();
     
     private StoreMailboxManager mailboxManager;
-
-    public static JamesImapHostSystem build() throws Exception {
-        return new MaildirHostSystem();
-    }
     
     @Override
     public void beforeTest() throws Exception {
@@ -78,15 +76,15 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();
 
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
-        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, delegatingListener);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, aclResolver, groupMembershipResolver, eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         SessionProvider sessionProvider = new SessionProvider(authenticator, authorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
         MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
 
         mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, sessionProvider, locker,
-            messageParser, new DefaultMessageId.Factory(), annotationManager, delegatingListener, storeRightManager, quotaComponents,
+            messageParser, new DefaultMessageId.Factory(), annotationManager, eventBus, storeRightManager, quotaComponents,
             index, MailboxManagerConfiguration.DEFAULT);
 
         ImapProcessor defaultImapProcessorFactory =

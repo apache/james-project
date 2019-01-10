@@ -40,6 +40,8 @@ import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
 import org.apache.james.mailbox.elasticsearch.search.ElasticSearchSearcher;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -55,7 +57,6 @@ import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DefaultDelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
@@ -107,7 +108,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     }
 
     @Override
-    protected void initializeMailboxManager() throws Exception {
+    protected void initializeMailboxManager() {
         Client client = MailboxIndexCreationUtil.prepareDefaultClient(
             new TestingClientProvider(embeddedElasticSearch.getNode()).get(),
                 ElasticSearchConfiguration.DEFAULT_CONFIGURATION);
@@ -116,9 +117,9 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         fakeAuthenticator.addUser(ManagerTestResources.USER, ManagerTestResources.USER_PASS);
         fakeAuthenticator.addUser(ManagerTestResources.OTHER_USER, ManagerTestResources.OTHER_USER_PASS);
         InMemoryMailboxSessionMapperFactory mailboxSessionMapperFactory = new InMemoryMailboxSessionMapperFactory();
-        DefaultDelegatingMailboxListener delegatingListener = new DefaultDelegatingMailboxListener();
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
         StoreRightManager storeRightManager = new StoreRightManager(mailboxSessionMapperFactory, new UnionMailboxACLResolver(),
-            new SimpleGroupMembershipResolver(), delegatingListener);
+            new SimpleGroupMembershipResolver(), eventBus);
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
@@ -146,7 +147,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             new JVMMailboxPathLocker(),
             new MessageParser(),
             messageIdFactory,
-            delegatingListener,
+            eventBus,
             annotationManager,
             storeRightManager,
             quotaComponents,
@@ -155,12 +156,12 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
         messageIdManager = new StoreMessageIdManager(
             storeMailboxManager,
             storeMailboxManager.getMapperFactory(),
-            storeMailboxManager.getDelegationListener(),
+            eventBus,
             storeMailboxManager.getMessageIdFactory(),
             quotaComponents.getQuotaManager(),
             quotaComponents.getQuotaRootResolver());
 
-        delegatingListener.addGlobalListener(elasticSearchListeningMessageSearchIndex, MailboxSessionUtil.create("admin"));
+        eventBus.register(elasticSearchListeningMessageSearchIndex);
         this.messageSearchIndex = elasticSearchListeningMessageSearchIndex;
     }
 

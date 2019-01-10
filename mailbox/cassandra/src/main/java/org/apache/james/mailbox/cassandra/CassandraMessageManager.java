@@ -25,6 +25,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -33,7 +34,6 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.event.DelegatingMailboxListener;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -49,12 +49,12 @@ public class CassandraMessageManager extends StoreMessageManager {
 
     private CassandraMailboxSessionMapperFactory mapperFactory;
 
-    public CassandraMessageManager(CassandraMailboxSessionMapperFactory mapperFactory, MessageSearchIndex index,
-                                   DelegatingMailboxListener delegatingMailboxListener, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
-                                   QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
-                                   BatchSizes batchSizes,
-                                   StoreRightManager storeRightManager) {
-        super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, delegatingMailboxListener, locker, mailbox,
+    CassandraMessageManager(CassandraMailboxSessionMapperFactory mapperFactory, MessageSearchIndex index,
+                            EventBus eventBus, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
+                            QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory,
+                            BatchSizes batchSizes,
+                            StoreRightManager storeRightManager) {
+        super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
             quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager);
 
         this.mapperFactory = mapperFactory;
