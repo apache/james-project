@@ -23,9 +23,6 @@ import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -44,7 +41,6 @@ import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
-import org.apache.james.util.OptionalUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForwardDestinationResponse;
@@ -56,7 +52,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -128,16 +123,8 @@ public class ForwardRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public Set<String> listForwards(Request request, Response response) throws RecipientRewriteTableException {
-        return Optional.ofNullable(recipientRewriteTable.getAllMappings())
-            .map(mappings ->
-                mappings.entrySet().stream()
-                    .filter(e -> e.getValue().contains(Mapping.Type.Forward))
-                    .map(Map.Entry::getKey)
-                    .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
-                    .map(MailAddress::asString)
-                    .collect(Guavate.toImmutableSortedSet()))
-            .orElse(ImmutableSortedSet.of());
+    public List<MappingSource> listForwards(Request request, Response response) throws RecipientRewriteTableException {
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward);
     }
 
     @PUT

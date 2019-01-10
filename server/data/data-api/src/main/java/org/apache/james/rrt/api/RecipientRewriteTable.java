@@ -115,9 +115,19 @@ public interface RecipientRewriteTable {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
             String.format("Not supported mapping of type %s", mapping.getType()));
 
-        return getAllMappings().entrySet().stream()
+        return getAllMappings()
+            .entrySet().stream()
             .filter(entry -> entry.getValue().contains(mapping))
             .map(Map.Entry::getKey)
+            .collect(Guavate.toImmutableList());
+    }
+
+    default List<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {
+        return getAllMappings()
+            .entrySet().stream()
+            .filter(e -> e.getValue().contains(type))
+            .map(Map.Entry::getKey)
+            .sorted()
             .collect(Guavate.toImmutableList());
     }
 }
