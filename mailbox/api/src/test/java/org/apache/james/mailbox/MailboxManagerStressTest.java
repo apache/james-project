@@ -31,6 +31,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
@@ -41,14 +43,15 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public abstract class MailboxManagerStressTest {
+public abstract class MailboxManagerStressTest<T extends MailboxManager> {
 
     private static final int APPEND_OPERATIONS = 200;
 
-    private MailboxManager mailboxManager;
+    private T mailboxManager;
 
-    protected abstract MailboxManager provideManager() throws MailboxException;
+    protected abstract T provideManager() throws MailboxException;
 
+    protected abstract EventBus retrieveEventBus(T mailboxManager);
     
     public void setUp() throws Exception {
         this.mailboxManager = provideManager();
@@ -66,11 +69,11 @@ public abstract class MailboxManagerStressTest {
         mailboxManager.startProcessingRequest(session);
         MailboxPath path = MailboxPath.forUser(username, "INBOX");
         MailboxId mailboxId = mailboxManager.createMailbox(path, session).get();
-        mailboxManager.register(
+        retrieveEventBus(mailboxManager).register(
             event -> {
                 MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
                 uList.add(u);
-            }, mailboxId);
+            }, new MailboxIdRegistrationKey(mailboxId));
         mailboxManager.endProcessingRequest(session);
         mailboxManager.logout(session, false);
 
