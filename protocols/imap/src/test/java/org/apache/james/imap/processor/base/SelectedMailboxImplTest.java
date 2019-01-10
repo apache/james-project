@@ -43,6 +43,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -76,6 +78,8 @@ public class SelectedMailboxImplTest {
     private ImapSession imapSession;
     private Mailbox mailbox;
     private TestId mailboxId;
+    private EventBus eventBus;
+    private MailboxIdRegistrationKey mailboxIdRegistrationKey;
 
     @Before
     public void setUp() throws Exception {
@@ -87,6 +91,8 @@ public class SelectedMailboxImplTest {
         imapSession = mock(ImapSession.class);
         mailbox = mock(Mailbox.class);
         mailboxId = TestId.of(42);
+        mailboxIdRegistrationKey = new MailboxIdRegistrationKey(mailboxId);
+        eventBus = mock(EventBus.class);
 
         when(mailboxManager.getMailbox(eq(mailboxPath), any(MailboxSession.class)))
             .thenReturn(messageManager);
@@ -109,13 +115,13 @@ public class SelectedMailboxImplTest {
 
     @Test
     public void concurrentEventShouldNotSkipAddedEventsEmittedDuringInitialisation() throws Exception {
-        final AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
-            .when(mailboxManager)
-            .register(any(MailboxListener.class), eq(mailboxId));
-
+            .when(eventBus)
+            .register(any(MailboxListener.class), eq(mailboxIdRegistrationKey));
         SelectedMailboxImpl selectedMailbox = new SelectedMailboxImpl(
             mailboxManager,
+            eventBus,
             imapSession,
             mailboxPath);
 
@@ -124,13 +130,14 @@ public class SelectedMailboxImplTest {
 
     @Test
     public void concurrentEventShouldBeProcessedSuccessfullyDuringInitialisation() throws Exception {
-        final AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger successCount = new AtomicInteger(0);
         doAnswer(generateEmitEventAnswer(successCount))
-            .when(mailboxManager)
-            .register(any(MailboxListener.class), eq(mailboxId));
+            .when(eventBus)
+            .register(any(MailboxListener.class), eq(mailboxIdRegistrationKey));
 
         new SelectedMailboxImpl(
             mailboxManager,
+            eventBus,
             imapSession,
             mailboxPath);
 
@@ -146,10 +153,10 @@ public class SelectedMailboxImplTest {
         };
     }
 
-    private Answer<Iterator<MessageUid>> generateEmitEventAnswer(final AtomicInteger success) {
+    private Answer<Iterator<MessageUid>> generateEmitEventAnswer(AtomicInteger success) {
         return invocation -> {
             Object[] args = invocation.getArguments();
-            final MailboxListener mailboxListener = (MailboxListener) args[1];
+            MailboxListener mailboxListener = (MailboxListener) args[0];
             executorService.submit(() -> {
                 try {
                     emitEvent(mailboxListener);

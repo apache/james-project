@@ -39,6 +39,8 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -50,6 +52,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailbox;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -127,6 +130,7 @@ public class MailboxEventAnalyserTest {
     @Before
     public void setUp() throws MailboxException {
         ImapSession imapSession = mock(ImapSession.class);
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(MAILBOX_SESSION);
         when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
@@ -152,7 +156,7 @@ public class MailboxEventAnalyserTest {
         when(messageManager.getMessages(any(), any(), any()))
             .thenReturn(new SingleMessageResultIterator(messageResult));
 
-        testee = new SelectedMailboxImpl(mailboxManager, imapSession, MAILBOX_PATH);
+        testee = new SelectedMailboxImpl(mailboxManager, eventBus, imapSession, MAILBOX_PATH);
     }
 
     @Test

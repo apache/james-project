@@ -23,7 +23,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -345,6 +344,4 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 
     boolean hasChildren(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
-
-    Registration register(MailboxListener listener, MailboxId registrationKey);
 }

@@ -89,7 +89,8 @@ public class MaildirHostSystem extends JamesImapHostSystem {
 
         ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(
-                        mailboxManager, 
+                        mailboxManager,
+                        eventBus,
                         sm, 
                         quotaComponents.getQuotaManager(),
                         quotaComponents.getQuotaRootResolver(),

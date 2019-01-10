@@ -32,7 +32,6 @@ import javax.inject.Inject;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxAnnotationManager;
-import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
@@ -41,7 +40,6 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -721,10 +719,5 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Mailbox mailbox = mapper.findMailboxByPath(mailboxPath);
         return mapper.hasChildren(mailbox, session.getPathDelimiter());
-    }
-
-    @Override
-    public Registration register(MailboxListener listener, MailboxId registrationKey) {
-        return eventBus.register(listener, new MailboxIdRegistrationKey(registrationKey));
     }
 }

@@ -40,6 +40,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.Registration;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -72,7 +74,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
     private final Flags applicableFlags;
     private boolean applicableFlagsChanged;
 
-    public SelectedMailboxImpl(MailboxManager mailboxManager, ImapSession session, MailboxPath path) throws MailboxException {
+    public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
         this.sessionId = ImapSessionUtils.getMailboxSession(session).getSessionId();
         this.mailboxManager = mailboxManager;
@@ -87,7 +89,7 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
         MessageManager messageManager = mailboxManager.getMailbox(path, mailboxSession);
         mailboxId = messageManager.getId();
 
-        registration = mailboxManager.register(this, mailboxId);
+        registration = eventBus.register(this, new MailboxIdRegistrationKey(mailboxId));
 
         applicableFlags = messageManager.getApplicableFlags(mailboxSession);
         uidMsnConverter.addAll(ImmutableList.copyOf(

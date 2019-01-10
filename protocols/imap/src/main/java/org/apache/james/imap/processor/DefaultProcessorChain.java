@@ -25,6 +25,7 @@ import org.apache.james.imap.api.process.MailboxTyper;
 import org.apache.james.imap.processor.fetch.FetchProcessor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
@@ -35,10 +36,15 @@ import org.apache.james.metrics.api.MetricFactory;
 public class DefaultProcessorChain {
 
     public static ImapProcessor createDefaultChain(ImapProcessor chainEndProcessor,
-                  MailboxManager mailboxManager, SubscriptionManager subscriptionManager,
-                  StatusResponseFactory statusResponseFactory, MailboxTyper mailboxTyper, QuotaManager quotaManager,
-                  QuotaRootResolver quotaRootResolver,
-                  MetricFactory metricFactory) {
+                                                   MailboxManager mailboxManager,
+                                                   EventBus eventBus,
+                                                   SubscriptionManager subscriptionManager,
+                                                   StatusResponseFactory statusResponseFactory,
+                                                   MailboxTyper mailboxTyper,
+                                                   QuotaManager quotaManager,
+                                                   QuotaRootResolver quotaRootResolver,
+                                                   MetricFactory metricFactory) {
+
         SystemMessageProcessor systemProcessor = new SystemMessageProcessor(chainEndProcessor, mailboxManager);
         LogoutProcessor logoutProcessor = new LogoutProcessor(systemProcessor, mailboxManager, statusResponseFactory, metricFactory);
 
@@ -73,11 +79,11 @@ public class DefaultProcessorChain {
             authenticateProcessor = new AuthenticateProcessor(copyProcessor, mailboxManager, statusResponseFactory, metricFactory);
         }
         ExpungeProcessor expungeProcessor = new ExpungeProcessor(authenticateProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        ExamineProcessor examineProcessor = new ExamineProcessor(expungeProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        ExamineProcessor examineProcessor = new ExamineProcessor(expungeProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
         AppendProcessor appendProcessor = new AppendProcessor(examineProcessor, mailboxManager, statusResponseFactory, metricFactory);
         StoreProcessor storeProcessor = new StoreProcessor(appendProcessor, mailboxManager, statusResponseFactory, metricFactory);
         NoopProcessor noopProcessor = new NoopProcessor(storeProcessor, mailboxManager, statusResponseFactory, metricFactory);
-        IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        IdleProcessor idleProcessor = new IdleProcessor(noopProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
         StatusProcessor statusProcessor = new StatusProcessor(idleProcessor, mailboxManager, statusResponseFactory, metricFactory);
         LSubProcessor lsubProcessor = new LSubProcessor(statusProcessor, mailboxManager, subscriptionManager, statusResponseFactory, metricFactory);
         XListProcessor xlistProcessor = new XListProcessor(lsubProcessor, mailboxManager, statusResponseFactory, mailboxTyper, metricFactory);
@@ -86,7 +92,7 @@ public class DefaultProcessorChain {
         // WITHIN extension
         capabilityProcessor.addProcessor(searchProcessor);
 
-        SelectProcessor selectProcessor = new SelectProcessor(searchProcessor, mailboxManager, statusResponseFactory, metricFactory);
+        SelectProcessor selectProcessor = new SelectProcessor(searchProcessor, mailboxManager, eventBus, statusResponseFactory, metricFactory);
         NamespaceProcessor namespaceProcessor = new NamespaceProcessor(selectProcessor, mailboxManager, statusResponseFactory, metricFactory);
 
         capabilityProcessor.addProcessor(xlistProcessor);
