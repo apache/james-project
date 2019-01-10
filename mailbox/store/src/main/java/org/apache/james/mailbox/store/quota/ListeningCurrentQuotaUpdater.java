@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -35,9 +36,11 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdater {
+public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailboxListener, QuotaUpdater {
+    private static class ListeningCurrentQuotaUpdaterGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningCurrentQuotaUpdater.class);
+    private static final Group GROUP = new ListeningCurrentQuotaUpdaterGroup();
 
     private final StoreCurrentQuotaManager currentQuotaManager;
     private final QuotaRootResolver quotaRootResolver;
@@ -50,6 +53,11 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener, QuotaUpdat
         this.quotaRootResolver = quotaRootResolver;
         this.delegatingMailboxListener = delegatingMailboxListener;
         this.quotaManager = quotaManager;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

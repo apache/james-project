@@ -20,12 +20,21 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Group;
 
-public class NoopMailboxListener implements MailboxListener {
+public class NoopMailboxListener implements MailboxListener.GroupMailboxListener {
+    private static class NoopMailboxListenerGroup extends Group {}
+
+    public static final Group GROUP = new NoopMailboxListenerGroup();
 
     @Override
     public ListenerType getType() {
         return ListenerType.ONCE;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

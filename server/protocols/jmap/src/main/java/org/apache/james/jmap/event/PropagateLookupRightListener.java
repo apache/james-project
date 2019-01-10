@@ -29,6 +29,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
@@ -37,8 +38,11 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PropagateLookupRightListener implements MailboxListener {
+public class PropagateLookupRightListener implements MailboxListener.GroupMailboxListener {
+    private static class PropagateLookupRightListenerGroup extends Group {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(PropagateLookupRightListener.class);
+    private static final Group GROUP = new PropagateLookupRightListenerGroup();
 
     private final RightManager rightManager;
     private final MailboxManager mailboxManager;
@@ -47,6 +51,11 @@ public class PropagateLookupRightListener implements MailboxListener {
     public PropagateLookupRightListener(RightManager rightManager, MailboxManager mailboxManager) {
         this.rightManager = rightManager;
         this.mailboxManager = mailboxManager;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

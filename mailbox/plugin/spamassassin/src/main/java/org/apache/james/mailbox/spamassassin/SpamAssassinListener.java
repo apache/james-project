@@ -30,6 +30,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageMoveEvent;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -49,9 +50,11 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class SpamAssassinListener implements SpamEventListener {
+    private static class SpamAssassinListenerGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListener.class);
     private static final int LIMIT = 1;
+    private static final Group GROUP = new SpamAssassinListenerGroup();
 
     private final SpamAssassin spamAssassin;
     private final SystemMailboxesProvider systemMailboxesProvider;
@@ -66,6 +69,11 @@ public class SpamAssassinListener implements SpamEventListener {
         this.mailboxManager = mailboxManager;
         this.mapperFactory = mapperFactory;
         this.executionMode = executionMode;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

@@ -28,6 +28,7 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.SearchCapabilities;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -55,8 +56,10 @@ import com.google.common.base.Preconditions;
  *
  */
 public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static class LazyMessageSearchIndexGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LazyMessageSearchIndex.class);
+    private static final Group GROUP = new LazyMessageSearchIndexGroup();
 
     private final ListeningMessageSearchIndex index;
     private final ConcurrentHashMap<MailboxId, Object> indexed = new ConcurrentHashMap<>();
@@ -67,6 +70,11 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
         super(factory, sessionProvider);
         this.index = index;
         this.factory = factory;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

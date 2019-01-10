@@ -3,6 +3,7 @@ package org.apache.james.mailbox.caching;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.MailboxListenerSupport;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +12,11 @@ import org.slf4j.LoggerFactory;
  * A MailboxListener that invalidates the configured caches in response to Events
  *
  */
-public class CacheInvalidatingMailboxListener implements MailboxListener {
+public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMailboxListener {
+    private static class CacheInvalidatingMailboxListenerGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CacheInvalidatingMailboxListener.class);
+    private static final Group GROUP = new CacheInvalidatingMailboxListenerGroup();
 
     private final MailboxByPathCache mailboxCacheByPath;
     private final MailboxMetadataCache mailboxMetadataCache;
@@ -21,6 +24,11 @@ public class CacheInvalidatingMailboxListener implements MailboxListener {
     public CacheInvalidatingMailboxListener(MailboxByPathCache mailboxCacheByPath, MailboxMetadataCache mailboxMetadataCache) {
         this.mailboxCacheByPath = mailboxCacheByPath;
         this.mailboxMetadataCache = mailboxMetadataCache;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     /**

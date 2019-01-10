@@ -24,8 +24,12 @@ import java.util.List;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Group;
 
-public class EventCollector implements MailboxListener {
+public class EventCollector implements MailboxListener.GroupMailboxListener {
+    private static class EventCollectorGroup extends Group {}
+
+    private static final Group GROUP = new EventCollectorGroup();
 
     private final List<Event> events = new ArrayList<>();
 
@@ -37,6 +41,11 @@ public class EventCollector implements MailboxListener {
 
     public EventCollector() {
         this(ListenerType.EACH_NODE);
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

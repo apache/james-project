@@ -45,7 +45,7 @@ import com.google.common.collect.ImmutableList;
  * 
  *
  */
-public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener {
+public abstract class ListeningMessageSearchIndex implements MessageSearchIndex, MailboxListener.GroupMailboxListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListeningMessageSearchIndex.class);
 
     private static final int UNLIMITED = -1;

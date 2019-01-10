@@ -30,6 +30,7 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossing;
 import org.apache.james.mailbox.quota.mailing.commands.DetectThresholdCrossingHandler;
@@ -41,8 +42,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
-public class QuotaThresholdCrossingListener implements MailboxListener {
+public class QuotaThresholdCrossingListener implements MailboxListener.GroupMailboxListener {
+    private static class QuotaThresholdCrossingListenerGroup extends Group {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(QuotaThresholdCrossingListener.class);
+    private static final Group GROUP = new QuotaThresholdCrossingListenerGroup();
 
     private final EventSourcingSystem eventSourcingSystem;
 
@@ -59,6 +63,11 @@ public class QuotaThresholdCrossingListener implements MailboxListener {
         ImmutableSet<CommandHandler<?>> handlers = ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, config));
         ImmutableSet<Subscriber> subscribers = ImmutableSet.of(new QuotaThresholdMailer(mailetContext, usersRepository, fileSystem, config));
         eventSourcingSystem = new EventSourcingSystem(handlers, subscribers, eventStore);
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

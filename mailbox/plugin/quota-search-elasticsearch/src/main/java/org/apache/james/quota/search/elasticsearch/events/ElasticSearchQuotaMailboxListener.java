@@ -25,6 +25,7 @@ import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.slf4j.Logger;
@@ -32,9 +33,11 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class ElasticSearchQuotaMailboxListener implements MailboxListener {
+public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupMailboxListener {
+    private static class ElasticSearchQuotaMailboxListenerGroup extends Group {}
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchQuotaMailboxListener.class);
+    private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();
 
     private final ElasticSearchIndexer indexer;
     private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
@@ -45,6 +48,11 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener {
             QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson) {
         this.indexer = indexer;
         this.quotaRatioToElasticSearchJson = quotaRatioToElasticSearchJson;
+    }
+
+    @Override
+    public Group getGroup() {
+        return GROUP;
     }
 
     @Override

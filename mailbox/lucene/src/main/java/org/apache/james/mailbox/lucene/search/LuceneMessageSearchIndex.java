@@ -131,9 +131,12 @@ import com.google.common.collect.ImmutableList;
  * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
+    private static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {}
+
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
+    private static final org.apache.james.mailbox.events.Group GROUP = new LuceneMessageSearchIndexGroup();
     
     static {
         Calendar cal = Calendar.getInstance();
@@ -396,6 +399,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 IndexWriter.unlock(directory);
             }
         }
+    }
+
+    @Override
+    public org.apache.james.mailbox.events.Group getGroup() {
+        return GROUP;
     }
 
     @Override

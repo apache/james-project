@@ -30,6 +30,7 @@ import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.ACLDiff;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -47,6 +48,10 @@ import com.google.common.collect.ImmutableMap;
  * Note that listeners may be removed asynchronously.
  */
 public interface MailboxListener {
+
+    interface GroupMailboxListener extends MailboxListener {
+        Group getGroup();
+    }
 
     enum ListenerType {
         ONCE,
