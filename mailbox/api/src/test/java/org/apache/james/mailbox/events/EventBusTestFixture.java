@@ -97,6 +97,8 @@ public interface EventBusTestFixture {
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
     List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class, GroupC.class);
 
+    GroupA GROUP_A = new GroupA();
+
     ConditionFactory WAIT_CONDITION = await().timeout(com.jayway.awaitility.Duration.ONE_SECOND);
 
     static MailboxListener newListener() {

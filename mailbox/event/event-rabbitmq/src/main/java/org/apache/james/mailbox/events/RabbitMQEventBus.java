@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PreDestroy;
 
@@ -36,29 +37,43 @@ import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
-public class RabbitMQEventBus implements EventBus {
+class RabbitMQEventBus implements EventBus {
     static final String MAILBOX_EVENT = "mailboxEvent";
     static final String MAILBOX_EVENT_EXCHANGE_NAME = MAILBOX_EVENT + "-exchange";
 
-    private final Sender sender;
-    private final GroupRegistrationHandler groupRegistrationHandler;
-    private final EventDispatcher eventDispatcher;
+    private final Mono<Connection> connectionMono;
+    private final EventSerializer eventSerializer;
+    private final AtomicBoolean isRunning;
+
+    private GroupRegistrationHandler groupRegistrationHandler;
+    private EventDispatcher eventDispatcher;
+    private Sender sender;
 
     RabbitMQEventBus(RabbitMQConnectionFactory rabbitMQConnectionFactory, EventSerializer eventSerializer) {
-        Mono<Connection> connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
-        this.sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
-        this.groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono);
-        this.eventDispatcher = new EventDispatcher(eventSerializer, sender);
+        this.connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
+        this.eventSerializer = eventSerializer;
+        isRunning = new AtomicBoolean(false);
     }
 
     public void start() {
-        eventDispatcher.start();
+        if (!isRunning.get()) {
+            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono);
+            eventDispatcher = new EventDispatcher(eventSerializer, sender);
+
+            eventDispatcher.start();
+
+            isRunning.set(true);
+        }
     }
 
     @PreDestroy
     public void stop() {
-        groupRegistrationHandler.stop();
-        sender.close();
+        if (isRunning.get()) {
+            groupRegistrationHandler.stop();
+            sender.close();
+            isRunning.set(false);
+        }
     }
 
     @Override

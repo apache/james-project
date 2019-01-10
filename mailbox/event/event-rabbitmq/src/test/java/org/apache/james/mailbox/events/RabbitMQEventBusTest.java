@@ -20,25 +20,37 @@
 package org.apache.james.mailbox.events;
 
 import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
 import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
+import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
+import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.mock;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
+import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
+import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -157,5 +169,203 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             return eventSerializer.fromJson(new String(eventInBytes, StandardCharsets.UTF_8))
                 .get();
         }
+    }
+
+    @Nested
+    class LifeCycleTest {
+
+        private RabbitMQManagementAPI rabbitManagementAPI;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            rabbitManagementAPI = rabbitMQExtension.managementAPI();
+        }
+
+        @Nested
+        class SingleEventBus {
+            @Test
+            void startShouldCreateEventExchange() {
+                eventBus.start();
+                assertThat(rabbitManagementAPI.listExchanges())
+                    .filteredOn(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME))
+                    .hasOnlyOneElementSatisfying(exchange -> {
+                        assertThat(exchange.isDurable()).isTrue();
+                        assertThat(exchange.getType()).isEqualTo(DIRECT_EXCHANGE);
+                    });
+            }
+
+            @Test
+            void stopShouldNotDeleteEventBusExchange() {
+                eventBus.start();
+                eventBus.stop();
+
+                assertThat(rabbitManagementAPI.listExchanges())
+                    .anySatisfy(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME));
+            }
+
+            @Test
+            void stopShouldNotDeleteGroupRegistrationWorkQueue() {
+                eventBus.start();
+                eventBus.register(mock(MailboxListener.class), GROUP_A);
+                eventBus.stop();
+
+                assertThat(rabbitManagementAPI.listQueues())
+                    .anySatisfy(queue -> queue.getName().contains(GroupA.class.getName()));
+            }
+
+            @Test
+            void stopShouldDeleteKeyRegistrationWorkQueue() {
+                eventBus.start();
+                eventBus.stop();
+
+                assertThat(rabbitManagementAPI.listQueues())
+                    .isEmpty();
+            }
+
+            @Test
+            void eventBusShouldNotThrowWhenContinuouslyStartAndStop() {
+                assertThatCode(() -> {
+                    eventBus.start();
+                    eventBus.stop();
+                    eventBus.stop();
+                    eventBus.start();
+                    eventBus.start();
+                    eventBus.start();
+                    eventBus.stop();
+                    eventBus.stop();
+                }).doesNotThrowAnyException();
+            }
+
+            @Test
+            void registrationsShouldNotHandleEventsAfterStop() throws Exception {
+                eventBus.start();
+
+                MailboxListenerCountingSuccessfulExecution listener = new MailboxListenerCountingSuccessfulExecution();
+                eventBus.register(listener, GROUP_A);
+
+                int threadCount = 10;
+                int operationCount = 1000;
+                int maxEventsDispatched = threadCount * operationCount;
+                ConcurrentTestRunner.builder()
+                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
+                    .threadCount(10)
+                    .operationCount(1000)
+                    .runSuccessfullyWithin(Duration.ofSeconds(5));
+
+                eventBus.stop();
+                int callsAfterStop = listener.numberOfEventCalls();
+
+                TimeUnit.SECONDS.sleep(1);
+                assertThat(listener.numberOfEventCalls())
+                    .isEqualTo(callsAfterStop)
+                    .isLessThan(maxEventsDispatched);
+            }
+        }
+
+        @Nested
+        class MultiEventBus {
+
+            private RabbitMQEventBus eventBus3;
+
+            @BeforeEach
+            void setUp() {
+                eventBus3 = new RabbitMQEventBus(connectionFactory, eventSerializer);
+                eventBus3.start();
+            }
+
+            @AfterEach
+            void tearDown() {
+                eventBus3.stop();
+            }
+
+            @Test
+            void multipleEventBusStartShouldCreateOnlyOneEventExchange() {
+                assertThat(rabbitManagementAPI.listExchanges())
+                    .filteredOn(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME))
+                    .hasSize(1);
+            }
+
+            @Test
+            void multipleEventBusShouldNotThrowWhenStartAndStopContinuously() {
+                assertThatCode(() -> {
+                    eventBus.start();
+                    eventBus.start();
+                    eventBus2.start();
+                    eventBus2.start();
+                    eventBus.stop();
+                    eventBus.stop();
+                    eventBus.stop();
+                    eventBus3.start();
+                    eventBus3.start();
+                    eventBus3.start();
+                    eventBus3.stop();
+                    eventBus.start();
+                    eventBus2.start();
+                    eventBus.stop();
+                    eventBus2.stop();
+                }).doesNotThrowAnyException();
+            }
+
+            @Test
+            void multipleEventBusStopShouldNotDeleteEventBusExchange() {
+                eventBus.stop();
+                eventBus2.stop();
+                eventBus3.stop();
+
+                assertThat(rabbitManagementAPI.listExchanges())
+                    .anySatisfy(exchange -> exchange.getName().equals(MAILBOX_EVENT_EXCHANGE_NAME));
+            }
+
+            @Test
+            void multipleEventBusStopShouldNotDeleteGroupRegistrationWorkQueue() {
+                eventBus.register(mock(MailboxListener.class), GROUP_A);
+
+                eventBus.stop();
+                eventBus2.stop();
+                eventBus3.stop();
+
+                assertThat(rabbitManagementAPI.listQueues())
+                    .anySatisfy(queue -> queue.getName().contains(GroupA.class.getName()));
+            }
+
+            @Test
+            void multipleEventBusStopShouldDeleteAllKeyRegistrationsWorkQueue() {
+                eventBus.stop();
+                eventBus2.stop();
+                eventBus3.stop();
+
+                assertThat(rabbitManagementAPI.listQueues())
+                    .isEmpty();
+            }
+
+            @Test
+            void registrationsShouldNotHandleEventsAfterStop() throws Exception {
+                eventBus.start();
+                eventBus2.start();
+
+                MailboxListenerCountingSuccessfulExecution listener = new MailboxListenerCountingSuccessfulExecution();
+                eventBus.register(listener, GROUP_A);
+                eventBus2.register(listener, GROUP_A);
+
+                int threadCount = 10;
+                int operationCount = 1000;
+                int maxEventsDispatched = threadCount * operationCount;
+                ConcurrentTestRunner.builder()
+                    .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
+                    .threadCount(10)
+                    .operationCount(1000)
+                    .runSuccessfullyWithin(Duration.ofSeconds(5));
+
+                eventBus.stop();
+                eventBus2.stop();
+                int callsAfterStop = listener.numberOfEventCalls();
+
+                TimeUnit.SECONDS.sleep(1);
+                assertThat(listener.numberOfEventCalls())
+                    .isEqualTo(callsAfterStop)
+                    .isLessThan(maxEventsDispatched);
+            }
+        }
+
     }
 }
