@@ -48,31 +48,11 @@ public class MappingsImpl implements Mappings, Serializable {
     private static class DefaultMappingOrderingPolicy {
 
         private static final Comparator<Mapping> MAPPING_COMPARATOR = Comparator
-            .<Mapping, Integer>comparing(DefaultMappingOrderingPolicy::typeOrder)
+            .comparing(DefaultMappingOrderingPolicy::typeOrder)
             .thenComparing(Mapping::asString);
 
         private static int typeOrder(Mapping mapping) {
-            return typeOrder(mapping.getType());
-        }
-
-        private static int typeOrder(Mapping.Type type) {
-            switch (type) {
-                case Domain:
-                    return 1;
-                case Group:
-                    return 2;
-                case Forward:
-                    return 3;
-                case Alias:
-                    return 3;
-                case Regex:
-                    return 4;
-                case Error:
-                    return 4;
-                case Address:
-                    return 4;
-            }
-            throw new IllegalArgumentException("missing enum handling");
+            return mapping.getType().getTypeOrder();
         }
 
         public Comparator<Mapping> comparator() {
