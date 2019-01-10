@@ -21,9 +21,30 @@ package org.apache.james.mailbox.events;
 
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.model.MailboxId;
 
 public class MailboxIdRegistrationKey implements RegistrationKey {
+    public static class Factory implements RegistrationKey.Factory {
+        private final MailboxId.Factory mailboxIdFactory;
+
+        @Inject
+        public Factory(MailboxId.Factory mailboxIdFactory) {
+            this.mailboxIdFactory = mailboxIdFactory;
+        }
+
+        @Override
+        public Class<? extends RegistrationKey> forClass() {
+            return MailboxIdRegistrationKey.class;
+        }
+
+        @Override
+        public RegistrationKey fromString(String asString) {
+            return new MailboxIdRegistrationKey(mailboxIdFactory.fromString(asString));
+        }
+    }
+
     private final MailboxId mailboxId;
 
     public MailboxIdRegistrationKey(MailboxId mailboxId) {
@@ -32,6 +53,11 @@ public class MailboxIdRegistrationKey implements RegistrationKey {
 
     public MailboxId getMailboxId() {
         return mailboxId;
+    }
+
+    @Override
+    public String asString() {
+        return mailboxId.serialize();
     }
 
     @Override

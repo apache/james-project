@@ -20,4 +20,12 @@
 package org.apache.james.mailbox.events;
 
 public interface RegistrationKey {
+
+    interface Factory {
+        Class<? extends RegistrationKey> forClass();
+
+        RegistrationKey fromString(String asString);
+    }
+
+    String asString();
 }
