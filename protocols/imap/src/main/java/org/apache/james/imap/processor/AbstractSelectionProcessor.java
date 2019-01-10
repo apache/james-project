@@ -61,11 +61,10 @@ import com.google.common.collect.ImmutableList;
 
 abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequest> extends AbstractMailboxProcessor<M> implements PermitEnableCapabilityProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSelectionProcessor.class);
-
-    final StatusResponseFactory statusResponseFactory;
-
-    private final boolean openReadOnly;
     private static final List<String> CAPS = ImmutableList.of(ImapConstants.SUPPORTS_QRESYNC, ImapConstants.SUPPORTS_CONDSTORE);
+
+    private final StatusResponseFactory statusResponseFactory;
+    private final boolean openReadOnly;
 
     
     public AbstractSelectionProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory statusResponseFactory, boolean openReadOnly,
