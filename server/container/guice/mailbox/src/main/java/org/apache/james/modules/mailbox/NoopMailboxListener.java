@@ -25,7 +25,7 @@ import org.apache.james.mailbox.events.Group;
 public class NoopMailboxListener implements MailboxListener.GroupMailboxListener {
     private static class NoopMailboxListenerGroup extends Group {}
 
-    public static final Group GROUP = new NoopMailboxListenerGroup();
+    static final Group GROUP = new NoopMailboxListenerGroup();
 
     @Override
     public ListenerType getType() {

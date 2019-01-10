@@ -21,8 +21,7 @@ package org.apache.james.modules.mailbox;
 import org.apache.james.mailbox.MailboxListener;
 
 public interface MailboxListenersLoader {
+    MailboxListener.GroupMailboxListener createListener(ListenerConfiguration configuration);
 
-    MailboxListener createListener(ListenerConfiguration configuration);
-
-    void register(MailboxListener listener);
+    void register(MailboxListener.GroupMailboxListener listener);
 }

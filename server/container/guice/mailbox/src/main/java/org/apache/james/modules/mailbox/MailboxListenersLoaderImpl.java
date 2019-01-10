@@ -23,7 +23,7 @@ import java.util.Set;
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
-import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
+import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,19 +31,18 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.Inject;
 
 public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxListenersLoaderImpl.class);
 
     private final MailboxListenerFactory mailboxListenerFactory;
-    private final MailboxListenerRegistry registry;
+    private final EventBus eventBus;
     private final ExtendedClassLoader classLoader;
-    private final Set<MailboxListener> guiceDefinedListeners;
+    private final Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners;
 
     @Inject
-    public MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, MailboxListenerRegistry registry,
-                                  ExtendedClassLoader classLoader, Set<MailboxListener> guiceDefinedListeners) {
+    public MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, EventBus eventBus,
+                                  ExtendedClassLoader classLoader, Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners) {
         this.mailboxListenerFactory = mailboxListenerFactory;
-        this.registry = registry;
+        this.eventBus = eventBus;
         this.classLoader = classLoader;
         this.guiceDefinedListeners = guiceDefinedListeners;
     }
@@ -62,12 +61,12 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     }
 
     @Override
-    public void register(MailboxListener listener) {
-        registry.addGlobalListener(listener);
+    public void register(MailboxListener.GroupMailboxListener listener) {
+        eventBus.register(listener);
     }
 
     @Override
-    public MailboxListener createListener(ListenerConfiguration configuration) {
+    public MailboxListener.GroupMailboxListener createListener(ListenerConfiguration configuration) {
         String listenerClass = configuration.getClazz();
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);

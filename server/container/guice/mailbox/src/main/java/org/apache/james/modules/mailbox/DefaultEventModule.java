@@ -31,7 +31,6 @@ import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
-import org.apache.james.mailbox.store.event.MailboxListenerRegistry;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
@@ -53,7 +52,6 @@ public class DefaultEventModule extends AbstractModule {
 
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
-        bind(MailboxListenerRegistry.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
 
