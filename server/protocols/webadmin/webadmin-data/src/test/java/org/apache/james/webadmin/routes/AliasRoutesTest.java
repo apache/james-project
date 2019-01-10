@@ -31,13 +31,13 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
@@ -53,6 +54,8 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -69,14 +72,10 @@ class AliasRoutesTest {
     public static final String BOB_ALIAS_WITH_SLASH = "bob-alias/@" + DOMAIN.name();
     public static final String BOB_ALIAS_WITH_ENCODED_SLASH = "bob-alias%2F@" + DOMAIN.name();
     public static final String ALICE = "alice@" + DOMAIN.name();
+    public static final String ALICE_ALIAS = "alice-alias@" + DOMAIN.name();
     public static final String BOB_PASSWORD = "123456";
     public static final String BOB_WITH_SLASH_PASSWORD = "abcdef";
     public static final String ALICE_PASSWORD = "789123";
-
-    private static final MappingSource BOB_ALIAS_SOURCE = MappingSource.fromUser("bob-alias", DOMAIN);
-    private static final MappingSource BOB_ALIAS_WITH_ENCODED_SLASH_SOURCE = MappingSource.fromUser("bob-alias/", DOMAIN);
-    private static final Mapping BOB_MAPPING = Mapping.alias(BOB);
-    private static final Mapping BOB_WITH_ENCODED_SLASH_MAPPING = Mapping.alias(BOB_WITH_SLASH);
 
     private WebAdminServer webAdminServer;
 
@@ -123,7 +122,58 @@ class AliasRoutesTest {
             usersRepository.addUser(BOB_WITH_SLASH, BOB_WITH_SLASH_PASSWORD);
             usersRepository.addUser(ALICE, ALICE_PASSWORD);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository));
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer()));
+        }
+
+        @Test
+        void getAliasesShouldBeEmpty() {
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("[]"));
+        }
+
+        @Test
+        void getAliasesShouldListExistingAliasesInAlphabeticOrder() {
+            with()
+                .put(ALICE + SEPARATOR + "sources" + SEPARATOR + ALICE_ALIAS);
+
+            with()
+                .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            List<String> addresses =
+                when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .statusCode(HttpStatus.OK_200)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+            assertThat(addresses).containsExactly(ALICE, BOB);
+        }
+
+        @Test
+        void getNotRegisteredAliasesShouldReturnEmptyList() {
+            when()
+                .get("unknown@domain.travel")
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("[]"));
+        }
+
+        @Test
+        void getAliasesShouldReturnEmptyListWhenNoAliasMappings() {
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("[]"));
         }
 
         @Test
@@ -202,7 +252,12 @@ class AliasRoutesTest {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
         }
 
         @Test
@@ -210,15 +265,25 @@ class AliasRoutesTest {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS_WITH_ENCODED_SLASH);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_WITH_ENCODED_SLASH_SOURCE)).containsOnly(BOB_MAPPING);
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS_WITH_SLASH));
         }
 
         @Test
-        void putAliasForUserWithEncodedSlashShouldCreateForward() {
+        void putAliasForUserWithEncodedSlashShouldCreateAlias() {
             with()
                 .put(BOB_WITH_ENCODED_SLASH + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_WITH_ENCODED_SLASH_MAPPING);
+            when()
+                .get(BOB_WITH_ENCODED_SLASH)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
         }
 
         @Test
@@ -229,34 +294,106 @@ class AliasRoutesTest {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
         }
 
         @Test
-        void putAliasForUserShouldAllowSeveralSources() {
-            MappingSource source2 = MappingSource.fromUser("bob-alias2", DOMAIN);
-
+        void putAliasForUserShouldAllowSeveralSourcesAndReturnThemInAlphabeticalOrder() {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS_2);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(source2)).containsOnly(BOB_MAPPING);
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS, BOB_ALIAS_2));
         }
 
         @Test
         void putAliasForUserShouldAllowSeveralDestinations() {
-            Mapping aliceMapping = Mapping.alias(ALICE);
-
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
             with()
                 .put(ALICE + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING, aliceMapping);
+            when()
+                .get(BOB)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
+
+            when()
+                .get(ALICE)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
+        }
+
+        @Test
+        void putAliasForUserShouldNotRequireExistingBaseUser() {
+            String notExistingAddress = "notFound@" + DOMAIN.name();
+
+            with()
+                .put(notExistingAddress + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            when()
+                .get(notExistingAddress)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body("source", hasItems(BOB_ALIAS));
+        }
+
+        @Test
+        void deleteAliasNotInAliasesShouldReturnOK() {
+            when()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteAliasInAliasesShouldDeleteAliasForUser() {
+            with()
+                .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            with()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            when()
+                .get(BOB_ALIAS)
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("[]"));
+        }
+
+        @Test
+        void deleteLastAliasOfUserInAliasesShouldDeleteUserFromAliasList() {
+            with()
+                .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            with()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(is("[]"));
         }
     }
 
@@ -284,7 +421,7 @@ class AliasRoutesTest {
             UsersRepository userRepository = mock(UsersRepository.class);
             DomainList domainList = mock(DomainList.class);
             Mockito.when(domainList.containsDomain(any())).thenReturn(true);
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository));
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, userRepository, new JsonTransformer()));
         }
 
         @Test
@@ -326,7 +463,7 @@ class AliasRoutesTest {
         }
 
         @Test
-        void putUserDestinationInForwardWithSlashShouldReturnNotFound() {
+        void putUserDestinationInAliasWithSlashShouldReturnNotFound() {
             when()
                 .put(BOB_WITH_SLASH + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
             .then()
@@ -345,6 +482,52 @@ class AliasRoutesTest {
         void putRequiresTwoPathParams() {
             when()
                 .put(BOB)
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void deleteMalformedUserDestinationShouldReturnBadRequest() {
+            Map<String, Object> errors = when()
+                .delete("not-an-address" + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The alias is not an email address")
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void deleteMalformedAliasShouldReturnBadRequest() {
+            Map<String, Object> errors = when()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + "not-an-address")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "The alias is not an email address")
+                .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
+        }
+
+        @Test
+        void deleteRequiresTwoPathParams() {
+            when()
+                .delete(BOB)
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
@@ -369,6 +552,78 @@ class AliasRoutesTest {
 
             when()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void getAllShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+            doThrow(RecipientRewriteTableException.class)
+                .when(memoryRecipientRewriteTable)
+                .getAllMappings();
+
+            when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void getAllShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+            doThrow(RuntimeException.class)
+                .when(memoryRecipientRewriteTable)
+                .getAllMappings();
+
+            when()
+                .get()
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void deleteShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+            doThrow(RecipientRewriteTableException.class)
+                .when(memoryRecipientRewriteTable)
+                .removeAliasMapping(any(), anyString());
+
+            when()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void deleteShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+            doThrow(RuntimeException.class)
+                .when(memoryRecipientRewriteTable)
+                .removeAliasMapping(any(), anyString());
+
+            when()
+                .delete(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void getShouldReturnErrorWhenRecipientRewriteTableExceptionIsThrown() throws Exception {
+            doThrow(RecipientRewriteTableException.class)
+                .when(memoryRecipientRewriteTable)
+                .getAllMappings();
+
+            when()
+                .get(BOB)
+            .then()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+        }
+
+        @Test
+        void getShouldReturnErrorWhenRuntimeExceptionIsThrown() throws Exception {
+            doThrow(RuntimeException.class)
+                .when(memoryRecipientRewriteTable)
+                .getAllMappings();
+
+            when()
+                .get(BOB)
             .then()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }

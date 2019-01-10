@@ -1314,7 +1314,46 @@ to be configured.
 
 Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
 
+ - [Listing users with aliases](#Listing_users_with_aliases)
+ - [Listing alias sources of an user](#Listing_alias_sources_of_an_user)
  - [Adding a new alias to an user](#Adding_a_new_alias_to_an_user)
+ - [Removing an alias of an user](#Removing_an_alias_of_an_user)
+
+### Listing users with aliases
+
+```
+curl -XGET http://ip:port/address/aliases
+```
+
+Will return the users having aliases configured as a list of JSON Strings representing mail addresses. For instance:
+
+```
+["user1@domain.com", "user2@domain.com"]
+```
+
+Response codes:
+
+ - 200: Success
+
+### Listing alias sources of an user
+
+```
+curl -XGET http://ip:port/address/aliases/user@domain.com
+```
+
+Will return the aliases of this user as a list of JSON Strings representing mail addresses. For instance:
+
+```
+[
+  {"source":"alias1@domain.com"},
+  {"source":"alias2@domain.com"}
+]
+```
+
+Response codes:
+
+ - 200: Success
+ - 400: Alias structure is not valid
 
 ### Adding a new alias to an user
 
@@ -1329,6 +1368,20 @@ Response codes:
  - 204: OK
  - 400: Alias structure or member is not valid
  - 400: The alias source exists as an user already
+ - 400: Source and destination can't be the same!
+
+### Removing an alias of an user
+
+```
+curl -XDELETE http://ip:port/address/aliases/user@domain.com/sources/alias@domain.com
+```
+
+Will remove alias@domain.com from user@domain.com, removing the alias if needed
+
+Response codes:
+
+ - 204: OK
+ - 400: Alias structure or member is not valid
 
 ## Administrating mail repositories
 

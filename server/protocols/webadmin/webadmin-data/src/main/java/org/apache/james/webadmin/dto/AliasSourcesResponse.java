@@ -17,11 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.rrt.api;
+package org.apache.james.webadmin.dto;
 
-public class SameSourceAndDestinationException extends RecipientRewriteTableException {
+public class AliasSourcesResponse {
+    private final String source;
 
-    public SameSourceAndDestinationException(String msg) {
-        super(msg);
+    public AliasSourcesResponse(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return source;
     }
 }

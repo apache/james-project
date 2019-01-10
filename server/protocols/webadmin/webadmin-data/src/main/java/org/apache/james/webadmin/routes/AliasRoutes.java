@@ -22,7 +22,12 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.inject.Inject;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -33,15 +38,22 @@ import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.api.SameSourceAndDestinationException;
+import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.OptionalUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
+import org.apache.james.webadmin.dto.AliasSourcesResponse;
 import org.apache.james.webadmin.utils.ErrorResponder;
+import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -70,12 +82,14 @@ public class AliasRoutes implements Routes {
     private static final String ADDRESS_TYPE = "alias";
 
     private final UsersRepository usersRepository;
+    private final JsonTransformer jsonTransformer;
     private final RecipientRewriteTable recipientRewriteTable;
 
     @Inject
     @VisibleForTesting
-    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository) {
+    AliasRoutes(RecipientRewriteTable recipientRewriteTable, UsersRepository usersRepository, JsonTransformer jsonTransformer) {
         this.usersRepository = usersRepository;
+        this.jsonTransformer = jsonTransformer;
         this.recipientRewriteTable = recipientRewriteTable;
     }
 
@@ -86,7 +100,29 @@ public class AliasRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.put(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::addToAliasSources);
+        service.get(ROOT_PATH, this::listAddressesWithAliases, jsonTransformer);
+        service.get(ALIAS_ADDRESS_PATH, this::listAliasesOfAddress, jsonTransformer);
+        service.put(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::addAlias);
+        service.delete(USER_IN_ALIAS_SOURCES_ADDRESSES_PATH, this::deleteAlias);
+    }
+
+    @GET
+    @Path(ROOT_PATH)
+    @ApiOperation(value = "getting addresses containing aliases list")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
+    })
+    public ImmutableSet<String> listAddressesWithAliases(Request request, Response response) throws RecipientRewriteTableException {
+        return recipientRewriteTable.getAllMappings()
+            .entrySet().stream()
+            .filter(e -> e.getValue().contains(Mapping.Type.Alias))
+            .map(Map.Entry::getValue)
+            .flatMap(Mappings::asStream)
+            .flatMap(mapping -> OptionalUtils.toStream(mapping.asMailAddress()))
+            .map(MailAddress::asString)
+            .collect(Guavate.toImmutableSortedSet());
     }
 
     @PUT
@@ -106,10 +142,11 @@ public class AliasRoutes implements Routes {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The alias source exists as an user already"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Source and destination can't be the same!"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
             message = "Internal server error - Something went bad on the server side.")
     })
-    public HaltException addToAliasSources(Request request, Response response) throws UsersRepositoryException, RecipientRewriteTableException {
+    public HaltException addAlias(Request request, Response response) throws UsersRepositoryException, RecipientRewriteTableException {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
@@ -142,5 +179,57 @@ public class AliasRoutes implements Routes {
                 .message("The alias source exists as an user already")
                 .haltError();
         }
+    }
+
+    @DELETE
+    @Path(ROOT_PATH + "/{" + ALIAS_DESTINATION_ADDRESS + "}/sources/{" + ALIAS_SOURCE_ADDRESS + "}")
+    @ApiOperation(value = "remove an alias from a destination address")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_DESTINATION_ADDRESS, paramType = "path",
+            value = "Destination mail address of the alias to remove.\n" +
+                MAILADDRESS_ASCII_DISCLAIMER),
+        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_SOURCE_ADDRESS, paramType = "path",
+            value = "Source mail address of the alias to remove.\n" +
+                MAILADDRESS_ASCII_DISCLAIMER)
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK"),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400,
+            message = ALIAS_DESTINATION_ADDRESS + " or alias structure format is not valid"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
+    })
+    public HaltException deleteAlias(Request request, Response response) throws RecipientRewriteTableException {
+        MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
+        MailAddress aliasToBeRemoved = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
+        MappingSource source = MappingSource.fromMailAddress(aliasToBeRemoved);
+        recipientRewriteTable.removeAliasMapping(source, destinationAddress.asString());
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    @GET
+    @Path(ROOT_PATH + "/{" + ALIAS_DESTINATION_ADDRESS + "}")
+    @ApiOperation(value = "listing alias sources of an address")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = ALIAS_DESTINATION_ADDRESS, paramType = "path")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.OK_200, message = "OK", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The destination is not an address"),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
+    })
+    public ImmutableSet<AliasSourcesResponse> listAliasesOfAddress(Request request, Response response) throws RecipientRewriteTableException {
+        MailAddress baseAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
+
+        return recipientRewriteTable.getAllMappings()
+            .entrySet().stream()
+            .filter(e -> e.getValue().contains(Mapping.alias(baseAddress.asString())))
+            .map(Map.Entry::getKey)
+            .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
+            .map(MailAddress::asString)
+            .sorted()
+            .map(AliasSourcesResponse::new)
+            .collect(Guavate.toImmutableSet());
     }
 }
