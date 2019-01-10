@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -92,6 +93,12 @@ public class MessageMoves {
 
     public ImmutableSet<MailboxId> getTargetMailboxIds() {
         return targetMailboxIds;
+    }
+
+    public Stream<MailboxId> impactedMailboxIds() {
+        return Stream.concat(
+            addedMailboxIds().stream(),
+            removedMailboxIds().stream());
     }
 
     @Override
