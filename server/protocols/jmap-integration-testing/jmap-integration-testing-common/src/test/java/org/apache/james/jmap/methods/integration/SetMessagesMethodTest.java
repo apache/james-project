@@ -96,6 +96,7 @@ import org.apache.james.mailbox.model.SerializableQuotaValue;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
+import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -123,7 +124,6 @@ import org.junit.experimental.categories.Category;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 
 import io.restassured.RestAssured;
@@ -2307,18 +2307,8 @@ public abstract class SetMessagesMethodTest {
             "  ]" +
             "]";
 
-        List<Event> events = Lists.newArrayList();
-        jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(new MailboxListener() {
-            @Override
-            public ListenerType getType() {
-                return ListenerType.ONCE;
-            }
-
-            @Override
-            public void event(Event event) {
-                events.add(event);
-            }
-        });
+        EventCollector eventCollector = new EventCollector();
+        jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(eventCollector);
 
         String messageId = with()
             .header("Authorization", accessToken.serialize())
@@ -2332,7 +2322,7 @@ public abstract class SetMessagesMethodTest {
 
 
 
-        calmlyAwait.atMost(5, TimeUnit.SECONDS).until(() -> events.stream()
+        calmlyAwait.atMost(5, TimeUnit.SECONDS).until(() -> eventCollector.getEvents().stream()
             .anyMatch(event -> isAddedToOutboxEvent(messageId, event, outboxId)));
     }
 
