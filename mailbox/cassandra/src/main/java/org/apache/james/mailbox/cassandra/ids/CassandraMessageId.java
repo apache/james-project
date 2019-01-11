@@ -62,6 +62,11 @@ public class CassandraMessageId implements MessageId {
     }
 
     @Override
+    public boolean isSerializable() {
+        return true;
+    }
+
+    @Override
     public final boolean equals(Object o) {
         if (o instanceof CassandraMessageId) {
             CassandraMessageId other = (CassandraMessageId) o;

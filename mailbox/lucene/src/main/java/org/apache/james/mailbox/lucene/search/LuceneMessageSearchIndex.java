@@ -548,7 +548,11 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
         doc.add(new Field(MAILBOX_ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US), Store.YES, Index.NOT_ANALYZED));
         doc.add(new NumericField(UID_FIELD,Store.YES, true).setLongValue(membership.getUid().asLong()));
         doc.add(new Field(HAS_ATTACHMENT_FIELD, Boolean.toString(hasAttachment(membership)), Store.YES, Index.NOT_ANALYZED));
-        doc.add(new Field(MESSAGE_ID_FIELD, SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership), Store.YES, Index.NOT_ANALYZED));
+
+        String serializedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(membership);
+        if (serializedMessageId != null) {
+            doc.add(new Field(MESSAGE_ID_FIELD, serializedMessageId, Store.YES, Index.NOT_ANALYZED));
+        }
 
         // create an unqiue key for the document which can be used later on updates to find the document
         doc.add(new Field(ID_FIELD, membership.getMailboxId().serialize().toUpperCase(Locale.US) + "-" + Long.toString(membership.getUid().asLong()), Store.YES, Index.NOT_ANALYZED));

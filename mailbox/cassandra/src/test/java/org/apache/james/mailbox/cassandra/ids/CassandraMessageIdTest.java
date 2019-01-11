@@ -62,4 +62,9 @@ public class CassandraMessageIdTest {
         String expected = uuid.toString();
         assertThat(cassandraMessageId.serialize()).isEqualTo(expected);
     }
+
+    @Test
+    public void shouldBeSerializable() {
+        assertThat(new CassandraMessageId.Factory().generate().isSerializable()).isTrue();
+    }
 }

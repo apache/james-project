@@ -107,8 +107,8 @@ public class SearchUtilTest {
         //given
         String messageIdString = "http://www.labraxeenne.com/#/";
         MessageId messageId = mock(MessageId.class);
-        when(messageId.serialize())
-            .thenReturn(messageIdString);
+        when(messageId.serialize()).thenReturn(messageIdString);
+        when(messageId.isSerializable()).thenReturn(true);
 
         MailboxMessage message = mock(MailboxMessage.class);
         when(message.getMessageId())
@@ -119,6 +119,23 @@ public class SearchUtilTest {
 
         //expect
         assertThat(messageIdString).isEqualTo(serialiazedMessageId);
+    }
+
+    @Test
+    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnNullWhenNotSupported() {
+        //given
+        MessageId messageId = mock(MessageId.class);
+        when(messageId.isSerializable()).thenReturn(false);
+
+        MailboxMessage message = mock(MailboxMessage.class);
+        when(message.getMessageId())
+            .thenReturn(messageId);
+
+        //when
+        String serialiazedMessageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
+
+        //expect
+        assertThat(serialiazedMessageId).isNull();
     }
 
 }
