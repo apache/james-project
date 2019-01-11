@@ -68,7 +68,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
                     (MailboxEvent) event);
             }
         } catch (MailboxException e) {
-            LOGGER.error("Unable to update index", e);
+            LOGGER.error("Unable to update index for event {}", event, e);
         }
     }
 
