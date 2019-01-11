@@ -21,14 +21,15 @@ package org.apache.james.mailbox.events;
 
 import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
-import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
@@ -52,14 +53,27 @@ public class EventDispatcher {
             .block();
     }
 
-    Mono<Void> dispatch(Event event) {
-        Mono<OutboundMessage> outboundMessage = Mono.just(event)
+    Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
+        Mono<byte[]> serializedEvent = Mono.just(event)
             .publishOn(Schedulers.parallel())
             .map(this::serializeEvent)
-            .map(payload -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, EMPTY_ROUTING_KEY, payload));
+            .cache();
 
-        return sender.send(outboundMessage)
+        return doDispatch(serializedEvent, keys)
             .subscribeWith(MonoProcessor.create());
+    }
+
+    private Mono<Void> doDispatch(Mono<byte[]> serializedEvent, Set<RegistrationKey> keys) {
+        Flux<RoutingKeyConverter.RoutingKey> routingKeys = Flux.concat(
+            Mono.just(RoutingKeyConverter.RoutingKey.empty()),
+            Flux.fromIterable(keys)
+                .map(RoutingKeyConverter.RoutingKey::of));
+
+        Flux<OutboundMessage> outboundMessages = routingKeys
+            .flatMap(routingKey -> serializedEvent
+                .map(payload -> new OutboundMessage(MAILBOX_EVENT_EXCHANGE_NAME, routingKey.asString(), payload)));
+
+        return sender.send(outboundMessages);
     }
 
     private byte[] serializeEvent(Event event) {

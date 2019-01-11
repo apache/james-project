@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backend.rabbitmq.RabbitMQConnectionFactory;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.Event;
@@ -44,25 +43,29 @@ class RabbitMQEventBus implements EventBus {
     private final Mono<Connection> connectionMono;
     private final EventSerializer eventSerializer;
     private final AtomicBoolean isRunning;
+    private final RoutingKeyConverter routingKeyConverter;
 
     private GroupRegistrationHandler groupRegistrationHandler;
+    private KeyRegistrationHandler keyRegistrationHandler;
     private EventDispatcher eventDispatcher;
     private Sender sender;
 
-    RabbitMQEventBus(RabbitMQConnectionFactory rabbitMQConnectionFactory, EventSerializer eventSerializer) {
+    RabbitMQEventBus(RabbitMQConnectionFactory rabbitMQConnectionFactory, EventSerializer eventSerializer, RoutingKeyConverter routingKeyConverter) {
         this.connectionMono = Mono.fromSupplier(rabbitMQConnectionFactory::create).cache();
         this.eventSerializer = eventSerializer;
-        isRunning = new AtomicBoolean(false);
+        this.routingKeyConverter = routingKeyConverter;
+        this.isRunning = new AtomicBoolean(false);
     }
 
     public void start() {
         if (!isRunning.get()) {
             sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono));
             groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono);
+            keyRegistrationHandler = new KeyRegistrationHandler(eventSerializer, sender, connectionMono, routingKeyConverter);
             eventDispatcher = new EventDispatcher(eventSerializer, sender);
 
             eventDispatcher.start();
-
+            keyRegistrationHandler.start();
             isRunning.set(true);
         }
     }
@@ -71,6 +74,7 @@ class RabbitMQEventBus implements EventBus {
     public void stop() {
         if (isRunning.get()) {
             groupRegistrationHandler.stop();
+            keyRegistrationHandler.stop();
             sender.close();
             isRunning.set(false);
         }
@@ -78,7 +82,7 @@ class RabbitMQEventBus implements EventBus {
 
     @Override
     public Registration register(MailboxListener listener, RegistrationKey key) {
-        throw new NotImplementedException("will implement latter");
+        return keyRegistrationHandler.register(listener, key);
     }
 
     @Override
@@ -89,7 +93,7 @@ class RabbitMQEventBus implements EventBus {
     @Override
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> key) {
         if (!event.isNoop()) {
-            return eventDispatcher.dispatch(event);
+            return eventDispatcher.dispatch(event, key);
         }
         return Mono.empty();
     }

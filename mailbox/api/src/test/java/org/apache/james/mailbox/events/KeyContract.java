@@ -25,13 +25,17 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
+import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertTimeout;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -242,5 +246,77 @@ public interface KeyContract extends EventBusContract {
                     latch.countDown();
                 });
         }
+
+        @Test
+        default void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
+            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            doThrow(new RuntimeException())
+                .doCallRealMethod()
+                .when(listener).event(any());
+            eventBus().register(listener, KEY_1);
+
+            eventBus().dispatch(EVENT, KEY_1).block();
+            eventBus().dispatch(EVENT, KEY_1).block();
+
+            WAIT_CONDITION
+                .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
+        }
+
+        @Test
+        default void allRegisteredListenersShouldBeExecutedWhenARegisteredListenerFails() {
+            MailboxListener listener = newListener();
+
+            MailboxListener failingListener = mock(MailboxListener.class);
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
+            doThrow(new RuntimeException()).when(failingListener).event(any());
+
+            eventBus().register(failingListener, KEY_1);
+            eventBus().register(listener, KEY_1);
+
+            eventBus().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+            verify(listener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+    }
+
+    interface MultipleEventBusKeyContract extends MultipleEventBusContract {
+
+        @Test
+        default void crossEventBusRegistrationShouldBeAllowed() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, KEY_1);
+
+            eventBus2().dispatch(EVENT, KEY_1).block();
+
+            verify(mailboxListener, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
+        @Test
+        default void unregisteredDistantListenersShouldNotBeNotified() {
+            MailboxListener mailboxListener = newListener();
+
+            eventBus().register(mailboxListener, KEY_1).unregister();
+
+            eventBus2().dispatch(EVENT, ImmutableSet.of(KEY_1)).block();
+
+            verify(mailboxListener, after(FIVE_HUNDRED_MS).never())
+                .event(any());
+        }
+
+        @Test
+        default void allRegisteredListenersShouldBeDispatched() {
+            MailboxListener mailboxListener1 = newListener();
+            MailboxListener mailboxListener2 = newListener();
+
+            eventBus().register(mailboxListener1, KEY_1);
+            eventBus2().register(mailboxListener2, KEY_1);
+
+            eventBus2().dispatch(EVENT, KEY_1).block();
+
+            verify(mailboxListener1, timeout(ONE_SECOND).times(1)).event(any());
+            verify(mailboxListener2, timeout(ONE_SECOND).times(1)).event(any());
+        }
+
     }
 }
