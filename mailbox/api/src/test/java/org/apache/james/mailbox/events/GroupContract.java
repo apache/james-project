@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
+import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_2;
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GroupB;
@@ -34,7 +35,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 
 public interface GroupContract {
@@ -171,15 +172,11 @@ public interface GroupContract {
 
         @Test
         default void failingGroupListenersShouldNotAbortGroupDelivery() {
-            EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
+            EventBusTestFixture.EventMatcherThrowingListener listener = new EventBusTestFixture.EventMatcherThrowingListener(ImmutableSet.of(EVENT));
             eventBus().register(listener, new GroupA());
 
-            doThrow(new RuntimeException())
-                .doCallRealMethod()
-                .when(listener).event(any());
-
             eventBus().dispatch(EVENT, NO_KEYS).block();
-            eventBus().dispatch(EVENT, NO_KEYS).block();
+            eventBus().dispatch(EVENT_2, NO_KEYS).block();
 
             WAIT_CONDITION
                 .until(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));

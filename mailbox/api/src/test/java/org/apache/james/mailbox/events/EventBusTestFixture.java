@@ -59,20 +59,38 @@ public interface EventBusTestFixture {
         }
     }
 
+    class EventMatcherThrowingListener extends MailboxListenerCountingSuccessfulExecution {
+        private final ImmutableSet<Event> eventsCauseThrowing;
+
+        EventMatcherThrowingListener(ImmutableSet<Event> eventsCauseThrowing) {
+            this.eventsCauseThrowing = eventsCauseThrowing;
+        }
+
+        @Override
+        public void event(Event event) {
+            if (eventsCauseThrowing.contains(event)) {
+                throw new RuntimeException("event triggers throwing");
+            }
+            super.event(event);
+        }
+    }
+
     class GroupA extends Group {}
     class GroupB extends Group {}
     class GroupC extends Group {}
 
-    MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(
-        MailboxSession.SessionId.of(42),
-        User.fromUsername("user"),
-        new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName"),
-        TestId.of(18),
-        Event.EventId.random());
+    MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
+    User USER = User.fromUsername("user");
+    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName");
+    TestId TEST_ID = TestId.of(18);
+    Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
+    Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");
+    MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID);
+    MailboxListener.MailboxEvent EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
 
     int ONE_SECOND = 1000;
     int FIVE_HUNDRED_MS = 500;
-    MailboxId ID_1 = TestId.of(18);
+    MailboxId ID_1 = TEST_ID;
     MailboxId ID_2 = TestId.of(24);
     ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
