@@ -32,6 +32,7 @@ import org.apache.james.core.User;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -112,8 +113,8 @@ public class AliasRoutes implements Routes {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
-        MappingSource source = MappingSource.fromUser(User.fromMailAddress(destinationAddress));
-        addAlias(source, aliasSourceAddress);
+        MappingSource source = MappingSource.fromUser(User.fromMailAddress(aliasSourceAddress));
+        addAlias(source, destinationAddress);
         return halt(HttpStatus.NO_CONTENT_204);
     }
 
@@ -122,6 +123,12 @@ public class AliasRoutes implements Routes {
             recipientRewriteTable.addAliasMapping(source, aliasSourceAddress.asString());
         } catch (MappingAlreadyExistsException e) {
             // ignore
+        } catch (SameSourceAndDestinationException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message(e.getMessage())
+                .haltError();
         }
     }
 

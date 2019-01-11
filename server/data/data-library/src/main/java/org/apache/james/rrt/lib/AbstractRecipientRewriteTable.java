@@ -37,6 +37,7 @@ import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.SameSourceAndDestinationException;
 import org.apache.james.rrt.lib.Mapping.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -201,7 +202,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
 
-        LOGGER.info("Add address mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Add address mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -215,7 +216,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     private void checkHasValidAddress(Mapping mapping) throws RecipientRewriteTableException {
         if (!mapping.asMailAddress().isPresent()) {
-            throw new RecipientRewriteTableException("Invalid emailAddress: " + mapping.toString());
+            throw new RecipientRewriteTableException("Invalid emailAddress: " + mapping.asString());
         }
     }
 
@@ -224,7 +225,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.address(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove address mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Remove address mapping => {} for source: {}", mapping.asString(), source.asString());
         removeMapping(source, mapping);
     }
 
@@ -264,7 +265,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
 
-        LOGGER.info("Add forward mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Add forward mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -273,7 +274,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.forward(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove forward mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Remove forward mapping => {} for source: {}", mapping.asString(), source.asString());
         removeMapping(source, mapping);
     }
 
@@ -285,7 +286,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
 
-        LOGGER.info("Add group mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Add group mapping => {} for source: {}", mapping.asString(), source.asString());
         addMapping(source, mapping);
     }
 
@@ -294,7 +295,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.group(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove group mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Remove group mapping => {} for source: {}", mapping.asString(), source.asString());
         removeMapping(source, mapping);
     }
 
@@ -305,8 +306,9 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
         checkHasValidAddress(mapping);
         checkDuplicateMapping(source, mapping);
+        checkNotSameSourceAndDestination(source, address);
 
-        LOGGER.info("Add alias mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Add alias source => {} for destination mapping: {}", source.asString(), mapping.asString());
         addMapping(source, mapping);
     }
 
@@ -315,7 +317,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         Mapping mapping = Mapping.alias(address)
             .appendDomainFromThrowingSupplierIfNone(this::defaultDomain);
 
-        LOGGER.info("Remove alias mapping => {} for source: {}", mapping.toString(), source.asString());
+        LOGGER.info("Remove alias source => {} for destination mapping: {}", source.asString(), mapping.asString());
         removeMapping(source, mapping);
     }
 
@@ -336,7 +338,13 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     private void checkDuplicateMapping(MappingSource source, Mapping mapping) throws RecipientRewriteTableException {
         Mappings mappings = getStoredMappings(source);
         if (mappings.contains(mapping)) {
-            throw new MappingAlreadyExistsException("Mapping " + mapping.toString() + " for " + source.asString() + " already exist!");
+            throw new MappingAlreadyExistsException("Mapping " + mapping.asString() + " for " + source.asString() + " already exist!");
+        }
+    }
+
+    private void checkNotSameSourceAndDestination(MappingSource source, String address) throws RecipientRewriteTableException {
+        if (source.asMailAddress().map(mailAddress -> mailAddress.asString().equals(address)).orElse(false)) {
+            throw new SameSourceAndDestinationException("Source and destination can't be the same!");
         }
     }
 

@@ -84,10 +84,10 @@ public class RewriteTablesStepdefs {
         rewriteTable.addForwardMapping(source, address);
     }
 
-    @Given("store \"([^\"]*)\" alias mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
-    public void storeAliasMappingForUserAtDomain(String address, String user, String domain) throws Throwable {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        rewriteTable.addAliasMapping(source, address);
+    @Given("store user \"([^\"]*)\" alias mapping for alias \"([^\"]*)\" at domain \"([^\"]*)\"")
+    public void storeAliasMappingForUserAtDomain(String user, String address, String domain) throws Throwable {
+        MappingSource source = MappingSource.fromUser(address, domain);
+        rewriteTable.addAliasMapping(source, user);
     }
 
     @Given("store \"([^\"]*)\" group mapping for user \"([^\"]*)\" at domain \"([^\"]*)\"")
@@ -134,7 +134,7 @@ public class RewriteTablesStepdefs {
         rewriteTable.removeForwardMapping(source, address);
     }
 
-    @When("user \"([^\"]*)\" at domain \"([^\"]*)\" removes an alias mapping \"([^\"]*)\"")
+    @When("alias \"([^\"]*)\" at domain \"([^\"]*)\" removes an alias mapping \"([^\"]*)\"")
     public void userAtDomainRemovesAliasMapping(String user, String domain, String address) throws Throwable {
         MappingSource source = MappingSource.fromUser(user, domain);
         rewriteTable.removeAliasMapping(source, address);
@@ -169,6 +169,11 @@ public class RewriteTablesStepdefs {
     @Then("mappings for user \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
     public void assertMappingsForUser(String user, String domain, List<String> mappings) throws Throwable {
         assertThat(rewriteTable.getResolvedMappings(user, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
+    }
+
+    @Then("mappings for alias \"([^\"]*)\" at domain \"([^\"]*)\" should contain only \"([^\"]*)\"")
+    public void assertMappingsForAlias(String alias, String domain, List<String> mappings) throws Throwable {
+        assertThat(rewriteTable.getResolvedMappings(alias, Domain.of(domain)).asStrings()).containsOnlyElementsOf(mappings);
     }
 
     @Then("a \"([^\"]*)\" exception should have been thrown")

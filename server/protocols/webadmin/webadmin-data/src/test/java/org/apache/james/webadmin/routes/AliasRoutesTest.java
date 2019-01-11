@@ -53,11 +53,8 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.WebAdminServer.NO_CONFIGURATION;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
@@ -76,9 +73,10 @@ class AliasRoutesTest {
     public static final String BOB_WITH_SLASH_PASSWORD = "abcdef";
     public static final String ALICE_PASSWORD = "789123";
 
-    private static final MappingSource BOB_SOURCE = MappingSource.fromUser("bob", DOMAIN);
-    private static final MappingSource BOB_WITH_ENCODED_SLASH_SOURCE = MappingSource.fromUser("bob/", DOMAIN);
-    private static final Mapping BOB_MAPPING = Mapping.alias(BOB_ALIAS);
+    private static final MappingSource BOB_ALIAS_SOURCE = MappingSource.fromUser("bob-alias", DOMAIN);
+    private static final MappingSource BOB_ALIAS_WITH_ENCODED_SLASH_SOURCE = MappingSource.fromUser("bob-alias/", DOMAIN);
+    private static final Mapping BOB_MAPPING = Mapping.alias(BOB);
+    private static final Mapping BOB_WITH_ENCODED_SLASH_MAPPING = Mapping.alias(BOB_WITH_SLASH);
 
     private WebAdminServer webAdminServer;
 
@@ -182,21 +180,37 @@ class AliasRoutesTest {
         }
 
         @Test
+        void putSameSourceAndDestinationShouldReturnBadRequest() {
+            Map<String, Object> errors = when()
+                .put(BOB_ALIAS + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+                .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Source and destination can't be the same!");
+        }
+
+        @Test
         void putAliasForUserShouldCreateAlias() {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_SOURCE)).containsOnly(BOB_MAPPING);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
         }
 
         @Test
         void putAliasWithEncodedSlashForUserShouldAddItAsADestination() {
-            Mapping mapping = Mapping.alias(BOB_ALIAS_WITH_SLASH);
-
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS_WITH_ENCODED_SLASH);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_SOURCE)).containsOnly(mapping);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_WITH_ENCODED_SLASH_SOURCE)).containsOnly(BOB_MAPPING);
         }
 
         @Test
@@ -204,7 +218,7 @@ class AliasRoutesTest {
             with()
                 .put(BOB_WITH_ENCODED_SLASH + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_WITH_ENCODED_SLASH_SOURCE)).containsOnly(BOB_MAPPING);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_WITH_ENCODED_SLASH_MAPPING);
         }
 
         @Test
@@ -215,12 +229,12 @@ class AliasRoutesTest {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_SOURCE)).containsOnly(BOB_MAPPING);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
         }
 
         @Test
         void putAliasForUserShouldAllowSeveralSources() {
-            Mapping mapping2 = Mapping.alias(BOB_ALIAS_2);
+            MappingSource source2 = MappingSource.fromUser("bob-alias2", DOMAIN);
 
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
@@ -228,7 +242,21 @@ class AliasRoutesTest {
             with()
                 .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS_2);
 
-            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_SOURCE)).containsOnly(BOB_MAPPING, mapping2);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING);
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(source2)).containsOnly(BOB_MAPPING);
+        }
+
+        @Test
+        void putAliasForUserShouldAllowSeveralDestinations() {
+            Mapping aliceMapping = Mapping.alias(ALICE);
+
+            with()
+                .put(BOB + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            with()
+                .put(ALICE + SEPARATOR + "sources" + SEPARATOR + BOB_ALIAS);
+
+            assertThat(memoryRecipientRewriteTable.getStoredMappings(BOB_ALIAS_SOURCE)).containsOnly(BOB_MAPPING, aliceMapping);
         }
     }
 
