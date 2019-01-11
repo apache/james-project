@@ -35,6 +35,8 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Receive a {@link org.apache.james.mailbox.MailboxListener.MailboxEvent} and delegate it to an other
  * {@link MailboxListener} depending on the registered mailboxId
@@ -99,6 +101,7 @@ public class DefaultDelegatingMailboxListener implements DelegatingMailboxListen
 
             eventDelivery.deliver(listeners, event)
                 .synchronousListenerFuture()
+                .onErrorResume(throwable -> Mono.empty()) // suppress InVmEventDelivery delivery errors. This class will be removed soon
                 .block();
 
             if (event instanceof MailboxDeletion) {
