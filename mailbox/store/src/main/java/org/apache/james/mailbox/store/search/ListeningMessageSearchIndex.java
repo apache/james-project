@@ -37,6 +37,8 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * {@link MessageSearchIndex} which needs to get registered as global {@link MailboxListener} and so get
  * notified about message changes. This will then allow to update the underlying index.
@@ -49,6 +51,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     private static final int UNLIMITED = -1;
     private final MailboxSessionMapperFactory factory;
     private final SessionProvider sessionProvider;
+    private static final ImmutableList<Class<? extends Event>> INTERESTING_EVENTS = ImmutableList.of(Added.class, Expunged.class, FlagsUpdated.class, MailboxDeletion.class);
 
     public ListeningMessageSearchIndex(MailboxSessionMapperFactory factory, SessionProvider sessionProvider) {
         this.factory = factory;
@@ -73,16 +76,18 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws MailboxException {
-        Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
+        if (INTERESTING_EVENTS.contains(event.getClass())) {
+            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
 
-        if (event instanceof Added) {
-            handleAdded(session, mailbox, (Added) event);
-        } else if (event instanceof Expunged) {
-            handleExpunged(session, mailbox, (Expunged) event);
-        } else if (event instanceof FlagsUpdated) {
-            handleFlagsUpdated(session, mailbox, (FlagsUpdated) event);
-        } else if (event instanceof MailboxDeletion) {
-            deleteAll(session, mailbox);
+            if (event instanceof Added) {
+                handleAdded(session, mailbox, (Added) event);
+            } else if (event instanceof Expunged) {
+                handleExpunged(session, mailbox, (Expunged) event);
+            } else if (event instanceof FlagsUpdated) {
+                handleFlagsUpdated(session, mailbox, (FlagsUpdated) event);
+            } else if (event instanceof MailboxDeletion) {
+                deleteAll(session, mailbox);
+            }
         }
     }
 
