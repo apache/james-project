@@ -92,9 +92,11 @@ public interface EventBusTestFixture {
     int FIVE_HUNDRED_MS = 500;
     MailboxId ID_1 = TEST_ID;
     MailboxId ID_2 = TestId.of(24);
+    MailboxId ID_3 = TestId.of(36);
     ImmutableSet<RegistrationKey> NO_KEYS = ImmutableSet.of();
     MailboxIdRegistrationKey KEY_1 = new MailboxIdRegistrationKey(ID_1);
     MailboxIdRegistrationKey KEY_2 = new MailboxIdRegistrationKey(ID_2);
+    MailboxIdRegistrationKey KEY_3 = new MailboxIdRegistrationKey(ID_3);
     List<Class<? extends Group>> ALL_GROUPS = ImmutableList.of(GroupA.class, GroupB.class, GroupC.class);
 
     GroupA GROUP_A = new GroupA();

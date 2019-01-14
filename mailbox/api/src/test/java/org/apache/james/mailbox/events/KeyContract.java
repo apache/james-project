@@ -251,6 +251,9 @@ public interface KeyContract extends EventBusContract {
         default void failingRegisteredListenersShouldNotAbortRegisteredDelivery() {
             EventBusTestFixture.MailboxListenerCountingSuccessfulExecution listener = spy(new EventBusTestFixture.MailboxListenerCountingSuccessfulExecution());
             doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
+                .doThrow(new RuntimeException())
                 .doCallRealMethod()
                 .when(listener).event(any());
             eventBus().register(listener, KEY_1);
