@@ -60,7 +60,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
     }
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 

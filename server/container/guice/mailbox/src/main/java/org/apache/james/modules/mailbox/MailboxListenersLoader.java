@@ -18,10 +18,12 @@
  ****************************************************************/
 package org.apache.james.modules.mailbox;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxListener;
+import org.apache.james.mailbox.events.Group;
 
 public interface MailboxListenersLoader {
-    MailboxListener.GroupMailboxListener createListener(ListenerConfiguration configuration);
+    Pair<Group, MailboxListener> createListener(ListenerConfiguration configuration);
 
-    void register(MailboxListener.GroupMailboxListener listener);
+    void register(Pair<Group, MailboxListener> listener);
 }

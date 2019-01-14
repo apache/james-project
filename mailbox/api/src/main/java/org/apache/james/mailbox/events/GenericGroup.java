@@ -19,50 +19,27 @@
 
 package org.apache.james.mailbox.events;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Objects;
 
-import org.junit.jupiter.api.Test;
+public class GenericGroup extends Group {
+    private final String groupName;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class GroupTest {
-    static class GroupA extends Group {}
-
-    static class GroupB extends Group {}
-
-    static class GroupC extends GroupA {}
-
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(Group.class)
-            .usingGetClass()
-            .verify();
+    public GenericGroup(String groupName) {
+        this.groupName = groupName;
     }
 
-    @Test
-    void equalsShouldReturnTrueOnSameClass() {
-        assertThat(new GroupA()).isEqualTo(new GroupA());
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof GenericGroup) {
+            GenericGroup that = (GenericGroup) o;
+
+            return Objects.equals(this.groupName, that.groupName);
+        }
+        return false;
     }
 
-    @Test
-    void equalsShouldReturnFalseOnDifferentClass() {
-        assertThat(new GroupA()).isNotEqualTo(new GroupB());
-    }
-
-    @Test
-    void equalsShouldReturnFalseOnSubClass() {
-        assertThat(new GroupA()).isNotEqualTo(new GroupC());
-    }
-
-    @Test
-    void equalsShouldReturnFalseOnParentClass() {
-        assertThat(new GroupC()).isNotEqualTo(new GroupA());
-    }
-
-    @Test
-    void genericGroupShouldMatchBeanContract() {
-        EqualsVerifier.forClass(GenericGroup.class)
-            .withRedefinedSuperclass()
-            .verify();
+    @Override
+    public final int hashCode() {
+        return Objects.hash(groupName);
     }
 }

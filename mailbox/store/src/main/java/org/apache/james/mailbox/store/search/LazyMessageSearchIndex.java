@@ -73,7 +73,7 @@ public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
     

@@ -27,7 +27,7 @@ public class CacheInvalidatingMailboxListener implements MailboxListener.GroupMa
     }
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 

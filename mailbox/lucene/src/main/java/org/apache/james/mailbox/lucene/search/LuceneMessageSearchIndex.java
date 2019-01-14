@@ -402,7 +402,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public org.apache.james.mailbox.events.Group getGroup() {
+    public org.apache.james.mailbox.events.Group getDefaultGroup() {
         return GROUP;
     }
 

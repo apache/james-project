@@ -32,7 +32,7 @@ public class MailboxListenerFactory {
 
     public static class MailboxListenerBuilder {
         private final Injector injector;
-        private Optional<Class<MailboxListener.GroupMailboxListener>> clazz;
+        private Optional<Class<MailboxListener>> clazz;
         private Optional<MailboxListener.ExecutionMode> executionMode;
         private Optional<HierarchicalConfiguration> configuration;
 
@@ -63,12 +63,12 @@ public class MailboxListenerFactory {
             return this;
         }
 
-        public MailboxListenerBuilder clazz(Class<MailboxListener.GroupMailboxListener> clazz) {
+        public MailboxListenerBuilder clazz(Class<MailboxListener> clazz) {
             this.clazz = Optional.of(clazz);
             return this;
         }
 
-        public MailboxListener.GroupMailboxListener build() {
+        public MailboxListener build() {
             Preconditions.checkState(clazz.isPresent(), "'clazz' is mandatory");
             return injector.createChildInjector(
                 binder -> binder.bind(MailboxListener.ExecutionMode.class)

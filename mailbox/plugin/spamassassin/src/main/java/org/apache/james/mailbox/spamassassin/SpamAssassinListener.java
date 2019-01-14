@@ -72,7 +72,7 @@ public class SpamAssassinListener implements SpamEventListener {
     }
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 

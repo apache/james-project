@@ -23,7 +23,7 @@ import java.util.Objects;
 
 public class Group {
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (o == null) {
             return false;
         }
@@ -31,7 +31,7 @@ public class Group {
     }
 
     @Override
-    public final int hashCode() {
+    public int hashCode() {
         return Objects.hash(getClass());
     }
 }

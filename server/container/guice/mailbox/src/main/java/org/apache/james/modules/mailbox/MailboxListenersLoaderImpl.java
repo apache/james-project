@@ -21,13 +21,17 @@ package org.apache.james.modules.mailbox;
 import java.util.Set;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.GenericGroup;
+import org.apache.james.mailbox.events.Group;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 public class MailboxListenersLoaderImpl implements Configurable, MailboxListenersLoader {
@@ -39,7 +43,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     private final Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners;
 
     @Inject
-    public MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, EventBus eventBus,
+    MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, EventBus eventBus,
                                   ExtendedClassLoader classLoader, Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners) {
         this.mailboxListenerFactory = mailboxListenerFactory;
         this.eventBus = eventBus;
@@ -53,7 +57,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
         ListenersConfiguration listenersConfiguration = ListenersConfiguration.from(configuration);
 
-        guiceDefinedListeners.forEach(this::register);
+        guiceDefinedListeners.forEach(eventBus::register);
 
         listenersConfiguration.getListenersConfiguration().stream()
             .map(this::createListener)
@@ -61,24 +65,37 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     }
 
     @Override
-    public void register(MailboxListener.GroupMailboxListener listener) {
-        eventBus.register(listener);
+    public void register(Pair<Group, MailboxListener> listener) {
+        eventBus.register(listener.getRight(), listener.getLeft());
     }
 
     @Override
-    public MailboxListener.GroupMailboxListener createListener(ListenerConfiguration configuration) {
+    public Pair<Group, MailboxListener> createListener(ListenerConfiguration configuration) {
         String listenerClass = configuration.getClazz();
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
-            return mailboxListenerFactory.newInstance()
+            MailboxListener mailboxListener = mailboxListenerFactory.newInstance()
                 .withConfiguration(configuration.getConfiguration())
                 .withExecutionMode(configuration.isAsync().map(this::getExecutionMode))
                 .clazz(classLoader.locateClass(listenerClass))
                 .build();
+
+
+            return configuration.getGroup()
+                .map(GenericGroup::new)
+                .map(group -> Pair.<Group, MailboxListener>of(group, mailboxListener))
+                .orElseGet(() -> withDefaultGroup(mailboxListener));
         } catch (ClassNotFoundException e) {
             LOGGER.error("Error while loading user registered global listener {}", listenerClass, e);
             throw new RuntimeException(e);
         }
+    }
+
+    private Pair<Group, MailboxListener> withDefaultGroup(MailboxListener mailboxListener) {
+        Preconditions.checkArgument(mailboxListener instanceof MailboxListener.GroupMailboxListener);
+
+        MailboxListener.GroupMailboxListener groupMailboxListener = (MailboxListener.GroupMailboxListener) mailboxListener;
+        return Pair.of(groupMailboxListener.getDefaultGroup(), groupMailboxListener);
     }
 
     private MailboxListener.ExecutionMode getExecutionMode(boolean isAsync) {

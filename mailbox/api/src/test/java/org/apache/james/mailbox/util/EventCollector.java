@@ -34,7 +34,7 @@ public class EventCollector implements MailboxListener.GroupMailboxListener {
     private final List<Event> events = new ArrayList<>();
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 

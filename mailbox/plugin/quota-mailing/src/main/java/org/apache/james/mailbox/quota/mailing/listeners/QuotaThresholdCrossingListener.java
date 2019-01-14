@@ -66,7 +66,7 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
     }
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 

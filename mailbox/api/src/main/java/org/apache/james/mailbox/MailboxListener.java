@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableMap;
 public interface MailboxListener {
 
     interface GroupMailboxListener extends MailboxListener {
-        Group getGroup();
+        Group getDefaultGroup();
     }
 
     enum ExecutionMode {

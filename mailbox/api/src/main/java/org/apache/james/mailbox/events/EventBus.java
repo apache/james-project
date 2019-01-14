@@ -40,6 +40,6 @@ public interface EventBus {
     }
 
     default Registration register(MailboxListener.GroupMailboxListener groupMailboxListener) {
-        return register(groupMailboxListener, groupMailboxListener.getGroup());
+        return register(groupMailboxListener, groupMailboxListener.getDefaultGroup());
     }
 }

@@ -40,7 +40,7 @@ public class MailboxOperationLoggingListener implements MailboxListener.GroupMai
     private static final Group GROUP = new MailboxOperationLoggingListenerGroup();
 
     @Override
-    public Group getGroup() {
+    public Group getDefaultGroup() {
         return GROUP;
     }
 
