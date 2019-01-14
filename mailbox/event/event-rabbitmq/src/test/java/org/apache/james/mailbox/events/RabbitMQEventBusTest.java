@@ -51,11 +51,16 @@ import org.apache.james.mailbox.MailboxListener;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.rabbitmq.client.Connection;
@@ -74,8 +79,40 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     EventBusConcurrentTestContract.SingleEventBusConcurrentContract, EventBusConcurrentTestContract.MultiEventBusConcurrentContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract {
 
+    static class RabbitMQEventExtension implements BeforeEachCallback, AfterEachCallback {
+        static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+
+        void startRabbit() {
+            rabbitMQExtension.beforeAll(null);
+        }
+
+        void stopRabbit() {
+            rabbitMQExtension.afterAll(null);
+        }
+
+        @Override
+        public void beforeEach(ExtensionContext extensionContext) throws Exception {
+            rabbitMQExtension.beforeEach(extensionContext);
+        }
+
+        @Override
+        public void afterEach(ExtensionContext extensionContext) throws Exception {
+            rabbitMQExtension.afterEach(extensionContext);
+        }
+    }
+
+    @BeforeAll
+    static void beforeAll() {
+        testExtension.startRabbit();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        testExtension.stopRabbit();
+    }
+
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
+    static RabbitMQEventExtension testExtension = new RabbitMQEventExtension();
 
     private RabbitMQEventBus eventBus;
     private RabbitMQEventBus eventBus2;
@@ -86,7 +123,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @BeforeEach
     void setUp() {
-        connectionFactory = rabbitMQExtension.getConnectionFactory();
+        connectionFactory = RabbitMQEventExtension.rabbitMQExtension.getConnectionFactory();
         Mono<Connection> connectionMono = Mono.fromSupplier(connectionFactory::create).cache();
 
         TestId.Factory mailboxIdFactory = new TestId.Factory();
@@ -170,7 +207,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Event dequeueEvent() {
-            RabbitMQConnectionFactory connectionFactory = rabbitMQExtension.getConnectionFactory();
+            RabbitMQConnectionFactory connectionFactory = RabbitMQEventExtension.rabbitMQExtension.getConnectionFactory();
             Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(Mono.just(connectionFactory.create())));
 
             byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
@@ -189,7 +226,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
         @BeforeEach
         void setUp() throws Exception {
-            rabbitManagementAPI = rabbitMQExtension.managementAPI();
+            rabbitManagementAPI = RabbitMQEventExtension.rabbitMQExtension.managementAPI();
         }
 
         @Nested
@@ -370,6 +407,4 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
     }
-
-
 }
