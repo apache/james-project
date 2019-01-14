@@ -237,6 +237,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
     @Nested
     class LifeCycleTest {
+        private final Duration TEN_SECONDS = Duration.ofSeconds(10);
+
+        private static final int THREAD_COUNT = 10;
+        private static final int OPERATION_COUNT = 100;
+        private static final int MAX_EVENT_DISPATCHED_COUNT = THREAD_COUNT * OPERATION_COUNT;
 
         private RabbitMQManagementAPI rabbitManagementAPI;
 
@@ -298,13 +303,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 MailboxListenerCountingSuccessfulExecution listener = new MailboxListenerCountingSuccessfulExecution();
                 eventBus.register(listener, GROUP_A);
 
-                int threadCount = 10;
-                int operationCount = 1000;
-                int maxEventsDispatched = threadCount * operationCount;
                 ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
-                    .threadCount(10)
-                    .operationCount(1000)
+                    .threadCount(THREAD_COUNT)
+                    .operationCount(OPERATION_COUNT)
                     .runSuccessfullyWithin(Duration.ofMinutes(1));
 
                 eventBus.stop();
@@ -313,7 +315,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 TimeUnit.SECONDS.sleep(1);
                 assertThat(listener.numberOfEventCalls())
                     .isEqualTo(callsAfterStop)
-                    .isLessThan(maxEventsDispatched);
+                    .isLessThan(MAX_EVENT_DISPATCHED_COUNT);
             }
         }
 
@@ -389,14 +391,11 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 eventBus.register(listener, GROUP_A);
                 eventBus2.register(listener, GROUP_A);
 
-                int threadCount = 10;
-                int operationCount = 1000;
-                int maxEventsDispatched = threadCount * operationCount;
                 ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> eventBus.dispatch(EVENT, KEY_1))
-                    .threadCount(10)
-                    .operationCount(1000)
-                    .runSuccessfullyWithin(Duration.ofSeconds(5));
+                    .threadCount(THREAD_COUNT)
+                    .operationCount(OPERATION_COUNT)
+                    .runSuccessfullyWithin(TEN_SECONDS);
 
                 eventBus.stop();
                 eventBus2.stop();
@@ -405,7 +404,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                 TimeUnit.SECONDS.sleep(1);
                 assertThat(listener.numberOfEventCalls())
                     .isEqualTo(callsAfterStop)
-                    .isLessThan(maxEventsDispatched);
+                    .isLessThan(MAX_EVENT_DISPATCHED_COUNT);
             }
         }
 
