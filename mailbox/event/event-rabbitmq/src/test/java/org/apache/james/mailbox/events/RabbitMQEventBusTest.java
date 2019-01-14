@@ -225,15 +225,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             }
 
             @Test
-            void stopShouldDeleteKeyRegistrationWorkQueue() {
-                eventBus.start();
-                eventBus.stop();
-
-                assertThat(rabbitManagementAPI.listQueues())
-                    .isEmpty();
-            }
-
-            @Test
             void eventBusShouldNotThrowWhenContinuouslyStartAndStop() {
                 assertThatCode(() -> {
                     eventBus.start();
