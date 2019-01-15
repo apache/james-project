@@ -36,10 +36,12 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.mock.DataProvisioner;
+import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -385,7 +387,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         @Test
         void deleteMailboxShouldFireMailboxDeletionEvent() throws Exception {
             assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
 
             mailboxManager.deleteMailbox(inbox, session);
 
@@ -441,7 +443,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void addingMessageShouldFireAddedEvent() throws Exception {
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
             inboxManager.appendMessage(MessageManager.AppendCommand.builder()
                     .build(message), session);
 
@@ -459,7 +461,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
             inboxManager.expunge(MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -475,7 +477,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         void setFlagsShouldFireFlagsUpdatedEvent() throws Exception {
             inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
             inboxManager.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
             assertThat(listener.getEvents())
@@ -493,7 +495,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -511,7 +513,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -528,7 +530,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
             inboxManager.appendMessage(AppendCommand.builder().build(message), session);
 
-            retrieveEventBus(mailboxManager).register(listener);
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
 
             assertThat(listener.getEvents())
@@ -538,6 +540,75 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .element(0)
                 .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(targetMailboxId.get()))
                 .satisfies(event -> assertThat(event.getUids()).hasSize(1));
+        }
+
+        @Test
+        void copyShouldFireMovedEventInTargetMailbox() throws Exception {
+            assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
+
+            Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MessageMoveEvent)
+                .hasSize(1)
+                .extracting(event -> (MessageMoveEvent) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMessageIds()).containsExactly(messageId.getMessageId()));
+        }
+
+        @Test
+        void copyShouldNotFireMovedEventInOriginMailbox() throws Exception {
+            assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
+
+            mailboxManager.createMailbox(newPath, session);
+            inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MessageMoveEvent)
+                .isEmpty();;
+        }
+
+        @Test
+        void moveShouldFireMovedEventInTargetMailbox() throws Exception {
+            assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
+
+            Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
+            mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MessageMoveEvent)
+                .hasSize(1)
+                .extracting(event -> (MessageMoveEvent) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMessageIds()).containsExactly(messageId.getMessageId()));
+        }
+
+        @Test
+        void moveShouldFireMovedEventInOriginMailbox() throws Exception {
+            assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
+
+            mailboxManager.createMailbox(newPath, session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+            mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MessageMoveEvent)
+                .hasSize(1)
+                .extracting(event -> (MessageMoveEvent) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMessageIds()).containsExactly(messageId.getMessageId()));
         }
 
         @Test

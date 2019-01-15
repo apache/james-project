@@ -739,6 +739,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
+        MessageMoves messageMoves = MessageMoves.builder()
+            .previousMailboxIds(getMailboxEntity().getMailboxId())
+            .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
+            .build();
         Flux.merge(
             eventBus.dispatch(EventFactory.added()
                     .randomEventId()
@@ -749,13 +753,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                 new MailboxIdRegistrationKey(to.getMailboxEntity().getMailboxId())),
             eventBus.dispatch(EventFactory.moved()
                     .session(session)
-                    .messageMoves(MessageMoves.builder()
-                        .previousMailboxIds(getMailboxEntity().getMailboxId())
-                        .targetMailboxIds(to.getMailboxEntity().getMailboxId(), getMailboxEntity().getMailboxId())
-                        .build())
+                    .messageMoves(messageMoves)
                     .messageId(messageIds.build())
                     .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId())))
+                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
             .then().block();
 
         return copiedUids;
@@ -772,6 +773,10 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
             messageIds.add(message.getMessageId());
         }
 
+        MessageMoves messageMoves = MessageMoves.builder()
+            .previousMailboxIds(getMailboxEntity().getMailboxId())
+            .targetMailboxIds(to.getMailboxEntity().getMailboxId())
+            .build();
         Flux.merge(
             eventBus.dispatch(EventFactory.added()
                     .randomEventId()
@@ -788,14 +793,11 @@ public class StoreMessageManager implements org.apache.james.mailbox.MessageMana
                     .build(),
                 new MailboxIdRegistrationKey(mailbox.getMailboxId())),
             eventBus.dispatch(EventFactory.moved()
-                    .messageMoves(MessageMoves.builder()
-                        .previousMailboxIds(getMailboxEntity().getMailboxId())
-                        .targetMailboxIds(to.getMailboxEntity().getMailboxId())
-                        .build())
+                    .messageMoves(messageMoves)
                     .messageId(messageIds.build())
                     .session(session)
                     .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId())))
+                messageMoves.impactedMailboxIds().map(MailboxIdRegistrationKey::new).collect(Guavate.toImmutableSet())))
             .then().block();
 
         return moveUids;
