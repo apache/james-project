@@ -29,7 +29,6 @@ import static org.mockito.Mockito.spy;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.james.mailbox.Event;
 import org.apache.james.mailbox.MailboxListener;
@@ -37,13 +36,10 @@ import org.apache.james.mailbox.util.EventCollector;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Stopwatch;
-
 interface ErrorHandlingContract extends EventBusContract {
 
     class ThrowingListener implements MailboxListener {
-
-        private List<Instant> timeElapsed;
+        private final List<Instant> timeElapsed;
 
         private ThrowingListener() {
             timeElapsed = new ArrayList<>();
@@ -62,12 +58,6 @@ interface ErrorHandlingContract extends EventBusContract {
 
     default ThrowingListener throwingListener() {
         return new ThrowingListener();
-    }
-
-    default long recordTimeRun(Runnable operation) {
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        operation.run();
-        return stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }
 
     @Test
