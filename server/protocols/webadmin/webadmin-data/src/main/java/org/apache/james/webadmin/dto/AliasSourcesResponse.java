@@ -19,14 +19,16 @@
 
 package org.apache.james.webadmin.dto;
 
-public class AliasSourcesResponse {
-    private final String source;
+import org.apache.james.rrt.lib.MappingSource;
 
-    public AliasSourcesResponse(String source) {
+public class AliasSourcesResponse {
+    private final MappingSource source;
+
+    public AliasSourcesResponse(MappingSource source) {
         this.source = source;
     }
 
-    public String getSource() {
+    public MappingSource getSource() {
         return source;
     }
 }

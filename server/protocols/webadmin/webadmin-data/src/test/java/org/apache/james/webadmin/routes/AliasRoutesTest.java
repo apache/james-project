@@ -37,6 +37,7 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.dto.MappingSourceModule;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -113,6 +114,7 @@ class AliasRoutesTest {
                 .autoDetect(false)
                 .autoDetectIp(false));
             domainList.addDomain(DOMAIN);
+            MappingSourceModule module = new MappingSourceModule();
 
             usersRepository = MemoryUsersRepository.withVirtualHosting();
             usersRepository.setDomainList(domainList);
@@ -122,7 +124,7 @@ class AliasRoutesTest {
             usersRepository.addUser(BOB_WITH_SLASH, BOB_WITH_SLASH_PASSWORD);
             usersRepository.addUser(ALICE, ALICE_PASSWORD);
 
-            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer()));
+            createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(module)));
         }
 
         @Test

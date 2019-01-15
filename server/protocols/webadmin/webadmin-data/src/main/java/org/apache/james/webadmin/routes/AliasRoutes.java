@@ -227,8 +227,7 @@ public class AliasRoutes implements Routes {
             .entrySet().stream()
             .filter(e -> e.getValue().contains(Mapping.alias(baseAddress.asString())))
             .map(Map.Entry::getKey)
-            .map(MappingSource::asMailAddressString)
-            .sorted()
+            .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .map(AliasSourcesResponse::new)
             .collect(Guavate.toImmutableSet());
     }
