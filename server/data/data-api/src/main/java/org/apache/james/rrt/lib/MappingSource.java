@@ -146,6 +146,10 @@ public class MappingSource implements Serializable, Comparable<MappingSource> {
         return Objects.hash(domain, user, wildcard);
     }
 
+    public String asMailAddressString() {
+        return getFixedUser() + "@" + getFixedDomain();
+    }
+
     @Override
     public int compareTo(MappingSource mappingSource) {
         final int result;
