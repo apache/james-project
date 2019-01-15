@@ -124,7 +124,7 @@ public class ForwardRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public List<MappingSource> listForwards(Request request, Response response) throws RecipientRewriteTableException {
-        return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward);
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Forward).collect(Guavate.toImmutableList());
     }
 
     @PUT

@@ -121,7 +121,7 @@ public class GroupsRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public List<MappingSource> listGroups(Request request, Response response) throws RecipientRewriteTableException {
-        return recipientRewriteTable.getSourcesForType(Mapping.Type.Group);
+        return recipientRewriteTable.getSourcesForType(Mapping.Type.Group).collect(Guavate.toImmutableList());
     }
 
     @PUT

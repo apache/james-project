@@ -126,13 +126,12 @@ public interface RecipientRewriteTable {
             .collect(Guavate.toImmutableList());
     }
 
-    default List<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {
+    default Stream<MappingSource> getSourcesForType(Mapping.Type type) throws RecipientRewriteTableException {
         return getAllMappings()
             .entrySet().stream()
             .filter(e -> e.getValue().contains(type))
             .map(Map.Entry::getKey)
-            .sorted(Comparator.comparing(MappingSource::asMailAddressString))
-            .collect(Guavate.toImmutableList());
+            .sorted(Comparator.comparing(MappingSource::asMailAddressString));
     }
 
     default Stream<Mapping> getMappingsForType(Mapping.Type type) throws RecipientRewriteTableException {
