@@ -21,6 +21,7 @@ package org.apache.james.mailbox.events.delivery;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -31,12 +32,11 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 
 public class InVmEventDelivery implements EventDelivery {
@@ -56,27 +56,21 @@ public class InVmEventDelivery implements EventDelivery {
 
     @Override
     public ExecutionStages deliver(Collection<MailboxListener> mailboxListeners, Event event) {
-        Mono<Void> synchronousListeners = doDeliver(
-            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.SYNCHRONOUS), event)
-            .cache();
-        Mono<Void> asyncListener = doDeliver(
-            filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.ASYNCHRONOUS), event)
-            .cache();
-
-        synchronousListeners.subscribe();
-        asyncListener.subscribe();
+        Mono<Void> synchronousListeners = doDeliver(filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.SYNCHRONOUS), event)
+            .subscribeWith(MonoProcessor.create());
+        Mono<Void> asyncListener = doDeliver(filterByExecutionMode(mailboxListeners, MailboxListener.ExecutionMode.ASYNCHRONOUS), event)
+            .subscribeWith(MonoProcessor.create());
 
         return new ExecutionStages(synchronousListeners, asyncListener);
     }
 
-    private ImmutableList<MailboxListener> filterByExecutionMode(Collection<MailboxListener> mailboxListeners, MailboxListener.ExecutionMode executionMode) {
+    private Stream<MailboxListener> filterByExecutionMode(Collection<MailboxListener> mailboxListeners, MailboxListener.ExecutionMode executionMode) {
         return mailboxListeners.stream()
-            .filter(listener -> listener.getExecutionMode() == executionMode)
-            .collect(Guavate.toImmutableList());
+            .filter(listener -> listener.getExecutionMode() == executionMode);
     }
 
-    private Mono<Void> doDeliver(Collection<MailboxListener> mailboxListeners, Event event) {
-        return Flux.fromIterable(mailboxListeners)
+    private Mono<Void> doDeliver(Stream<MailboxListener> mailboxListeners, Event event) {
+        return Flux.fromStream(mailboxListeners)
             .flatMap(mailboxListener -> deliveryWithRetries(event, mailboxListener))
             .then()
             .subscribeOn(Schedulers.elastic());
