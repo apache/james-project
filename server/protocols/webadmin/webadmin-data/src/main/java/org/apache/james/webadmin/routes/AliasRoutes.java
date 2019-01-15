@@ -55,6 +55,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -221,12 +222,10 @@ public class AliasRoutes implements Routes {
             message = "Internal server error - Something went bad on the server side.")
     })
     public ImmutableSet<AliasSourcesResponse> listAliasesOfAddress(Request request, Response response) throws RecipientRewriteTableException {
-        MailAddress baseAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
+        MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
 
-        return recipientRewriteTable.getAllMappings()
-            .entrySet().stream()
-            .filter(e -> e.getValue().contains(Mapping.alias(baseAddress.asString())))
-            .map(Map.Entry::getKey)
+        return recipientRewriteTable.listSources(Mapping.alias(destinationAddress.asString()))
+            .stream()
             .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .map(AliasSourcesResponse::new)
             .collect(Guavate.toImmutableSet());
