@@ -19,16 +19,26 @@
 
 package org.apache.james.rrt.lib;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class MappingSourceTest {
     private static final String DOMAIN = "domain.tld";
     private static final  String USER = "alice";
     private static final String MAIL_ADDRESS = USER + "@" + DOMAIN;
+
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(MappingSource.class)
+            .withIgnoredFields("wildcard")
+            .verify();
+    }
 
     @Test
     void asMailAddressStringShouldSerializeWilcard() {

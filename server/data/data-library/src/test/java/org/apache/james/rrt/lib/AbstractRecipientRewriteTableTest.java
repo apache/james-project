@@ -474,7 +474,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void getSourcesForTypeShouldReturnSortedList() throws Exception {
+    public void getSourcesForTypeShouldReturnSortedStream() throws Exception {
         MappingSource source1 = MappingSource.fromUser("alice", Domain.LOCALHOST);
         MappingSource source2 = MappingSource.fromUser("bob", Domain.LOCALHOST);
         MappingSource source3 = MappingSource.fromUser("cedric", Domain.LOCALHOST);
@@ -517,7 +517,7 @@ public abstract class AbstractRecipientRewriteTableTest {
     }
 
     @Test
-    public void getMappingsForTypeShouldReturnSortedList() throws Exception {
+    public void getMappingsForTypeShouldReturnSortedStream() throws Exception {
         String address1 = "alice@domain.com";
         String address2 = "bob@domain.com";
         String address3 = "cedric@domain.com";
