@@ -44,6 +44,8 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
+import reactor.core.publisher.Mono;
+
 class InVmEventDeliveryTest {
     private static final int DELIVERY_DELAY = (int) TimeUnit.MILLISECONDS.toMillis(100);
 
@@ -147,7 +149,9 @@ class InVmEventDeliveryTest {
             void deliverShouldDeliverEventToAsyncListenerWhenSyncGetException() {
                 doThrow(RuntimeException.class).when(syncEventCollector).event(event);
 
-                inVmEventDelivery.deliver(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture().subscribe();
+                inVmEventDelivery.deliver(ImmutableList.of(asyncEventCollector, syncEventCollector), event).allListenerFuture()
+                    .onErrorResume(e -> Mono.empty())
+                    .block();
 
                 SoftAssertions.assertSoftly(softly -> {
                     softly.assertThat(syncEventCollector.getEvents()).isEmpty();
