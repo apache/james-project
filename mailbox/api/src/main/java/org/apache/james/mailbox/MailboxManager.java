@@ -64,7 +64,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * is the quota management. It is probably really difficult to implement a quota
  * system that spans multiple repository implementations. That is why quotas are
  * created for a specific repository. To be able to administer, repositories and
- * theier belonging mailboxes can be listet.
+ * their belonging mailboxes can be listed.
  * </p>
  */
 
@@ -78,7 +78,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
         Namespace,
         UserFlag,
         ACL,
-        Quota
+        Quota,
     }
 
     EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities();
@@ -289,7 +289,7 @@ public interface MailboxManager extends RequestAware, MailboxListenerSupport, Ri
     MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException;
 
     /**
-     * Autenticates the given administrator against the given password,
+     * Authenticates the given administrator against the given password,
      * then switch to an other user<br>
      * When authenticated and authorized, a session for the other user will be supplied
      * 

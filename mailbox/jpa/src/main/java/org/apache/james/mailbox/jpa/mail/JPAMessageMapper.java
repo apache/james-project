@@ -18,17 +18,20 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
+import com.google.common.base.Preconditions;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -53,6 +56,7 @@ import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
@@ -106,6 +110,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
                 break;
             case ONE:
                 results = findMessagesInMailboxWithUID(mailboxId, from);
+
                 break;
             case RANGE:
                 results = findMessagesInMailboxBetweenUIDs(mailboxId, from, to, max);
@@ -118,6 +123,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             throw new MailboxException("Search of MessageRange " + set + " failed in mailbox " + mailbox, e);
         }
     }
+
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
@@ -349,9 +355,12 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @SuppressWarnings("unchecked")
     private List<MailboxMessage> findMessagesInMailboxWithUID(JPAId mailboxId, MessageUid from) {
+        Preconditions.checkArgument(mailboxId != null);
+        Preconditions.checkArgument(from != null);
         return getEntityManager().createNamedQuery("findMessagesInMailboxWithUID")
-                .setParameter("idParam", mailboxId.getRawId()).setParameter("uidParam", from.asLong()).setMaxResults(1)
-                .getResultList();
+                .setParameter("idParam", mailboxId.getRawId()).setParameter("uidParam", from.asLong())
+                .setMaxResults(1).getResultList();
+
     }
 
     @SuppressWarnings("unchecked")

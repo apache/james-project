@@ -57,7 +57,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     /**
-     * Commit the transaction. If the commit fails due a conflict in a unique key constraint a {@link MailboxExistsException}
+     * Commit the transaction. If the commit fails due to a conflict in a unique key constraint a {@link MailboxExistsException}
      * will get thrown
      */
     @Override

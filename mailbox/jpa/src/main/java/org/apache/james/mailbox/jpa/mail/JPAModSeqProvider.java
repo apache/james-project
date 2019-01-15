@@ -21,6 +21,7 @@ package org.apache.james.mailbox.jpa.mail;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -32,6 +33,8 @@ import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AbstractLockingModSeqProvider;
 import org.apache.james.mailbox.store.mail.model.Mailbox;
+
+import java.util.Optional;
 
 public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
 
@@ -59,7 +62,7 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
             }
             throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailbox, e);
         } finally {
-            if (manager != null) {
+            if (manager != null && !manager.getTransaction().isActive()) {
                 manager.close();
             }
         }
@@ -72,9 +75,11 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
             manager = factory.createEntityManager();
             manager.getTransaction().begin();
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
-            JPAMailbox m = manager.find(JPAMailbox.class, mailboxId.getRawId());
-            long modSeq = m.consumeModSeq();
-            manager.persist(m);
+            JPAMailbox m = Optional.ofNullable(manager.find(JPAMailbox.class, mailboxId.getRawId()))
+                    .orElse(JPAMailbox.from(mailbox));
+            JPAMailbox mAfterMerge = manager.merge(m);
+            long modSeq = mAfterMerge.consumeModSeq();
+            mailbox.setMailboxId(mAfterMerge.getMailboxId());
             manager.getTransaction().commit();
             return modSeq;
         } catch (PersistenceException e) {
@@ -83,7 +88,7 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
             }
             throw new MailboxException("Unable to save highest mod-sequence for mailbox " + mailbox, e);
         } finally {
-            if (manager != null) {
+            if (manager != null && !manager.getTransaction().isActive()) {
                 manager.close();
             }
         }

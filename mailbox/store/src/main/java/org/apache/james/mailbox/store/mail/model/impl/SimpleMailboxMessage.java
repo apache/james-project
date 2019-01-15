@@ -185,7 +185,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     }
 
     private MessageUid uid;
-    private final MailboxId mailboxId;
+    private MailboxId mailboxId;
     private boolean answered;
     private boolean deleted;
     private boolean draft;
@@ -238,6 +238,11 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     @Override
     public MailboxId getMailboxId() {
         return mailboxId;
+    }
+
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        this.mailboxId = mailboxId;
     }
 
     @Override

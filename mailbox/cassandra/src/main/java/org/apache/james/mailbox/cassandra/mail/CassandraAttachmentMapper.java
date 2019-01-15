@@ -109,8 +109,8 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private CompletableFuture<Optional<Attachment>> getAttachmentInternal(AttachmentId id) {
         return attachmentDAOV2.getAttachment(id)
-            .thenCompose(this::retrievePayload)
-            .thenCompose(v2Value -> fallbackToV1(id, v2Value));
+                .thenCompose(this::retrievePayload)
+                .thenCompose(v2Value -> fallbackToV1(id, v2Value));
     }
 
     private CompletionStage<Optional<Attachment>> fallbackToV1(AttachmentId attachmentId, Optional<Attachment> v2Value) {

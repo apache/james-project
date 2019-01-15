@@ -26,11 +26,13 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.JPAAnnotationMapper;
+import org.apache.james.mailbox.jpa.mail.JPAAttachmentMapper;
 import org.apache.james.mailbox.jpa.mail.JPAMailboxMapper;
 import org.apache.james.mailbox.jpa.mail.JPAMessageMapper;
 import org.apache.james.mailbox.jpa.user.JPASubscriptionMapper;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
+import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
@@ -74,6 +76,11 @@ public class JPAMailboxSessionMapperFactory extends MailboxSessionMapperFactory 
     @Override
     public SubscriptionMapper createSubscriptionMapper(MailboxSession session) {
         return new JPASubscriptionMapper(entityManagerFactory);
+    }
+
+    @Override
+    public AttachmentMapper createAttachmentMapper(MailboxSession session) {
+        return new JPAAttachmentMapper(entityManagerFactory);
     }
 
     /**

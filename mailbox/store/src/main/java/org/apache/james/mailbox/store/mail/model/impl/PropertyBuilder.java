@@ -94,7 +94,7 @@ public class PropertyBuilder {
     }
 
     /**
-     * Aets the number of CRLF in a textual document.
+     * Sets the number of CRLF in a textual document.
      * @param textualLineCount count when document is textual,
      * null otherwise
      */

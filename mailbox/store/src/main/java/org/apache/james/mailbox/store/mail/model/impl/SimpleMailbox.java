@@ -30,7 +30,7 @@ import com.google.common.base.Objects;
 
 public class SimpleMailbox implements Mailbox {
 
-    private MailboxId id = null;
+    private MailboxId id;
     private String namespace;
     private String user;
     private String name;

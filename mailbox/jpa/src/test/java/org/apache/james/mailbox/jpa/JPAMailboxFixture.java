@@ -21,6 +21,8 @@ package org.apache.james.mailbox.jpa;
 
 import java.util.List;
 
+
+import org.apache.james.mailbox.jpa.mail.model.JPAAttachment;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailboxAnnotation;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
@@ -41,13 +43,14 @@ import com.google.common.collect.ImmutableList;
 public interface JPAMailboxFixture {
 
     List<Class<?>> MAILBOX_PERSISTANCE_CLASSES = ImmutableList.of(
-        JPAMailbox.class,
-        AbstractJPAMailboxMessage.class,
-        JPAMailboxMessage.class,
-        JPAProperty.class,
-        JPAUserFlag.class,
-        JPAMailboxAnnotation.class,
-        JPASubscription.class
+            JPAMailbox.class,
+            JPAAttachment.class,
+            AbstractJPAMailboxMessage.class,
+            JPAMailboxMessage.class,
+            JPAProperty.class,
+            JPAUserFlag.class,
+            JPAMailboxAnnotation.class,
+            JPASubscription.class
     );
 
     List<Class<?>> QUOTA_PERSISTANCE_CLASSES = ImmutableList.of(
@@ -66,6 +69,7 @@ public interface JPAMailboxFixture {
         "JAMES_MAILBOX_ANNOTATION",
         "JAMES_MAILBOX",
         "JAMES_MAIL",
+        "JAMES_MAIL_ATTACHMENT",
         "JAMES_SUBSCRIPTION");
 
     List<String> QUOTA_TABLES_NAMES = ImmutableList.of(

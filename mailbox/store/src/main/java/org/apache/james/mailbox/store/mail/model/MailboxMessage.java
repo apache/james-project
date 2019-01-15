@@ -40,6 +40,13 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
      */
     MailboxId getMailboxId();
 
+
+    /**
+     * Set the mailbox id for the mailbox
+     * @param mailboxId
+     */
+    void setMailboxId(MailboxId mailboxId);
+
     /**
      * Return the uid
      */

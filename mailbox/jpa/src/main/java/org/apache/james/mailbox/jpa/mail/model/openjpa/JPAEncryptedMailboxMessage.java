@@ -36,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.openjpa.persistence.Externalizer;
@@ -100,5 +101,4 @@ public class JPAEncryptedMailboxMessage extends AbstractJPAMailboxMessage {
         public InputStream getHeaderContent() throws IOException {
             return new ByteArrayInputStream(header);
         }
-
 }

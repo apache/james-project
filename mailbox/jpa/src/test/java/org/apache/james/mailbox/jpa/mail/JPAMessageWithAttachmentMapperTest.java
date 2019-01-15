@@ -17,49 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.transaction;
+package org.apache.james.mailbox.jpa.mail;
 
-import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.backends.jpa.JpaTestCluster;
+import org.apache.james.mailbox.jpa.JPAMailboxFixture;
+import org.apache.james.mailbox.store.mail.model.MapperProvider;
+import org.apache.james.mailbox.store.mail.model.MessageWithAttachmentMapperTest;
+import org.junit.After;
+import org.junit.Before;
 
-/**
- *
- * Run Transaction and handle begin, commit and rollback in the right order
- *
- */
-public abstract class TransactionalMapper implements Mapper {
+public class JPAMessageWithAttachmentMapperTest extends MessageWithAttachmentMapperTest {
+
+
+    public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     @Override
-    public final <T> T execute(Transaction<T> transaction) throws MailboxException {
-        begin();
-        try {
-            T value = transaction.run();
-            commit();
-            return value;
-        } catch (MailboxException e) {
-            rollback();
-            throw e;
-        }
+    protected MapperProvider createMapperProvider() {
+        return new JPAMapperProvider(JPA_TEST_CLUSTER);
     }
-    
-    /**
-     * Begin transaction
-     * 
-     * @throws MailboxException
-     */
-    protected abstract void begin() throws MailboxException;
 
-    /**
-     * Commit transaction
-     * 
-     * @throws MailboxException
-     */
-    protected abstract void commit() throws MailboxException;
-    
-    /**
-     * Rollback transaction
-     * 
-     * @throws MailboxException
-     */
-    protected abstract void rollback() throws MailboxException;
+    @Before
+    public void setUp() throws Exception {
+        super.setUp();
+    }
 
+    @After
+    public void cleanUp() {
+        JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
+    }
 }

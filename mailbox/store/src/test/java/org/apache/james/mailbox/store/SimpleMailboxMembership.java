@@ -38,6 +38,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -100,7 +101,12 @@ public class SimpleMailboxMembership implements MailboxMessage {
     public TestId getMailboxId() {
         return mailboxId;
     }
-    
+
+    @Override
+    public void setMailboxId(MailboxId mailboxId) {
+        this.mailboxId = TestId.of(Long.valueOf(mailboxId.serialize()));
+    }
+
     @Override
     public MessageUid getUid() {
         return uid;

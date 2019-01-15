@@ -27,9 +27,11 @@ import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.jpa.mail.JPAMessageId;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
@@ -62,7 +64,7 @@ public class JpaMailboxManagerProvider {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager,
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
         OpenJPAMailboxManager openJPAMailboxManager = new OpenJPAMailboxManager(mf, noAuthenticator, noAuthorizator,
-            messageParser, new DefaultMessageId.Factory(),
+            messageParser, new JPAMessageId.Factory(),
             delegatingListener, mailboxEventDispatcher, annotationManager,
             storeRightManager);
 

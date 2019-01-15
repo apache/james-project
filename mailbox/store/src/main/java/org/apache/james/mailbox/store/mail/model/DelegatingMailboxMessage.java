@@ -120,6 +120,8 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
         return message;
     }
 
+
+
     @Override
     public List<MessageAttachment> getAttachments() {
         return message.getAttachments();
