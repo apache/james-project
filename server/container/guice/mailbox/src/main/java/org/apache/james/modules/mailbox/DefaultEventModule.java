@@ -30,8 +30,6 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
-import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.ConfigurationPerformer;
 
@@ -44,22 +42,18 @@ import com.google.inject.multibindings.Multibinder;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-
         Multibinder.newSetBinder(binder(), ConfigurationPerformer.class).addBinding().to(ListenerRegistrationPerformer.class);
-
-        bind(ListeningCurrentQuotaUpdater.class).in(Scopes.SINGLETON);
-        bind(MailboxAnnotationListener.class).in(Scopes.SINGLETON);
 
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
-        bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
-
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
-        bind(EventDelivery.class).to(InVmEventDelivery.class);
-
         bind(InVMEventBus.class).in(Scopes.SINGLETON);
+        
+        bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
+        bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);
+
+        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class);
     }
 
     @Singleton
