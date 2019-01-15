@@ -168,4 +168,16 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
         MappingSource source = MappingSource.fromUser(toUser, toDomain);
         recipientRewriteTable.removeGroupMapping(source, fromAddress);
     }
+
+    @Override
+    public void addAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromAlias, fromDomain);
+        recipientRewriteTable.addAliasMapping(source, toAddress);
+    }
+
+    @Override
+    public void removeAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromAlias, fromDomain);
+        recipientRewriteTable.removeAliasMapping(source, toAddress);
+    }
 }

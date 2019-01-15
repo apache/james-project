@@ -310,6 +310,22 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
+    public void addressAliasesEndpointShouldListAliasesAddresses() throws Exception {
+        dataProbe.addAliasMapping("alias1", "domain.com", "to1@domain.com");
+        dataProbe.addAliasMapping("alias2", "domain.com", "to2@domain.com");
+
+        List<String> members = when()
+            .get("/address/aliases")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .contentType(JSON_CONTENT_TYPE)
+            .extract()
+            .jsonPath()
+            .getList(".");
+        assertThat(members).containsOnly("to1@domain.com", "to2@domain.com");
+    }
+
+    @Test
     public void getSwaggerShouldReturnJsonDataForSwagger() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)

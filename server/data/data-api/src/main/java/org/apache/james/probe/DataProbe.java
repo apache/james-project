@@ -92,4 +92,8 @@ public interface DataProbe {
     void addGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception;
 
     void removeGroupMapping(String toUser, String toDomain, String fromAddress) throws Exception;
+
+    void addAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception;
+
+    void removeAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception;
 }

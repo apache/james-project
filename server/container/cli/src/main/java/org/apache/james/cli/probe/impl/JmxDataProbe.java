@@ -281,4 +281,26 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
             virtualUserTableProxy.removeGroupMapping(toUser, toDomain, fromAddress);
         }
     }
+
+    @Override
+    public void addAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, JMX)
+                     .addContext(MDCBuilder.ACTION, "addAliasMapping")
+                     .build()) {
+            virtualUserTableProxy.addAliasMapping(fromAlias, fromDomain, toAddress);
+        }
+    }
+
+    @Override
+    public void removeAliasMapping(String fromAlias, String fromDomain, String toAddress) throws Exception {
+        try (Closeable closeable =
+                 MDCBuilder.create()
+                     .addContext(MDCBuilder.PROTOCOL, JMX)
+                     .addContext(MDCBuilder.ACTION, "removeAliasMapping")
+                     .build()) {
+            virtualUserTableProxy.removeAliasMapping(fromAlias, fromDomain, toAddress);
+        }
+    }
 }
