@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.api;
 
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +128,7 @@ public interface RecipientRewriteTable {
             .entrySet().stream()
             .filter(e -> e.getValue().contains(type))
             .map(Map.Entry::getKey)
-            .sorted()
+            .sorted(Comparator.comparing(MappingSource::asMailAddressString))
             .collect(Guavate.toImmutableList());
     }
 }

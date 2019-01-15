@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -226,8 +227,7 @@ public class AliasRoutes implements Routes {
             .entrySet().stream()
             .filter(e -> e.getValue().contains(Mapping.alias(baseAddress.asString())))
             .map(Map.Entry::getKey)
-            .flatMap(source -> OptionalUtils.toStream(source.asMailAddress()))
-            .map(MailAddress::asString)
+            .map(MappingSource::asMailAddressString)
             .sorted()
             .map(AliasSourcesResponse::new)
             .collect(Guavate.toImmutableSet());

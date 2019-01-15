@@ -32,7 +32,7 @@ import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MappingSource implements Serializable, Comparable<MappingSource> {
+public class MappingSource implements Serializable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingSource.class);
     private static final String WILDCARD = "*";
@@ -148,22 +148,5 @@ public class MappingSource implements Serializable, Comparable<MappingSource> {
 
     public String asMailAddressString() {
         return getFixedUser() + "@" + getFixedDomain();
-    }
-
-    @Override
-    public int compareTo(MappingSource mappingSource) {
-        final int result;
-        final MailAddress mailAddress1 = this.asMailAddress().get();
-        final MailAddress mailAddress2 = mappingSource.asMailAddress().get();
-
-        if (mailAddress1 == null) {
-            result = mailAddress2 == null ? 0 : 1;
-        } else if (mailAddress2 == null) {
-            result = -1;
-        } else {
-            result = mailAddress1.asString().compareTo(mailAddress2.asString());
-        }
-
-        return result;
     }
 }

@@ -20,9 +20,7 @@
 package org.apache.james.webadmin.dto;
 
 import java.io.IOException;
-import java.util.Optional;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 
@@ -40,15 +38,8 @@ public class MappingSourceModule implements JsonTransformerModule {
         simpleModule = new SimpleModule()
             .addSerializer(MappingSource.class, new JsonSerializer<MappingSource>() {
                 @Override
-                public void serialize(MappingSource t, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-                    jsonGenerator.writeString(serialize(t.asMailAddress()));
-                }
-
-                private String serialize(Optional<MailAddress> mailAddress) {
-                    if (mailAddress.isPresent()) {
-                        return mailAddress.get().asString();
-                    }
-                    return "";
+                public void serialize(MappingSource mappingSource, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+                    jsonGenerator.writeString(mappingSource.asMailAddressString());
                 }
             });
     }
