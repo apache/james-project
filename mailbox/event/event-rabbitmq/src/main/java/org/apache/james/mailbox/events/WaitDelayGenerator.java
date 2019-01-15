@@ -29,37 +29,39 @@ import reactor.core.publisher.Mono;
 
 class WaitDelayGenerator {
 
-    static WaitDelayGenerator of(RetryBackoff retryBackoff) {
+    static WaitDelayGenerator of(RetryBackoffConfiguration retryBackoff) {
         return new WaitDelayGenerator(retryBackoff);
     }
 
     private static int randomBetween(int lowest, int highest) {
         Preconditions.checkArgument(lowest <= highest, "lowest always has to be less than or equals highest");
+        if (lowest == highest) {
+            return lowest;
+        }
         return SECURE_RANDOM.nextInt(highest - lowest) + lowest;
     }
 
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private final RetryBackoff retryBackoff;
+    private final RetryBackoffConfiguration retryBackoff;
 
-    private WaitDelayGenerator(RetryBackoff retryBackoff) {
+    private WaitDelayGenerator(RetryBackoffConfiguration retryBackoff) {
         this.retryBackoff = retryBackoff;
     }
 
     Mono<Integer> delayIfHaveTo(int retryCount) {
         Mono<Integer> countRetryMono = Mono.just(retryCount);
-        if (retryCount < 1) {
+        if (!shouldDelay(retryCount)) {
             return countRetryMono;
         }
 
         return countRetryMono
-            .filter(count -> count <= retryBackoff.getMaxRetries())
             .delayElement(generateDelay(retryCount));
     }
 
     @VisibleForTesting
     Duration generateDelay(int retryCount) {
-        if (retryCount < 1) {
+        if (!shouldDelay(retryCount)) {
             return Duration.ZERO;
         }
         int exponentialFactor = Double.valueOf(Math.pow(2, retryCount - 1)).intValue();
@@ -67,5 +69,9 @@ class WaitDelayGenerator {
         int maxDelay = Double.valueOf(minDelay + minDelay * retryBackoff.getJitterFactor()).intValue();
 
         return Duration.ofMillis(randomBetween(minDelay, maxDelay));
+    }
+
+    private boolean shouldDelay(int retryCount) {
+        return retryCount >= 1 && retryCount <= retryBackoff.getMaxRetries();
     }
 }

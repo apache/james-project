@@ -21,6 +21,7 @@ package org.apache.james.mailbox.events;
 
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
@@ -86,8 +87,8 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        assertThat(eventCollector.getEvents())
-            .hasSize(1);
+        WAIT_CONDITION
+            .until(() -> assertThat(eventCollector.getEvents()).hasSize(1));
     }
 
     @Test
@@ -103,12 +104,12 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
-        assertThat(eventCollector.getEvents())
-            .hasSize(1);
+        WAIT_CONDITION
+            .until(() -> assertThat(eventCollector.getEvents()).hasSize(1));
     }
 
     @Test
-    default void listenerShouldNotReceiveWhenFailsGreaterThanMaxRetries() {
+    default void listenerShouldNotReceiveWhenFailsGreaterThanMaxRetries() throws Exception {
         EventCollector eventCollector = eventCollector();
 
         doThrow(new RuntimeException())
@@ -121,32 +122,50 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().register(eventCollector, new EventBusTestFixture.GroupA());
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
+        TimeUnit.SECONDS.sleep(1);
         assertThat(eventCollector.getEvents())
             .isEmpty();
     }
 
     @Test
-    default void retriesBackOffShouldDelayByExponentialGrowth() {
+    default void exceedingMaxRetriesShouldStopConsumingFailedEvent() throws Exception {
         ThrowingListener throwingListener = throwingListener();
 
         eventBus().register(throwingListener, new EventBusTestFixture.GroupA());
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
+        TimeUnit.SECONDS.sleep(5);
+        int numberOfCallsAfterExceedMaxRetries = throwingListener.timeElapsed.size();
+        TimeUnit.SECONDS.sleep(5);
+
+        assertThat(throwingListener.timeElapsed.size())
+            .isEqualTo(numberOfCallsAfterExceedMaxRetries);
+    }
+
+    @Test
+    default void retriesBackOffShouldDelayByExponentialGrowth() throws Exception {
+        ThrowingListener throwingListener = throwingListener();
+
+        eventBus().register(throwingListener, new EventBusTestFixture.GroupA());
+        eventBus().dispatch(EVENT, NO_KEYS).block();
+
+        TimeUnit.SECONDS.sleep(5);
         SoftAssertions.assertSoftly(softly -> {
-            softly.assertThat(throwingListener.timeElapsed).hasSize(4);
+            List<Instant> timeElapsed = throwingListener.timeElapsed;
+            softly.assertThat(timeElapsed).hasSize(4);
 
             long minFirstDelayAfter = 100; // first backOff
             long minSecondDelayAfter = 100; // 200 * jitter factor (200 * 0.5)
             long minThirdDelayAfter = 200; // 400 * jitter factor (400 * 0.5)
 
-            softly.assertThat(throwingListener.timeElapsed.get(1))
-                .isAfterOrEqualTo(throwingListener.timeElapsed.get(0).plusMillis(minFirstDelayAfter));
+            softly.assertThat(timeElapsed.get(1))
+                .isAfterOrEqualTo(timeElapsed.get(0).plusMillis(minFirstDelayAfter));
 
-            softly.assertThat(throwingListener.timeElapsed.get(2))
-                .isAfterOrEqualTo(throwingListener.timeElapsed.get(1).plusMillis(minSecondDelayAfter));
+            softly.assertThat(timeElapsed.get(2))
+                .isAfterOrEqualTo(timeElapsed.get(1).plusMillis(minSecondDelayAfter));
 
-            softly.assertThat(throwingListener.timeElapsed.get(3))
-                .isAfterOrEqualTo(throwingListener.timeElapsed.get(2).plusMillis(minThirdDelayAfter));
+            softly.assertThat(timeElapsed.get(3))
+                .isAfterOrEqualTo(timeElapsed.get(2).plusMillis(minThirdDelayAfter));
         });
     }
 }

@@ -20,11 +20,12 @@
 package org.apache.james.mailbox.events;
 
 import java.time.Duration;
+import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-class RetryBackoff {
+class RetryBackoffConfiguration {
 
     @FunctionalInterface
     interface RequireMaxRetries {
@@ -52,8 +53,8 @@ class RetryBackoff {
             this.jitterFactor = jitterFactor;
         }
 
-        RetryBackoff build() {
-            return new RetryBackoff(maxRetries, firstBackoff, jitterFactor);
+        RetryBackoffConfiguration build() {
+            return new RetryBackoffConfiguration(maxRetries, firstBackoff, jitterFactor);
         }
     }
 
@@ -61,26 +62,23 @@ class RetryBackoff {
         return maxRetries -> firstBackoff -> jitterFactor -> new ReadyToBuild(maxRetries, firstBackoff, jitterFactor);
     }
 
-    static RetryBackoff defaultRetryBackoff() {
-        return builder()
-            .maxRetries(DEFAULT_MAX_RETRIES)
-            .firstBackoff(DEFAULT_FIRST_BACKOFF)
-            .jitterFactor(DEFAULT_JITTER_FACTOR)
-            .build();
-    }
-
-    private static final double DEFAULT_JITTER_FACTOR = 0.5;
-    private static final int DEFAULT_MAX_RETRIES = 3;
-    private static final Duration DEFAULT_FIRST_BACKOFF = Duration.ofMillis(100);
+    static final double DEFAULT_JITTER_FACTOR = 0.5;
+    static final int DEFAULT_MAX_RETRIES = 3;
+    static final Duration DEFAULT_FIRST_BACKOFF = Duration.ofMillis(100);
+    public static final RetryBackoffConfiguration DEFAULT = new RetryBackoffConfiguration(
+        DEFAULT_MAX_RETRIES,
+        DEFAULT_FIRST_BACKOFF,
+        DEFAULT_JITTER_FACTOR);
 
     private final int maxRetries;
     private final Duration firstBackoff;
     private final double jitterFactor;
 
-    RetryBackoff(int maxRetries, Duration firstBackoff, double jitterFactor) {
-        Preconditions.checkArgument(!firstBackoff.isNegative() && !firstBackoff.isZero(), "firstBackoff has to be strictly positive");
-        Preconditions.checkArgument(maxRetries > 0, "maxRetries has to be strictly positive");
-        Preconditions.checkArgument(jitterFactor > 0, "jitterFactor has to be strictly positive");
+    private RetryBackoffConfiguration(int maxRetries, Duration firstBackoff, double jitterFactor) {
+        Preconditions.checkArgument(!firstBackoff.isNegative(), "firstBackoff is not allowed to be negative");
+        Preconditions.checkArgument(maxRetries >= 0, "maxRetries is not allowed to be negative");
+        Preconditions.checkArgument(jitterFactor >= 0 && jitterFactor <= 1.0, "jitterFactor is not " +
+            "allowed to be negative or greater than 1");
 
         this.maxRetries = maxRetries;
         this.firstBackoff = firstBackoff;
@@ -97,6 +95,23 @@ class RetryBackoff {
 
     public double getJitterFactor() {
         return jitterFactor;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof RetryBackoffConfiguration) {
+            RetryBackoffConfiguration that = (RetryBackoffConfiguration) o;
+
+            return Objects.equals(this.maxRetries, that.maxRetries)
+                && Objects.equals(this.jitterFactor, that.jitterFactor)
+                && Objects.equals(this.firstBackoff, that.firstBackoff);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(maxRetries, firstBackoff, jitterFactor);
     }
 
     @Override

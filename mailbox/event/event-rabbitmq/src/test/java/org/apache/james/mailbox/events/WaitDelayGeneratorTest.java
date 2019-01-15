@@ -30,7 +30,7 @@ class WaitDelayGeneratorTest {
 
     @Test
     void generateDelayShouldReturnZeroWhenZeroRetryCount() {
-        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoff.defaultRetryBackoff());
+        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoffConfiguration.DEFAULT);
 
         assertThat(generator.generateDelay(0))
             .isEqualTo(Duration.ofMillis(0));
@@ -38,7 +38,7 @@ class WaitDelayGeneratorTest {
 
     @Test
     void generateDelayShouldReturnByRandomInRangeOfExponentialGrowthOfRetryCount() {
-        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoff.builder()
+        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoffConfiguration.builder()
             .maxRetries(4)
             .firstBackoff(Duration.ofMillis(100))
             .jitterFactor(0.5)
@@ -53,6 +53,51 @@ class WaitDelayGeneratorTest {
                 .isBetween(400L, 600L);
             softly.assertThat(generator.generateDelay(4).toMillis())
                 .isBetween(800L, 1200L);
+        });
+    }
+
+    @Test
+    void generateDelayShouldReturnZeroWhenZeroMaxRetries() {
+        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoffConfiguration.builder()
+            .maxRetries(0)
+            .firstBackoff(Duration.ofMillis(1000))
+            .jitterFactor(0.5)
+            .build());
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(generator.generateDelay(1)).isEqualTo(Duration.ZERO);
+            softly.assertThat(generator.generateDelay(2)).isEqualTo(Duration.ZERO);
+            softly.assertThat(generator.generateDelay(3)).isEqualTo(Duration.ZERO);
+        });
+    }
+
+    @Test
+    void generateDelayShouldReturnZeroWhenZeroFirstBackOff() {
+        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoffConfiguration.builder()
+            .maxRetries(3)
+            .firstBackoff(Duration.ZERO)
+            .jitterFactor(0.5)
+            .build());
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(generator.generateDelay(1)).isEqualTo(Duration.ZERO);
+            softly.assertThat(generator.generateDelay(2)).isEqualTo(Duration.ZERO);
+            softly.assertThat(generator.generateDelay(3)).isEqualTo(Duration.ZERO);
+        });
+    }
+
+    @Test
+    void generateDelayShouldReturnFloorOfExponentialGrowthStepsWhenZeroJitterFactor() {
+        WaitDelayGenerator generator = WaitDelayGenerator.of(RetryBackoffConfiguration.builder()
+            .maxRetries(3)
+            .firstBackoff(Duration.ofMillis(100))
+            .jitterFactor(0.0)
+            .build());
+
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(generator.generateDelay(1)).isEqualTo(Duration.ofMillis(100));
+            softly.assertThat(generator.generateDelay(2)).isEqualTo(Duration.ofMillis(200));
+            softly.assertThat(generator.generateDelay(3)).isEqualTo(Duration.ofMillis(400));
         });
     }
 }

@@ -32,6 +32,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import static org.apache.james.mailbox.events.EventBusTestFixture.KEY_1;
 import static org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
+import static org.apache.james.mailbox.events.EventBusTestFixture.newListener;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT_EXCHANGE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,7 +78,8 @@ import reactor.rabbitmq.SenderOptions;
 
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
     EventBusConcurrentTestContract.SingleEventBusConcurrentContract, EventBusConcurrentTestContract.MultiEventBusConcurrentContract,
-    KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract {
+    KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
+    ErrorHandlingContract {
 
     static class RabbitMQEventExtension implements BeforeEachCallback, AfterEachCallback {
         static final RabbitMQExtension rabbitMQExtension = new RabbitMQExtension();
@@ -131,9 +133,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory());
         routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
 
-        eventBus = new RabbitMQEventBus(connectionFactory, eventSerializer, routingKeyConverter);
-        eventBus2 = new RabbitMQEventBus(connectionFactory, eventSerializer, routingKeyConverter);
-        eventBus3 = new RabbitMQEventBus(connectionFactory, eventSerializer, routingKeyConverter);
+        eventBus = newEventBus();
+        eventBus2 = newEventBus();
+        eventBus3 = newEventBus();
+
         eventBus.start();
         eventBus2.start();
         eventBus3.start();
@@ -150,6 +153,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
             .forEach(queueName -> sender.delete(QueueSpecification.queue(queueName)).block());
         sender.delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)).block();
         sender.close();
+    }
+
+    private RabbitMQEventBus newEventBus() {
+        return new RabbitMQEventBus(connectionFactory, eventSerializer, RetryBackoffConfiguration.DEFAULT, routingKeyConverter);
     }
 
     @Override
@@ -179,6 +186,17 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Disabled("This test is failing by design as the different registration keys are handled by distinct messages")
     public void dispatchShouldCallListenerOnceWhenSeveralKeysMatching() {
 
+    }
+
+    @Test
+    void registerGroupShouldCreateRetryExchange() throws Exception {
+        MailboxListener listener = newListener();
+        EventBusTestFixture.GroupA registeredGroup = new EventBusTestFixture.GroupA();
+        eventBus.register(listener, registeredGroup);
+
+        GroupConsumerRetry.RetryExchangeName retryExchangeName = GroupConsumerRetry.RetryExchangeName.of(registeredGroup);
+        assertThat(testExtension.rabbitMQExtension.managementAPI().listExchanges())
+            .anyMatch(exchange -> exchange.getName().equals(retryExchangeName.asString()));
     }
 
     @Nested
